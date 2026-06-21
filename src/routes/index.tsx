@@ -400,10 +400,42 @@ function Nav() {
 
 function Footer() {
   const cols = [
-    { title: "Product", items: ["Dashboard", "Coaches", "Pricing", "Mobile App"] },
-    { title: "Company", items: ["About", "Careers", "Press", "Contact"] },
-    { title: "Resources", items: ["Guide", "API docs", "Status", "Help"] },
-    { title: "Legal", items: ["Privacy", "Terms", "Risk disclosure", "Cookies"] },
+    {
+      title: "Product",
+      items: [
+        { label: "Dashboard", to: "/dashboard" as const },
+        { label: "Coaches", to: "/coaches" as const },
+        { label: "Pricing", to: "/" as const },
+        { label: "Mobile App", to: "/" as const },
+      ],
+    },
+    {
+      title: "Company",
+      items: [
+        { label: "About", to: "/" as const },
+        { label: "Careers", to: "/" as const },
+        { label: "Press", to: "/" as const },
+        { label: "Contact", to: "/" as const },
+      ],
+    },
+    {
+      title: "Resources",
+      items: [
+        { label: "Guide", to: "/guide" as const },
+        { label: "API docs", to: "/" as const },
+        { label: "Status", to: "/system-status" as const },
+        { label: "Help", to: "/" as const },
+      ],
+    },
+    {
+      title: "Legal",
+      items: [
+        { label: "Privacy", to: "/" as const },
+        { label: "Terms", to: "/" as const },
+        { label: "Risk disclosure", to: "/" as const },
+        { label: "Cookies", to: "/" as const },
+      ],
+    },
   ];
   return (
     <footer className="border-t border-border/60 px-6 py-20 bg-card/20">
@@ -421,8 +453,8 @@ function Footer() {
             </div>
             <ul className="space-y-2.5">
               {c.items.map((i) => (
-                <li key={i}>
-                  <a href="#" className="text-sm hover:text-primary transition">{i}</a>
+                <li key={i.label}>
+                  <Link to={i.to} className="text-sm hover:text-primary transition">{i.label}</Link>
                 </li>
               ))}
             </ul>
