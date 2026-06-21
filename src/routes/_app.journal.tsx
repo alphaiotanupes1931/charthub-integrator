@@ -25,7 +25,7 @@ function JournalPage() {
   while (cells.length % 7 !== 0) cells.push(null);
 
   return (
-    <div className="p-8 max-w-[1400px] mx-auto">
+    <div className="p-4 md:p-8 max-w-[1400px] mx-auto">
       <PageHeader
         title="Trade Journal"
         description={

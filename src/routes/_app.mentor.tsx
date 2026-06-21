@@ -9,7 +9,7 @@ export const Route = createFileRoute("/_app/mentor")({
 
 function MentorPage() {
   return (
-    <div className="p-8 max-w-[1400px] mx-auto">
+    <div className="p-4 md:p-8 max-w-[1400px] mx-auto">
       <PageHeader
         title="Coach Dashboard"
         icon={<Users className="h-8 w-8 text-primary" />}
