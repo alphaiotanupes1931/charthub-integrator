@@ -16,7 +16,7 @@ const QUESTIONS = [
 
 function AnalyticsPage() {
   return (
-    <div className="p-8 max-w-[1400px] mx-auto">
+    <div className="p-4 md:p-8 max-w-[1400px] mx-auto">
       <PageHeader title="Analytics" description="Your trading performance at a glance" />
 
       <div className="rounded-xl border border-border bg-card p-12 mb-6 text-center space-y-4">

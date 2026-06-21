@@ -32,7 +32,7 @@ const STEPS = [
 
 function GuidePage() {
   return (
-    <div className="p-8 max-w-[1100px] mx-auto">
+    <div className="p-4 md:p-8 max-w-[1100px] mx-auto">
       <PageHeader
         title="Guide"
         icon={<BookOpen className="h-8 w-8 text-primary" />}
