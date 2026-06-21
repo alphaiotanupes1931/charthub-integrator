@@ -167,17 +167,17 @@ function Landing() {
       </div>
 
       {/* HOW IT WORKS */}
-      <section className="px-6 py-28">
+      <section className="px-5 sm:px-6 py-16 sm:py-24 md:py-28">
         <div className="max-w-6xl mx-auto">
           <SectionEyebrow>How it works</SectionEyebrow>
-          <h2 className="font-display text-4xl md:text-6xl font-medium text-center leading-tight">
+          <h2 className="font-display text-3xl sm:text-4xl md:text-6xl font-medium text-center leading-tight">
             Three steps. Zero guesswork.
           </h2>
-          <p className="text-center text-muted-foreground mt-4 max-w-xl mx-auto">
+          <p className="text-center text-sm sm:text-base text-muted-foreground mt-4 max-w-xl mx-auto px-2">
             From chart to confident execution in under thirty seconds.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-16">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 mt-10 sm:mt-16">
             {[
               {
                 step: "Step 01",
@@ -201,16 +201,17 @@ function Landing() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-80px" }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="rounded-2xl border border-border bg-card/40 p-8 hover-lift"
+                className="rounded-2xl border border-border bg-card/40 p-6 sm:p-8 hover-lift"
               >
                 <div className="font-mono text-xs uppercase tracking-[0.2em] text-primary">{s.step}</div>
-                <h3 className="font-display text-2xl md:text-3xl mt-5">{s.title}</h3>
-                <p className="text-sm text-muted-foreground mt-4 leading-relaxed">{s.body}</p>
+                <h3 className="font-display text-xl sm:text-2xl md:text-3xl mt-4 sm:mt-5">{s.title}</h3>
+                <p className="text-sm text-muted-foreground mt-3 sm:mt-4 leading-relaxed">{s.body}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
+
 
       {/* GRADING SECTION */}
       <section className="px-6 py-28 border-t border-border/60">
