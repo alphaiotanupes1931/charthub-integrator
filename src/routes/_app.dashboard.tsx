@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { TradingViewChart } from "@/components/TradingViewChart";
+import { CandlestickScene } from "@/components/CandlestickScene";
+import { MotionPage, MotionStagger } from "@/components/MotionPage";
 import {
   Crosshair,
   Bell,
@@ -42,9 +44,35 @@ function Dashboard() {
   const [panel, setPanel] = useState<"analysis" | "chat">("analysis");
 
   return (
+    <MotionPage>
     <div className="flex flex-col lg:flex-row">
       {/* Center column */}
       <div className="flex-1 min-w-0 p-4 space-y-3">
+        {/* 3D hero scene */}
+        <MotionStagger>
+          <div className="relative rounded-2xl border border-gold glass-strong overflow-hidden">
+            <div className="grid-bg absolute inset-0 opacity-60" />
+            <div className="relative flex items-center justify-between p-6">
+              <div className="max-w-md">
+                <div className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.25em] text-primary mb-3">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse-gold" />
+                  Live Market
+                </div>
+                <h1 className="font-display text-3xl md:text-4xl font-semibold leading-tight">
+                  <span className="text-gold-gradient">XAU/USD</span>
+                  <span className="block text-foreground/90 text-2xl md:text-3xl mt-1">Wyckoff in motion.</span>
+                </h1>
+                <p className="text-sm text-muted-foreground mt-2 max-w-sm">
+                  Sweep → BOS → Retest. Live institutional phase detection on gold.
+                </p>
+              </div>
+              <div className="hidden md:block w-[420px] h-[200px] -my-4 -mr-4">
+                <CandlestickScene className="w-full h-full" />
+              </div>
+            </div>
+          </div>
+        </MotionStagger>
+
         {/* Top status strip */}
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center gap-2 text-muted-foreground">
@@ -205,5 +233,6 @@ function Dashboard() {
         </div>
       </div>
     </div>
+    </MotionPage>
   );
 }
