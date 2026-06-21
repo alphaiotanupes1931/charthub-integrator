@@ -127,20 +127,20 @@ function Landing() {
 
 
       {/* LIVE CHART PREVIEW */}
-      <section className="relative px-6 pb-16">
+      <section className="relative px-4 sm:px-6 pb-12 sm:pb-16">
         <div className="max-w-6xl mx-auto">
           <BrowserFrame url="trademindaicoach.com/dashboard">
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-5 sm:gap-6 p-4 sm:p-6">
               <div>
                 <div className="text-sm text-muted-foreground mb-1">XAU/USD · Gold Spot</div>
-                <SymbolOverview symbol="OANDA:XAUUSD" height={420} />
+                <SymbolOverview symbol="OANDA:XAUUSD" height={320} />
               </div>
-              <aside className="space-y-5">
+              <aside className="space-y-4 sm:space-y-5">
                 <div className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
                   <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse-gold" />
                   New signal
                 </div>
-                <div className="font-display text-7xl text-primary leading-none">A+</div>
+                <div className="font-display text-6xl sm:text-7xl text-primary leading-none">A+</div>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   Spring at recent low confirmed. Wait for retest before risking.
                 </p>
@@ -159,6 +159,7 @@ function Landing() {
           </BrowserFrame>
         </div>
       </section>
+
 
       {/* TICKER */}
       <div className="border-y border-border/60 bg-card/30 backdrop-blur">
