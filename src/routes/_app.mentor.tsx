@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Users, Mail } from "lucide-react";
 
 export const Route = createFileRoute("/_app/mentor")({
-  head: () => ({ meta: [{ title: "Coach Dashboard — TradeMind" }] }),
+  head: () => ({ meta: [{ title: "Coach Dashboard, TradeMind" }] }),
   component: MentorPage,
 });
 

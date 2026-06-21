@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Brain, Activity, Plus, Lightbulb, AlertTriangle, BookOpen, ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/_app/memory")({
-  head: () => ({ meta: [{ title: "Trading Memory — TradeMind" }] }),
+  head: () => ({ meta: [{ title: "Trading Memory, TradeMind" }] }),
   component: MemoryPage,
 });
 
@@ -50,7 +50,7 @@ function MemoryPage() {
         <div className="rounded-md border border-border bg-card p-4">
           <div className="text-sm font-semibold mb-1">Today's Recommendation</div>
           <p className="text-sm text-muted-foreground">
-            Start logging your sessions and lessons — TradeMind AI gets smarter with every entry.
+            Start logging your sessions and lessons, TradeMind AI gets smarter with every entry.
           </p>
         </div>
       </div>
@@ -61,7 +61,7 @@ function MemoryPage() {
             <AlertTriangle className="h-4 w-4 text-amber-400" /> Pattern Summary
           </h3>
           <p className="text-sm text-muted-foreground mb-4">
-            No patterns logged yet. Patterns surface once you've logged a few lessons — repeat behaviors get tagged and tracked here.
+            No patterns logged yet. Patterns surface once you've logged a few lessons, repeat behaviors get tagged and tracked here.
           </p>
           <button className="flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs">
             Log a lesson <ArrowRight className="h-3 w-3" />
@@ -72,7 +72,7 @@ function MemoryPage() {
             <BookOpen className="h-4 w-4 text-primary" /> Recent Lessons (0)
           </h3>
           <p className="text-sm text-muted-foreground mb-4">
-            No lessons logged yet. Lessons capture what you learned from a trade — wins, losses, and the rules you broke. They feed the pattern tracker above.
+            No lessons logged yet. Lessons capture what you learned from a trade, wins, losses, and the rules you broke. They feed the pattern tracker above.
           </p>
           <button className="flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs">
             Open the journal <ArrowRight className="h-3 w-3" />
