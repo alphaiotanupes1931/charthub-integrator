@@ -49,19 +49,22 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   return (
-    <div className="flex min-h-screen w-full bg-background text-foreground">
+    <div className="flex min-h-screen w-full text-foreground">
       {/* Sidebar */}
       <aside
         className={`${
           collapsed ? "w-16" : "w-64"
-        } shrink-0 border-r border-border bg-background flex flex-col transition-[width] duration-200`}
+        } shrink-0 border-r border-border/60 glass flex flex-col transition-[width] duration-300 ease-out`}
       >
-        <div className="flex items-center gap-2 px-4 py-4">
-          <img src={logoAsset.url} alt="TradeMind" className="h-8 w-8 object-contain" />
+        <div className="flex items-center gap-2.5 px-4 py-5">
+          <div className="relative">
+            <div className="absolute inset-0 rounded-full blur-md bg-primary/40" />
+            <img src={logoAsset.url} alt="TradeMind" className="relative h-8 w-8 object-contain animate-float" />
+          </div>
           {!collapsed && (
             <span className="font-display text-xl font-semibold tracking-tight">
               <span className="text-foreground">Trade</span>
-              <span className="text-foreground/90">Mind</span>
+              <span className="text-gold-gradient">Mind</span>
             </span>
           )}
         </div>
@@ -74,16 +77,17 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link
                 key={item.to}
                 to={item.to}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
+                className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200 ${
                   active
-                    ? "border border-primary/60 bg-primary/5 text-primary"
+                    ? "bg-gradient-to-r from-primary/15 via-primary/8 to-transparent text-primary ring-gold"
                     : item.accent
-                    ? "text-primary/80 hover:bg-accent/40"
-                    : "text-foreground/80 hover:bg-accent/40 hover:text-foreground"
+                    ? "text-primary/80 hover:bg-accent/40 hover:translate-x-0.5"
+                    : "text-foreground/80 hover:bg-accent/40 hover:text-foreground hover:translate-x-0.5"
                 }`}
                 title={item.label}
               >
-                <Icon className="h-4 w-4 shrink-0" />
+                {active && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-r bg-gold-gradient" />}
+                <Icon className={`h-4 w-4 shrink-0 ${active ? "drop-shadow-[0_0_6px_color-mix(in_oklab,var(--gold)_60%,transparent)]" : ""}`} />
                 {!collapsed && <span className="font-medium">{item.label}</span>}
               </Link>
             );
