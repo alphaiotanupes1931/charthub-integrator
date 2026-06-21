@@ -233,5 +233,6 @@ function Dashboard() {
         </div>
       </div>
     </div>
+    </MotionPage>
   );
 }
