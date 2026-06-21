@@ -70,7 +70,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <Link to="/dashboard" className="flex items-center gap-2.5 min-w-0">
           <div className="relative shrink-0">
             <div className="absolute inset-0 rounded-full blur-md bg-primary/40" />
-            <img src={logoAsset.url} alt="TradeMind" className="relative h-12 w-12 object-contain animate-float" />
+            <img src={logoAsset.url} alt="TradeMind" className="relative h-12 w-12 object-contain" />
           </div>
           {!collapsed && (
             <span className="font-display text-xl font-semibold tracking-tight truncate">
