@@ -70,7 +70,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <Link to="/dashboard" className="flex items-center gap-2.5 min-w-0">
           <div className="relative shrink-0">
             <div className="absolute inset-0 rounded-full blur-md bg-primary/40" />
-            <img src={logoAsset.url} alt="TradeMind" className="relative h-8 w-8 object-contain animate-float" />
+            <img src={logoAsset.url} alt="TradeMind" className="relative h-12 w-12 object-contain animate-float" />
           </div>
           {!collapsed && (
             <span className="font-display text-xl font-semibold tracking-tight truncate">
@@ -194,7 +194,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
           {/* Mobile logo */}
           <Link to="/dashboard" className="md:hidden flex items-center gap-1.5 shrink-0">
-            <img src={logoAsset.url} alt="TradeMind" className="h-7 w-7 object-contain" />
+            <img src={logoAsset.url} alt="TradeMind" className="h-10 w-10 object-contain" />
           </Link>
         </header>
 
