@@ -21,9 +21,12 @@ import {
   PanelLeftOpen,
   Menu,
   X,
+  Sun,
+  Moon,
 } from "lucide-react";
 import logoAsset from "@/assets/logo.png.asset.json";
 import { Tutorial } from "@/components/Tutorial";
+import { useTheme } from "@/hooks/useTheme";
 
 type NavItem = {
   to: string;
@@ -50,6 +53,7 @@ const NAV: NavItem[] = [
 export function AppShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { theme, toggle } = useTheme();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   // Close drawer on route change
@@ -193,6 +197,15 @@ export function AppShell({ children }: { children: ReactNode }) {
               ⌘K
             </kbd>
           </div>
+          {/* Theme toggle */}
+          <button
+            onClick={toggle}
+            className="h-9 w-9 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:text-foreground shrink-0"
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            title={theme === "dark" ? "Light mode" : "Dark mode"}
+          >
+            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
           {/* Mobile logo */}
           <Link to="/dashboard" className="md:hidden flex items-center gap-1.5 shrink-0">
             <img src={logoAsset.url} alt="TradeMind" className="h-10 w-10 object-contain" />
