@@ -64,11 +64,11 @@ function Index() {
               className="h-11 w-11 object-contain"
             />
             <div className="leading-tight">
-              <h1 className="text-lg font-bold tracking-wide">
-                <span className="text-foreground">TRADE</span>
-                <span className="text-primary"> MIND</span>
+              <h1 className="font-display text-xl font-semibold tracking-tight">
+                <span className="text-foreground">Trade</span>
+                <span className="text-primary">Mind</span>
               </h1>
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
                 AI Trading Coach
               </p>
             </div>
