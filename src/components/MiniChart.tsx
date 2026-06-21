@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 interface Props {
   symbol: string;
   width?: string | number;
-  height?: string | number;
+  height?: number;
   dateRange?: string;
 }
 
@@ -12,13 +12,14 @@ export function MiniChart({ symbol, width = "100%", height = 70, dateRange = "1D
 
   useEffect(() => {
     if (!ref.current) return;
-    ref.current.innerHTML = '<div class="tradingview-widget-container__widget"></div>';
+    ref.current.innerHTML = `<div class="tradingview-widget-container__widget" style="width:100%;height:${height}px"></div>`;
     const script = document.createElement("script");
     script.src = "https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js";
     script.async = true;
+    script.type = "text/javascript";
     script.innerHTML = JSON.stringify({
       symbol,
-      width,
+      width: "100%",
       height,
       locale: "en",
       dateRange,
@@ -28,6 +29,9 @@ export function MiniChart({ symbol, width = "100%", height = 70, dateRange = "1D
       largeChartUrl: "",
       chartOnly: true,
       noTimeScale: true,
+      trendLineColor: "rgba(201, 168, 76, 1)",
+      underLineColor: "rgba(201, 168, 76, 0.15)",
+      underLineBottomColor: "rgba(201, 168, 76, 0)",
     });
     ref.current.appendChild(script);
   }, [symbol, width, height, dateRange]);
@@ -45,10 +49,11 @@ export function SymbolOverview({ symbol, height = 420 }: SymbolOverviewProps) {
 
   useEffect(() => {
     if (!ref.current) return;
-    ref.current.innerHTML = '<div class="tradingview-widget-container__widget"></div>';
+    ref.current.innerHTML = `<div class="tradingview-widget-container__widget" style="width:100%;height:${height}px"></div>`;
     const script = document.createElement("script");
     script.src = "https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js";
     script.async = true;
+    script.type = "text/javascript";
     script.innerHTML = JSON.stringify({
       symbols: [[symbol, symbol]],
       chartOnly: false,
@@ -70,7 +75,7 @@ export function SymbolOverview({ symbol, height = 420 }: SymbolOverviewProps) {
       valuesTracking: "1",
       changeMode: "price-and-percent",
       chartType: "area",
-      maLineColor: "#2962FF",
+      maLineColor: "#c9a84c",
       maLineWidth: 1,
       maLength: 9,
       headerFontSize: "medium",
@@ -86,5 +91,5 @@ export function SymbolOverview({ symbol, height = 420 }: SymbolOverviewProps) {
     ref.current.appendChild(script);
   }, [symbol, height]);
 
-  return <div className="tradingview-widget-container" ref={ref} />;
+  return <div className="tradingview-widget-container" ref={ref} style={{ width: "100%", height }} />;
 }
