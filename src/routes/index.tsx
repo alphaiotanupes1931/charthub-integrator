@@ -9,13 +9,13 @@ import logoAsset from "@/assets/trademind-logo.png.asset.json";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "TradeMind — Trade smarter. Every single setup." },
+      { title: "TradeMind, Trade smarter. Every single setup." },
       {
         name: "description",
         content:
-          "TradeMind is the first AI trading coach that grades every setup before you risk a dollar — so you only take the trades that deserve to win.",
+          "TradeMind is the first AI trading coach that grades every setup before you risk a dollar, so you only take the trades that deserve to win.",
       },
-      { property: "og:title", content: "TradeMind — AI Trading Coach" },
+      { property: "og:title", content: "TradeMind, AI Trading Coach" },
       {
         property: "og:description",
         content: "Grade every setup A+ to NO ENTRY. Built for serious day traders, prop traders, and swing traders.",
@@ -99,7 +99,7 @@ function Landing() {
             transition={{ duration: 0.6, delay: 0.25 }}
             className="mt-8 text-base md:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed"
           >
-            TradeMind is the first AI trading coach that grades every setup before you risk a dollar —
+            TradeMind is the first AI trading coach that grades every setup before you risk a dollar , 
             so you only take the trades that deserve to win.
           </motion.p>
 
@@ -180,7 +180,7 @@ function Landing() {
               {
                 step: "Step 01",
                 title: "Pick your setup",
-                body: "Connect a chart or paste a screenshot. TradeMind reads structure, sweeps, BOS, retests — automatically.",
+                body: "Connect a chart or paste a screenshot. TradeMind reads structure, sweeps, BOS, retests, automatically.",
               },
               {
                 step: "Step 02",
@@ -219,7 +219,7 @@ function Landing() {
               Grade every setup before you fire.
             </h2>
             <p className="text-muted-foreground mt-6 leading-relaxed max-w-md">
-              Each TradeMind signal is graded on six dimensions — structure, momentum, risk, confluence,
+              Each TradeMind signal is graded on six dimensions, structure, momentum, risk, confluence,
               session, and your personal track record. Only A and A+ deserve real risk.
             </p>
             <div className="grid grid-cols-4 gap-3 mt-10 max-w-md">
@@ -246,7 +246,7 @@ function Landing() {
             </div>
             <div className="font-display text-8xl text-primary leading-none">A+</div>
             <p className="text-sm leading-relaxed">
-              "Spring at recent low confirmed. Phase D BOS on the 5m. Wait for the retest — your stop is structurally clean."
+              "Spring at recent low confirmed. Phase D BOS on the 5m. Wait for the retest, your stop is structurally clean."
             </p>
             <div className="border-t border-border/60 pt-5">
               <MiniChart symbol="OANDA:XAUUSD" height={120} dateRange="1D" />
