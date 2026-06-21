@@ -35,11 +35,11 @@ const TICKER = [
 ];
 
 const COACHES = [
-  { initial: "A", name: "The Analyst", tag: "Wyckoff & structure first.", quote: "Show me the phase before you click buy." },
-  { initial: "S", name: "The Sniper", tag: "A+ setups only. Or nothing.", quote: "Patience is profit. Wait." },
-  { initial: "M", name: "The Mentor", tag: "The lesson is the trade.", quote: "What did you learn from the last loss?" },
-  { initial: "B", name: "The Beast", tag: "Press conviction. Hard.", quote: "You see it. Take it. NOW." },
-  { initial: "K", name: "The Monk", tag: "The market will be there.", quote: "Tomorrow is a new chart." },
+  { name: "The Analyst", tag: "Wyckoff & structure first.", quote: "Show me the phase before you click buy." },
+  { name: "The Sniper", tag: "A+ setups only. Or nothing.", quote: "Patience is profit. Wait." },
+  { name: "The Mentor", tag: "The lesson is the trade.", quote: "What did you learn from the last loss?" },
+  { name: "The Beast", tag: "Press conviction. Hard.", quote: "You see it. Take it. NOW." },
+  { name: "The Monk", tag: "The market will be there.", quote: "Tomorrow is a new chart." },
 ];
 
 const PRICING = [
@@ -281,9 +281,6 @@ function Landing() {
                 transition={{ duration: 0.4, delay: i * 0.06 }}
                 className="rounded-2xl border border-border bg-card/40 p-6 hover-lift"
               >
-                <div className="h-12 w-12 rounded-full border border-border bg-background flex items-center justify-center mb-6 font-display text-lg">
-                  {c.initial}
-                </div>
                 <h3 className="font-semibold text-lg">{c.name}</h3>
                 <div className="text-primary text-xs mt-1">{c.tag}</div>
                 <p className="text-xs text-muted-foreground mt-5">"{c.quote}"</p>
