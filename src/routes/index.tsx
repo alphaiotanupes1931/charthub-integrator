@@ -8,10 +8,10 @@ import { Search, TrendingUp } from "lucide-react";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Chartly — Live Trading Charts & Market Analysis" },
-      { name: "description", content: "View live stock, crypto, and forex charts with advanced technical analysis tools." },
-      { property: "og:title", content: "Chartly — Live Trading Charts" },
-      { property: "og:description", content: "Real-time market charts and analysis for traders." },
+      { title: "TradeMind — Live Trading Charts & Market Analysis" },
+      { name: "description", content: "Live stock, crypto, and forex charts with advanced technical analysis for retail day, swing, and prop traders." },
+      { property: "og:title", content: "TradeMind — Live Trading Charts" },
+      { property: "og:description", content: "AI-grade chart analysis and live market data for serious traders." },
     ],
   }),
   component: Index,
@@ -56,11 +56,14 @@ function Index() {
     <div className="min-h-screen flex flex-col bg-background">
       <header className="border-b border-border bg-card/40 backdrop-blur-sm">
         <div className="mx-auto flex max-w-[1600px] items-center gap-4 px-6 py-4">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <TrendingUp className="h-5 w-5" />
             </div>
-            <h1 className="text-xl font-bold tracking-tight">Chartly</h1>
+            <h1 className="text-xl font-bold tracking-tight">
+              <span className="text-foreground">Trade</span>
+              <span className="text-primary">Mind</span>
+            </h1>
           </div>
           <form onSubmit={handleSearch} className="ml-auto flex w-full max-w-md items-center gap-2">
             <div className="relative flex-1">
@@ -132,7 +135,7 @@ function Index() {
           </div>
 
           <p className="text-center text-xs text-muted-foreground">
-            Charts powered by TradingView. Data for informational purposes only — not financial advice.
+            Charts powered by TradingView · Built with Claude Code · Not financial advice
           </p>
         </main>
       </div>
