@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Calendar as CalIcon, BookOpen, MessageSquare, ChevronLeft, ChevronRight } from "lucide-react";
 
 export const Route = createFileRoute("/_app/journal")({
-  head: () => ({ meta: [{ title: "Trade Journal — TradeMind" }] }),
+  head: () => ({ meta: [{ title: "Trade Journal, TradeMind" }] }),
   component: JournalPage,
 });
 
@@ -32,7 +32,7 @@ function JournalPage() {
           <>
             Log every trade with your three trader inputs (entry-matched-plan, exit-matched-plan, P&L).
             The system grades your execution and behavior over time so you can see whether you're
-            actually improving — not just whether you got lucky.
+            actually improving, not just whether you got lucky.
           </>
         }
       />

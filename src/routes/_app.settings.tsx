@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 
 export const Route = createFileRoute("/_app/settings")({
-  head: () => ({ meta: [{ title: "Settings — TradeMind" }] }),
+  head: () => ({ meta: [{ title: "Settings, TradeMind" }] }),
   component: SettingsPage,
 });
 
@@ -194,7 +194,7 @@ function SettingsPage() {
               API Endpoint URL <span className="text-muted-foreground font-normal">(optional)</span>
             </FieldLabel>
             <Input placeholder="https://public-api.tradelocker.com" />
-            <p className="text-xs text-muted-foreground mt-1.5">Default: public-api.tradelocker.com — only change if needed</p>
+            <p className="text-xs text-muted-foreground mt-1.5">Default: public-api.tradelocker.com, only change if needed</p>
           </div>
         </div>
 
@@ -261,7 +261,7 @@ function SettingsPage() {
           })}
         </div>
         <p className="italic text-xs text-muted-foreground mt-5">
-          Strategy is the lens, not the law. No lens overrides Wyckoff grading — Sweep → BOS → Retest is always required for A+ entries.
+          Strategy is the lens, not the law. No lens overrides Wyckoff grading, Sweep → BOS → Retest is always required for A+ entries.
         </p>
       </Card>
 
@@ -343,11 +343,11 @@ function SettingsPage() {
           Drives the adaptive timeframe hierarchy and per-style risk multipliers. The chart TF auto-aligns when you change style.
         </p>
         <div className="grid grid-cols-2 gap-4">
-          <Select defaultValue="Intraday — hours">
-            <option>Scalp — minutes</option>
-            <option>Intraday — hours</option>
-            <option>Swing — days</option>
-            <option>Position — weeks</option>
+          <Select defaultValue="Intraday, hours">
+            <option>Scalp, minutes</option>
+            <option>Intraday, hours</option>
+            <option>Swing, days</option>
+            <option>Position, weeks</option>
           </Select>
           <Select defaultValue="">
             <option value="" disabled>Risk profile…</option>
