@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "motion/react";
-import { ArrowRight, Check, Square, Triangle, Circle, Star, Hash } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import { TickerTape } from "@/components/TickerTape";
 import { MiniChart, SymbolOverview } from "@/components/MiniChart";
 import { CandlestickScene } from "@/components/CandlestickScene";
