@@ -3,7 +3,8 @@ import { useState } from "react";
 import { TradingViewChart } from "@/components/TradingViewChart";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, TrendingUp } from "lucide-react";
+import { Search } from "lucide-react";
+import logoAsset from "@/assets/trademind-logo.png.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -56,14 +57,21 @@ function Index() {
     <div className="min-h-screen flex flex-col bg-background">
       <header className="border-b border-border bg-card/40 backdrop-blur-sm">
         <div className="mx-auto flex max-w-[1600px] items-center gap-4 px-6 py-4">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <TrendingUp className="h-5 w-5" />
+          <div className="flex items-center gap-3">
+            <img
+              src={logoAsset.url}
+              alt="TradeMind logo"
+              className="h-11 w-11 object-contain"
+            />
+            <div className="leading-tight">
+              <h1 className="text-lg font-bold tracking-wide">
+                <span className="text-foreground">TRADE</span>
+                <span className="text-primary"> MIND</span>
+              </h1>
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                AI Trading Coach
+              </p>
             </div>
-            <h1 className="text-xl font-bold tracking-tight">
-              <span className="text-foreground">Trade</span>
-              <span className="text-primary">Mind</span>
-            </h1>
           </div>
           <form onSubmit={handleSearch} className="ml-auto flex w-full max-w-md items-center gap-2">
             <div className="relative flex-1">
