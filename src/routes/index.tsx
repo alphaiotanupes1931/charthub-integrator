@@ -382,10 +382,10 @@ function Landing() {
 function Nav() {
   return (
     <header className="sticky top-0 z-40 backdrop-blur-xl bg-background/60 border-b border-border/40">
-      <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2.5">
-          <img src={logoAsset.url} alt="TradeMind" className="h-12 w-12 object-contain" />
-          <span className="font-display text-2xl font-semibold tracking-tight">TradeMind</span>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-3">
+        <Link to="/" className="flex items-center gap-2 min-w-0">
+          <img src={logoAsset.url} alt="TradeMind" className="h-9 w-9 sm:h-12 sm:w-12 object-contain shrink-0" />
+          <span className="font-display text-lg sm:text-2xl font-semibold tracking-tight truncate">TradeMind</span>
         </Link>
         <nav className="hidden md:flex items-center gap-10 text-sm">
           <a href="#product" className="hover:text-primary transition">Product</a>
@@ -394,7 +394,7 @@ function Nav() {
         </nav>
         <Link
           to="/dashboard"
-          className="rounded-full bg-foreground text-background px-5 py-2.5 text-sm font-semibold hover:scale-[1.02] transition"
+          className="rounded-full bg-foreground text-background px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold hover:scale-[1.02] transition shrink-0"
         >
           Get started
         </Link>
