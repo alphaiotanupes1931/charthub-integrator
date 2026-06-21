@@ -269,13 +269,13 @@ function Landing() {
 
 
       {/* COACHES */}
-      <section className="px-6 py-28 border-t border-border/60">
+      <section className="px-5 sm:px-6 py-16 sm:py-24 md:py-28 border-t border-border/60">
         <div className="max-w-6xl mx-auto">
           <SectionEyebrow>Five personalities</SectionEyebrow>
-          <h2 className="font-display text-4xl md:text-6xl font-medium text-center leading-tight">
+          <h2 className="font-display text-3xl sm:text-4xl md:text-6xl font-medium text-center leading-tight">
             Pick the coach that pushes you.
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mt-16">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mt-10 sm:mt-16">
             {COACHES.map((c, i) => (
               <motion.div
                 key={c.name}
@@ -283,11 +283,11 @@ function Landing() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: i * 0.06 }}
-                className="rounded-2xl border border-border bg-card/40 p-6 hover-lift"
+                className="rounded-2xl border border-border bg-card/40 p-5 sm:p-6 hover-lift"
               >
-                <h3 className="font-semibold text-lg">{c.name}</h3>
+                <h3 className="font-semibold text-base sm:text-lg">{c.name}</h3>
                 <div className="text-primary text-xs mt-1">{c.tag}</div>
-                <p className="text-xs text-muted-foreground mt-5">"{c.quote}"</p>
+                <p className="text-xs text-muted-foreground mt-4 sm:mt-5">"{c.quote}"</p>
               </motion.div>
             ))}
           </div>
@@ -295,14 +295,14 @@ function Landing() {
       </section>
 
       {/* PRICING */}
-      <section className="px-6 py-28 border-t border-border/60">
+      <section className="px-5 sm:px-6 py-16 sm:py-24 md:py-28 border-t border-border/60">
         <div className="max-w-6xl mx-auto">
-          <h2 className="font-display text-4xl md:text-6xl font-medium text-center leading-tight">
+          <h2 className="font-display text-3xl sm:text-4xl md:text-6xl font-medium text-center leading-tight">
             Choose your edge.
           </h2>
-          <p className="text-center text-muted-foreground mt-4">Start free. Upgrade when the trades pay for it.</p>
+          <p className="text-center text-sm sm:text-base text-muted-foreground mt-4">Start free. Upgrade when the trades pay for it.</p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-16 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 mt-10 sm:mt-16 items-start">
             {PRICING.map((p, i) => (
               <motion.div
                 key={p.name}
@@ -310,7 +310,7 @@ function Landing() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.08 }}
-                className={`relative rounded-3xl border p-8 ${
+                className={`relative rounded-3xl border p-6 sm:p-8 ${
                   p.popular
                     ? "border-primary/60 bg-card/60 shadow-gold md:-mt-6"
                     : "border-border bg-card/30"
@@ -322,14 +322,14 @@ function Landing() {
                   </div>
                 )}
                 <div className="text-muted-foreground text-sm">{p.name}</div>
-                <div className="mt-4 flex items-baseline gap-1">
+                <div className="mt-3 sm:mt-4 flex items-baseline gap-1">
                   <span className="text-2xl text-muted-foreground">$</span>
-                  <span className="font-display text-6xl font-medium">{p.price}</span>
+                  <span className="font-display text-5xl sm:text-6xl font-medium">{p.price}</span>
                   <span className="text-sm text-muted-foreground ml-1">/month</span>
                 </div>
                 <Link
                   to="/dashboard"
-                  className={`mt-8 block text-center rounded-full px-5 py-3 text-sm font-semibold transition ${
+                  className={`mt-6 sm:mt-8 block text-center rounded-full px-5 py-3 text-sm font-semibold transition ${
                     p.popular
                       ? "bg-primary text-primary-foreground hover:opacity-90"
                       : "bg-foreground text-background hover:opacity-90"
@@ -337,7 +337,7 @@ function Landing() {
                 >
                   Start free trial
                 </Link>
-                <ul className="mt-8 space-y-3 pt-6 border-t border-border/60">
+                <ul className="mt-6 sm:mt-8 space-y-3 pt-5 sm:pt-6 border-t border-border/60">
                   {p.features.map((f) => (
                     <li key={f} className="flex items-center gap-2.5 text-sm">
                       <Check className="size-4 text-emerald-400 shrink-0" />
@@ -352,18 +352,18 @@ function Landing() {
       </section>
 
       {/* FINAL CTA */}
-      <section className="relative px-6 py-32 border-t border-border/60">
+      <section className="relative px-5 sm:px-6 py-20 sm:py-28 md:py-32 border-t border-border/60">
         <div className="relative max-w-3xl mx-auto text-center">
-          <h2 className="font-display text-5xl md:text-7xl font-medium leading-[1.05]">
+          <h2 className="font-display text-4xl sm:text-5xl md:text-7xl font-medium leading-[1.05]">
             The next trade is yours
             <br />
             to <span className="text-primary">win.</span>
           </h2>
-          <p className="text-muted-foreground mt-6">Free for 7 days. Cancel anytime.</p>
-          <div className="mt-10">
+          <p className="text-sm sm:text-base text-muted-foreground mt-5 sm:mt-6">Free for 7 days. Cancel anytime.</p>
+          <div className="mt-8 sm:mt-10">
             <Link
               to="/dashboard"
-              className="group inline-flex items-center gap-2 rounded-full bg-foreground text-background px-8 py-4 text-sm font-semibold hover:scale-[1.02] transition"
+              className="group inline-flex items-center gap-2 rounded-full bg-foreground text-background px-7 sm:px-8 py-3.5 sm:py-4 text-sm font-semibold hover:scale-[1.02] transition"
             >
               Get started
               <ArrowRight className="size-4 group-hover:translate-x-0.5 transition" />
@@ -371,6 +371,7 @@ function Landing() {
           </div>
         </div>
       </section>
+
 
 
       <Footer />
