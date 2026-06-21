@@ -22,7 +22,14 @@ import {
 } from "lucide-react";
 import logoAsset from "@/assets/trademind-logo.png.asset.json";
 
-const NAV = [
+type NavItem = {
+  to: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  accent?: boolean;
+};
+
+const NAV: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/guide", label: "Guide", icon: BookOpen },
   { to: "/journal", label: "Trade Journal", icon: NotebookPen },
@@ -35,7 +42,7 @@ const NAV = [
   { to: "/settings", label: "Settings", icon: SettingsIcon },
   { to: "/mentor", label: "Coach Dashboard", icon: UserCog },
   { to: "/admin", label: "Admin", icon: ShieldCheck, accent: true },
-] as const;
+];
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);

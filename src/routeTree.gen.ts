@@ -9,38 +9,201 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppVoiceCoachRouteImport } from './routes/_app.voice-coach'
+import { Route as AppSystemStatusRouteImport } from './routes/_app.system-status'
+import { Route as AppStrategiesRouteImport } from './routes/_app.strategies'
+import { Route as AppSettingsRouteImport } from './routes/_app.settings'
+import { Route as AppMentorRouteImport } from './routes/_app.mentor'
+import { Route as AppMemoryRouteImport } from './routes/_app.memory'
+import { Route as AppJournalRouteImport } from './routes/_app.journal'
+import { Route as AppGuideRouteImport } from './routes/_app.guide'
+import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
+import { Route as AppCoachesRouteImport } from './routes/_app.coaches'
+import { Route as AppAnalyticsRouteImport } from './routes/_app.analytics'
+import { Route as AppAdminRouteImport } from './routes/_app.admin'
 
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppVoiceCoachRoute = AppVoiceCoachRouteImport.update({
+  id: '/voice-coach',
+  path: '/voice-coach',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSystemStatusRoute = AppSystemStatusRouteImport.update({
+  id: '/system-status',
+  path: '/system-status',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppStrategiesRoute = AppStrategiesRouteImport.update({
+  id: '/strategies',
+  path: '/strategies',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMentorRoute = AppMentorRouteImport.update({
+  id: '/mentor',
+  path: '/mentor',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMemoryRoute = AppMemoryRouteImport.update({
+  id: '/memory',
+  path: '/memory',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppJournalRoute = AppJournalRouteImport.update({
+  id: '/journal',
+  path: '/journal',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppGuideRoute = AppGuideRouteImport.update({
+  id: '/guide',
+  path: '/guide',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDashboardRoute = AppDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCoachesRoute = AppCoachesRouteImport.update({
+  id: '/coaches',
+  path: '/coaches',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAnalyticsRoute = AppAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminRoute = AppAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AppAdminRoute
+  '/analytics': typeof AppAnalyticsRoute
+  '/coaches': typeof AppCoachesRoute
+  '/dashboard': typeof AppDashboardRoute
+  '/guide': typeof AppGuideRoute
+  '/journal': typeof AppJournalRoute
+  '/memory': typeof AppMemoryRoute
+  '/mentor': typeof AppMentorRoute
+  '/settings': typeof AppSettingsRoute
+  '/strategies': typeof AppStrategiesRoute
+  '/system-status': typeof AppSystemStatusRoute
+  '/voice-coach': typeof AppVoiceCoachRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AppAdminRoute
+  '/analytics': typeof AppAnalyticsRoute
+  '/coaches': typeof AppCoachesRoute
+  '/dashboard': typeof AppDashboardRoute
+  '/guide': typeof AppGuideRoute
+  '/journal': typeof AppJournalRoute
+  '/memory': typeof AppMemoryRoute
+  '/mentor': typeof AppMentorRoute
+  '/settings': typeof AppSettingsRoute
+  '/strategies': typeof AppStrategiesRoute
+  '/system-status': typeof AppSystemStatusRoute
+  '/voice-coach': typeof AppVoiceCoachRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_app': typeof AppRouteWithChildren
+  '/_app/admin': typeof AppAdminRoute
+  '/_app/analytics': typeof AppAnalyticsRoute
+  '/_app/coaches': typeof AppCoachesRoute
+  '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/guide': typeof AppGuideRoute
+  '/_app/journal': typeof AppJournalRoute
+  '/_app/memory': typeof AppMemoryRoute
+  '/_app/mentor': typeof AppMentorRoute
+  '/_app/settings': typeof AppSettingsRoute
+  '/_app/strategies': typeof AppStrategiesRoute
+  '/_app/system-status': typeof AppSystemStatusRoute
+  '/_app/voice-coach': typeof AppVoiceCoachRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/analytics'
+    | '/coaches'
+    | '/dashboard'
+    | '/guide'
+    | '/journal'
+    | '/memory'
+    | '/mentor'
+    | '/settings'
+    | '/strategies'
+    | '/system-status'
+    | '/voice-coach'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/admin'
+    | '/analytics'
+    | '/coaches'
+    | '/dashboard'
+    | '/guide'
+    | '/journal'
+    | '/memory'
+    | '/mentor'
+    | '/settings'
+    | '/strategies'
+    | '/system-status'
+    | '/voice-coach'
+  id:
+    | '__root__'
+    | '/'
+    | '/_app'
+    | '/_app/admin'
+    | '/_app/analytics'
+    | '/_app/coaches'
+    | '/_app/dashboard'
+    | '/_app/guide'
+    | '/_app/journal'
+    | '/_app/memory'
+    | '/_app/mentor'
+    | '/_app/settings'
+    | '/_app/strategies'
+    | '/_app/system-status'
+    | '/_app/voice-coach'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +211,128 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/voice-coach': {
+      id: '/_app/voice-coach'
+      path: '/voice-coach'
+      fullPath: '/voice-coach'
+      preLoaderRoute: typeof AppVoiceCoachRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/system-status': {
+      id: '/_app/system-status'
+      path: '/system-status'
+      fullPath: '/system-status'
+      preLoaderRoute: typeof AppSystemStatusRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/strategies': {
+      id: '/_app/strategies'
+      path: '/strategies'
+      fullPath: '/strategies'
+      preLoaderRoute: typeof AppStrategiesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/settings': {
+      id: '/_app/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/mentor': {
+      id: '/_app/mentor'
+      path: '/mentor'
+      fullPath: '/mentor'
+      preLoaderRoute: typeof AppMentorRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/memory': {
+      id: '/_app/memory'
+      path: '/memory'
+      fullPath: '/memory'
+      preLoaderRoute: typeof AppMemoryRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/journal': {
+      id: '/_app/journal'
+      path: '/journal'
+      fullPath: '/journal'
+      preLoaderRoute: typeof AppJournalRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/guide': {
+      id: '/_app/guide'
+      path: '/guide'
+      fullPath: '/guide'
+      preLoaderRoute: typeof AppGuideRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/dashboard': {
+      id: '/_app/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/coaches': {
+      id: '/_app/coaches'
+      path: '/coaches'
+      fullPath: '/coaches'
+      preLoaderRoute: typeof AppCoachesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/analytics': {
+      id: '/_app/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AppAnalyticsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/admin': {
+      id: '/_app/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AppAdminRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
+interface AppRouteChildren {
+  AppAdminRoute: typeof AppAdminRoute
+  AppAnalyticsRoute: typeof AppAnalyticsRoute
+  AppCoachesRoute: typeof AppCoachesRoute
+  AppDashboardRoute: typeof AppDashboardRoute
+  AppGuideRoute: typeof AppGuideRoute
+  AppJournalRoute: typeof AppJournalRoute
+  AppMemoryRoute: typeof AppMemoryRoute
+  AppMentorRoute: typeof AppMentorRoute
+  AppSettingsRoute: typeof AppSettingsRoute
+  AppStrategiesRoute: typeof AppStrategiesRoute
+  AppSystemStatusRoute: typeof AppSystemStatusRoute
+  AppVoiceCoachRoute: typeof AppVoiceCoachRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppAdminRoute: AppAdminRoute,
+  AppAnalyticsRoute: AppAnalyticsRoute,
+  AppCoachesRoute: AppCoachesRoute,
+  AppDashboardRoute: AppDashboardRoute,
+  AppGuideRoute: AppGuideRoute,
+  AppJournalRoute: AppJournalRoute,
+  AppMemoryRoute: AppMemoryRoute,
+  AppMentorRoute: AppMentorRoute,
+  AppSettingsRoute: AppSettingsRoute,
+  AppStrategiesRoute: AppStrategiesRoute,
+  AppSystemStatusRoute: AppSystemStatusRoute,
+  AppVoiceCoachRoute: AppVoiceCoachRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
