@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/PageHeader";
 export const Route = createFileRoute("/_app/system-status")({
   head: () => ({ meta: [{ title: "System Status — TradeMind" }] }),
   component: () => (
-    <div className="p-8 max-w-[900px] mx-auto">
+    <div className="p-4 md:p-8 max-w-[900px] mx-auto">
       <PageHeader title="System Status" description="Live status of TradeMind services." />
       <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-6 text-sm">
         <div className="flex items-center gap-2 mb-1">

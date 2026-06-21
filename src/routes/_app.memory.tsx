@@ -9,7 +9,7 @@ export const Route = createFileRoute("/_app/memory")({
 
 function MemoryPage() {
   return (
-    <div className="p-8 max-w-[1400px] mx-auto">
+    <div className="p-4 md:p-8 max-w-[1400px] mx-auto">
       <PageHeader
         title="My Trading Memory"
         icon={<Brain className="h-9 w-9 text-primary" />}

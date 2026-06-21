@@ -24,7 +24,7 @@ function StrategiesPage() {
   );
 
   return (
-    <div className="p-8 max-w-[1400px] mx-auto">
+    <div className="p-4 md:p-8 max-w-[1400px] mx-auto">
       <PageHeader
         title="Strategy Library"
         description={
