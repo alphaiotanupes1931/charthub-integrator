@@ -88,8 +88,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", type: "image/png", href: "/__l5e/assets-v1/35a46767-cbd7-432e-92c6-df2940f9ba51/trademind-favicon.png" },
-      { rel: "apple-touch-icon", href: "/__l5e/assets-v1/35a46767-cbd7-432e-92c6-df2940f9ba51/trademind-favicon.png" },
+      { rel: "icon", type: "image/png", href: "/__l5e/assets-v1/1b10274c-a5e0-49d5-b7af-d7ec4b84a564/logo.png" },
+      { rel: "apple-touch-icon", href: "/__l5e/assets-v1/1b10274c-a5e0-49d5-b7af-d7ec4b84a564/logo.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" },

@@ -22,7 +22,7 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import logoAsset from "@/assets/trademind-logo.png.asset.json";
+import logoAsset from "@/assets/logo.png.asset.json";
 
 type NavItem = {
   to: string;
