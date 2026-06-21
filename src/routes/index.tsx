@@ -69,7 +69,7 @@ function Landing() {
       <Nav />
 
       {/* HERO */}
-      <section className="relative px-6 pt-20 pb-12">
+      <section className="relative px-5 sm:px-6 pt-12 sm:pt-20 pb-10 sm:pb-12">
         <div className="absolute inset-0 grid-bg opacity-50 pointer-events-none" />
         <div className="relative max-w-6xl mx-auto text-center">
           <motion.div
@@ -86,7 +86,7 @@ function Landing() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.05 }}
-            className="font-display mt-10 text-5xl md:text-7xl lg:text-8xl font-medium leading-[1.02] tracking-tight"
+            className="font-display mt-8 sm:mt-10 text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-medium leading-[1.05] tracking-tight"
           >
             Trade smarter.
             <br />
@@ -97,7 +97,7 @@ function Landing() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.25 }}
-            className="mt-8 text-base md:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed"
+            className="mt-6 sm:mt-8 text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed"
           >
             TradeMind is the first AI trading coach that grades every setup before you risk a dollar , 
             so you only take the trades that deserve to win.
@@ -107,7 +107,7 @@ function Landing() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="mt-10 flex flex-col items-center gap-5"
+            className="mt-8 sm:mt-10 flex flex-col items-center gap-5"
           >
             <Link
               to="/dashboard"
@@ -124,6 +124,7 @@ function Landing() {
           </motion.div>
         </div>
       </section>
+
 
       {/* LIVE CHART PREVIEW */}
       <section className="relative px-6 pb-16">
