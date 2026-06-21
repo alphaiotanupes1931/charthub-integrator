@@ -4,7 +4,7 @@ import { ArrowRight, Check } from "lucide-react";
 import { TickerTape } from "@/components/TickerTape";
 import { MiniChart, SymbolOverview } from "@/components/MiniChart";
 // 3D candlestick scene removed for a more legitimate platform aesthetic
-import logoAsset from "@/assets/trademind-logo.png.asset.json";
+import logoAsset from "@/assets/logo.png.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
