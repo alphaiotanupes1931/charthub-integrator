@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Bot, BarChart2, Target, GraduationCap, CheckCircle2, Volume2, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/_app/coaches")({
-  head: () => ({ meta: [{ title: "AI Coaches — TradeMind" }] }),
+  head: () => ({ meta: [{ title: "AI Coaches, TradeMind" }] }),
   component: CoachesPage,
 });
 
@@ -14,7 +14,7 @@ const COACHES = [
     icon: BarChart2,
     iconBg: "bg-blue-500/20 text-blue-300",
     description:
-      "Numbers don't lie. The Analyst breaks down your trading performance with surgical precision — win rates, R:R ratios, edge statistics, and pattern recognition across your data.",
+      "Numbers don't lie. The Analyst breaks down your trading performance with surgical precision, win rates, R:R ratios, edge statistics, and pattern recognition across your data.",
     tone: "Precise & Analytical",
     strengths: ["Statistical analysis", "Pattern recognition", "Performance metrics", "Edge calculation"],
     bestFor: "Data-oriented traders who want to optimize performance through numbers and statistics",

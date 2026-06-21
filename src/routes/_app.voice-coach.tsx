@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Mic, ChevronDown } from "lucide-react";
 
 export const Route = createFileRoute("/_app/voice-coach")({
-  head: () => ({ meta: [{ title: "Voice Coach — TradeMind" }] }),
+  head: () => ({ meta: [{ title: "Voice Coach, TradeMind" }] }),
   component: VoicePage,
 });
 
@@ -22,7 +22,7 @@ function VoicePage() {
         title="Voice Coach"
         description={
           <>
-            Talk to TradeMind out loud. Tap the mic to dictate a question, then hear the AI respond in your selected coach's voice. This is the audio side of the same coaching personality you picked under <span className="text-foreground font-semibold">AI Coaches</span> — it doesn't replace it.
+            Talk to TradeMind out loud. Tap the mic to dictate a question, then hear the AI respond in your selected coach's voice. This is the audio side of the same coaching personality you picked under <span className="text-foreground font-semibold">AI Coaches</span>, it doesn't replace it.
           </>
         }
       />

@@ -5,7 +5,7 @@ import { STRATEGIES, type Level } from "@/data/strategies";
 import { Search, Plus, ChevronDown, BarChart2, TrendingUp, CircleDot, Zap } from "lucide-react";
 
 export const Route = createFileRoute("/_app/strategies")({
-  head: () => ({ meta: [{ title: "Strategies — TradeMind" }] }),
+  head: () => ({ meta: [{ title: "Strategies, TradeMind" }] }),
   component: StrategiesPage,
 });
 
@@ -29,7 +29,7 @@ function StrategiesPage() {
         title="Strategy Library"
         description={
           <>
-            A <span className="text-foreground font-semibold">strategy</span> is your trading playbook — entry rules, exit rules, risk management, sessions. Pick one and TradeMind grades every <span className="text-foreground font-semibold">scan signal</span> against your chosen strategy's rules so you can see whether you're sticking to your plan or freelancing.
+            A <span className="text-foreground font-semibold">strategy</span> is your trading playbook, entry rules, exit rules, risk management, sessions. Pick one and TradeMind grades every <span className="text-foreground font-semibold">scan signal</span> against your chosen strategy's rules so you can see whether you're sticking to your plan or freelancing.
           </>
         }
         action={

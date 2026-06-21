@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader } from "@/components/PageHeader";
 
 export const Route = createFileRoute("/_app/system-status")({
-  head: () => ({ meta: [{ title: "System Status — TradeMind" }] }),
+  head: () => ({ meta: [{ title: "System Status, TradeMind" }] }),
   component: () => (
     <div className="p-4 md:p-8 max-w-[900px] mx-auto">
       <PageHeader title="System Status" description="Live status of TradeMind services." />

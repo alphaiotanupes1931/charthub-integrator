@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { BookOpen, Crosshair, NotebookPen, Brain, Mic } from "lucide-react";
 
 export const Route = createFileRoute("/_app/guide")({
-  head: () => ({ meta: [{ title: "Guide — TradeMind" }] }),
+  head: () => ({ meta: [{ title: "Guide, TradeMind" }] }),
   component: GuidePage,
 });
 
@@ -16,7 +16,7 @@ const STEPS = [
   {
     icon: NotebookPen,
     title: "Log every trade",
-    body: "Use the Trade Journal to record entries, exits, and P&L. We score execution and behavior — not just whether you got lucky.",
+    body: "Use the Trade Journal to record entries, exits, and P&L. We score execution and behavior, not just whether you got lucky.",
   },
   {
     icon: Brain,

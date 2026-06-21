@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { BarChart3, Bot, MessageSquare } from "lucide-react";
 
 export const Route = createFileRoute("/_app/analytics")({
-  head: () => ({ meta: [{ title: "Analytics — TradeMind" }] }),
+  head: () => ({ meta: [{ title: "Analytics, TradeMind" }] }),
   component: AnalyticsPage,
 });
 

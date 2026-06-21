@@ -19,7 +19,7 @@ import {
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({
     meta: [
-      { title: "Dashboard — TradeMind" },
+      { title: "Dashboard, TradeMind" },
       { name: "description", content: "Live chart, setup grading, and AI analysis for your active instrument." },
     ],
   }),
