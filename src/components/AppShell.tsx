@@ -115,9 +115,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {!collapsed && (
         <div className="px-3 pb-3 space-y-3 border-t border-border/60 pt-3">
-          <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
-            <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-primary/80">
-              <Sparkles className="h-3 w-3" /> AI Coach
+          <div className="rounded-xl border border-border bg-card p-3">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              Active Coach
             </div>
             <div className="flex items-center gap-2 mt-2">
               <div className="h-7 w-7 shrink-0 rounded-full bg-rose-300/70 flex items-center justify-center">
