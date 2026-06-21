@@ -3,7 +3,7 @@ import { motion } from "motion/react";
 import { ArrowRight, Check } from "lucide-react";
 import { TickerTape } from "@/components/TickerTape";
 import { MiniChart, SymbolOverview } from "@/components/MiniChart";
-import { CandlestickScene } from "@/components/CandlestickScene";
+// 3D candlestick scene removed for a more legitimate platform aesthetic
 import logoAsset from "@/assets/trademind-logo.png.asset.json";
 
 export const Route = createFileRoute("/")({
@@ -35,11 +35,11 @@ const TICKER = [
 ];
 
 const COACHES = [
-  { icon: Square, name: "The Analyst", tag: "Wyckoff & structure first.", quote: "Show me the phase before you click buy." },
-  { icon: Triangle, name: "The Sniper", tag: "A+ setups only. Or nothing.", quote: "Patience is profit. Wait." },
-  { icon: Circle, name: "The Mentor", tag: "The lesson is the trade.", quote: "What did you learn from the last loss?" },
-  { icon: Star, name: "The Beast", tag: "Press conviction. Hard.", quote: "You see it. Take it. NOW." },
-  { icon: Hash, name: "The Monk", tag: "The market will be there.", quote: "Tomorrow is a new chart." },
+  { initial: "A", name: "The Analyst", tag: "Wyckoff & structure first.", quote: "Show me the phase before you click buy." },
+  { initial: "S", name: "The Sniper", tag: "A+ setups only. Or nothing.", quote: "Patience is profit. Wait." },
+  { initial: "M", name: "The Mentor", tag: "The lesson is the trade.", quote: "What did you learn from the last loss?" },
+  { initial: "B", name: "The Beast", tag: "Press conviction. Hard.", quote: "You see it. Take it. NOW." },
+  { initial: "K", name: "The Monk", tag: "The market will be there.", quote: "Tomorrow is a new chart." },
 ];
 
 const PRICING = [
@@ -90,7 +90,7 @@ function Landing() {
           >
             Trade smarter.
             <br />
-            <span className="italic text-gold-gradient">Every single setup.</span>
+            <span className="text-primary">Every single setup.</span>
           </motion.h1>
 
           <motion.p
@@ -139,7 +139,7 @@ function Landing() {
                   <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse-gold" />
                   New signal
                 </div>
-                <div className="font-display text-7xl text-gold-gradient leading-none">A+</div>
+                <div className="font-display text-7xl text-primary leading-none">A+</div>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   Spring at recent low confirmed. Wait for retest before risking.
                 </p>
@@ -169,7 +169,7 @@ function Landing() {
         <div className="max-w-6xl mx-auto">
           <SectionEyebrow>How it works</SectionEyebrow>
           <h2 className="font-display text-4xl md:text-6xl font-medium text-center leading-tight">
-            Three steps. <span className="italic">Zero guesswork.</span>
+            Three steps. Zero guesswork.
           </h2>
           <p className="text-center text-muted-foreground mt-4 max-w-xl mx-auto">
             From chart to confident execution in under thirty seconds.
@@ -244,7 +244,7 @@ function Landing() {
               </div>
               <span className="font-mono text-muted-foreground">13:42:08</span>
             </div>
-            <div className="font-display text-8xl text-gold-gradient leading-none">A+</div>
+            <div className="font-display text-8xl text-primary leading-none">A+</div>
             <p className="text-sm leading-relaxed">
               "Spring at recent low confirmed. Phase D BOS on the 5m. Wait for the retest — your stop is structurally clean."
             </p>
@@ -272,26 +272,23 @@ function Landing() {
             Pick the coach that pushes you.
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mt-16">
-            {COACHES.map((c, i) => {
-              const Icon = c.icon;
-              return (
-                <motion.div
-                  key={c.name}
-                  initial={{ opacity: 0, y: 16 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: i * 0.06 }}
-                  className="rounded-2xl border border-border bg-card/40 p-6 hover-lift"
-                >
-                  <div className="h-14 w-14 rounded-full border border-border flex items-center justify-center mb-6">
-                    <Icon className="size-6 text-foreground/80" strokeWidth={1.4} />
-                  </div>
-                  <h3 className="font-semibold text-lg">{c.name}</h3>
-                  <div className="text-primary text-xs mt-1">{c.tag}</div>
-                  <p className="italic text-xs text-muted-foreground mt-5">"{c.quote}"</p>
-                </motion.div>
-              );
-            })}
+            {COACHES.map((c, i) => (
+              <motion.div
+                key={c.name}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: i * 0.06 }}
+                className="rounded-2xl border border-border bg-card/40 p-6 hover-lift"
+              >
+                <div className="h-12 w-12 rounded-full border border-border bg-background flex items-center justify-center mb-6 font-display text-lg">
+                  {c.initial}
+                </div>
+                <h3 className="font-semibold text-lg">{c.name}</h3>
+                <div className="text-primary text-xs mt-1">{c.tag}</div>
+                <p className="text-xs text-muted-foreground mt-5">"{c.quote}"</p>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
@@ -319,7 +316,7 @@ function Landing() {
                 }`}
               >
                 {p.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 rounded-full bg-gold-gradient px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-primary-foreground">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center rounded-full border border-primary/50 bg-background px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
                     Most popular
                   </div>
                 )}
@@ -333,7 +330,7 @@ function Landing() {
                   to="/dashboard"
                   className={`mt-8 block text-center rounded-full px-5 py-3 text-sm font-semibold transition ${
                     p.popular
-                      ? "bg-gold-gradient text-primary-foreground hover:opacity-90"
+                      ? "bg-primary text-primary-foreground hover:opacity-90"
                       : "bg-foreground text-background hover:opacity-90"
                   }`}
                 >
@@ -353,22 +350,19 @@ function Landing() {
         </div>
       </section>
 
-      {/* 3D SCENE / FINAL CTA */}
-      <section className="relative px-6 py-32 border-t border-border/60 overflow-hidden">
-        <div className="absolute inset-0 opacity-50 pointer-events-none">
-          <CandlestickScene className="w-full h-full" />
-        </div>
+      {/* FINAL CTA */}
+      <section className="relative px-6 py-32 border-t border-border/60">
         <div className="relative max-w-3xl mx-auto text-center">
           <h2 className="font-display text-5xl md:text-7xl font-medium leading-[1.05]">
             The next trade is yours
             <br />
-            to <span className="italic text-gold-gradient">win.</span>
+            to <span className="text-primary">win.</span>
           </h2>
           <p className="text-muted-foreground mt-6">Free for 7 days. Cancel anytime.</p>
           <div className="mt-10">
             <Link
               to="/dashboard"
-              className="group inline-flex items-center gap-2 rounded-full bg-gold-gradient text-primary-foreground px-8 py-4 text-sm font-bold shadow-gold hover:scale-[1.02] transition"
+              className="group inline-flex items-center gap-2 rounded-full bg-foreground text-background px-8 py-4 text-sm font-semibold hover:scale-[1.02] transition"
             >
               Get started
               <ArrowRight className="size-4 group-hover:translate-x-0.5 transition" />
@@ -376,6 +370,7 @@ function Landing() {
           </div>
         </div>
       </section>
+
 
       <Footer />
     </div>
