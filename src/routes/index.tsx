@@ -379,7 +379,7 @@ function Nav() {
     <header className="sticky top-0 z-40 backdrop-blur-xl bg-background/60 border-b border-border/40">
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5">
-          <img src={logoAsset.url} alt="TradeMind" className="h-9 w-9 object-contain" />
+          <img src={logoAsset.url} alt="TradeMind" className="h-12 w-12 object-contain" />
           <span className="font-display text-2xl font-semibold tracking-tight">TradeMind</span>
         </Link>
         <nav className="hidden md:flex items-center gap-10 text-sm">
@@ -409,7 +409,7 @@ function Footer() {
     <footer className="border-t border-border/60 px-6 py-20 bg-card/20">
       <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-10">
         <div className="col-span-2 md:col-span-1">
-          <img src={logoAsset.url} alt="TradeMind" className="h-12 w-12 object-contain mb-4" />
+          <img src={logoAsset.url} alt="TradeMind" className="h-16 w-16 object-contain mb-4" />
           <p className="text-sm text-muted-foreground max-w-[200px] leading-relaxed">
             The first AI trading coach. Built for serious day traders, prop traders, and swing traders.
           </p>
