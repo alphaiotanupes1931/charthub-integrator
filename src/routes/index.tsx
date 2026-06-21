@@ -214,18 +214,18 @@ function Landing() {
 
 
       {/* GRADING SECTION */}
-      <section className="px-6 py-28 border-t border-border/60">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      <section className="px-5 sm:px-6 py-16 sm:py-24 md:py-28 border-t border-border/60">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 sm:gap-12 lg:gap-16 items-center">
           <div>
             <SectionEyebrow align="left">Signal grading</SectionEyebrow>
-            <h2 className="font-display text-4xl md:text-6xl font-medium leading-[1.05] tracking-tight">
+            <h2 className="font-display text-3xl sm:text-4xl md:text-6xl font-medium leading-[1.05] tracking-tight">
               Grade every setup before you fire.
             </h2>
-            <p className="text-muted-foreground mt-6 leading-relaxed max-w-md">
+            <p className="text-sm sm:text-base text-muted-foreground mt-5 sm:mt-6 leading-relaxed max-w-md">
               Each TradeMind signal is graded on six dimensions, structure, momentum, risk, confluence,
               session, and your personal track record. Only A and A+ deserve real risk.
             </p>
-            <div className="grid grid-cols-4 gap-3 mt-10 max-w-md">
+            <div className="grid grid-cols-4 gap-2 sm:gap-3 mt-8 sm:mt-10 max-w-md">
               <GradeChip grade="A+" color="text-primary" border="border-primary/50" label="Take it" />
               <GradeChip grade="A" color="text-emerald-400" border="border-emerald-500/40" label="Strong" />
               <GradeChip grade="B" color="text-foreground/80" border="border-border" label="Optional" />
@@ -238,20 +238,20 @@ function Landing() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="rounded-2xl glass-strong p-8 space-y-6"
+            className="rounded-2xl glass-strong p-6 sm:p-8 space-y-5 sm:space-y-6"
           >
-            <div className="flex items-center justify-between text-xs">
-              <div className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 font-semibold uppercase tracking-[0.18em] text-primary">
+            <div className="flex items-center justify-between gap-2 text-xs">
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 font-semibold uppercase tracking-[0.16em] text-primary text-[10px] sm:text-xs">
                 <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse-gold" />
-                Signal · Long · XAU/USD
+                Long · XAU/USD
               </div>
-              <span className="font-mono text-muted-foreground">13:42:08</span>
+              <span className="font-mono text-muted-foreground shrink-0">13:42:08</span>
             </div>
-            <div className="font-display text-8xl text-primary leading-none">A+</div>
+            <div className="font-display text-6xl sm:text-7xl md:text-8xl text-primary leading-none">A+</div>
             <p className="text-sm leading-relaxed">
               "Spring at recent low confirmed. Phase D BOS on the 5m. Wait for the retest, your stop is structurally clean."
             </p>
-            <div className="border-t border-border/60 pt-5">
+            <div className="border-t border-border/60 pt-4 sm:pt-5">
               <MiniChart symbol="OANDA:XAUUSD" height={120} dateRange="1D" />
             </div>
             <div>
@@ -266,6 +266,7 @@ function Landing() {
           </motion.div>
         </div>
       </section>
+
 
       {/* COACHES */}
       <section className="px-6 py-28 border-t border-border/60">
