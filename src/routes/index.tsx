@@ -69,7 +69,7 @@ function Landing() {
       <Nav />
 
       {/* HERO */}
-      <section className="relative px-6 pt-20 pb-12">
+      <section className="relative px-5 sm:px-6 pt-12 sm:pt-20 pb-10 sm:pb-12">
         <div className="absolute inset-0 grid-bg opacity-50 pointer-events-none" />
         <div className="relative max-w-6xl mx-auto text-center">
           <motion.div
@@ -86,7 +86,7 @@ function Landing() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.05 }}
-            className="font-display mt-10 text-5xl md:text-7xl lg:text-8xl font-medium leading-[1.02] tracking-tight"
+            className="font-display mt-8 sm:mt-10 text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-medium leading-[1.05] tracking-tight"
           >
             Trade smarter.
             <br />
@@ -97,7 +97,7 @@ function Landing() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.25 }}
-            className="mt-8 text-base md:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed"
+            className="mt-6 sm:mt-8 text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed"
           >
             TradeMind is the first AI trading coach that grades every setup before you risk a dollar , 
             so you only take the trades that deserve to win.
@@ -107,7 +107,7 @@ function Landing() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="mt-10 flex flex-col items-center gap-5"
+            className="mt-8 sm:mt-10 flex flex-col items-center gap-5"
           >
             <Link
               to="/dashboard"
@@ -125,21 +125,22 @@ function Landing() {
         </div>
       </section>
 
+
       {/* LIVE CHART PREVIEW */}
-      <section className="relative px-6 pb-16">
+      <section className="relative px-4 sm:px-6 pb-12 sm:pb-16">
         <div className="max-w-6xl mx-auto">
           <BrowserFrame url="trademindaicoach.com/dashboard">
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-5 sm:gap-6 p-4 sm:p-6">
               <div>
                 <div className="text-sm text-muted-foreground mb-1">XAU/USD · Gold Spot</div>
-                <SymbolOverview symbol="OANDA:XAUUSD" height={420} />
+                <SymbolOverview symbol="OANDA:XAUUSD" height={320} />
               </div>
-              <aside className="space-y-5">
+              <aside className="space-y-4 sm:space-y-5">
                 <div className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
                   <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse-gold" />
                   New signal
                 </div>
-                <div className="font-display text-7xl text-primary leading-none">A+</div>
+                <div className="font-display text-6xl sm:text-7xl text-primary leading-none">A+</div>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   Spring at recent low confirmed. Wait for retest before risking.
                 </p>
@@ -159,23 +160,24 @@ function Landing() {
         </div>
       </section>
 
+
       {/* TICKER */}
       <div className="border-y border-border/60 bg-card/30 backdrop-blur">
         <TickerTape symbols={TICKER} />
       </div>
 
       {/* HOW IT WORKS */}
-      <section className="px-6 py-28">
+      <section className="px-5 sm:px-6 py-16 sm:py-24 md:py-28">
         <div className="max-w-6xl mx-auto">
           <SectionEyebrow>How it works</SectionEyebrow>
-          <h2 className="font-display text-4xl md:text-6xl font-medium text-center leading-tight">
+          <h2 className="font-display text-3xl sm:text-4xl md:text-6xl font-medium text-center leading-tight">
             Three steps. Zero guesswork.
           </h2>
-          <p className="text-center text-muted-foreground mt-4 max-w-xl mx-auto">
+          <p className="text-center text-sm sm:text-base text-muted-foreground mt-4 max-w-xl mx-auto px-2">
             From chart to confident execution in under thirty seconds.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-16">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 mt-10 sm:mt-16">
             {[
               {
                 step: "Step 01",
@@ -199,30 +201,31 @@ function Landing() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-80px" }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="rounded-2xl border border-border bg-card/40 p-8 hover-lift"
+                className="rounded-2xl border border-border bg-card/40 p-6 sm:p-8 hover-lift"
               >
                 <div className="font-mono text-xs uppercase tracking-[0.2em] text-primary">{s.step}</div>
-                <h3 className="font-display text-2xl md:text-3xl mt-5">{s.title}</h3>
-                <p className="text-sm text-muted-foreground mt-4 leading-relaxed">{s.body}</p>
+                <h3 className="font-display text-xl sm:text-2xl md:text-3xl mt-4 sm:mt-5">{s.title}</h3>
+                <p className="text-sm text-muted-foreground mt-3 sm:mt-4 leading-relaxed">{s.body}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
+
       {/* GRADING SECTION */}
-      <section className="px-6 py-28 border-t border-border/60">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      <section className="px-5 sm:px-6 py-16 sm:py-24 md:py-28 border-t border-border/60">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 sm:gap-12 lg:gap-16 items-center">
           <div>
             <SectionEyebrow align="left">Signal grading</SectionEyebrow>
-            <h2 className="font-display text-4xl md:text-6xl font-medium leading-[1.05] tracking-tight">
+            <h2 className="font-display text-3xl sm:text-4xl md:text-6xl font-medium leading-[1.05] tracking-tight">
               Grade every setup before you fire.
             </h2>
-            <p className="text-muted-foreground mt-6 leading-relaxed max-w-md">
+            <p className="text-sm sm:text-base text-muted-foreground mt-5 sm:mt-6 leading-relaxed max-w-md">
               Each TradeMind signal is graded on six dimensions, structure, momentum, risk, confluence,
               session, and your personal track record. Only A and A+ deserve real risk.
             </p>
-            <div className="grid grid-cols-4 gap-3 mt-10 max-w-md">
+            <div className="grid grid-cols-4 gap-2 sm:gap-3 mt-8 sm:mt-10 max-w-md">
               <GradeChip grade="A+" color="text-primary" border="border-primary/50" label="Take it" />
               <GradeChip grade="A" color="text-emerald-400" border="border-emerald-500/40" label="Strong" />
               <GradeChip grade="B" color="text-foreground/80" border="border-border" label="Optional" />
@@ -235,20 +238,20 @@ function Landing() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="rounded-2xl glass-strong p-8 space-y-6"
+            className="rounded-2xl glass-strong p-6 sm:p-8 space-y-5 sm:space-y-6"
           >
-            <div className="flex items-center justify-between text-xs">
-              <div className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 font-semibold uppercase tracking-[0.18em] text-primary">
+            <div className="flex items-center justify-between gap-2 text-xs">
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 font-semibold uppercase tracking-[0.16em] text-primary text-[10px] sm:text-xs">
                 <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse-gold" />
-                Signal · Long · XAU/USD
+                Long · XAU/USD
               </div>
-              <span className="font-mono text-muted-foreground">13:42:08</span>
+              <span className="font-mono text-muted-foreground shrink-0">13:42:08</span>
             </div>
-            <div className="font-display text-8xl text-primary leading-none">A+</div>
+            <div className="font-display text-6xl sm:text-7xl md:text-8xl text-primary leading-none">A+</div>
             <p className="text-sm leading-relaxed">
               "Spring at recent low confirmed. Phase D BOS on the 5m. Wait for the retest, your stop is structurally clean."
             </p>
-            <div className="border-t border-border/60 pt-5">
+            <div className="border-t border-border/60 pt-4 sm:pt-5">
               <MiniChart symbol="OANDA:XAUUSD" height={120} dateRange="1D" />
             </div>
             <div>
@@ -264,14 +267,15 @@ function Landing() {
         </div>
       </section>
 
+
       {/* COACHES */}
-      <section className="px-6 py-28 border-t border-border/60">
+      <section className="px-5 sm:px-6 py-16 sm:py-24 md:py-28 border-t border-border/60">
         <div className="max-w-6xl mx-auto">
           <SectionEyebrow>Five personalities</SectionEyebrow>
-          <h2 className="font-display text-4xl md:text-6xl font-medium text-center leading-tight">
+          <h2 className="font-display text-3xl sm:text-4xl md:text-6xl font-medium text-center leading-tight">
             Pick the coach that pushes you.
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mt-16">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mt-10 sm:mt-16">
             {COACHES.map((c, i) => (
               <motion.div
                 key={c.name}
@@ -279,11 +283,11 @@ function Landing() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: i * 0.06 }}
-                className="rounded-2xl border border-border bg-card/40 p-6 hover-lift"
+                className="rounded-2xl border border-border bg-card/40 p-5 sm:p-6 hover-lift"
               >
-                <h3 className="font-semibold text-lg">{c.name}</h3>
+                <h3 className="font-semibold text-base sm:text-lg">{c.name}</h3>
                 <div className="text-primary text-xs mt-1">{c.tag}</div>
-                <p className="text-xs text-muted-foreground mt-5">"{c.quote}"</p>
+                <p className="text-xs text-muted-foreground mt-4 sm:mt-5">"{c.quote}"</p>
               </motion.div>
             ))}
           </div>
@@ -291,14 +295,14 @@ function Landing() {
       </section>
 
       {/* PRICING */}
-      <section className="px-6 py-28 border-t border-border/60">
+      <section className="px-5 sm:px-6 py-16 sm:py-24 md:py-28 border-t border-border/60">
         <div className="max-w-6xl mx-auto">
-          <h2 className="font-display text-4xl md:text-6xl font-medium text-center leading-tight">
+          <h2 className="font-display text-3xl sm:text-4xl md:text-6xl font-medium text-center leading-tight">
             Choose your edge.
           </h2>
-          <p className="text-center text-muted-foreground mt-4">Start free. Upgrade when the trades pay for it.</p>
+          <p className="text-center text-sm sm:text-base text-muted-foreground mt-4">Start free. Upgrade when the trades pay for it.</p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-16 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 mt-10 sm:mt-16 items-start">
             {PRICING.map((p, i) => (
               <motion.div
                 key={p.name}
@@ -306,7 +310,7 @@ function Landing() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.08 }}
-                className={`relative rounded-3xl border p-8 ${
+                className={`relative rounded-3xl border p-6 sm:p-8 ${
                   p.popular
                     ? "border-primary/60 bg-card/60 shadow-gold md:-mt-6"
                     : "border-border bg-card/30"
@@ -318,14 +322,14 @@ function Landing() {
                   </div>
                 )}
                 <div className="text-muted-foreground text-sm">{p.name}</div>
-                <div className="mt-4 flex items-baseline gap-1">
+                <div className="mt-3 sm:mt-4 flex items-baseline gap-1">
                   <span className="text-2xl text-muted-foreground">$</span>
-                  <span className="font-display text-6xl font-medium">{p.price}</span>
+                  <span className="font-display text-5xl sm:text-6xl font-medium">{p.price}</span>
                   <span className="text-sm text-muted-foreground ml-1">/month</span>
                 </div>
                 <Link
                   to="/dashboard"
-                  className={`mt-8 block text-center rounded-full px-5 py-3 text-sm font-semibold transition ${
+                  className={`mt-6 sm:mt-8 block text-center rounded-full px-5 py-3 text-sm font-semibold transition ${
                     p.popular
                       ? "bg-primary text-primary-foreground hover:opacity-90"
                       : "bg-foreground text-background hover:opacity-90"
@@ -333,7 +337,7 @@ function Landing() {
                 >
                   Start free trial
                 </Link>
-                <ul className="mt-8 space-y-3 pt-6 border-t border-border/60">
+                <ul className="mt-6 sm:mt-8 space-y-3 pt-5 sm:pt-6 border-t border-border/60">
                   {p.features.map((f) => (
                     <li key={f} className="flex items-center gap-2.5 text-sm">
                       <Check className="size-4 text-emerald-400 shrink-0" />
@@ -348,18 +352,18 @@ function Landing() {
       </section>
 
       {/* FINAL CTA */}
-      <section className="relative px-6 py-32 border-t border-border/60">
+      <section className="relative px-5 sm:px-6 py-20 sm:py-28 md:py-32 border-t border-border/60">
         <div className="relative max-w-3xl mx-auto text-center">
-          <h2 className="font-display text-5xl md:text-7xl font-medium leading-[1.05]">
+          <h2 className="font-display text-4xl sm:text-5xl md:text-7xl font-medium leading-[1.05]">
             The next trade is yours
             <br />
             to <span className="text-primary">win.</span>
           </h2>
-          <p className="text-muted-foreground mt-6">Free for 7 days. Cancel anytime.</p>
-          <div className="mt-10">
+          <p className="text-sm sm:text-base text-muted-foreground mt-5 sm:mt-6">Free for 7 days. Cancel anytime.</p>
+          <div className="mt-8 sm:mt-10">
             <Link
               to="/dashboard"
-              className="group inline-flex items-center gap-2 rounded-full bg-foreground text-background px-8 py-4 text-sm font-semibold hover:scale-[1.02] transition"
+              className="group inline-flex items-center gap-2 rounded-full bg-foreground text-background px-7 sm:px-8 py-3.5 sm:py-4 text-sm font-semibold hover:scale-[1.02] transition"
             >
               Get started
               <ArrowRight className="size-4 group-hover:translate-x-0.5 transition" />
@@ -367,6 +371,7 @@ function Landing() {
           </div>
         </div>
       </section>
+
 
 
       <Footer />
@@ -377,10 +382,10 @@ function Landing() {
 function Nav() {
   return (
     <header className="sticky top-0 z-40 backdrop-blur-xl bg-background/60 border-b border-border/40">
-      <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2.5">
-          <img src={logoAsset.url} alt="TradeMind" className="h-12 w-12 object-contain" />
-          <span className="font-display text-2xl font-semibold tracking-tight">TradeMind</span>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-3">
+        <Link to="/" className="flex items-center gap-2 min-w-0">
+          <img src={logoAsset.url} alt="TradeMind" className="h-9 w-9 sm:h-12 sm:w-12 object-contain shrink-0" />
+          <span className="font-display text-lg sm:text-2xl font-semibold tracking-tight truncate">TradeMind</span>
         </Link>
         <nav className="hidden md:flex items-center gap-10 text-sm">
           <a href="#product" className="hover:text-primary transition">Product</a>
@@ -389,7 +394,7 @@ function Nav() {
         </nav>
         <Link
           to="/dashboard"
-          className="rounded-full bg-foreground text-background px-5 py-2.5 text-sm font-semibold hover:scale-[1.02] transition"
+          className="rounded-full bg-foreground text-background px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold hover:scale-[1.02] transition shrink-0"
         >
           Get started
         </Link>
@@ -438,17 +443,17 @@ function Footer() {
     },
   ];
   return (
-    <footer className="border-t border-border/60 px-6 py-20 bg-card/20">
-      <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-10">
+    <footer className="border-t border-border/60 px-5 sm:px-6 py-14 sm:py-20 bg-card/20">
+      <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-8 sm:gap-10">
         <div className="col-span-2 md:col-span-1">
-          <img src={logoAsset.url} alt="TradeMind" className="h-16 w-16 object-contain mb-4" />
-          <p className="text-sm text-muted-foreground max-w-[200px] leading-relaxed">
+          <img src={logoAsset.url} alt="TradeMind" className="h-14 w-14 sm:h-16 sm:w-16 object-contain mb-3 sm:mb-4" />
+          <p className="text-sm text-muted-foreground max-w-[240px] leading-relaxed">
             The first AI trading coach. Built for serious day traders, prop traders, and swing traders.
           </p>
         </div>
         {cols.map((c) => (
           <div key={c.title}>
-            <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-3 sm:mb-4">
               {c.title}
             </div>
             <ul className="space-y-2.5">
@@ -461,7 +466,7 @@ function Footer() {
           </div>
         ))}
       </div>
-      <div className="max-w-7xl mx-auto mt-16 pt-8 border-t border-border/60 text-xs text-muted-foreground">
+      <div className="max-w-7xl mx-auto mt-10 sm:mt-16 pt-6 sm:pt-8 border-t border-border/60 text-xs text-muted-foreground">
         © {new Date().getFullYear()} TradeMind. Educational analysis only, not financial advice.
       </div>
     </footer>
