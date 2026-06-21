@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { TradingViewChart } from "@/components/TradingViewChart";
+import { CandlestickScene } from "@/components/CandlestickScene";
+import { MotionPage, MotionStagger } from "@/components/MotionPage";
 import {
   Crosshair,
   Bell,
