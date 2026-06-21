@@ -443,17 +443,17 @@ function Footer() {
     },
   ];
   return (
-    <footer className="border-t border-border/60 px-6 py-20 bg-card/20">
-      <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-10">
+    <footer className="border-t border-border/60 px-5 sm:px-6 py-14 sm:py-20 bg-card/20">
+      <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-8 sm:gap-10">
         <div className="col-span-2 md:col-span-1">
-          <img src={logoAsset.url} alt="TradeMind" className="h-16 w-16 object-contain mb-4" />
-          <p className="text-sm text-muted-foreground max-w-[200px] leading-relaxed">
+          <img src={logoAsset.url} alt="TradeMind" className="h-14 w-14 sm:h-16 sm:w-16 object-contain mb-3 sm:mb-4" />
+          <p className="text-sm text-muted-foreground max-w-[240px] leading-relaxed">
             The first AI trading coach. Built for serious day traders, prop traders, and swing traders.
           </p>
         </div>
         {cols.map((c) => (
           <div key={c.title}>
-            <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-3 sm:mb-4">
               {c.title}
             </div>
             <ul className="space-y-2.5">
@@ -466,7 +466,7 @@ function Footer() {
           </div>
         ))}
       </div>
-      <div className="max-w-7xl mx-auto mt-16 pt-8 border-t border-border/60 text-xs text-muted-foreground">
+      <div className="max-w-7xl mx-auto mt-10 sm:mt-16 pt-6 sm:pt-8 border-t border-border/60 text-xs text-muted-foreground">
         © {new Date().getFullYear()} TradeMind. Educational analysis only, not financial advice.
       </div>
     </footer>
