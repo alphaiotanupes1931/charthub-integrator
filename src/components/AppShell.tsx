@@ -23,6 +23,7 @@ import {
   X,
 } from "lucide-react";
 import logoAsset from "@/assets/logo.png.asset.json";
+import { Tutorial } from "@/components/Tutorial";
 
 type NavItem = {
   to: string;
@@ -204,6 +205,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           Educational analysis only, not financial advice.
         </footer>
       </div>
+      <Tutorial />
     </div>
   );
 }
