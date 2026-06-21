@@ -115,7 +115,8 @@ function Dashboard() {
               <Sparkles className="h-3.5 w-3.5 text-primary" /> Wyckoff Core <ChevronDown className="h-3 w-3" />
             </button>
             <button className="flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-xs">
-              🧠 The Analyst <ChevronDown className="h-3 w-3" />
+              <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-primary/15 text-[10px] font-semibold text-primary">A</span>
+              The Analyst <ChevronDown className="h-3 w-3" />
             </button>
           </div>
         </div>
