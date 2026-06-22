@@ -73,12 +73,12 @@ const gradeColor: Record<ScanResult["grade"], string> = {
   "NO ENTRY": "text-destructive",
 };
 
-const ALL_LEVELS: LevelKey[] = ["VWAP","POC","SR","ZONES","FVG","FIB","LIQ"];
+const ALL_LEVELS: LevelKey[] = ["VWAP","POC","SR","ZONES","FVG","FIB","LIQ","OF"];
 
-const STORAGE_KEY = "trademind.levels.enabled.v1";
+const STORAGE_KEY = "trademind.levels.enabled.v2";
 
 function loadLevels(): Record<LevelKey, boolean> {
-  const def: Record<LevelKey, boolean> = { VWAP: true, POC: true, SR: true, ZONES: true, FVG: true, FIB: false, LIQ: true };
+  const def: Record<LevelKey, boolean> = { VWAP: true, POC: true, SR: true, ZONES: true, FVG: true, FIB: false, LIQ: true, OF: true };
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return def;
