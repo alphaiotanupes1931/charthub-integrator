@@ -539,6 +539,47 @@ function TradeFormModal({
             />
           </Field>
 
+          <Field label="Chart screenshot (stays on this device)">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => { void handlePickFile(e.target.files?.[0]); e.target.value = ""; }}
+            />
+            {imageUrl ? (
+              <div className="relative rounded-md border border-border overflow-hidden bg-background">
+                <img src={imageUrl} alt="Trade screenshot" className="w-full max-h-72 object-contain" />
+                <div className="absolute top-2 right-2 flex gap-1">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="rounded bg-background/80 backdrop-blur px-2 py-1 text-[10px] font-medium border border-border hover:bg-accent"
+                  >
+                    Replace
+                  </button>
+                  <button
+                    type="button"
+                    onClick={clearImage}
+                    className="rounded bg-background/80 backdrop-blur px-2 py-1 text-[10px] font-medium border border-border text-destructive hover:bg-destructive/10"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full rounded-md border border-dashed border-border bg-background/40 px-3 py-6 text-sm text-muted-foreground hover:border-primary/40 hover:text-foreground transition flex flex-col items-center gap-1.5"
+              >
+                <Upload className="h-4 w-4" />
+                <span>Upload screenshot or paste from clipboard</span>
+                <span className="text-[10px]">Stored only on your device — never uploaded to our servers</span>
+              </button>
+            )}
+          </Field>
+
           <div className="rounded-lg border border-border bg-background/50 p-3 grid grid-cols-2 gap-3 text-sm">
             <div>
               <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">P&amp;L</div>
