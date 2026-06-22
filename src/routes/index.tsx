@@ -473,12 +473,48 @@ function Nav() {
           <a href="#coaches" className="hover:text-primary transition">Coaches</a>
           <Link to="/faq" className="hover:text-primary transition">FAQ</Link>
         </nav>
-        <Link
-          to="/dashboard"
-          className="rounded-full bg-foreground text-background px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold hover:scale-[1.02] transition shrink-0"
-        >
-          Get started
-        </Link>
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <Sheet>
+            <SheetTrigger asChild>
+              <button
+                className="sm:hidden inline-flex items-center justify-center rounded-full border border-border bg-card/60 p-2 text-foreground hover:bg-card transition"
+                aria-label="Open menu"
+              >
+                <Menu className="size-5" />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[280px] bg-background/95 border-border p-6">
+              <div className="flex flex-col gap-6 mt-10">
+                <SheetClose asChild>
+                  <a href="#product" className="text-lg font-medium hover:text-primary transition">Product</a>
+                </SheetClose>
+                <SheetClose asChild>
+                  <a href="#pricing" className="text-lg font-medium hover:text-primary transition">Pricing</a>
+                </SheetClose>
+                <SheetClose asChild>
+                  <a href="#coaches" className="text-lg font-medium hover:text-primary transition">Coaches</a>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link to="/faq" className="text-lg font-medium hover:text-primary transition">FAQ</Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link
+                    to="/dashboard"
+                    className="mt-4 inline-flex items-center justify-center rounded-full bg-foreground text-background px-5 py-3 text-sm font-semibold hover:scale-[1.02] transition"
+                  >
+                    Get started
+                  </Link>
+                </SheetClose>
+              </div>
+            </SheetContent>
+          </Sheet>
+          <Link
+            to="/dashboard"
+            className="hidden sm:inline-flex rounded-full bg-foreground text-background px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold hover:scale-[1.02] transition"
+          >
+            Get started
+          </Link>
+        </div>
       </div>
     </header>
   );
