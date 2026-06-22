@@ -313,7 +313,7 @@ function Dashboard() {
           {chartMode === "live" ? (
             <TradingViewChart symbol={symbol.tv} interval={interval} enabled={levels} />
           ) : (
-            <NativeChart symbol={symbol.tv} ticker={symbol.ticker} interval={interval} enabled={levels} sessions={sessionsOn} />
+            <NativeChart symbol={symbol.tv} ticker={symbol.ticker} interval={interval} enabled={levels} sessions={sessionsOn} onSnapshot={setSnapshot} />
           )}
         </div>
 
