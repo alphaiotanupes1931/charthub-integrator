@@ -228,7 +228,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, class
   const [bands, setBands] = useState<Array<{ key: string; color: string; label: string; left: number; width: number; idx: number }>>([]);
 
   const fetchOhlc = useServerFn(getOhlc);
-  const { data: liveOhlc } = useQuery({
+  const { data: liveOhlc, isLoading } = useQuery({
     queryKey: ["ohlc", ticker, interval],
     queryFn: () => fetchOhlc({ data: { ticker, interval } }),
     staleTime: 30_000,
@@ -236,8 +236,14 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, class
     refetchOnWindowFocus: false,
   });
 
+  const hasLive = !!liveOhlc && liveOhlc.source !== "synthetic" && liveOhlc.bars.length > 0;
+  const noLiveSource = !!liveOhlc && liveOhlc.source === "synthetic";
+  // Don't flash synthetic candles while we're still waiting on the live feed —
+  // only fall back to synthetic when the server actually says no live source exists.
+  const showLoader = !liveOhlc || (isLoading && !hasLive && !noLiveSource);
+
   const candles = useMemo<Candle[]>(() => {
-    if (liveOhlc && liveOhlc.source !== "synthetic" && liveOhlc.bars.length > 0) {
+    if (hasLive && liveOhlc) {
       return liveOhlc.bars.map((b) => ({
         time: b.time as Time,
         open: b.open,
@@ -246,10 +252,11 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, class
         close: b.close,
       }));
     }
-    return generateCandles(symbol, interval, ticker);
-  }, [liveOhlc, symbol, interval, ticker]);
+    if (noLiveSource) return generateCandles(symbol, interval, ticker);
+    return [];
+  }, [liveOhlc, hasLive, noLiveSource, symbol, interval, ticker]);
   const levels = useMemo(() => computeLevels(candles), [candles]);
-  const isLive = !!liveOhlc && liveOhlc.source !== "synthetic" && liveOhlc.bars.length > 0;
+  const isLive = hasLive;
   const sourceLabel = liveOhlc?.source === "coingecko" ? "CoinGecko" : liveOhlc?.source === "twelvedata" ? "Twelve Data" : "";
 
   // Init / teardown chart
