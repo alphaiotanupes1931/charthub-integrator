@@ -120,6 +120,7 @@ function AuthPage() {
         if (error) throw error;
         toast.success("Account created");
       }
+      let welcomeStarted = false;
       try {
         const recap = await Promise.race([
           buildLoginWelcomeRecap(),
@@ -129,6 +130,7 @@ function AuthPage() {
         ]);
         speakWithBrowserVoice(recap, readActiveCoach(), preparedWelcomeUtterance, {
           onStart: () => {
+            welcomeStarted = true;
             try { sessionStorage.setItem(WELCOME_BACK_SESSION_KEY, "1"); } catch { /* ignore */ }
           },
           onEnd: () => {
@@ -147,7 +149,7 @@ function AuthPage() {
         const pending = localStorage.getItem("trademind.pendingInvite");
         if (pending) target = `/invite/${pending}`;
         localStorage.setItem(WELCOME_BACK_REQUEST_KEY, Date.now().toString());
-        sessionStorage.removeItem(WELCOME_BACK_SESSION_KEY);
+        if (!welcomeStarted) sessionStorage.removeItem(WELCOME_BACK_SESSION_KEY);
       } catch { /* ignore */ }
       navigate({ to: target, replace: true });
     } catch (err: unknown) {
