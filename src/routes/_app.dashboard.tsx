@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { TradingViewChart } from "@/components/TradingViewChart";
 import { NativeChart, LEVEL_META, type LevelKey } from "@/components/NativeChart";
 import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid } from "lucide-react";
+import { useProfile } from "@/hooks/useProfile";
 
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({
