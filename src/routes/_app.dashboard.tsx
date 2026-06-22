@@ -237,9 +237,8 @@ function Dashboard() {
           <div className="relative" ref={levelsRef}>
             <button
               onClick={() => setLevelsOpen((o) => !o)}
-              disabled={chartMode === "live"}
-              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/60 px-2.5 py-1 text-xs font-medium hover:border-primary/50 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              title={chartMode === "live" ? "Levels render on the Native Chart" : "Toggle levels"}
+              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/60 px-2.5 py-1 text-xs font-medium hover:border-primary/50 transition"
+              title="Toggle overlay zones / levels"
             >
               Levels <span className="text-muted-foreground">({enabledCount})</span>
               <ChevronDown className={`h-3 w-3 transition-transform ${levelsOpen ? "rotate-180" : ""}`} />
@@ -267,6 +266,11 @@ function Dashboard() {
                     );
                   })}
                 </div>
+                {chartMode === "live" && (
+                  <div className="mt-2 px-1 text-[10px] text-muted-foreground leading-relaxed">
+                    On the Live chart, FVG and Liq are Native-only — switch to Native Chart to see them.
+                  </div>
+                )}
                 <div className="mt-3 pt-3 border-t border-border/60 flex items-center justify-between text-[11px]">
                   <button
                     onClick={() => setLevels(Object.fromEntries(ALL_LEVELS.map((k) => [k, true])) as Record<LevelKey, boolean>)}
@@ -288,13 +292,14 @@ function Dashboard() {
 
         <div className="h-[520px]">
           {chartMode === "live" ? (
-            <TradingViewChart symbol={symbol.tv} interval={interval} />
+            <TradingViewChart symbol={symbol.tv} interval={interval} enabled={levels} />
           ) : (
             <NativeChart symbol={symbol.tv} ticker={symbol.ticker} interval={interval} enabled={levels} />
           )}
         </div>
 
       </div>
+
 
       {/* Scan card */}
       <div className="rounded-xl border border-border bg-card p-8">
