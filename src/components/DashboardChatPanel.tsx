@@ -98,7 +98,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
         },
         prepareSendMessagesRequest: ({ messages, id }) => {
           const stratName = readActiveStrategy();
-          const strategy = stratName ? STRATEGIES.find((s) => s.name === stratName) ?? { name: stratName } : null;
+          const strategy = stratName ? findStrategyByName(stratName) ?? { name: stratName } : null;
           return {
             body: {
               messages,
