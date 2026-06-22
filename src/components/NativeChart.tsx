@@ -202,15 +202,15 @@ function computeLevels(candles: Candle[]) {
   return { vwap, poc, sr: clustered, zones, fvg, fib, liq };
 }
 
-export function NativeChart({ symbol, ticker, interval, enabled, className }: Props) {
+export function NativeChart({ symbol, ticker, interval, enabled, sessions, className }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
   const linesRef = useRef<IPriceLine[]>([]);
   const [ready, setReady] = useState(false);
+  // Session band positions {key,color,label,left,width} in pixels for the overlay
+  const [bands, setBands] = useState<Array<{ key: string; color: string; label: string; left: number; width: number; idx: number }>>([]);
 
-  // Live OHLC from CoinGecko (crypto) or Twelve Data (FX/metals/indices),
-  // server-cached. Returns empty bars when no upstream supports the symbol.
   const fetchOhlc = useServerFn(getOhlc);
   const { data: liveOhlc } = useQuery({
     queryKey: ["ohlc", ticker, interval],
@@ -236,21 +236,13 @@ export function NativeChart({ symbol, ticker, interval, enabled, className }: Pr
   const isLive = !!liveOhlc && liveOhlc.source !== "synthetic" && liveOhlc.bars.length > 0;
   const sourceLabel = liveOhlc?.source === "coingecko" ? "CoinGecko" : liveOhlc?.source === "twelvedata" ? "Twelve Data" : "";
 
-
   // Init / teardown chart
   useEffect(() => {
     if (!containerRef.current) return;
     const chart = createChart(containerRef.current, {
       autoSize: true,
-      layout: {
-        background: { color: "transparent" },
-        textColor: "#94a3b8",
-        fontFamily: "ui-sans-serif, system-ui, sans-serif",
-      },
-      grid: {
-        vertLines: { color: "rgba(148, 163, 184, 0.06)" },
-        horzLines: { color: "rgba(148, 163, 184, 0.06)" },
-      },
+      layout: { background: { color: "transparent" }, textColor: "#94a3b8", fontFamily: "ui-sans-serif, system-ui, sans-serif" },
+      grid: { vertLines: { color: "rgba(148, 163, 184, 0.06)" }, horzLines: { color: "rgba(148, 163, 184, 0.06)" } },
       crosshair: {
         mode: CrosshairMode.Normal,
         vertLine: { color: "rgba(251, 191, 36, 0.5)", width: 1, style: LineStyle.Solid, labelBackgroundColor: "#fbbf24" },
@@ -260,12 +252,9 @@ export function NativeChart({ symbol, ticker, interval, enabled, className }: Pr
       timeScale: { borderColor: "rgba(148, 163, 184, 0.15)", timeVisible: true, secondsVisible: false },
     });
     const series = chart.addSeries(CandlestickSeries, {
-      upColor: "#34d399",
-      downColor: "#f87171",
-      borderUpColor: "#34d399",
-      borderDownColor: "#f87171",
-      wickUpColor: "#34d399",
-      wickDownColor: "#f87171",
+      upColor: "#34d399", downColor: "#f87171",
+      borderUpColor: "#34d399", borderDownColor: "#f87171",
+      wickUpColor: "#34d399", wickDownColor: "#f87171",
     });
     chartRef.current = chart;
     seriesRef.current = series;
@@ -290,18 +279,14 @@ export function NativeChart({ symbol, ticker, interval, enabled, className }: Pr
   useEffect(() => {
     if (!ready || !seriesRef.current) return;
     const s = seriesRef.current;
-    // Clear previous
     linesRef.current.forEach((l) => s.removePriceLine(l));
     linesRef.current = [];
 
     const add = (price: number, color: string, title: string, dashed = false) => {
       const line = s.createPriceLine({
-        price,
-        color,
-        lineWidth: 1,
+        price, color, lineWidth: 1,
         lineStyle: dashed ? LineStyle.Dashed : LineStyle.Solid,
-        axisLabelVisible: true,
-        title,
+        axisLabelVisible: true, title,
       });
       linesRef.current.push(line);
     };
@@ -321,9 +306,70 @@ export function NativeChart({ symbol, ticker, interval, enabled, className }: Pr
     if (enabled.LIQ) levels.liq.forEach((l) => add(l.price, LEVEL_META.LIQ.color, l.side === "buy" ? "Buy-side liq" : "Sell-side liq"));
   }, [enabled, levels, ready]);
 
+  // ---- Sessions overlay ----
+  useEffect(() => {
+    if (!ready || !chartRef.current) { setBands([]); return; }
+    if (!sessions) { setBands([]); return; }
+    const chart = chartRef.current;
+
+    const recompute = () => {
+      const ts = chart.timeScale();
+      const visible = ts.getVisibleRange();
+      if (!visible) { setBands([]); return; }
+      const from = Number(visible.from) * 1000;
+      const to = Number(visible.to) * 1000;
+      const DAY = 24 * 3600 * 1000;
+      // Walk each UTC day in the visible window and emit a band per session.
+      const out: Array<{ key: string; color: string; label: string; left: number; width: number; idx: number }> = [];
+      const firstDay = Math.floor(from / DAY) * DAY - DAY; // include prev day for sessions crossing midnight
+      for (let d = firstDay; d <= to; d += DAY) {
+        SESSIONS.forEach((sess, idx) => {
+          // session window: [d + startH, d + endH] (endH may wrap to next day if startH > endH)
+          const startMs = d + sess.startH * 3600 * 1000;
+          const endMs = sess.startH < sess.endH
+            ? d + sess.endH * 3600 * 1000
+            : d + (sess.endH + 24) * 3600 * 1000;
+          if (endMs < from || startMs > to) return;
+          const a = ts.timeToCoordinate(Math.floor(Math.max(startMs, from) / 1000) as Time);
+          const b = ts.timeToCoordinate(Math.floor(Math.min(endMs, to) / 1000) as Time);
+          if (a == null || b == null) return;
+          const left = Math.min(a, b);
+          const width = Math.abs(b - a);
+          if (width < 2) return;
+          out.push({ key: `${d}-${sess.key}`, color: sess.color, label: sess.label, left, width, idx });
+        });
+      }
+      setBands(out);
+    };
+
+    recompute();
+    const ts = chart.timeScale();
+    ts.subscribeVisibleTimeRangeChange(recompute);
+    ts.subscribeVisibleLogicalRangeChange(recompute);
+    const ro = new ResizeObserver(recompute);
+    if (containerRef.current) ro.observe(containerRef.current);
+    return () => {
+      ts.unsubscribeVisibleTimeRangeChange(recompute);
+      ts.unsubscribeVisibleLogicalRangeChange(recompute);
+      ro.disconnect();
+    };
+  }, [sessions, ready, candles]);
+
   return (
     <div className={`relative h-full w-full ${className ?? ""}`}>
       <div ref={containerRef} className="absolute inset-0" />
+      {/* Session bands overlay */}
+      {sessions && bands.length > 0 && (
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          {bands.map((b) => (
+            <div
+              key={b.key}
+              className="absolute top-0 bottom-6"
+              style={{ left: b.left, width: b.width, background: b.color, borderLeft: `1px dashed ${b.color.replace("0.08", "0.35")}`, borderRight: `1px dashed ${b.color.replace("0.08", "0.35")}` }}
+            />
+          ))}
+        </div>
+      )}
       <div className="absolute left-3 top-3 z-10 rounded-md border border-border bg-background/70 backdrop-blur px-2 py-1 text-[10px] font-mono text-muted-foreground uppercase tracking-wider flex items-center gap-2">
         <span>{isLive ? "Live" : "Native"} · {ticker} · {interval}</span>
         {isLive && (
@@ -332,8 +378,18 @@ export function NativeChart({ symbol, ticker, interval, enabled, className }: Pr
             {sourceLabel}
           </span>
         )}
-
       </div>
+      {sessions && (
+        <div className="absolute right-3 top-3 z-10 rounded-md border border-border bg-background/70 backdrop-blur px-2 py-1 text-[10px] font-mono text-muted-foreground flex items-center gap-2">
+          {SESSIONS.map((s) => (
+            <span key={s.key} className="inline-flex items-center gap-1">
+              <span className="h-2 w-2 rounded-sm" style={{ background: s.color.replace("0.08", "0.6") }} />
+              {s.label}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
+
