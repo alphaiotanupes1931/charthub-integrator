@@ -154,10 +154,11 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
         <Conversation className="flex-1 min-h-0">
           <ConversationContent className="px-3 py-4">
             {messages.length === 0 && (
-              <div className="text-center text-xs text-muted-foreground py-10 flex flex-col items-center gap-2">
-                <MessageSquare className="h-5 w-5 opacity-60" />
-                <div>Ask about a setup, or hit <span className="text-foreground font-medium">Run a scan</span> on the chart.</div>
-              </div>
+              <EmptyStateSuggestions
+                chart={chart}
+                disabled={loading}
+                onPick={(text) => void sendMessage({ text })}
+              />
             )}
             {messages.map((m) => {
               const text = m.parts
