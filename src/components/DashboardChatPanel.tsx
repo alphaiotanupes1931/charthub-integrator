@@ -32,9 +32,9 @@ export type ChartContext = {
   enabledLevels: string;
 };
 
-type Props = { chart?: ChartContext };
+type Props = { chart?: ChartContext; onClose?: () => void };
 
-export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(function DashboardChatPanel({ chart }, ref) {
+export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(function DashboardChatPanel({ chart, onClose }, ref) {
   const [threadId, setThreadId] = useState<string | null>(null);
   const [initial, setInitial] = useState<UIMessage[] | null>(null);
   const getThread = useServerFn(getOrCreateDashboardThread);
@@ -65,12 +65,13 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
     );
   }
 
-  return <ChatInner ref={ref} threadId={threadId} initial={initial} chart={chart} />;
+  return <ChatInner ref={ref} threadId={threadId} initial={initial} chart={chart} onClose={onClose} />;
 });
 
 
-const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: UIMessage[]; chart?: ChartContext }>(
-  function ChatInner({ threadId, initial, chart }, ref) {
+const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: UIMessage[]; chart?: ChartContext; onClose?: () => void }>(
+  function ChatInner({ threadId, initial, chart, onClose }, ref) {
+
     const [input, setInput] = useState("");
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const chartRef = useRef<ChartContext | undefined>(chart);
