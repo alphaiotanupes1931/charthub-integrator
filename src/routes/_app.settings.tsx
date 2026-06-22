@@ -283,52 +283,45 @@ function SettingsPage() {
             <Plug className="size-5 text-primary" />
             Connect Your Broker
           </h2>
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md border border-destructive/40 text-destructive bg-destructive/10">
-            <XCircle className="size-3.5" />
-            Not Connected
-          </span>
+          {tlConnected ? (
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md border border-primary/40 text-primary bg-primary/10">
+              <ShieldCheck className="size-3.5" /> Connected
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md border border-destructive/40 text-destructive bg-destructive/10">
+              <XCircle className="size-3.5" /> Not Connected
+            </span>
+          )}
         </div>
         <p className="text-sm text-muted-foreground leading-relaxed mb-5">
-          Enter your broker's API credentials to enable automatic trade import, real-time monitoring, and live position tracking.
+          Log in with your TradeLocker credentials to pull your trade history straight into the TradeMind journal. Credentials are sent over HTTPS to fetch your trades and are not stored on our servers — only your email, server, and account choice persist locally in this browser.
         </p>
 
         <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 mb-6">
           <div className="flex items-center gap-2 text-sm font-medium text-primary mb-1.5">
             <ShieldCheck className="size-4" />
-            Enter your TradeLocker login credentials
+            TradeLocker Public API
           </div>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Uses TradeLocker's Public API (public-api.tradelocker.com). Your email, password, and Server ID are encrypted with AES-256 before storage.
+            Uses <code>{tlAccountType === "live" ? "live" : "demo"}.tradelocker.com/backend-api</code>. Your password is used only for this request and is never written to our database.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
-            <FieldLabel>Select Your Broker</FieldLabel>
-            <Select defaultValue="">
-              <option value="" disabled>Choose a broker...</option>
-              <option>OANDA</option>
-              <option>FTMO</option>
-              <option>The Funded Trader</option>
-            </Select>
-          </div>
-          <div>
-            <FieldLabel>Platform</FieldLabel>
-            <Select defaultValue="TradeLocker">
-              <option>TradeLocker</option>
-              <option>MT4</option>
-              <option>MT5</option>
-            </Select>
-          </div>
-          <div>
             <FieldLabel icon={<UserIcon className="size-3.5" />}>TradeLocker Email</FieldLabel>
-            <Input type="email" placeholder="your@email.com" />
-            <p className="text-xs text-muted-foreground mt-1.5">Your TradeLocker account email</p>
+            <Input type="email" placeholder="your@email.com" value={tlEmail} onChange={(e) => setTlEmail(e.target.value)} />
           </div>
           <div>
             <FieldLabel icon={<ShieldCheck className="size-3.5" />}>TradeLocker Password</FieldLabel>
             <div className="relative">
-              <Input type={showPw ? "text" : "password"} placeholder="Enter your TradeLocker password" />
+              <Input
+                type={showPw ? "text" : "password"}
+                placeholder="Enter your TradeLocker password"
+                value={tlPassword}
+                onChange={(e) => setTlPassword(e.target.value)}
+                autoComplete="current-password"
+              />
               <button
                 type="button"
                 onClick={() => setShowPw((v) => !v)}
@@ -337,47 +330,50 @@ function SettingsPage() {
                 <Eye className="size-4" />
               </button>
             </div>
-            <p className="text-xs text-muted-foreground mt-1.5">Encrypted with AES-256 before storage</p>
+            <p className="text-xs text-muted-foreground mt-1.5">Used once per sync. Not stored.</p>
           </div>
           <div>
             <FieldLabel icon={<Plug className="size-3.5" />}>Server ID</FieldLabel>
-            <Select defaultValue="OSP-DEMO">
-              <option>OSP-DEMO</option>
-              <option>OSP-LIVE</option>
-            </Select>
+            <Input placeholder="OSP-DEMO" value={tlServer} onChange={(e) => setTlServer(e.target.value)} />
             <p className="text-xs text-muted-foreground mt-1.5">
-              The server name shown on the TradeLocker login screen (e.g., "OSP-DEMO" or "OSP-LIVE")
+              The server shown on the TradeLocker login screen (e.g. "OSP-DEMO" or "OSP-LIVE").
             </p>
           </div>
           <div>
-            <FieldLabel>
-              API Endpoint URL <span className="text-muted-foreground font-normal">(optional)</span>
-            </FieldLabel>
-            <Input placeholder="https://public-api.tradelocker.com" />
-            <p className="text-xs text-muted-foreground mt-1.5">Default: public-api.tradelocker.com, only change if needed</p>
+            <FieldLabel>Account Type</FieldLabel>
+            <Select value={tlAccountType} onChange={(e) => setTlAccountType(e.target.value as "demo" | "live")}>
+              <option value="demo">Demo</option>
+              <option value="live">Live</option>
+            </Select>
           </div>
-        </div>
-
-        <div className="mt-5">
-          <FieldLabel>Account Type</FieldLabel>
-          <Select defaultValue="Live">
-            <option>Live</option>
-            <option>Demo</option>
-          </Select>
-          <p className="text-xs text-muted-foreground mt-1.5">Demo and live accounts use different API endpoints</p>
+          {tlAccounts.length > 0 && (
+            <div className="md:col-span-2">
+              <FieldLabel>Account</FieldLabel>
+              <Select value={tlAccountId} onChange={(e) => setTlAccountId(e.target.value)}>
+                {tlAccounts.map((a) => (
+                  <option key={String(a.id)} value={String(a.id)}>
+                    {a.name || `Account ${a.accNum ?? a.id}`} {typeof a.balance === "number" ? `· ${a.balance.toFixed(2)} ${a.currency ?? ""}` : ""}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-3 mt-6">
-          <GhostButton><Plug className="size-4" /> Test Connection</GhostButton>
-          <PrimaryButton><Save className="size-4" /> Save Credentials</PrimaryButton>
-          <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-            <ShieldCheck className="size-3.5" /> AES-256 encrypted
-          </span>
+          <GhostButton onClick={testTradeLocker} disabled={tlBusy !== ""}>
+            <Plug className="size-4" /> {tlBusy === "test" ? "Testing…" : "Test Connection"}
+          </GhostButton>
+          <PrimaryButton onClick={importTradeLocker} disabled={tlBusy !== "" || !tlConnected}>
+            <Save className="size-4" /> {tlBusy === "import" ? "Importing…" : "Import Trades"}
+          </PrimaryButton>
         </div>
-        <p className="flex items-center gap-1.5 text-xs text-primary mt-3">
-          <AlertCircle className="size-3.5" />
-          You must test your connection before saving
-        </p>
+        {!tlConnected && (
+          <p className="flex items-center gap-1.5 text-xs text-primary mt-3">
+            <AlertCircle className="size-3.5" />
+            Test the connection first to load your accounts.
+          </p>
+        )}
       </Card>
 
       {/* STRATEGY moved to its own tab — see /scan-lens */}
