@@ -24,7 +24,7 @@ export function useCoachVoice() {
     if (!audioRef.current) {
       const el = new Audio();
       el.preload = "auto";
-      el.playsInline = true;
+      (el as HTMLAudioElement & { playsInline?: boolean }).playsInline = true;
       audioRef.current = el;
     }
     return audioRef.current;
