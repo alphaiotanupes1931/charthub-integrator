@@ -127,7 +127,7 @@ function generateCandles(symbol: string, interval: string, ticker: string, count
 // --- Compute levels from candles ---
 function computeLevels(candles: Candle[]) {
   if (candles.length === 0) {
-    return { vwap: 0, poc: 0, sr: [] as number[], zones: [] as { top: number; bot: number }[], fvg: [] as { top: number; bot: number }[], fib: [] as { ratio: number; price: number }[], liq: [] as { price: number; side: "buy" | "sell" }[] };
+    return { vwap: 0, poc: 0, sr: [] as number[], zones: [] as { top: number; bot: number }[], fvg: [] as { top: number; bot: number }[], fib: [] as { ratio: number; price: number }[], liq: [] as { price: number; side: "buy" | "sell" }[], of: [] as { price: number; side: "buy" | "sell"; strength: number }[], delta: 0 };
   }
   // VWAP (using HLC/3 as volume proxy)
   let pvSum = 0, vSum = 0;
@@ -163,7 +163,6 @@ function computeLevels(candles: Candle[]) {
     if (isHigh) sr.push(c.high);
     if (isLow)  sr.push(c.low);
   }
-  // Cluster + keep most-recent 4 distinct
   const tol = (hi - lo) * 0.005;
   const clustered: number[] = [];
   for (const p of sr.reverse()) {
@@ -171,13 +170,11 @@ function computeLevels(candles: Candle[]) {
     if (clustered.length >= 4) break;
   }
 
-  // Zones: build accumulation rectangles around POC ± step
   const zones = [
     { top: poc + step * 1.5, bot: poc - step * 1.5 },
     { top: hi - step * 2,    bot: hi - step * 4 },
   ];
 
-  // FVG: gap between candle i-1 high and i+1 low (bullish) / inverse
   const fvg: { top: number; bot: number }[] = [];
   for (let i = 1; i < candles.length - 1; i++) {
     const prev = candles[i - 1], next = candles[i + 1];
@@ -186,21 +183,39 @@ function computeLevels(candles: Candle[]) {
     if (fvg.length >= 3) break;
   }
 
-  // Fibonacci on last swing high/low
   const recent = candles.slice(-60);
   const swingHi = Math.max(...recent.map((c) => c.high));
   const swingLo = Math.min(...recent.map((c) => c.low));
   const range = swingHi - swingLo;
   const fib = [0.236, 0.382, 0.5, 0.618, 0.786].map((r) => ({ ratio: r, price: swingHi - range * r }));
 
-  // Liquidity: highest high cluster & lowest low cluster from last segment
   const last = candles.slice(-30);
   const liq = [
     { price: Math.max(...last.map((c) => c.high)) + step * 0.5, side: "sell" as const },
     { price: Math.min(...last.map((c) => c.low))  - step * 0.5, side: "buy"  as const },
   ];
 
-  return { vwap, poc, sr: clustered, zones, fvg, fib, liq };
+  // --- Order Flow: per-bar delta proxy from body strength + cumulative delta ---
+  // delta = sign(close-open) * |body|/range — strongest absorption/initiative bars
+  const scored = candles.slice(-50).map((c) => {
+    const body = c.close - c.open;
+    const rng = Math.max(1e-9, c.high - c.low);
+    const strength = Math.abs(body) / rng; // 0..1
+    return { price: (c.high + c.low + c.close) / 3, side: body >= 0 ? ("buy" as const) : ("sell" as const), strength };
+  });
+  const of = scored
+    .filter((s) => s.strength > 0.55)
+    .sort((a, b) => b.strength - a.strength)
+    .slice(0, 4);
+  let cum = 0;
+  for (const c of candles) {
+    const body = c.close - c.open;
+    const rng = Math.max(1e-9, c.high - c.low);
+    cum += (body / rng);
+  }
+  const delta = cum;
+
+  return { vwap, poc, sr: clustered, zones, fvg, fib, liq, of, delta };
 }
 
 export function NativeChart({ symbol, ticker, interval, enabled, sessions, className }: Props) {
