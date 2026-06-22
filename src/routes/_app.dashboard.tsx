@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { TradingViewChart } from "@/components/TradingViewChart";
 import { NativeChart, LEVEL_META, type LevelKey } from "@/components/NativeChart";
-import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Sparkles } from "lucide-react";
+import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Sparkles, Clock, MessageSquare, X } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { DashboardChatPanel, type DashboardChatHandle } from "@/components/DashboardChatPanel";
 
@@ -98,10 +98,13 @@ function Dashboard() {
   const [levels, setLevels] = useState<Record<LevelKey, boolean>>(() =>
     typeof window !== "undefined" ? loadLevels() : { VWAP: true, POC: true, SR: true, ZONES: true, FVG: true, FIB: false, LIQ: true },
   );
+  const [sessionsOn, setSessionsOn] = useState(true);
   const [levelsOpen, setLevelsOpen] = useState(false);
+  const [coachOpen, setCoachOpen] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
   const levelsRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<DashboardChatHandle>(null);
+
 
   useEffect(() => {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(levels)); } catch { /* ignore */ }
@@ -125,12 +128,14 @@ function Dashboard() {
     setResult(null);
     const enabledLevels = ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none";
     const prompt = `Analyze ${symbol.ticker} (${symbol.name}, ${symbol.venue}) on the ${intervalLabel} chart for a trade setup. I'm watching these levels: ${enabledLevels}. Give me: bias (long/short/neutral), entry trigger, stop loss, take profit 1 and 2, R:R, and a short rationale grounded in price action. Be concrete with levels.`;
+    setCoachOpen(true);
     chatRef.current?.scan(prompt);
     window.setTimeout(() => {
       setResult(gradeFor(symbol));
       setScanning(false);
     }, 400);
   };
+
 
 
   const toggleLevel = (k: LevelKey) => setLevels((p) => ({ ...p, [k]: !p[k] }));
@@ -143,11 +148,11 @@ function Dashboard() {
           Welcome back, <span className="text-foreground font-medium">{profile?.display_name}</span>
         </div>
       )}
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_400px]">
-        <div className="space-y-5 min-w-0">
-      {/* Header */}
-      <header className="flex flex-wrap items-end justify-between gap-4 border-b border-border/60 pb-5">
-        <div className="min-w-0">
+      <div className="space-y-5">
+        {/* Header */}
+        <header className="flex flex-wrap items-end justify-between gap-4 border-b border-border/60 pb-5">
+          <div className="min-w-0">
+
           <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground mb-1.5">
             Active instrument
           </div>
@@ -288,15 +293,28 @@ function Dashboard() {
               </div>
             )}
           </div>
+
+          <button
+            onClick={() => setSessionsOn((v) => !v)}
+            className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition ${
+              sessionsOn
+                ? "border-primary/40 bg-primary/10 text-primary"
+                : "border-border bg-background/60 text-muted-foreground hover:text-foreground hover:border-primary/40"
+            }`}
+            title="Highlight Sydney / Tokyo / London / New York trading sessions"
+          >
+            <Clock className="h-3.5 w-3.5" /> Sessions
+          </button>
         </div>
 
         <div className="h-[520px]">
           {chartMode === "live" ? (
-            <TradingViewChart symbol={symbol.tv} interval={interval} enabled={levels} />
+            <TradingViewChart symbol={symbol.tv} interval={interval} enabled={levels} sessions={sessionsOn} />
           ) : (
-            <NativeChart symbol={symbol.tv} ticker={symbol.ticker} interval={interval} enabled={levels} />
+            <NativeChart symbol={symbol.tv} ticker={symbol.ticker} interval={interval} enabled={levels} sessions={sessionsOn} />
           )}
         </div>
+
 
       </div>
 
@@ -358,20 +376,56 @@ function Dashboard() {
           </div>
         )}
       </div>
-        </div>
-        {/* Chat panel */}
-        <aside className="xl:sticky xl:top-4 h-[600px] xl:h-[calc(100vh-6rem)]">
-          <DashboardChatPanel
-            ref={chatRef}
-            chart={{
-              ticker: symbol.ticker,
-              intervalLabel,
-              enabledLevels: ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none",
-            }}
-          />
-        </aside>
       </div>
+
+      {/* Floating AI Coach bubble */}
+      <FloatingCoach
+        open={coachOpen}
+        onOpen={() => setCoachOpen(true)}
+        onClose={() => setCoachOpen(false)}
+        chatRef={chatRef}
+        chart={{
+          ticker: symbol.ticker,
+          intervalLabel,
+          enabledLevels: ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none",
+        }}
+      />
     </div>
   );
 }
+
+function FloatingCoach({
+  open, onOpen, onClose, chatRef, chart,
+}: {
+  open: boolean;
+  onOpen: () => void;
+  onClose: () => void;
+  chatRef: React.RefObject<DashboardChatHandle | null>;
+  chart: { ticker: string; intervalLabel: string; enabledLevels: string };
+}) {
+  return (
+    <>
+      {/* Bubble (always rendered, hidden when open so the panel can take over) */}
+      {!open && (
+        <button
+          onClick={onOpen}
+          aria-label="Open AI coach"
+          className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/30 ring-1 ring-primary/40 hover:scale-105 transition flex items-center justify-center"
+        >
+          <MessageSquare className="h-6 w-6" />
+        </button>
+      )}
+
+      {/* Expanded panel — always mounted so the chat thread persists between toggles */}
+      <div
+        className={`fixed z-40 right-4 bottom-4 sm:right-6 sm:bottom-6 w-[min(420px,calc(100vw-2rem))] h-[min(640px,calc(100vh-2rem))] transition-all duration-200 ${
+          open ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 translate-y-4 pointer-events-none"
+        }`}
+      >
+        <DashboardChatPanel ref={chatRef} chart={chart} onClose={onClose} />
+      </div>
+    </>
+  );
+}
+
 
