@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface Props {
   symbol: string;
@@ -9,9 +9,14 @@ interface Props {
 
 export function MiniChart({ symbol, width = "100%", height = 70, dateRange = "1D" }: Props) {
   const ref = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    if (!ref.current) return;
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || !ref.current) return;
     ref.current.innerHTML = `<div class="tradingview-widget-container__widget" style="width:100%;height:${height}px;background:transparent"></div>`;
     const script = document.createElement("script");
     script.src = "https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js";
