@@ -45,7 +45,7 @@ export function MiniChart({ symbol, width = "100%", height = 70, dateRange = "1D
   if (!mounted) {
     return (
       <div
-        className="rounded-md overflow-hidden bg-card/40 border border-border/40 animate-pulse"
+        className="rounded-md overflow-hidden bg-transparent animate-pulse"
         style={{ width, height }}
       />
     );
@@ -53,7 +53,7 @@ export function MiniChart({ symbol, width = "100%", height = 70, dateRange = "1D
 
   return (
     <div
-      className="tradingview-widget-container bg-background/40 rounded-md overflow-hidden"
+      className="tradingview-widget-container bg-transparent rounded-md overflow-hidden"
       ref={ref}
       style={{ width, height }}
     />
@@ -121,7 +121,7 @@ export function SymbolOverview({ symbol, height = 420 }: SymbolOverviewProps) {
   if (!mounted) {
     return (
       <div
-        className="rounded-lg overflow-hidden bg-card/40 border border-border/40 animate-pulse"
+        className="rounded-lg overflow-hidden bg-transparent animate-pulse"
         style={{ width: "100%", height }}
       />
     );
@@ -129,7 +129,7 @@ export function SymbolOverview({ symbol, height = 420 }: SymbolOverviewProps) {
 
   return (
     <div
-      className="tradingview-widget-container bg-background/60 rounded-lg overflow-hidden border border-border/40"
+      className="tradingview-widget-container bg-transparent rounded-lg overflow-hidden"
       ref={ref}
       style={{ width: "100%", height }}
     />
