@@ -8,6 +8,7 @@ import {
   Users,
   Mic,
   BarChart3,
+  MessageSquare,
   Brain,
   Activity,
   Settings as SettingsIcon,
