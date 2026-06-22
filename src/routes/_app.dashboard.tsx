@@ -293,15 +293,28 @@ function Dashboard() {
               </div>
             )}
           </div>
+
+          <button
+            onClick={() => setSessionsOn((v) => !v)}
+            className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition ${
+              sessionsOn
+                ? "border-primary/40 bg-primary/10 text-primary"
+                : "border-border bg-background/60 text-muted-foreground hover:text-foreground hover:border-primary/40"
+            }`}
+            title="Highlight Sydney / Tokyo / London / New York trading sessions"
+          >
+            <Clock className="h-3.5 w-3.5" /> Sessions
+          </button>
         </div>
 
         <div className="h-[520px]">
           {chartMode === "live" ? (
             <TradingViewChart symbol={symbol.tv} interval={interval} enabled={levels} />
           ) : (
-            <NativeChart symbol={symbol.tv} ticker={symbol.ticker} interval={interval} enabled={levels} />
+            <NativeChart symbol={symbol.tv} ticker={symbol.ticker} interval={interval} enabled={levels} sessions={sessionsOn} />
           )}
         </div>
+
 
       </div>
 
