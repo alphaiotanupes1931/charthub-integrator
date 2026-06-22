@@ -149,8 +149,10 @@ function Dashboard() {
         </div>
       )}
       <div className="space-y-5">
+        {/* Header */}
+        <header className="flex flex-wrap items-end justify-between gap-4 border-b border-border/60 pb-5">
+          <div className="min-w-0">
 
-        <div className="min-w-0">
           <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground mb-1.5">
             Active instrument
           </div>
