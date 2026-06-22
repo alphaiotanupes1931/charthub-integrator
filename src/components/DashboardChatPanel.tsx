@@ -76,6 +76,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
   function ChatInner({ threadId, initial, chart, onClose, onMinimize }, ref) {
 
     const [input, setInput] = useState("");
+    const [activeCoach, setActiveCoach] = useState<string>(() => readActiveCoach());
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const chartRef = useRef<ChartContext | undefined>(chart);
     useEffect(() => { chartRef.current = chart; }, [chart]);
