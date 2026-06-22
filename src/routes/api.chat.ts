@@ -46,6 +46,8 @@ type StrategyCtx = {
   rr?: number;
 };
 
+type LensCtx = { id?: string; name?: string; promptEmphasis?: string };
+
 type ChatRequestBody = {
   messages?: UIMessage[];
   threadId?: string;
@@ -53,6 +55,7 @@ type ChatRequestBody = {
   journal?: Trade[];
   chart?: ChartCtx;
   strategy?: StrategyCtx | null;
+  lens?: LensCtx | null;
 };
 
 function pnl(t: Trade) {
