@@ -484,8 +484,20 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
           </div>
         </div>
       )}
+      {/* Live clock: local + UTC, honours 12h/24h preference */}
+      <div className="absolute right-3 top-3 z-10 rounded-md border border-border bg-background/70 backdrop-blur px-2 py-1 text-[10px] font-mono text-muted-foreground flex items-center gap-2">
+        <span className="text-foreground/90">{formatTime(now, timeFormat, { seconds: true })}</span>
+        <span className="opacity-60">·</span>
+        <span>{formatTime(now, timeFormat, { seconds: false, utc: true })} UTC</span>
+        {activeSessionsNow.length > 0 && (
+          <>
+            <span className="opacity-60">·</span>
+            <span className="text-primary normal-case">{activeSessionsNow.join(" + ")}</span>
+          </>
+        )}
+      </div>
       {sessions && (
-        <div className="absolute right-3 top-3 z-10 rounded-md border border-border bg-background/70 backdrop-blur px-2 py-1 text-[10px] font-mono text-muted-foreground flex items-center gap-2">
+        <div className="absolute right-3 top-11 z-10 rounded-md border border-border bg-background/70 backdrop-blur px-2 py-1 text-[10px] font-mono text-muted-foreground flex items-center gap-2">
           {SESSIONS.map((s) => (
             <span key={s.key} className="inline-flex items-center gap-1">
               <span className="h-2 w-2 rounded-sm" style={{ background: s.color.replace("0.08", "0.6") }} />
