@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { Link } from "@tanstack/react-router";
-import { MessageSquare, Sparkles, ExternalLink, Trash2, X } from "lucide-react";
+import { MessageSquare, Sparkles, ExternalLink, Trash2, X, Volume2, VolumeX } from "lucide-react";
 import {
   Conversation,
   ConversationContent,
@@ -20,6 +20,8 @@ import { Shimmer } from "@/components/ai-elements/shimmer";
 import { supabase } from "@/integrations/supabase/client";
 import { getOrCreateDashboardThread, getChatMessages } from "@/lib/chat.functions";
 import { readJournal, readActiveCoach } from "@/lib/chat-client";
+import { useCoachVoice } from "@/hooks/useCoachVoice";
+import { voiceForCoach } from "@/lib/coachVoices";
 import { toast } from "sonner";
 
 export type DashboardChatHandle = {
