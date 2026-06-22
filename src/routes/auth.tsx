@@ -120,24 +120,24 @@ function AuthPage() {
         if (error) throw error;
         toast.success("Account created");
       }
-      let welcomeStarted = false;
+      // Claim the welcome slot IMMEDIATELY so the post-nav WelcomeBackGreeter
+      // does not also start its own playback (which caused two overlapping voices).
+      try { sessionStorage.setItem(WELCOME_BACK_SESSION_KEY, "1"); } catch { /* ignore */ }
       try {
-        const recap = await Promise.race([
-          buildLoginWelcomeRecap(),
-          new Promise<string>((resolve) =>
-            window.setTimeout(() => resolve(`Welcome back, ${spokenName(null, parsed.data.email)}. Ready when you are.`), 1600),
-          ),
-        ]);
+        let recap: string;
+        if (mode === "signup") {
+          const name = spokenName(null, parsed.data.email);
+          recap = `Hi ${name}, welcome to TradeMind. Make sure to complete your profile and pick your coach so I can tailor your feedback. I am here whenever you have questions — just click the chatbot in the bottom right corner and I will jump in.`;
+        } else {
+          recap = await Promise.race([
+            buildLoginWelcomeRecap(),
+            new Promise<string>((resolve) =>
+              window.setTimeout(() => resolve(`Welcome back, ${spokenName(null, parsed.data.email)}. Ready when you are.`), 1600),
+            ),
+          ]);
+        }
         // Fire-and-forget: don't block navigation on TTS fetch.
-        void speakWithElevenLabs(recap, readActiveCoach(), welcomeAudio, {
-          onStart: () => {
-            welcomeStarted = true;
-            try { sessionStorage.setItem(WELCOME_BACK_SESSION_KEY, "1"); } catch { /* ignore */ }
-          },
-          onEnd: () => {
-            try { sessionStorage.setItem(WELCOME_BACK_SESSION_KEY, "1"); } catch { /* ignore */ }
-          },
-        });
+        void speakWithElevenLabs(recap, readActiveCoach(), welcomeAudio);
       } catch {
         void speakWithElevenLabs(
           `Welcome back, ${spokenName(null, parsed.data.email)}. Ready when you are.`,
@@ -149,8 +149,7 @@ function AuthPage() {
       try {
         const pending = localStorage.getItem("trademind.pendingInvite");
         if (pending) target = `/invite/${pending}`;
-        localStorage.setItem(WELCOME_BACK_REQUEST_KEY, Date.now().toString());
-        if (!welcomeStarted) sessionStorage.removeItem(WELCOME_BACK_SESSION_KEY);
+        localStorage.removeItem(WELCOME_BACK_REQUEST_KEY);
       } catch { /* ignore */ }
       navigate({ to: target, replace: true });
     } catch (err: unknown) {
