@@ -397,14 +397,27 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, class
         </div>
       )}
       <div className="absolute left-3 top-3 z-10 rounded-md border border-border bg-background/70 backdrop-blur px-2 py-1 text-[10px] font-mono text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-        <span>{isLive ? "Live" : "Native"} · {ticker} · {interval}</span>
+        <span>{isLive ? "Live" : showLoader ? "Loading" : "Native"} · {ticker} · {interval}</span>
         {isLive && (
           <span className="inline-flex items-center gap-1 text-emerald-400 normal-case">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
             {sourceLabel}
           </span>
         )}
+        {enabled.OF && candles.length > 0 && (
+          <span className={`inline-flex items-center gap-1 normal-case ${levels.delta >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+            Δ {levels.delta >= 0 ? "+" : ""}{levels.delta.toFixed(1)}
+          </span>
+        )}
       </div>
+      {showLoader && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/60 backdrop-blur-sm">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+            Fetching live {ticker}…
+          </div>
+        </div>
+      )}
       {sessions && (
         <div className="absolute right-3 top-3 z-10 rounded-md border border-border bg-background/70 backdrop-blur px-2 py-1 text-[10px] font-mono text-muted-foreground flex items-center gap-2">
           {SESSIONS.map((s) => (
