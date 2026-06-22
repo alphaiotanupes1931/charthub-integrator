@@ -378,6 +378,57 @@ function Landing() {
         </div>
       </section>
 
+      {/* FAQ */}
+      <section id="faq" className="px-5 sm:px-6 py-16 sm:py-24 md:py-28 border-t border-border/60 scroll-mt-24">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-10 sm:mb-14">
+            <SectionEyebrow>FAQ</SectionEyebrow>
+            <h2 className="font-display text-3xl sm:text-4xl md:text-6xl font-medium leading-tight">
+              Questions, answered.
+            </h2>
+            <p className="text-center text-sm sm:text-base text-muted-foreground mt-4 max-w-xl mx-auto px-2">
+              The most common things traders ask before getting started.
+            </p>
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="rounded-2xl border border-border bg-card/40 p-2 sm:p-4"
+          >
+            <Accordion type="single" collapsible className="w-full">
+              {FAQS.map((item, i) => (
+                <AccordionItem
+                  key={i}
+                  value={`faq-${i}`}
+                  className="border-border/60 px-2 sm:px-4"
+                >
+                  <AccordionTrigger className="text-sm sm:text-base font-medium py-4 sm:py-5 hover:no-underline hover:text-primary transition">
+                    {item.q}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                    {item.a}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </motion.div>
+
+          <div className="mt-8 sm:mt-10 text-center">
+            <Link
+              to="/faq"
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-5 py-2.5 text-sm font-medium hover:bg-card transition"
+            >
+              <HelpCircle className="size-4 text-primary" />
+              View all FAQ
+              <ArrowRight className="size-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* FINAL CTA */}
       <section className="relative px-5 sm:px-6 py-20 sm:py-28 md:py-32 border-t border-border/60">
         <div className="relative max-w-3xl mx-auto text-center">
