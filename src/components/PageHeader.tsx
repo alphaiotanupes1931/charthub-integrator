@@ -12,14 +12,14 @@ export function PageHeader({
   icon?: ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
-      <div className="max-w-3xl">
-        <h1 className="font-display text-4xl font-semibold tracking-tight flex items-center gap-3">
+    <div className="flex flex-wrap items-start justify-between gap-3 sm:gap-4 mb-5 sm:mb-6">
+      <div className="max-w-3xl min-w-0">
+        <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight flex items-center gap-2 sm:gap-3">
           {icon}
-          {title}
+          <span className="truncate">{title}</span>
         </h1>
         {description && (
-          <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{description}</p>
+          <p className="mt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">{description}</p>
         )}
       </div>
       {action}
