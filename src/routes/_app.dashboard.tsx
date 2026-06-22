@@ -321,7 +321,7 @@ function Dashboard() {
 
 
       {/* Scan card */}
-      <div className="rounded-xl border border-border bg-card p-8">
+      <div className="rounded-xl border border-border bg-card p-6">
         {!result && !scanning && (
           <div className="flex flex-col items-center text-center gap-3">
             <Crosshair className="h-6 w-6 text-primary" />
