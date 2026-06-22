@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
+import { useTimeFormat, formatTime } from "@/hooks/useTimeFormat";
 import { toast } from "sonner";
 import {
   Plug,
