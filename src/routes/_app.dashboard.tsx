@@ -294,11 +294,6 @@ function Dashboard() {
           )}
         </div>
 
-        {chartMode === "native" && (
-          <div className="border-t border-border/60 px-3 py-2 text-[11px] text-muted-foreground">
-            Native chart shows synthetic OHLC seeded per (symbol, timeframe) so levels and overlays render deterministically. Connect a live price feed for production.
-          </div>
-        )}
       </div>
 
       {/* Scan card */}
