@@ -24,6 +24,7 @@ import { Route as AppMentorRouteImport } from './routes/_app.mentor'
 import { Route as AppMemoryRouteImport } from './routes/_app.memory'
 import { Route as AppJournalRouteImport } from './routes/_app.journal'
 import { Route as AppGuideRouteImport } from './routes/_app.guide'
+import { Route as AppFriendsRouteImport } from './routes/_app.friends'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppCoachesRouteImport } from './routes/_app.coaches'
 import { Route as AppChatRouteImport } from './routes/_app.chat'
@@ -107,6 +108,11 @@ const AppGuideRoute = AppGuideRouteImport.update({
   path: '/guide',
   getParentRoute: () => AppRoute,
 } as any)
+const AppFriendsRoute = AppFriendsRouteImport.update({
+  id: '/friends',
+  path: '/friends',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -158,6 +164,7 @@ export interface FileRoutesByFullPath {
   '/chat': typeof AppChatRouteWithChildren
   '/coaches': typeof AppCoachesRoute
   '/dashboard': typeof AppDashboardRoute
+  '/friends': typeof AppFriendsRoute
   '/guide': typeof AppGuideRoute
   '/journal': typeof AppJournalRoute
   '/memory': typeof AppMemoryRoute
@@ -181,6 +188,7 @@ export interface FileRoutesByTo {
   '/broker': typeof AppBrokerRoute
   '/coaches': typeof AppCoachesRoute
   '/dashboard': typeof AppDashboardRoute
+  '/friends': typeof AppFriendsRoute
   '/guide': typeof AppGuideRoute
   '/journal': typeof AppJournalRoute
   '/memory': typeof AppMemoryRoute
@@ -207,6 +215,7 @@ export interface FileRoutesById {
   '/_app/chat': typeof AppChatRouteWithChildren
   '/_app/coaches': typeof AppCoachesRoute
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/friends': typeof AppFriendsRoute
   '/_app/guide': typeof AppGuideRoute
   '/_app/journal': typeof AppJournalRoute
   '/_app/memory': typeof AppMemoryRoute
@@ -233,6 +242,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/coaches'
     | '/dashboard'
+    | '/friends'
     | '/guide'
     | '/journal'
     | '/memory'
@@ -256,6 +266,7 @@ export interface FileRouteTypes {
     | '/broker'
     | '/coaches'
     | '/dashboard'
+    | '/friends'
     | '/guide'
     | '/journal'
     | '/memory'
@@ -281,6 +292,7 @@ export interface FileRouteTypes {
     | '/_app/chat'
     | '/_app/coaches'
     | '/_app/dashboard'
+    | '/_app/friends'
     | '/_app/guide'
     | '/_app/journal'
     | '/_app/memory'
@@ -413,6 +425,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppGuideRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/friends': {
+      id: '/_app/friends'
+      path: '/friends'
+      fullPath: '/friends'
+      preLoaderRoute: typeof AppFriendsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/dashboard': {
       id: '/_app/dashboard'
       path: '/dashboard'
@@ -492,6 +511,7 @@ interface AppRouteChildren {
   AppChatRoute: typeof AppChatRouteWithChildren
   AppCoachesRoute: typeof AppCoachesRoute
   AppDashboardRoute: typeof AppDashboardRoute
+  AppFriendsRoute: typeof AppFriendsRoute
   AppGuideRoute: typeof AppGuideRoute
   AppJournalRoute: typeof AppJournalRoute
   AppMemoryRoute: typeof AppMemoryRoute
@@ -509,6 +529,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppChatRoute: AppChatRouteWithChildren,
   AppCoachesRoute: AppCoachesRoute,
   AppDashboardRoute: AppDashboardRoute,
+  AppFriendsRoute: AppFriendsRoute,
   AppGuideRoute: AppGuideRoute,
   AppJournalRoute: AppJournalRoute,
   AppMemoryRoute: AppMemoryRoute,
