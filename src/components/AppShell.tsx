@@ -46,7 +46,8 @@ const NAV: NavItem[] = [
   { to: "/journal", label: "Trade Journal", icon: NotebookPen },
   { to: "/strategies", label: "Strategies", icon: Library },
   { to: "/coaches", label: "AI Coaches", icon: Users },
-  { to: "/chat", label: "Chat", icon: MessageSquare },
+  // Chat lives beside the dashboard; full chat is still reachable at /chat
+  // { to: "/chat", label: "Chat", icon: MessageSquare },
   { to: "/voice-coach", label: "Voice Coach", icon: Mic },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/memory", label: "Trading Memory", icon: Brain },

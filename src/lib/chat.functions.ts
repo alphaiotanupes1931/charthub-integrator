@@ -14,6 +14,28 @@ export const listChatThreads = createServerFn({ method: "POST" })
     return data ?? [];
   });
 
+export const getOrCreateDashboardThread = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const title = "Dashboard scans";
+    const { data: existing } = await context.supabase
+      .from("chat_threads")
+      .select("id,title,updated_at,created_at")
+      .eq("user_id", context.userId)
+      .eq("title", title)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (existing) return existing;
+    const { data: row, error } = await context.supabase
+      .from("chat_threads")
+      .insert({ user_id: context.userId, client_id: context.userId, title })
+      .select("id,title,updated_at,created_at")
+      .single();
+    if (error) throw new Error(error.message);
+    return row;
+  });
+
 export const createChatThread = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ title: z.string().max(80).optional() }).parse(d))
