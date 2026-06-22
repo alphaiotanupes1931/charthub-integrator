@@ -281,6 +281,7 @@ function JournalPage() {
                 const rr = tradeRR(t);
                 return (
                   <div key={t.id} className="flex items-center gap-4 p-4 hover:bg-accent/20 transition">
+                    {t.hasImage && <TradeThumb tradeId={t.id} />}
                     <button onClick={() => openEdit(t)} className="flex-1 min-w-0 text-left">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-semibold">{t.symbol}</span>
@@ -294,6 +295,11 @@ function JournalPage() {
                           {t.timeframe}
                         </span>
                         <span className="text-xs text-muted-foreground">{formatYmdHuman(t.date)}</span>
+                        {t.hasImage && (
+                          <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground" title="Screenshot stored on this device only">
+                            <ImageIcon className="h-3 w-3" /> local
+                          </span>
+                        )}
                       </div>
                       {t.notes && <div className="mt-1 text-xs text-muted-foreground line-clamp-1">{t.notes}</div>}
                     </button>
