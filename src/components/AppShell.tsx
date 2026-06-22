@@ -31,6 +31,7 @@ import {
 import logoAsset from "@/assets/logo.png.asset.json";
 import { Tutorial } from "@/components/Tutorial";
 import { useTheme } from "@/hooks/useTheme";
+import { useProfile } from "@/hooks/useProfile";
 
 type NavItem = {
   to: string;
@@ -62,6 +63,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { isAdmin } = useProfile();
+  const nav = NAV.filter((n) => n.to !== "/admin" || isAdmin);
 
   async function handleSignOut() {
     try {
@@ -113,7 +116,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
 
       <nav className="flex-1 px-2 py-2 space-y-0.5 overflow-y-auto">
-        {NAV.map((item) => {
+        {nav.map((item) => {
           const active = pathname === item.to || pathname.startsWith(item.to + "/");
           const Icon = item.icon;
           return (
