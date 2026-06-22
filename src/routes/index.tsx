@@ -167,7 +167,7 @@ function Landing() {
       </div>
 
       {/* HOW IT WORKS */}
-      <section className="px-5 sm:px-6 py-16 sm:py-24 md:py-28">
+      <section id="product" className="px-5 sm:px-6 py-16 sm:py-24 md:py-28 scroll-mt-24">
         <div className="max-w-6xl mx-auto">
           <SectionEyebrow>How it works</SectionEyebrow>
           <h2 className="font-display text-3xl sm:text-4xl md:text-6xl font-medium text-center leading-tight">
@@ -269,7 +269,8 @@ function Landing() {
 
 
       {/* COACHES */}
-      <section className="px-5 sm:px-6 py-16 sm:py-24 md:py-28 border-t border-border/60">
+      <section id="coaches" className="px-5 sm:px-6 py-16 sm:py-24 md:py-28 border-t border-border/60 scroll-mt-24">
+
         <div className="max-w-6xl mx-auto">
           <SectionEyebrow>Five personalities</SectionEyebrow>
           <h2 className="font-display text-3xl sm:text-4xl md:text-6xl font-medium text-center leading-tight">
@@ -295,7 +296,8 @@ function Landing() {
       </section>
 
       {/* PRICING */}
-      <section className="px-5 sm:px-6 py-16 sm:py-24 md:py-28 border-t border-border/60">
+      <section id="pricing" className="px-5 sm:px-6 py-16 sm:py-24 md:py-28 border-t border-border/60 scroll-mt-24">
+
         <div className="max-w-6xl mx-auto">
           <h2 className="font-display text-3xl sm:text-4xl md:text-6xl font-medium text-center leading-tight">
             Choose your edge.

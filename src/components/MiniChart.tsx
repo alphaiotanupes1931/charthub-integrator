@@ -12,7 +12,7 @@ export function MiniChart({ symbol, width = "100%", height = 70, dateRange = "1D
 
   useEffect(() => {
     if (!ref.current) return;
-    ref.current.innerHTML = `<div class="tradingview-widget-container__widget" style="width:100%;height:${height}px"></div>`;
+    ref.current.innerHTML = `<div class="tradingview-widget-container__widget" style="width:100%;height:${height}px;background:transparent"></div>`;
     const script = document.createElement("script");
     script.src = "https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js";
     script.async = true;
@@ -25,6 +25,7 @@ export function MiniChart({ symbol, width = "100%", height = 70, dateRange = "1D
       dateRange,
       colorTheme: "dark",
       isTransparent: true,
+      backgroundColor: "rgba(0,0,0,0)",
       autosize: false,
       largeChartUrl: "",
       chartOnly: true,
@@ -36,7 +37,7 @@ export function MiniChart({ symbol, width = "100%", height = 70, dateRange = "1D
     ref.current.appendChild(script);
   }, [symbol, width, height, dateRange]);
 
-  return <div className="tradingview-widget-container" ref={ref} style={{ width, height }} />;
+  return <div className="tradingview-widget-container bg-background/40 rounded-md overflow-hidden" ref={ref} style={{ width, height }} />;
 }
 
 interface SymbolOverviewProps {
@@ -49,7 +50,7 @@ export function SymbolOverview({ symbol, height = 420 }: SymbolOverviewProps) {
 
   useEffect(() => {
     if (!ref.current) return;
-    ref.current.innerHTML = `<div class="tradingview-widget-container__widget" style="width:100%;height:${height}px"></div>`;
+    ref.current.innerHTML = `<div class="tradingview-widget-container__widget" style="width:100%;height:${height}px;background:transparent"></div>`;
     const script = document.createElement("script");
     script.src = "https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js";
     script.async = true;
@@ -92,5 +93,5 @@ export function SymbolOverview({ symbol, height = 420 }: SymbolOverviewProps) {
     ref.current.appendChild(script);
   }, [symbol, height]);
 
-  return <div className="tradingview-widget-container" ref={ref} style={{ width: "100%", height }} />;
+  return <div className="tradingview-widget-container bg-background/60 rounded-lg overflow-hidden border border-border/40" ref={ref} style={{ width: "100%", height }} />;
 }
