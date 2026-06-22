@@ -20,6 +20,7 @@ import { Route as AppVoiceCoachRouteImport } from './routes/_app.voice-coach'
 import { Route as AppSystemStatusRouteImport } from './routes/_app.system-status'
 import { Route as AppStrategiesRouteImport } from './routes/_app.strategies'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
+import { Route as AppScanLensRouteImport } from './routes/_app.scan-lens'
 import { Route as AppMentorRouteImport } from './routes/_app.mentor'
 import { Route as AppMemoryRouteImport } from './routes/_app.memory'
 import { Route as AppJournalRouteImport } from './routes/_app.journal'
@@ -32,6 +33,7 @@ import { Route as AppBrokerRouteImport } from './routes/_app.broker'
 import { Route as AppAnalyticsRouteImport } from './routes/_app.analytics'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
 import { Route as AppChatIndexRouteImport } from './routes/_app.chat.index'
+import { Route as ApiTradelockerImportRouteImport } from './routes/api.tradelocker.import'
 import { Route as AppChatThreadIdRouteImport } from './routes/_app.chat.$threadId'
 
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -86,6 +88,11 @@ const AppStrategiesRoute = AppStrategiesRouteImport.update({
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppScanLensRoute = AppScanLensRouteImport.update({
+  id: '/scan-lens',
+  path: '/scan-lens',
   getParentRoute: () => AppRoute,
 } as any)
 const AppMentorRoute = AppMentorRouteImport.update({
@@ -148,6 +155,11 @@ const AppChatIndexRoute = AppChatIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppChatRoute,
 } as any)
+const ApiTradelockerImportRoute = ApiTradelockerImportRouteImport.update({
+  id: '/api/tradelocker/import',
+  path: '/api/tradelocker/import',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppChatThreadIdRoute = AppChatThreadIdRouteImport.update({
   id: '/$threadId',
   path: '/$threadId',
@@ -169,6 +181,7 @@ export interface FileRoutesByFullPath {
   '/journal': typeof AppJournalRoute
   '/memory': typeof AppMemoryRoute
   '/mentor': typeof AppMentorRoute
+  '/scan-lens': typeof AppScanLensRoute
   '/settings': typeof AppSettingsRoute
   '/strategies': typeof AppStrategiesRoute
   '/system-status': typeof AppSystemStatusRoute
@@ -177,6 +190,7 @@ export interface FileRoutesByFullPath {
   '/api/tts': typeof ApiTtsRoute
   '/invite/$code': typeof InviteCodeRoute
   '/chat/$threadId': typeof AppChatThreadIdRoute
+  '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/chat/': typeof AppChatIndexRoute
 }
 export interface FileRoutesByTo {
@@ -193,6 +207,7 @@ export interface FileRoutesByTo {
   '/journal': typeof AppJournalRoute
   '/memory': typeof AppMemoryRoute
   '/mentor': typeof AppMentorRoute
+  '/scan-lens': typeof AppScanLensRoute
   '/settings': typeof AppSettingsRoute
   '/strategies': typeof AppStrategiesRoute
   '/system-status': typeof AppSystemStatusRoute
@@ -201,6 +216,7 @@ export interface FileRoutesByTo {
   '/api/tts': typeof ApiTtsRoute
   '/invite/$code': typeof InviteCodeRoute
   '/chat/$threadId': typeof AppChatThreadIdRoute
+  '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/chat': typeof AppChatIndexRoute
 }
 export interface FileRoutesById {
@@ -220,6 +236,7 @@ export interface FileRoutesById {
   '/_app/journal': typeof AppJournalRoute
   '/_app/memory': typeof AppMemoryRoute
   '/_app/mentor': typeof AppMentorRoute
+  '/_app/scan-lens': typeof AppScanLensRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/strategies': typeof AppStrategiesRoute
   '/_app/system-status': typeof AppSystemStatusRoute
@@ -228,6 +245,7 @@ export interface FileRoutesById {
   '/api/tts': typeof ApiTtsRoute
   '/invite/$code': typeof InviteCodeRoute
   '/_app/chat/$threadId': typeof AppChatThreadIdRoute
+  '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/_app/chat/': typeof AppChatIndexRoute
 }
 export interface FileRouteTypes {
@@ -247,6 +265,7 @@ export interface FileRouteTypes {
     | '/journal'
     | '/memory'
     | '/mentor'
+    | '/scan-lens'
     | '/settings'
     | '/strategies'
     | '/system-status'
@@ -255,6 +274,7 @@ export interface FileRouteTypes {
     | '/api/tts'
     | '/invite/$code'
     | '/chat/$threadId'
+    | '/api/tradelocker/import'
     | '/chat/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -271,6 +291,7 @@ export interface FileRouteTypes {
     | '/journal'
     | '/memory'
     | '/mentor'
+    | '/scan-lens'
     | '/settings'
     | '/strategies'
     | '/system-status'
@@ -279,6 +300,7 @@ export interface FileRouteTypes {
     | '/api/tts'
     | '/invite/$code'
     | '/chat/$threadId'
+    | '/api/tradelocker/import'
     | '/chat'
   id:
     | '__root__'
@@ -297,6 +319,7 @@ export interface FileRouteTypes {
     | '/_app/journal'
     | '/_app/memory'
     | '/_app/mentor'
+    | '/_app/scan-lens'
     | '/_app/settings'
     | '/_app/strategies'
     | '/_app/system-status'
@@ -305,6 +328,7 @@ export interface FileRouteTypes {
     | '/api/tts'
     | '/invite/$code'
     | '/_app/chat/$threadId'
+    | '/api/tradelocker/import'
     | '/_app/chat/'
   fileRoutesById: FileRoutesById
 }
@@ -316,6 +340,7 @@ export interface RootRouteChildren {
   ApiChatRoute: typeof ApiChatRoute
   ApiTtsRoute: typeof ApiTtsRoute
   InviteCodeRoute: typeof InviteCodeRoute
+  ApiTradelockerImportRoute: typeof ApiTradelockerImportRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -395,6 +420,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/scan-lens': {
+      id: '/_app/scan-lens'
+      path: '/scan-lens'
+      fullPath: '/scan-lens'
+      preLoaderRoute: typeof AppScanLensRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/mentor': {
@@ -481,6 +513,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppChatIndexRouteImport
       parentRoute: typeof AppChatRoute
     }
+    '/api/tradelocker/import': {
+      id: '/api/tradelocker/import'
+      path: '/api/tradelocker/import'
+      fullPath: '/api/tradelocker/import'
+      preLoaderRoute: typeof ApiTradelockerImportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app/chat/$threadId': {
       id: '/_app/chat/$threadId'
       path: '/$threadId'
@@ -516,6 +555,7 @@ interface AppRouteChildren {
   AppJournalRoute: typeof AppJournalRoute
   AppMemoryRoute: typeof AppMemoryRoute
   AppMentorRoute: typeof AppMentorRoute
+  AppScanLensRoute: typeof AppScanLensRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppStrategiesRoute: typeof AppStrategiesRoute
   AppSystemStatusRoute: typeof AppSystemStatusRoute
@@ -534,6 +574,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppJournalRoute: AppJournalRoute,
   AppMemoryRoute: AppMemoryRoute,
   AppMentorRoute: AppMentorRoute,
+  AppScanLensRoute: AppScanLensRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppStrategiesRoute: AppStrategiesRoute,
   AppSystemStatusRoute: AppSystemStatusRoute,
@@ -550,6 +591,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiChatRoute: ApiChatRoute,
   ApiTtsRoute: ApiTtsRoute,
   InviteCodeRoute: InviteCodeRoute,
+  ApiTradelockerImportRoute: ApiTradelockerImportRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
