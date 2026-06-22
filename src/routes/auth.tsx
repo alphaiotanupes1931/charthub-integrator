@@ -103,10 +103,18 @@ function AuthPage() {
       return;
     }
     // Pre-create an Audio element inside the user gesture so .play() will
-    // be allowed after we receive the ElevenLabs MP3 bytes.
+    // be allowed after we receive the ElevenLabs MP3 bytes. Mobile Safari
+    // requires the element to actually start playing inside the gesture, so
+    // we prime it with a tiny silent WAV and immediately call .play().
     let welcomeAudio: HTMLAudioElement | null = null;
-    if (typeof window !== "undefined" && typeof Audio !== "undefined") {
+    const muted = isWelcomeBackMuted();
+    if (!muted && typeof window !== "undefined" && typeof Audio !== "undefined") {
       welcomeAudio = new Audio();
+      welcomeAudio.preload = "auto";
+      // 1-frame silent WAV — primes the element so a later src swap can play.
+      welcomeAudio.src =
+        "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
+      welcomeAudio.play().then(() => welcomeAudio?.pause()).catch(() => {});
       (window as Window & { __trademindWelcomeAudio?: HTMLAudioElement }).__trademindWelcomeAudio = welcomeAudio;
     }
     setBusy(true);
