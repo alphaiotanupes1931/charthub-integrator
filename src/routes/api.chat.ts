@@ -146,7 +146,7 @@ export const Route = createFileRoute("/api/chat")({
                   thread_id: threadId,
                   client_id: clientId,
                   role: m.role,
-                  parts: m.parts as unknown as Record<string, unknown>,
+                  parts: m.parts as unknown as import("@/integrations/supabase/types").Json,
                 }));
               if (toInsert.length > 0) {
                 const { error } = await sb.from("chat_messages").insert(toInsert);
