@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { PageHeader } from "@/components/PageHeader";
 import { BarChart3, Bot, MessageSquare } from "lucide-react";
 
@@ -15,6 +15,10 @@ const QUESTIONS = [
 ];
 
 function AnalyticsPage() {
+  const navigate = useNavigate();
+  const ask = (q: string) => {
+    navigate({ to: "/dashboard", search: { ask: q } as never });
+  };
   return (
     <div className="p-4 md:p-8 max-w-[1400px] mx-auto">
       <PageHeader title="Analytics" description="Your trading performance at a glance" />
@@ -37,11 +41,15 @@ function AnalyticsPage() {
         <div className="text-center space-y-4 py-6">
           <Bot className="h-10 w-10 mx-auto text-muted-foreground" />
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            Ask questions about your trading performance and I'll analyze your data.
+            Pick a question and your AI Coach will analyze your journal in real time.
           </p>
           <div className="flex flex-wrap justify-center gap-2 pt-2">
             {QUESTIONS.map((q) => (
-              <button key={q} className="rounded-md border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs text-primary hover:bg-primary/10">
+              <button
+                key={q}
+                onClick={() => ask(q)}
+                className="rounded-md border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs text-primary hover:bg-primary/10"
+              >
                 {q}
               </button>
             ))}
