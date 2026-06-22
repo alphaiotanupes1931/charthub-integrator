@@ -304,6 +304,8 @@ function Dashboard() {
           </button>
         ))}
       </div>
+      </div>
+
 
       {/* Chart card */}
       <div className="rounded-xl border border-border bg-card overflow-hidden" data-tour="chart">
