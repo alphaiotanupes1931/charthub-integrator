@@ -17,11 +17,14 @@ type Trade = {
   notes: string;
 };
 
+type ChartCtx = { ticker?: string; intervalLabel?: string; enabledLevels?: string };
+
 type ChatRequestBody = {
   messages?: UIMessage[];
   threadId?: string;
   coach?: string;
   journal?: Trade[];
+  chart?: ChartCtx;
 };
 
 function pnl(t: Trade) {
@@ -77,17 +80,29 @@ function coachPersona(coach?: string) {
   }
 }
 
-function systemPrompt(coach: string | undefined, journalContext: string) {
+function chartContextBlock(chart?: ChartCtx): string {
+  if (!chart?.ticker) return "The trader has not selected a chart yet.";
+  return `Symbol: ${chart.ticker}
+Timeframe: ${chart.intervalLabel ?? "?"}
+Levels currently on chart: ${chart.enabledLevels || "none"}`;
+}
+
+function systemPrompt(coach: string | undefined, journalContext: string, chartCtx: string) {
   return `${coachPersona(coach)}
 
-You are TradeMind, the trader's personal AI coach. You have full access to the trader's journal (below) and the entire conversation history of this thread — use them to give specific, personalized feedback. Reference real trades by date and symbol. Identify patterns: best/worst setups, time-of-day edge, symbols where they bleed, repeated mistakes. When they ask "what's my weakness", answer from the data.
+You are TradeMind, the trader's personal AI coach. You have full access to the trader's journal (below), the live chart context they're looking at right now, and the entire conversation history of this thread — use all three to give specific, personalized feedback. Reference real trades by date and symbol. Identify patterns: best/worst setups, time-of-day edge, symbols where they bleed, repeated mistakes. When they ask "what's my weakness", answer from the data.
+
+When they ask you to analyze a setup or "give me entry, stop, target", assume they mean the symbol and timeframe in the LIVE CHART block below unless they name a different one. Always produce a concrete plan: bias (long/short/neutral), entry trigger with a price or zone, invalidation/stop, take profit 1 and 2, R:R, and a 1–2 sentence rationale tied to the levels they have enabled. If exact prices aren't possible without live OHLC, give clearly-labeled illustrative levels and tell them to confirm against price.
 
 Rules:
 - Be conversational, like a real coach. Short paragraphs. Direct.
-- When they describe a setup, walk through it: bias, entry trigger, invalidation, target, R:R, position size.
 - If they ask what a term means (FVG, OB, liquidity sweep, R-multiple, etc.), explain plainly.
 - Never invent trades that aren't in their journal. If you don't have the data, say so.
 - Do not use emojis or decorative symbols.
+
+=== LIVE CHART ===
+${chartCtx}
+=== END CHART ===
 
 === TRADER'S JOURNAL ===
 ${journalContext}
@@ -130,7 +145,7 @@ export const Route = createFileRoute("/api/chat")({
         } catch {
           return new Response("Invalid JSON", { status: 400 });
         }
-        const { messages, threadId, coach, journal } = body;
+        const { messages, threadId, coach, journal, chart } = body;
         if (!Array.isArray(messages) || !threadId) {
           return new Response("messages, threadId required", { status: 400 });
         }
@@ -149,7 +164,7 @@ export const Route = createFileRoute("/api/chat")({
         }
 
         const journalCtx = buildJournalContext(journal ?? []);
-        const system = systemPrompt(coach, journalCtx);
+        const system = systemPrompt(coach, journalCtx, chartContextBlock(chart));
 
         const gateway = createLovableAiGatewayProvider(key);
         const result = streamText({
