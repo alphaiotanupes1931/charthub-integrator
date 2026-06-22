@@ -84,7 +84,7 @@ function FriendsPage() {
   });
 
   return (
-    <AppShell>
+    
       <div className="mx-auto w-full max-w-5xl space-y-6 p-6">
         <header className="flex items-center gap-3">
           <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary">
@@ -167,6 +167,6 @@ function FriendsPage() {
           </div>
         )}
       </div>
-    </AppShell>
+    
   );
 }
