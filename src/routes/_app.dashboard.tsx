@@ -117,8 +117,29 @@ function Dashboard() {
   const chatRef = useRef<DashboardChatHandle>(null);
   const [lensId, setLensId] = useState<ScanLensId>("wyckoff");
   const [lensOpen, setLensOpen] = useState(false);
+  const [broker, setBroker] = useState<{ email: string; server: string; accountType: "demo" | "live" } | null>(null);
   useEffect(() => { setLensId(readActiveLensId()); }, []);
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem("trademind.tradelocker.creds.v1");
+      if (raw) {
+        const c = JSON.parse(raw) as { email?: string; server?: string; accountType?: "demo" | "live" };
+        if (c.email && c.server) setBroker({ email: c.email, server: c.server, accountType: c.accountType ?? "demo" });
+      }
+    } catch { /* ignore */ }
+  }, []);
   const activeLens = SCAN_LENSES.find((l) => l.id === lensId) ?? SCAN_LENSES[0];
+
+  const openTradingFloor = () => {
+    const url = `https://www.tradingview.com/chart/?symbol=${encodeURIComponent(symbol.tv)}`;
+    const width = Math.min(1100, Math.round(window.screen.availWidth * 0.6));
+    const height = Math.round(window.screen.availHeight * 0.92);
+    const left = Math.max(0, window.screen.availWidth - width);
+    const features = `popup=yes,width=${width},height=${height},left=${left},top=0`;
+    const w = window.open(url, "trademind_tv_floor", features);
+    if (!w) { toast.error("Popup blocked — allow popups to open the trading floor."); return; }
+    w.focus();
+  };
 
 
   useEffect(() => {
