@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import {
   Calendar as CalIcon,
@@ -11,7 +11,15 @@ import {
   X,
   TrendingUp,
   TrendingDown,
+  ImageIcon,
+  Upload,
 } from "lucide-react";
+import {
+  putTradeImage,
+  getTradeImage,
+  deleteTradeImage,
+  compressImageFile,
+} from "@/lib/journalImages";
 
 export const Route = createFileRoute("/_app/journal")({
   head: () => ({ meta: [{ title: "Trade Journal, TradeMind" }] }),
