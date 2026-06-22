@@ -96,7 +96,7 @@ function Dashboard() {
   const [result, setResult] = useState<ScanResult | null>(null);
   const [chartMode, setChartMode] = useState<"live" | "native">("native");
   const [levels, setLevels] = useState<Record<LevelKey, boolean>>(() =>
-    typeof window !== "undefined" ? loadLevels() : { VWAP: true, POC: true, SR: true, ZONES: true, FVG: true, FIB: false, LIQ: true },
+    typeof window !== "undefined" ? loadLevels() : { VWAP: true, POC: true, SR: true, ZONES: true, FVG: true, FIB: false, LIQ: true, OF: true },
   );
   const [sessionsOn, setSessionsOn] = useState(true);
   const [levelsOpen, setLevelsOpen] = useState(false);
