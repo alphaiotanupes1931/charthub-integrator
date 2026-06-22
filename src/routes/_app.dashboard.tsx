@@ -113,7 +113,12 @@ function Dashboard() {
   const [snapshot, setSnapshot] = useState<ChartSnapshot | null>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
   const levelsRef = useRef<HTMLDivElement>(null);
+  const lensRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<DashboardChatHandle>(null);
+  const [lensId, setLensId] = useState<ScanLensId>("wyckoff");
+  const [lensOpen, setLensOpen] = useState(false);
+  useEffect(() => { setLensId(readActiveLensId()); }, []);
+  const activeLens = SCAN_LENSES.find((l) => l.id === lensId) ?? SCAN_LENSES[0];
 
 
   useEffect(() => {
