@@ -19,7 +19,7 @@ import {
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { supabase } from "@/integrations/supabase/client";
 import { getOrCreateDashboardThread, getChatMessages } from "@/lib/chat.functions";
-import { readJournal, readActiveCoach } from "@/lib/chat-client";
+import { readJournal, readActiveCoach, writeActiveCoach } from "@/lib/chat-client";
 import { useCoachVoice } from "@/hooks/useCoachVoice";
 import { voiceForCoach, COACH_VOICES } from "@/lib/coachVoices";
 import { toast } from "sonner";
