@@ -358,6 +358,56 @@ function TradeFormModal({
   const [stop, setStop] = useState<string>(editing ? String(editing.stop) : "");
   const [size, setSize] = useState<string>(editing ? String(editing.size) : "1");
   const [notes, setNotes] = useState(editing?.notes ?? "");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [pendingImage, setPendingImage] = useState<Blob | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [removeImage, setRemoveImage] = useState(false);
+
+  // Load existing image preview when editing.
+  useEffect(() => {
+    let revokedUrl: string | null = null;
+    if (editing?.hasImage) {
+      void getTradeImage(editing.id).then((blob) => {
+        if (blob) {
+          const url = URL.createObjectURL(blob);
+          revokedUrl = url;
+          setImageUrl(url);
+        }
+      });
+    }
+    return () => { if (revokedUrl) URL.revokeObjectURL(revokedUrl); };
+  }, [editing?.id, editing?.hasImage]);
+
+  const handlePickFile = async (file: File | null | undefined) => {
+    if (!file || !file.type.startsWith("image/")) return;
+    const compressed = await compressImageFile(file);
+    setPendingImage(compressed);
+    setRemoveImage(false);
+    if (imageUrl) URL.revokeObjectURL(imageUrl);
+    setImageUrl(URL.createObjectURL(compressed));
+  };
+
+  const clearImage = () => {
+    if (imageUrl) URL.revokeObjectURL(imageUrl);
+    setImageUrl(null);
+    setPendingImage(null);
+    setRemoveImage(true);
+  };
+
+  // Paste-from-clipboard support (great for TradingView screenshots).
+  useEffect(() => {
+    const onPaste = (e: ClipboardEvent) => {
+      const item = Array.from(e.clipboardData?.items ?? []).find((i) => i.type.startsWith("image/"));
+      if (!item) return;
+      const file = item.getAsFile();
+      if (file) void handlePickFile(file);
+    };
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const hasImage = !!pendingImage || (!!editing?.hasImage && !removeImage);
 
   const preview: Trade = {
     id: editing?.id ?? "preview",
@@ -370,6 +420,7 @@ function TradeFormModal({
     stop: Number(stop) || 0,
     size: Number(size) || 0,
     notes,
+    hasImage,
     createdAt: editing?.createdAt ?? Date.now(),
   };
   const previewPnl = tradePnl(preview);
@@ -377,12 +428,16 @@ function TradeFormModal({
 
   const canSave = symbol.trim() && entry !== "" && exit !== "" && stop !== "" && date;
 
-  const submit = () => {
+  const submit = async () => {
     if (!canSave) return;
-    onSave({
-      ...preview,
-      id: editing?.id ?? `t_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
-    });
+    const id = editing?.id ?? `t_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
+    if (pendingImage) {
+      await putTradeImage(id, pendingImage);
+    } else if (removeImage && editing?.hasImage) {
+      await deleteTradeImage(id);
+    }
+    onSave({ ...preview, id });
+
   };
 
   return (
