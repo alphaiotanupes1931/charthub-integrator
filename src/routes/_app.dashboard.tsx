@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { TradingViewChart } from "@/components/TradingViewChart";
-import { NativeChart, LEVEL_META, type LevelKey } from "@/components/NativeChart";
+import { NativeChart, LEVEL_META, type LevelKey, type ChartSnapshot } from "@/components/NativeChart";
 import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Sparkles, Clock, MessageSquare, X } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { DashboardChatPanel, type DashboardChatHandle } from "@/components/DashboardChatPanel";
@@ -101,6 +101,7 @@ function Dashboard() {
   const [sessionsOn, setSessionsOn] = useState(true);
   const [levelsOpen, setLevelsOpen] = useState(false);
   const [coachOpen, setCoachOpen] = useState(false);
+  const [snapshot, setSnapshot] = useState<ChartSnapshot | null>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
   const levelsRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<DashboardChatHandle>(null);
@@ -312,7 +313,7 @@ function Dashboard() {
           {chartMode === "live" ? (
             <TradingViewChart symbol={symbol.tv} interval={interval} enabled={levels} />
           ) : (
-            <NativeChart symbol={symbol.tv} ticker={symbol.ticker} interval={interval} enabled={levels} sessions={sessionsOn} />
+            <NativeChart symbol={symbol.tv} ticker={symbol.ticker} interval={interval} enabled={levels} sessions={sessionsOn} onSnapshot={setSnapshot} />
           )}
         </div>
 
@@ -389,6 +390,7 @@ function Dashboard() {
           ticker: symbol.ticker,
           intervalLabel,
           enabledLevels: ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none",
+          snapshot: snapshot ?? undefined,
         }}
       />
     </div>
@@ -402,7 +404,7 @@ function FloatingCoach({
   onOpen: () => void;
   onClose: () => void;
   chatRef: React.RefObject<DashboardChatHandle | null>;
-  chart: { ticker: string; intervalLabel: string; enabledLevels: string };
+  chart: { ticker: string; intervalLabel: string; enabledLevels: string; snapshot?: ChartSnapshot };
 }) {
   return (
     <>
