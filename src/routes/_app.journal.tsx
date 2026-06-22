@@ -106,6 +106,21 @@ function JournalPage() {
   useEffect(() => { setTrades(loadTrades()); }, []);
   useEffect(() => { saveTrades(trades); }, [trades]);
 
+  // Hand-off from Broker → Journal "Snapshot to Journal".
+  const [prefill, setPrefill] = useState<{ symbol?: string; timeframe?: string; notes?: string } | null>(null);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("trademind.journal.prefill.v1");
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      localStorage.removeItem("trademind.journal.prefill.v1");
+      setPrefill(data);
+      setFormDate(todayYmd());
+      setEditingId(null);
+      setFormOpen(true);
+    } catch { /* ignore */ }
+  }, []);
+
   const year = cursor.getFullYear();
   const month = cursor.getMonth();
   const firstDay = new Date(year, month, 1).getDay();
