@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { Link } from "@tanstack/react-router";
-import { MessageSquare, Sparkles, ExternalLink, Trash2, X, Volume2, VolumeX } from "lucide-react";
+import { MessageSquare, Sparkles, ExternalLink, Trash2, X, Minus, Volume2, VolumeX } from "lucide-react";
 import {
   Conversation,
   ConversationContent,
@@ -35,9 +35,9 @@ export type ChartContext = {
   snapshot?: import("@/components/NativeChart").ChartSnapshot;
 };
 
-type Props = { chart?: ChartContext; onClose?: () => void };
+type Props = { chart?: ChartContext; onClose?: () => void; onMinimize?: () => void };
 
-export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(function DashboardChatPanel({ chart, onClose }, ref) {
+export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(function DashboardChatPanel({ chart, onClose, onMinimize }, ref) {
   const [threadId, setThreadId] = useState<string | null>(null);
   const [initial, setInitial] = useState<UIMessage[] | null>(null);
   const getThread = useServerFn(getOrCreateDashboardThread);
@@ -68,12 +68,12 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
     );
   }
 
-  return <ChatInner ref={ref} threadId={threadId} initial={initial} chart={chart} onClose={onClose} />;
+  return <ChatInner ref={ref} threadId={threadId} initial={initial} chart={chart} onClose={onClose} onMinimize={onMinimize} />;
 });
 
 
-const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: UIMessage[]; chart?: ChartContext; onClose?: () => void }>(
-  function ChatInner({ threadId, initial, chart, onClose }, ref) {
+const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: UIMessage[]; chart?: ChartContext; onClose?: () => void; onMinimize?: () => void }>(
+  function ChatInner({ threadId, initial, chart, onClose, onMinimize }, ref) {
 
     const [input, setInput] = useState("");
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -167,6 +167,14 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               aria-label={voice.enabled ? "Mute voice" : "Enable voice"}
             >
               {voice.enabled ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
+            </button>
+            <button
+              onClick={onMinimize}
+              className="text-muted-foreground hover:text-foreground p-1.5 rounded-md"
+              title="Hide coach (audio keeps playing)"
+              aria-label="Hide coach"
+            >
+              <Minus className="h-4 w-4" />
             </button>
             <button
               onClick={clearChat}
