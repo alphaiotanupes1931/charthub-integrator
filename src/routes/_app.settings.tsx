@@ -118,6 +118,12 @@ function SettingsPage() {
   const { profile, refresh } = useProfile();
   const [name, setName] = useState("");
   const [savingName, setSavingName] = useState(false);
+  const { format: timeFormat, setFormat: setTimeFormat } = useTimeFormat();
+  const [clockNow, setClockNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = window.setInterval(() => setClockNow(new Date()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
 
   useEffect(() => { if (profile?.display_name) setName(profile.display_name); }, [profile?.display_name]);
 
