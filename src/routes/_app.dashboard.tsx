@@ -129,10 +129,19 @@ function Dashboard() {
     const onDown = (e: MouseEvent) => {
       if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) setPickerOpen(false);
       if (levelsRef.current && !levelsRef.current.contains(e.target as Node)) setLevelsOpen(false);
+      if (lensRef.current && !lensRef.current.contains(e.target as Node)) setLensOpen(false);
     };
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
   }, []);
+
+  function pickLens(id: ScanLensId) {
+    setLensId(id);
+    writeActiveLensId(id);
+    setLensOpen(false);
+    const lens = SCAN_LENSES.find((l) => l.id === id);
+    toast.success(`Scan Lens: ${lens?.name ?? id}`);
+  }
 
   useEffect(() => { setResult(null); }, [symbol]);
 
