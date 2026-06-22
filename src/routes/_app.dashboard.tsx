@@ -2,8 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { TradingViewChart } from "@/components/TradingViewChart";
 import { NativeChart, LEVEL_META, type LevelKey } from "@/components/NativeChart";
-import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid } from "lucide-react";
+import { ChevronDown, Crosshair, Check, Activity, LayoutGrid, Sparkles } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
+import { DashboardChatPanel, type DashboardChatHandle } from "@/components/DashboardChatPanel";
 
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({
