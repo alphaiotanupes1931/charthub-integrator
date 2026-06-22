@@ -55,7 +55,7 @@ function BrokerPage() {
           </a>
         </div>
         <div className="h-[640px]">
-          <TradingViewChart symbol="OANDA:XAUUSD" interval="60" sessions={false} />
+          <TradingViewChart symbol="OANDA:XAUUSD" interval="60" />
         </div>
         <div className="border-t border-border/60 px-4 py-3 text-xs text-muted-foreground">
           Tap the <span className="text-foreground font-medium">Trading Panel</span> button on the chart toolbar to open the broker terminal. If you haven't connected a broker yet, TradingView will prompt you.
