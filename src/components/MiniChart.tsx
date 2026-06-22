@@ -40,9 +40,24 @@ export function MiniChart({ symbol, width = "100%", height = 70, dateRange = "1D
       underLineBottomColor: "rgba(201, 168, 76, 0)",
     });
     ref.current.appendChild(script);
-  }, [symbol, width, height, dateRange]);
+  }, [mounted, symbol, width, height, dateRange]);
 
-  return <div className="tradingview-widget-container bg-background/40 rounded-md overflow-hidden" ref={ref} style={{ width, height }} />;
+  if (!mounted) {
+    return (
+      <div
+        className="rounded-md overflow-hidden bg-card/40 border border-border/40 animate-pulse"
+        style={{ width, height }}
+      />
+    );
+  }
+
+  return (
+    <div
+      className="tradingview-widget-container bg-background/40 rounded-md overflow-hidden"
+      ref={ref}
+      style={{ width, height }}
+    />
+  );
 }
 
 interface SymbolOverviewProps {
