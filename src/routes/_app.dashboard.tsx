@@ -361,7 +361,14 @@ function Dashboard() {
         </div>
         {/* Chat panel */}
         <aside className="xl:sticky xl:top-4 h-[600px] xl:h-[calc(100vh-6rem)]">
-          <DashboardChatPanel ref={chatRef} />
+          <DashboardChatPanel
+            ref={chatRef}
+            chart={{
+              ticker: symbol.ticker,
+              intervalLabel,
+              enabledLevels: ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none",
+            }}
+          />
         </aside>
       </div>
     </div>

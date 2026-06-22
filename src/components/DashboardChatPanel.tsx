@@ -26,7 +26,15 @@ export type DashboardChatHandle = {
   scan: (prompt: string) => void;
 };
 
-export const DashboardChatPanel = forwardRef<DashboardChatHandle>(function DashboardChatPanel(_props, ref) {
+export type ChartContext = {
+  ticker: string;
+  intervalLabel: string;
+  enabledLevels: string;
+};
+
+type Props = { chart?: ChartContext };
+
+export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(function DashboardChatPanel({ chart }, ref) {
   const [threadId, setThreadId] = useState<string | null>(null);
   const [initial, setInitial] = useState<UIMessage[] | null>(null);
   const getThread = useServerFn(getOrCreateDashboardThread);
@@ -57,13 +65,16 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle>(function Dashb
     );
   }
 
-  return <ChatInner ref={ref} threadId={threadId} initial={initial} />;
+  return <ChatInner ref={ref} threadId={threadId} initial={initial} chart={chart} />;
 });
 
-const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: UIMessage[] }>(
-  function ChatInner({ threadId, initial }, ref) {
+
+const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: UIMessage[]; chart?: ChartContext }>(
+  function ChatInner({ threadId, initial, chart }, ref) {
     const [input, setInput] = useState("");
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+    const chartRef = useRef<ChartContext | undefined>(chart);
+    useEffect(() => { chartRef.current = chart; }, [chart]);
 
     const { messages, sendMessage, status, setMessages } = useChat({
       id: threadId,
@@ -83,6 +94,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
             threadId: id,
             coach: readActiveCoach(),
             journal: readJournal(),
+            chart: chartRef.current,
           },
         }),
       }),
@@ -142,10 +154,11 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
         <Conversation className="flex-1 min-h-0">
           <ConversationContent className="px-3 py-4">
             {messages.length === 0 && (
-              <div className="text-center text-xs text-muted-foreground py-10 flex flex-col items-center gap-2">
-                <MessageSquare className="h-5 w-5 opacity-60" />
-                <div>Ask about a setup, or hit <span className="text-foreground font-medium">Run a scan</span> on the chart.</div>
-              </div>
+              <EmptyStateSuggestions
+                chart={chart}
+                disabled={loading}
+                onPick={(text) => void sendMessage({ text })}
+              />
             )}
             {messages.map((m) => {
               const text = m.parts
@@ -185,6 +198,50 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
           </PromptInput>
         </div>
       </div>
-    );
+);
+
+function EmptyStateSuggestions({
+  chart,
+  disabled,
+  onPick,
+}: {
+  chart?: ChartContext;
+  disabled: boolean;
+  onPick: (text: string) => void;
+}) {
+  const ticker = chart?.ticker ?? "XAU/USD";
+  const tf = chart?.intervalLabel ?? "1H";
+  const levels = chart?.enabledLevels || "VWAP, POC, S/R";
+  const suggestions = [
+    `Analyze ${ticker} for a trade setup. Give me entry, stop loss, and take profit levels.`,
+    `What's my edge on ${ticker} based on my journal?`,
+    `Walk me through a ${tf} ${ticker} plan using ${levels}.`,
+    `What's my biggest weakness right now? Be specific with trade examples.`,
+  ];
+  return (
+    <div className="py-6 px-1 flex flex-col items-center gap-3">
+      <div className="flex flex-col items-center gap-1.5 text-center">
+        <MessageSquare className="h-5 w-5 text-muted-foreground/70" />
+        <div className="text-xs text-muted-foreground">
+          Ask your coach, or tap a suggestion to get started.
+        </div>
+      </div>
+      <div className="w-full flex flex-col gap-1.5 mt-1">
+        {suggestions.map((s) => (
+          <button
+            key={s}
+            type="button"
+            disabled={disabled}
+            onClick={() => onPick(s)}
+            className="text-left text-xs leading-snug rounded-lg border border-border/70 bg-background/40 hover:bg-primary/5 hover:border-primary/40 transition px-3 py-2 text-foreground/90 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {s}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
   },
 );
