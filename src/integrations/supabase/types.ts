@@ -85,27 +85,90 @@ export type Database = {
           display_name: string | null
           email: string | null
           id: string
+          losses: number
           onboarded: boolean
           referral_source: string | null
           updated_at: string
+          voice_enabled: boolean
+          voice_id_override: string | null
+          wins: number
         }
         Insert: {
           created_at?: string
           display_name?: string | null
           email?: string | null
           id: string
+          losses?: number
           onboarded?: boolean
           referral_source?: string | null
           updated_at?: string
+          voice_enabled?: boolean
+          voice_id_override?: string | null
+          wins?: number
         }
         Update: {
           created_at?: string
           display_name?: string | null
           email?: string | null
           id?: string
+          losses?: number
           onboarded?: boolean
           referral_source?: string | null
           updated_at?: string
+          voice_enabled?: boolean
+          voice_id_override?: string | null
+          wins?: number
+        }
+        Relationships: []
+      }
+      trader_connections: {
+        Row: {
+          created_at: string
+          id: string
+          user_a: string
+          user_b: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user_a: string
+          user_b: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user_a?: string
+          user_b?: string
+        }
+        Relationships: []
+      }
+      trader_invites: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          code: string
+          created_at: string
+          id: string
+          inviter_id: string
+          note: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          code: string
+          created_at?: string
+          id?: string
+          inviter_id: string
+          note?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          code?: string
+          created_at?: string
+          id?: string
+          inviter_id?: string
+          note?: string | null
         }
         Relationships: []
       }
