@@ -100,6 +100,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
         prepareSendMessagesRequest: ({ messages, id }) => {
           const stratName = readActiveStrategy();
           const strategy = stratName ? findStrategyByName(stratName) ?? { name: stratName } : null;
+          const lens = findLens(readActiveLensId());
           return {
             body: {
               messages,
@@ -108,6 +109,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               journal: readJournal(),
               chart: chartRef.current,
               strategy,
+              lens: { id: lens.id, name: lens.name, promptEmphasis: lens.promptEmphasis },
             },
           };
         },
