@@ -204,9 +204,9 @@ function Dashboard() {
   const enabledCount = ALL_LEVELS.filter((k) => levels[k]).length;
 
   return (
-    <div className="mx-auto max-w-[1600px] px-4 sm:px-6 py-6 sm:py-8">
+    <div className="mx-auto max-w-[1600px] px-4 sm:px-6 py-6 sm:py-10">
       {firstName && (
-        <div className="text-sm text-muted-foreground mb-4">
+        <div className="text-sm text-muted-foreground mb-5 sm:mb-6">
           Welcome back, <span className="text-foreground font-medium">{profile?.display_name}</span>
         </div>
       )}
@@ -216,12 +216,12 @@ function Dashboard() {
         <TodaysRecommendation />
       </div>
 
-      <div className="space-y-5">
+      <div className="space-y-6 sm:space-y-8 mt-6 sm:mt-8">
         {/* Header */}
-        <header className="flex flex-wrap items-end justify-between gap-4 border-b border-border/60 pb-5">
+        <header className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3 border-b border-border/60 pb-5 sm:pb-6">
           <div className="min-w-0">
 
-          <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground mb-1.5">
+          <div className="text-[10px] sm:text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground mb-1.5">
             Active instrument
           </div>
           <h1 className="font-display text-2xl sm:text-3xl font-semibold tracking-tight truncate">
@@ -232,18 +232,19 @@ function Dashboard() {
           </p>
         </div>
 
-        <div className="relative" ref={pickerRef} data-tour="symbol-picker">
+        <div className="relative shrink-0" ref={pickerRef} data-tour="symbol-picker">
           <button
             onClick={() => setPickerOpen((o) => !o)}
-            className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium hover:border-primary/50 transition"
+            className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-xs sm:text-sm font-medium hover:border-primary/50 transition"
             aria-haspopup="listbox"
             aria-expanded={pickerOpen}
           >
-            Change symbol
+            <span className="hidden sm:inline">Change symbol</span>
+            <span className="sm:hidden">Change</span>
             <ChevronDown className={`h-3.5 w-3.5 transition-transform ${pickerOpen ? "rotate-180" : ""}`} />
           </button>
           {pickerOpen && (
-            <div role="listbox" className="absolute right-0 mt-2 w-72 max-h-80 overflow-y-auto rounded-lg border border-border bg-card shadow-xl z-20">
+            <div role="listbox" className="absolute right-0 mt-2 w-[min(18rem,calc(100vw-2rem))] max-h-80 overflow-y-auto rounded-lg border border-border bg-card shadow-xl z-20">
               {SYMBOLS.map((s) => {
                 const active = s.tv === symbol.tv;
                 return (
@@ -561,7 +562,7 @@ function FloatingCoach({
           onClick={() => { setMinimized(false); onOpen(); }}
           aria-label="Open AI coach"
           data-tour="coach-bubble"
-          className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/30 ring-1 ring-primary/40 hover:scale-105 transition flex items-center justify-center"
+          className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-40 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/30 ring-1 ring-primary/40 hover:scale-105 transition flex items-center justify-center"
         >
           <MessageSquare className="h-6 w-6" />
         </button>
@@ -583,9 +584,9 @@ function FloatingCoach({
         </button>
       )}
 
-      {/* Expanded panel — always mounted so the chat thread persists between toggles */}
+      {/* Expanded panel — full-screen on mobile, anchored bubble on desktop. Always mounted so the chat thread persists. */}
       <div
-        className={`fixed z-40 right-4 bottom-4 sm:right-6 sm:bottom-6 w-[min(420px,calc(100vw-2rem))] h-[min(640px,calc(100vh-2rem))] transition-all duration-200 ${
+        className={`fixed z-40 inset-0 sm:inset-auto sm:right-6 sm:bottom-6 sm:w-[min(420px,calc(100vw-3rem))] sm:h-[min(640px,calc(100vh-3rem))] transition-all duration-200 ${
           expanded ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 translate-y-4 pointer-events-none"
         }`}
       >
