@@ -79,12 +79,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { name: "theme-color", content: "#0a0a0a" },
       { title: "TradeMind, AI Trading Coach & Live Charts" },
-      { name: "description", content: "AI trading coach with live TradingView charts, trade journaling, and performance analytics for day, swing, and prop traders." },
+      { name: "description", content: "AI trading coach with live charts, trade journaling, and performance analytics for day, swing, and prop traders." },
       { property: "og:title", content: "TradeMind, AI Trading Coach" },
       { property: "og:description", content: "Live charts and AI-powered coaching for serious traders." },
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "TradeMind" },
+      { property: "og:image", content: "/__l5e/assets-v1/1b10274c-a5e0-49d5-b7af-d7ec4b84a564/logo.png" },
       { name: "twitter:card", content: "summary" },
+      { name: "twitter:image", content: "/__l5e/assets-v1/1b10274c-a5e0-49d5-b7af-d7ec4b84a564/logo.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -117,6 +119,22 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
+
+  useEffect(() => {
+    // Single global auth state listener: invalidate router/cache on identity changes.
+    // We import the client lazily to avoid pulling it into SSR.
+    let unsub: (() => void) | undefined;
+    import("@/integrations/supabase/client").then(({ supabase }) => {
+      const { data } = supabase.auth.onAuthStateChange((event) => {
+        if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+        router.invalidate();
+        if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
+      });
+      unsub = () => data.subscription.unsubscribe();
+    });
+    return () => unsub?.();
+  }, [router, queryClient]);
 
   return (
     <QueryClientProvider client={queryClient}>
