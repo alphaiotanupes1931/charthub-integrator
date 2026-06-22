@@ -17,11 +17,14 @@ type Trade = {
   notes: string;
 };
 
+type ChartCtx = { ticker?: string; intervalLabel?: string; enabledLevels?: string };
+
 type ChatRequestBody = {
   messages?: UIMessage[];
   threadId?: string;
   coach?: string;
   journal?: Trade[];
+  chart?: ChartCtx;
 };
 
 function pnl(t: Trade) {
