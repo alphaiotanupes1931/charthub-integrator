@@ -138,7 +138,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
             <button
               onClick={clearChat}
               className="text-muted-foreground hover:text-foreground p-1.5 rounded-md"
-              title="Clear conversation"
+              title="Start a new conversation"
             >
               <Trash2 className="h-3.5 w-3.5" />
             </button>
@@ -149,7 +149,17 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
             >
               <ExternalLink className="h-3.5 w-3.5" />
             </Link>
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="text-muted-foreground hover:text-foreground p-1.5 rounded-md"
+                title="Close coach"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
+
         </div>
 
         <Conversation className="flex-1 min-h-0">
