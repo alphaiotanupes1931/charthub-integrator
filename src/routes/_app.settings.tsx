@@ -114,6 +114,8 @@ function SettingsPage() {
   const [savingName, setSavingName] = useState(false);
   const { format: timeFormat, setFormat: setTimeFormat } = useTimeFormat();
   const [clockNow, setClockNow] = useState(() => new Date());
+  const [welcomeMuted, setWelcomeMutedState] = useState(false);
+  useEffect(() => { setWelcomeMutedState(isWelcomeBackMuted()); }, []);
 
   // TradeLocker integration state
   const [tlEmail, setTlEmail] = useState("");
