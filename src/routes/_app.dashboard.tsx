@@ -137,12 +137,14 @@ function Dashboard() {
   const enabledCount = ALL_LEVELS.filter((k) => levels[k]).length;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 sm:px-6 py-6 sm:py-8 space-y-5">
+    <div className="mx-auto max-w-[1600px] px-4 sm:px-6 py-6 sm:py-8">
       {firstName && (
-        <div className="text-sm text-muted-foreground">
+        <div className="text-sm text-muted-foreground mb-4">
           Welcome back, <span className="text-foreground font-medium">{profile?.display_name}</span>
         </div>
       )}
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_400px]">
+        <div className="space-y-5 min-w-0">
       {/* Header */}
       <header className="flex flex-wrap items-end justify-between gap-4 border-b border-border/60 pb-5">
         <div className="min-w-0">
