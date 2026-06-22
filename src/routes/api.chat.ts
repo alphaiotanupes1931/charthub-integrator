@@ -32,6 +32,16 @@ function pnl(t: Trade) {
   return (t.exit - t.entry) * dir * t.size;
 }
 
+function sessionFor(hourUtc: number): string {
+  // FX trading sessions in UTC (approx, ignore DST)
+  if (hourUtc >= 22 || hourUtc < 7) return "Sydney";
+  if (hourUtc >= 0  && hourUtc < 8) return "Tokyo";
+  if (hourUtc >= 8  && hourUtc < 13) return "London";
+  if (hourUtc >= 13 && hourUtc < 17) return "London/NY overlap";
+  if (hourUtc >= 17 && hourUtc < 22) return "New York";
+  return "Off-hours";
+}
+
 function buildJournalContext(trades: Trade[]): string {
   if (!trades || trades.length === 0) return "The trader has not logged any trades yet.";
   const recent = trades.slice(-25);
@@ -40,33 +50,59 @@ function buildJournalContext(trades: Trade[]): string {
   const total = wins + losses;
   const wr = total ? Math.round((wins / total) * 100) : 0;
   const totalPnl = trades.reduce((s, t) => s + pnl(t), 0);
+  const avgWin = wins ? trades.filter((t) => pnl(t) > 0).reduce((s, t) => s + pnl(t), 0) / wins : 0;
+  const avgLoss = losses ? trades.filter((t) => pnl(t) < 0).reduce((s, t) => s + pnl(t), 0) / losses : 0;
+  const expectancy = total ? totalPnl / total : 0;
+
+  const bucket = (key: string, t: Trade, acc: Record<string, { n: number; pnl: number; wins: number }>) => {
+    acc[key] ??= { n: 0, pnl: 0, wins: 0 };
+    acc[key].n++;
+    acc[key].pnl += pnl(t);
+    if (pnl(t) > 0) acc[key].wins++;
+  };
+  const fmt = (rec: Record<string, { n: number; pnl: number; wins: number }>) =>
+    Object.entries(rec)
+      .sort((a, b) => b[1].n - a[1].n)
+      .map(([k, v]) => `  - ${k}: ${v.n} trades, ${v.wins}W/${v.n - v.wins}L (${Math.round((v.wins / v.n) * 100)}%), P&L ${v.pnl.toFixed(2)}`)
+      .join("\n");
+
   const bySymbol: Record<string, { n: number; pnl: number; wins: number }> = {};
+  const bySide:   Record<string, { n: number; pnl: number; wins: number }> = {};
+  const bySession:Record<string, { n: number; pnl: number; wins: number }> = {};
+  const byDow:    Record<string, { n: number; pnl: number; wins: number }> = {};
+  const byTf:     Record<string, { n: number; pnl: number; wins: number }> = {};
+  const DOW = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
   for (const t of trades) {
-    const k = t.symbol || "?";
-    bySymbol[k] ??= { n: 0, pnl: 0, wins: 0 };
-    bySymbol[k].n++;
-    bySymbol[k].pnl += pnl(t);
-    if (pnl(t) > 0) bySymbol[k].wins++;
+    bucket(t.symbol || "?", t, bySymbol);
+    bucket(t.side, t, bySide);
+    bucket(t.timeframe || "?", t, byTf);
+    const d = new Date(t.date);
+    if (!isNaN(d.getTime())) {
+      bucket(sessionFor(d.getUTCHours()), t, bySession);
+      bucket(DOW[d.getUTCDay()], t, byDow);
+    }
   }
-  const symLines = Object.entries(bySymbol)
-    .sort((a, b) => b[1].n - a[1].n)
-    .slice(0, 6)
-    .map(([s, v]) => `  - ${s}: ${v.n} trades, ${v.wins}W/${v.n - v.wins}L, P&L ${v.pnl.toFixed(2)}`)
-    .join("\n");
+
   const tradeLines = recent
-    .map(
-      (t) =>
-        `  ${t.date} ${t.timeframe} ${t.symbol} ${t.side} entry=${t.entry} exit=${t.exit} stop=${t.stop} size=${t.size} pnl=${pnl(t).toFixed(2)}${t.notes ? ` // ${t.notes.slice(0, 120)}` : ""}`,
-    )
+    .map((t) => {
+      const d = new Date(t.date);
+      const sess = !isNaN(d.getTime()) ? sessionFor(d.getUTCHours()) : "?";
+      return `  ${t.date} ${t.timeframe} ${t.symbol} ${t.side} [${sess}] entry=${t.entry} exit=${t.exit} stop=${t.stop} size=${t.size} pnl=${pnl(t).toFixed(2)}${t.notes ? ` // ${t.notes.slice(0, 120)}` : ""}`;
+    })
     .join("\n");
+
   return [
-    `STATS: ${trades.length} total trades, ${wr}% win rate (${wins}W/${losses}L), net P&L ${totalPnl.toFixed(2)}.`,
-    `BY SYMBOL:`,
-    symLines,
+    `STATS: ${trades.length} trades, ${wr}% win rate (${wins}W/${losses}L), net P&L ${totalPnl.toFixed(2)}, avg win ${avgWin.toFixed(2)}, avg loss ${avgLoss.toFixed(2)}, expectancy/trade ${expectancy.toFixed(2)}.`,
+    `BY SYMBOL:\n${fmt(bySymbol)}`,
+    `BY SIDE:\n${fmt(bySide)}`,
+    `BY SESSION (UTC: Sydney/Tokyo/London/NY):\n${fmt(bySession)}`,
+    `BY DAY OF WEEK:\n${fmt(byDow)}`,
+    `BY TIMEFRAME:\n${fmt(byTf)}`,
     `RECENT TRADES (last ${recent.length}):`,
     tradeLines,
   ].join("\n");
 }
+
 
 function coachPersona(coach?: string) {
   switch (coach) {
@@ -90,7 +126,7 @@ Levels currently on chart: ${chart.enabledLevels || "none"}`;
 function systemPrompt(coach: string | undefined, journalContext: string, chartCtx: string) {
   return `${coachPersona(coach)}
 
-You are TradeMind, the trader's personal AI coach. You have full access to the trader's journal (below), the live chart context they're looking at right now, and the entire conversation history of this thread — use all three to give specific, personalized feedback. Reference real trades by date and symbol. Identify patterns: best/worst setups, time-of-day edge, symbols where they bleed, repeated mistakes. When they ask "what's my weakness", answer from the data.
+You are TradeMind, the trader's personal AI coach. You have full access to the trader's journal (below), the live chart context they're looking at right now, and the entire conversation history of this thread — use all three to give specific, personalized feedback. Reference real trades by date and symbol. PROACTIVELY surface patterns from the journal: which symbol/side/session/day-of-week/timeframe has the highest and lowest win rate and P&L, which combinations are tilting the curve, and any repeated mistake visible in the notes. When the user asks for a recommendation, weight it by what's actually working in their data (e.g. "you're +68% on London-session XAU longs, that's your A+ setup"). When you spot a clearly losing pattern, name it bluntly and tell them to stop or size down.
 
 When they ask you to analyze a setup or "give me entry, stop, target", assume they mean the symbol and timeframe in the LIVE CHART block below unless they name a different one. Always produce a concrete plan: bias (long/short/neutral), entry trigger with a price or zone, invalidation/stop, take profit 1 and 2, R:R, and a 1–2 sentence rationale tied to the levels they have enabled. If exact prices aren't possible without live OHLC, give clearly-labeled illustrative levels and tell them to confirm against price.
 

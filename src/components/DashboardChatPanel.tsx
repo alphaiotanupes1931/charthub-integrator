@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { Link } from "@tanstack/react-router";
-import { MessageSquare, Sparkles, ExternalLink, Trash2 } from "lucide-react";
+import { MessageSquare, Sparkles, ExternalLink, Trash2, X } from "lucide-react";
 import {
   Conversation,
   ConversationContent,
@@ -32,9 +32,9 @@ export type ChartContext = {
   enabledLevels: string;
 };
 
-type Props = { chart?: ChartContext };
+type Props = { chart?: ChartContext; onClose?: () => void };
 
-export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(function DashboardChatPanel({ chart }, ref) {
+export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(function DashboardChatPanel({ chart, onClose }, ref) {
   const [threadId, setThreadId] = useState<string | null>(null);
   const [initial, setInitial] = useState<UIMessage[] | null>(null);
   const getThread = useServerFn(getOrCreateDashboardThread);
@@ -65,12 +65,13 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
     );
   }
 
-  return <ChatInner ref={ref} threadId={threadId} initial={initial} chart={chart} />;
+  return <ChatInner ref={ref} threadId={threadId} initial={initial} chart={chart} onClose={onClose} />;
 });
 
 
-const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: UIMessage[]; chart?: ChartContext }>(
-  function ChatInner({ threadId, initial, chart }, ref) {
+const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: UIMessage[]; chart?: ChartContext; onClose?: () => void }>(
+  function ChatInner({ threadId, initial, chart, onClose }, ref) {
+
     const [input, setInput] = useState("");
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const chartRef = useRef<ChartContext | undefined>(chart);
@@ -137,7 +138,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
             <button
               onClick={clearChat}
               className="text-muted-foreground hover:text-foreground p-1.5 rounded-md"
-              title="Clear conversation"
+              title="Start a new conversation"
             >
               <Trash2 className="h-3.5 w-3.5" />
             </button>
@@ -148,7 +149,17 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
             >
               <ExternalLink className="h-3.5 w-3.5" />
             </Link>
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="text-muted-foreground hover:text-foreground p-1.5 rounded-md"
+                title="Close coach"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
+
         </div>
 
         <Conversation className="flex-1 min-h-0">

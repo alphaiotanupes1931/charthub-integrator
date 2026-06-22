@@ -81,11 +81,14 @@ function tickerToTwelveData(ticker: string): string | null {
   const t = ticker.toUpperCase();
   // FX-style "EUR/USD", "XAU/USD" pass through
   if (/^[A-Z]{3}\/[A-Z]{3}$/.test(t)) return t;
-  if (t === "NAS100") return "NDX";
-  if (t === "SPX500") return "SPX";
-  if (t === "US30")   return "DJI";
+  // Free tier doesn't include index symbols (NDX/SPX/DJI). Use ETF proxies
+  // that track the same indices and are available on the free plan.
+  if (t === "NAS100") return "QQQ"; // Nasdaq 100 ETF (Invesco)
+  if (t === "SPX500") return "SPY"; // S&P 500 ETF (SPDR)
+  if (t === "US30")   return "DIA"; // Dow Jones ETF (SPDR)
   return null;
 }
+
 
 async function fetchTwelveData(symbol: string, interval: string): Promise<OhlcBar[]> {
   const apiKey = process.env.TWELVE_DATA_API_KEY;
