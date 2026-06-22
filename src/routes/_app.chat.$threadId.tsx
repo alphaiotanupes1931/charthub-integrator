@@ -20,8 +20,9 @@ import {
   PromptInputSubmit,
 } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
-import { getClientId, readJournal, readActiveCoach } from "@/lib/chat-client";
+import { readJournal, readActiveCoach } from "@/lib/chat-client";
 import { getChatMessages } from "@/lib/chat.functions";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/chat/$threadId")({
@@ -30,27 +31,21 @@ export const Route = createFileRoute("/_app/chat/$threadId")({
 
 function ChatThread() {
   const { threadId } = useParams({ from: "/_app/chat/$threadId" });
-  const [clientId, setClientId] = useState("");
   const [initialMessages, setInitialMessages] = useState<UIMessage[] | null>(null);
   const getMsgs = useServerFn(getChatMessages);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
-    setClientId(getClientId());
-  }, []);
-
-  useEffect(() => {
-    if (!clientId) return;
     setInitialMessages(null);
-    getMsgs({ data: { clientId, threadId } })
+    getMsgs({ data: { threadId } })
       .then((rows) => setInitialMessages(rows as UIMessage[]))
       .catch((e) => {
         console.error(e);
         setInitialMessages([]);
       });
-  }, [clientId, threadId, getMsgs]);
+  }, [threadId, getMsgs]);
 
-  if (!clientId || initialMessages === null) {
+  if (initialMessages === null) {
     return (
       <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
         Loading conversation...
@@ -62,7 +57,6 @@ function ChatThread() {
     <ChatThreadInner
       key={threadId}
       threadId={threadId}
-      clientId={clientId}
       initialMessages={initialMessages}
       textareaRef={textareaRef}
     />
@@ -71,12 +65,10 @@ function ChatThread() {
 
 function ChatThreadInner({
   threadId,
-  clientId,
   initialMessages,
   textareaRef,
 }: {
   threadId: string;
-  clientId: string;
   initialMessages: UIMessage[];
   textareaRef: React.MutableRefObject<HTMLTextAreaElement | null>;
 }) {
@@ -87,11 +79,15 @@ function ChatThreadInner({
     messages: initialMessages,
     transport: new DefaultChatTransport({
       api: "/api/chat",
+      headers: async () => {
+        const { data } = await supabase.auth.getSession();
+        const token = data.session?.access_token;
+        return token ? { Authorization: `Bearer ${token}` } : {};
+      },
       prepareSendMessagesRequest: ({ messages, id }) => ({
         body: {
           messages,
           threadId: id,
-          clientId,
           coach: readActiveCoach(),
           journal: readJournal(),
         },
