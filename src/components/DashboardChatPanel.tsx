@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
@@ -47,39 +47,65 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
   const getThread = useServerFn(getOrCreateDashboardThread);
   const getMsgs = useServerFn(getChatMessages);
 
+  // Wait until the supabase session is hydrated before calling auth-protected
+  // server functions. On mobile (slower cold start, app resume from background)
+  // this is the difference between a 401 and a clean load.
+  const waitForSession = useCallback(async (): Promise<boolean> => {
+    for (let i = 0; i < 20; i++) {
+      const { data } = await supabase.auth.getSession();
+      if (data.session?.access_token) return true;
+      await new Promise((r) => setTimeout(r, 250));
+    }
+    return false;
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     setLoadError(null);
-    const timeout = window.setTimeout(() => {
-      if (!cancelled && (!threadId || initial === null)) {
-        setLoadError("Couldn't reach the coach. Check your connection.");
-      }
-    }, 8000);
+
+    const tryOnce = async () => {
+      const t = await getThread();
+      if (!t) throw new Error("no thread returned");
+      if (cancelled) return null;
+      setThreadId(t.id);
+      const rows = await getMsgs({ data: { threadId: t.id } });
+      return rows as UIMessage[];
+    };
+
     (async () => {
+      const ok = await waitForSession();
+      if (cancelled) return;
+      if (!ok) {
+        setLoadError("You're signed out. Sign in again to talk to your coach.");
+        return;
+      }
       try {
-        const t = await getThread();
+        const rows = await tryOnce();
+        if (!cancelled && rows) setInitial(rows);
+      } catch (e1) {
+        console.warn("[coach] first load failed, retrying", e1);
+        // One retry with short backoff — handles mobile cold-start flakiness.
+        await new Promise((r) => setTimeout(r, 1200));
         if (cancelled) return;
-        if (!t) {
-          setLoadError("Coach unavailable. Try again.");
-          return;
+        try {
+          const rows = await tryOnce();
+          if (!cancelled && rows) setInitial(rows);
+        } catch (e2) {
+          console.error("[coach] load failed after retry", e2);
+          if (!cancelled) {
+            // Last-resort: let the user chat without history rather than blocking.
+            setInitial([]);
+            if (!threadId) {
+              setLoadError("Couldn't reach the coach. Tap retry.");
+            }
+          }
         }
-        setThreadId(t.id);
-        const rows = await getMsgs({ data: { threadId: t.id } });
-        if (!cancelled) setInitial(rows as UIMessage[]);
-      } catch (e) {
-        console.error("[coach] load failed", e);
-        if (!cancelled) {
-          // Render the panel anyway with no history so the user isn't blocked.
-          setInitial([]);
-          setLoadError("Coach history unavailable, starting fresh.");
-        }
-      } finally {
-        window.clearTimeout(timeout);
       }
     })();
-    return () => { cancelled = true; window.clearTimeout(timeout); };
+
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [getThread, getMsgs, attempt]);
+  }, [getThread, getMsgs, attempt, waitForSession]);
 
   if (!threadId || initial === null) {
     return (
@@ -87,8 +113,8 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
         <div>{loadError ?? "Loading coach…"}</div>
         {loadError && (
           <button
-            onClick={() => { setThreadId(null); setInitial(null); setAttempt((n) => n + 1); }}
-            className="rounded-full border border-border bg-background/60 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-background"
+            onClick={() => { setThreadId(null); setInitial(null); setLoadError(null); setAttempt((n) => n + 1); }}
+            className="rounded-full border border-border bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary hover:bg-primary/15"
           >
             Retry
           </button>
