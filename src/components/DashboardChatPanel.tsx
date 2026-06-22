@@ -257,8 +257,11 @@ function EmptyStateSuggestions({
   const ticker = chart?.ticker ?? "XAU/USD";
   const tf = chart?.intervalLabel ?? "1H";
   const levels = chart?.enabledLevels || "VWAP, POC, S/R";
+  const hasSnapshot = !!chart?.snapshot;
   const suggestions = [
-    `Analyze ${ticker} for a trade setup. Give me entry, stop loss, and take profit levels.`,
+    hasSnapshot
+      ? `Scan my chart right now — ${ticker} ${tf}. Use the live price, VWAP, POC, and any liquidity/order-flow data you can see to tell me bias, entry, stop, TP1 and TP2.`
+      : `Analyze ${ticker} for a trade setup. Give me entry, stop loss, and take profit levels.`,
     `What's my edge on ${ticker} based on my journal?`,
     `Walk me through a ${tf} ${ticker} plan using ${levels}.`,
     `What's my biggest weakness right now? Be specific with trade examples.`,
