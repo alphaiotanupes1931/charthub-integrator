@@ -387,7 +387,7 @@ function FloatingCoach({
   open: boolean;
   onOpen: () => void;
   onClose: () => void;
-  chatRef: React.RefObject<DashboardChatHandle>;
+  chatRef: React.RefObject<DashboardChatHandle | null>;
   chart: { ticker: string; intervalLabel: string; enabledLevels: string };
 }) {
   return (
