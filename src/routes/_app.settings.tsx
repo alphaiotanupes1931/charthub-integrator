@@ -102,18 +102,13 @@ function GhostButton({ children, ...props }: React.ButtonHTMLAttributes<HTMLButt
   );
 }
 
-const LENSES = [
-  { id: "wyckoff", icon: Crosshair, name: "Wyckoff Core", desc: "Pure institutional phase detection. No overlay." },
-  { id: "accum", icon: ArrowDown, name: "Accumulation Specialist", desc: "Highlights Spring + BOS in uptrends. Demand absorption focus." },
-  { id: "dist", icon: ArrowUp, name: "Distribution Specialist", desc: "Highlights Upthrust + BOS in downtrends. Supply absorption focus." },
-  { id: "trend", icon: TrendingUp, name: "Trend Trader", desc: "Breakout + retest in established trends. Momentum aligned." },
-  { id: "range", icon: ArrowLeftRight, name: "Range Trader", desc: "Wick extremes within consolidation ranges. Mean reversion." },
-  { id: "fib", icon: Hash, name: "Fibonacci Confluence", desc: "Adds Fib retracement and extension targets. Wyckoff still core." },
-];
-
 function SettingsPage() {
   const [showPw, setShowPw] = useState(false);
-  const [activeLens, setActiveLens] = useState("wyckoff");
+  const { profile, refresh } = useProfile();
+  const [name, setName] = useState("");
+  const [savingName, setSavingName] = useState(false);
+  const { format: timeFormat, setFormat: setTimeFormat } = useTimeFormat();
+  const [clockNow, setClockNow] = useState(() => new Date());
   const { profile, refresh } = useProfile();
   const [name, setName] = useState("");
   const [savingName, setSavingName] = useState(false);
