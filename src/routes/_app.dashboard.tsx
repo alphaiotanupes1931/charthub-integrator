@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { TradingViewChart } from "@/components/TradingViewChart";
 import { NativeChart, LEVEL_META, type LevelKey } from "@/components/NativeChart";
 import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid } from "lucide-react";
+import { useProfile } from "@/hooks/useProfile";
 
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({
@@ -85,6 +86,8 @@ function loadLevels(): Record<LevelKey, boolean> {
 }
 
 function Dashboard() {
+  const { profile } = useProfile();
+  const firstName = profile?.display_name?.split(" ")[0] ?? null;
   const [interval, setIntervalState] = useState("60");
   const [symbol, setSymbol] = useState<Symbol>(SYMBOLS[0]);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -127,6 +130,11 @@ function Dashboard() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-6 sm:py-8 space-y-5">
+      {firstName && (
+        <div className="text-sm text-muted-foreground">
+          Welcome back, <span className="text-foreground font-medium">{profile?.display_name}</span>
+        </div>
+      )}
       {/* Header */}
       <header className="flex flex-wrap items-end justify-between gap-4 border-b border-border/60 pb-5">
         <div className="min-w-0">
