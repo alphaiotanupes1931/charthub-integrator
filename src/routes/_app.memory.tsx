@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader } from "@/components/PageHeader";
-import { Brain, Activity, Plus, Lightbulb, AlertTriangle, BookOpen, ArrowRight } from "lucide-react";
+import { Brain, Activity, Plus, TrendingUp, TrendingDown, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/_app/memory")({
   head: () => ({ meta: [{ title: "Trading Memory, TradeMind" }] }),
@@ -13,17 +13,10 @@ function MemoryPage() {
       <PageHeader
         title="My Trading Memory"
         icon={<Brain className="h-9 w-9 text-primary" />}
-        description={
-          <>
-            Your AI coach remembers every lesson, pattern, and session to give you smarter guidance.
-            <div className="mt-3">
-              <button className="rounded-md border border-border bg-card px-3 py-1.5 text-xs">View Analytics →</button>
-            </div>
-          </>
-        }
+        description="The AI remembers every win, every loss, and every time it was right or wrong about a setup, so its next read of the chart is sharper than the last."
         action={
           <button className="flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
-            <Activity className="h-4 w-4" /> Log Session
+            <Activity className="h-4 w-4" /> Log Outcome
           </button>
         }
       />
@@ -33,52 +26,61 @@ function MemoryPage() {
           <Brain className="h-4 w-4 text-primary" /> What the AI has learned about you
         </h2>
         <p className="text-xs text-muted-foreground mb-4">
-          These are corrections you've given the AI in chat. They're injected into every system prompt so the AI won't repeat the same mistake. Pause or delete any that no longer apply.
+          Corrections you've given the AI in chat. Injected into every system prompt so the AI doesn't repeat the same mistake.
         </p>
         <p className="text-sm text-primary/80 italic mb-4">
-          No corrections yet. When you tell the AI it's wrong (e.g. "actually, my broker is OANDA"), TradeMind saves the correction here and stops repeating the mistake.
+          No corrections yet. Tell the AI when it's wrong (e.g. "my broker is OANDA, not IC Markets") and TradeMind will remember.
         </p>
         <button className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm text-muted-foreground hover:text-foreground">
           <Plus className="h-4 w-4" /> Add a correction manually
         </button>
       </div>
 
-      <div className="rounded-xl border border-primary/30 bg-primary/[0.03] p-6 mb-6">
-        <h2 className="flex items-center gap-2 font-semibold mb-4">
-          <Lightbulb className="h-4 w-4 text-primary" /> AI Recommendations
-        </h2>
-        <div className="rounded-md border border-border bg-card p-4">
-          <div className="text-sm font-semibold mb-1">Today's Recommendation</div>
-          <p className="text-sm text-muted-foreground">
-            Start logging your sessions and lessons, TradeMind AI gets smarter with every entry.
-          </p>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <StatCard
+          icon={<TrendingUp className="h-4 w-4 text-emerald-400" />}
+          label="Wins logged"
+          value="0"
+          hint="Trades that closed in profit"
+        />
+        <StatCard
+          icon={<TrendingDown className="h-4 w-4 text-destructive" />}
+          label="Losses logged"
+          value="0"
+          hint="Trades that closed at a loss"
+        />
+        <StatCard
+          icon={<Sparkles className="h-4 w-4 text-primary" />}
+          label="AI accuracy"
+          value="—"
+          hint="How often the AI's grade matched the outcome"
+        />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="rounded-xl border border-border bg-card p-5">
-          <h3 className="flex items-center gap-2 font-semibold mb-2">
-            <AlertTriangle className="h-4 w-4 text-amber-400" /> Pattern Summary
-          </h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            No patterns logged yet. Patterns surface once you've logged a few lessons, repeat behaviors get tagged and tracked here.
-          </p>
-          <button className="flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs">
-            Log a lesson <ArrowRight className="h-3 w-3" />
-          </button>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-5">
-          <h3 className="flex items-center gap-2 font-semibold mb-2">
-            <BookOpen className="h-4 w-4 text-primary" /> Recent Lessons (0)
-          </h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            No lessons logged yet. Lessons capture what you learned from a trade, wins, losses, and the rules you broke. They feed the pattern tracker above.
-          </p>
-          <button className="flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs">
-            Open the journal <ArrowRight className="h-3 w-3" />
-          </button>
-        </div>
+      <div className="rounded-xl border border-border bg-card p-6">
+        <h2 className="flex items-center gap-2 font-semibold mb-2">
+          <Sparkles className="h-4 w-4 text-primary" /> AI calls, scored against reality
+        </h2>
+        <p className="text-xs text-muted-foreground mb-4">
+          Every time you mark a trade a win or a loss, TradeMind cross-references the AI's original grade. Patterns the AI gets right get reinforced; patterns it gets wrong get down-weighted in future reads.
+        </p>
+        <p className="text-sm text-muted-foreground italic">
+          No AI calls scored yet. Log a trade outcome from the journal to start building the feedback loop.
+        </p>
       </div>
+    </div>
+  );
+}
+
+function StatCard({ icon, label, value, hint }: { icon: React.ReactNode; label: string; value: string; hint: string }) {
+  return (
+    <div className="rounded-xl border border-border bg-card p-5">
+      <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
+        {icon}
+        {label}
+      </div>
+      <div className="font-display text-4xl mt-3">{value}</div>
+      <div className="text-xs text-muted-foreground mt-2">{hint}</div>
     </div>
   );
 }
