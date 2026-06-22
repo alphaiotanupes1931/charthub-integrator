@@ -188,7 +188,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
     }
 
     return (
-      <div className="flex flex-col h-full min-h-0 rounded-xl border border-border bg-card overflow-hidden">
+      <div className="flex flex-col h-full min-h-0 sm:rounded-xl border-y border-border bg-card overflow-hidden sm:border">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border/60 px-3 py-2">
           <div className="flex items-center gap-2 text-sm font-medium min-w-0">
