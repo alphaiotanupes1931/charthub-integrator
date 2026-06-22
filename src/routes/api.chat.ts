@@ -145,7 +145,7 @@ export const Route = createFileRoute("/api/chat")({
         } catch {
           return new Response("Invalid JSON", { status: 400 });
         }
-        const { messages, threadId, coach, journal } = body;
+        const { messages, threadId, coach, journal, chart } = body;
         if (!Array.isArray(messages) || !threadId) {
           return new Response("messages, threadId required", { status: 400 });
         }
