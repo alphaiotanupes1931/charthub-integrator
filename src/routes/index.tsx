@@ -508,7 +508,7 @@ function Footer() {
       items: [
         { label: "Guide", to: "/guide" as const },
         { label: "API docs", to: "/" as const },
-        { label: "Help", to: "/" as const },
+        { label: "FAQ", to: "/faq" as const },
       ],
     },
     {
