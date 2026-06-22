@@ -12,6 +12,7 @@ import {
   CrosshairMode,
 } from "lightweight-charts";
 import { getOhlc } from "@/lib/ohlc.functions";
+import { useTimeFormat, formatTime } from "@/hooks/useTimeFormat";
 
 export type LevelKey = "VWAP" | "POC" | "SR" | "ZONES" | "FVG" | "FIB" | "LIQ" | "OF";
 
@@ -26,12 +27,34 @@ export const LEVEL_META: Record<LevelKey, { label: string; color: string; tone: 
   OF:    { label: "Order Flow", color: "#22d3ee", tone: "bg-cyan-500/10 text-cyan-300 border-cyan-500/30" },
 };
 
+export type ChartSnapshot = {
+  source: "coingecko" | "twelvedata" | "synthetic";
+  sourceLabel: string;
+  ticker: string;
+  interval: string;
+  lastPrice: number;
+  high20: number;
+  low20: number;
+  high50: number;
+  low50: number;
+  vwap: number;
+  poc: number;
+  sr: number[];
+  fib: { ratio: number; price: number }[];
+  liq: { price: number; side: "buy" | "sell" }[];
+  of: { price: number; side: "buy" | "sell"; strength: number }[];
+  delta: number;
+  sessionsActive: string[];
+  fetchedAt: string;
+};
+
 interface Props {
   symbol: string;
   ticker: string;
   interval: string; // 1, 5, 15, 60, 240, D, W, M
   enabled: Record<LevelKey, boolean>;
   sessions?: boolean;
+  onSnapshot?: (snap: ChartSnapshot) => void;
   className?: string;
 }
 
@@ -218,7 +241,7 @@ function computeLevels(candles: Candle[]) {
   return { vwap, poc, sr: clustered, zones, fvg, fib, liq, of, delta };
 }
 
-export function NativeChart({ symbol, ticker, interval, enabled, sessions, className }: Props) {
+export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSnapshot, className }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
@@ -258,6 +281,49 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, class
   const levels = useMemo(() => computeLevels(candles), [candles]);
   const isLive = hasLive;
   const sourceLabel = liveOhlc?.source === "coingecko" ? "CoinGecko" : liveOhlc?.source === "twelvedata" ? "Twelve Data" : "";
+
+  // Live clock for the on-chart overlay
+  const { format: timeFormat } = useTimeFormat();
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
+  const activeSessionsNow = useMemo(() => {
+    const h = now.getUTCHours();
+    return SESSIONS.filter((s) => (s.startH < s.endH ? h >= s.startH && h < s.endH : h >= s.startH || h < s.endH)).map((s) => s.label);
+  }, [now]);
+
+  // Publish a snapshot to parent for AI context whenever the data changes
+  useEffect(() => {
+    if (!onSnapshot || candles.length === 0) return;
+    const last20 = candles.slice(-20);
+    const last50 = candles.slice(-50);
+    const lastPrice = candles[candles.length - 1].close;
+    const snap: ChartSnapshot = {
+      source: (liveOhlc?.source ?? "synthetic"),
+      sourceLabel: sourceLabel || "Synthetic",
+      ticker,
+      interval,
+      lastPrice,
+      high20: Math.max(...last20.map((c) => c.high)),
+      low20:  Math.min(...last20.map((c) => c.low)),
+      high50: Math.max(...last50.map((c) => c.high)),
+      low50:  Math.min(...last50.map((c) => c.low)),
+      vwap: levels.vwap,
+      poc: levels.poc,
+      sr: levels.sr,
+      fib: levels.fib,
+      liq: levels.liq,
+      of: levels.of,
+      delta: levels.delta,
+      sessionsActive: activeSessionsNow,
+      fetchedAt: new Date().toISOString(),
+    };
+    onSnapshot(snap);
+    // intentionally exclude onSnapshot identity from deps to avoid loops
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [candles, levels, ticker, interval, liveOhlc?.source, sourceLabel, activeSessionsNow]);
 
   // Init / teardown chart
   useEffect(() => {
@@ -418,8 +484,20 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, class
           </div>
         </div>
       )}
+      {/* Live clock: local + UTC, honours 12h/24h preference */}
+      <div className="absolute right-3 top-3 z-10 rounded-md border border-border bg-background/70 backdrop-blur px-2 py-1 text-[10px] font-mono text-muted-foreground flex items-center gap-2">
+        <span className="text-foreground/90">{formatTime(now, timeFormat, { seconds: true })}</span>
+        <span className="opacity-60">·</span>
+        <span>{formatTime(now, timeFormat, { seconds: false, utc: true })} UTC</span>
+        {activeSessionsNow.length > 0 && (
+          <>
+            <span className="opacity-60">·</span>
+            <span className="text-primary normal-case">{activeSessionsNow.join(" + ")}</span>
+          </>
+        )}
+      </div>
       {sessions && (
-        <div className="absolute right-3 top-3 z-10 rounded-md border border-border bg-background/70 backdrop-blur px-2 py-1 text-[10px] font-mono text-muted-foreground flex items-center gap-2">
+        <div className="absolute right-3 top-11 z-10 rounded-md border border-border bg-background/70 backdrop-blur px-2 py-1 text-[10px] font-mono text-muted-foreground flex items-center gap-2">
           {SESSIONS.map((s) => (
             <span key={s.key} className="inline-flex items-center gap-1">
               <span className="h-2 w-2 rounded-sm" style={{ background: s.color.replace("0.08", "0.6") }} />

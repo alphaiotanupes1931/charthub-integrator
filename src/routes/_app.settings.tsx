@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
+import { useTimeFormat, formatTime } from "@/hooks/useTimeFormat";
 import { toast } from "sonner";
 import {
   Plug,
@@ -117,6 +118,12 @@ function SettingsPage() {
   const { profile, refresh } = useProfile();
   const [name, setName] = useState("");
   const [savingName, setSavingName] = useState(false);
+  const { format: timeFormat, setFormat: setTimeFormat } = useTimeFormat();
+  const [clockNow, setClockNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = window.setInterval(() => setClockNow(new Date()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
 
   useEffect(() => { if (profile?.display_name) setName(profile.display_name); }, [profile?.display_name]);
 
@@ -152,6 +159,43 @@ function SettingsPage() {
           <p className="mt-3 text-xs text-muted-foreground">Signed in as {profile.email}</p>
         )}
       </Card>
+
+      {/* DISPLAY */}
+      <SectionLabel>Display</SectionLabel>
+      <Card>
+        <h2 className="flex items-center gap-2 text-lg font-semibold mb-2">
+          <Monitor className="size-5 text-primary" />
+          Time Format
+        </h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          Used by the on-chart clock and session badges. Switch any time.
+        </p>
+        <div className="flex items-center gap-2 mb-3">
+          {(["12h", "24h"] as const).map((f) => {
+            const active = timeFormat === f;
+            return (
+              <button
+                key={f}
+                onClick={() => setTimeFormat(f)}
+                className={`px-4 h-10 rounded-lg border text-sm font-medium transition ${
+                  active
+                    ? "border-primary/60 bg-primary/10 text-primary"
+                    : "border-border bg-background/40 text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {f === "12h" ? "12-hour (AM/PM)" : "24-hour (military)"}
+              </button>
+            );
+          })}
+        </div>
+        <p className="text-xs text-muted-foreground font-mono">
+          Preview: <span className="text-foreground">{formatTime(clockNow, timeFormat, { seconds: true })}</span>
+          {" · "}
+          {formatTime(clockNow, timeFormat, { utc: true })} UTC
+        </p>
+      </Card>
+
+
 
       {/* INTEGRATIONS */}
       <SectionLabel>Integrations</SectionLabel>
