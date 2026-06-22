@@ -169,13 +169,15 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
     useImperativeHandle(ref, () => ({
       scan: (prompt: string) => {
         if (loading) return;
+        if (voice.enabled) voice.prime();
         void sendMessage({ text: prompt });
       },
-    }), [sendMessage, loading]);
+    }), [sendMessage, loading, voice]);
 
     const handleSubmit = () => {
       const text = input.trim();
       if (!text || loading) return;
+      if (voice.enabled) voice.prime();
       setInput("");
       void sendMessage({ text });
     };
