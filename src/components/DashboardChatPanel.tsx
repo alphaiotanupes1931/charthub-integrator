@@ -214,81 +214,87 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
     }
 
     return (
-      <div className="flex flex-col h-full min-h-0 sm:rounded-xl border-y border-border bg-card overflow-hidden sm:border">
+      <div className="flex flex-col h-full min-h-0 bg-card overflow-hidden sm:rounded-xl border-y sm:border border-border shadow-2xl sm:shadow-xl">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-border/60 px-3 py-2">
-          <div className="flex items-center gap-2 text-sm font-medium min-w-0">
-            <Sparkles className="h-4 w-4 text-primary shrink-0" />
-            <span className="hidden sm:inline text-muted-foreground">AI Coach</span>
-            <div className="relative">
-              <select
-                value={activeCoach}
-                onChange={(e) => {
-                  const name = e.target.value;
-                  if (name === activeCoach) return;
-                  if (voice.enabled) voice.stop();
-                  writeActiveCoach(name);
-                  setActiveCoach(name);
-                  toast.success(`${name} is now your coach`);
-                }}
-                className="h-7 appearance-none rounded-md border border-border bg-background/60 pl-2 pr-6 text-xs font-semibold focus:outline-none focus:border-primary/50 cursor-pointer hover:border-primary/40"
-                aria-label="Change coach voice"
-              >
-                {Object.keys(COACH_VOICES).map((key) => (
-                  <option key={key} value={key}>
-                    {key}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+        <div
+          className="flex items-center justify-between gap-2 border-b border-border/60 px-3 py-2.5 bg-card/95 backdrop-blur"
+          style={{ paddingTop: "max(0.625rem, env(safe-area-inset-top))" }}
+        >
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary/15 text-primary shrink-0">
+              <Sparkles className="h-3.5 w-3.5" />
+            </span>
+            <div className="flex flex-col min-w-0">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground leading-none">AI Coach</span>
+              <div className="relative -ml-1">
+                <select
+                  value={activeCoach}
+                  onChange={(e) => {
+                    const name = e.target.value;
+                    if (name === activeCoach) return;
+                    if (voice.enabled) voice.stop();
+                    writeActiveCoach(name);
+                    setActiveCoach(name);
+                    toast.success(`${name} is now your coach`);
+                  }}
+                  className="appearance-none bg-transparent pl-1 pr-5 text-sm font-semibold text-foreground focus:outline-none cursor-pointer max-w-full truncate"
+                  aria-label="Change coach"
+                >
+                  {Object.keys(COACH_VOICES).map((key) => (
+                    <option key={key} value={key}>{key}</option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-0.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5 shrink-0">
             <button
               onClick={() => {
                 if (voice.enabled) voice.stop();
                 voice.setEnabled(!voice.enabled);
               }}
-              className={`p-1.5 rounded-md ${voice.enabled ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+              className={`h-9 w-9 inline-flex items-center justify-center rounded-md transition ${voice.enabled ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-muted/60"}`}
               title={voice.enabled ? "Mute coach voice" : "Hear coach replies aloud"}
               aria-label={voice.enabled ? "Mute voice" : "Enable voice"}
             >
-              {voice.enabled ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
+              {voice.enabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
             </button>
             <button
+              onClick={clearChat}
+              className="h-9 w-9 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60"
+              title="Clear conversation"
+              aria-label="Clear conversation"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+            <Link
+              to="/chat"
+              className="hidden sm:inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60"
+              title="Open full chat"
+              aria-label="Open full chat"
+            >
+              <ExternalLink className="h-4 w-4" />
+            </Link>
+            <button
               onClick={onMinimize}
-              className="text-muted-foreground hover:text-foreground p-1.5 rounded-md"
-              title="Hide coach (audio keeps playing)"
+              className="h-9 w-9 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60"
+              title="Hide coach (keeps audio playing)"
               aria-label="Hide coach"
             >
               <Minus className="h-4 w-4" />
             </button>
-            <button
-              onClick={clearChat}
-              className="text-muted-foreground hover:text-foreground p-1.5 rounded-md"
-              title="Start a new conversation"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
-            <Link
-              to="/chat"
-              className="text-muted-foreground hover:text-foreground p-1.5 rounded-md"
-              title="Open full chat"
-            >
-              <ExternalLink className="h-3.5 w-3.5" />
-            </Link>
             {onClose && (
               <button
                 onClick={onClose}
-                className="text-muted-foreground hover:text-foreground p-1.5 rounded-md"
+                className="h-9 w-9 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60"
                 title="Close coach"
+                aria-label="Close coach"
               >
                 <X className="h-4 w-4" />
               </button>
             )}
           </div>
-
-
         </div>
 
         <Conversation className="flex-1 min-h-0">
@@ -297,7 +303,10 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               <EmptyStateSuggestions
                 chart={chart}
                 disabled={loading}
-                onPick={(text) => void sendMessage({ text })}
+                onPick={(text) => {
+                  if (voice.enabled) voice.prime();
+                  void sendMessage({ text });
+                }}
               />
             )}
             {messages.map((m) => {
@@ -323,7 +332,10 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
           <ConversationScrollButton />
         </Conversation>
 
-        <div className="border-t border-border bg-background/60 p-2">
+        <div
+          className="border-t border-border bg-background/80 backdrop-blur p-2"
+          style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+        >
           <PromptInput onSubmit={handleSubmit}>
             <PromptInputTextarea
               ref={textareaRef}
