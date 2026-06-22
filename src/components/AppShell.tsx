@@ -153,14 +153,6 @@ export function AppShell({ children }: { children: ReactNode }) {
           </button>
         </div>
       )}
-            onClick={handleSignOut}
-            className="w-full flex items-center gap-2 text-sm text-foreground/80 hover:text-foreground px-1"
-          >
-            <LogOut className="h-4 w-4" />
-            Sign Out
-          </button>
-        </div>
-      )}
     </>
   );
 
