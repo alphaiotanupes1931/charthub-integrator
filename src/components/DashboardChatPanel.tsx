@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { Link } from "@tanstack/react-router";
-import { MessageSquare, Sparkles, ExternalLink, Trash2, X } from "lucide-react";
+import { MessageSquare, Sparkles, ExternalLink, Trash2, X, Volume2, VolumeX } from "lucide-react";
 import {
   Conversation,
   ConversationContent,
@@ -20,6 +20,8 @@ import { Shimmer } from "@/components/ai-elements/shimmer";
 import { supabase } from "@/integrations/supabase/client";
 import { getOrCreateDashboardThread, getChatMessages } from "@/lib/chat.functions";
 import { readJournal, readActiveCoach } from "@/lib/chat-client";
+import { useCoachVoice } from "@/hooks/useCoachVoice";
+import { voiceForCoach } from "@/lib/coachVoices";
 import { toast } from "sonner";
 
 export type DashboardChatHandle = {
@@ -77,6 +79,8 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const chartRef = useRef<ChartContext | undefined>(chart);
     useEffect(() => { chartRef.current = chart; }, [chart]);
+    const voice = useCoachVoice();
+    const lastSpokenIdRef = useRef<string | null>(null);
 
     const { messages, sendMessage, status, setMessages } = useChat({
       id: threadId,
@@ -108,6 +112,23 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
 
     const loading = status === "submitted" || status === "streaming";
 
+    // Speak the last assistant message after streaming completes
+    useEffect(() => {
+      if (!voice.enabled) return;
+      if (status !== "ready") return;
+      const last = messages[messages.length - 1];
+      if (!last || last.role !== "assistant") return;
+      if (lastSpokenIdRef.current === last.id) return;
+      const text = last.parts
+        .map((p) => (p.type === "text" ? (p as { text: string }).text : ""))
+        .join("")
+        .trim();
+      if (!text) return;
+      lastSpokenIdRef.current = last.id;
+      void voice.speak(text, voiceForCoach(readActiveCoach()));
+    }, [messages, status, voice]);
+
+
     useImperativeHandle(ref, () => ({
       scan: (prompt: string) => {
         if (loading) return;
@@ -137,6 +158,17 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
           </div>
           <div className="flex items-center gap-1">
             <button
+              onClick={() => {
+                if (voice.enabled) voice.stop();
+                voice.setEnabled(!voice.enabled);
+              }}
+              className={`p-1.5 rounded-md ${voice.enabled ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+              title={voice.enabled ? "Mute coach voice" : "Hear coach replies aloud"}
+              aria-label={voice.enabled ? "Mute voice" : "Enable voice"}
+            >
+              {voice.enabled ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
+            </button>
+            <button
               onClick={clearChat}
               className="text-muted-foreground hover:text-foreground p-1.5 rounded-md"
               title="Start a new conversation"
@@ -160,6 +192,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               </button>
             )}
           </div>
+
 
         </div>
 

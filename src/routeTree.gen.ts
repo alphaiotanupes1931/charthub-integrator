@@ -13,6 +13,7 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiTtsRouteImport } from './routes/api.tts'
 import { Route as ApiChatRouteImport } from './routes/api.chat'
 import { Route as AppVoiceCoachRouteImport } from './routes/_app.voice-coach'
 import { Route as AppSystemStatusRouteImport } from './routes/_app.system-status'
@@ -25,6 +26,7 @@ import { Route as AppGuideRouteImport } from './routes/_app.guide'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppCoachesRouteImport } from './routes/_app.coaches'
 import { Route as AppChatRouteImport } from './routes/_app.chat'
+import { Route as AppBrokerRouteImport } from './routes/_app.broker'
 import { Route as AppAnalyticsRouteImport } from './routes/_app.analytics'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
 import { Route as AppChatIndexRouteImport } from './routes/_app.chat.index'
@@ -47,6 +49,11 @@ const AppRoute = AppRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTtsRoute = ApiTtsRouteImport.update({
+  id: '/api/tts',
+  path: '/api/tts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiChatRoute = ApiChatRouteImport.update({
@@ -109,6 +116,11 @@ const AppChatRoute = AppChatRouteImport.update({
   path: '/chat',
   getParentRoute: () => AppRoute,
 } as any)
+const AppBrokerRoute = AppBrokerRouteImport.update({
+  id: '/broker',
+  path: '/broker',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAnalyticsRoute = AppAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
@@ -136,6 +148,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/admin': typeof AppAdminRoute
   '/analytics': typeof AppAnalyticsRoute
+  '/broker': typeof AppBrokerRoute
   '/chat': typeof AppChatRouteWithChildren
   '/coaches': typeof AppCoachesRoute
   '/dashboard': typeof AppDashboardRoute
@@ -148,6 +161,7 @@ export interface FileRoutesByFullPath {
   '/system-status': typeof AppSystemStatusRoute
   '/voice-coach': typeof AppVoiceCoachRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/tts': typeof ApiTtsRoute
   '/chat/$threadId': typeof AppChatThreadIdRoute
   '/chat/': typeof AppChatIndexRoute
 }
@@ -157,6 +171,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/admin': typeof AppAdminRoute
   '/analytics': typeof AppAnalyticsRoute
+  '/broker': typeof AppBrokerRoute
   '/coaches': typeof AppCoachesRoute
   '/dashboard': typeof AppDashboardRoute
   '/guide': typeof AppGuideRoute
@@ -168,6 +183,7 @@ export interface FileRoutesByTo {
   '/system-status': typeof AppSystemStatusRoute
   '/voice-coach': typeof AppVoiceCoachRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/tts': typeof ApiTtsRoute
   '/chat/$threadId': typeof AppChatThreadIdRoute
   '/chat': typeof AppChatIndexRoute
 }
@@ -179,6 +195,7 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/_app/admin': typeof AppAdminRoute
   '/_app/analytics': typeof AppAnalyticsRoute
+  '/_app/broker': typeof AppBrokerRoute
   '/_app/chat': typeof AppChatRouteWithChildren
   '/_app/coaches': typeof AppCoachesRoute
   '/_app/dashboard': typeof AppDashboardRoute
@@ -191,6 +208,7 @@ export interface FileRoutesById {
   '/_app/system-status': typeof AppSystemStatusRoute
   '/_app/voice-coach': typeof AppVoiceCoachRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/tts': typeof ApiTtsRoute
   '/_app/chat/$threadId': typeof AppChatThreadIdRoute
   '/_app/chat/': typeof AppChatIndexRoute
 }
@@ -202,6 +220,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/admin'
     | '/analytics'
+    | '/broker'
     | '/chat'
     | '/coaches'
     | '/dashboard'
@@ -214,6 +233,7 @@ export interface FileRouteTypes {
     | '/system-status'
     | '/voice-coach'
     | '/api/chat'
+    | '/api/tts'
     | '/chat/$threadId'
     | '/chat/'
   fileRoutesByTo: FileRoutesByTo
@@ -223,6 +243,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/admin'
     | '/analytics'
+    | '/broker'
     | '/coaches'
     | '/dashboard'
     | '/guide'
@@ -234,6 +255,7 @@ export interface FileRouteTypes {
     | '/system-status'
     | '/voice-coach'
     | '/api/chat'
+    | '/api/tts'
     | '/chat/$threadId'
     | '/chat'
   id:
@@ -244,6 +266,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/_app/admin'
     | '/_app/analytics'
+    | '/_app/broker'
     | '/_app/chat'
     | '/_app/coaches'
     | '/_app/dashboard'
@@ -256,6 +279,7 @@ export interface FileRouteTypes {
     | '/_app/system-status'
     | '/_app/voice-coach'
     | '/api/chat'
+    | '/api/tts'
     | '/_app/chat/$threadId'
     | '/_app/chat/'
   fileRoutesById: FileRoutesById
@@ -266,6 +290,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   OnboardingRoute: typeof OnboardingRoute
   ApiChatRoute: typeof ApiChatRoute
+  ApiTtsRoute: typeof ApiTtsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -296,6 +321,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tts': {
+      id: '/api/tts'
+      path: '/api/tts'
+      fullPath: '/api/tts'
+      preLoaderRoute: typeof ApiTtsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/chat': {
@@ -382,6 +414,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppChatRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/broker': {
+      id: '/_app/broker'
+      path: '/broker'
+      fullPath: '/broker'
+      preLoaderRoute: typeof AppBrokerRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/analytics': {
       id: '/_app/analytics'
       path: '/analytics'
@@ -429,6 +468,7 @@ const AppChatRouteWithChildren =
 interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRoute
   AppAnalyticsRoute: typeof AppAnalyticsRoute
+  AppBrokerRoute: typeof AppBrokerRoute
   AppChatRoute: typeof AppChatRouteWithChildren
   AppCoachesRoute: typeof AppCoachesRoute
   AppDashboardRoute: typeof AppDashboardRoute
@@ -445,6 +485,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAdminRoute: AppAdminRoute,
   AppAnalyticsRoute: AppAnalyticsRoute,
+  AppBrokerRoute: AppBrokerRoute,
   AppChatRoute: AppChatRouteWithChildren,
   AppCoachesRoute: AppCoachesRoute,
   AppDashboardRoute: AppDashboardRoute,
@@ -466,6 +507,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   OnboardingRoute: OnboardingRoute,
   ApiChatRoute: ApiChatRoute,
+  ApiTtsRoute: ApiTtsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
