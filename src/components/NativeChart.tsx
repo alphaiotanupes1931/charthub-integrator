@@ -282,6 +282,49 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
   const isLive = hasLive;
   const sourceLabel = liveOhlc?.source === "coingecko" ? "CoinGecko" : liveOhlc?.source === "twelvedata" ? "Twelve Data" : "";
 
+  // Live clock for the on-chart overlay
+  const { format: timeFormat } = useTimeFormat();
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
+  const activeSessionsNow = useMemo(() => {
+    const h = now.getUTCHours();
+    return SESSIONS.filter((s) => (s.startH < s.endH ? h >= s.startH && h < s.endH : h >= s.startH || h < s.endH)).map((s) => s.label);
+  }, [now]);
+
+  // Publish a snapshot to parent for AI context whenever the data changes
+  useEffect(() => {
+    if (!onSnapshot || candles.length === 0) return;
+    const last20 = candles.slice(-20);
+    const last50 = candles.slice(-50);
+    const lastPrice = candles[candles.length - 1].close;
+    const snap: ChartSnapshot = {
+      source: (liveOhlc?.source ?? "synthetic"),
+      sourceLabel: sourceLabel || "Synthetic",
+      ticker,
+      interval,
+      lastPrice,
+      high20: Math.max(...last20.map((c) => c.high)),
+      low20:  Math.min(...last20.map((c) => c.low)),
+      high50: Math.max(...last50.map((c) => c.high)),
+      low50:  Math.min(...last50.map((c) => c.low)),
+      vwap: levels.vwap,
+      poc: levels.poc,
+      sr: levels.sr,
+      fib: levels.fib,
+      liq: levels.liq,
+      of: levels.of,
+      delta: levels.delta,
+      sessionsActive: activeSessionsNow,
+      fetchedAt: new Date().toISOString(),
+    };
+    onSnapshot(snap);
+    // intentionally exclude onSnapshot identity from deps to avoid loops
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [candles, levels, ticker, interval, liveOhlc?.source, sourceLabel, activeSessionsNow]);
+
   // Init / teardown chart
   useEffect(() => {
     if (!containerRef.current) return;
