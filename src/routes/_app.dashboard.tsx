@@ -204,9 +204,9 @@ function Dashboard() {
   const enabledCount = ALL_LEVELS.filter((k) => levels[k]).length;
 
   return (
-    <div className="mx-auto max-w-[1600px] px-4 sm:px-6 py-6 sm:py-8">
+    <div className="mx-auto max-w-[1600px] px-4 sm:px-6 py-6 sm:py-10">
       {firstName && (
-        <div className="text-sm text-muted-foreground mb-4">
+        <div className="text-sm text-muted-foreground mb-5 sm:mb-6">
           Welcome back, <span className="text-foreground font-medium">{profile?.display_name}</span>
         </div>
       )}
@@ -216,12 +216,12 @@ function Dashboard() {
         <TodaysRecommendation />
       </div>
 
-      <div className="space-y-5">
+      <div className="space-y-6 sm:space-y-8 mt-6 sm:mt-8">
         {/* Header */}
-        <header className="flex flex-wrap items-end justify-between gap-4 border-b border-border/60 pb-5">
+        <header className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3 border-b border-border/60 pb-5 sm:pb-6">
           <div className="min-w-0">
 
-          <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground mb-1.5">
+          <div className="text-[10px] sm:text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground mb-1.5">
             Active instrument
           </div>
           <h1 className="font-display text-2xl sm:text-3xl font-semibold tracking-tight truncate">
@@ -232,18 +232,19 @@ function Dashboard() {
           </p>
         </div>
 
-        <div className="relative" ref={pickerRef} data-tour="symbol-picker">
+        <div className="relative shrink-0" ref={pickerRef} data-tour="symbol-picker">
           <button
             onClick={() => setPickerOpen((o) => !o)}
-            className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium hover:border-primary/50 transition"
+            className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-xs sm:text-sm font-medium hover:border-primary/50 transition"
             aria-haspopup="listbox"
             aria-expanded={pickerOpen}
           >
-            Change symbol
+            <span className="hidden sm:inline">Change symbol</span>
+            <span className="sm:hidden">Change</span>
             <ChevronDown className={`h-3.5 w-3.5 transition-transform ${pickerOpen ? "rotate-180" : ""}`} />
           </button>
           {pickerOpen && (
-            <div role="listbox" className="absolute right-0 mt-2 w-72 max-h-80 overflow-y-auto rounded-lg border border-border bg-card shadow-xl z-20">
+            <div role="listbox" className="absolute right-0 mt-2 w-[min(18rem,calc(100vw-2rem))] max-h-80 overflow-y-auto rounded-lg border border-border bg-card shadow-xl z-20">
               {SYMBOLS.map((s) => {
                 const active = s.tv === symbol.tv;
                 return (
