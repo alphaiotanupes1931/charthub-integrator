@@ -32,12 +32,18 @@ const STRAT_KEY = "trademind.activeStrategy";
 
 function StrategiesPage() {
   const [q, setQ] = useState("");
-  const [open, setOpen] = useState<Strategy | null>(null);
+  const [open, setOpen] = useState<Strategy | CustomStrategy | null>(null);
   const [active, setActive] = useState<string | null>(null);
+  const [builderOpen, setBuilderOpen] = useState(false);
+  const [editing, setEditing] = useState<CustomStrategy | null>(null);
+  const [customs, setCustoms] = useState<CustomStrategy[]>([]);
 
   useEffect(() => {
     try { setActive(localStorage.getItem(STRAT_KEY)); } catch { /* ignore */ }
+    setCustoms(readCustomStrategies());
   }, []);
+
+  const refreshCustoms = () => setCustoms(readCustomStrategies());
 
   const select = (name: string) => {
     try { localStorage.setItem(STRAT_KEY, name); } catch { /* ignore */ }
@@ -46,9 +52,19 @@ function StrategiesPage() {
     setOpen(null);
   };
 
-  const filtered = STRATEGIES.filter((s) =>
-    s.name.toLowerCase().includes(q.toLowerCase())
-  );
+  const removeCustom = (s: CustomStrategy) => {
+    deleteCustomStrategy(s.id);
+    if (active === s.name) {
+      try { localStorage.removeItem(STRAT_KEY); } catch { /* ignore */ }
+      setActive(null);
+    }
+    refreshCustoms();
+    setOpen(null);
+    toast.success(`${s.name} deleted`);
+  };
+
+  const list = useMemo(() => [...customs, ...allStrategies().filter((s) => !(s as CustomStrategy).custom)], [customs]);
+  const filtered = list.filter((s) => s.name.toLowerCase().includes(q.toLowerCase()));
 
   return (
     <div className="p-4 md:p-8 max-w-[1400px] mx-auto">
@@ -61,7 +77,7 @@ function StrategiesPage() {
         }
         action={
           <button
-            onClick={() => toast.info("Custom strategy builder coming soon")}
+            onClick={() => { setEditing(null); setBuilderOpen(true); }}
             className="flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/20"
           >
             <Plus className="h-4 w-4" /> Create Your Own
@@ -106,10 +122,11 @@ function StrategiesPage() {
         {filtered.map((s) => {
           const StyleIcon = styleIcon[s.style];
           const isActive = active === s.name;
+          const isCustom = (s as CustomStrategy).custom === true;
           return (
             <button
               type="button"
-              key={s.name}
+              key={isCustom ? (s as CustomStrategy).id : s.name}
               onClick={() => setOpen(s)}
               className={`text-left rounded-xl border bg-card p-5 space-y-3 transition-colors ${
                 isActive ? "border-primary/60 ring-1 ring-primary/30" : "border-border hover:border-primary/40"
@@ -119,6 +136,11 @@ function StrategiesPage() {
                 <h3 className="font-semibold text-base flex items-center gap-2">
                   {s.name}
                   {isActive && <CheckCircle2 className="h-3.5 w-3.5 text-primary" />}
+                  {isCustom && (
+                    <span className="inline-flex items-center gap-1 rounded border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold text-primary uppercase tracking-wider">
+                      <Sparkles className="h-2.5 w-2.5" /> Custom
+                    </span>
+                  )}
                 </h3>
                 <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${levelColor[s.level]}`}>
                   {s.level}
@@ -150,7 +172,29 @@ function StrategiesPage() {
         })}
       </div>
 
-      {open && <StrategyModal strategy={open} active={active === open.name} onSelect={select} onClose={() => setOpen(null)} />}
+      {open && (
+        <StrategyModal
+          strategy={open}
+          active={active === open.name}
+          onSelect={select}
+          onClose={() => setOpen(null)}
+          onEdit={(s) => { setEditing(s); setBuilderOpen(true); setOpen(null); }}
+          onDelete={removeCustom}
+        />
+      )}
+
+      {builderOpen && (
+        <StrategyBuilderModal
+          editing={editing}
+          onClose={() => { setBuilderOpen(false); setEditing(null); }}
+          onSaved={(s) => {
+            refreshCustoms();
+            setBuilderOpen(false);
+            setEditing(null);
+            toast.success(`${s.name} saved`);
+          }}
+        />
+      )}
     </div>
   );
 }
