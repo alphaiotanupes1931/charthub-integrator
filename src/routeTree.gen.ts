@@ -33,6 +33,7 @@ import { Route as AppBrokerRouteImport } from './routes/_app.broker'
 import { Route as AppAnalyticsRouteImport } from './routes/_app.analytics'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
 import { Route as AppChatIndexRouteImport } from './routes/_app.chat.index'
+import { Route as ApiTradelockerImportRouteImport } from './routes/api.tradelocker.import'
 import { Route as AppChatThreadIdRouteImport } from './routes/_app.chat.$threadId'
 
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -154,6 +155,11 @@ const AppChatIndexRoute = AppChatIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppChatRoute,
 } as any)
+const ApiTradelockerImportRoute = ApiTradelockerImportRouteImport.update({
+  id: '/api/tradelocker/import',
+  path: '/api/tradelocker/import',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppChatThreadIdRoute = AppChatThreadIdRouteImport.update({
   id: '/$threadId',
   path: '/$threadId',
@@ -184,6 +190,7 @@ export interface FileRoutesByFullPath {
   '/api/tts': typeof ApiTtsRoute
   '/invite/$code': typeof InviteCodeRoute
   '/chat/$threadId': typeof AppChatThreadIdRoute
+  '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/chat/': typeof AppChatIndexRoute
 }
 export interface FileRoutesByTo {
@@ -209,6 +216,7 @@ export interface FileRoutesByTo {
   '/api/tts': typeof ApiTtsRoute
   '/invite/$code': typeof InviteCodeRoute
   '/chat/$threadId': typeof AppChatThreadIdRoute
+  '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/chat': typeof AppChatIndexRoute
 }
 export interface FileRoutesById {
@@ -237,6 +245,7 @@ export interface FileRoutesById {
   '/api/tts': typeof ApiTtsRoute
   '/invite/$code': typeof InviteCodeRoute
   '/_app/chat/$threadId': typeof AppChatThreadIdRoute
+  '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/_app/chat/': typeof AppChatIndexRoute
 }
 export interface FileRouteTypes {
@@ -265,6 +274,7 @@ export interface FileRouteTypes {
     | '/api/tts'
     | '/invite/$code'
     | '/chat/$threadId'
+    | '/api/tradelocker/import'
     | '/chat/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -290,6 +300,7 @@ export interface FileRouteTypes {
     | '/api/tts'
     | '/invite/$code'
     | '/chat/$threadId'
+    | '/api/tradelocker/import'
     | '/chat'
   id:
     | '__root__'
@@ -317,6 +328,7 @@ export interface FileRouteTypes {
     | '/api/tts'
     | '/invite/$code'
     | '/_app/chat/$threadId'
+    | '/api/tradelocker/import'
     | '/_app/chat/'
   fileRoutesById: FileRoutesById
 }
@@ -328,6 +340,7 @@ export interface RootRouteChildren {
   ApiChatRoute: typeof ApiChatRoute
   ApiTtsRoute: typeof ApiTtsRoute
   InviteCodeRoute: typeof InviteCodeRoute
+  ApiTradelockerImportRoute: typeof ApiTradelockerImportRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -500,6 +513,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppChatIndexRouteImport
       parentRoute: typeof AppChatRoute
     }
+    '/api/tradelocker/import': {
+      id: '/api/tradelocker/import'
+      path: '/api/tradelocker/import'
+      fullPath: '/api/tradelocker/import'
+      preLoaderRoute: typeof ApiTradelockerImportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app/chat/$threadId': {
       id: '/_app/chat/$threadId'
       path: '/$threadId'
@@ -571,6 +591,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiChatRoute: ApiChatRoute,
   ApiTtsRoute: ApiTtsRoute,
   InviteCodeRoute: InviteCodeRoute,
+  ApiTradelockerImportRoute: ApiTradelockerImportRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
