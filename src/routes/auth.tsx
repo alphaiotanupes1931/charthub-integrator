@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate, useSearch, Link } from "@tanstack/react-r
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import { signUpConfirmed } from "@/lib/auth.functions";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import logoAsset from "@/assets/logo.png.asset.json";
@@ -62,11 +63,8 @@ function AuthPage() {
         if (error) throw error;
         toast.success("Signed in");
       } else {
-        const { error } = await supabase.auth.signUp({
-          email: parsed.data.email,
-          password: parsed.data.password,
-          options: { emailRedirectTo: window.location.origin },
-        });
+        await signUpConfirmed({ data: parsed.data });
+        const { error } = await supabase.auth.signInWithPassword(parsed.data);
         if (error) throw error;
         toast.success("Account created");
       }
