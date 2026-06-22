@@ -114,11 +114,48 @@ const LENSES = [
 function SettingsPage() {
   const [showPw, setShowPw] = useState(false);
   const [activeLens, setActiveLens] = useState("wyckoff");
+  const { profile, refresh } = useProfile();
+  const [name, setName] = useState("");
+  const [savingName, setSavingName] = useState(false);
+
+  useEffect(() => { if (profile?.display_name) setName(profile.display_name); }, [profile?.display_name]);
+
+  async function saveName() {
+    if (!profile) return;
+    const trimmed = name.trim();
+    if (trimmed.length < 2) { toast.error("Name must be at least 2 characters"); return; }
+    setSavingName(true);
+    const { error } = await supabase.from("profiles").update({ display_name: trimmed }).eq("id", profile.id);
+    setSavingName(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Name updated");
+    refresh();
+  }
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-10">
+      {/* PROFILE */}
+      <SectionLabel>Profile</SectionLabel>
+      <Card>
+        <h2 className="flex items-center gap-2 text-lg font-semibold mb-4">
+          <UserIcon className="size-5 text-primary" />
+          Your Name
+        </h2>
+        <p className="text-sm text-muted-foreground mb-4">This is what shows on your dashboard and in coaching messages.</p>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="First and last" maxLength={80} />
+          <PrimaryButton onClick={saveName} disabled={savingName} className="shrink-0">
+            <Save className="size-4" /> {savingName ? "Saving..." : "Save"}
+          </PrimaryButton>
+        </div>
+        {profile?.email && (
+          <p className="mt-3 text-xs text-muted-foreground">Signed in as {profile.email}</p>
+        )}
+      </Card>
+
       {/* INTEGRATIONS */}
       <SectionLabel>Integrations</SectionLabel>
+
 
       <Card>
         <div className="flex items-start justify-between gap-4 mb-2">
