@@ -11,6 +11,8 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import trademindFavicon from "../assets/trademind-favicon.png.asset.json";
+import trademindLogo from "../assets/trademind-logo.png.asset.json";
 
 function NotFoundComponent() {
   return (
@@ -84,14 +86,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:description", content: "Live charts and AI-powered coaching for serious traders." },
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "TradeMind" },
-      { property: "og:image", content: "/__l5e/assets-v1/1b10274c-a5e0-49d5-b7af-d7ec4b84a564/logo.png" },
+      { property: "og:image", content: trademindLogo.url },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:image", content: "/__l5e/assets-v1/1b10274c-a5e0-49d5-b7af-d7ec4b84a564/logo.png" },
+      { name: "twitter:image", content: trademindLogo.url },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", type: "image/png", href: "/__l5e/assets-v1/1b10274c-a5e0-49d5-b7af-d7ec4b84a564/logo.png" },
-      { rel: "apple-touch-icon", href: "/__l5e/assets-v1/1b10274c-a5e0-49d5-b7af-d7ec4b84a564/logo.png" },
+      { rel: "icon", type: "image/png", href: trademindFavicon.url },
+      { rel: "apple-touch-icon", href: trademindLogo.url },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" },
