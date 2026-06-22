@@ -68,29 +68,52 @@ export function buildWelcomeBackRecap(
   return parts.join(" ");
 }
 
-export function configureBrowserVoice(utterance: SpeechSynthesisUtterance, coach: string | undefined | null) {
-  utterance.lang = "en-US";
-  utterance.rate = 1;
-  utterance.pitch = coach === "The Disciplinarian" ? 0.9 : coach === "The Mentor" ? 1.06 : 1;
-  const voices = window.speechSynthesis?.getVoices?.() ?? [];
-  const preferred = voices.find((v) => /english|en-/i.test(`${v.lang} ${v.name}`));
-  if (preferred) utterance.voice = preferred;
+export function coachToElevenVoiceId(coach: string | null | undefined): string {
+  switch (coach) {
+    case "The Disciplinarian":
+    case "The Beast":
+      return "bIHbv24MWmeRgasZH58o"; // Will
+    case "The Mentor":
+      return "XrExE9yKIg1WjnnlVkGX"; // Matilda
+    case "The Analyst":
+    case "The Sniper":
+    case "The Monk":
+    default:
+      return "JBFqnCBsd6RMkjVDRZzb"; // George
+  }
 }
 
-export function speakWithBrowserVoice(
+// Plays the welcome-back recap using ElevenLabs (via /api/tts).
+// Pass `audio` from a user-gesture context (auth submit) so autoplay rules
+// allow .play() after navigation.
+export async function speakWithElevenLabs(
   text: string,
-  coach: string | undefined | null,
-  preparedUtterance?: SpeechSynthesisUtterance | null,
+  coach: string | null | undefined,
+  audio?: HTMLAudioElement | null,
   handlers?: { onStart?: () => void; onEnd?: () => void; onError?: () => void },
-): boolean {
-  if (typeof window === "undefined" || !("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) return false;
-  const utterance = preparedUtterance ?? new SpeechSynthesisUtterance();
-  utterance.text = text;
-  utterance.onstart = handlers?.onStart ?? null;
-  utterance.onend = handlers?.onEnd ?? null;
-  utterance.onerror = handlers?.onError ?? null;
-  configureBrowserVoice(utterance, coach);
-  window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(utterance);
-  return true;
+): Promise<boolean> {
+  try {
+    const res = await fetch("/api/tts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, voiceId: coachToElevenVoiceId(coach) }),
+    });
+    if (!res.ok) throw new Error(`tts ${res.status}`);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const el = audio ?? new Audio();
+    el.src = url;
+    el.onplay = () => handlers?.onStart?.();
+    el.onended = () => {
+      handlers?.onEnd?.();
+      URL.revokeObjectURL(url);
+    };
+    el.onerror = () => handlers?.onError?.();
+    await el.play();
+    return true;
+  } catch (err) {
+    console.warn("[welcomeBack] elevenlabs failed", err);
+    handlers?.onError?.();
+    return false;
+  }
 }
