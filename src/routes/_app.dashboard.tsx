@@ -148,10 +148,8 @@ function Dashboard() {
           Welcome back, <span className="text-foreground font-medium">{profile?.display_name}</span>
         </div>
       )}
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_400px]">
-        <div className="space-y-5 min-w-0">
-      {/* Header */}
-      <header className="flex flex-wrap items-end justify-between gap-4 border-b border-border/60 pb-5">
+      <div className="space-y-5">
+
         <div className="min-w-0">
           <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground mb-1.5">
             Active instrument
