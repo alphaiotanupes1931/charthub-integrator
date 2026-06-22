@@ -464,7 +464,7 @@ function Dashboard() {
 
 
       {/* Scan card */}
-      <div className="rounded-xl border border-border bg-card p-6" data-tour="scan">
+      <div className="rounded-xl border border-border bg-card p-4 sm:p-6" data-tour="scan">
 
         {!result && !scanning && (
           <div className="flex flex-col items-center text-center gap-3">
