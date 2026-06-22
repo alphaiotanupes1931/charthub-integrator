@@ -13,7 +13,7 @@ import {
 } from "lightweight-charts";
 import { getOhlc } from "@/lib/ohlc.functions";
 
-export type LevelKey = "VWAP" | "POC" | "SR" | "ZONES" | "FVG" | "FIB" | "LIQ";
+export type LevelKey = "VWAP" | "POC" | "SR" | "ZONES" | "FVG" | "FIB" | "LIQ" | "OF";
 
 export const LEVEL_META: Record<LevelKey, { label: string; color: string; tone: string }> = {
   VWAP:  { label: "VWAP",  color: "#fbbf24", tone: "bg-amber-500/10 text-amber-300 border-amber-500/30" },
@@ -23,6 +23,7 @@ export const LEVEL_META: Record<LevelKey, { label: string; color: string; tone: 
   FVG:   { label: "FVG",   color: "#34d399", tone: "bg-emerald-500/10 text-emerald-300 border-emerald-500/30" },
   FIB:   { label: "Fib",   color: "#f472b6", tone: "bg-pink-500/10 text-pink-300 border-pink-500/30" },
   LIQ:   { label: "Liq",   color: "#f87171", tone: "bg-red-500/10 text-red-300 border-red-500/30" },
+  OF:    { label: "Order Flow", color: "#22d3ee", tone: "bg-cyan-500/10 text-cyan-300 border-cyan-500/30" },
 };
 
 interface Props {
@@ -126,7 +127,7 @@ function generateCandles(symbol: string, interval: string, ticker: string, count
 // --- Compute levels from candles ---
 function computeLevels(candles: Candle[]) {
   if (candles.length === 0) {
-    return { vwap: 0, poc: 0, sr: [] as number[], zones: [] as { top: number; bot: number }[], fvg: [] as { top: number; bot: number }[], fib: [] as { ratio: number; price: number }[], liq: [] as { price: number; side: "buy" | "sell" }[] };
+    return { vwap: 0, poc: 0, sr: [] as number[], zones: [] as { top: number; bot: number }[], fvg: [] as { top: number; bot: number }[], fib: [] as { ratio: number; price: number }[], liq: [] as { price: number; side: "buy" | "sell" }[], of: [] as { price: number; side: "buy" | "sell"; strength: number }[], delta: 0 };
   }
   // VWAP (using HLC/3 as volume proxy)
   let pvSum = 0, vSum = 0;
@@ -162,7 +163,6 @@ function computeLevels(candles: Candle[]) {
     if (isHigh) sr.push(c.high);
     if (isLow)  sr.push(c.low);
   }
-  // Cluster + keep most-recent 4 distinct
   const tol = (hi - lo) * 0.005;
   const clustered: number[] = [];
   for (const p of sr.reverse()) {
@@ -170,13 +170,11 @@ function computeLevels(candles: Candle[]) {
     if (clustered.length >= 4) break;
   }
 
-  // Zones: build accumulation rectangles around POC ± step
   const zones = [
     { top: poc + step * 1.5, bot: poc - step * 1.5 },
     { top: hi - step * 2,    bot: hi - step * 4 },
   ];
 
-  // FVG: gap between candle i-1 high and i+1 low (bullish) / inverse
   const fvg: { top: number; bot: number }[] = [];
   for (let i = 1; i < candles.length - 1; i++) {
     const prev = candles[i - 1], next = candles[i + 1];
@@ -185,21 +183,39 @@ function computeLevels(candles: Candle[]) {
     if (fvg.length >= 3) break;
   }
 
-  // Fibonacci on last swing high/low
   const recent = candles.slice(-60);
   const swingHi = Math.max(...recent.map((c) => c.high));
   const swingLo = Math.min(...recent.map((c) => c.low));
   const range = swingHi - swingLo;
   const fib = [0.236, 0.382, 0.5, 0.618, 0.786].map((r) => ({ ratio: r, price: swingHi - range * r }));
 
-  // Liquidity: highest high cluster & lowest low cluster from last segment
   const last = candles.slice(-30);
   const liq = [
     { price: Math.max(...last.map((c) => c.high)) + step * 0.5, side: "sell" as const },
     { price: Math.min(...last.map((c) => c.low))  - step * 0.5, side: "buy"  as const },
   ];
 
-  return { vwap, poc, sr: clustered, zones, fvg, fib, liq };
+  // --- Order Flow: per-bar delta proxy from body strength + cumulative delta ---
+  // delta = sign(close-open) * |body|/range — strongest absorption/initiative bars
+  const scored = candles.slice(-50).map((c) => {
+    const body = c.close - c.open;
+    const rng = Math.max(1e-9, c.high - c.low);
+    const strength = Math.abs(body) / rng; // 0..1
+    return { price: (c.high + c.low + c.close) / 3, side: body >= 0 ? ("buy" as const) : ("sell" as const), strength };
+  });
+  const of = scored
+    .filter((s) => s.strength > 0.55)
+    .sort((a, b) => b.strength - a.strength)
+    .slice(0, 4);
+  let cum = 0;
+  for (const c of candles) {
+    const body = c.close - c.open;
+    const rng = Math.max(1e-9, c.high - c.low);
+    cum += (body / rng);
+  }
+  const delta = cum;
+
+  return { vwap, poc, sr: clustered, zones, fvg, fib, liq, of, delta };
 }
 
 export function NativeChart({ symbol, ticker, interval, enabled, sessions, className }: Props) {
@@ -212,7 +228,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, class
   const [bands, setBands] = useState<Array<{ key: string; color: string; label: string; left: number; width: number; idx: number }>>([]);
 
   const fetchOhlc = useServerFn(getOhlc);
-  const { data: liveOhlc } = useQuery({
+  const { data: liveOhlc, isLoading } = useQuery({
     queryKey: ["ohlc", ticker, interval],
     queryFn: () => fetchOhlc({ data: { ticker, interval } }),
     staleTime: 30_000,
@@ -220,8 +236,14 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, class
     refetchOnWindowFocus: false,
   });
 
+  const hasLive = !!liveOhlc && liveOhlc.source !== "synthetic" && liveOhlc.bars.length > 0;
+  const noLiveSource = !!liveOhlc && liveOhlc.source === "synthetic";
+  // Don't flash synthetic candles while we're still waiting on the live feed —
+  // only fall back to synthetic when the server actually says no live source exists.
+  const showLoader = !liveOhlc || (isLoading && !hasLive && !noLiveSource);
+
   const candles = useMemo<Candle[]>(() => {
-    if (liveOhlc && liveOhlc.source !== "synthetic" && liveOhlc.bars.length > 0) {
+    if (hasLive && liveOhlc) {
       return liveOhlc.bars.map((b) => ({
         time: b.time as Time,
         open: b.open,
@@ -230,10 +252,11 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, class
         close: b.close,
       }));
     }
-    return generateCandles(symbol, interval, ticker);
-  }, [liveOhlc, symbol, interval, ticker]);
+    if (noLiveSource) return generateCandles(symbol, interval, ticker);
+    return [];
+  }, [liveOhlc, hasLive, noLiveSource, symbol, interval, ticker]);
   const levels = useMemo(() => computeLevels(candles), [candles]);
-  const isLive = !!liveOhlc && liveOhlc.source !== "synthetic" && liveOhlc.bars.length > 0;
+  const isLive = hasLive;
   const sourceLabel = liveOhlc?.source === "coingecko" ? "CoinGecko" : liveOhlc?.source === "twelvedata" ? "Twelve Data" : "";
 
   // Init / teardown chart
@@ -304,6 +327,9 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, class
     });
     if (enabled.FIB) levels.fib.forEach((f) => add(f.price, LEVEL_META.FIB.color, `Fib ${f.ratio}`, true));
     if (enabled.LIQ) levels.liq.forEach((l) => add(l.price, LEVEL_META.LIQ.color, l.side === "buy" ? "Buy-side liq" : "Sell-side liq"));
+    if (enabled.OF) levels.of.forEach((o, i) =>
+      add(o.price, LEVEL_META.OF.color, `${o.side === "buy" ? "OF↑" : "OF↓"} ${i + 1}`, true),
+    );
   }, [enabled, levels, ready]);
 
   // ---- Sessions overlay ----
@@ -371,14 +397,27 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, class
         </div>
       )}
       <div className="absolute left-3 top-3 z-10 rounded-md border border-border bg-background/70 backdrop-blur px-2 py-1 text-[10px] font-mono text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-        <span>{isLive ? "Live" : "Native"} · {ticker} · {interval}</span>
+        <span>{isLive ? "Live" : showLoader ? "Loading" : "Native"} · {ticker} · {interval}</span>
         {isLive && (
           <span className="inline-flex items-center gap-1 text-emerald-400 normal-case">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
             {sourceLabel}
           </span>
         )}
+        {enabled.OF && candles.length > 0 && (
+          <span className={`inline-flex items-center gap-1 normal-case ${levels.delta >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+            Δ {levels.delta >= 0 ? "+" : ""}{levels.delta.toFixed(1)}
+          </span>
+        )}
       </div>
+      {showLoader && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/60 backdrop-blur-sm">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+            Fetching live {ticker}…
+          </div>
+        </div>
+      )}
       {sessions && (
         <div className="absolute right-3 top-3 z-10 rounded-md border border-border bg-background/70 backdrop-blur px-2 py-1 text-[10px] font-mono text-muted-foreground flex items-center gap-2">
           {SESSIONS.map((s) => (

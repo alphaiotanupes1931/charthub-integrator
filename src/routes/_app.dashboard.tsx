@@ -73,12 +73,12 @@ const gradeColor: Record<ScanResult["grade"], string> = {
   "NO ENTRY": "text-destructive",
 };
 
-const ALL_LEVELS: LevelKey[] = ["VWAP","POC","SR","ZONES","FVG","FIB","LIQ"];
+const ALL_LEVELS: LevelKey[] = ["VWAP","POC","SR","ZONES","FVG","FIB","LIQ","OF"];
 
-const STORAGE_KEY = "trademind.levels.enabled.v1";
+const STORAGE_KEY = "trademind.levels.enabled.v2";
 
 function loadLevels(): Record<LevelKey, boolean> {
-  const def: Record<LevelKey, boolean> = { VWAP: true, POC: true, SR: true, ZONES: true, FVG: true, FIB: false, LIQ: true };
+  const def: Record<LevelKey, boolean> = { VWAP: true, POC: true, SR: true, ZONES: true, FVG: true, FIB: false, LIQ: true, OF: true };
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return def;
@@ -96,7 +96,7 @@ function Dashboard() {
   const [result, setResult] = useState<ScanResult | null>(null);
   const [chartMode, setChartMode] = useState<"live" | "native">("native");
   const [levels, setLevels] = useState<Record<LevelKey, boolean>>(() =>
-    typeof window !== "undefined" ? loadLevels() : { VWAP: true, POC: true, SR: true, ZONES: true, FVG: true, FIB: false, LIQ: true },
+    typeof window !== "undefined" ? loadLevels() : { VWAP: true, POC: true, SR: true, ZONES: true, FVG: true, FIB: false, LIQ: true, OF: true },
   );
   const [sessionsOn, setSessionsOn] = useState(true);
   const [levelsOpen, setLevelsOpen] = useState(false);
@@ -296,12 +296,13 @@ function Dashboard() {
 
           <button
             onClick={() => setSessionsOn((v) => !v)}
-            className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition ${
-              sessionsOn
+            disabled={chartMode === "live"}
+            className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition disabled:opacity-40 disabled:cursor-not-allowed ${
+              sessionsOn && chartMode !== "live"
                 ? "border-primary/40 bg-primary/10 text-primary"
                 : "border-border bg-background/60 text-muted-foreground hover:text-foreground hover:border-primary/40"
             }`}
-            title="Highlight Sydney / Tokyo / London / New York trading sessions"
+            title={chartMode === "live" ? "Sessions are available on the Native chart" : "Highlight Sydney / Tokyo / London / New York trading sessions"}
           >
             <Clock className="h-3.5 w-3.5" /> Sessions
           </button>
@@ -309,7 +310,7 @@ function Dashboard() {
 
         <div className="h-[520px]">
           {chartMode === "live" ? (
-            <TradingViewChart symbol={symbol.tv} interval={interval} enabled={levels} sessions={sessionsOn} />
+            <TradingViewChart symbol={symbol.tv} interval={interval} enabled={levels} />
           ) : (
             <NativeChart symbol={symbol.tv} ticker={symbol.ticker} interval={interval} enabled={levels} sessions={sessionsOn} />
           )}
@@ -320,7 +321,7 @@ function Dashboard() {
 
 
       {/* Scan card */}
-      <div className="rounded-xl border border-border bg-card p-8">
+      <div className="rounded-xl border border-border bg-card p-6">
         {!result && !scanning && (
           <div className="flex flex-col items-center text-center gap-3">
             <Crosshair className="h-6 w-6 text-primary" />
