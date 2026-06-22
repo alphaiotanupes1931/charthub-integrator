@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { TradingViewChart } from "@/components/TradingViewChart";
 import { NativeChart, LEVEL_META, type LevelKey, type ChartSnapshot } from "@/components/NativeChart";
@@ -6,12 +6,17 @@ import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Sparkles,
 import { useProfile } from "@/hooks/useProfile";
 import { DashboardChatPanel, type DashboardChatHandle } from "@/components/DashboardChatPanel";
 
+type DashboardSearch = { ask?: string };
+
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({
     meta: [
       { title: "Dashboard, TradeMind" },
       { name: "description", content: "Live chart and AI setup analysis for your active instrument." },
     ],
+  }),
+  validateSearch: (s: Record<string, unknown>): DashboardSearch => ({
+    ask: typeof s.ask === "string" ? s.ask : undefined,
   }),
   component: Dashboard,
 });
