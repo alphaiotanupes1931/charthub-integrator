@@ -9,9 +9,8 @@ import logoAsset from "@/assets/logo.png.asset.json";
 import { readActiveCoach, readJournal } from "@/lib/chat-client";
 import {
   buildWelcomeBackRecap,
-  configureBrowserVoice,
   latestJournalTrade,
-  speakWithBrowserVoice,
+  speakWithElevenLabs,
   spokenName,
   WELCOME_BACK_REQUEST_KEY,
   WELCOME_BACK_SESSION_KEY,
@@ -102,11 +101,12 @@ function AuthPage() {
       toast.error(parsed.error.issues[0]?.message ?? "Invalid input");
       return;
     }
-    let preparedWelcomeUtterance: SpeechSynthesisUtterance | null = null;
-    if (typeof window !== "undefined" && "SpeechSynthesisUtterance" in window) {
-      preparedWelcomeUtterance = new SpeechSynthesisUtterance();
-      configureBrowserVoice(preparedWelcomeUtterance, readActiveCoach());
-      (window as Window & { __trademindWelcomeUtterance?: SpeechSynthesisUtterance }).__trademindWelcomeUtterance = preparedWelcomeUtterance;
+    // Pre-create an Audio element inside the user gesture so .play() will
+    // be allowed after we receive the ElevenLabs MP3 bytes.
+    let welcomeAudio: HTMLAudioElement | null = null;
+    if (typeof window !== "undefined" && typeof Audio !== "undefined") {
+      welcomeAudio = new Audio();
+      (window as Window & { __trademindWelcomeAudio?: HTMLAudioElement }).__trademindWelcomeAudio = welcomeAudio;
     }
     setBusy(true);
     try {
@@ -128,7 +128,8 @@ function AuthPage() {
             window.setTimeout(() => resolve(`Welcome back, ${spokenName(null, parsed.data.email)}. Ready when you are.`), 1600),
           ),
         ]);
-        speakWithBrowserVoice(recap, readActiveCoach(), preparedWelcomeUtterance, {
+        // Fire-and-forget: don't block navigation on TTS fetch.
+        void speakWithElevenLabs(recap, readActiveCoach(), welcomeAudio, {
           onStart: () => {
             welcomeStarted = true;
             try { sessionStorage.setItem(WELCOME_BACK_SESSION_KEY, "1"); } catch { /* ignore */ }
@@ -138,10 +139,10 @@ function AuthPage() {
           },
         });
       } catch {
-        speakWithBrowserVoice(
+        void speakWithElevenLabs(
           `Welcome back, ${spokenName(null, parsed.data.email)}. Ready when you are.`,
           readActiveCoach(),
-          preparedWelcomeUtterance,
+          welcomeAudio,
         );
       }
       let target = search.redirect || "/dashboard";
