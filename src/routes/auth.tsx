@@ -6,6 +6,17 @@ import { signUpConfirmed } from "@/lib/auth.functions";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import logoAsset from "@/assets/logo.png.asset.json";
+import { readActiveCoach, readJournal } from "@/lib/chat-client";
+import {
+  buildWelcomeBackRecap,
+  configureBrowserVoice,
+  latestJournalTrade,
+  speakWithBrowserVoice,
+  spokenName,
+  WELCOME_BACK_REQUEST_KEY,
+  WELCOME_BACK_SESSION_KEY,
+  type JournalTrade,
+} from "@/lib/welcomeBack";
 
 const searchSchema = z.object({
   redirect: z.string().optional(),
@@ -29,6 +40,37 @@ const credSchema = z.object({
   email: z.string().trim().email("Enter a valid email").max(255),
   password: z.string().min(8, "Password must be at least 8 characters").max(72),
 });
+
+async function buildLoginWelcomeRecap() {
+  const [{ data: userData }, { data: profile }, { data: thread }] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase.from("profiles").select("display_name,email").maybeSingle(),
+    supabase.from("chat_threads").select("id,title,updated_at").order("updated_at", { ascending: false }).limit(1).maybeSingle(),
+  ]);
+
+  let lastAssistant: string | null = null;
+  let lastUser: string | null = null;
+  if (thread?.id) {
+    const { data: msgs } = await supabase
+      .from("chat_messages")
+      .select("role,parts,created_at")
+      .eq("thread_id", thread.id)
+      .order("created_at", { ascending: false })
+      .limit(8);
+    for (const m of msgs ?? []) {
+      const parts = (m.parts ?? []) as Array<{ type: string; text?: string }>;
+      const text = parts.filter((p) => p.type === "text" && p.text).map((p) => p.text!).join(" ").trim();
+      if (!text) continue;
+      if (!lastAssistant && m.role === "assistant") lastAssistant = text;
+      if (!lastUser && m.role === "user") lastUser = text;
+      if (lastAssistant && lastUser) break;
+    }
+  }
+
+  const name = spokenName(profile?.display_name, profile?.email ?? userData.user?.email ?? null);
+  const trades = readJournal() as JournalTrade[];
+  return buildWelcomeBackRecap(name, latestJournalTrade(trades), lastAssistant, thread?.title ?? null, lastUser);
+}
 
 function AuthPage() {
   const navigate = useNavigate();
@@ -60,6 +102,12 @@ function AuthPage() {
       toast.error(parsed.error.issues[0]?.message ?? "Invalid input");
       return;
     }
+    let preparedWelcomeUtterance: SpeechSynthesisUtterance | null = null;
+    if (typeof window !== "undefined" && "SpeechSynthesisUtterance" in window) {
+      preparedWelcomeUtterance = new SpeechSynthesisUtterance();
+      configureBrowserVoice(preparedWelcomeUtterance, readActiveCoach());
+      (window as Window & { __trademindWelcomeUtterance?: SpeechSynthesisUtterance }).__trademindWelcomeUtterance = preparedWelcomeUtterance;
+    }
     setBusy(true);
     try {
       if (mode === "signin") {
@@ -72,10 +120,34 @@ function AuthPage() {
         if (error) throw error;
         toast.success("Account created");
       }
+      try {
+        const recap = await Promise.race([
+          buildLoginWelcomeRecap(),
+          new Promise<string>((resolve) =>
+            window.setTimeout(() => resolve(`Welcome back, ${spokenName(null, parsed.data.email)}. Ready when you are.`), 1600),
+          ),
+        ]);
+        speakWithBrowserVoice(recap, readActiveCoach(), preparedWelcomeUtterance, {
+          onStart: () => {
+            try { sessionStorage.setItem(WELCOME_BACK_SESSION_KEY, "1"); } catch { /* ignore */ }
+          },
+          onEnd: () => {
+            try { sessionStorage.setItem(WELCOME_BACK_SESSION_KEY, "1"); } catch { /* ignore */ }
+          },
+        });
+      } catch {
+        speakWithBrowserVoice(
+          `Welcome back, ${spokenName(null, parsed.data.email)}. Ready when you are.`,
+          readActiveCoach(),
+          preparedWelcomeUtterance,
+        );
+      }
       let target = search.redirect || "/dashboard";
       try {
         const pending = localStorage.getItem("trademind.pendingInvite");
         if (pending) target = `/invite/${pending}`;
+        localStorage.setItem(WELCOME_BACK_REQUEST_KEY, Date.now().toString());
+        sessionStorage.removeItem(WELCOME_BACK_SESSION_KEY);
       } catch { /* ignore */ }
       navigate({ to: target, replace: true });
     } catch (err: unknown) {

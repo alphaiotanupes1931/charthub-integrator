@@ -2,11 +2,18 @@ import { createFileRoute } from "@tanstack/react-router";
 
 type Body = { text?: string; voiceId?: string };
 
+const VOICE_ID_TO_GATEWAY_VOICE: Record<string, string> = {
+  JBFqnCBsd6RMkjVDRZzb: "echo",
+  bIHbv24MWmeRgasZH58o: "ash",
+  XrExE9yKIg1WjnnlVkGX: "coral",
+  EXAVITQu4vr4xnSDxMaL: "sage",
+};
+
 export const Route = createFileRoute("/api/tts")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const apiKey = process.env.ELEVENLABS_API_KEY;
+        const apiKey = process.env.LOVABLE_API_KEY;
         if (!apiKey) return new Response("TTS not configured", { status: 500 });
 
         let body: Body;
@@ -22,28 +29,21 @@ export const Route = createFileRoute("/api/tts")({
         // Hard cap to control cost / latency. Long replies get truncated for voice.
         const clipped = text.length > 1200 ? text.slice(0, 1200) + "…" : text;
 
-        const upstream = await fetch(
-          `https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(
-            voiceId,
-          )}/stream?output_format=mp3_44100_128`,
-          {
-            method: "POST",
-            headers: {
-              "xi-api-key": apiKey,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              text: clipped,
-              model_id: "eleven_turbo_v2_5",
-              voice_settings: {
-                stability: 0.5,
-                similarity_boost: 0.75,
-                style: 0.3,
-                use_speaker_boost: true,
-              },
-            }),
+        const upstream = await fetch("https://ai.gateway.lovable.dev/v1/audio/speech", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
           },
-        );
+          body: JSON.stringify({
+            model: "openai/gpt-4o-mini-tts",
+            input: clipped,
+            voice: VOICE_ID_TO_GATEWAY_VOICE[voiceId] ?? "alloy",
+            stream_format: "audio",
+            response_format: "mp3",
+            instructions: "Speak like a concise, confident trading coach. Keep the delivery warm and direct.",
+          }),
+        });
 
         if (!upstream.ok || !upstream.body) {
           const err = await upstream.text().catch(() => "");

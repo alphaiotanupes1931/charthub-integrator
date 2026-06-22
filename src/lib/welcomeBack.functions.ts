@@ -4,6 +4,12 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 export const getLatestRecapContext = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const { data: profile } = await context.supabase
+      .from("profiles")
+      .select("display_name,email")
+      .eq("id", context.userId)
+      .maybeSingle();
+
     const { data: thread } = await context.supabase
       .from("chat_threads")
       .select("id,title,updated_at")
@@ -37,6 +43,8 @@ export const getLatestRecapContext = createServerFn({ method: "POST" })
     }
 
     return {
+      displayName: profile?.display_name ?? null,
+      email: profile?.email ?? null,
       threadTitle: thread?.title ?? null,
       threadUpdatedAt: thread?.updated_at ?? null,
       lastAssistant,
