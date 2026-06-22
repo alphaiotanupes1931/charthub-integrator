@@ -127,6 +127,23 @@ function Dashboard() {
 
   useEffect(() => { setResult(null); }, [symbol]);
 
+  // Honor ?ask= deep links (from Analytics quick questions)
+  const search = Route.useSearch();
+  const navigate = useNavigate();
+  const askedRef = useRef<string | null>(null);
+  useEffect(() => {
+    const q = search.ask?.trim();
+    if (!q || askedRef.current === q) return;
+    const tryRun = () => {
+      if (!chatRef.current) { window.setTimeout(tryRun, 150); return; }
+      askedRef.current = q;
+      setCoachOpen(true);
+      chatRef.current.scan(q);
+      navigate({ to: "/dashboard", search: {}, replace: true });
+    };
+    tryRun();
+  }, [search.ask, navigate]);
+
   const intervalLabel = INTERVALS.find((i) => i.value === interval)?.label ?? interval;
 
   const runScan = () => {
