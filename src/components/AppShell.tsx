@@ -51,7 +51,7 @@ const NAV: NavItem[] = [
   { to: "/memory", label: "Trading Memory", icon: Brain },
   { to: "/system-status", label: "System Status", icon: Activity },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
-  { to: "/mentor", label: "Coach Dashboard", icon: UserCog },
+  { to: "/friends", label: "Friends", icon: Users },
   { to: "/admin", label: "Admin", icon: ShieldCheck, accent: true },
 ];
 
