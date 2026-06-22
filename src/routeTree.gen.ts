@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiChatRouteImport } from './routes/api.chat'
 import { Route as AppVoiceCoachRouteImport } from './routes/_app.voice-coach'
 import { Route as AppSystemStatusRouteImport } from './routes/_app.system-status'
 import { Route as AppStrategiesRouteImport } from './routes/_app.strategies'
@@ -31,6 +32,11 @@ const AppRoute = AppRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppVoiceCoachRoute = AppVoiceCoachRouteImport.update({
@@ -108,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/strategies': typeof AppStrategiesRoute
   '/system-status': typeof AppSystemStatusRoute
   '/voice-coach': typeof AppVoiceCoachRoute
+  '/api/chat': typeof ApiChatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -123,6 +130,7 @@ export interface FileRoutesByTo {
   '/strategies': typeof AppStrategiesRoute
   '/system-status': typeof AppSystemStatusRoute
   '/voice-coach': typeof AppVoiceCoachRoute
+  '/api/chat': typeof ApiChatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -140,6 +148,7 @@ export interface FileRoutesById {
   '/_app/strategies': typeof AppStrategiesRoute
   '/_app/system-status': typeof AppSystemStatusRoute
   '/_app/voice-coach': typeof AppVoiceCoachRoute
+  '/api/chat': typeof ApiChatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -157,6 +166,7 @@ export interface FileRouteTypes {
     | '/strategies'
     | '/system-status'
     | '/voice-coach'
+    | '/api/chat'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -172,6 +182,7 @@ export interface FileRouteTypes {
     | '/strategies'
     | '/system-status'
     | '/voice-coach'
+    | '/api/chat'
   id:
     | '__root__'
     | '/'
@@ -188,11 +199,13 @@ export interface FileRouteTypes {
     | '/_app/strategies'
     | '/_app/system-status'
     | '/_app/voice-coach'
+    | '/api/chat'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
+  ApiChatRoute: typeof ApiChatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -209,6 +222,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/voice-coach': {
@@ -333,6 +353,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
+  ApiChatRoute: ApiChatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
