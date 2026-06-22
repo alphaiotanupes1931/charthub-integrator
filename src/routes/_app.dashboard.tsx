@@ -436,6 +436,10 @@ function FloatingCoach({
   chatRef: React.RefObject<DashboardChatHandle | null>;
   chart: { ticker: string; intervalLabel: string; enabledLevels: string; snapshot?: ChartSnapshot };
 }) {
+  const [minimized, setMinimized] = useState(false);
+  const expanded = open && !minimized;
+  const collapsed = open && minimized;
+
   return (
     <>
       {/* Bubble (always rendered, hidden when open so the panel can take over) */}
@@ -450,13 +454,29 @@ function FloatingCoach({
         </button>
       )}
 
+      {/* Minimized activity bar — lets the user look at the chart while the coach keeps talking */}
+      {collapsed && (
+        <button
+          onClick={() => setMinimized(false)}
+          aria-label="Expand AI coach"
+          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 inline-flex items-center gap-2 rounded-full border border-border bg-card/95 backdrop-blur px-3 py-2 shadow-xl hover:bg-card transition"
+        >
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary" />
+          </span>
+          <span className="text-xs font-medium">AI Coach</span>
+          <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" />
+        </button>
+      )}
+
       {/* Expanded panel — always mounted so the chat thread persists between toggles */}
       <div
         className={`fixed z-40 right-4 bottom-4 sm:right-6 sm:bottom-6 w-[min(420px,calc(100vw-2rem))] h-[min(640px,calc(100vh-2rem))] transition-all duration-200 ${
-          open ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 translate-y-4 pointer-events-none"
+          expanded ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 translate-y-4 pointer-events-none"
         }`}
       >
-        <DashboardChatPanel ref={chatRef} chart={chart} onClose={onClose} />
+        <DashboardChatPanel ref={chatRef} chart={chart} onClose={onClose} onMinimize={() => setMinimized(true)} />
       </div>
     </>
   );
