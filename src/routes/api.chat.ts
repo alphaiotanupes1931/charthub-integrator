@@ -36,12 +36,23 @@ type ChartSnap = {
 };
 type ChartCtx = { ticker?: string; intervalLabel?: string; enabledLevels?: string; snapshot?: ChartSnap };
 
+type StrategyCtx = {
+  name: string;
+  level?: string;
+  style?: string;
+  markets?: string[];
+  description?: string;
+  winRate?: number;
+  rr?: number;
+};
+
 type ChatRequestBody = {
   messages?: UIMessage[];
   threadId?: string;
   coach?: string;
   journal?: Trade[];
   chart?: ChartCtx;
+  strategy?: StrategyCtx | null;
 };
 
 function pnl(t: Trade) {
