@@ -224,10 +224,10 @@ function Dashboard() {
           <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground mb-1.5">
             Active instrument
           </div>
-          <h1 className="font-display text-3xl font-semibold tracking-tight truncate">
+          <h1 className="font-display text-2xl sm:text-3xl font-semibold tracking-tight truncate">
             {symbol.ticker}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1 truncate">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1 truncate">
             {symbol.name} · {symbol.venue}
           </p>
         </div>
@@ -420,12 +420,43 @@ function Dashboard() {
           </button>
         </div>
 
-        <div className="h-[520px]">
+        <div className="h-[360px] sm:h-[460px] md:h-[520px]">
           {chartMode === "live" ? (
             <TradingViewChart symbol={symbol.tv} interval={interval} enabled={levels} />
           ) : (
             <NativeChart symbol={symbol.tv} ticker={symbol.ticker} interval={interval} enabled={levels} sessions={sessionsOn} onSnapshot={setSnapshot} />
           )}
+        </div>
+
+        {/* Broker strip — minimalist, only when chart is shown */}
+        <div className="border-t border-border/60 px-3 py-2 flex items-center justify-between gap-2 flex-wrap text-xs">
+          {broker ? (
+            <div className="flex items-center gap-2 min-w-0 text-muted-foreground">
+              <span className="relative flex h-2 w-2 shrink-0">
+                <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+              </span>
+              <span className="truncate">
+                <span className="text-foreground font-medium">Broker connected</span>
+                <span className="hidden sm:inline"> · {broker.email} · {broker.accountType}</span>
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 text-muted-foreground min-w-0">
+              <Plug className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">Chart-only mode.&nbsp;
+                <Link to="/settings" className="text-primary hover:underline">Connect broker</Link>
+                <span className="hidden sm:inline"> to trade from here.</span>
+              </span>
+            </div>
+          )}
+          <button
+            onClick={openTradingFloor}
+            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground hover:opacity-90 shrink-0"
+            title="Open TradingView trading floor with your broker terminal"
+          >
+            <Maximize2 className="h-3 w-3" /> Trade
+          </button>
         </div>
 
 
