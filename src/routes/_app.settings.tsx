@@ -167,7 +167,7 @@ function SettingsPage() {
         body: JSON.stringify({ email: tlEmail, password: tlPassword, server: tlServer, accountType: tlAccountType, test: true }),
       });
       const data = await res.json();
-      if (!res.ok) { toast.error(data.error || "Connection failed"); setTlConnected(false); return; }
+      if (!res.ok || data?.ok === false || data?.error) { toast.error(data?.error || "Connection failed"); setTlConnected(false); return; }
       const accounts: TLAccount[] = data.accounts || [];
       setTlAccounts(accounts);
       if (accounts.length && !tlAccountId) setTlAccountId(String(accounts[0].id));
@@ -202,7 +202,7 @@ function SettingsPage() {
         body: JSON.stringify({ email: tlEmail, password: tlPassword, server: tlServer, accountType: tlAccountType, accountId: tlAccountId || undefined }),
       });
       const data = await res.json();
-      if (!res.ok) { toast.error(data.error || "Import failed"); return; }
+      if (!res.ok || data?.ok === false || data?.error) { toast.error(data?.error || "Import failed"); return; }
       const incoming: TLTrade[] = data.trades || [];
       if (!incoming.length) { toast.info("No trades found on this TradeLocker account yet"); return; }
       // Merge into local journal (dedupe by id)
