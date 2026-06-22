@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import {
   Calendar as CalIcon,
@@ -11,7 +11,15 @@ import {
   X,
   TrendingUp,
   TrendingDown,
+  ImageIcon,
+  Upload,
 } from "lucide-react";
+import {
+  putTradeImage,
+  getTradeImage,
+  deleteTradeImage,
+  compressImageFile,
+} from "@/lib/journalImages";
 
 export const Route = createFileRoute("/_app/journal")({
   head: () => ({ meta: [{ title: "Trade Journal, TradeMind" }] }),
@@ -39,6 +47,7 @@ type Trade = {
   stop: number;
   size: number;
   notes: string;
+  hasImage?: boolean; // screenshot stored locally in IndexedDB
   createdAt: number;
 };
 
@@ -145,6 +154,7 @@ function JournalPage() {
   };
   const handleDelete = (id: string) => {
     setTrades((prev) => prev.filter((p) => p.id !== id));
+    void deleteTradeImage(id);
   };
 
   const editing = editingId ? trades.find((t) => t.id === editingId) ?? null : null;
@@ -271,6 +281,7 @@ function JournalPage() {
                 const rr = tradeRR(t);
                 return (
                   <div key={t.id} className="flex items-center gap-4 p-4 hover:bg-accent/20 transition">
+                    {t.hasImage && <TradeThumb tradeId={t.id} />}
                     <button onClick={() => openEdit(t)} className="flex-1 min-w-0 text-left">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-semibold">{t.symbol}</span>
@@ -284,6 +295,11 @@ function JournalPage() {
                           {t.timeframe}
                         </span>
                         <span className="text-xs text-muted-foreground">{formatYmdHuman(t.date)}</span>
+                        {t.hasImage && (
+                          <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground" title="Screenshot stored on this device only">
+                            <ImageIcon className="h-3 w-3" /> local
+                          </span>
+                        )}
                       </div>
                       {t.notes && <div className="mt-1 text-xs text-muted-foreground line-clamp-1">{t.notes}</div>}
                     </button>
@@ -342,6 +358,56 @@ function TradeFormModal({
   const [stop, setStop] = useState<string>(editing ? String(editing.stop) : "");
   const [size, setSize] = useState<string>(editing ? String(editing.size) : "1");
   const [notes, setNotes] = useState(editing?.notes ?? "");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [pendingImage, setPendingImage] = useState<Blob | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [removeImage, setRemoveImage] = useState(false);
+
+  // Load existing image preview when editing.
+  useEffect(() => {
+    let revokedUrl: string | null = null;
+    if (editing?.hasImage) {
+      void getTradeImage(editing.id).then((blob) => {
+        if (blob) {
+          const url = URL.createObjectURL(blob);
+          revokedUrl = url;
+          setImageUrl(url);
+        }
+      });
+    }
+    return () => { if (revokedUrl) URL.revokeObjectURL(revokedUrl); };
+  }, [editing?.id, editing?.hasImage]);
+
+  const handlePickFile = async (file: File | null | undefined) => {
+    if (!file || !file.type.startsWith("image/")) return;
+    const compressed = await compressImageFile(file);
+    setPendingImage(compressed);
+    setRemoveImage(false);
+    if (imageUrl) URL.revokeObjectURL(imageUrl);
+    setImageUrl(URL.createObjectURL(compressed));
+  };
+
+  const clearImage = () => {
+    if (imageUrl) URL.revokeObjectURL(imageUrl);
+    setImageUrl(null);
+    setPendingImage(null);
+    setRemoveImage(true);
+  };
+
+  // Paste-from-clipboard support (great for TradingView screenshots).
+  useEffect(() => {
+    const onPaste = (e: ClipboardEvent) => {
+      const item = Array.from(e.clipboardData?.items ?? []).find((i) => i.type.startsWith("image/"));
+      if (!item) return;
+      const file = item.getAsFile();
+      if (file) void handlePickFile(file);
+    };
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const hasImage = !!pendingImage || (!!editing?.hasImage && !removeImage);
 
   const preview: Trade = {
     id: editing?.id ?? "preview",
@@ -354,6 +420,7 @@ function TradeFormModal({
     stop: Number(stop) || 0,
     size: Number(size) || 0,
     notes,
+    hasImage,
     createdAt: editing?.createdAt ?? Date.now(),
   };
   const previewPnl = tradePnl(preview);
@@ -361,12 +428,16 @@ function TradeFormModal({
 
   const canSave = symbol.trim() && entry !== "" && exit !== "" && stop !== "" && date;
 
-  const submit = () => {
+  const submit = async () => {
     if (!canSave) return;
-    onSave({
-      ...preview,
-      id: editing?.id ?? `t_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
-    });
+    const id = editing?.id ?? `t_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
+    if (pendingImage) {
+      await putTradeImage(id, pendingImage);
+    } else if (removeImage && editing?.hasImage) {
+      await deleteTradeImage(id);
+    }
+    onSave({ ...preview, id });
+
   };
 
   return (
@@ -468,6 +539,47 @@ function TradeFormModal({
             />
           </Field>
 
+          <Field label="Chart screenshot (stays on this device)">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => { void handlePickFile(e.target.files?.[0]); e.target.value = ""; }}
+            />
+            {imageUrl ? (
+              <div className="relative rounded-md border border-border overflow-hidden bg-background">
+                <img src={imageUrl} alt="Trade screenshot" className="w-full max-h-72 object-contain" />
+                <div className="absolute top-2 right-2 flex gap-1">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="rounded bg-background/80 backdrop-blur px-2 py-1 text-[10px] font-medium border border-border hover:bg-accent"
+                  >
+                    Replace
+                  </button>
+                  <button
+                    type="button"
+                    onClick={clearImage}
+                    className="rounded bg-background/80 backdrop-blur px-2 py-1 text-[10px] font-medium border border-border text-destructive hover:bg-destructive/10"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full rounded-md border border-dashed border-border bg-background/40 px-3 py-6 text-sm text-muted-foreground hover:border-primary/40 hover:text-foreground transition flex flex-col items-center gap-1.5"
+              >
+                <Upload className="h-4 w-4" />
+                <span>Upload screenshot or paste from clipboard</span>
+                <span className="text-[10px]">Stored only on your device — never uploaded to our servers</span>
+              </button>
+            )}
+          </Field>
+
           <div className="rounded-lg border border-border bg-background/50 p-3 grid grid-cols-2 gap-3 text-sm">
             <div>
               <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">P&amp;L</div>
@@ -503,5 +615,33 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1.5">{label}</div>
       {children}
     </label>
+  );
+}
+
+function TradeThumb({ tradeId }: { tradeId: string }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    let active = true;
+    let created: string | null = null;
+    void getTradeImage(tradeId).then((blob) => {
+      if (!active || !blob) return;
+      created = URL.createObjectURL(blob);
+      setUrl(created);
+    });
+    return () => { active = false; if (created) URL.revokeObjectURL(created); };
+  }, [tradeId]);
+  if (!url) {
+    return (
+      <div className="h-12 w-16 rounded border border-border bg-background/40 flex items-center justify-center text-muted-foreground shrink-0">
+        <ImageIcon className="h-4 w-4" />
+      </div>
+    );
+  }
+  return (
+    <img
+      src={url}
+      alt="Trade screenshot"
+      className="h-12 w-16 rounded border border-border object-cover shrink-0"
+    />
   );
 }
