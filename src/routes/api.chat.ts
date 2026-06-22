@@ -164,7 +164,7 @@ export const Route = createFileRoute("/api/chat")({
         }
 
         const journalCtx = buildJournalContext(journal ?? []);
-        const system = systemPrompt(coach, journalCtx);
+        const system = systemPrompt(coach, journalCtx, chartContextBlock(chart));
 
         const gateway = createLovableAiGatewayProvider(key);
         const result = streamText({
