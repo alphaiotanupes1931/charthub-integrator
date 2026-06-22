@@ -181,3 +181,9 @@
   50% { box-shadow: 0 0 0 14px color-mix(in oklab, var(--gold) 0%, transparent); }
 }
 .animate-pulse-gold { animation: pulse-gold 2.4s ease-in-out infinite; }
+
+@keyframes ticker-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-ticker-scroll { animation: ticker-scroll 45s linear infinite; }
