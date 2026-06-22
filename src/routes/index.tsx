@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "motion/react";
-import { ArrowRight, Check, HelpCircle } from "lucide-react";
+import { ArrowRight, Check, HelpCircle, Menu } from "lucide-react";
 import { TickerTape } from "@/components/TickerTape";
 import { MiniChart, SymbolOverview } from "@/components/MiniChart";
 import {
