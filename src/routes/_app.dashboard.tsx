@@ -445,7 +445,7 @@ function FloatingCoach({
       {/* Bubble (always rendered, hidden when open so the panel can take over) */}
       {!open && (
         <button
-          onClick={onOpen}
+          onClick={() => { setMinimized(false); onOpen(); }}
           aria-label="Open AI coach"
           data-tour="coach-bubble"
           className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/30 ring-1 ring-primary/40 hover:scale-105 transition flex items-center justify-center"
