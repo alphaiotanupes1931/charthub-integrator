@@ -96,15 +96,20 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
           if (token) headers.set("Authorization", `Bearer ${token}`);
           return fetch(input, { ...init, headers });
         },
-        prepareSendMessagesRequest: ({ messages, id }) => ({
-          body: {
-            messages,
-            threadId: id,
-            coach: readActiveCoach(),
-            journal: readJournal(),
-            chart: chartRef.current,
-          },
-        }),
+        prepareSendMessagesRequest: ({ messages, id }) => {
+          const stratName = readActiveStrategy();
+          const strategy = stratName ? STRATEGIES.find((s) => s.name === stratName) ?? { name: stratName } : null;
+          return {
+            body: {
+              messages,
+              threadId: id,
+              coach: readActiveCoach(),
+              journal: readJournal(),
+              chart: chartRef.current,
+              strategy,
+            },
+          };
+        },
       }),
       onError: (err) => {
         console.error(err);
