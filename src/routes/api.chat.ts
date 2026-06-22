@@ -135,9 +135,31 @@ function coachPersona(coach?: string) {
 
 function chartContextBlock(chart?: ChartCtx): string {
   if (!chart?.ticker) return "The trader has not selected a chart yet.";
-  return `Symbol: ${chart.ticker}
-Timeframe: ${chart.intervalLabel ?? "?"}
-Levels currently on chart: ${chart.enabledLevels || "none"}`;
+  const lines: string[] = [
+    `Symbol: ${chart.ticker}`,
+    `Timeframe: ${chart.intervalLabel ?? "?"}`,
+    `Levels currently on chart: ${chart.enabledLevels || "none"}`,
+  ];
+  const s = chart.snapshot;
+  if (s) {
+    const fmt = (n?: number, d = 2) => (typeof n === "number" && isFinite(n) ? n.toFixed(d) : "?");
+    lines.push(
+      "",
+      `LIVE CHART DATA (snapshot from the user's screen, source: ${s.sourceLabel ?? s.source ?? "?"}, fetched ${s.fetchedAt ?? "?"}):`,
+      `  Last price: ${fmt(s.lastPrice, 4)}`,
+      `  20-bar range: ${fmt(s.low20, 4)} → ${fmt(s.high20, 4)}`,
+      `  50-bar range: ${fmt(s.low50, 4)} → ${fmt(s.high50, 4)}`,
+      `  VWAP: ${fmt(s.vwap, 4)}   POC: ${fmt(s.poc, 4)}   Cumulative delta: ${fmt(s.delta, 2)}`,
+      s.sr?.length ? `  Swing S/R (recent): ${s.sr.map((p) => fmt(p, 4)).join(", ")}` : "",
+      s.fib?.length ? `  Fib levels: ${s.fib.map((f) => `${f.ratio}=${fmt(f.price, 4)}`).join(", ")}` : "",
+      s.liq?.length ? `  Liquidity pools: ${s.liq.map((l) => `${l.side}@${fmt(l.price, 4)}`).join(", ")}` : "",
+      s.of?.length ? `  Order-flow initiative bars: ${s.of.map((o) => `${o.side}@${fmt(o.price, 4)} (${(o.strength * 100).toFixed(0)}%)`).join(", ")}` : "",
+      s.sessionsActive?.length ? `  Active sessions right now: ${s.sessionsActive.join(", ")}` : `  Active sessions right now: none (off-hours)`,
+    );
+  } else {
+    lines.push("", "Live chart data not yet loaded — answer generally and ask the trader to wait a moment for the feed.");
+  }
+  return lines.filter(Boolean).join("\n");
 }
 
 function systemPrompt(coach: string | undefined, journalContext: string, chartCtx: string) {
