@@ -556,19 +556,19 @@ function FloatingCoach({
 
   return (
     <>
-      {/* Bubble (always rendered, hidden when open so the panel can take over) */}
+      {/* Bubble — hidden when panel is open */}
       {!open && (
         <button
           onClick={() => { setMinimized(false); onOpen(); }}
           aria-label="Open AI coach"
           data-tour="coach-bubble"
-          className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-40 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/30 ring-1 ring-primary/40 hover:scale-105 transition flex items-center justify-center"
+          className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-40 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/30 ring-1 ring-primary/40 hover:scale-105 active:scale-95 transition flex items-center justify-center"
         >
           <MessageSquare className="h-6 w-6" />
         </button>
       )}
 
-      {/* Minimized activity bar — lets the user look at the chart while the coach keeps talking */}
+      {/* Minimized pill */}
       {collapsed && (
         <button
           onClick={() => setMinimized(false)}
@@ -584,11 +584,23 @@ function FloatingCoach({
         </button>
       )}
 
-      {/* Expanded panel — full-screen on mobile, anchored bubble on desktop. Always mounted so the chat thread persists. */}
+      {/* Mobile backdrop — tap to minimize */}
+      {expanded && (
+        <button
+          aria-label="Hide coach"
+          onClick={() => setMinimized(true)}
+          className="sm:hidden fixed inset-0 z-30 bg-background/60 backdrop-blur-sm"
+        />
+      )}
+
+      {/* Expanded panel — full-screen sheet on mobile, anchored card on desktop. Always mounted so chat state survives. */}
       <div
-        className={`fixed z-40 inset-0 sm:inset-auto sm:right-6 sm:bottom-6 sm:w-[min(420px,calc(100vw-3rem))] sm:h-[min(640px,calc(100vh-3rem))] transition-all duration-200 ${
-          expanded ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 translate-y-4 pointer-events-none"
+        className={`fixed z-40 left-0 right-0 bottom-0 top-0 sm:top-auto sm:left-auto sm:right-6 sm:bottom-6 sm:w-[min(420px,calc(100vw-3rem))] sm:h-[min(640px,calc(100vh-3rem))] transition-transform duration-200 ease-out ${
+          expanded
+            ? "translate-y-0 pointer-events-auto"
+            : "translate-y-full sm:translate-y-4 pointer-events-none sm:opacity-0"
         }`}
+        style={{ height: expanded ? "100dvh" : undefined }}
       >
         <DashboardChatPanel ref={chatRef} chart={chart} onClose={() => { setMinimized(false); onClose(); }} onMinimize={() => setMinimized(true)} />
       </div>
