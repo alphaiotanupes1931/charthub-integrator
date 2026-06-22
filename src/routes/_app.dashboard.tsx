@@ -358,6 +358,13 @@ function Dashboard() {
           </div>
         )}
       </div>
+        </div>
+        {/* Chat panel */}
+        <aside className="xl:sticky xl:top-4 h-[600px] xl:h-[calc(100vh-6rem)]">
+          <DashboardChatPanel ref={chatRef} />
+        </aside>
+      </div>
     </div>
   );
 }
+
