@@ -1,8 +1,16 @@
+import { useState, useEffect } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "motion/react";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, HelpCircle, Menu } from "lucide-react";
 import { TickerTape } from "@/components/TickerTape";
 import { MiniChart, SymbolOverview } from "@/components/MiniChart";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 // 3D candlestick scene removed for a more legitimate platform aesthetic
 import logoAsset from "@/assets/logo.png.asset.json";
 
@@ -60,6 +68,25 @@ const PRICING = [
     price: 197,
     features: ["Unlimited instruments", "Custom strategies", "Priority scans", "1:1 onboarding", "Direct support"],
     popular: false,
+  },
+];
+
+const FAQS = [
+  {
+    q: "What is TradeMind?",
+    a: "An AI trading coach that grades every setup before you risk capital, so you only take the trades that deserve to win.",
+  },
+  {
+    q: "Is TradeMind a broker?",
+    a: "No. We do not hold funds or execute trades. You can connect supported brokers to import history, but execution stays with your broker.",
+  },
+  {
+    q: "Can I change my AI coach?",
+    a: "Yes. Pick from five personalities in the Coaches tab and switch anytime from the dashboard.",
+  },
+  {
+    q: "Is my trade data secure?",
+    a: "Yes. Encrypted connections, row-level security, and no sharing of raw trade history with third parties.",
   },
 ];
 
@@ -353,6 +380,57 @@ function Landing() {
         </div>
       </section>
 
+      {/* FAQ */}
+      <section id="faq" className="px-5 sm:px-6 py-16 sm:py-24 md:py-28 border-t border-border/60 scroll-mt-24">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-10 sm:mb-14">
+            <SectionEyebrow>FAQ</SectionEyebrow>
+            <h2 className="font-display text-3xl sm:text-4xl md:text-6xl font-medium leading-tight">
+              Questions, answered.
+            </h2>
+            <p className="text-center text-sm sm:text-base text-muted-foreground mt-4 max-w-xl mx-auto px-2">
+              The most common things traders ask before getting started.
+            </p>
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="rounded-2xl border border-border bg-card/40 p-2 sm:p-4"
+          >
+            <Accordion type="single" collapsible className="w-full">
+              {FAQS.map((item, i) => (
+                <AccordionItem
+                  key={i}
+                  value={`faq-${i}`}
+                  className="border-border/60 px-2 sm:px-4"
+                >
+                  <AccordionTrigger className="text-sm sm:text-base font-medium py-4 sm:py-5 hover:no-underline hover:text-primary transition">
+                    {item.q}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                    {item.a}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </motion.div>
+
+          <div className="mt-8 sm:mt-10 text-center">
+            <Link
+              to="/faq"
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-5 py-2.5 text-sm font-medium hover:bg-card transition"
+            >
+              <HelpCircle className="size-4 text-primary" />
+              View all FAQ
+              <ArrowRight className="size-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* FINAL CTA */}
       <section className="relative px-5 sm:px-6 py-20 sm:py-28 md:py-32 border-t border-border/60">
         <div className="relative max-w-3xl mx-auto text-center">
@@ -389,23 +467,63 @@ function Nav() {
           <img src={logoAsset.url} alt="TradeMind" className="h-9 w-9 sm:h-12 sm:w-12 object-contain shrink-0" />
           <span className="font-display text-lg sm:text-2xl font-semibold tracking-tight truncate">TradeMind</span>
         </Link>
-        <nav className="hidden md:flex items-center gap-10 text-sm">
+        <nav className="hidden sm:flex items-center gap-6 lg:gap-10 text-sm">
           <a href="#product" className="hover:text-primary transition">Product</a>
           <a href="#pricing" className="hover:text-primary transition">Pricing</a>
           <a href="#coaches" className="hover:text-primary transition">Coaches</a>
+          <Link to="/faq" className="hover:text-primary transition">FAQ</Link>
         </nav>
-        <Link
-          to="/dashboard"
-          className="rounded-full bg-foreground text-background px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold hover:scale-[1.02] transition shrink-0"
-        >
-          Get started
-        </Link>
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <Sheet>
+            <SheetTrigger asChild>
+              <button
+                className="sm:hidden inline-flex items-center justify-center rounded-full border border-border bg-card/60 p-2 text-foreground hover:bg-card transition"
+                aria-label="Open menu"
+              >
+                <Menu className="size-5" />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[280px] bg-background/95 border-border p-6">
+              <div className="flex flex-col gap-6 mt-10">
+                <SheetClose asChild>
+                  <a href="#product" className="text-lg font-medium hover:text-primary transition">Product</a>
+                </SheetClose>
+                <SheetClose asChild>
+                  <a href="#pricing" className="text-lg font-medium hover:text-primary transition">Pricing</a>
+                </SheetClose>
+                <SheetClose asChild>
+                  <a href="#coaches" className="text-lg font-medium hover:text-primary transition">Coaches</a>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link to="/faq" className="text-lg font-medium hover:text-primary transition">FAQ</Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link
+                    to="/dashboard"
+                    className="mt-4 inline-flex items-center justify-center rounded-full bg-foreground text-background px-5 py-3 text-sm font-semibold hover:scale-[1.02] transition"
+                  >
+                    Get started
+                  </Link>
+                </SheetClose>
+              </div>
+            </SheetContent>
+          </Sheet>
+          <Link
+            to="/dashboard"
+            className="hidden sm:inline-flex rounded-full bg-foreground text-background px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold hover:scale-[1.02] transition"
+          >
+            Get started
+          </Link>
+        </div>
       </div>
     </header>
   );
 }
 
 function Footer() {
+  const [year, setYear] = useState<number | null>(null);
+  useEffect(() => setYear(new Date().getFullYear()), []);
+
   const cols = [
     {
       title: "Product",
@@ -430,7 +548,7 @@ function Footer() {
       items: [
         { label: "Guide", to: "/guide" as const },
         { label: "API docs", to: "/" as const },
-        { label: "Help", to: "/" as const },
+        { label: "FAQ", to: "/faq" as const },
       ],
     },
     {
@@ -468,7 +586,7 @@ function Footer() {
         ))}
       </div>
       <div className="max-w-7xl mx-auto mt-10 sm:mt-16 pt-6 sm:pt-8 border-t border-border/60 text-xs text-muted-foreground">
-        © {new Date().getFullYear()} TradeMind. Educational analysis only, not financial advice.
+        © {year ?? "2026"} TradeMind. Educational analysis only, not financial advice.
       </div>
     </footer>
   );

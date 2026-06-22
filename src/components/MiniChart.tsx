@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface Props {
   symbol: string;
@@ -9,9 +9,14 @@ interface Props {
 
 export function MiniChart({ symbol, width = "100%", height = 70, dateRange = "1D" }: Props) {
   const ref = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    if (!ref.current) return;
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || !ref.current) return;
     ref.current.innerHTML = `<div class="tradingview-widget-container__widget" style="width:100%;height:${height}px;background:transparent"></div>`;
     const script = document.createElement("script");
     script.src = "https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js";
@@ -35,9 +40,24 @@ export function MiniChart({ symbol, width = "100%", height = 70, dateRange = "1D
       underLineBottomColor: "rgba(201, 168, 76, 0)",
     });
     ref.current.appendChild(script);
-  }, [symbol, width, height, dateRange]);
+  }, [mounted, symbol, width, height, dateRange]);
 
-  return <div className="tradingview-widget-container bg-background/40 rounded-md overflow-hidden" ref={ref} style={{ width, height }} />;
+  if (!mounted) {
+    return (
+      <div
+        className="rounded-md overflow-hidden bg-card/40 border border-border/40 animate-pulse"
+        style={{ width, height }}
+      />
+    );
+  }
+
+  return (
+    <div
+      className="tradingview-widget-container bg-background/40 rounded-md overflow-hidden"
+      ref={ref}
+      style={{ width, height }}
+    />
+  );
 }
 
 interface SymbolOverviewProps {
@@ -47,9 +67,14 @@ interface SymbolOverviewProps {
 
 export function SymbolOverview({ symbol, height = 420 }: SymbolOverviewProps) {
   const ref = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    if (!ref.current) return;
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || !ref.current) return;
     ref.current.innerHTML = `<div class="tradingview-widget-container__widget" style="width:100%;height:${height}px;background:transparent"></div>`;
     const script = document.createElement("script");
     script.src = "https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js";
@@ -91,7 +116,22 @@ export function SymbolOverview({ symbol, height = 420 }: SymbolOverviewProps) {
       bottomColor: "rgba(201, 168, 76, 0.0)",
     });
     ref.current.appendChild(script);
-  }, [symbol, height]);
+  }, [mounted, symbol, height]);
 
-  return <div className="tradingview-widget-container bg-background/60 rounded-lg overflow-hidden border border-border/40" ref={ref} style={{ width: "100%", height }} />;
+  if (!mounted) {
+    return (
+      <div
+        className="rounded-lg overflow-hidden bg-card/40 border border-border/40 animate-pulse"
+        style={{ width: "100%", height }}
+      />
+    );
+  }
+
+  return (
+    <div
+      className="tradingview-widget-container bg-background/60 rounded-lg overflow-hidden border border-border/40"
+      ref={ref}
+      style={{ width: "100%", height }}
+    />
+  );
 }
