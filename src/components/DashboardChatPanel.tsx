@@ -79,6 +79,8 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const chartRef = useRef<ChartContext | undefined>(chart);
     useEffect(() => { chartRef.current = chart; }, [chart]);
+    const voice = useCoachVoice();
+    const lastSpokenIdRef = useRef<string | null>(null);
 
     const { messages, sendMessage, status, setMessages } = useChat({
       id: threadId,
@@ -109,6 +111,23 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
     });
 
     const loading = status === "submitted" || status === "streaming";
+
+    // Speak the last assistant message after streaming completes
+    useEffect(() => {
+      if (!voice.enabled) return;
+      if (status !== "ready") return;
+      const last = messages[messages.length - 1];
+      if (!last || last.role !== "assistant") return;
+      if (lastSpokenIdRef.current === last.id) return;
+      const text = last.parts
+        .map((p) => (p.type === "text" ? (p as { text: string }).text : ""))
+        .join("")
+        .trim();
+      if (!text) return;
+      lastSpokenIdRef.current = last.id;
+      void voice.speak(text, voiceForCoach(readActiveCoach()));
+    }, [messages, status, voice]);
+
 
     useImperativeHandle(ref, () => ({
       scan: (prompt: string) => {
