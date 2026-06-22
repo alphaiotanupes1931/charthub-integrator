@@ -296,12 +296,13 @@ function Dashboard() {
 
           <button
             onClick={() => setSessionsOn((v) => !v)}
-            className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition ${
-              sessionsOn
+            disabled={chartMode === "live"}
+            className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition disabled:opacity-40 disabled:cursor-not-allowed ${
+              sessionsOn && chartMode !== "live"
                 ? "border-primary/40 bg-primary/10 text-primary"
                 : "border-border bg-background/60 text-muted-foreground hover:text-foreground hover:border-primary/40"
             }`}
-            title="Highlight Sydney / Tokyo / London / New York trading sessions"
+            title={chartMode === "live" ? "Sessions are available on the Native chart" : "Highlight Sydney / Tokyo / London / New York trading sessions"}
           >
             <Clock className="h-3.5 w-3.5" /> Sessions
           </button>
