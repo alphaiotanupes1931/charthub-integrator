@@ -5,6 +5,7 @@ import { NativeChart, LEVEL_META, type LevelKey, type ChartSnapshot } from "@/co
 import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Sparkles, Clock, MessageSquare, X } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { DashboardChatPanel, type DashboardChatHandle } from "@/components/DashboardChatPanel";
+import { TodaysRecommendation } from "@/components/TodaysRecommendation";
 
 type DashboardSearch = { ask?: string };
 
@@ -171,6 +172,12 @@ function Dashboard() {
           Welcome back, <span className="text-foreground font-medium">{profile?.display_name}</span>
         </div>
       )}
+
+      {/* Today's recommendation — top of the dashboard */}
+      <div data-tour="recommendation">
+        <TodaysRecommendation />
+      </div>
+
       <div className="space-y-5">
         {/* Header */}
         <header className="flex flex-wrap items-end justify-between gap-4 border-b border-border/60 pb-5">
@@ -187,7 +194,7 @@ function Dashboard() {
           </p>
         </div>
 
-        <div className="relative" ref={pickerRef}>
+        <div className="relative" ref={pickerRef} data-tour="symbol-picker">
           <button
             onClick={() => setPickerOpen((o) => !o)}
             className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium hover:border-primary/50 transition"
