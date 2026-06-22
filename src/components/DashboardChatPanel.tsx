@@ -169,6 +169,14 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               {voice.enabled ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
             </button>
             <button
+              onClick={onMinimize}
+              className="text-muted-foreground hover:text-foreground p-1.5 rounded-md"
+              title="Hide coach (audio keeps playing)"
+              aria-label="Hide coach"
+            >
+              <Minus className="h-4 w-4" />
+            </button>
+            <button
               onClick={clearChat}
               className="text-muted-foreground hover:text-foreground p-1.5 rounded-md"
               title="Start a new conversation"
