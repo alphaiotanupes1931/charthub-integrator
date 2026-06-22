@@ -1,172 +1,193 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
-
+import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { UserPlus, Search, Trash2, Users } from "lucide-react";
+import { Users, Copy, Check, Loader2, Share2 } from "lucide-react";
+import { createInvite, listMyInvites, listRoster } from "@/lib/social.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/friends")({
+  head: () => ({ meta: [{ title: "Friends, TradeMind" }] }),
   component: FriendsPage,
 });
 
-type Friend = {
+type Invite = {
   id: string;
-  name: string;
-  handle: string;
-  note?: string;
-  addedAt: string;
+  code: string;
+  note: string | null;
+  created_at: string;
+  accepted_by: string | null;
+  accepted_at: string | null;
 };
 
-const STORAGE_KEY = "trademind.friends.v1";
+type Friend = {
+  id: string;
+  display_name: string | null;
+  email: string | null;
+  wins: number | null;
+  losses: number | null;
+  total: number;
+  winRate: number;
+};
 
-function readFriends(): Friend[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as Friend[]) : [];
-  } catch {
-    return [];
-  }
+function inviteUrl(code: string): string {
+  if (typeof window === "undefined") return "";
+  return `${window.location.origin}/invite/${code}`;
 }
 
-function writeFriends(list: Friend[]) {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+function initials(name: string | null, email: string | null): string {
+  const src = (name || email || "?").trim();
+  return src
+    .replace(/[._-]+/g, " ")
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w.charAt(0).toUpperCase())
+    .join("");
 }
 
 function FriendsPage() {
+  const create = useServerFn(createInvite);
+  const list = useServerFn(listMyInvites);
+  const roster = useServerFn(listRoster);
+
+  const [link, setLink] = useState<string>("");
   const [friends, setFriends] = useState<Friend[]>([]);
-  const [query, setQuery] = useState("");
-  const [name, setName] = useState("");
-  const [handle, setHandle] = useState("");
-  const [note, setNote] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    setFriends(readFriends());
+    let cancelled = false;
+    (async () => {
+      try {
+        const [inv, ros] = await Promise.all([list(), roster()]);
+        if (cancelled) return;
+        setFriends(ros as Friend[]);
+        const existing = (inv as Invite[]).find((i) => !i.accepted_by);
+        if (existing) {
+          setLink(inviteUrl(existing.code));
+        } else {
+          // Auto-create a reusable invite so the page always has one link.
+          const fresh = await create({ data: {} });
+          if (!cancelled) setLink(inviteUrl(fresh.code));
+        }
+      } catch (e) {
+        if (!cancelled) toast.error(e instanceof Error ? e.message : "Failed to load");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function addFriend() {
-    if (!name.trim()) {
-      toast.error("Enter a name");
-      return;
+  async function generateNew() {
+    setBusy(true);
+    try {
+      const fresh = await create({ data: {} });
+      setLink(inviteUrl(fresh.code));
+      toast.success("New link generated");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not generate link");
+    } finally {
+      setBusy(false);
     }
-    const f: Friend = {
-      id: crypto.randomUUID(),
-      name: name.trim(),
-      handle: handle.trim(),
-      note: note.trim() || undefined,
-      addedAt: new Date().toISOString(),
-    };
-    const next = [f, ...friends];
-    setFriends(next);
-    writeFriends(next);
-    setName("");
-    setHandle("");
-    setNote("");
-    toast.success(`${f.name} added`);
   }
 
-  function removeFriend(id: string) {
-    const next = friends.filter((f) => f.id !== id);
-    setFriends(next);
-    writeFriends(next);
+  async function copyLink() {
+    if (!link) return;
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1500);
+    } catch {
+      toast.error("Copy failed — select the link manually");
+    }
   }
 
-  const filtered = friends.filter((f) => {
-    const q = query.toLowerCase();
-    return (
-      !q ||
-      f.name.toLowerCase().includes(q) ||
-      f.handle.toLowerCase().includes(q) ||
-      (f.note ?? "").toLowerCase().includes(q)
-    );
-  });
+  async function shareLink() {
+    if (!link) return;
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({ title: "Join me on TradeMind", url: link });
+        return;
+      } catch { /* user cancelled */ }
+    }
+    await copyLink();
+  }
 
   return (
-    
-      <div className="mx-auto w-full max-w-5xl space-y-6 p-6">
-        <header className="flex items-center gap-3">
-          <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary">
-            <Users className="h-5 w-5" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-semibold">Friends</h1>
-            <p className="text-sm text-muted-foreground">
-              All of your trading friends in one place.
-            </p>
-          </div>
-        </header>
+    <div className="mx-auto w-full max-w-4xl space-y-6 p-4 md:p-8">
+      <PageHeader
+        title="Friends"
+        icon={<Users className="h-8 w-8 text-primary" />}
+        description="Share your link. When a trader accepts, they show up here automatically."
+      />
 
-        <Card className="space-y-4 p-5">
-          <div className="grid gap-3 sm:grid-cols-3">
-            <Input
-              placeholder="Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-            <Input
-              placeholder="Handle (e.g. @trader)"
-              value={handle}
-              onChange={(e) => setHandle(e.target.value)}
-            />
-            <Input
-              placeholder="Note (optional)"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-            />
+      <Card className="space-y-4 p-5 md:p-6">
+        <div className="flex items-center gap-2 text-sm font-semibold">
+          <Share2 className="h-4 w-4 text-primary" /> Your invite link
+        </div>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <div className="flex-1 truncate rounded-md border border-border bg-background/60 px-3 py-2 font-mono text-xs text-muted-foreground">
+            {loading ? "Generating…" : link || "—"}
           </div>
-          <div className="flex justify-end">
-            <Button onClick={addFriend}>
-              <UserPlus className="mr-2 h-4 w-4" /> Add friend
+          <div className="flex gap-2">
+            <Button onClick={copyLink} disabled={!link} variant="secondary" className="flex-1 sm:flex-none">
+              {copied ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+              {copied ? "Copied" : "Copy"}
+            </Button>
+            <Button onClick={shareLink} disabled={!link} className="flex-1 sm:flex-none">
+              <Share2 className="mr-2 h-4 w-4" /> Share
             </Button>
           </div>
-        </Card>
-
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            className="pl-9"
-            placeholder="Search friends"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
         </div>
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>Anyone with this link can connect with you.</span>
+          <button
+            onClick={generateNew}
+            disabled={busy}
+            className="text-primary hover:underline disabled:opacity-50"
+          >
+            {busy ? "Generating…" : "Generate new"}
+          </button>
+        </div>
+      </Card>
 
-        {filtered.length === 0 ? (
+      <div>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          Connected ({friends.length})
+        </h2>
+        {loading ? (
+          <Card className="flex items-center justify-center gap-2 p-10 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" /> Loading
+          </Card>
+        ) : friends.length === 0 ? (
           <Card className="p-10 text-center text-sm text-muted-foreground">
-            {friends.length === 0
-              ? "No friends yet. Add your first one above."
-              : "No friends match your search."}
+            No friends yet. Share your link to get started.
           </Card>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
-            {filtered.map((f) => (
-              <Card key={f.id} className="flex items-start justify-between gap-3 p-4">
-                <div className="min-w-0">
-                  <div className="truncate font-medium">{f.name}</div>
-                  {f.handle && (
-                    <div className="truncate text-xs text-muted-foreground">
-                      {f.handle}
-                    </div>
-                  )}
-                  {f.note && (
-                    <div className="mt-2 text-sm text-muted-foreground">{f.note}</div>
-                  )}
+            {friends.map((f) => (
+              <Card key={f.id} className="flex items-center gap-3 p-4">
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                  {initials(f.display_name, f.email)}
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeFriend(f.id)}
-                  aria-label={`Remove ${f.name}`}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate font-medium">
+                    {f.display_name || f.email?.split("@")[0] || "Trader"}
+                  </div>
+                  <div className="truncate text-xs text-muted-foreground">
+                    {f.wins ?? 0}W · {f.losses ?? 0}L · {f.winRate}% win rate
+                  </div>
+                </div>
               </Card>
             ))}
           </div>
         )}
       </div>
-    
+    </div>
   );
 }
