@@ -345,8 +345,9 @@ function JournalPage() {
         <TradeFormModal
           initialDate={formDate}
           editing={editing}
-          onClose={() => { setFormOpen(false); setEditingId(null); }}
-          onSave={handleSave}
+          prefill={editing ? null : prefill}
+          onClose={() => { setFormOpen(false); setEditingId(null); setPrefill(null); }}
+          onSave={(t) => { handleSave(t); setPrefill(null); }}
         />
       )}
     </div>
@@ -356,17 +357,21 @@ function JournalPage() {
 function TradeFormModal({
   initialDate,
   editing,
+  prefill,
   onClose,
   onSave,
 }: {
   initialDate: string;
   editing: Trade | null;
+  prefill?: { symbol?: string; timeframe?: string; notes?: string } | null;
   onClose: () => void;
   onSave: (t: Trade) => void;
 }) {
   const [date, setDate] = useState(editing?.date ?? initialDate);
-  const [timeframe, setTimeframe] = useState<Timeframe>(editing?.timeframe ?? "1H");
-  const [symbol, setSymbol] = useState(editing?.symbol ?? "XAU/USD");
+  const [timeframe, setTimeframe] = useState<Timeframe>(
+    editing?.timeframe ?? (TIMEFRAMES.includes((prefill?.timeframe ?? "") as Timeframe) ? (prefill!.timeframe as Timeframe) : "1H"),
+  );
+  const [symbol, setSymbol] = useState(editing?.symbol ?? prefill?.symbol ?? "XAU/USD");
   const [side, setSide] = useState<Side>(editing?.side ?? "Long");
   const [entry, setEntry] = useState<string>(editing ? String(editing.entry) : "");
   const [exit, setExit] = useState<string>(editing ? String(editing.exit) : "");
