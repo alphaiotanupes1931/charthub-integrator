@@ -117,7 +117,7 @@ export const updateVoicePrefs = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { voice_enabled?: boolean; voice_id_override?: string | null }) => data)
   .handler(async ({ data, context }) => {
-    const patch: Record<string, unknown> = {};
+    const patch: { voice_enabled?: boolean; voice_id_override?: string | null } = {};
     if (typeof data.voice_enabled === "boolean") patch.voice_enabled = data.voice_enabled;
     if (data.voice_id_override !== undefined) patch.voice_id_override = data.voice_id_override;
     if (Object.keys(patch).length === 0) return { ok: true };
