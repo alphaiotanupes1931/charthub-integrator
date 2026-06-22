@@ -21,6 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getOrCreateDashboardThread, getChatMessages } from "@/lib/chat.functions";
 import { readJournal, readActiveCoach, writeActiveCoach, readActiveStrategy } from "@/lib/chat-client";
 import { findStrategyByName } from "@/lib/customStrategies";
+import { readActiveLensId, findLens } from "@/lib/scanLens";
 import { useCoachVoice } from "@/hooks/useCoachVoice";
 import { voiceForCoach, COACH_VOICES } from "@/lib/coachVoices";
 import { toast } from "sonner";
