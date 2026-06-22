@@ -106,6 +106,21 @@ function JournalPage() {
   useEffect(() => { setTrades(loadTrades()); }, []);
   useEffect(() => { saveTrades(trades); }, [trades]);
 
+  // Hand-off from Broker → Journal "Snapshot to Journal".
+  const [prefill, setPrefill] = useState<{ symbol?: string; timeframe?: string; notes?: string } | null>(null);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("trademind.journal.prefill.v1");
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      localStorage.removeItem("trademind.journal.prefill.v1");
+      setPrefill(data);
+      setFormDate(todayYmd());
+      setEditingId(null);
+      setFormOpen(true);
+    } catch { /* ignore */ }
+  }, []);
+
   const year = cursor.getFullYear();
   const month = cursor.getMonth();
   const firstDay = new Date(year, month, 1).getDay();
@@ -330,8 +345,9 @@ function JournalPage() {
         <TradeFormModal
           initialDate={formDate}
           editing={editing}
-          onClose={() => { setFormOpen(false); setEditingId(null); }}
-          onSave={handleSave}
+          prefill={editing ? null : prefill}
+          onClose={() => { setFormOpen(false); setEditingId(null); setPrefill(null); }}
+          onSave={(t) => { handleSave(t); setPrefill(null); }}
         />
       )}
     </div>
@@ -341,23 +357,27 @@ function JournalPage() {
 function TradeFormModal({
   initialDate,
   editing,
+  prefill,
   onClose,
   onSave,
 }: {
   initialDate: string;
   editing: Trade | null;
+  prefill?: { symbol?: string; timeframe?: string; notes?: string } | null;
   onClose: () => void;
   onSave: (t: Trade) => void;
 }) {
   const [date, setDate] = useState(editing?.date ?? initialDate);
-  const [timeframe, setTimeframe] = useState<Timeframe>(editing?.timeframe ?? "1H");
-  const [symbol, setSymbol] = useState(editing?.symbol ?? "XAU/USD");
+  const [timeframe, setTimeframe] = useState<Timeframe>(
+    editing?.timeframe ?? (TIMEFRAMES.includes((prefill?.timeframe ?? "") as Timeframe) ? (prefill!.timeframe as Timeframe) : "1H"),
+  );
+  const [symbol, setSymbol] = useState(editing?.symbol ?? prefill?.symbol ?? "XAU/USD");
   const [side, setSide] = useState<Side>(editing?.side ?? "Long");
   const [entry, setEntry] = useState<string>(editing ? String(editing.entry) : "");
   const [exit, setExit] = useState<string>(editing ? String(editing.exit) : "");
   const [stop, setStop] = useState<string>(editing ? String(editing.stop) : "");
   const [size, setSize] = useState<string>(editing ? String(editing.size) : "1");
-  const [notes, setNotes] = useState(editing?.notes ?? "");
+  const [notes, setNotes] = useState(editing?.notes ?? prefill?.notes ?? "");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pendingImage, setPendingImage] = useState<Blob | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
