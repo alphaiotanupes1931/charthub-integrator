@@ -1,37 +1,30 @@
 import { createServerFn } from "@tanstack/react-start";
-import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import type { Database } from "@/integrations/supabase/types";
-
-
-function db() {
-  return createClient<Database>(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_PUBLISHABLE_KEY!,
-    { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
-  );
-}
-
-const ClientIdInput = z.object({ clientId: z.string().min(8) });
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export const listChatThreads = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) => ClientIdInput.parse(d))
-  .handler(async ({ data }) => {
-    const { data: rows, error } = await db()
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
       .from("chat_threads")
       .select("id,title,updated_at,created_at")
-      .eq("client_id", data.clientId)
+      .eq("user_id", context.userId)
       .order("updated_at", { ascending: false });
     if (error) throw new Error(error.message);
-    return rows ?? [];
+    return data ?? [];
   });
 
 export const createChatThread = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) => z.object({ clientId: z.string().min(8), title: z.string().optional() }).parse(d))
-  .handler(async ({ data }) => {
-    const { data: row, error } = await db()
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ title: z.string().max(80).optional() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: row, error } = await context.supabase
       .from("chat_threads")
-      .insert({ client_id: data.clientId, title: data.title || "New conversation" })
+      .insert({
+        user_id: context.userId,
+        client_id: context.userId, // legacy NOT NULL column
+        title: data.title || "New conversation",
+      })
       .select("id,title,updated_at,created_at")
       .single();
     if (error) throw new Error(error.message);
@@ -39,24 +32,26 @@ export const createChatThread = createServerFn({ method: "POST" })
   });
 
 export const deleteChatThread = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) => z.object({ clientId: z.string().min(8), threadId: z.string().uuid() }).parse(d))
-  .handler(async ({ data }) => {
-    const { error } = await db()
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ threadId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
       .from("chat_threads")
       .delete()
-      .eq("client_id", data.clientId)
+      .eq("user_id", context.userId)
       .eq("id", data.threadId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
 
 export const getChatMessages = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) => z.object({ clientId: z.string().min(8), threadId: z.string().uuid() }).parse(d))
-  .handler(async ({ data }) => {
-    const { data: rows, error } = await db()
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ threadId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: rows, error } = await context.supabase
       .from("chat_messages")
       .select("id,role,parts,created_at")
-      .eq("client_id", data.clientId)
+      .eq("user_id", context.userId)
       .eq("thread_id", data.threadId)
       .order("created_at", { ascending: true });
     if (error) throw new Error(error.message);
@@ -68,12 +63,15 @@ export const getChatMessages = createServerFn({ method: "POST" })
   });
 
 export const renameChatThread = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) => z.object({ clientId: z.string().min(8), threadId: z.string().uuid(), title: z.string().min(1).max(80) }).parse(d))
-  .handler(async ({ data }) => {
-    const { error } = await db()
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ threadId: z.string().uuid(), title: z.string().trim().min(1).max(80) }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
       .from("chat_threads")
       .update({ title: data.title })
-      .eq("client_id", data.clientId)
+      .eq("user_id", context.userId)
       .eq("id", data.threadId);
     if (error) throw new Error(error.message);
     return { ok: true };
