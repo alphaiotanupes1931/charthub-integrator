@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { Bot, BarChart2, Target, GraduationCap, CheckCircle2, Volume2, Sparkles, Loader2, Square } from "lucide-react";
 import { COACH_VOICES } from "@/lib/coachVoices";
+import { readActiveCoach, writeActiveCoach } from "@/lib/chat-client";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/coaches")({
