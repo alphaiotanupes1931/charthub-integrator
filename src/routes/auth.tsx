@@ -132,27 +132,29 @@ function AuthPage() {
       // Claim the welcome slot IMMEDIATELY so the post-nav WelcomeBackGreeter
       // does not also start its own playback (which caused two overlapping voices).
       try { sessionStorage.setItem(WELCOME_BACK_SESSION_KEY, "1"); } catch { /* ignore */ }
-      try {
-        let recap: string;
-        if (mode === "signup") {
-          const name = spokenName(null, parsed.data.email);
-          recap = `Hi ${name}, welcome to TradeMind. Make sure to complete your profile and pick your coach so I can tailor your feedback. I am here whenever you have questions — just click the chatbot in the bottom right corner and I will jump in.`;
-        } else {
-          recap = await Promise.race([
-            buildLoginWelcomeRecap(),
-            new Promise<string>((resolve) =>
-              window.setTimeout(() => resolve(`Welcome back, ${spokenName(null, parsed.data.email)}. Ready when you are.`), 1600),
-            ),
-          ]);
+      if (!muted) {
+        try {
+          let recap: string;
+          if (mode === "signup") {
+            const name = spokenName(null, parsed.data.email);
+            recap = `Hi ${name}, welcome to TradeMind. Make sure to complete your profile and pick your coach so I can tailor your feedback. I am here whenever you have questions — just click the chatbot in the bottom right corner and I will jump in.`;
+          } else {
+            recap = await Promise.race([
+              buildLoginWelcomeRecap(),
+              new Promise<string>((resolve) =>
+                window.setTimeout(() => resolve(`Welcome back, ${spokenName(null, parsed.data.email)}. Ready when you are.`), 1600),
+              ),
+            ]);
+          }
+          // Fire-and-forget: don't block navigation on TTS fetch.
+          void speakWithElevenLabs(recap, readActiveCoach(), welcomeAudio);
+        } catch {
+          void speakWithElevenLabs(
+            `Welcome back, ${spokenName(null, parsed.data.email)}. Ready when you are.`,
+            readActiveCoach(),
+            welcomeAudio,
+          );
         }
-        // Fire-and-forget: don't block navigation on TTS fetch.
-        void speakWithElevenLabs(recap, readActiveCoach(), welcomeAudio);
-      } catch {
-        void speakWithElevenLabs(
-          `Welcome back, ${spokenName(null, parsed.data.email)}. Ready when you are.`,
-          readActiveCoach(),
-          welcomeAudio,
-        );
       }
       let target = search.redirect || "/dashboard";
       try {
