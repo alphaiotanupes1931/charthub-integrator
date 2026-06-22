@@ -69,8 +69,8 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
 });
 
 
-const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: UIMessage[] }>(
-  function ChatInner({ threadId, initial }, ref) {
+const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: UIMessage[]; chart?: ChartContext }>(
+  function ChatInner({ threadId, initial, chart }, ref) {
     const [input, setInput] = useState("");
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
