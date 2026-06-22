@@ -363,20 +363,56 @@ function Dashboard() {
           </div>
         )}
       </div>
-        </div>
-        {/* Chat panel */}
-        <aside className="xl:sticky xl:top-4 h-[600px] xl:h-[calc(100vh-6rem)]">
-          <DashboardChatPanel
-            ref={chatRef}
-            chart={{
-              ticker: symbol.ticker,
-              intervalLabel,
-              enabledLevels: ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none",
-            }}
-          />
-        </aside>
       </div>
+
+      {/* Floating AI Coach bubble */}
+      <FloatingCoach
+        open={coachOpen}
+        onOpen={() => setCoachOpen(true)}
+        onClose={() => setCoachOpen(false)}
+        chatRef={chatRef}
+        chart={{
+          ticker: symbol.ticker,
+          intervalLabel,
+          enabledLevels: ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none",
+        }}
+      />
     </div>
   );
 }
+
+function FloatingCoach({
+  open, onOpen, onClose, chatRef, chart,
+}: {
+  open: boolean;
+  onOpen: () => void;
+  onClose: () => void;
+  chatRef: React.RefObject<DashboardChatHandle>;
+  chart: { ticker: string; intervalLabel: string; enabledLevels: string };
+}) {
+  return (
+    <>
+      {/* Bubble (always rendered, hidden when open so the panel can take over) */}
+      {!open && (
+        <button
+          onClick={onOpen}
+          aria-label="Open AI coach"
+          className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/30 ring-1 ring-primary/40 hover:scale-105 transition flex items-center justify-center"
+        >
+          <MessageSquare className="h-6 w-6" />
+        </button>
+      )}
+
+      {/* Expanded panel — always mounted so the chat thread persists between toggles */}
+      <div
+        className={`fixed z-40 right-4 bottom-4 sm:right-6 sm:bottom-6 w-[min(420px,calc(100vw-2rem))] h-[min(640px,calc(100vh-2rem))] transition-all duration-200 ${
+          open ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 translate-y-4 pointer-events-none"
+        }`}
+      >
+        <DashboardChatPanel ref={chatRef} chart={chart} onClose={onClose} />
+      </div>
+    </>
+  );
+}
+
 
