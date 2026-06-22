@@ -38,13 +38,17 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
 
-  // Already signed in? Bounce to redirect target.
+  // Already signed in? Bounce to redirect target (honoring any pending invite).
   useEffect(() => {
     let cancelled = false;
     supabase.auth.getUser().then(({ data }) => {
-      if (!cancelled && data.user) {
-        navigate({ to: search.redirect || "/dashboard", replace: true });
-      }
+      if (cancelled || !data.user) return;
+      let target = search.redirect || "/dashboard";
+      try {
+        const pending = localStorage.getItem("trademind.pendingInvite");
+        if (pending) target = `/invite/${pending}`;
+      } catch { /* ignore */ }
+      navigate({ to: target, replace: true });
     });
     return () => { cancelled = true; };
   }, [navigate, search.redirect]);
