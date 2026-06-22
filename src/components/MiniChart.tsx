@@ -67,9 +67,14 @@ interface SymbolOverviewProps {
 
 export function SymbolOverview({ symbol, height = 420 }: SymbolOverviewProps) {
   const ref = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    if (!ref.current) return;
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || !ref.current) return;
     ref.current.innerHTML = `<div class="tradingview-widget-container__widget" style="width:100%;height:${height}px;background:transparent"></div>`;
     const script = document.createElement("script");
     script.src = "https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js";
