@@ -80,6 +80,7 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Already signed in? Bounce to redirect target (honoring any pending invite).
   useEffect(() => {
