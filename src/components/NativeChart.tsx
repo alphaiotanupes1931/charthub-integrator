@@ -327,6 +327,9 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, class
     });
     if (enabled.FIB) levels.fib.forEach((f) => add(f.price, LEVEL_META.FIB.color, `Fib ${f.ratio}`, true));
     if (enabled.LIQ) levels.liq.forEach((l) => add(l.price, LEVEL_META.LIQ.color, l.side === "buy" ? "Buy-side liq" : "Sell-side liq"));
+    if (enabled.OF) levels.of.forEach((o, i) =>
+      add(o.price, LEVEL_META.OF.color, `${o.side === "buy" ? "OF↑" : "OF↓"} ${i + 1}`, true),
+    );
   }, [enabled, levels, ready]);
 
   // ---- Sessions overlay ----
