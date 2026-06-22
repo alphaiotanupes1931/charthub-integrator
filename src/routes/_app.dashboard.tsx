@@ -6,6 +6,9 @@ import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Sparkles,
 import { useProfile } from "@/hooks/useProfile";
 import { DashboardChatPanel, type DashboardChatHandle } from "@/components/DashboardChatPanel";
 import { TodaysRecommendation } from "@/components/TodaysRecommendation";
+import { SCAN_LENSES, readActiveLensId, writeActiveLensId, type ScanLensId } from "@/lib/scanLens";
+import { Link } from "@tanstack/react-router";
+import { toast } from "sonner";
 
 type DashboardSearch = { ask?: string };
 
