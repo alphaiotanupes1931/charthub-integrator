@@ -26,7 +26,15 @@ export type DashboardChatHandle = {
   scan: (prompt: string) => void;
 };
 
-export const DashboardChatPanel = forwardRef<DashboardChatHandle>(function DashboardChatPanel(_props, ref) {
+export type ChartContext = {
+  ticker: string;
+  intervalLabel: string;
+  enabledLevels: string;
+};
+
+type Props = { chart?: ChartContext };
+
+export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(function DashboardChatPanel({ chart }, ref) {
   const [threadId, setThreadId] = useState<string | null>(null);
   const [initial, setInitial] = useState<UIMessage[] | null>(null);
   const getThread = useServerFn(getOrCreateDashboardThread);
@@ -57,8 +65,9 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle>(function Dashb
     );
   }
 
-  return <ChatInner ref={ref} threadId={threadId} initial={initial} />;
+  return <ChatInner ref={ref} threadId={threadId} initial={initial} chart={chart} />;
 });
+
 
 const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: UIMessage[] }>(
   function ChatInner({ threadId, initial }, ref) {
