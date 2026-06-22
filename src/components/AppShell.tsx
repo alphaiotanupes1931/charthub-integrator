@@ -213,16 +213,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           >
             {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
           </button>
-          <div className="relative flex-1 min-w-0 max-w-md">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              placeholder="Search"
-              className="w-full h-9 rounded-lg border border-border bg-card/50 pl-9 pr-3 md:pr-12 text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/40"
-            />
-            <kbd className="hidden md:block absolute right-3 top-1/2 -translate-y-1/2 rounded border border-border bg-background px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground">
-              ⌘K
-            </kbd>
-          </div>
+          <HeaderSearch nav={nav} />
           {/* Theme toggle */}
           <button
             onClick={toggle}
