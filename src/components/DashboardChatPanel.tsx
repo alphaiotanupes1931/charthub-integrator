@@ -21,6 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getOrCreateDashboardThread, getChatMessages } from "@/lib/chat.functions";
 import { readJournal, readActiveCoach, writeActiveCoach, readActiveStrategy } from "@/lib/chat-client";
 import { findStrategyByName } from "@/lib/customStrategies";
+import { readActiveLensId, findLens } from "@/lib/scanLens";
 import { useCoachVoice } from "@/hooks/useCoachVoice";
 import { voiceForCoach, COACH_VOICES } from "@/lib/coachVoices";
 import { toast } from "sonner";
@@ -99,6 +100,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
         prepareSendMessagesRequest: ({ messages, id }) => {
           const stratName = readActiveStrategy();
           const strategy = stratName ? findStrategyByName(stratName) ?? { name: stratName } : null;
+          const lens = findLens(readActiveLensId());
           return {
             body: {
               messages,
@@ -107,6 +109,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               journal: readJournal(),
               chart: chartRef.current,
               strategy,
+              lens: { id: lens.id, name: lens.name, promptEmphasis: lens.promptEmphasis },
             },
           };
         },

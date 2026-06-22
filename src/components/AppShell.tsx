@@ -14,6 +14,7 @@ import {
   MessageSquare,
   Brain,
   Activity,
+  Crosshair,
   Settings as SettingsIcon,
   UserCog,
   ShieldCheck,
@@ -45,6 +46,7 @@ const NAV: NavItem[] = [
   { to: "/guide", label: "Guide", icon: BookOpen },
   { to: "/journal", label: "Trade Journal", icon: NotebookPen },
   { to: "/strategies", label: "Strategies", icon: Library },
+  { to: "/scan-lens", label: "Scan Lens", icon: Crosshair },
   { to: "/coaches", label: "AI Coaches", icon: Users },
   { to: "/broker", label: "Broker", icon: Activity },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
@@ -142,21 +144,6 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {!collapsed && (
         <div className="px-3 pb-3 space-y-3 border-t border-border/60 pt-3">
-          <div className="rounded-xl border border-border bg-card p-3">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-              Active Coach
-            </div>
-            <div className="flex items-center gap-2 mt-2">
-              <div className="h-7 w-7 shrink-0 rounded-full bg-rose-300/70 flex items-center justify-center">
-                <Brain className="h-4 w-4 text-rose-900" />
-              </div>
-              <div className="min-w-0">
-                <div className="text-sm font-semibold text-foreground truncate">The Analyst</div>
-                <div className="text-[11px] text-muted-foreground truncate">Smart, institutional</div>
-              </div>
-            </div>
-          </div>
-
           <button
             onClick={handleSignOut}
             className="w-full flex items-center gap-2 text-sm text-foreground/80 hover:text-foreground px-1"

@@ -6,6 +6,9 @@ import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Sparkles,
 import { useProfile } from "@/hooks/useProfile";
 import { DashboardChatPanel, type DashboardChatHandle } from "@/components/DashboardChatPanel";
 import { TodaysRecommendation } from "@/components/TodaysRecommendation";
+import { SCAN_LENSES, readActiveLensId, writeActiveLensId, type ScanLensId } from "@/lib/scanLens";
+import { Link } from "@tanstack/react-router";
+import { toast } from "sonner";
 
 type DashboardSearch = { ask?: string };
 
@@ -110,7 +113,12 @@ function Dashboard() {
   const [snapshot, setSnapshot] = useState<ChartSnapshot | null>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
   const levelsRef = useRef<HTMLDivElement>(null);
+  const lensRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<DashboardChatHandle>(null);
+  const [lensId, setLensId] = useState<ScanLensId>("wyckoff");
+  const [lensOpen, setLensOpen] = useState(false);
+  useEffect(() => { setLensId(readActiveLensId()); }, []);
+  const activeLens = SCAN_LENSES.find((l) => l.id === lensId) ?? SCAN_LENSES[0];
 
 
   useEffect(() => {
@@ -121,10 +129,19 @@ function Dashboard() {
     const onDown = (e: MouseEvent) => {
       if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) setPickerOpen(false);
       if (levelsRef.current && !levelsRef.current.contains(e.target as Node)) setLevelsOpen(false);
+      if (lensRef.current && !lensRef.current.contains(e.target as Node)) setLensOpen(false);
     };
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
   }, []);
+
+  function pickLens(id: ScanLensId) {
+    setLensId(id);
+    writeActiveLensId(id);
+    setLensOpen(false);
+    const lens = SCAN_LENSES.find((l) => l.id === id);
+    toast.success(`Scan Lens: ${lens?.name ?? id}`);
+  }
 
   useEffect(() => { setResult(null); }, [symbol]);
 
@@ -231,8 +248,50 @@ function Dashboard() {
         </div>
       </header>
 
+      {/* Scan Lens + Interval row */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative" ref={lensRef}>
+          <button
+            onClick={() => setLensOpen((o) => !o)}
+            className="inline-flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary hover:border-primary/60 transition"
+            title="Scan Lens — biases the AI's chart read"
+          >
+            <Crosshair className="h-3.5 w-3.5" />
+            Lens: {activeLens.short}
+            <ChevronDown className={`h-3 w-3 transition-transform ${lensOpen ? "rotate-180" : ""}`} />
+          </button>
+          {lensOpen && (
+            <div role="listbox" className="absolute left-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-lg border border-border bg-card shadow-xl z-30">
+              {SCAN_LENSES.map((l) => {
+                const isActive = l.id === lensId;
+                return (
+                  <button
+                    key={l.id}
+                    role="option"
+                    aria-selected={isActive}
+                    onClick={() => pickLens(l.id)}
+                    className={`w-full text-left px-3 py-2.5 text-sm border-b border-border/40 last:border-0 hover:bg-accent/40 transition ${
+                      isActive ? "bg-primary/10 text-primary" : ""
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium">{l.name}</span>
+                      {isActive && <Check className="h-3.5 w-3.5 shrink-0" />}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{l.desc}</div>
+                  </button>
+                );
+              })}
+              <Link to="/scan-lens" className="block px-3 py-2 text-[11px] text-muted-foreground hover:text-foreground border-t border-border/60">
+                Manage all lenses →
+              </Link>
+            </div>
+          )}
+        </div>
+
       {/* Interval bar */}
-      <div className="flex items-center gap-1 rounded-lg border border-border bg-card p-1 w-fit overflow-x-auto max-w-full">
+      <div className="flex items-center gap-1 rounded-lg border border-border bg-card p-1 overflow-x-auto max-w-full">
+
         {INTERVALS.map((i) => (
           <button
             key={i.value}
@@ -245,6 +304,8 @@ function Dashboard() {
           </button>
         ))}
       </div>
+      </div>
+
 
       {/* Chart card */}
       <div className="rounded-xl border border-border bg-card overflow-hidden" data-tour="chart">
