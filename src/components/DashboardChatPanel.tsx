@@ -42,30 +42,57 @@ type Props = { chart?: ChartContext; onClose?: () => void; onMinimize?: () => vo
 export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(function DashboardChatPanel({ chart, onClose, onMinimize }, ref) {
   const [threadId, setThreadId] = useState<string | null>(null);
   const [initial, setInitial] = useState<UIMessage[] | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
   const getThread = useServerFn(getOrCreateDashboardThread);
   const getMsgs = useServerFn(getChatMessages);
 
   useEffect(() => {
     let cancelled = false;
+    setLoadError(null);
+    const timeout = window.setTimeout(() => {
+      if (!cancelled && (!threadId || initial === null)) {
+        setLoadError("Couldn't reach the coach. Check your connection.");
+      }
+    }, 8000);
     (async () => {
       try {
         const t = await getThread();
-        if (cancelled || !t) return;
+        if (cancelled) return;
+        if (!t) {
+          setLoadError("Coach unavailable. Try again.");
+          return;
+        }
         setThreadId(t.id);
         const rows = await getMsgs({ data: { threadId: t.id } });
         if (!cancelled) setInitial(rows as UIMessage[]);
       } catch (e) {
-        console.error(e);
-        if (!cancelled) setInitial([]);
+        console.error("[coach] load failed", e);
+        if (!cancelled) {
+          // Render the panel anyway with no history so the user isn't blocked.
+          setInitial([]);
+          setLoadError("Coach history unavailable, starting fresh.");
+        }
+      } finally {
+        window.clearTimeout(timeout);
       }
     })();
-    return () => { cancelled = true; };
-  }, [getThread, getMsgs]);
+    return () => { cancelled = true; window.clearTimeout(timeout); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [getThread, getMsgs, attempt]);
 
   if (!threadId || initial === null) {
     return (
-      <div className="h-full flex items-center justify-center text-xs text-muted-foreground">
-        Loading coach…
+      <div className="h-full flex flex-col items-center justify-center gap-3 p-6 text-center text-xs text-muted-foreground">
+        <div>{loadError ?? "Loading coach…"}</div>
+        {loadError && (
+          <button
+            onClick={() => { setThreadId(null); setInitial(null); setAttempt((n) => n + 1); }}
+            className="rounded-full border border-border bg-background/60 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-background"
+          >
+            Retry
+          </button>
+        )}
       </div>
     );
   }
