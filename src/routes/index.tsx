@@ -465,10 +465,11 @@ function Nav() {
           <img src={logoAsset.url} alt="TradeMind" className="h-9 w-9 sm:h-12 sm:w-12 object-contain shrink-0" />
           <span className="font-display text-lg sm:text-2xl font-semibold tracking-tight truncate">TradeMind</span>
         </Link>
-        <nav className="hidden md:flex items-center gap-10 text-sm">
+        <nav className="hidden sm:flex items-center gap-6 lg:gap-10 text-sm">
           <a href="#product" className="hover:text-primary transition">Product</a>
           <a href="#pricing" className="hover:text-primary transition">Pricing</a>
           <a href="#coaches" className="hover:text-primary transition">Coaches</a>
+          <Link to="/faq" className="hover:text-primary transition">FAQ</Link>
         </nav>
         <Link
           to="/dashboard"
