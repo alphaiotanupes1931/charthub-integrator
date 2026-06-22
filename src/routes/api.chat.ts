@@ -173,18 +173,40 @@ function chartContextBlock(chart?: ChartCtx): string {
   return lines.filter(Boolean).join("\n");
 }
 
-function systemPrompt(coach: string | undefined, journalContext: string, chartCtx: string) {
+function strategyContextBlock(strat?: StrategyCtx | null): string {
+  if (!strat?.name) {
+    return "The trader has NOT selected an active strategy. Encourage them to pick one from the Strategy Library so you can grade setups against concrete rules.";
+  }
+  const lines = [
+    `ACTIVE STRATEGY: ${strat.name}`,
+    strat.style ? `Style: ${strat.style}` : "",
+    strat.level ? `Level: ${strat.level}` : "",
+    strat.markets?.length ? `Markets: ${strat.markets.join(", ")}` : "",
+    typeof strat.winRate === "number" ? `Baseline win rate: ${strat.winRate}%` : "",
+    typeof strat.rr === "number" ? `Baseline R:R: ${strat.rr}` : "",
+    strat.description ? `Playbook: ${strat.description}` : "",
+  ].filter(Boolean);
+  return lines.join("\n");
+}
+
+function systemPrompt(coach: string | undefined, journalContext: string, chartCtx: string, strategyCtx: string) {
   return `${coachPersona(coach)}
 
-You are TradeMind, the trader's personal AI coach. You have full access to the trader's journal (below), the live chart context they're looking at right now, and the entire conversation history of this thread — use all three to give specific, personalized feedback. Reference real trades by date and symbol. PROACTIVELY surface patterns from the journal: which symbol/side/session/day-of-week/timeframe has the highest and lowest win rate and P&L, which combinations are tilting the curve, and any repeated mistake visible in the notes. When the user asks for a recommendation, weight it by what's actually working in their data (e.g. "you're +68% on London-session XAU longs, that's your A+ setup"). When you spot a clearly losing pattern, name it bluntly and tell them to stop or size down.
+You are TradeMind, the trader's personal AI coach. You have full access to the trader's journal (below), the live chart context they're looking at right now, the trader's ACTIVE STRATEGY (below), and the entire conversation history of this thread — use all four to give specific, personalized feedback. Reference real trades by date and symbol. PROACTIVELY surface patterns from the journal: which symbol/side/session/day-of-week/timeframe has the highest and lowest win rate and P&L, which combinations are tilting the curve, and any repeated mistake visible in the notes. When the user asks for a recommendation, weight it by what's actually working in their data (e.g. "you're +68% on London-session XAU longs, that's your A+ setup"). When you spot a clearly losing pattern, name it bluntly and tell them to stop or size down.
 
-When they ask you to analyze a setup or "give me entry, stop, target", assume they mean the symbol and timeframe in the LIVE CHART block below unless they name a different one. Always produce a concrete plan: bias (long/short/neutral), entry trigger with a price or zone, invalidation/stop, take profit 1 and 2, R:R, and a 1–2 sentence rationale tied to the levels they have enabled. If exact prices aren't possible without live OHLC, give clearly-labeled illustrative levels and tell them to confirm against price.
+EVERY setup, entry, or recommendation MUST be graded against the active strategy: confirm whether the current chart matches the strategy's rules, and if it doesn't, refuse or flag it as off-playbook. Reference the strategy by name in your reply so the trader knows you're using it. If no strategy is set, say so and ask them to pick one before you grade setups.
+
+When they ask you to analyze a setup or "give me entry, stop, target", assume they mean the symbol and timeframe in the LIVE CHART block below unless they name a different one. Always produce a concrete plan: bias (long/short/neutral), entry trigger with a price or zone, invalidation/stop, take profit 1 and 2, R:R, and a 1–2 sentence rationale tied to the levels they have enabled AND the active strategy's rules. If exact prices aren't possible without live OHLC, give clearly-labeled illustrative levels and tell them to confirm against price.
 
 Rules:
 - Be conversational, like a real coach. Short paragraphs. Direct.
 - If they ask what a term means (FVG, OB, liquidity sweep, R-multiple, etc.), explain plainly.
 - Never invent trades that aren't in their journal. If you don't have the data, say so.
 - Do not use emojis or decorative symbols.
+
+=== ACTIVE STRATEGY ===
+${strategyCtx}
+=== END STRATEGY ===
 
 === LIVE CHART ===
 ${chartCtx}
