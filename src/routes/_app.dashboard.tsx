@@ -248,8 +248,50 @@ function Dashboard() {
         </div>
       </header>
 
+      {/* Scan Lens + Interval row */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative" ref={lensRef}>
+          <button
+            onClick={() => setLensOpen((o) => !o)}
+            className="inline-flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary hover:border-primary/60 transition"
+            title="Scan Lens — biases the AI's chart read"
+          >
+            <Crosshair className="h-3.5 w-3.5" />
+            Lens: {activeLens.short}
+            <ChevronDown className={`h-3 w-3 transition-transform ${lensOpen ? "rotate-180" : ""}`} />
+          </button>
+          {lensOpen && (
+            <div role="listbox" className="absolute left-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-lg border border-border bg-card shadow-xl z-30">
+              {SCAN_LENSES.map((l) => {
+                const isActive = l.id === lensId;
+                return (
+                  <button
+                    key={l.id}
+                    role="option"
+                    aria-selected={isActive}
+                    onClick={() => pickLens(l.id)}
+                    className={`w-full text-left px-3 py-2.5 text-sm border-b border-border/40 last:border-0 hover:bg-accent/40 transition ${
+                      isActive ? "bg-primary/10 text-primary" : ""
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium">{l.name}</span>
+                      {isActive && <Check className="h-3.5 w-3.5 shrink-0" />}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{l.desc}</div>
+                  </button>
+                );
+              })}
+              <Link to="/scan-lens" className="block px-3 py-2 text-[11px] text-muted-foreground hover:text-foreground border-t border-border/60">
+                Manage all lenses →
+              </Link>
+            </div>
+          )}
+        </div>
+
       {/* Interval bar */}
-      <div className="flex items-center gap-1 rounded-lg border border-border bg-card p-1 w-fit overflow-x-auto max-w-full">
+      <div className="flex items-center gap-1 rounded-lg border border-border bg-card p-1 overflow-x-auto max-w-full">
+
         {INTERVALS.map((i) => (
           <button
             key={i.value}
