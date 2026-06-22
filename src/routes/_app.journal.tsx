@@ -617,3 +617,31 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </label>
   );
 }
+
+function TradeThumb({ tradeId }: { tradeId: string }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    let active = true;
+    let created: string | null = null;
+    void getTradeImage(tradeId).then((blob) => {
+      if (!active || !blob) return;
+      created = URL.createObjectURL(blob);
+      setUrl(created);
+    });
+    return () => { active = false; if (created) URL.revokeObjectURL(created); };
+  }, [tradeId]);
+  if (!url) {
+    return (
+      <div className="h-12 w-16 rounded border border-border bg-background/40 flex items-center justify-center text-muted-foreground shrink-0">
+        <ImageIcon className="h-4 w-4" />
+      </div>
+    );
+  }
+  return (
+    <img
+      src={url}
+      alt="Trade screenshot"
+      className="h-12 w-16 rounded border border-border object-cover shrink-0"
+    />
+  );
+}
