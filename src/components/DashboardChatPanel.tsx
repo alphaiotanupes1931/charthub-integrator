@@ -158,6 +158,17 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
           </div>
           <div className="flex items-center gap-1">
             <button
+              onClick={() => {
+                if (voice.enabled) voice.stop();
+                voice.setEnabled(!voice.enabled);
+              }}
+              className={`p-1.5 rounded-md ${voice.enabled ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+              title={voice.enabled ? "Mute coach voice" : "Hear coach replies aloud"}
+              aria-label={voice.enabled ? "Mute voice" : "Enable voice"}
+            >
+              {voice.enabled ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
+            </button>
+            <button
               onClick={clearChat}
               className="text-muted-foreground hover:text-foreground p-1.5 rounded-md"
               title="Start a new conversation"
@@ -181,6 +192,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               </button>
             )}
           </div>
+
 
         </div>
 
