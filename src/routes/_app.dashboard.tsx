@@ -98,10 +98,13 @@ function Dashboard() {
   const [levels, setLevels] = useState<Record<LevelKey, boolean>>(() =>
     typeof window !== "undefined" ? loadLevels() : { VWAP: true, POC: true, SR: true, ZONES: true, FVG: true, FIB: false, LIQ: true },
   );
+  const [sessionsOn, setSessionsOn] = useState(true);
   const [levelsOpen, setLevelsOpen] = useState(false);
+  const [coachOpen, setCoachOpen] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
   const levelsRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<DashboardChatHandle>(null);
+
 
   useEffect(() => {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(levels)); } catch { /* ignore */ }
