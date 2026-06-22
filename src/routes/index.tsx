@@ -1,8 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "motion/react";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, HelpCircle } from "lucide-react";
 import { TickerTape } from "@/components/TickerTape";
 import { MiniChart, SymbolOverview } from "@/components/MiniChart";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 // 3D candlestick scene removed for a more legitimate platform aesthetic
 import logoAsset from "@/assets/logo.png.asset.json";
 
