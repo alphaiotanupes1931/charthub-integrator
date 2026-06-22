@@ -2,8 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { TradingViewChart } from "@/components/TradingViewChart";
 import { NativeChart, LEVEL_META, type LevelKey } from "@/components/NativeChart";
-import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid } from "lucide-react";
+import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Sparkles } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
+import { DashboardChatPanel, type DashboardChatHandle } from "@/components/DashboardChatPanel";
 
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({
@@ -100,6 +101,7 @@ function Dashboard() {
   const [levelsOpen, setLevelsOpen] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
   const levelsRef = useRef<HTMLDivElement>(null);
+  const chatRef = useRef<DashboardChatHandle>(null);
 
   useEffect(() => {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(levels)); } catch { /* ignore */ }
@@ -116,25 +118,33 @@ function Dashboard() {
 
   useEffect(() => { setResult(null); }, [symbol]);
 
+  const intervalLabel = INTERVALS.find((i) => i.value === interval)?.label ?? interval;
+
   const runScan = () => {
     setScanning(true);
     setResult(null);
+    const enabledLevels = ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none";
+    const prompt = `Analyze ${symbol.ticker} (${symbol.name}, ${symbol.venue}) on the ${intervalLabel} chart for a trade setup. I'm watching these levels: ${enabledLevels}. Give me: bias (long/short/neutral), entry trigger, stop loss, take profit 1 and 2, R:R, and a short rationale grounded in price action. Be concrete with levels.`;
+    chatRef.current?.scan(prompt);
     window.setTimeout(() => {
       setResult(gradeFor(symbol));
       setScanning(false);
-    }, 900);
+    }, 400);
   };
+
 
   const toggleLevel = (k: LevelKey) => setLevels((p) => ({ ...p, [k]: !p[k] }));
   const enabledCount = ALL_LEVELS.filter((k) => levels[k]).length;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 sm:px-6 py-6 sm:py-8 space-y-5">
+    <div className="mx-auto max-w-[1600px] px-4 sm:px-6 py-6 sm:py-8">
       {firstName && (
-        <div className="text-sm text-muted-foreground">
+        <div className="text-sm text-muted-foreground mb-4">
           Welcome back, <span className="text-foreground font-medium">{profile?.display_name}</span>
         </div>
       )}
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_400px]">
+        <div className="space-y-5 min-w-0">
       {/* Header */}
       <header className="flex flex-wrap items-end justify-between gap-4 border-b border-border/60 pb-5">
         <div className="min-w-0">
@@ -348,6 +358,13 @@ function Dashboard() {
           </div>
         )}
       </div>
+        </div>
+        {/* Chat panel */}
+        <aside className="xl:sticky xl:top-4 h-[600px] xl:h-[calc(100vh-6rem)]">
+          <DashboardChatPanel ref={chatRef} />
+        </aside>
+      </div>
     </div>
   );
 }
+
