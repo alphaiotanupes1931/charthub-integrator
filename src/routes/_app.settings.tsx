@@ -303,50 +303,7 @@ function SettingsPage() {
         </p>
       </Card>
 
-      {/* STRATEGY */}
-      <SectionLabel>Strategy</SectionLabel>
-      <Card>
-        <h2 className="flex items-center gap-2 text-lg font-semibold mb-2">
-          <Crosshair className="size-5 text-primary" />
-          Strategy Lens
-        </h2>
-        <p className="text-sm text-muted-foreground mb-5">
-          Wyckoff Sweep → BOS → Retest runs on every scan. Choose a lens to adjust emphasis and presentation.
-        </p>
-        <div className="space-y-2.5">
-          {LENSES.map((l) => {
-            const active = activeLens === l.id;
-            const Icon = l.icon;
-            return (
-              <button
-                key={l.id}
-                onClick={() => setActiveLens(l.id)}
-                className={`w-full text-left rounded-lg border p-4 transition flex items-start gap-3 ${
-                  active
-                    ? "border-primary/60 bg-primary/10"
-                    : "border-border bg-background/40 hover:border-border/80"
-                }`}
-              >
-                <Icon className={`size-5 mt-0.5 ${active ? "text-primary" : "text-muted-foreground"}`} />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className={`font-medium ${active ? "text-primary" : ""}`}>{l.name}</span>
-                    {active && (
-                      <span className="text-[10px] font-medium px-1.5 py-0.5 rounded border border-primary/40 text-primary">
-                        Active
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-1">{l.desc}</p>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-        <p className="italic text-xs text-muted-foreground mt-5">
-          Strategy is the lens, not the law. No lens overrides Wyckoff grading, Sweep → BOS → Retest is always required for A+ entries.
-        </p>
-      </Card>
+      {/* STRATEGY moved to its own tab — see /scan-lens */}
 
       {/* BILLING */}
       <SectionLabel>Billing</SectionLabel>
