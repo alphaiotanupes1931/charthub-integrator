@@ -73,6 +73,8 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
   function ChatInner({ threadId, initial, chart }, ref) {
     const [input, setInput] = useState("");
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+    const chartRef = useRef<ChartContext | undefined>(chart);
+    useEffect(() => { chartRef.current = chart; }, [chart]);
 
     const { messages, sendMessage, status, setMessages } = useChat({
       id: threadId,
@@ -92,6 +94,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
             threadId: id,
             coach: readActiveCoach(),
             journal: readJournal(),
+            chart: chartRef.current,
           },
         }),
       }),
