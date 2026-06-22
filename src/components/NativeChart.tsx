@@ -319,9 +319,10 @@ export function NativeChart({ symbol, ticker, interval, enabled, className }: Pr
         {isLive && (
           <span className="inline-flex items-center gap-1 text-emerald-400 normal-case">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            CoinGecko
+            {sourceLabel}
           </span>
         )}
+
       </div>
     </div>
   );
