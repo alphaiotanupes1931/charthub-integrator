@@ -298,7 +298,7 @@ function SettingsPage() {
             type="button"
             onClick={() => {
               const next = !welcomeMuted;
-              setWelcomeMuted(next);
+              setWelcomeBackMuted(next);
               setWelcomeMutedState(next);
               toast.success(next ? "Welcome voice muted" : "Welcome voice on");
             }}
