@@ -12,6 +12,7 @@ import {
   CrosshairMode,
 } from "lightweight-charts";
 import { getOhlc } from "@/lib/ohlc.functions";
+import { useTimeFormat, formatTime } from "@/hooks/useTimeFormat";
 
 export type LevelKey = "VWAP" | "POC" | "SR" | "ZONES" | "FVG" | "FIB" | "LIQ" | "OF";
 
