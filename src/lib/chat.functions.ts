@@ -52,7 +52,7 @@ export const deleteChatThread = createServerFn({ method: "POST" })
 
 export const getChatMessages = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ clientId: z.string().min(8), threadId: z.string().uuid() }).parse(d))
-  .handler(async ({ data }): Promise<UIMessage[]> => {
+  .handler(async ({ data }) => {
     const { data: rows, error } = await db()
       .from("chat_messages")
       .select("id,role,parts,created_at")
@@ -61,9 +61,9 @@ export const getChatMessages = createServerFn({ method: "POST" })
       .order("created_at", { ascending: true });
     if (error) throw new Error(error.message);
     return (rows ?? []).map((r) => ({
-      id: r.id,
-      role: r.role as UIMessage["role"],
-      parts: (r.parts as UIMessage["parts"]) ?? [],
+      id: r.id as string,
+      role: r.role as "user" | "assistant" | "system",
+      parts: (r.parts ?? []) as Array<{ type: string; text?: string }>,
     }));
   });
 
