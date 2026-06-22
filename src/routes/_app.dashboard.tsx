@@ -390,6 +390,7 @@ function Dashboard() {
           ticker: symbol.ticker,
           intervalLabel,
           enabledLevels: ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none",
+          snapshot: snapshot ?? undefined,
         }}
       />
     </div>
@@ -403,7 +404,7 @@ function FloatingCoach({
   onOpen: () => void;
   onClose: () => void;
   chatRef: React.RefObject<DashboardChatHandle | null>;
-  chart: { ticker: string; intervalLabel: string; enabledLevels: string };
+  chart: { ticker: string; intervalLabel: string; enabledLevels: string; snapshot?: ChartSnapshot };
 }) {
   return (
     <>
