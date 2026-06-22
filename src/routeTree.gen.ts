@@ -25,6 +25,7 @@ import { Route as AppCoachesRouteImport } from './routes/_app.coaches'
 import { Route as AppChatRouteImport } from './routes/_app.chat'
 import { Route as AppAnalyticsRouteImport } from './routes/_app.analytics'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
+import { Route as AppChatIndexRouteImport } from './routes/_app.chat.index'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -105,12 +106,17 @@ const AppAdminRoute = AppAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AppRoute,
 } as any)
+const AppChatIndexRoute = AppChatIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppChatRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AppAdminRoute
   '/analytics': typeof AppAnalyticsRoute
-  '/chat': typeof AppChatRoute
+  '/chat': typeof AppChatRouteWithChildren
   '/coaches': typeof AppCoachesRoute
   '/dashboard': typeof AppDashboardRoute
   '/guide': typeof AppGuideRoute
@@ -122,12 +128,12 @@ export interface FileRoutesByFullPath {
   '/system-status': typeof AppSystemStatusRoute
   '/voice-coach': typeof AppVoiceCoachRoute
   '/api/chat': typeof ApiChatRoute
+  '/chat/': typeof AppChatIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AppAdminRoute
   '/analytics': typeof AppAnalyticsRoute
-  '/chat': typeof AppChatRoute
   '/coaches': typeof AppCoachesRoute
   '/dashboard': typeof AppDashboardRoute
   '/guide': typeof AppGuideRoute
@@ -139,6 +145,7 @@ export interface FileRoutesByTo {
   '/system-status': typeof AppSystemStatusRoute
   '/voice-coach': typeof AppVoiceCoachRoute
   '/api/chat': typeof ApiChatRoute
+  '/chat': typeof AppChatIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -146,7 +153,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/_app/admin': typeof AppAdminRoute
   '/_app/analytics': typeof AppAnalyticsRoute
-  '/_app/chat': typeof AppChatRoute
+  '/_app/chat': typeof AppChatRouteWithChildren
   '/_app/coaches': typeof AppCoachesRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/guide': typeof AppGuideRoute
@@ -158,6 +165,7 @@ export interface FileRoutesById {
   '/_app/system-status': typeof AppSystemStatusRoute
   '/_app/voice-coach': typeof AppVoiceCoachRoute
   '/api/chat': typeof ApiChatRoute
+  '/_app/chat/': typeof AppChatIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -177,12 +185,12 @@ export interface FileRouteTypes {
     | '/system-status'
     | '/voice-coach'
     | '/api/chat'
+    | '/chat/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/admin'
     | '/analytics'
-    | '/chat'
     | '/coaches'
     | '/dashboard'
     | '/guide'
@@ -194,6 +202,7 @@ export interface FileRouteTypes {
     | '/system-status'
     | '/voice-coach'
     | '/api/chat'
+    | '/chat'
   id:
     | '__root__'
     | '/'
@@ -212,6 +221,7 @@ export interface FileRouteTypes {
     | '/_app/system-status'
     | '/_app/voice-coach'
     | '/api/chat'
+    | '/_app/chat/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -334,13 +344,31 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/chat/': {
+      id: '/_app/chat/'
+      path: '/'
+      fullPath: '/chat/'
+      preLoaderRoute: typeof AppChatIndexRouteImport
+      parentRoute: typeof AppChatRoute
+    }
   }
 }
+
+interface AppChatRouteChildren {
+  AppChatIndexRoute: typeof AppChatIndexRoute
+}
+
+const AppChatRouteChildren: AppChatRouteChildren = {
+  AppChatIndexRoute: AppChatIndexRoute,
+}
+
+const AppChatRouteWithChildren =
+  AppChatRoute._addFileChildren(AppChatRouteChildren)
 
 interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRoute
   AppAnalyticsRoute: typeof AppAnalyticsRoute
-  AppChatRoute: typeof AppChatRoute
+  AppChatRoute: typeof AppChatRouteWithChildren
   AppCoachesRoute: typeof AppCoachesRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppGuideRoute: typeof AppGuideRoute
@@ -356,7 +384,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAdminRoute: AppAdminRoute,
   AppAnalyticsRoute: AppAnalyticsRoute,
-  AppChatRoute: AppChatRoute,
+  AppChatRoute: AppChatRouteWithChildren,
   AppCoachesRoute: AppCoachesRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppGuideRoute: AppGuideRoute,
