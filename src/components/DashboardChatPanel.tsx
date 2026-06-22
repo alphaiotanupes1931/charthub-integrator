@@ -198,6 +198,50 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
           </PromptInput>
         </div>
       </div>
-    );
+);
+
+function EmptyStateSuggestions({
+  chart,
+  disabled,
+  onPick,
+}: {
+  chart?: ChartContext;
+  disabled: boolean;
+  onPick: (text: string) => void;
+}) {
+  const ticker = chart?.ticker ?? "XAU/USD";
+  const tf = chart?.intervalLabel ?? "1H";
+  const levels = chart?.enabledLevels || "VWAP, POC, S/R";
+  const suggestions = [
+    `Analyze ${ticker} for a trade setup. Give me entry, stop loss, and take profit levels.`,
+    `What's my edge on ${ticker} based on my journal?`,
+    `Walk me through a ${tf} ${ticker} plan using ${levels}.`,
+    `What's my biggest weakness right now? Be specific with trade examples.`,
+  ];
+  return (
+    <div className="py-6 px-1 flex flex-col items-center gap-3">
+      <div className="flex flex-col items-center gap-1.5 text-center">
+        <MessageSquare className="h-5 w-5 text-muted-foreground/70" />
+        <div className="text-xs text-muted-foreground">
+          Ask your coach, or tap a suggestion to get started.
+        </div>
+      </div>
+      <div className="w-full flex flex-col gap-1.5 mt-1">
+        {suggestions.map((s) => (
+          <button
+            key={s}
+            type="button"
+            disabled={disabled}
+            onClick={() => onPick(s)}
+            className="text-left text-xs leading-snug rounded-lg border border-border/70 bg-background/40 hover:bg-primary/5 hover:border-primary/40 transition px-3 py-2 text-foreground/90 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {s}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
   },
 );
