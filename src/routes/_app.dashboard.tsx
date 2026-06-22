@@ -128,12 +128,14 @@ function Dashboard() {
     setResult(null);
     const enabledLevels = ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none";
     const prompt = `Analyze ${symbol.ticker} (${symbol.name}, ${symbol.venue}) on the ${intervalLabel} chart for a trade setup. I'm watching these levels: ${enabledLevels}. Give me: bias (long/short/neutral), entry trigger, stop loss, take profit 1 and 2, R:R, and a short rationale grounded in price action. Be concrete with levels.`;
+    setCoachOpen(true);
     chatRef.current?.scan(prompt);
     window.setTimeout(() => {
       setResult(gradeFor(symbol));
       setScanning(false);
     }, 400);
   };
+
 
 
   const toggleLevel = (k: LevelKey) => setLevels((p) => ({ ...p, [k]: !p[k] }));
