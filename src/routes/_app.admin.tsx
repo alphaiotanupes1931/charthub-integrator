@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
-import { Loader2, ShieldAlert, Users, BarChart3 } from "lucide-react";
+import { Loader2, ShieldAlert, Users, BarChart3, CircleDot, CircleOff, CircleDashed } from "lucide-react";
 
 export const Route = createFileRoute("/_app/admin")({
   head: () => ({ meta: [{ title: "Admin, TradeMind" }] }),
