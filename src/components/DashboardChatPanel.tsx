@@ -51,7 +51,7 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
   // server functions. On mobile (slower cold start, app resume from background)
   // this is the difference between a 401 and a clean load.
   const waitForSession = useCallback(async (): Promise<boolean> => {
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 40; i++) {
       const { data } = await supabase.auth.getSession();
       if (data.session?.access_token) return true;
       await new Promise((r) => setTimeout(r, 250));
