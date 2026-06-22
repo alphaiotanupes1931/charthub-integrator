@@ -247,7 +247,7 @@ function Dashboard() {
       </div>
 
       {/* Chart card */}
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <div className="rounded-xl border border-border bg-card overflow-hidden" data-tour="chart">
         {/* Chart toolbar */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-3 py-2">
           <div className="flex items-center gap-1 rounded-md border border-border p-0.5">
@@ -351,7 +351,8 @@ function Dashboard() {
 
 
       {/* Scan card */}
-      <div className="rounded-xl border border-border bg-card p-6">
+      <div className="rounded-xl border border-border bg-card p-6" data-tour="scan">
+
         {!result && !scanning && (
           <div className="flex flex-col items-center text-center gap-3">
             <Crosshair className="h-6 w-6 text-primary" />
@@ -442,6 +443,7 @@ function FloatingCoach({
         <button
           onClick={onOpen}
           aria-label="Open AI coach"
+          data-tour="coach-bubble"
           className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/30 ring-1 ring-primary/40 hover:scale-105 transition flex items-center justify-center"
         >
           <MessageSquare className="h-6 w-6" />
