@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
 import {
   createChart,
   CandlestickSeries,
@@ -9,6 +11,7 @@ import {
   LineStyle,
   CrosshairMode,
 } from "lightweight-charts";
+import { getOhlc } from "@/lib/ohlc.functions";
 
 export type LevelKey = "VWAP" | "POC" | "SR" | "ZONES" | "FVG" | "FIB" | "LIQ";
 
