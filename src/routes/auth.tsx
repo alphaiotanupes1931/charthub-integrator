@@ -9,6 +9,7 @@ import logoAsset from "@/assets/logo.png.asset.json";
 import { readActiveCoach, readJournal } from "@/lib/chat-client";
 import {
   buildWelcomeBackRecap,
+  isWelcomeBackMuted,
   latestJournalTrade,
   speakWithElevenLabs,
   spokenName,
@@ -102,10 +103,18 @@ function AuthPage() {
       return;
     }
     // Pre-create an Audio element inside the user gesture so .play() will
-    // be allowed after we receive the ElevenLabs MP3 bytes.
+    // be allowed after we receive the ElevenLabs MP3 bytes. Mobile Safari
+    // requires the element to actually start playing inside the gesture, so
+    // we prime it with a tiny silent WAV and immediately call .play().
     let welcomeAudio: HTMLAudioElement | null = null;
-    if (typeof window !== "undefined" && typeof Audio !== "undefined") {
+    const muted = isWelcomeBackMuted();
+    if (!muted && typeof window !== "undefined" && typeof Audio !== "undefined") {
       welcomeAudio = new Audio();
+      welcomeAudio.preload = "auto";
+      // 1-frame silent WAV — primes the element so a later src swap can play.
+      welcomeAudio.src =
+        "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
+      welcomeAudio.play().then(() => welcomeAudio?.pause()).catch(() => {});
       (window as Window & { __trademindWelcomeAudio?: HTMLAudioElement }).__trademindWelcomeAudio = welcomeAudio;
     }
     setBusy(true);
@@ -123,27 +132,29 @@ function AuthPage() {
       // Claim the welcome slot IMMEDIATELY so the post-nav WelcomeBackGreeter
       // does not also start its own playback (which caused two overlapping voices).
       try { sessionStorage.setItem(WELCOME_BACK_SESSION_KEY, "1"); } catch { /* ignore */ }
-      try {
-        let recap: string;
-        if (mode === "signup") {
-          const name = spokenName(null, parsed.data.email);
-          recap = `Hi ${name}, welcome to TradeMind. Make sure to complete your profile and pick your coach so I can tailor your feedback. I am here whenever you have questions — just click the chatbot in the bottom right corner and I will jump in.`;
-        } else {
-          recap = await Promise.race([
-            buildLoginWelcomeRecap(),
-            new Promise<string>((resolve) =>
-              window.setTimeout(() => resolve(`Welcome back, ${spokenName(null, parsed.data.email)}. Ready when you are.`), 1600),
-            ),
-          ]);
+      if (!muted) {
+        try {
+          let recap: string;
+          if (mode === "signup") {
+            const name = spokenName(null, parsed.data.email);
+            recap = `Hi ${name}, welcome to TradeMind. Make sure to complete your profile and pick your coach so I can tailor your feedback. I am here whenever you have questions — just click the chatbot in the bottom right corner and I will jump in.`;
+          } else {
+            recap = await Promise.race([
+              buildLoginWelcomeRecap(),
+              new Promise<string>((resolve) =>
+                window.setTimeout(() => resolve(`Welcome back, ${spokenName(null, parsed.data.email)}. Ready when you are.`), 1600),
+              ),
+            ]);
+          }
+          // Fire-and-forget: don't block navigation on TTS fetch.
+          void speakWithElevenLabs(recap, readActiveCoach(), welcomeAudio);
+        } catch {
+          void speakWithElevenLabs(
+            `Welcome back, ${spokenName(null, parsed.data.email)}. Ready when you are.`,
+            readActiveCoach(),
+            welcomeAudio,
+          );
         }
-        // Fire-and-forget: don't block navigation on TTS fetch.
-        void speakWithElevenLabs(recap, readActiveCoach(), welcomeAudio);
-      } catch {
-        void speakWithElevenLabs(
-          `Welcome back, ${spokenName(null, parsed.data.email)}. Ready when you are.`,
-          readActiveCoach(),
-          welcomeAudio,
-        );
       }
       let target = search.redirect || "/dashboard";
       try {

@@ -18,7 +18,10 @@ import {
   Save,
   XCircle,
   AlertCircle,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
+import { isWelcomeBackMuted, setWelcomeBackMuted } from "@/lib/welcomeBack";
 
 export const Route = createFileRoute("/_app/settings")({
   head: () => ({ meta: [{ title: "Settings, TradeMind" }] }),
@@ -111,6 +114,8 @@ function SettingsPage() {
   const [savingName, setSavingName] = useState(false);
   const { format: timeFormat, setFormat: setTimeFormat } = useTimeFormat();
   const [clockNow, setClockNow] = useState(() => new Date());
+  const [welcomeMuted, setWelcomeMutedState] = useState(false);
+  useEffect(() => { setWelcomeMutedState(isWelcomeBackMuted()); }, []);
 
   // TradeLocker integration state
   const [tlEmail, setTlEmail] = useState("");
@@ -277,6 +282,42 @@ function SettingsPage() {
           {formatTime(clockNow, timeFormat, { utc: true })} UTC
         </p>
       </Card>
+
+      <Card className="mt-4">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="flex items-center gap-2 text-lg font-semibold mb-2">
+              {welcomeMuted ? <VolumeX className="size-5 text-primary" /> : <Volume2 className="size-5 text-primary" />}
+              Welcome Voice
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Your coach greets you out loud when you sign in. Mute it if you'd rather start in silence.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              const next = !welcomeMuted;
+              setWelcomeBackMuted(next);
+              setWelcomeMutedState(next);
+              toast.success(next ? "Welcome voice muted" : "Welcome voice on");
+            }}
+            role="switch"
+            aria-checked={!welcomeMuted}
+            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition ${
+              welcomeMuted ? "bg-muted" : "bg-primary"
+            }`}
+          >
+            <span
+              className={`inline-block h-5 w-5 transform rounded-full bg-background shadow transition ${
+                welcomeMuted ? "translate-x-0.5" : "translate-x-[22px]"
+              }`}
+            />
+          </button>
+        </div>
+      </Card>
+
+
 
 
 
