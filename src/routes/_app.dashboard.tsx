@@ -5,6 +5,7 @@ import { NativeChart, LEVEL_META, type LevelKey, type ChartSnapshot } from "@/co
 import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Sparkles, Clock, MessageSquare, X } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { DashboardChatPanel, type DashboardChatHandle } from "@/components/DashboardChatPanel";
+import { TodaysRecommendation } from "@/components/TodaysRecommendation";
 
 type DashboardSearch = { ask?: string };
 
@@ -171,6 +172,12 @@ function Dashboard() {
           Welcome back, <span className="text-foreground font-medium">{profile?.display_name}</span>
         </div>
       )}
+
+      {/* Today's recommendation — top of the dashboard */}
+      <div data-tour="recommendation">
+        <TodaysRecommendation />
+      </div>
+
       <div className="space-y-5">
         {/* Header */}
         <header className="flex flex-wrap items-end justify-between gap-4 border-b border-border/60 pb-5">
@@ -187,7 +194,7 @@ function Dashboard() {
           </p>
         </div>
 
-        <div className="relative" ref={pickerRef}>
+        <div className="relative" ref={pickerRef} data-tour="symbol-picker">
           <button
             onClick={() => setPickerOpen((o) => !o)}
             className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium hover:border-primary/50 transition"
@@ -240,7 +247,7 @@ function Dashboard() {
       </div>
 
       {/* Chart card */}
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <div className="rounded-xl border border-border bg-card overflow-hidden" data-tour="chart">
         {/* Chart toolbar */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-3 py-2">
           <div className="flex items-center gap-1 rounded-md border border-border p-0.5">
@@ -344,7 +351,8 @@ function Dashboard() {
 
 
       {/* Scan card */}
-      <div className="rounded-xl border border-border bg-card p-6">
+      <div className="rounded-xl border border-border bg-card p-6" data-tour="scan">
+
         {!result && !scanning && (
           <div className="flex flex-col items-center text-center gap-3">
             <Crosshair className="h-6 w-6 text-primary" />
@@ -435,6 +443,7 @@ function FloatingCoach({
         <button
           onClick={onOpen}
           aria-label="Open AI coach"
+          data-tour="coach-bubble"
           className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/30 ring-1 ring-primary/40 hover:scale-105 transition flex items-center justify-center"
         >
           <MessageSquare className="h-6 w-6" />
