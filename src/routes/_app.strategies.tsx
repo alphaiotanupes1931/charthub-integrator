@@ -200,8 +200,17 @@ function StrategiesPage() {
 }
 
 function StrategyModal({
-  strategy: s, active, onSelect, onClose,
-}: { strategy: Strategy; active: boolean; onSelect: (name: string) => void; onClose: () => void }) {
+  strategy: s, active, onSelect, onClose, onEdit, onDelete,
+}: {
+  strategy: Strategy | CustomStrategy;
+  active: boolean;
+  onSelect: (name: string) => void;
+  onClose: () => void;
+  onEdit: (s: CustomStrategy) => void;
+  onDelete: (s: CustomStrategy) => void;
+}) {
+  const isCustom = (s as CustomStrategy).custom === true;
+  const custom = isCustom ? (s as CustomStrategy) : null;
   const StyleIcon = styleIcon[s.style];
   return (
     <div
