@@ -30,6 +30,7 @@ export type ChartContext = {
   ticker: string;
   intervalLabel: string;
   enabledLevels: string;
+  snapshot?: import("@/components/NativeChart").ChartSnapshot;
 };
 
 type Props = { chart?: ChartContext; onClose?: () => void };
