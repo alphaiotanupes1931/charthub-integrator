@@ -72,7 +72,12 @@ function AuthPage() {
         if (error) throw error;
         toast.success("Account created");
       }
-      navigate({ to: search.redirect || "/dashboard", replace: true });
+      let target = search.redirect || "/dashboard";
+      try {
+        const pending = localStorage.getItem("trademind.pendingInvite");
+        if (pending) target = `/invite/${pending}`;
+      } catch { /* ignore */ }
+      navigate({ to: target, replace: true });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Authentication failed";
       toast.error(msg);
