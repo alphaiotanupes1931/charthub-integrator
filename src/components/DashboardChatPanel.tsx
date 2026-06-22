@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { Link } from "@tanstack/react-router";
-import { MessageSquare, Sparkles, ExternalLink, Trash2, X, Minus, Volume2, VolumeX } from "lucide-react";
+import { MessageSquare, Sparkles, ExternalLink, Trash2, X, Minus, Volume2, VolumeX, ChevronDown } from "lucide-react";
 import {
   Conversation,
   ConversationContent,
@@ -19,9 +19,9 @@ import {
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { supabase } from "@/integrations/supabase/client";
 import { getOrCreateDashboardThread, getChatMessages } from "@/lib/chat.functions";
-import { readJournal, readActiveCoach } from "@/lib/chat-client";
+import { readJournal, readActiveCoach, writeActiveCoach } from "@/lib/chat-client";
 import { useCoachVoice } from "@/hooks/useCoachVoice";
-import { voiceForCoach } from "@/lib/coachVoices";
+import { voiceForCoach, COACH_VOICES } from "@/lib/coachVoices";
 import { toast } from "sonner";
 
 export type DashboardChatHandle = {
@@ -76,6 +76,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
   function ChatInner({ threadId, initial, chart, onClose, onMinimize }, ref) {
 
     const [input, setInput] = useState("");
+    const [activeCoach, setActiveCoach] = useState<string>(() => readActiveCoach());
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const chartRef = useRef<ChartContext | undefined>(chart);
     useEffect(() => { chartRef.current = chart; }, [chart]);
@@ -152,9 +153,31 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
       <div className="flex flex-col h-full min-h-0 rounded-xl border border-border bg-card overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border/60 px-3 py-2">
-          <div className="flex items-center gap-2 text-sm font-medium">
-            <Sparkles className="h-4 w-4 text-primary" />
-            AI Coach
+          <div className="flex items-center gap-2 text-sm font-medium min-w-0">
+            <Sparkles className="h-4 w-4 text-primary shrink-0" />
+            <span className="hidden sm:inline text-muted-foreground">AI Coach</span>
+            <div className="relative">
+              <select
+                value={activeCoach}
+                onChange={(e) => {
+                  const name = e.target.value;
+                  if (name === activeCoach) return;
+                  if (voice.enabled) voice.stop();
+                  writeActiveCoach(name);
+                  setActiveCoach(name);
+                  toast.success(`${name} is now your coach`);
+                }}
+                className="h-7 appearance-none rounded-md border border-border bg-background/60 pl-2 pr-6 text-xs font-semibold focus:outline-none focus:border-primary/50 cursor-pointer hover:border-primary/40"
+                aria-label="Change coach voice"
+              >
+                {Object.keys(COACH_VOICES).map((key) => (
+                  <option key={key} value={key}>
+                    {key}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+            </div>
           </div>
           <div className="flex items-center gap-1">
             <button

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { Bot, BarChart2, Target, GraduationCap, CheckCircle2, Volume2, Sparkles, Loader2, Square } from "lucide-react";
 import { COACH_VOICES } from "@/lib/coachVoices";
+import { readActiveCoach, writeActiveCoach } from "@/lib/chat-client";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/coaches")({
@@ -46,21 +47,13 @@ const COACHES = [
   },
 ];
 
-const COACH_KEY = "trademind.activeCoach";
-
 function CoachesPage() {
-  const [active, setActive] = useState<string>("The Analyst");
+  const [active, setActive] = useState<string>(() => readActiveCoach());
   const [previewing, setPreviewing] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  useEffect(() => {
-    try { setActive(localStorage.getItem(COACH_KEY) || "The Analyst"); } catch { /* ignore */ }
-  }, []);
-
-  useEffect(() => () => { audioRef.current?.pause(); }, []);
-
   const select = (name: string) => {
-    try { localStorage.setItem(COACH_KEY, name); } catch { /* ignore */ }
+    writeActiveCoach(name);
     setActive(name);
     toast.success(`${name} is now your active coach`);
   };
