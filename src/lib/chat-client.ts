@@ -34,3 +34,9 @@ export function writeActiveCoach(name: string) {
   if (typeof window === "undefined") return;
   try { window.localStorage.setItem(COACH_KEY, name); } catch { /* ignore */ }
 }
+
+export const STRATEGY_KEY = "trademind.activeStrategy";
+export function readActiveStrategy(): string | null {
+  if (typeof window === "undefined") return null;
+  try { return window.localStorage.getItem(STRATEGY_KEY); } catch { return null; }
+}
