@@ -9,6 +9,7 @@ import logoAsset from "@/assets/logo.png.asset.json";
 import { readActiveCoach, readJournal } from "@/lib/chat-client";
 import {
   buildWelcomeBackRecap,
+  isWelcomeBackMuted,
   latestJournalTrade,
   speakWithElevenLabs,
   spokenName,
