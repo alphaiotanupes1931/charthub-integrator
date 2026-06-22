@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
 import {
   createChart,
   CandlestickSeries,
@@ -9,6 +11,7 @@ import {
   LineStyle,
   CrosshairMode,
 } from "lightweight-charts";
+import { getOhlc } from "@/lib/ohlc.functions";
 
 export type LevelKey = "VWAP" | "POC" | "SR" | "ZONES" | "FVG" | "FIB" | "LIQ";
 
@@ -196,11 +199,32 @@ export function NativeChart({ symbol, ticker, interval, enabled, className }: Pr
   const linesRef = useRef<IPriceLine[]>([]);
   const [ready, setReady] = useState(false);
 
-  const candles = useMemo(
-    () => generateCandles(symbol, interval, ticker),
-    [symbol, interval, ticker],
-  );
+  // Live OHLC from CoinGecko (server-cached). Returns empty bars for non-crypto.
+  const fetchOhlc = useServerFn(getOhlc);
+  const isCrypto = /BTC|ETH/i.test(ticker);
+  const { data: liveOhlc } = useQuery({
+    queryKey: ["ohlc", ticker, interval],
+    queryFn: () => fetchOhlc({ data: { ticker, interval } }),
+    enabled: isCrypto,
+    staleTime: 30_000,
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: false,
+  });
+
+  const candles = useMemo<Candle[]>(() => {
+    if (liveOhlc && liveOhlc.source === "coingecko" && liveOhlc.bars.length > 0) {
+      return liveOhlc.bars.map((b) => ({
+        time: b.time as Time,
+        open: b.open,
+        high: b.high,
+        low: b.low,
+        close: b.close,
+      }));
+    }
+    return generateCandles(symbol, interval, ticker);
+  }, [liveOhlc, symbol, interval, ticker]);
   const levels = useMemo(() => computeLevels(candles), [candles]);
+  const isLive = liveOhlc?.source === "coingecko" && (liveOhlc?.bars.length ?? 0) > 0;
 
   // Init / teardown chart
   useEffect(() => {
@@ -289,8 +313,14 @@ export function NativeChart({ symbol, ticker, interval, enabled, className }: Pr
   return (
     <div className={`relative h-full w-full ${className ?? ""}`}>
       <div ref={containerRef} className="absolute inset-0" />
-      <div className="absolute left-3 top-3 z-10 rounded-md border border-border bg-background/70 backdrop-blur px-2 py-1 text-[10px] font-mono text-muted-foreground uppercase tracking-wider">
-        Native · {ticker} · {interval}
+      <div className="absolute left-3 top-3 z-10 rounded-md border border-border bg-background/70 backdrop-blur px-2 py-1 text-[10px] font-mono text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+        <span>{isLive ? "Live" : "Native"} · {ticker} · {interval}</span>
+        {isLive && (
+          <span className="inline-flex items-center gap-1 text-emerald-400 normal-case">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            CoinGecko
+          </span>
+        )}
       </div>
     </div>
   );
