@@ -13,7 +13,7 @@ import {
 } from "lightweight-charts";
 import { getOhlc } from "@/lib/ohlc.functions";
 
-export type LevelKey = "VWAP" | "POC" | "SR" | "ZONES" | "FVG" | "FIB" | "LIQ";
+export type LevelKey = "VWAP" | "POC" | "SR" | "ZONES" | "FVG" | "FIB" | "LIQ" | "OF";
 
 export const LEVEL_META: Record<LevelKey, { label: string; color: string; tone: string }> = {
   VWAP:  { label: "VWAP",  color: "#fbbf24", tone: "bg-amber-500/10 text-amber-300 border-amber-500/30" },
@@ -23,6 +23,7 @@ export const LEVEL_META: Record<LevelKey, { label: string; color: string; tone: 
   FVG:   { label: "FVG",   color: "#34d399", tone: "bg-emerald-500/10 text-emerald-300 border-emerald-500/30" },
   FIB:   { label: "Fib",   color: "#f472b6", tone: "bg-pink-500/10 text-pink-300 border-pink-500/30" },
   LIQ:   { label: "Liq",   color: "#f87171", tone: "bg-red-500/10 text-red-300 border-red-500/30" },
+  OF:    { label: "Order Flow", color: "#22d3ee", tone: "bg-cyan-500/10 text-cyan-300 border-cyan-500/30" },
 };
 
 interface Props {
