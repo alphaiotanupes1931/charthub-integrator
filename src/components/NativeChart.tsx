@@ -199,20 +199,19 @@ export function NativeChart({ symbol, ticker, interval, enabled, className }: Pr
   const linesRef = useRef<IPriceLine[]>([]);
   const [ready, setReady] = useState(false);
 
-  // Live OHLC from CoinGecko (server-cached). Returns empty bars for non-crypto.
+  // Live OHLC from CoinGecko (crypto) or Twelve Data (FX/metals/indices),
+  // server-cached. Returns empty bars when no upstream supports the symbol.
   const fetchOhlc = useServerFn(getOhlc);
-  const isCrypto = /BTC|ETH/i.test(ticker);
   const { data: liveOhlc } = useQuery({
     queryKey: ["ohlc", ticker, interval],
     queryFn: () => fetchOhlc({ data: { ticker, interval } }),
-    enabled: isCrypto,
     staleTime: 30_000,
     refetchInterval: 30_000,
     refetchOnWindowFocus: false,
   });
 
   const candles = useMemo<Candle[]>(() => {
-    if (liveOhlc && liveOhlc.source === "coingecko" && liveOhlc.bars.length > 0) {
+    if (liveOhlc && liveOhlc.source !== "synthetic" && liveOhlc.bars.length > 0) {
       return liveOhlc.bars.map((b) => ({
         time: b.time as Time,
         open: b.open,
@@ -224,7 +223,9 @@ export function NativeChart({ symbol, ticker, interval, enabled, className }: Pr
     return generateCandles(symbol, interval, ticker);
   }, [liveOhlc, symbol, interval, ticker]);
   const levels = useMemo(() => computeLevels(candles), [candles]);
-  const isLive = liveOhlc?.source === "coingecko" && (liveOhlc?.bars.length ?? 0) > 0;
+  const isLive = !!liveOhlc && liveOhlc.source !== "synthetic" && liveOhlc.bars.length > 0;
+  const sourceLabel = liveOhlc?.source === "coingecko" ? "CoinGecko" : liveOhlc?.source === "twelvedata" ? "Twelve Data" : "";
+
 
   // Init / teardown chart
   useEffect(() => {
@@ -318,9 +319,10 @@ export function NativeChart({ symbol, ticker, interval, enabled, className }: Pr
         {isLive && (
           <span className="inline-flex items-center gap-1 text-emerald-400 normal-case">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            CoinGecko
+            {sourceLabel}
           </span>
         )}
+
       </div>
     </div>
   );
