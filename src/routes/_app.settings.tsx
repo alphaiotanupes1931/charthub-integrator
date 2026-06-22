@@ -18,7 +18,10 @@ import {
   Save,
   XCircle,
   AlertCircle,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
+import { isWelcomeBackMuted, setWelcomeBackMuted } from "@/lib/welcomeBack";
 
 export const Route = createFileRoute("/_app/settings")({
   head: () => ({ meta: [{ title: "Settings, TradeMind" }] }),
