@@ -109,14 +109,19 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
 
   if (!threadId || initial === null) {
     return (
-      <div className="h-full flex flex-col items-center justify-center gap-3 p-6 text-center text-xs text-muted-foreground">
-        <div>{loadError ?? "Loading coach…"}</div>
+      <div className="h-full flex flex-col items-center justify-center gap-4 p-6 text-center bg-card sm:rounded-xl border-y sm:border border-border">
+        <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/15 text-primary">
+          <Sparkles className="h-5 w-5 animate-pulse" />
+        </div>
+        <div className="text-sm text-muted-foreground max-w-xs">
+          {loadError ?? "Waking up your coach…"}
+        </div>
         {loadError && (
           <button
             onClick={() => { setThreadId(null); setInitial(null); setLoadError(null); setAttempt((n) => n + 1); }}
-            className="rounded-full border border-border bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary hover:bg-primary/15"
+            className="rounded-full bg-primary px-5 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90 transition"
           >
-            Retry
+            Try again
           </button>
         )}
       </div>
