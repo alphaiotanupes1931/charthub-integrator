@@ -17,7 +17,6 @@ import {
   Hash,
   CreditCard,
   ExternalLink,
-  Zap,
   Monitor,
   Save,
   XCircle,
