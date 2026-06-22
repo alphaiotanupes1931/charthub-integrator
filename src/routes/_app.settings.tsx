@@ -1,9 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
 import { useTimeFormat, formatTime } from "@/hooks/useTimeFormat";
+import { recordBrokerConnection } from "@/lib/broker.functions";
 import { toast } from "sonner";
+
 import {
   Plug,
   ShieldCheck,
@@ -119,7 +122,10 @@ function SettingsPage() {
   const [tlAccountId, setTlAccountId] = useState<string>("");
   const [tlConnected, setTlConnected] = useState(false);
 
+  const recordBroker = useServerFn(recordBrokerConnection);
+
   useEffect(() => {
+
     const id = window.setInterval(() => setClockNow(new Date()), 1000);
     return () => window.clearInterval(id);
   }, []);
@@ -166,11 +172,18 @@ function SettingsPage() {
       setTlAccounts(accounts);
       if (accounts.length && !tlAccountId) setTlAccountId(String(accounts[0].id));
       setTlConnected(true);
+      // Persist broker connection status so admins can see live/demo usage.
+      try {
+        await recordBroker({ data: { brokerName: "TradeLocker", accountType: tlAccountType, connected: true } });
+      } catch (err) {
+        console.error("Failed to record broker connection", err);
+      }
       // Save non-secret prefs locally (NEVER the password)
       try {
         window.localStorage.setItem(TL_CREDS_KEY, JSON.stringify({ email: tlEmail, server: tlServer, accountType: tlAccountType, accountId: tlAccountId || (accounts[0] && String(accounts[0].id)) }));
       } catch { /* ignore */ }
       toast.success(`Connected · ${accounts.length} account${accounts.length === 1 ? "" : "s"} found`);
+
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Connection failed");
       setTlConnected(false);
