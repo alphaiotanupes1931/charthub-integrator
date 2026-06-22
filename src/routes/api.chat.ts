@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
 import { createClient } from "@supabase/supabase-js";
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
-import type { Database } from "@/integrations/supabase/types";
+import type { Database, Json } from "@/integrations/supabase/types";
 
 type Trade = {
   id: string;
@@ -20,7 +20,6 @@ type Trade = {
 type ChatRequestBody = {
   messages?: UIMessage[];
   threadId?: string;
-  clientId?: string;
   coach?: string;
   journal?: Trade[];
 };
@@ -99,25 +98,55 @@ export const Route = createFileRoute("/api/chat")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        // --- Auth: verify the bearer token ---
+        const authHeader = request.headers.get("authorization") ?? "";
+        if (!authHeader.startsWith("Bearer ")) {
+          return new Response("Unauthorized", { status: 401 });
+        }
+        const token = authHeader.slice("Bearer ".length).trim();
+        if (!token || token.split(".").length !== 3) {
+          return new Response("Unauthorized", { status: 401 });
+        }
+
+        const sb = createClient<Database>(
+          process.env.SUPABASE_URL!,
+          process.env.SUPABASE_PUBLISHABLE_KEY!,
+          {
+            global: { headers: { Authorization: `Bearer ${token}` } },
+            auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
+          },
+        );
+
+        const { data: claims, error: claimsErr } = await sb.auth.getClaims(token);
+        if (claimsErr || !claims?.claims?.sub) {
+          return new Response("Unauthorized", { status: 401 });
+        }
+        const userId = claims.claims.sub;
+
+        // --- Parse body ---
         let body: ChatRequestBody;
         try {
           body = (await request.json()) as ChatRequestBody;
         } catch {
           return new Response("Invalid JSON", { status: 400 });
         }
-        const { messages, threadId, clientId, coach, journal } = body;
-        if (!Array.isArray(messages) || !threadId || !clientId) {
-          return new Response("messages, threadId, clientId required", { status: 400 });
+        const { messages, threadId, coach, journal } = body;
+        if (!Array.isArray(messages) || !threadId) {
+          return new Response("messages, threadId required", { status: 400 });
         }
 
         const key = process.env.LOVABLE_API_KEY;
         if (!key) return new Response("AI not configured", { status: 500 });
 
-        const sb = createClient<Database>(
-          process.env.SUPABASE_URL!,
-          process.env.SUPABASE_PUBLISHABLE_KEY!,
-          { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
-        );
+        // --- Verify thread ownership (defense in depth alongside RLS) ---
+        const { data: thread, error: threadErr } = await sb
+          .from("chat_threads")
+          .select("id,title,user_id")
+          .eq("id", threadId)
+          .maybeSingle();
+        if (threadErr || !thread || thread.user_id !== userId) {
+          return new Response("Forbidden", { status: 403 });
+        }
 
         const journalCtx = buildJournalContext(journal ?? []);
         const system = systemPrompt(coach, journalCtx);
@@ -133,7 +162,6 @@ export const Route = createFileRoute("/api/chat")({
           originalMessages: messages,
           onFinish: async ({ messages: finalMessages }) => {
             try {
-              // Persist only messages not already saved (by id)
               const { data: existing } = await sb
                 .from("chat_messages")
                 .select("id")
@@ -144,9 +172,10 @@ export const Route = createFileRoute("/api/chat")({
                 .map((m) => ({
                   id: m.id,
                   thread_id: threadId,
-                  client_id: clientId,
+                  user_id: userId,
+                  client_id: userId, // legacy NOT NULL column
                   role: m.role,
-                  parts: m.parts as unknown as import("@/integrations/supabase/types").Json,
+                  parts: m.parts as unknown as Json,
                 }));
               if (toInsert.length > 0) {
                 const { error } = await sb.from("chat_messages").insert(toInsert);
@@ -154,24 +183,17 @@ export const Route = createFileRoute("/api/chat")({
               }
               // Auto-title from first user message
               const firstUser = finalMessages.find((m) => m.role === "user");
-              if (firstUser) {
+              if (firstUser && thread.title === "New conversation") {
                 const text = (firstUser.parts as Array<{ type: string; text?: string }>)
                   .filter((p) => p.type === "text")
                   .map((p) => p.text ?? "")
                   .join(" ")
                   .trim();
                 if (text) {
-                  const { data: thread } = await sb
+                  await sb
                     .from("chat_threads")
-                    .select("title")
-                    .eq("id", threadId)
-                    .maybeSingle();
-                  if (thread && thread.title === "New conversation") {
-                    await sb
-                      .from("chat_threads")
-                      .update({ title: text.slice(0, 60) })
-                      .eq("id", threadId);
-                  }
+                    .update({ title: text.slice(0, 60) })
+                    .eq("id", threadId);
                 }
               }
             } catch (e) {
