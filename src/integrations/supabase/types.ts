@@ -81,6 +81,9 @@ export type Database = {
       }
       profiles: {
         Row: {
+          broker_account_type: string | null
+          broker_connected: boolean
+          broker_name: string | null
           created_at: string
           display_name: string | null
           email: string | null
@@ -94,6 +97,9 @@ export type Database = {
           wins: number
         }
         Insert: {
+          broker_account_type?: string | null
+          broker_connected?: boolean
+          broker_name?: string | null
           created_at?: string
           display_name?: string | null
           email?: string | null
@@ -107,6 +113,9 @@ export type Database = {
           wins?: number
         }
         Update: {
+          broker_account_type?: string | null
+          broker_connected?: boolean
+          broker_name?: string | null
           created_at?: string
           display_name?: string | null
           email?: string | null
@@ -208,6 +217,9 @@ export type Database = {
       admin_users_overview: {
         Args: never
         Returns: {
+          broker_account_type: string
+          broker_connected: boolean
+          broker_name: string
           created_at: string
           display_name: string
           email: string

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
-import { Loader2, ShieldAlert, Users, BarChart3 } from "lucide-react";
+import { Loader2, ShieldAlert, Users, BarChart3, CircleDot, CircleOff, CircleDashed } from "lucide-react";
 
 export const Route = createFileRoute("/_app/admin")({
   head: () => ({ meta: [{ title: "Admin, TradeMind" }] }),
@@ -18,6 +18,9 @@ type UserRow = {
   referral_source: string | null;
   onboarded: boolean;
   created_at: string;
+  broker_connected: boolean;
+  broker_name: string | null;
+  broker_account_type: string | null;
 };
 
 function AdminPage() {
@@ -123,19 +126,32 @@ function AdminPage() {
                   <th className="text-left px-4 py-2 font-medium">Name</th>
                   <th className="text-left px-4 py-2 font-medium">Email</th>
                   <th className="text-left px-4 py-2 font-medium">Source</th>
+                  <th className="text-left px-4 py-2 font-medium">Broker</th>
                   <th className="text-left px-4 py-2 font-medium">Joined</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {users === null ? (
-                  <tr><td colSpan={4} className="p-6 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Loading…</td></tr>
+                  <tr><td colSpan={5} className="p-6 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Loading…</td></tr>
                 ) : users.length === 0 ? (
-                  <tr><td colSpan={4} className="p-6 text-muted-foreground">No users yet.</td></tr>
+                  <tr><td colSpan={5} className="p-6 text-muted-foreground">No users yet.</td></tr>
                 ) : users.map((u) => (
                   <tr key={u.id}>
                     <td className="px-4 py-2.5">{u.display_name ?? <span className="text-muted-foreground">—</span>}</td>
                     <td className="px-4 py-2.5 text-muted-foreground">{u.email}</td>
                     <td className="px-4 py-2.5 text-muted-foreground">{u.referral_source ?? <span className="opacity-60">—</span>}</td>
+                    <td className="px-4 py-2.5">
+                      {u.broker_connected ? (
+                        <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${u.broker_account_type === "live" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-amber-500/10 text-amber-400 border border-amber-500/20"}`}>
+                          {u.broker_account_type === "live" ? <CircleDot className="h-3 w-3" /> : <CircleDashed className="h-3 w-3" />}
+                          {u.broker_account_type === "live" ? "Live" : u.broker_account_type === "demo" ? "Demo" : u.broker_name ?? "Connected"}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium text-muted-foreground bg-muted border border-border">
+                          <CircleOff className="h-3 w-3" /> Not connected
+                        </span>
+                      )}
+                    </td>
                     <td className="px-4 py-2.5 text-muted-foreground tabular-nums">{new Date(u.created_at).toLocaleDateString()}</td>
                   </tr>
                 ))}
