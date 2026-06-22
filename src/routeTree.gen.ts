@@ -20,6 +20,7 @@ import { Route as AppVoiceCoachRouteImport } from './routes/_app.voice-coach'
 import { Route as AppSystemStatusRouteImport } from './routes/_app.system-status'
 import { Route as AppStrategiesRouteImport } from './routes/_app.strategies'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
+import { Route as AppScanLensRouteImport } from './routes/_app.scan-lens'
 import { Route as AppMentorRouteImport } from './routes/_app.mentor'
 import { Route as AppMemoryRouteImport } from './routes/_app.memory'
 import { Route as AppJournalRouteImport } from './routes/_app.journal'
@@ -86,6 +87,11 @@ const AppStrategiesRoute = AppStrategiesRouteImport.update({
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppScanLensRoute = AppScanLensRouteImport.update({
+  id: '/scan-lens',
+  path: '/scan-lens',
   getParentRoute: () => AppRoute,
 } as any)
 const AppMentorRoute = AppMentorRouteImport.update({
@@ -169,6 +175,7 @@ export interface FileRoutesByFullPath {
   '/journal': typeof AppJournalRoute
   '/memory': typeof AppMemoryRoute
   '/mentor': typeof AppMentorRoute
+  '/scan-lens': typeof AppScanLensRoute
   '/settings': typeof AppSettingsRoute
   '/strategies': typeof AppStrategiesRoute
   '/system-status': typeof AppSystemStatusRoute
@@ -193,6 +200,7 @@ export interface FileRoutesByTo {
   '/journal': typeof AppJournalRoute
   '/memory': typeof AppMemoryRoute
   '/mentor': typeof AppMentorRoute
+  '/scan-lens': typeof AppScanLensRoute
   '/settings': typeof AppSettingsRoute
   '/strategies': typeof AppStrategiesRoute
   '/system-status': typeof AppSystemStatusRoute
@@ -220,6 +228,7 @@ export interface FileRoutesById {
   '/_app/journal': typeof AppJournalRoute
   '/_app/memory': typeof AppMemoryRoute
   '/_app/mentor': typeof AppMentorRoute
+  '/_app/scan-lens': typeof AppScanLensRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/strategies': typeof AppStrategiesRoute
   '/_app/system-status': typeof AppSystemStatusRoute
@@ -247,6 +256,7 @@ export interface FileRouteTypes {
     | '/journal'
     | '/memory'
     | '/mentor'
+    | '/scan-lens'
     | '/settings'
     | '/strategies'
     | '/system-status'
@@ -271,6 +281,7 @@ export interface FileRouteTypes {
     | '/journal'
     | '/memory'
     | '/mentor'
+    | '/scan-lens'
     | '/settings'
     | '/strategies'
     | '/system-status'
@@ -297,6 +308,7 @@ export interface FileRouteTypes {
     | '/_app/journal'
     | '/_app/memory'
     | '/_app/mentor'
+    | '/_app/scan-lens'
     | '/_app/settings'
     | '/_app/strategies'
     | '/_app/system-status'
@@ -395,6 +407,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/scan-lens': {
+      id: '/_app/scan-lens'
+      path: '/scan-lens'
+      fullPath: '/scan-lens'
+      preLoaderRoute: typeof AppScanLensRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/mentor': {
@@ -516,6 +535,7 @@ interface AppRouteChildren {
   AppJournalRoute: typeof AppJournalRoute
   AppMemoryRoute: typeof AppMemoryRoute
   AppMentorRoute: typeof AppMentorRoute
+  AppScanLensRoute: typeof AppScanLensRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppStrategiesRoute: typeof AppStrategiesRoute
   AppSystemStatusRoute: typeof AppSystemStatusRoute
@@ -534,6 +554,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppJournalRoute: AppJournalRoute,
   AppMemoryRoute: AppMemoryRoute,
   AppMentorRoute: AppMentorRoute,
+  AppScanLensRoute: AppScanLensRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppStrategiesRoute: AppStrategiesRoute,
   AppSystemStatusRoute: AppSystemStatusRoute,
