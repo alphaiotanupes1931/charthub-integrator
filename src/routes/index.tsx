@@ -549,7 +549,7 @@ function Footer() {
         ))}
       </div>
       <div className="max-w-7xl mx-auto mt-10 sm:mt-16 pt-6 sm:pt-8 border-t border-border/60 text-xs text-muted-foreground">
-        © {new Date().getFullYear()} TradeMind. Educational analysis only, not financial advice.
+        © {year ?? "2026"} TradeMind. Educational analysis only, not financial advice.
       </div>
     </footer>
   );
