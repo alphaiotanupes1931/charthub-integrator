@@ -46,9 +46,7 @@ const NAV: NavItem[] = [
   { to: "/journal", label: "Trade Journal", icon: NotebookPen },
   { to: "/strategies", label: "Strategies", icon: Library },
   { to: "/coaches", label: "AI Coaches", icon: Users },
-  // Chat lives beside the dashboard; full chat is still reachable at /chat
-  // { to: "/chat", label: "Chat", icon: MessageSquare },
-  { to: "/voice-coach", label: "Voice Coach", icon: Mic },
+  { to: "/broker", label: "Broker", icon: Activity },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/memory", label: "Trading Memory", icon: Brain },
   { to: "/system-status", label: "System Status", icon: Activity },
@@ -56,6 +54,7 @@ const NAV: NavItem[] = [
   { to: "/mentor", label: "Coach Dashboard", icon: UserCog },
   { to: "/admin", label: "Admin", icon: ShieldCheck, accent: true },
 ];
+
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
