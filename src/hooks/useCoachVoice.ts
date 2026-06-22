@@ -1,18 +1,45 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const VOICE_KEY = "trademind.voice.enabled";
 
 export function useCoachVoice() {
-  const [enabled, setEnabled] = useState<boolean>(() => {
+  const [enabled, setEnabledState] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return window.localStorage.getItem(VOICE_KEY) === "1";
   });
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const syncedRef = useRef(false);
 
+  // On mount: hydrate from profile (cross-device), fall back to localStorage
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    window.localStorage.setItem(VOICE_KEY, enabled ? "1" : "0");
-  }, [enabled]);
+    if (syncedRef.current) return;
+    syncedRef.current = true;
+    (async () => {
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) return;
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("voice_enabled")
+        .eq("id", data.user.id)
+        .maybeSingle();
+      if (prof && typeof prof.voice_enabled === "boolean") {
+        setEnabledState(prof.voice_enabled);
+        try { window.localStorage.setItem(VOICE_KEY, prof.voice_enabled ? "1" : "0"); } catch { /* ignore */ }
+      }
+    })();
+  }, []);
+
+  // Persist on change: local + profile
+  const setEnabled = useCallback((v: boolean) => {
+    setEnabledState(v);
+    try { window.localStorage.setItem(VOICE_KEY, v ? "1" : "0"); } catch { /* ignore */ }
+    (async () => {
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) return;
+      await supabase.from("profiles").update({ voice_enabled: v }).eq("id", data.user.id);
+    })();
+  }, []);
 
   const stop = useCallback(() => {
     const a = audioRef.current;
