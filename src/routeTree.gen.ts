@@ -26,6 +26,7 @@ import { Route as AppChatRouteImport } from './routes/_app.chat'
 import { Route as AppAnalyticsRouteImport } from './routes/_app.analytics'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
 import { Route as AppChatIndexRouteImport } from './routes/_app.chat.index'
+import { Route as AppChatThreadIdRouteImport } from './routes/_app.chat.$threadId'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -111,6 +112,11 @@ const AppChatIndexRoute = AppChatIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppChatRoute,
 } as any)
+const AppChatThreadIdRoute = AppChatThreadIdRouteImport.update({
+  id: '/$threadId',
+  path: '/$threadId',
+  getParentRoute: () => AppChatRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -128,6 +134,7 @@ export interface FileRoutesByFullPath {
   '/system-status': typeof AppSystemStatusRoute
   '/voice-coach': typeof AppVoiceCoachRoute
   '/api/chat': typeof ApiChatRoute
+  '/chat/$threadId': typeof AppChatThreadIdRoute
   '/chat/': typeof AppChatIndexRoute
 }
 export interface FileRoutesByTo {
@@ -145,6 +152,7 @@ export interface FileRoutesByTo {
   '/system-status': typeof AppSystemStatusRoute
   '/voice-coach': typeof AppVoiceCoachRoute
   '/api/chat': typeof ApiChatRoute
+  '/chat/$threadId': typeof AppChatThreadIdRoute
   '/chat': typeof AppChatIndexRoute
 }
 export interface FileRoutesById {
@@ -165,6 +173,7 @@ export interface FileRoutesById {
   '/_app/system-status': typeof AppSystemStatusRoute
   '/_app/voice-coach': typeof AppVoiceCoachRoute
   '/api/chat': typeof ApiChatRoute
+  '/_app/chat/$threadId': typeof AppChatThreadIdRoute
   '/_app/chat/': typeof AppChatIndexRoute
 }
 export interface FileRouteTypes {
@@ -185,6 +194,7 @@ export interface FileRouteTypes {
     | '/system-status'
     | '/voice-coach'
     | '/api/chat'
+    | '/chat/$threadId'
     | '/chat/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -202,6 +212,7 @@ export interface FileRouteTypes {
     | '/system-status'
     | '/voice-coach'
     | '/api/chat'
+    | '/chat/$threadId'
     | '/chat'
   id:
     | '__root__'
@@ -221,6 +232,7 @@ export interface FileRouteTypes {
     | '/_app/system-status'
     | '/_app/voice-coach'
     | '/api/chat'
+    | '/_app/chat/$threadId'
     | '/_app/chat/'
   fileRoutesById: FileRoutesById
 }
@@ -351,14 +363,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppChatIndexRouteImport
       parentRoute: typeof AppChatRoute
     }
+    '/_app/chat/$threadId': {
+      id: '/_app/chat/$threadId'
+      path: '/$threadId'
+      fullPath: '/chat/$threadId'
+      preLoaderRoute: typeof AppChatThreadIdRouteImport
+      parentRoute: typeof AppChatRoute
+    }
   }
 }
 
 interface AppChatRouteChildren {
+  AppChatThreadIdRoute: typeof AppChatThreadIdRoute
   AppChatIndexRoute: typeof AppChatIndexRoute
 }
 
 const AppChatRouteChildren: AppChatRouteChildren = {
+  AppChatThreadIdRoute: AppChatThreadIdRoute,
   AppChatIndexRoute: AppChatIndexRoute,
 }
 

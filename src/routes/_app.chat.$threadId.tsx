@@ -109,8 +109,7 @@ function ChatThreadInner({
     if (!loading) textareaRef.current?.focus();
   }, [loading, textareaRef, threadId]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = () => {
     const text = input.trim();
     if (!text || loading) return;
     setInput("");
