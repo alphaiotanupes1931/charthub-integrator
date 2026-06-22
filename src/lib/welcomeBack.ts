@@ -1,5 +1,15 @@
 export const WELCOME_BACK_SESSION_KEY = "trademind.welcomeBack.played.v2";
 export const WELCOME_BACK_REQUEST_KEY = "trademind.welcomeBack.requestedAt.v1";
+export const WELCOME_BACK_MUTED_KEY = "trademind.welcomeBack.muted.v1";
+
+export function isWelcomeBackMuted(): boolean {
+  if (typeof window === "undefined") return false;
+  try { return localStorage.getItem(WELCOME_BACK_MUTED_KEY) === "1"; } catch { return false; }
+}
+export function setWelcomeBackMuted(muted: boolean) {
+  if (typeof window === "undefined") return;
+  try { localStorage.setItem(WELCOME_BACK_MUTED_KEY, muted ? "1" : "0"); } catch { /* ignore */ }
+}
 
 export type JournalTrade = {
   symbol?: string;
