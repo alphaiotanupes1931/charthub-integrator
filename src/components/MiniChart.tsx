@@ -61,6 +61,7 @@ export function SymbolOverview({ symbol, height = 420 }: SymbolOverviewProps) {
       height,
       locale: "en",
       colorTheme: "dark",
+      isTransparent: true,
       autosize: false,
       showVolume: false,
       showMA: false,
