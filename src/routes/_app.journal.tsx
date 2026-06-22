@@ -377,7 +377,7 @@ function TradeFormModal({
   const [exit, setExit] = useState<string>(editing ? String(editing.exit) : "");
   const [stop, setStop] = useState<string>(editing ? String(editing.stop) : "");
   const [size, setSize] = useState<string>(editing ? String(editing.size) : "1");
-  const [notes, setNotes] = useState(editing?.notes ?? "");
+  const [notes, setNotes] = useState(editing?.notes ?? prefill?.notes ?? "");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pendingImage, setPendingImage] = useState<Blob | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
