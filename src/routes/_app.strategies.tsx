@@ -1,9 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
-import { STRATEGIES, type Level, type Strategy } from "@/data/strategies";
-import { Search, Plus, ChevronDown, BarChart2, TrendingUp, CircleDot, Zap, X, CheckCircle2 } from "lucide-react";
+import { type Level, type Style, type Strategy } from "@/data/strategies";
+import { Search, Plus, ChevronDown, BarChart2, TrendingUp, CircleDot, Zap, X, CheckCircle2, Trash2, Pencil, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import {
+  type CustomStrategy,
+  allStrategies,
+  readCustomStrategies,
+  saveCustomStrategy,
+  deleteCustomStrategy,
+  LEVELS,
+  STYLES,
+  MARKETS,
+} from "@/lib/customStrategies";
 
 export const Route = createFileRoute("/_app/strategies")({
   head: () => ({ meta: [{ title: "Strategies, TradeMind" }] }),
