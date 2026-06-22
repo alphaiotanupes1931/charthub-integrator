@@ -313,8 +313,14 @@ export function NativeChart({ symbol, ticker, interval, enabled, className }: Pr
   return (
     <div className={`relative h-full w-full ${className ?? ""}`}>
       <div ref={containerRef} className="absolute inset-0" />
-      <div className="absolute left-3 top-3 z-10 rounded-md border border-border bg-background/70 backdrop-blur px-2 py-1 text-[10px] font-mono text-muted-foreground uppercase tracking-wider">
-        Native · {ticker} · {interval}
+      <div className="absolute left-3 top-3 z-10 rounded-md border border-border bg-background/70 backdrop-blur px-2 py-1 text-[10px] font-mono text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+        <span>{isLive ? "Live" : "Native"} · {ticker} · {interval}</span>
+        {isLive && (
+          <span className="inline-flex items-center gap-1 text-emerald-400 normal-case">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            CoinGecko
+          </span>
+        )}
       </div>
     </div>
   );
