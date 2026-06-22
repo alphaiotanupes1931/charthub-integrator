@@ -154,6 +154,7 @@ function JournalPage() {
   };
   const handleDelete = (id: string) => {
     setTrades((prev) => prev.filter((p) => p.id !== id));
+    void deleteTradeImage(id);
   };
 
   const editing = editingId ? trades.find((t) => t.id === editingId) ?? null : null;
