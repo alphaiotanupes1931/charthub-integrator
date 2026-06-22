@@ -26,12 +26,34 @@ export const LEVEL_META: Record<LevelKey, { label: string; color: string; tone: 
   OF:    { label: "Order Flow", color: "#22d3ee", tone: "bg-cyan-500/10 text-cyan-300 border-cyan-500/30" },
 };
 
+export type ChartSnapshot = {
+  source: "coingecko" | "twelvedata" | "synthetic";
+  sourceLabel: string;
+  ticker: string;
+  interval: string;
+  lastPrice: number;
+  high20: number;
+  low20: number;
+  high50: number;
+  low50: number;
+  vwap: number;
+  poc: number;
+  sr: number[];
+  fib: { ratio: number; price: number }[];
+  liq: { price: number; side: "buy" | "sell" }[];
+  of: { price: number; side: "buy" | "sell"; strength: number }[];
+  delta: number;
+  sessionsActive: string[];
+  fetchedAt: string;
+};
+
 interface Props {
   symbol: string;
   ticker: string;
   interval: string; // 1, 5, 15, 60, 240, D, W, M
   enabled: Record<LevelKey, boolean>;
   sessions?: boolean;
+  onSnapshot?: (snap: ChartSnapshot) => void;
   className?: string;
 }
 
