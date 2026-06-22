@@ -18,6 +18,9 @@ type UserRow = {
   referral_source: string | null;
   onboarded: boolean;
   created_at: string;
+  broker_connected: boolean;
+  broker_name: string | null;
+  broker_account_type: string | null;
 };
 
 function AdminPage() {
