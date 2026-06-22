@@ -4,7 +4,6 @@ import { useServerFn } from "@tanstack/react-start";
 import { MessageSquare, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { listChatThreads, createChatThread, deleteChatThread } from "@/lib/chat.functions";
-import { getClientId } from "@/lib/chat-client";
 
 export const Route = createFileRoute("/_app/chat")({
   head: () => ({ meta: [{ title: "AI Coach Chat, TradeMind" }] }),
@@ -14,7 +13,6 @@ export const Route = createFileRoute("/_app/chat")({
 type Thread = { id: string; title: string; updated_at: string };
 
 function ChatLayout() {
-  const [clientId, setClientId] = useState("");
   const [threads, setThreads] = useState<Thread[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -24,14 +22,10 @@ function ChatLayout() {
   const createFn = useServerFn(createChatThread);
   const delFn = useServerFn(deleteChatThread);
 
-  useEffect(() => {
-    setClientId(getClientId());
-  }, []);
-
-  const reload = useCallback(async (cid: string) => {
+  const reload = useCallback(async () => {
     setLoading(true);
     try {
-      const rows = await listFn({ data: { clientId: cid } });
+      const rows = await listFn();
       setThreads(rows as Thread[]);
     } finally {
       setLoading(false);
@@ -39,28 +33,25 @@ function ChatLayout() {
   }, [listFn]);
 
   useEffect(() => {
-    if (!clientId) return;
-    reload(clientId);
-  }, [clientId, reload]);
+    reload();
+  }, [reload]);
 
   const handleNew = useCallback(async () => {
-    if (!clientId) return;
-    const t = await createFn({ data: { clientId } });
+    const t = await createFn({ data: {} });
     if (t) {
       setThreads((prev) => [{ id: t.id, title: t.title, updated_at: t.updated_at }, ...prev]);
       navigate({ to: "/chat/$threadId", params: { threadId: t.id } });
     }
-  }, [clientId, createFn, navigate]);
+  }, [createFn, navigate]);
 
   const handleDelete = useCallback(async (id: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!clientId) return;
     if (!confirm("Delete this conversation?")) return;
-    await delFn({ data: { clientId, threadId: id } });
+    await delFn({ data: { threadId: id } });
     setThreads((prev) => prev.filter((t) => t.id !== id));
     if (params.threadId === id) navigate({ to: "/chat" });
-  }, [clientId, delFn, navigate, params.threadId]);
+  }, [delFn, navigate, params.threadId]);
 
   return (
     <div className="flex h-[calc(100vh-4rem)] overflow-hidden">

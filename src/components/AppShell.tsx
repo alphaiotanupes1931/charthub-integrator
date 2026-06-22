@@ -1,5 +1,8 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useState, useEffect, type ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import {
   LayoutDashboard,
   BookOpen,
@@ -57,6 +60,20 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { theme, toggle } = useTheme();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  async function handleSignOut() {
+    try {
+      await queryClient.cancelQueries();
+      queryClient.clear();
+      await supabase.auth.signOut();
+      navigate({ to: "/auth", replace: true });
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to sign out");
+    }
+  }
 
   // Close drawer on route change
   useEffect(() => {
@@ -137,7 +154,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           </div>
 
-          <button className="w-full flex items-center gap-2 text-sm text-foreground/80 hover:text-foreground px-1">
+          <button
+            onClick={handleSignOut}
+            className="w-full flex items-center gap-2 text-sm text-foreground/80 hover:text-foreground px-1"
+          >
             <LogOut className="h-4 w-4" />
             Sign Out
           </button>
