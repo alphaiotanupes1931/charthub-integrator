@@ -17,7 +17,24 @@ type Trade = {
   notes: string;
 };
 
-type ChartCtx = { ticker?: string; intervalLabel?: string; enabledLevels?: string };
+type ChartSnap = {
+  source?: string;
+  sourceLabel?: string;
+  ticker?: string;
+  interval?: string;
+  lastPrice?: number;
+  high20?: number; low20?: number;
+  high50?: number; low50?: number;
+  vwap?: number; poc?: number;
+  sr?: number[];
+  fib?: { ratio: number; price: number }[];
+  liq?: { price: number; side: string }[];
+  of?: { price: number; side: string; strength: number }[];
+  delta?: number;
+  sessionsActive?: string[];
+  fetchedAt?: string;
+};
+type ChartCtx = { ticker?: string; intervalLabel?: string; enabledLevels?: string; snapshot?: ChartSnap };
 
 type ChatRequestBody = {
   messages?: UIMessage[];
