@@ -7,14 +7,14 @@ import { getLatestRecapContext } from "@/lib/welcomeBack.functions";
 import {
   buildWelcomeBackRecap,
   latestJournalTrade,
-  speakWithBrowserVoice,
+  speakWithElevenLabs,
   spokenName,
   WELCOME_BACK_REQUEST_KEY,
   WELCOME_BACK_SESSION_KEY,
   type JournalTrade,
 } from "@/lib/welcomeBack";
 
-type PreparedWindow = Window & { __trademindWelcomeUtterance?: SpeechSynthesisUtterance };
+type PreparedWindow = Window & { __trademindWelcomeAudio?: HTMLAudioElement };
 
 function shouldPlayWelcome(): boolean {
   if (typeof window === "undefined") return false;
@@ -52,15 +52,13 @@ export function WelcomeBackGreeter() {
 
     let cancelled = false;
     const coach = readActiveCoach();
-    const prepared = (window as PreparedWindow).__trademindWelcomeUtterance ?? null;
-    delete (window as PreparedWindow).__trademindWelcomeUtterance;
+    const preparedAudio = (window as PreparedWindow).__trademindWelcomeAudio ?? null;
+    delete (window as PreparedWindow).__trademindWelcomeAudio;
 
-    const play = (text: string, userInitiated = false) => {
+    const play = async (text: string, userInitiated = false): Promise<boolean> => {
       recapRef.current = text;
-      let started = false;
-      const ok = speakWithBrowserVoice(text, coach, userInitiated ? null : prepared, {
+      const ok = await speakWithElevenLabs(text, coach, userInitiated ? null : preparedAudio, {
         onStart: () => {
-          started = true;
           markPlayed();
           if (!cancelled) setNeedsTap(false);
         },
@@ -69,21 +67,16 @@ export function WelcomeBackGreeter() {
           if (!cancelled) setNeedsTap(true);
         },
       });
-      if (ok && userInitiated) {
-        markPlayed();
-        if (!cancelled) setNeedsTap(false);
-      } else if (ok) {
-        window.setTimeout(() => {
-          if (!started && !cancelled) setNeedsTap(true);
-        }, 900);
-      }
+      if (!ok && !cancelled) setNeedsTap(true);
       return ok;
     };
 
     const gestureEvents: Array<keyof DocumentEventMap> = ["pointerdown", "keydown", "touchstart"];
     const onGesture = () => {
       if (!recapRef.current) return;
-      if (play(recapRef.current, true)) removeGestureListeners();
+      void play(recapRef.current, true).then((ok) => {
+        if (ok) removeGestureListeners();
+      });
     };
     const removeGestureListeners = () => {
       gestureEvents.forEach((ev) => document.removeEventListener(ev, onGesture));
@@ -117,9 +110,8 @@ export function WelcomeBackGreeter() {
       }
       if (cancelled || runId !== runIdRef.current || !text) return;
 
-      const ok = play(text);
+      const ok = await play(text);
       if (!ok && !cancelled) {
-        setNeedsTap(true);
         gestureEvents.forEach((ev) => document.addEventListener(ev, onGesture, { passive: true }));
       }
     })();
@@ -137,7 +129,10 @@ export function WelcomeBackGreeter() {
       <button
         onClick={() => {
           if (recapRef.current) {
-            speakWithBrowserVoice(recapRef.current, readActiveCoach(), null, { onStart: markPlayed, onEnd: markPlayed });
+            void speakWithElevenLabs(recapRef.current, readActiveCoach(), null, {
+              onStart: markPlayed,
+              onEnd: markPlayed,
+            });
           }
           setNeedsTap(false);
         }}
