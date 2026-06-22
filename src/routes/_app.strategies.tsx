@@ -263,20 +263,207 @@ function StrategyModal({
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-2">
-            <button onClick={onClose} className="text-sm text-muted-foreground hover:text-foreground px-3 py-2">Cancel</button>
-            <button
-              onClick={() => onSelect(s.name)}
-              disabled={active}
-              className={`inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold ${
-                active ? "bg-primary/10 text-primary cursor-default" : "bg-primary text-primary-foreground hover:opacity-90"
-              }`}
-            >
-              {active ? <><CheckCircle2 className="h-4 w-4" /> Selected</> : "Use this Strategy"}
-            </button>
+          {custom?.rules && (
+            <div>
+              <div className="text-xs font-semibold mb-2">Playbook rules</div>
+              <pre className="whitespace-pre-wrap text-xs text-muted-foreground bg-background/50 border border-border rounded-lg p-3 font-mono leading-relaxed">{custom.rules}</pre>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between gap-2 pt-2">
+            <div className="flex items-center gap-1">
+              {custom && (
+                <>
+                  <button
+                    onClick={() => onEdit(custom)}
+                    className="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/40"
+                  >
+                    <Pencil className="h-3.5 w-3.5" /> Edit
+                  </button>
+                  <button
+                    onClick={() => { if (confirm(`Delete "${custom.name}"?`)) onDelete(custom); }}
+                    className="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-xs text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" /> Delete
+                  </button>
+                </>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <button onClick={onClose} className="text-sm text-muted-foreground hover:text-foreground px-3 py-2">Cancel</button>
+              <button
+                onClick={() => onSelect(s.name)}
+                disabled={active}
+                className={`inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold ${
+                  active ? "bg-primary/10 text-primary cursor-default" : "bg-primary text-primary-foreground hover:opacity-90"
+                }`}
+              >
+                {active ? <><CheckCircle2 className="h-4 w-4" /> Selected</> : "Use this Strategy"}
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+function StrategyBuilderModal({
+  editing,
+  onClose,
+  onSaved,
+}: {
+  editing: CustomStrategy | null;
+  onClose: () => void;
+  onSaved: (s: CustomStrategy) => void;
+}) {
+  const [name, setName] = useState(editing?.name ?? "");
+  const [level, setLevel] = useState<Level>(editing?.level ?? "Intermediate");
+  const [style, setStyle] = useState<Style>(editing?.style ?? "Day");
+  const [markets, setMarkets] = useState<string[]>(editing?.markets ?? ["Forex"]);
+  const [description, setDescription] = useState(editing?.description ?? "");
+  const [rules, setRules] = useState(editing?.rules ?? "");
+  const [winRate, setWinRate] = useState<string>(editing ? String(editing.winRate) : "55");
+  const [rr, setRr] = useState<string>(editing ? String(editing.rr) : "2");
+
+  const toggleMarket = (m: string) => {
+    setMarkets((prev) => (prev.includes(m) ? prev.filter((x) => x !== m) : [...prev, m]));
+  };
+
+  const canSave = name.trim().length > 0 && description.trim().length > 0 && markets.length > 0;
+
+  const submit = () => {
+    if (!canSave) return;
+    const saved = saveCustomStrategy({
+      id: editing?.id,
+      name: name.trim(),
+      level,
+      style,
+      markets,
+      description: description.trim(),
+      rules: rules.trim(),
+      winRate: Math.max(0, Math.min(100, Number(winRate) || 0)),
+      rr: Math.max(0, Number(rr) || 0),
+    });
+    onSaved(saved);
+  };
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      className="fixed inset-0 z-[90] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-background/80 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full sm:max-w-2xl max-h-[95vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl border border-border bg-card shadow-2xl"
+      >
+        <div className="flex items-center justify-between p-5 border-b border-border/60">
+          <div>
+            <div className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">{editing ? "Edit strategy" : "Build a strategy"}</div>
+            <h2 className="font-display text-xl font-semibold">Your playbook</h2>
+          </div>
+          <button onClick={onClose} aria-label="Close" className="h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/40 flex items-center justify-center">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="p-5 space-y-4">
+          <BuilderField label="Name">
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. London Reversal"
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:border-primary/50"
+            />
+          </BuilderField>
+
+          <div className="grid grid-cols-2 gap-3">
+            <BuilderField label="Level">
+              <select value={level} onChange={(e) => setLevel(e.target.value as Level)} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm">
+                {LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
+              </select>
+            </BuilderField>
+            <BuilderField label="Style">
+              <select value={style} onChange={(e) => setStyle(e.target.value as Style)} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm">
+                {STYLES.map((s) => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </BuilderField>
+          </div>
+
+          <BuilderField label="Markets">
+            <div className="flex flex-wrap gap-1.5">
+              {MARKETS.map((m) => {
+                const on = markets.includes(m);
+                return (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => toggleMarket(m)}
+                    className={`rounded border px-2.5 py-1 text-xs transition ${
+                      on
+                        ? "border-primary/50 bg-primary/15 text-primary"
+                        : "border-border bg-background text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {m}
+                  </button>
+                );
+              })}
+            </div>
+          </BuilderField>
+
+          <BuilderField label="Description">
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              placeholder="One-paragraph summary of the setup and edge."
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:border-primary/50"
+            />
+          </BuilderField>
+
+          <BuilderField label="Rules (entry, stop, target, sessions, filters)">
+            <textarea
+              value={rules}
+              onChange={(e) => setRules(e.target.value)}
+              rows={6}
+              placeholder={`Entry: ...\nStop: ...\nTake profit: ...\nSessions: ...\nFilters: ...`}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm font-mono resize-none focus:outline-none focus:border-primary/50"
+            />
+          </BuilderField>
+
+          <div className="grid grid-cols-2 gap-3">
+            <BuilderField label="Baseline win rate (%)">
+              <input inputMode="decimal" value={winRate} onChange={(e) => setWinRate(e.target.value)} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            </BuilderField>
+            <BuilderField label="Baseline R:R">
+              <input inputMode="decimal" value={rr} onChange={(e) => setRr(e.target.value)} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            </BuilderField>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-2 p-5 border-t border-border/60">
+          <button onClick={onClose} className="rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground">Cancel</button>
+          <button
+            disabled={!canSave}
+            onClick={submit}
+            className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {editing ? "Save changes" : "Save strategy"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BuilderField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1.5">{label}</div>
+      {children}
+    </label>
   );
 }
