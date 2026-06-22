@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Volume2, X } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { readActiveCoach, readJournal } from "@/lib/chat-client";
 import { getLatestRecapContext } from "@/lib/welcomeBack.functions";
 import {
   buildWelcomeBackRecap,
+  isWelcomeBackMuted,
   latestJournalTrade,
   speakWithElevenLabs,
   spokenName,
@@ -18,6 +18,7 @@ type PreparedWindow = Window & { __trademindWelcomeAudio?: HTMLAudioElement };
 
 function shouldPlayWelcome(): boolean {
   if (typeof window === "undefined") return false;
+  if (isWelcomeBackMuted()) return false;
   try {
     if (sessionStorage.getItem(WELCOME_BACK_SESSION_KEY)) return false;
     const requestedAt = Number(localStorage.getItem(WELCOME_BACK_REQUEST_KEY) ?? "0");
@@ -40,9 +41,6 @@ function markPlayed() {
 export function WelcomeBackGreeter() {
   const { profile } = useProfile();
   const fetchContext = useServerFn(getLatestRecapContext);
-  const [needsTap, setNeedsTap] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
-  const recapRef = useRef<string>("");
   const runIdRef = useRef(0);
 
   useEffect(() => {
@@ -54,33 +52,6 @@ export function WelcomeBackGreeter() {
     const coach = readActiveCoach();
     const preparedAudio = (window as PreparedWindow).__trademindWelcomeAudio ?? null;
     delete (window as PreparedWindow).__trademindWelcomeAudio;
-
-    const play = async (text: string, userInitiated = false): Promise<boolean> => {
-      recapRef.current = text;
-      const ok = await speakWithElevenLabs(text, coach, userInitiated ? null : preparedAudio, {
-        onStart: () => {
-          markPlayed();
-          if (!cancelled) setNeedsTap(false);
-        },
-        onEnd: markPlayed,
-        onError: () => {
-          if (!cancelled) setNeedsTap(true);
-        },
-      });
-      if (!ok && !cancelled) setNeedsTap(true);
-      return ok;
-    };
-
-    const gestureEvents: Array<keyof DocumentEventMap> = ["pointerdown", "keydown", "touchstart"];
-    const onGesture = () => {
-      if (!recapRef.current) return;
-      void play(recapRef.current, true).then((ok) => {
-        if (ok) removeGestureListeners();
-      });
-    };
-    const removeGestureListeners = () => {
-      gestureEvents.forEach((ev) => document.removeEventListener(ev, onGesture));
-    };
 
     (async () => {
       let text = "";
@@ -110,43 +81,16 @@ export function WelcomeBackGreeter() {
       }
       if (cancelled || runId !== runIdRef.current || !text) return;
 
-      const ok = await play(text);
-      if (!ok && !cancelled) {
-        gestureEvents.forEach((ev) => document.addEventListener(ev, onGesture, { passive: true }));
-      }
+      await speakWithElevenLabs(text, coach, preparedAudio, {
+        onStart: markPlayed,
+        onEnd: markPlayed,
+      });
     })();
 
     return () => {
       cancelled = true;
-      removeGestureListeners();
     };
-  }, [profile?.id, profile?.display_name, profile?.email]);
+  }, [profile?.id, profile?.display_name, profile?.email, fetchContext]);
 
-  if (!needsTap || dismissed) return null;
-
-  return (
-    <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-full border border-primary/40 bg-card/95 px-4 py-2.5 text-sm shadow-2xl backdrop-blur">
-      <button
-        onClick={() => {
-          if (recapRef.current) {
-            void speakWithElevenLabs(recapRef.current, readActiveCoach(), null, {
-              onStart: markPlayed,
-              onEnd: markPlayed,
-            });
-          }
-          setNeedsTap(false);
-        }}
-        className="flex items-center gap-2 font-semibold text-primary"
-      >
-        <Volume2 className="h-4 w-4" /> Play your welcome back brief
-      </button>
-      <button
-        onClick={() => setDismissed(true)}
-        className="text-muted-foreground hover:text-foreground"
-        aria-label="Dismiss"
-      >
-        <X className="h-4 w-4" />
-      </button>
-    </div>
-  );
+  return null;
 }
