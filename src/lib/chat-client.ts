@@ -24,8 +24,13 @@ export function readJournal(): unknown[] {
   }
 }
 
-const COACH_KEY = "trademind.activeCoach";
+export const COACH_KEY = "trademind.activeCoach";
 export function readActiveCoach(): string {
   if (typeof window === "undefined") return "The Analyst";
   return window.localStorage.getItem(COACH_KEY) || "The Analyst";
+}
+
+export function writeActiveCoach(name: string) {
+  if (typeof window === "undefined") return;
+  try { window.localStorage.setItem(COACH_KEY, name); } catch { /* ignore */ }
 }
