@@ -47,6 +47,7 @@ type Trade = {
   stop: number;
   size: number;
   notes: string;
+  hasImage?: boolean; // screenshot stored locally in IndexedDB
   createdAt: number;
 };
 
