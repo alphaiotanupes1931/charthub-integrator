@@ -199,11 +199,32 @@ export function NativeChart({ symbol, ticker, interval, enabled, className }: Pr
   const linesRef = useRef<IPriceLine[]>([]);
   const [ready, setReady] = useState(false);
 
-  const candles = useMemo(
-    () => generateCandles(symbol, interval, ticker),
-    [symbol, interval, ticker],
-  );
+  // Live OHLC from CoinGecko (server-cached). Returns empty bars for non-crypto.
+  const fetchOhlc = useServerFn(getOhlc);
+  const isCrypto = /BTC|ETH/i.test(ticker);
+  const { data: liveOhlc } = useQuery({
+    queryKey: ["ohlc", ticker, interval],
+    queryFn: () => fetchOhlc({ data: { ticker, interval } }),
+    enabled: isCrypto,
+    staleTime: 30_000,
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: false,
+  });
+
+  const candles = useMemo<Candle[]>(() => {
+    if (liveOhlc && liveOhlc.source === "coingecko" && liveOhlc.bars.length > 0) {
+      return liveOhlc.bars.map((b) => ({
+        time: b.time as Time,
+        open: b.open,
+        high: b.high,
+        low: b.low,
+        close: b.close,
+      }));
+    }
+    return generateCandles(symbol, interval, ticker);
+  }, [liveOhlc, symbol, interval, ticker]);
   const levels = useMemo(() => computeLevels(candles), [candles]);
+  const isLive = liveOhlc?.source === "coingecko" && (liveOhlc?.bars.length ?? 0) > 0;
 
   // Init / teardown chart
   useEffect(() => {
