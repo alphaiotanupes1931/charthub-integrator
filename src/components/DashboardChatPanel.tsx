@@ -19,7 +19,8 @@ import {
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { supabase } from "@/integrations/supabase/client";
 import { getOrCreateDashboardThread, getChatMessages } from "@/lib/chat.functions";
-import { readJournal, readActiveCoach, writeActiveCoach } from "@/lib/chat-client";
+import { readJournal, readActiveCoach, writeActiveCoach, readActiveStrategy } from "@/lib/chat-client";
+import { STRATEGIES } from "@/data/strategies";
 import { useCoachVoice } from "@/hooks/useCoachVoice";
 import { voiceForCoach, COACH_VOICES } from "@/lib/coachVoices";
 import { toast } from "sonner";
@@ -95,15 +96,20 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
           if (token) headers.set("Authorization", `Bearer ${token}`);
           return fetch(input, { ...init, headers });
         },
-        prepareSendMessagesRequest: ({ messages, id }) => ({
-          body: {
-            messages,
-            threadId: id,
-            coach: readActiveCoach(),
-            journal: readJournal(),
-            chart: chartRef.current,
-          },
-        }),
+        prepareSendMessagesRequest: ({ messages, id }) => {
+          const stratName = readActiveStrategy();
+          const strategy = stratName ? STRATEGIES.find((s) => s.name === stratName) ?? { name: stratName } : null;
+          return {
+            body: {
+              messages,
+              threadId: id,
+              coach: readActiveCoach(),
+              journal: readJournal(),
+              chart: chartRef.current,
+              strategy,
+            },
+          };
+        },
       }),
       onError: (err) => {
         console.error(err);
