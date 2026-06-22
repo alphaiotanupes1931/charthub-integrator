@@ -131,7 +131,7 @@ export const Route = createFileRoute("/api/tradelocker/import")({
 
           const token = auth.accessToken;
           if (!token) {
-            return Response.json({ error: "TradeLocker did not return an access token" }, { status: 502 });
+            return Response.json({ ok: false, error: "TradeLocker did not return an access token", fallback: true });
           }
 
           // 2. List accounts
@@ -155,13 +155,13 @@ export const Route = createFileRoute("/api/tradelocker/import")({
           }
 
           if (!accounts.length) {
-            return Response.json({ error: "No TradeLocker accounts found on this login" }, { status: 404 });
+            return Response.json({ ok: false, error: "No TradeLocker accounts found on this login" });
           }
           const acct = accountId
             ? accounts.find((a) => String(a.id) === String(accountId) || String(a.accNum) === String(accountId))
             : accounts[0];
           if (!acct) {
-            return Response.json({ error: `Account ${accountId} not found` }, { status: 404 });
+            return Response.json({ ok: false, error: `Account ${accountId} not found` });
           }
 
           // 3. Orders history
@@ -189,7 +189,10 @@ export const Route = createFileRoute("/api/tradelocker/import")({
           });
         } catch (e) {
           const msg = e instanceof Error ? e.message : "Unknown TradeLocker error";
-          return Response.json({ error: msg }, { status: 502 });
+          console.error("[tradelocker/import]", msg);
+          // Return 200 with structured error so the client SSR/error boundary
+          // does not flag this as a runtime crash. See troubleshooting docs.
+          return Response.json({ ok: false, error: msg, fallback: true });
         }
       },
     },
