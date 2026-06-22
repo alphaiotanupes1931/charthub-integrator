@@ -77,11 +77,11 @@ export function WelcomeBackGreeter() {
     if (typeof window === "undefined") return;
     if (sessionStorage.getItem(SESSION_KEY)) return;
     fired.current = true;
-    sessionStorage.setItem(SESSION_KEY, "1");
 
     let cancelled = false;
+    let played = false;
 
-    (async () => {
+    const prepareAudio = async (): Promise<HTMLAudioElement | null> => {
       let recap = "";
       try {
         const ctx = await fetchContext();
@@ -95,7 +95,7 @@ export function WelcomeBackGreeter() {
         const name = firstName(profile.display_name, profile.email);
         recap = `Welcome back, ${name}. Ready to grade your next setup?`;
       }
-      if (cancelled || !recap) return;
+      if (cancelled || !recap) return null;
 
       try {
         const voiceId = voiceForCoach(readActiveCoach());
@@ -104,26 +104,69 @@ export function WelcomeBackGreeter() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text: recap, voiceId }),
         });
-        if (!res.ok || !res.body) return;
+        if (!res.ok) {
+          console.warn("[welcomeBack] tts failed", res.status, await res.text().catch(() => ""));
+          return null;
+        }
         const blob = await res.blob();
-        if (cancelled) return;
+        if (cancelled) return null;
         const url = URL.createObjectURL(blob);
         const audio = new Audio(url);
-        audioRef.current = audio;
         audio.onended = () => URL.revokeObjectURL(url);
-        try {
-          await audio.play();
-        } catch {
-          // Autoplay blocked — surface a tap-to-play prompt.
-          if (!cancelled) setNeedsTap(true);
-        }
+        audioRef.current = audio;
+        return audio;
+      } catch (err) {
+        console.warn("[welcomeBack] error", err);
+        return null;
+      }
+    };
+
+    const markPlayed = () => {
+      played = true;
+      try { sessionStorage.setItem(SESSION_KEY, "1"); } catch { /* ignore */ }
+    };
+
+    const tryPlay = async (audio: HTMLAudioElement) => {
+      try {
+        await audio.play();
+        markPlayed();
+        if (!cancelled) setNeedsTap(false);
+        return true;
       } catch {
-        /* silent */
+        return false;
+      }
+    };
+
+    const gestureEvents: Array<keyof DocumentEventMap> = ["pointerdown", "keydown", "touchstart"];
+    const onGesture = async () => {
+      const audio = audioRef.current;
+      if (!audio || played) {
+        removeGestureListeners();
+        return;
+      }
+      const ok = await tryPlay(audio);
+      if (ok) removeGestureListeners();
+    };
+    const removeGestureListeners = () => {
+      gestureEvents.forEach((ev) => document.removeEventListener(ev, onGesture));
+    };
+
+    (async () => {
+      const audio = await prepareAudio();
+      if (!audio || cancelled) return;
+      const ok = await tryPlay(audio);
+      if (!ok) {
+        // Autoplay blocked. Show tap prompt + listen for any user gesture.
+        if (!cancelled) setNeedsTap(true);
+        gestureEvents.forEach((ev) =>
+          document.addEventListener(ev, onGesture, { once: false, passive: true }),
+        );
       }
     })();
 
     return () => {
       cancelled = true;
+      removeGestureListeners();
     };
   }, [profile, loading, fetchContext]);
 
@@ -135,6 +178,7 @@ export function WelcomeBackGreeter() {
         onClick={async () => {
           try {
             await audioRef.current?.play();
+            try { sessionStorage.setItem(SESSION_KEY, "1"); } catch { /* ignore */ }
             setNeedsTap(false);
           } catch {
             /* ignore */
@@ -142,7 +186,7 @@ export function WelcomeBackGreeter() {
         }}
         className="flex items-center gap-2 font-semibold text-primary"
       >
-        <Volume2 className="h-4 w-4" /> Play your daily brief
+        <Volume2 className="h-4 w-4" /> Play your welcome back brief
       </button>
       <button
         onClick={() => setDismissed(true)}
