@@ -14,6 +14,7 @@ import {
   MessageSquare,
   Brain,
   Activity,
+  Crosshair,
   Settings as SettingsIcon,
   UserCog,
   ShieldCheck,
