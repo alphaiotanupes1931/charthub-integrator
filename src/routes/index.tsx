@@ -69,6 +69,25 @@ const PRICING = [
   },
 ];
 
+const FAQS = [
+  {
+    q: "What is TradeMind?",
+    a: "An AI trading coach that grades every setup before you risk capital, so you only take the trades that deserve to win.",
+  },
+  {
+    q: "Is TradeMind a broker?",
+    a: "No. We do not hold funds or execute trades. You can connect supported brokers to import history, but execution stays with your broker.",
+  },
+  {
+    q: "Can I change my AI coach?",
+    a: "Yes. Pick from five personalities in the Coaches tab and switch anytime from the dashboard.",
+  },
+  {
+    q: "Is my trade data secure?",
+    a: "Yes. Encrypted connections, row-level security, and no sharing of raw trade history with third parties.",
+  },
+];
+
 function Landing() {
   return (
     <div className="min-h-screen w-full text-foreground">
