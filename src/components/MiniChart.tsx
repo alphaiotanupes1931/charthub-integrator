@@ -116,7 +116,22 @@ export function SymbolOverview({ symbol, height = 420 }: SymbolOverviewProps) {
       bottomColor: "rgba(201, 168, 76, 0.0)",
     });
     ref.current.appendChild(script);
-  }, [symbol, height]);
+  }, [mounted, symbol, height]);
 
-  return <div className="tradingview-widget-container bg-background/60 rounded-lg overflow-hidden border border-border/40" ref={ref} style={{ width: "100%", height }} />;
+  if (!mounted) {
+    return (
+      <div
+        className="rounded-lg overflow-hidden bg-card/40 border border-border/40 animate-pulse"
+        style={{ width: "100%", height }}
+      />
+    );
+  }
+
+  return (
+    <div
+      className="tradingview-widget-container bg-background/60 rounded-lg overflow-hidden border border-border/40"
+      ref={ref}
+      style={{ width: "100%", height }}
+    />
+  );
 }
