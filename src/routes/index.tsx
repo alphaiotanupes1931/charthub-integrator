@@ -484,6 +484,9 @@ function Nav() {
 }
 
 function Footer() {
+  const [year, setYear] = useState<number | null>(null);
+  useEffect(() => setYear(new Date().getFullYear()), []);
+
   const cols = [
     {
       title: "Product",
