@@ -1,7 +1,16 @@
 import { useEffect, useState } from "react";
-import { X, ArrowRight, ArrowLeft, Sparkles, LayoutDashboard, NotebookPen, Users, BarChart3 } from "lucide-react";
+import {
+  X, ArrowRight, ArrowLeft, Sparkles, LayoutDashboard, NotebookPen, Users,
+  BarChart3, Library, Brain, Activity, MessageSquare, Volume2,
+} from "lucide-react";
 
 const STORAGE_KEY = "trademind.tutorial.completed";
+
+export function restartTutorial() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+  // Notify any mounted Tutorial to re-open
+  window.dispatchEvent(new CustomEvent("trademind:tutorial:open"));
+}
 
 type Step = {
   icon: typeof LayoutDashboard;
@@ -13,27 +22,47 @@ const STEPS: Step[] = [
   {
     icon: Sparkles,
     title: "Welcome to TradeMind",
-    body: "Your AI trading copilot. Let's take 30 seconds to show you around so you can hit the ground running.",
+    body: "Your AI trading copilot. We'll take 60 seconds to walk you through the features so you can hit the ground running. Tap Skip anytime.",
   },
   {
     icon: LayoutDashboard,
-    title: "Your Dashboard",
-    body: "Pick any instrument, choose a timeframe, and hit Run scan to get an AI-graded breakdown of the current setup.",
+    title: "Dashboard — your scan workspace",
+    body: "Pick any instrument, change timeframe, toggle on-chart levels (VWAP, POC, S/R, FVG, Liquidity, Order Flow). Hit Run scan and the AI grades the current setup in real time using what's on your chart.",
+  },
+  {
+    icon: MessageSquare,
+    title: "Floating AI Coach",
+    body: "The bubble in the bottom-right opens your AI Coach. It reads your live chart and your journal, so every answer is specific to you. Use the speaker icon to hear replies aloud.",
   },
   {
     icon: NotebookPen,
     title: "Journal every trade",
-    body: "Log entries, exits, and your thinking. TradeMind builds a memory of your edge and your leaks over time.",
+    body: "Log entries, exits, P&L and notes in the Trade Journal. TradeMind builds a memory of your edge and your leaks, then weights coaching on what's actually working for you.",
+  },
+  {
+    icon: Library,
+    title: "Strategies & playbooks",
+    body: "Browse the Strategy Library, tap any card to see the full breakdown, and pick one as your active playbook. Every scan is then graded against your strategy's rules.",
   },
   {
     icon: Users,
-    title: "Coaches when you need them",
-    body: "Chat with specialised AI coaches, or use the Voice Coach for hands-free reviews mid-session.",
+    title: "AI Coaches with voices",
+    body: "Choose between The Analyst, The Disciplinarian, and The Mentor. Each has a distinct tone and voice. Tap the speaker on any coach card to preview how they sound.",
+  },
+  {
+    icon: Activity,
+    title: "Broker — trade from the chart",
+    body: "The Broker page embeds TradingView's chart with a built-in broker terminal. Connect a regulated broker (OANDA, Tradovate, IBKR, etc.) and execute right from the chart.",
   },
   {
     icon: BarChart3,
+    title: "Analytics & Memory",
+    body: "Analytics shows your performance breakdown by symbol, side, session, and day. Trading Memory stores your corrections so the AI gets sharper about you over time.",
+  },
+  {
+    icon: Brain,
     title: "You're all set",
-    body: "Analytics and Trading Memory unlock as you trade. Anything is reachable from the left sidebar.",
+    body: "Everything is reachable from the left sidebar, and ⌘K opens a quick search for any page. You can re-run this tour anytime from the Guide page.",
   },
 ];
 
@@ -44,21 +73,22 @@ export function Tutorial() {
   useEffect(() => {
     try {
       if (!localStorage.getItem(STORAGE_KEY)) {
-        // small delay so the app paints first
         const t = window.setTimeout(() => setOpen(true), 400);
         return () => window.clearTimeout(t);
       }
-    } catch {
-      // ignore
-    }
+    } catch { /* ignore */ }
+  }, []);
+
+  useEffect(() => {
+    const onOpen = () => { setStep(0); setOpen(true); };
+    window.addEventListener("trademind:tutorial:open", onOpen);
+    return () => window.removeEventListener("trademind:tutorial:open", onOpen);
   }, []);
 
   const close = (completed: boolean) => {
     try {
       localStorage.setItem(STORAGE_KEY, completed ? "completed" : "skipped");
-    } catch {
-      // ignore
-    }
+    } catch { /* ignore */ }
     setOpen(false);
   };
 
@@ -98,7 +128,6 @@ export function Tutorial() {
           </h2>
           <p className="text-sm text-muted-foreground leading-relaxed">{s.body}</p>
 
-          {/* Progress dots */}
           <div className="flex items-center gap-1.5 mt-6">
             {STEPS.map((_, i) => (
               <div
@@ -110,7 +139,6 @@ export function Tutorial() {
             ))}
           </div>
 
-          {/* Actions */}
           <div className="flex items-center justify-between gap-3 mt-7">
             <button
               onClick={() => close(false)}
@@ -151,3 +179,5 @@ export function Tutorial() {
     </div>
   );
 }
+// Re-exported icons used by GuidePage indirectly; keep tree-shake happy.
+export { Volume2 };
