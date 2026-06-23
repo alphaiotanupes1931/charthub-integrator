@@ -251,19 +251,21 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
   const [bands, setBands] = useState<Array<{ key: string; color: string; label: string; left: number; width: number; idx: number }>>([]);
 
   const fetchOhlc = useServerFn(getOhlc);
-  const { data: liveOhlc, isLoading } = useQuery({
+  const { data: liveOhlc, isLoading, isError } = useQuery({
     queryKey: ["ohlc", ticker, interval],
     queryFn: () => fetchOhlc({ data: { ticker, interval } }),
     staleTime: 30_000,
     refetchInterval: 30_000,
     refetchOnWindowFocus: false,
+    retry: 1,
   });
 
   const hasLive = !!liveOhlc && liveOhlc.source !== "synthetic" && liveOhlc.bars.length > 0;
-  const noLiveSource = !!liveOhlc && liveOhlc.source === "synthetic";
-  // Don't flash synthetic candles while we're still waiting on the live feed —
-  // only fall back to synthetic when the server actually says no live source exists.
-  const showLoader = !liveOhlc || (isLoading && !hasLive && !noLiveSource);
+  const noLiveSource =
+    isError || (!!liveOhlc && (liveOhlc.source === "synthetic" || liveOhlc.bars.length === 0));
+  // Only show the loader while the first fetch is genuinely in flight.
+  // If it errored or the server reports no live source, fall back to synthetic candles immediately.
+  const showLoader = isLoading && !hasLive && !noLiveSource;
 
   const candles = useMemo<Candle[]>(() => {
     if (hasLive && liveOhlc) {
@@ -275,9 +277,9 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
         close: b.close,
       }));
     }
-    if (noLiveSource) return generateCandles(symbol, interval, ticker);
+    if (noLiveSource || isError) return generateCandles(symbol, interval, ticker);
     return [];
-  }, [liveOhlc, hasLive, noLiveSource, symbol, interval, ticker]);
+  }, [liveOhlc, hasLive, noLiveSource, isError, symbol, interval, ticker]);
   const levels = useMemo(() => computeLevels(candles), [candles]);
   const isLive = hasLive;
   const sourceLabel = liveOhlc?.source === "coingecko" ? "CoinGecko" : liveOhlc?.source === "twelvedata" ? "Twelve Data" : "";
