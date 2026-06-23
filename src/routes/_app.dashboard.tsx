@@ -352,7 +352,7 @@ function Dashboard() {
 
 
       {/* Chart card */}
-      <div className="rounded-xl border border-border bg-card overflow-hidden" data-tour="chart">
+      <div className="rounded-xl border border-border bg-card" data-tour="chart">
         {/* Chart toolbar */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-3 py-2">
           <div className="flex items-center gap-1 rounded-md border border-border p-0.5">
