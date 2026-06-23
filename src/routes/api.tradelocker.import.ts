@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
+import { enforceMaxBody, enforceOrigin, preflight, rateLimit } from "@/lib/api-security";
+
 
 // TradeLocker public API integration.
 // We do NOT persist credentials server-side. The client passes them per request;
