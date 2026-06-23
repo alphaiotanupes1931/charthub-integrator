@@ -117,7 +117,8 @@ function AuthPage() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const parsed = credSchema.safeParse({ email, password });
+    const schema = mode === "signup" ? signUpSchema : signInSchema;
+    const parsed = schema.safeParse({ email, password });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message ?? "Invalid input");
       return;
