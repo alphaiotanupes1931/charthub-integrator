@@ -18,7 +18,7 @@ import logoAsset from "@/assets/logo.png.asset.json";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "TradeMind | Trade smarter" },
+      { title: "TradeMind | Trade Smarter" },
       {
         name: "description",
         content:
@@ -127,7 +127,7 @@ function Landing() {
           >
             TradeMind.
             <br />
-            <span className="text-primary">Trade smarter.</span>
+            <span className="text-primary">Trade Smarter.</span>
           </motion.h1>
 
           <motion.p
