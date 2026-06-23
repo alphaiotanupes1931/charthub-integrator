@@ -9,8 +9,12 @@
       "destination": "https://market-view-villa.lovable.app/_serverFn/:path*"
     },
     {
-      "source": "/api/:path*",
-      "destination": "https://market-view-villa.lovable.app/api/:path*"
+      "source": "/api/chat",
+      "destination": "https://market-view-villa.lovable.app/api/chat"
+    },
+    {
+      "source": "/api/tts",
+      "destination": "https://market-view-villa.lovable.app/api/tts"
     }
   ]
 }
