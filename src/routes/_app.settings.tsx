@@ -477,6 +477,72 @@ function SettingsPage() {
 
       {/* STRATEGY moved to its own tab — see /scan-lens */}
 
+      {/* PRIVACY & DATA (GDPR) */}
+      <SectionLabel>Privacy &amp; Data</SectionLabel>
+      <Card>
+        <h2 className="flex items-center gap-2 text-lg font-semibold mb-2">
+          <Download className="size-5 text-primary" />
+          Download all my data
+        </h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          Exports your account, profile, chat history, AI usage, and connection data as a JSON file.
+          Trade journal entries are stored locally in this browser and not included.
+        </p>
+        <GhostButton onClick={handleExport} disabled={exporting}>
+          <Download className="size-4" />
+          {exporting ? "Preparing…" : "Download my data (JSON)"}
+        </GhostButton>
+      </Card>
+
+      <Card className="mt-4 border-destructive/40">
+        <h2 className="flex items-center gap-2 text-lg font-semibold mb-2">
+          <Trash2 className="size-5 text-destructive" />
+          Delete my account
+        </h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          Permanently deletes your account and every piece of data attached to it — profile, chats, usage
+          history, broker connections. <strong className="text-foreground">This cannot be undone.</strong>
+        </p>
+        {!confirmDelete ? (
+          <button
+            type="button"
+            onClick={() => setConfirmDelete(true)}
+            className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-destructive/10 border border-destructive/40 text-destructive text-sm font-medium hover:bg-destructive/20 transition"
+          >
+            <Trash2 className="size-4" /> Delete my account
+          </button>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-sm">
+              Type <code className="px-1.5 py-0.5 rounded bg-background/60 border border-border font-mono">DELETE</code> to confirm.
+            </p>
+            <Input
+              value={deleteText}
+              onChange={(e) => setDeleteText(e.target.value)}
+              placeholder="DELETE"
+              autoFocus
+            />
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting || deleteText !== "DELETE"}
+                className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-destructive text-destructive-foreground text-sm font-medium hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Trash2 className="size-4" />
+                {deleting ? "Deleting…" : "Permanently delete"}
+              </button>
+              <GhostButton
+                onClick={() => { setConfirmDelete(false); setDeleteText(""); }}
+                disabled={deleting}
+              >
+                Cancel
+              </GhostButton>
+            </div>
+          </div>
+        )}
+      </Card>
+
       {/* BILLING */}
       <SectionLabel>Billing</SectionLabel>
       <Card>
