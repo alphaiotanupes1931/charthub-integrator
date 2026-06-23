@@ -10,14 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as StatusRouteImport } from './routes/status'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as HelpRouteImport } from './routes/help'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as CookiesRouteImport } from './routes/cookies'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as InviteCodeRouteImport } from './routes/invite.$code'
+import { Route as HelpSlugRouteImport } from './routes/help.$slug'
 import { Route as ApiTtsRouteImport } from './routes/api.tts'
 import { Route as ApiOhlcRouteImport } from './routes/api.ohlc'
 import { Route as ApiHealthRouteImport } from './routes/api.health'
@@ -45,6 +48,11 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StatusRoute = StatusRouteImport.update({
+  id: '/status',
+  path: '/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
@@ -53,6 +61,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HelpRoute = HelpRouteImport.update({
+  id: '/help',
+  path: '/help',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FaqRoute = FaqRouteImport.update({
@@ -83,6 +96,11 @@ const InviteCodeRoute = InviteCodeRouteImport.update({
   id: '/invite/$code',
   path: '/invite/$code',
   getParentRoute: () => rootRouteImport,
+} as any)
+const HelpSlugRoute = HelpSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => HelpRoute,
 } as any)
 const ApiTtsRoute = ApiTtsRouteImport.update({
   id: '/api/tts',
@@ -195,8 +213,10 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/cookies': typeof CookiesRoute
   '/faq': typeof FaqRoute
+  '/help': typeof HelpRouteWithChildren
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
+  '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
   '/admin': typeof AppAdminRoute
   '/analytics': typeof AppAnalyticsRoute
@@ -216,6 +236,7 @@ export interface FileRoutesByFullPath {
   '/api/health': typeof ApiHealthRoute
   '/api/ohlc': typeof ApiOhlcRoute
   '/api/tts': typeof ApiTtsRoute
+  '/help/$slug': typeof HelpSlugRoute
   '/invite/$code': typeof InviteCodeRoute
   '/chat/$threadId': typeof AppChatThreadIdRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
@@ -226,8 +247,10 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/cookies': typeof CookiesRoute
   '/faq': typeof FaqRoute
+  '/help': typeof HelpRouteWithChildren
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
+  '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
   '/admin': typeof AppAdminRoute
   '/analytics': typeof AppAnalyticsRoute
@@ -246,6 +269,7 @@ export interface FileRoutesByTo {
   '/api/health': typeof ApiHealthRoute
   '/api/ohlc': typeof ApiOhlcRoute
   '/api/tts': typeof ApiTtsRoute
+  '/help/$slug': typeof HelpSlugRoute
   '/invite/$code': typeof InviteCodeRoute
   '/chat/$threadId': typeof AppChatThreadIdRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
@@ -258,8 +282,10 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/cookies': typeof CookiesRoute
   '/faq': typeof FaqRoute
+  '/help': typeof HelpRouteWithChildren
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
+  '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
   '/_app/admin': typeof AppAdminRoute
   '/_app/analytics': typeof AppAnalyticsRoute
@@ -279,6 +305,7 @@ export interface FileRoutesById {
   '/api/health': typeof ApiHealthRoute
   '/api/ohlc': typeof ApiOhlcRoute
   '/api/tts': typeof ApiTtsRoute
+  '/help/$slug': typeof HelpSlugRoute
   '/invite/$code': typeof InviteCodeRoute
   '/_app/chat/$threadId': typeof AppChatThreadIdRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
@@ -291,8 +318,10 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cookies'
     | '/faq'
+    | '/help'
     | '/onboarding'
     | '/privacy'
+    | '/status'
     | '/terms'
     | '/admin'
     | '/analytics'
@@ -312,6 +341,7 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/api/ohlc'
     | '/api/tts'
+    | '/help/$slug'
     | '/invite/$code'
     | '/chat/$threadId'
     | '/api/tradelocker/import'
@@ -322,8 +352,10 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cookies'
     | '/faq'
+    | '/help'
     | '/onboarding'
     | '/privacy'
+    | '/status'
     | '/terms'
     | '/admin'
     | '/analytics'
@@ -342,6 +374,7 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/api/ohlc'
     | '/api/tts'
+    | '/help/$slug'
     | '/invite/$code'
     | '/chat/$threadId'
     | '/api/tradelocker/import'
@@ -353,8 +386,10 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cookies'
     | '/faq'
+    | '/help'
     | '/onboarding'
     | '/privacy'
+    | '/status'
     | '/terms'
     | '/_app/admin'
     | '/_app/analytics'
@@ -374,6 +409,7 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/api/ohlc'
     | '/api/tts'
+    | '/help/$slug'
     | '/invite/$code'
     | '/_app/chat/$threadId'
     | '/api/tradelocker/import'
@@ -386,8 +422,10 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CookiesRoute: typeof CookiesRoute
   FaqRoute: typeof FaqRoute
+  HelpRoute: typeof HelpRouteWithChildren
   OnboardingRoute: typeof OnboardingRoute
   PrivacyRoute: typeof PrivacyRoute
+  StatusRoute: typeof StatusRoute
   TermsRoute: typeof TermsRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiHealthRoute: typeof ApiHealthRoute
@@ -406,6 +444,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/status': {
+      id: '/status'
+      path: '/status'
+      fullPath: '/status'
+      preLoaderRoute: typeof StatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/privacy': {
       id: '/privacy'
       path: '/privacy'
@@ -418,6 +463,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/help': {
+      id: '/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof HelpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/faq': {
@@ -461,6 +513,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/invite/$code'
       preLoaderRoute: typeof InviteCodeRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/help/$slug': {
+      id: '/help/$slug'
+      path: '/$slug'
+      fullPath: '/help/$slug'
+      preLoaderRoute: typeof HelpSlugRouteImport
+      parentRoute: typeof HelpRoute
     }
     '/api/tts': {
       id: '/api/tts'
@@ -661,14 +720,26 @@ const AppRouteChildren: AppRouteChildren = {
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
+interface HelpRouteChildren {
+  HelpSlugRoute: typeof HelpSlugRoute
+}
+
+const HelpRouteChildren: HelpRouteChildren = {
+  HelpSlugRoute: HelpSlugRoute,
+}
+
+const HelpRouteWithChildren = HelpRoute._addFileChildren(HelpRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRoute,
   CookiesRoute: CookiesRoute,
   FaqRoute: FaqRoute,
+  HelpRoute: HelpRouteWithChildren,
   OnboardingRoute: OnboardingRoute,
   PrivacyRoute: PrivacyRoute,
+  StatusRoute: StatusRoute,
   TermsRoute: TermsRoute,
   ApiChatRoute: ApiChatRoute,
   ApiHealthRoute: ApiHealthRoute,
