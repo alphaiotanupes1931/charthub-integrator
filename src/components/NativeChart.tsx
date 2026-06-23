@@ -172,18 +172,22 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
   // Session band positions {key,color,label,left,width} in pixels for the overlay
   const [bands, setBands] = useState<Array<{ key: string; color: string; label: string; left: number; width: number; idx: number }>>([]);
 
-  const fetchOhlc = useServerFn(getOhlc);
-  const { data: liveOhlc, isLoading, isError } = useQuery({
+  const { data: liveOhlc, isLoading, isError } = useQuery<OhlcResponse>({
     queryKey: ["ohlc", ticker, interval],
-    queryFn: () => fetchOhlc({ data: { ticker, interval } }),
+    queryFn: async () => {
+      const params = new URLSearchParams({ ticker, interval });
+      const res = await fetch(`/api/ohlc?${params.toString()}`);
+      if (!res.ok) throw new Error(`OHLC fetch failed: ${res.status}`);
+      return (await res.json()) as OhlcResponse;
+    },
     staleTime: 30_000,
     refetchInterval: 30_000,
     refetchOnWindowFocus: false,
     retry: 1,
   });
 
-  const hasLive = !!liveOhlc && liveOhlc.source !== "synthetic" && liveOhlc.bars.length > 0;
-  const noLiveSource = isError || (!!liveOhlc && (liveOhlc.source === "synthetic" || liveOhlc.bars.length === 0));
+  const hasLive = !!liveOhlc && !!liveOhlc.source && liveOhlc.bars.length > 0;
+  const noLiveSource = isError || (!!liveOhlc && (!liveOhlc.source || liveOhlc.bars.length === 0));
   // Show the loader only while the first fetch is genuinely in flight.
   const showLoader = isLoading && !hasLive && !noLiveSource;
 
