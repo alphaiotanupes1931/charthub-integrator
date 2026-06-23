@@ -562,10 +562,10 @@ function Footer() {
     {
       title: "Legal",
       items: [
-        { label: "Privacy", to: "/" as const },
-        { label: "Terms", to: "/" as const },
-        { label: "Risk disclosure", to: "/" as const },
-        { label: "Cookies", to: "/" as const },
+        { label: "Privacy", to: "/privacy" as const },
+        { label: "Terms", to: "/terms" as const },
+        { label: "Risk disclosure", to: "/terms" as const },
+        { label: "Cookies", to: "/cookies" as const },
       ],
     },
   ];
