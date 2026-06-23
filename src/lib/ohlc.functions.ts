@@ -115,7 +115,7 @@ async function fetchTwelveData(symbol: string, interval: string): Promise<OhlcBa
   }));
 }
 
-export const getOhlc = createServerFn({ method: "GET" })
+export const getOhlc = createServerFn({ method: "POST" })
   .inputValidator((input: { ticker: string; interval: string }) =>
     z.object({ ticker: z.string(), interval: z.string() }).parse(input),
   )
