@@ -12,7 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import logoAsset from "../assets/logo.png.asset.json";
-import { getHost } from "../lib/host.functions";
+
 
 
 function NotFoundComponent() {
@@ -76,21 +76,16 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  loader: async () => {
-    const host = await getHost();
-    const isLovableHost = /\.lovable\.app$/i.test(host);
-    return { isLovableHost };
-  },
-  head: ({ loaderData }) => ({
+  head: () => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { name: "theme-color", content: "#0a0a0a" },
       { title: "TradeMind, AI Trading Coach & Live Charts" },
       { name: "description", content: "AI trading coach with live charts, trade journaling, and performance analytics for day, swing, and prop traders." },
-      ...(loaderData?.isLovableHost
-        ? [{ name: "robots", content: "noindex, nofollow" }]
-        : []),
+
+      { name: "robots", content: "index, follow" },
+
       { property: "og:title", content: "TradeMind, AI Trading Coach" },
       { property: "og:description", content: "Live charts and AI-powered coaching for serious traders." },
       { property: "og:type", content: "website" },
