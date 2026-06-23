@@ -217,6 +217,7 @@ export type Database = {
       admin_users_overview: {
         Args: never
         Returns: {
+          banned: boolean
           broker_account_type: string
           broker_connected: boolean
           broker_name: string
