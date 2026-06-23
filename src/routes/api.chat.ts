@@ -6,10 +6,13 @@ import {
   corsHeadersFor,
   enforceMaxBody,
   enforceOrigin,
+  getOrCreateRequestId,
   preflight,
   rateLimit,
 } from "@/lib/api-security";
 import type { Database, Json } from "@/integrations/supabase/types";
+
+const DAILY_AI_CAP = 100; // requests per user per UTC day
 
 type Trade = {
   id: string;
