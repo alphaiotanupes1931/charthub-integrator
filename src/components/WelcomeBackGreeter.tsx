@@ -57,13 +57,16 @@ function markPlayed() {
   }
 }
 
-export function WelcomeBackGreeter() {
+type WelcomeBackGreeterProps = { playOnMount?: boolean };
+
+export function WelcomeBackGreeter({ playOnMount = true }: WelcomeBackGreeterProps) {
   const { profile } = useProfile();
+  const { setRecapText } = useWelcomeBackRecap();
   const fetchContext = useServerFn(getLatestRecapContext);
   const runIdRef = useRef(0);
 
   useEffect(() => {
-    if (typeof window === "undefined" || !shouldPlayWelcome()) return;
+    if (typeof window === "undefined") return;
     const runId = runIdRef.current + 1;
     runIdRef.current = runId;
 
@@ -100,6 +103,11 @@ export function WelcomeBackGreeter() {
       }
       if (cancelled || runId !== runIdRef.current || !text) return;
 
+      // Always expose the text so the dashboard replay button can read it aloud.
+      setRecapText(text);
+
+      if (!playOnMount || !shouldPlayWelcome()) return;
+
       await speakWithElevenLabs(text, coach, preparedAudio, {
         onStart: markPlayed,
         onEnd: markPlayed,
@@ -109,7 +117,7 @@ export function WelcomeBackGreeter() {
     return () => {
       cancelled = true;
     };
-  }, [profile?.id, profile?.display_name, profile?.email, fetchContext]);
+  }, [profile?.id, profile?.display_name, profile?.email, fetchContext, playOnMount, setRecapText]);
 
   return null;
 }
