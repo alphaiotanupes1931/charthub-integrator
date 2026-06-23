@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import logoAsset from "@/assets/logo.png.asset.json";
+import { LogoLink } from "@/components/LogoLink";
 
 export const Route = createFileRoute("/onboarding")({
   ssr: false,
@@ -77,13 +77,7 @@ function OnboardingPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-md">
-        <div className="flex items-center justify-center gap-2.5 mb-8">
-          <img src={logoAsset.url} alt="TradeMind" className="h-12 w-12 object-contain" />
-          <span className="font-display text-2xl font-semibold tracking-tight">
-            <span className="text-foreground">Trade</span>
-            <span className="text-gold-gradient">Mind</span>
-          </span>
-        </div>
+        <LogoLink to="/" size="lg" variant="brand" textClassName="text-2xl" className="justify-center mb-8" />
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
           <h1 className="text-xl font-semibold">Let's get you set up</h1>
           <p className="mt-1 text-sm text-muted-foreground">Two quick questions before you start.</p>
