@@ -246,7 +246,14 @@ async function fetchBestAvailable(ticker: string, interval: string): Promise<Cac
 export const Route = createFileRoute("/api/ohlc")({
   server: {
     handlers: {
+      OPTIONS: async ({ request }) => preflight(request) ?? new Response(null, { status: 204 }),
       GET: async ({ request }) => {
+        const originBlock = enforceOrigin(request);
+        if (originBlock) return originBlock;
+        const limited = rateLimit(request, { key: "ohlc", limit: 120, windowMs: 60_000 });
+        if (limited) return limited;
+        const cors = corsHeadersFor(request);
+        const jsonHeaders = { "content-type": "application/json", ...cors };
         const url = new URL(request.url);
         const ticker = url.searchParams.get("ticker");
         const interval = url.searchParams.get("interval");
