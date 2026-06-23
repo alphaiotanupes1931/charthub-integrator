@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as StatusRouteImport } from './routes/status'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as HelpRouteImport } from './routes/help'
@@ -45,6 +46,11 @@ import { Route as AppChatThreadIdRouteImport } from './routes/_app.chat.$threadI
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StatusRoute = StatusRouteImport.update({
+  id: '/status',
+  path: '/status',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -210,6 +216,7 @@ export interface FileRoutesByFullPath {
   '/help': typeof HelpRouteWithChildren
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
+  '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
   '/admin': typeof AppAdminRoute
   '/analytics': typeof AppAnalyticsRoute
@@ -243,6 +250,7 @@ export interface FileRoutesByTo {
   '/help': typeof HelpRouteWithChildren
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
+  '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
   '/admin': typeof AppAdminRoute
   '/analytics': typeof AppAnalyticsRoute
@@ -277,6 +285,7 @@ export interface FileRoutesById {
   '/help': typeof HelpRouteWithChildren
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
+  '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
   '/_app/admin': typeof AppAdminRoute
   '/_app/analytics': typeof AppAnalyticsRoute
@@ -312,6 +321,7 @@ export interface FileRouteTypes {
     | '/help'
     | '/onboarding'
     | '/privacy'
+    | '/status'
     | '/terms'
     | '/admin'
     | '/analytics'
@@ -345,6 +355,7 @@ export interface FileRouteTypes {
     | '/help'
     | '/onboarding'
     | '/privacy'
+    | '/status'
     | '/terms'
     | '/admin'
     | '/analytics'
@@ -378,6 +389,7 @@ export interface FileRouteTypes {
     | '/help'
     | '/onboarding'
     | '/privacy'
+    | '/status'
     | '/terms'
     | '/_app/admin'
     | '/_app/analytics'
@@ -413,6 +425,7 @@ export interface RootRouteChildren {
   HelpRoute: typeof HelpRouteWithChildren
   OnboardingRoute: typeof OnboardingRoute
   PrivacyRoute: typeof PrivacyRoute
+  StatusRoute: typeof StatusRoute
   TermsRoute: typeof TermsRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiHealthRoute: typeof ApiHealthRoute
@@ -429,6 +442,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/status': {
+      id: '/status'
+      path: '/status'
+      fullPath: '/status'
+      preLoaderRoute: typeof StatusRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -719,6 +739,7 @@ const rootRouteChildren: RootRouteChildren = {
   HelpRoute: HelpRouteWithChildren,
   OnboardingRoute: OnboardingRoute,
   PrivacyRoute: PrivacyRoute,
+  StatusRoute: StatusRoute,
   TermsRoute: TermsRoute,
   ApiChatRoute: ApiChatRoute,
   ApiHealthRoute: ApiHealthRoute,
