@@ -37,12 +37,23 @@ function originAllowed(origin: string | null, host: string | null): boolean {
   return false;
 }
 
+// ---- Request ID -----------------------------------------------------------
+// Honor an inbound X-Request-Id if it looks safe, otherwise mint one.
+const SAFE_REQ_ID = /^[A-Za-z0-9._-]{8,128}$/;
+export function getOrCreateRequestId(request: Request): string {
+  const incoming = request.headers.get("x-request-id");
+  if (incoming && SAFE_REQ_ID.test(incoming)) return incoming;
+  // crypto.randomUUID is available in Workers + modern Node
+  return (globalThis.crypto?.randomUUID?.() ?? `req_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`);
+}
+
 export function corsHeadersFor(request: Request): Record<string, string> {
   const origin = request.headers.get("origin");
   const headers: Record<string, string> = {
     "Vary": "Origin",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, X-Request-Id",
+    "Access-Control-Expose-Headers": "X-Request-Id",
     "Access-Control-Max-Age": "86400",
   };
   if (origin && originAllowed(origin, request.headers.get("host"))) {
