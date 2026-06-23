@@ -22,7 +22,7 @@ export type Database = {
           parts: Json
           role: string
           thread_id: string
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           client_id: string
@@ -31,7 +31,7 @@ export type Database = {
           parts: Json
           role: string
           thread_id: string
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           client_id?: string
@@ -40,7 +40,7 @@ export type Database = {
           parts?: Json
           role?: string
           thread_id?: string
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: [
           {
