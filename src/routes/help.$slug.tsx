@@ -73,7 +73,7 @@ function ArticlePage() {
           <p className="mt-3 text-base text-muted-foreground">{article.description}</p>
 
           <div className="mt-8 space-y-5 text-sm sm:text-base leading-relaxed text-foreground/90">
-            {article.body.map((para, i) =>
+            {article.body.map((para: string, i: number) =>
               para.startsWith("## ") ? (
                 <h2 key={i} className="font-display text-xl sm:text-2xl font-medium mt-8">
                   {para.replace(/^##\s+/, "")}
