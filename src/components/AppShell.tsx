@@ -28,7 +28,7 @@ import {
   Sun,
   Moon,
 } from "lucide-react";
-import logoAsset from "@/assets/logo.png.asset.json";
+import { LogoLink } from "@/components/LogoLink";
 import { Tutorial } from "@/components/Tutorial";
 import { WelcomeBackGreeter, WelcomeBackProvider } from "@/components/WelcomeBackGreeter";
 import { useTheme } from "@/hooks/useTheme";
@@ -94,18 +94,15 @@ export function AppShell({ children }: { children: ReactNode }) {
   const SidebarContent = (
     <>
       <div className="flex items-center justify-between gap-2.5 px-4 py-5">
-        <Link to="/dashboard" className="flex items-center gap-2.5 min-w-0">
-          <div className="relative shrink-0">
-            <div className="absolute inset-0 rounded-full blur-md bg-primary/40" />
-            <img src={logoAsset.url} alt="TradeMind" className="relative h-12 w-12 object-contain" />
-          </div>
-          {!collapsed && (
-            <span className="font-display text-xl font-semibold tracking-tight truncate">
-              <span className="text-foreground">Trade</span>
-              <span className="text-gold-gradient">Mind</span>
-            </span>
-          )}
-        </Link>
+        <LogoLink
+          to="/dashboard"
+          size="lg"
+          variant="brand"
+          glow
+          showText={!collapsed}
+          textClassName="text-xl"
+          className="gap-2.5"
+        />
         <button
           onClick={() => setMobileOpen(false)}
           className="md:hidden h-8 w-8 rounded-md text-muted-foreground hover:text-foreground"
@@ -209,9 +206,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </button>
           {/* Mobile logo */}
-          <Link to="/dashboard" className="md:hidden flex items-center gap-1.5 shrink-0">
-            <img src={logoAsset.url} alt="TradeMind" className="h-10 w-10 object-contain" />
-          </Link>
+          <LogoLink to="/dashboard" size="md" showText={false} className="md:hidden shrink-0" />
         </header>
 
         <main className="flex-1 min-w-0 overflow-x-hidden">{children}</main>
