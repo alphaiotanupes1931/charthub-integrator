@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_app")({
       .select("onboarded,banned" as "onboarded")
       .eq("id", data.user.id)
       .maybeSingle() as { data: { onboarded: boolean; banned?: boolean } | null };
-    if ((prof as { banned?: boolean } | null)?.banned) {
+    if (prof?.banned) {
       await supabase.auth.signOut();
       throw redirect({ to: "/auth", search: { banned: "1" } });
     }
