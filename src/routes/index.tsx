@@ -43,13 +43,8 @@ const TICKER = [
   { proName: "FX:EURUSD", title: "EUR/USD" },
 ];
 
-const COACHES = [
-  { name: "The Analyst", tag: "Wyckoff & structure first.", quote: "Show me the phase before you click buy." },
-  { name: "The Sniper", tag: "A+ setups only. Or nothing.", quote: "Patience is profit. Wait." },
-  { name: "The Mentor", tag: "The lesson is the trade.", quote: "What did you learn from the last loss?" },
-  { name: "The Beast", tag: "Press conviction. Hard.", quote: "You see it. Take it. NOW." },
-  { name: "The Monk", tag: "The market will be there.", quote: "Tomorrow is a new chart." },
-];
+
+
 
 const PRICING = [
   {
@@ -194,7 +189,7 @@ function Landing() {
       {/* LIVE CHART PREVIEW */}
       <section className="relative px-4 sm:px-6 pb-12 sm:pb-16">
         <div className="max-w-6xl mx-auto">
-          <BrowserFrame url="trademindaicoach.com/dashboard">
+          <BrowserFrame url="">
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-5 sm:gap-6 p-4 sm:p-6">
               <div>
                 <div className="text-sm text-muted-foreground mb-1">XAU/USD · Gold Spot</div>
@@ -333,32 +328,7 @@ function Landing() {
       </section>
 
 
-      {/* COACHES */}
-      <section id="coaches" className="px-5 sm:px-6 py-16 sm:py-24 md:py-28 border-t border-border/60 scroll-mt-24">
 
-        <div className="max-w-6xl mx-auto">
-          <SectionEyebrow>Five personalities</SectionEyebrow>
-          <h2 className="font-display text-3xl sm:text-4xl md:text-6xl font-medium text-center leading-tight">
-            Pick the coach that pushes you.
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mt-10 sm:mt-16">
-            {COACHES.map((c, i) => (
-              <motion.div
-                key={c.name}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.06 }}
-                className="rounded-2xl border border-border bg-card/40 p-5 sm:p-6 hover-lift"
-              >
-                <h3 className="font-semibold text-base sm:text-lg">{c.name}</h3>
-                <div className="text-primary text-xs mt-1">{c.tag}</div>
-                <p className="text-xs text-muted-foreground mt-4 sm:mt-5">"{c.quote}"</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* PRICING */}
       <section id="pricing" className="px-5 sm:px-6 py-16 sm:py-24 md:py-28 border-t border-border/60 scroll-mt-24">

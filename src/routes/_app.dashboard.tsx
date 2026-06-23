@@ -617,12 +617,11 @@ function FloatingCoach({
 
       {/* Expanded panel — full-screen sheet on mobile, anchored card on desktop. Always mounted so chat state survives. */}
       <div
-        className={`fixed z-40 left-0 right-0 bottom-0 top-0 sm:top-auto sm:left-auto sm:right-6 sm:bottom-6 sm:w-[min(420px,calc(100vw-3rem))] sm:h-[min(640px,calc(100vh-3rem))] transition-transform duration-200 ease-out ${
+        className={`fixed z-40 left-0 right-0 bottom-0 top-0 h-[100dvh] sm:h-[min(640px,calc(100vh-3rem))] sm:top-auto sm:left-auto sm:right-6 sm:bottom-6 sm:w-[min(420px,calc(100vw-3rem))] transition-transform duration-200 ease-out ${
           expanded
             ? "translate-y-0 pointer-events-auto"
             : "translate-y-full sm:translate-y-4 pointer-events-none sm:opacity-0"
         }`}
-        style={{ height: expanded ? "100dvh" : undefined }}
       >
         <DashboardChatPanel ref={chatRef} chart={chart} onClose={() => { setMinimized(false); onClose(); }} onMinimize={() => setMinimized(true)} />
       </div>
