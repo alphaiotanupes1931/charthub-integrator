@@ -1,10 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
 import { useTimeFormat, formatTime } from "@/hooks/useTimeFormat";
 import { recordBrokerConnection } from "@/lib/broker.functions";
+import { exportMyData, deleteMyAccount } from "@/lib/privacy.functions";
 import { toast } from "sonner";
 
 import {
@@ -20,6 +21,8 @@ import {
   AlertCircle,
   Volume2,
   VolumeX,
+  Download,
+  Trash2,
 } from "lucide-react";
 import { isWelcomeBackMuted, setWelcomeBackMuted } from "@/lib/welcomeBack";
 
