@@ -1,10 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
 import { useTimeFormat, formatTime } from "@/hooks/useTimeFormat";
 import { recordBrokerConnection } from "@/lib/broker.functions";
+import { exportMyData, deleteMyAccount } from "@/lib/privacy.functions";
 import { toast } from "sonner";
 
 import {
@@ -20,6 +21,8 @@ import {
   AlertCircle,
   Volume2,
   VolumeX,
+  Download,
+  Trash2,
 } from "lucide-react";
 import { isWelcomeBackMuted, setWelcomeBackMuted } from "@/lib/welcomeBack";
 
@@ -108,6 +111,7 @@ const JOURNAL_KEY = "trademind.journal.trades.v1";
 const TL_CREDS_KEY = "trademind.tradelocker.creds.v1";
 
 function SettingsPage() {
+  const navigate = useNavigate();
   const [showPw, setShowPw] = useState(false);
   const { profile, refresh } = useProfile();
   const [name, setName] = useState("");
@@ -126,6 +130,14 @@ function SettingsPage() {
   const [tlAccounts, setTlAccounts] = useState<TLAccount[]>([]);
   const [tlAccountId, setTlAccountId] = useState<string>("");
   const [tlConnected, setTlConnected] = useState(false);
+
+  // Privacy / GDPR
+  const [exporting, setExporting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteText, setDeleteText] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const runExport = useServerFn(exportMyData);
+  const runDelete = useServerFn(deleteMyAccount);
 
   const recordBroker = useServerFn(recordBrokerConnection);
 
@@ -224,6 +236,45 @@ function SettingsPage() {
       toast.error(e instanceof Error ? e.message : "Import failed");
     } finally {
       setTlBusy("");
+    }
+  }
+
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const data = await runExport({ data: undefined });
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `trademind-data-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast.success("Your data has been downloaded");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Export failed");
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  async function handleDelete() {
+    setDeleting(true);
+    try {
+      await runDelete({ data: undefined });
+      // Wipe local prefs/journal so a future signup on this browser starts clean.
+      try {
+        const keys = ["trademind.journal.trades.v1", "trademind.tradelocker.creds.v1", "trademind.welcome-back.muted"];
+        for (const k of keys) window.localStorage.removeItem(k);
+      } catch { /* ignore */ }
+      await supabase.auth.signOut();
+      toast.success("Your account has been deleted");
+      navigate({ to: "/" });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not delete account");
+      setDeleting(false);
     }
   }
 
@@ -425,6 +476,72 @@ function SettingsPage() {
       </Card>
 
       {/* STRATEGY moved to its own tab — see /scan-lens */}
+
+      {/* PRIVACY & DATA (GDPR) */}
+      <SectionLabel>Privacy &amp; Data</SectionLabel>
+      <Card>
+        <h2 className="flex items-center gap-2 text-lg font-semibold mb-2">
+          <Download className="size-5 text-primary" />
+          Download all my data
+        </h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          Exports your account, profile, chat history, AI usage, and connection data as a JSON file.
+          Trade journal entries are stored locally in this browser and not included.
+        </p>
+        <GhostButton onClick={handleExport} disabled={exporting}>
+          <Download className="size-4" />
+          {exporting ? "Preparing…" : "Download my data (JSON)"}
+        </GhostButton>
+      </Card>
+
+      <Card className="mt-4 border-destructive/40">
+        <h2 className="flex items-center gap-2 text-lg font-semibold mb-2">
+          <Trash2 className="size-5 text-destructive" />
+          Delete my account
+        </h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          Permanently deletes your account and every piece of data attached to it — profile, chats, usage
+          history, broker connections. <strong className="text-foreground">This cannot be undone.</strong>
+        </p>
+        {!confirmDelete ? (
+          <button
+            type="button"
+            onClick={() => setConfirmDelete(true)}
+            className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-destructive/10 border border-destructive/40 text-destructive text-sm font-medium hover:bg-destructive/20 transition"
+          >
+            <Trash2 className="size-4" /> Delete my account
+          </button>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-sm">
+              Type <code className="px-1.5 py-0.5 rounded bg-background/60 border border-border font-mono">DELETE</code> to confirm.
+            </p>
+            <Input
+              value={deleteText}
+              onChange={(e) => setDeleteText(e.target.value)}
+              placeholder="DELETE"
+              autoFocus
+            />
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting || deleteText !== "DELETE"}
+                className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-destructive text-destructive-foreground text-sm font-medium hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Trash2 className="size-4" />
+                {deleting ? "Deleting…" : "Permanently delete"}
+              </button>
+              <GhostButton
+                onClick={() => { setConfirmDelete(false); setDeleteText(""); }}
+                disabled={deleting}
+              >
+                Cancel
+              </GhostButton>
+            </div>
+          </div>
+        )}
+      </Card>
 
       {/* BILLING */}
       <SectionLabel>Billing</SectionLabel>
