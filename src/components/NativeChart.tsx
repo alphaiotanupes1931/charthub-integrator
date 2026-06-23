@@ -205,7 +205,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
   }, [liveOhlc, hasLive]);
   const levels = useMemo(() => computeLevels(candles), [candles]);
   const isLive = hasLive;
-  const sourceLabel = liveOhlc?.source === "coingecko" ? "CoinGecko" : liveOhlc?.source === "twelvedata" ? "Twelve Data" : "";
+  const sourceLabel = liveOhlc?.source === "coingecko" ? "CoinGecko" : liveOhlc?.source === "twelvedata" ? "Twelve Data" : liveOhlc?.source === "yahoo" ? "Yahoo" : "";
   const snapshotSource = isLive ? (liveOhlc?.source ?? "unknown") : "unavailable";
   const snapshotSourceLabel = isLive ? (sourceLabel || "Live") : "Unavailable";
 
