@@ -122,7 +122,16 @@ export function useCoachVoice() {
         body: JSON.stringify({ text, voiceId }),
       });
       if (!res.ok) {
-        console.error("[voice] tts failed", res.status, await res.text().catch(() => ""));
+        const body = await res.text().catch(() => "");
+        console.error("[voice] tts failed", res.status, body);
+        if (res.status === 401 || res.status === 402 || body.includes("quota_exceeded")) {
+          setEnabledState(false);
+          try { window.localStorage.setItem(VOICE_KEY, "0"); } catch { /* ignore */ }
+          const { data } = await supabase.auth.getUser();
+          if (data.user) {
+            await supabase.from("profiles").update({ voice_enabled: false }).eq("id", data.user.id);
+          }
+        }
         return;
       }
       const blob = await res.blob();
