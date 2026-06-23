@@ -223,6 +223,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <Tutorial />
       <WelcomeBackGreeter />
     </div>
+    </WelcomeBackProvider>
   );
 }
 
