@@ -47,22 +47,36 @@ async function speakWithAiGateway(text: string) {
 export const Route = createFileRoute("/api/tts")({
   server: {
     handlers: {
+      OPTIONS: async ({ request }) => preflight(request) ?? new Response(null, { status: 204 }),
       POST: async ({ request }) => {
+        const originBlock = enforceOrigin(request);
+        if (originBlock) return originBlock;
+        const tooBig = enforceMaxBody(request, 32 * 1024); // 32 KB cap for TTS text
+        if (tooBig) return tooBig;
+        const limited = rateLimit(request, { key: "tts", limit: 20, windowMs: 60_000 });
+        if (limited) return limited;
+        const cors = corsHeadersFor(request);
+
         let body: Body;
         try {
           body = (await request.json()) as Body;
         } catch {
-          return new Response("Invalid JSON", { status: 400 });
+          return new Response("Invalid JSON", { status: 400, headers: cors });
         }
         const text = (body.text ?? "").toString().trim();
         const voiceId = (body.voiceId ?? DEFAULT_VOICE).toString();
-        if (!text) return new Response("text required", { status: 400 });
+        if (!text) return new Response("text required", { status: 400, headers: cors });
 
         const clipped = text.length > 1200 ? text.slice(0, 1200) + "…" : text;
         const apiKey = process.env.ELEVENLABS_API_KEY_OVERRIDE || process.env.ELEVENLABS_API_KEY;
         if (!apiKey) {
           const gatewayAudio = await speakWithAiGateway(clipped);
-          return gatewayAudio ?? new Response("TTS not configured", { status: 500 });
+          if (gatewayAudio) {
+            const h = new Headers(gatewayAudio.headers);
+            for (const [k, v] of Object.entries(cors)) h.set(k, v);
+            return new Response(gatewayAudio.body, { headers: h });
+          }
+          return new Response("TTS not configured", { status: 500, headers: cors });
         }
 
         const upstream = await fetch(
@@ -93,13 +107,17 @@ export const Route = createFileRoute("/api/tts")({
           const quotaBlocked = upstream.status === 401 || upstream.status === 402 || err.toLowerCase().includes("quota");
           if (quotaBlocked) {
             const gatewayAudio = await speakWithAiGateway(clipped);
-            if (gatewayAudio) return gatewayAudio;
+            if (gatewayAudio) {
+              const h = new Headers(gatewayAudio.headers);
+              for (const [k, v] of Object.entries(cors)) h.set(k, v);
+              return new Response(gatewayAudio.body, { headers: h });
+            }
           }
-          return new Response(err || "TTS failed", { status: upstream.status });
+          return new Response(err || "TTS failed", { status: upstream.status, headers: cors });
         }
 
         return new Response(upstream.body, {
-          headers: { "Content-Type": "audio/mpeg" },
+          headers: { "Content-Type": "audio/mpeg", ...cors },
         });
       },
     },
