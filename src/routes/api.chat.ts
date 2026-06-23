@@ -58,6 +58,8 @@ type ChatRequestBody = {
   lens?: LensCtx | null;
 };
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 function pnl(t: Trade) {
   const dir = t.side === "Long" ? 1 : -1;
   return (t.exit - t.entry) * dir * t.size;
@@ -275,14 +277,22 @@ export const Route = createFileRoute("/api/chat")({
         const key = process.env.LOVABLE_API_KEY;
         if (!key) return new Response("AI not configured", { status: 500 });
 
-        // --- Verify thread ownership (defense in depth alongside RLS) ---
-        const { data: thread, error: threadErr } = await sb
-          .from("chat_threads")
-          .select("id,title,user_id")
-          .eq("id", threadId)
-          .maybeSingle();
-        if (threadErr || !thread || thread.user_id !== userId) {
-          return new Response("Forbidden", { status: 403 });
+        // --- Verify thread ownership when this is a persisted chat thread. ---
+        // The dashboard coach can start in ephemeral mode while the protected
+        // thread loader is still warming up, so non-UUID thread IDs are allowed
+        // for a live AI response but are not written to the database.
+        const shouldPersist = UUID_RE.test(threadId);
+        let thread: { id: string; title: string; user_id: string | null } | null = null;
+        if (shouldPersist) {
+          const { data: threadRow, error: threadErr } = await sb
+            .from("chat_threads")
+            .select("id,title,user_id")
+            .eq("id", threadId)
+            .maybeSingle();
+          if (threadErr || !threadRow || threadRow.user_id !== userId) {
+            return new Response("Forbidden", { status: 403 });
+          }
+          thread = threadRow;
         }
 
         const journalCtx = buildJournalContext(journal ?? []);
@@ -298,6 +308,7 @@ export const Route = createFileRoute("/api/chat")({
         return result.toUIMessageStreamResponse({
           originalMessages: messages,
           onFinish: async ({ messages: finalMessages }) => {
+            if (!shouldPersist || !thread) return;
             try {
               const { data: existing } = await sb
                 .from("chat_messages")
@@ -307,7 +318,6 @@ export const Route = createFileRoute("/api/chat")({
               const toInsert = finalMessages
                 .filter((m) => !existingIds.has(m.id))
                 .map((m) => ({
-                  id: m.id,
                   thread_id: threadId,
                   user_id: userId,
                   client_id: userId, // legacy NOT NULL column

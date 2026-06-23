@@ -39,11 +39,11 @@ export type ChartContext = {
 
 type Props = { chart?: ChartContext; onClose?: () => void; onMinimize?: () => void };
 
+const DASHBOARD_THREAD_FALLBACK_ID = "dashboard-scans";
+
 export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(function DashboardChatPanel({ chart, onClose, onMinimize }, ref) {
-  const [threadId, setThreadId] = useState<string | null>(null);
-  const [initial, setInitial] = useState<UIMessage[] | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [attempt, setAttempt] = useState(0);
+  const [threadId, setThreadId] = useState(DASHBOARD_THREAD_FALLBACK_ID);
+  const [initial, setInitial] = useState<UIMessage[]>([]);
   const getThread = useServerFn(getOrCreateDashboardThread);
   const getMsgs = useServerFn(getChatMessages);
 
@@ -77,22 +77,20 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
 
   useEffect(() => {
     let cancelled = false;
-    setLoadError(null);
 
     const tryOnce = async () => {
       const t = await getThread();
       if (!t) throw new Error("no thread returned");
       if (cancelled) return null;
-      setThreadId(t.id);
       const rows = await getMsgs({ data: { threadId: t.id } });
-      return rows as UIMessage[];
+      return { threadId: t.id, rows: rows as UIMessage[] };
     };
 
     (async () => {
       const token = await waitForSession();
       if (cancelled) return;
       if (!token) {
-        setLoadError("Sign-in hasn't finished loading. Tap retry.");
+        console.warn("[coach] session not ready; using live chat fallback");
         return;
       }
 
@@ -103,10 +101,10 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
         if (cancelled) return;
         if (delays[i]) await new Promise((r) => setTimeout(r, delays[i]));
         try {
-          const rows = await tryOnce();
-          if (!cancelled && rows) {
-            setInitial(rows);
-            setLoadError(null);
+          const loaded = await tryOnce();
+          if (!cancelled && loaded) {
+            setThreadId(loaded.threadId);
+            setInitial(loaded.rows);
           }
           return;
         } catch (e) {
@@ -117,35 +115,13 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
         }
       }
       console.error("[coach] all attempts failed", lastErr);
-      if (!cancelled) setLoadError("Couldn't reach the coach. Check your connection, then retry.");
     })();
 
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [getThread, getMsgs, attempt, waitForSession]);
+  }, [getThread, getMsgs, waitForSession]);
 
-  if (!threadId || initial === null) {
-    return (
-      <div className="h-full flex flex-col items-center justify-center gap-4 p-6 text-center bg-card sm:rounded-xl border-y sm:border border-border">
-        <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/15 text-primary">
-          <Sparkles className="h-5 w-5 animate-pulse" />
-        </div>
-        <div className="text-sm text-muted-foreground max-w-xs">
-          {loadError ?? "Waking up your coach…"}
-        </div>
-        {loadError && (
-          <button
-            onClick={() => { setThreadId(null); setInitial(null); setLoadError(null); setAttempt((n) => n + 1); }}
-            className="rounded-full bg-primary px-5 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90 transition"
-          >
-            Try again
-          </button>
-        )}
-      </div>
-    );
-  }
-
-  return <ChatInner ref={ref} threadId={threadId} initial={initial} chart={chart} onClose={onClose} onMinimize={onMinimize} />;
+  return <ChatInner key={threadId} ref={ref} threadId={threadId} initial={initial} chart={chart} onClose={onClose} onMinimize={onMinimize} />;
 });
 
 
