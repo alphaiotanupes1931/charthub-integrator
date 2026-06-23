@@ -11,5 +11,3 @@ export function createAiGatewayProvider(apiKey: string) {
   });
 }
 
-// Backwards-compatible alias
-export const createLovableAiGatewayProvider = createAiGatewayProvider;
