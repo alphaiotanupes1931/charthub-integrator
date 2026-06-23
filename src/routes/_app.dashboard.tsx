@@ -7,7 +7,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { useCoachVoice } from "@/hooks/useCoachVoice";
 import { DashboardChatPanel, type DashboardChatHandle } from "@/components/DashboardChatPanel";
 import { TodaysRecommendation } from "@/components/TodaysRecommendation";
-import { WelcomeBackGreeter, useWelcomeBackRecap } from "@/components/WelcomeBackGreeter";
+import { useWelcomeBackRecap } from "@/components/WelcomeBackGreeter";
 import { SCAN_LENSES, readActiveLensId, writeActiveLensId, type ScanLensId } from "@/lib/scanLens";
 import { readActiveCoach } from "@/lib/chat-client";
 import { voiceForCoach } from "@/lib/coachVoices";
