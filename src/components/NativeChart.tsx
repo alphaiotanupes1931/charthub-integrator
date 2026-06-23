@@ -395,12 +395,12 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
           ))}
         </div>
       )}
-      <div className="absolute left-3 top-3 z-10 rounded-md border border-border bg-background/70 backdrop-blur px-2 py-1 text-[10px] font-mono text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-        <span>{isLive ? "Live" : showLoader ? "Loading" : noLiveSource ? "Unavailable" : "Native"} · {ticker} · {interval}</span>
+      <div className="absolute left-2 top-2 sm:left-3 sm:top-3 z-10 max-w-[55%] rounded-md border border-border bg-background/70 backdrop-blur px-1.5 py-1 sm:px-2 text-[9px] sm:text-[10px] font-mono text-muted-foreground uppercase tracking-wider flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+        <span className="truncate">{isLive ? "Live" : showLoader ? "Loading" : noLiveSource ? "Unavailable" : "Native"} · {ticker} · {interval}</span>
         {isLive && (
           <span className="inline-flex items-center gap-1 text-emerald-400 normal-case">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            {sourceLabel}
+            <span className="hidden sm:inline">{sourceLabel}</span>
           </span>
         )}
         {enabled.OF && candles.length > 0 && (
