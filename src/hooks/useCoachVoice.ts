@@ -136,18 +136,22 @@ export function useCoachVoice() {
     if (syncedRef.current) return;
     syncedRef.current = true;
     (async () => {
-      const { data } = await supabase.auth.getUser();
-      if (!data.user) return;
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("voice_enabled")
-        .eq("id", data.user.id)
-        .maybeSingle();
-      if (prof && typeof prof.voice_enabled === "boolean") {
-        if (voicePreferenceTouched) return;
-        rememberVoiceEnabled(prof.voice_enabled);
-        setEnabledState(prof.voice_enabled);
-        broadcastVoiceEnabled();
+      try {
+        const { data } = await supabase.auth.getUser();
+        if (!data.user) return;
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("voice_enabled")
+          .eq("id", data.user.id)
+          .maybeSingle();
+        if (prof && typeof prof.voice_enabled === "boolean") {
+          if (voicePreferenceTouched) return;
+          rememberVoiceEnabled(prof.voice_enabled);
+          setEnabledState(prof.voice_enabled);
+          broadcastVoiceEnabled();
+        }
+      } catch {
+        /* keep local voice preference */
       }
     })();
   }, []);
@@ -160,9 +164,13 @@ export function useCoachVoice() {
     broadcastVoiceEnabled();
     if (v) prime();
     (async () => {
-      const { data } = await supabase.auth.getUser();
-      if (!data.user) return;
-      await supabase.from("profiles").update({ voice_enabled: v }).eq("id", data.user.id);
+      try {
+        const { data } = await supabase.auth.getUser();
+        if (!data.user) return;
+        await supabase.from("profiles").update({ voice_enabled: v }).eq("id", data.user.id);
+      } catch {
+        /* local preference already saved */
+      }
     })();
   }, [prime]);
 
