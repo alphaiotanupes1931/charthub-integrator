@@ -6,10 +6,13 @@ import {
   corsHeadersFor,
   enforceMaxBody,
   enforceOrigin,
+  getOrCreateRequestId,
   preflight,
   rateLimit,
 } from "@/lib/api-security";
 import type { Database, Json } from "@/integrations/supabase/types";
+
+const DAILY_AI_CAP = 100; // requests per user per UTC day
 
 type Trade = {
   id: string;
@@ -245,6 +248,7 @@ export const Route = createFileRoute("/api/chat")({
     handlers: {
       OPTIONS: async ({ request }) => preflight(request) ?? new Response(null, { status: 204 }),
       POST: async ({ request }) => {
+        const reqId = getOrCreateRequestId(request);
         const originBlock = enforceOrigin(request);
         if (originBlock) return originBlock;
         const tooBig = enforceMaxBody(request, 512 * 1024); // 512 KB cap
@@ -252,7 +256,8 @@ export const Route = createFileRoute("/api/chat")({
         const limited = rateLimit(request, { key: "chat", limit: 20, windowMs: 60_000 });
         if (limited) return limited;
 
-        const cors = corsHeadersFor(request);
+        const cors = { ...corsHeadersFor(request), "X-Request-Id": reqId };
+        console.log(`[chat] req=${reqId} start`);
 
         // --- Auth: verify the bearer token ---
         const authHeader = request.headers.get("authorization") ?? "";
@@ -312,6 +317,27 @@ export const Route = createFileRoute("/api/chat")({
           thread = threadRow;
         }
 
+        // --- Daily AI cap per user (UTC) ---
+        const { data: usageCount, error: usageErr } = await sb.rpc("bump_ai_usage", { _cap: DAILY_AI_CAP });
+        if (usageErr) {
+          const msg = (usageErr.message || "").toLowerCase();
+          if (msg.includes("daily_cap_reached")) {
+            console.log(`[chat] req=${reqId} user=${userId} cap_reached`);
+            return new Response(
+              JSON.stringify({
+                error: "daily_cap_reached",
+                message: "You have ran out of AI credits for the day, feel free to keep trading. Your AI coach will be back tomorrow.",
+                cap: DAILY_AI_CAP,
+              }),
+              { status: 429, headers: { ...cors, "Content-Type": "application/json" } },
+            );
+          }
+          console.error(`[chat] req=${reqId} usage_error`, usageErr.message);
+          // Fail open on internal errors so a usage bug doesn't lock everyone out.
+        } else {
+          console.log(`[chat] req=${reqId} user=${userId} usage=${usageCount}/${DAILY_AI_CAP}`);
+        }
+
         const journalCtx = buildJournalContext(journal ?? []);
         const system = systemPrompt(coach, journalCtx, chartContextBlock(chart), strategyContextBlock(strategy), lensContextBlock(lens));
 
@@ -323,6 +349,7 @@ export const Route = createFileRoute("/api/chat")({
         });
 
         return result.toUIMessageStreamResponse({
+          headers: { "X-Request-Id": reqId },
           originalMessages: messages,
           onFinish: async ({ messages: finalMessages }) => {
             if (!shouldPersist || !thread) return;
