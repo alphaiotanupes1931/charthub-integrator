@@ -43,13 +43,8 @@ const TICKER = [
   { proName: "FX:EURUSD", title: "EUR/USD" },
 ];
 
-const COACHES = [
-  { name: "The Analyst", tag: "Wyckoff & structure first.", quote: "Show me the phase before you click buy." },
-  { name: "The Sniper", tag: "A+ setups only. Or nothing.", quote: "Patience is profit. Wait." },
-  { name: "The Mentor", tag: "The lesson is the trade.", quote: "What did you learn from the last loss?" },
-  { name: "The Beast", tag: "Press conviction. Hard.", quote: "You see it. Take it. NOW." },
-  { name: "The Monk", tag: "The market will be there.", quote: "Tomorrow is a new chart." },
-];
+
+
 
 const PRICING = [
   {
