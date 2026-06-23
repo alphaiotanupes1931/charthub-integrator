@@ -154,7 +154,8 @@ function Landing() {
             <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
               {isAuthed ? (
                 <Link
-                  to="/dashboard"
+                  to="/auth"
+                  search={{ mode: "signin", force: "1", redirect: "/dashboard" }}
                   className="group inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-7 py-3.5 text-sm font-semibold hover:scale-[1.02] transition shadow-2xl"
                 >
                   Open dashboard
