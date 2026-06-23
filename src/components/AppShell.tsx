@@ -28,7 +28,7 @@ import {
   Sun,
   Moon,
 } from "lucide-react";
-import logoAsset from "@/assets/logo.png.asset.json";
+import { LogoLink } from "@/components/LogoLink";
 import { Tutorial } from "@/components/Tutorial";
 import { WelcomeBackGreeter, WelcomeBackProvider } from "@/components/WelcomeBackGreeter";
 import { useTheme } from "@/hooks/useTheme";
