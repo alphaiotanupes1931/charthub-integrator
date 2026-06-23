@@ -111,6 +111,7 @@ const JOURNAL_KEY = "trademind.journal.trades.v1";
 const TL_CREDS_KEY = "trademind.tradelocker.creds.v1";
 
 function SettingsPage() {
+  const navigate = useNavigate();
   const [showPw, setShowPw] = useState(false);
   const { profile, refresh } = useProfile();
   const [name, setName] = useState("");
@@ -129,6 +130,14 @@ function SettingsPage() {
   const [tlAccounts, setTlAccounts] = useState<TLAccount[]>([]);
   const [tlAccountId, setTlAccountId] = useState<string>("");
   const [tlConnected, setTlConnected] = useState(false);
+
+  // Privacy / GDPR
+  const [exporting, setExporting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteText, setDeleteText] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const runExport = useServerFn(exportMyData);
+  const runDelete = useServerFn(deleteMyAccount);
 
   const recordBroker = useServerFn(recordBrokerConnection);
 
