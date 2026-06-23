@@ -152,21 +152,33 @@ function Landing() {
             className="mt-8 sm:mt-10 flex flex-col items-center gap-5"
           >
             <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
-              <Link
-                to="/auth"
-                search={{ mode: "signup" }}
-                className="group inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-7 py-3.5 text-sm font-semibold hover:scale-[1.02] transition shadow-2xl"
-              >
-                Get started
-                <ArrowRight className="size-4 group-hover:translate-x-0.5 transition" />
-              </Link>
-              <Link
-                to="/auth"
-                search={{ mode: "signin" }}
-                className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-7 py-3.5 text-sm font-semibold hover:bg-card transition"
-              >
-                Log in
-              </Link>
+              {isAuthed ? (
+                <Link
+                  to="/dashboard"
+                  className="group inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-7 py-3.5 text-sm font-semibold hover:scale-[1.02] transition shadow-2xl"
+                >
+                  Open dashboard
+                  <ArrowRight className="size-4 group-hover:translate-x-0.5 transition" />
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    to="/auth"
+                    search={{ mode: "signup" }}
+                    className="group inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-7 py-3.5 text-sm font-semibold hover:scale-[1.02] transition shadow-2xl"
+                  >
+                    Get started
+                    <ArrowRight className="size-4 group-hover:translate-x-0.5 transition" />
+                  </Link>
+                  <Link
+                    to="/auth"
+                    search={{ mode: "signin" }}
+                    className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-7 py-3.5 text-sm font-semibold hover:bg-card transition"
+                  >
+                    Log in
+                  </Link>
+                </>
+              )}
             </div>
             <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
               <Bullet>7-day free trial</Bullet>
