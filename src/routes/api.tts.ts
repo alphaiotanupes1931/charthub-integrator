@@ -51,13 +51,15 @@ export const Route = createFileRoute("/api/tts")({
     handlers: {
       OPTIONS: async ({ request }) => preflight(request) ?? new Response(null, { status: 204 }),
       POST: async ({ request }) => {
+        const reqId = getOrCreateRequestId(request);
         const originBlock = enforceOrigin(request);
         if (originBlock) return originBlock;
         const tooBig = enforceMaxBody(request, 32 * 1024); // 32 KB cap for TTS text
         if (tooBig) return tooBig;
         const limited = rateLimit(request, { key: "tts", limit: 20, windowMs: 60_000 });
         if (limited) return limited;
-        const cors = corsHeadersFor(request);
+        const cors = { ...corsHeadersFor(request), "X-Request-Id": reqId };
+        console.log(`[tts] req=${reqId} start`);
 
         let body: Body;
         try {
