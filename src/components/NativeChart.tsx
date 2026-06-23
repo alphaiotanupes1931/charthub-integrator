@@ -27,7 +27,7 @@ export const LEVEL_META: Record<LevelKey, { label: string; color: string; tone: 
 };
 
 export type ChartSnapshot = {
-  source: "coingecko" | "twelvedata" | "synthetic" | "unavailable";
+  source: "coingecko" | "twelvedata" | "yahoo" | "synthetic" | "unavailable";
   sourceLabel: string;
   ticker: string;
   interval: string;
