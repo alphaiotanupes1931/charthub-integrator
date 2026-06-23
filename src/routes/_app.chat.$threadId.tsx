@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
+import { Volume2, VolumeX } from "lucide-react";
 import {
   Conversation,
   ConversationContent,
@@ -22,6 +23,8 @@ import {
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { readJournal, readActiveCoach } from "@/lib/chat-client";
 import { getChatMessages } from "@/lib/chat.functions";
+import { useCoachVoice } from "@/hooks/useCoachVoice";
+import { voiceForCoach } from "@/lib/coachVoices";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -73,6 +76,8 @@ function ChatThreadInner({
   textareaRef: React.MutableRefObject<HTMLTextAreaElement | null>;
 }) {
   const [input, setInput] = useState("");
+  const voice = useCoachVoice();
+  const lastSpokenIdRef = useRef<string | null>(null);
 
   const { messages, sendMessage, status } = useChat({
     id: threadId,
@@ -104,12 +109,28 @@ function ChatThreadInner({
   const loading = status === "submitted" || status === "streaming";
 
   useEffect(() => {
+    if (!voice.enabled) return;
+    if (status !== "ready") return;
+    const last = messages[messages.length - 1];
+    if (!last || last.role !== "assistant") return;
+    if (lastSpokenIdRef.current === last.id) return;
+    const text = last.parts
+      .map((p) => (p.type === "text" ? (p as { text: string }).text : ""))
+      .join("")
+      .trim();
+    if (!text) return;
+    lastSpokenIdRef.current = last.id;
+    void voice.speak(text, voiceForCoach(readActiveCoach()));
+  }, [messages, status, voice]);
+
+  useEffect(() => {
     if (!loading) textareaRef.current?.focus();
   }, [loading, textareaRef, threadId]);
 
   const handleSubmit = () => {
     const text = input.trim();
     if (!text || loading) return;
+    if (voice.enabled) voice.prime();
     setInput("");
     void sendMessage({ text });
   };
@@ -157,6 +178,18 @@ function ChatThreadInner({
               autoFocus
             />
             <PromptInputFooter className="justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  if (voice.enabled) voice.stop();
+                  voice.setEnabled(!voice.enabled);
+                }}
+                className={`h-9 w-9 inline-flex items-center justify-center rounded-md transition ${voice.enabled ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-muted/60"}`}
+                title={voice.enabled ? "Mute coach voice" : "Hear coach replies aloud"}
+                aria-label={voice.enabled ? "Mute voice" : "Enable voice"}
+              >
+                {voice.enabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+              </button>
               <PromptInputSubmit status={status} disabled={!input.trim() || loading} />
             </PromptInputFooter>
           </PromptInput>

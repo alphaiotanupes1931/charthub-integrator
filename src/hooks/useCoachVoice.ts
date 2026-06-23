@@ -71,7 +71,6 @@ export function useCoachVoice() {
   // Call inside a user gesture (click/tap) to unlock mobile autoplay.
   // Safe to call repeatedly.
   const prime = useCallback(() => {
-    if (unlockedRef.current) return;
     const ctx = getAudioContext();
     if (ctx) {
       void ctx.resume().then(() => {
@@ -89,6 +88,7 @@ export function useCoachVoice() {
         /* ignore */
       });
     }
+    if (unlockedRef.current) return;
     const el = getAudio();
     if (!el) return;
     try {
