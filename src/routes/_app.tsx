@@ -12,9 +12,9 @@ export const Route = createFileRoute("/_app")({
     // Force onboarding for new users
     const { data: prof } = await supabase
       .from("profiles")
-      .select("onboarded,banned")
+      .select("onboarded,banned" as "onboarded")
       .eq("id", data.user.id)
-      .maybeSingle();
+      .maybeSingle() as { data: { onboarded: boolean; banned?: boolean } | null };
     if ((prof as { banned?: boolean } | null)?.banned) {
       await supabase.auth.signOut();
       throw redirect({ to: "/auth", search: { banned: "1" } });
