@@ -111,7 +111,15 @@ async function tlFetch(url: string, init: RequestInit, label: string) {
 export const Route = createFileRoute("/api/tradelocker/import")({
   server: {
     handlers: {
+      OPTIONS: async ({ request }) => preflight(request) ?? new Response(null, { status: 204 }),
       POST: async ({ request }) => {
+        const originBlock = enforceOrigin(request);
+        if (originBlock) return originBlock;
+        const tooBig = enforceMaxBody(request, 16 * 1024);
+        if (tooBig) return tooBig;
+        const limited = rateLimit(request, { key: "tl-import", limit: 10, windowMs: 60_000 });
+        if (limited) return limited;
+
         let raw: unknown;
         try { raw = await request.json(); } catch {
           return Response.json({ error: "Invalid JSON" }, { status: 400 });
