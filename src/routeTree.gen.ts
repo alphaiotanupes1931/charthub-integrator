@@ -16,6 +16,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as InviteCodeRouteImport } from './routes/invite.$code'
 import { Route as ApiTtsRouteImport } from './routes/api.tts'
+import { Route as ApiOhlcRouteImport } from './routes/api.ohlc'
 import { Route as ApiChatRouteImport } from './routes/api.chat'
 import { Route as AppVoiceCoachRouteImport } from './routes/_app.voice-coach'
 import { Route as AppStrategiesRouteImport } from './routes/_app.strategies'
@@ -67,6 +68,11 @@ const InviteCodeRoute = InviteCodeRouteImport.update({
 const ApiTtsRoute = ApiTtsRouteImport.update({
   id: '/api/tts',
   path: '/api/tts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiOhlcRoute = ApiOhlcRouteImport.update({
+  id: '/api/ohlc',
+  path: '/api/ohlc',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiChatRoute = ApiChatRouteImport.update({
@@ -180,6 +186,7 @@ export interface FileRoutesByFullPath {
   '/strategies': typeof AppStrategiesRoute
   '/voice-coach': typeof AppVoiceCoachRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/ohlc': typeof ApiOhlcRoute
   '/api/tts': typeof ApiTtsRoute
   '/invite/$code': typeof InviteCodeRoute
   '/chat/$threadId': typeof AppChatThreadIdRoute
@@ -205,6 +212,7 @@ export interface FileRoutesByTo {
   '/strategies': typeof AppStrategiesRoute
   '/voice-coach': typeof AppVoiceCoachRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/ohlc': typeof ApiOhlcRoute
   '/api/tts': typeof ApiTtsRoute
   '/invite/$code': typeof InviteCodeRoute
   '/chat/$threadId': typeof AppChatThreadIdRoute
@@ -233,6 +241,7 @@ export interface FileRoutesById {
   '/_app/strategies': typeof AppStrategiesRoute
   '/_app/voice-coach': typeof AppVoiceCoachRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/ohlc': typeof ApiOhlcRoute
   '/api/tts': typeof ApiTtsRoute
   '/invite/$code': typeof InviteCodeRoute
   '/_app/chat/$threadId': typeof AppChatThreadIdRoute
@@ -261,6 +270,7 @@ export interface FileRouteTypes {
     | '/strategies'
     | '/voice-coach'
     | '/api/chat'
+    | '/api/ohlc'
     | '/api/tts'
     | '/invite/$code'
     | '/chat/$threadId'
@@ -286,6 +296,7 @@ export interface FileRouteTypes {
     | '/strategies'
     | '/voice-coach'
     | '/api/chat'
+    | '/api/ohlc'
     | '/api/tts'
     | '/invite/$code'
     | '/chat/$threadId'
@@ -313,6 +324,7 @@ export interface FileRouteTypes {
     | '/_app/strategies'
     | '/_app/voice-coach'
     | '/api/chat'
+    | '/api/ohlc'
     | '/api/tts'
     | '/invite/$code'
     | '/_app/chat/$threadId'
@@ -327,6 +339,7 @@ export interface RootRouteChildren {
   FaqRoute: typeof FaqRoute
   OnboardingRoute: typeof OnboardingRoute
   ApiChatRoute: typeof ApiChatRoute
+  ApiOhlcRoute: typeof ApiOhlcRoute
   ApiTtsRoute: typeof ApiTtsRoute
   InviteCodeRoute: typeof InviteCodeRoute
   ApiTradelockerImportRoute: typeof ApiTradelockerImportRoute
@@ -381,6 +394,13 @@ declare module '@tanstack/react-router' {
       path: '/api/tts'
       fullPath: '/api/tts'
       preLoaderRoute: typeof ApiTtsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ohlc': {
+      id: '/api/ohlc'
+      path: '/api/ohlc'
+      fullPath: '/api/ohlc'
+      preLoaderRoute: typeof ApiOhlcRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/chat': {
@@ -568,6 +588,7 @@ const rootRouteChildren: RootRouteChildren = {
   FaqRoute: FaqRoute,
   OnboardingRoute: OnboardingRoute,
   ApiChatRoute: ApiChatRoute,
+  ApiOhlcRoute: ApiOhlcRoute,
   ApiTtsRoute: ApiTtsRoute,
   InviteCodeRoute: InviteCodeRoute,
   ApiTradelockerImportRoute: ApiTradelockerImportRoute,

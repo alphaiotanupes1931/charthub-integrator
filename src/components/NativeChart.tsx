@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import {
   createChart,
@@ -11,7 +10,7 @@ import {
   LineStyle,
   CrosshairMode,
 } from "lightweight-charts";
-import { getOhlc } from "@/lib/ohlc.functions";
+import type { OhlcResponse, OhlcSource } from "@/routes/api.ohlc";
 import { useTimeFormat, formatTime } from "@/hooks/useTimeFormat";
 
 export type LevelKey = "VWAP" | "POC" | "SR" | "ZONES" | "FVG" | "FIB" | "LIQ" | "OF";
