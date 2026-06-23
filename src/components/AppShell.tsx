@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import logoAsset from "@/assets/logo.png.asset.json";
 import { Tutorial } from "@/components/Tutorial";
-import { WelcomeBackGreeter } from "@/components/WelcomeBackGreeter";
+import { WelcomeBackGreeter, WelcomeBackProvider } from "@/components/WelcomeBackGreeter";
 import { useTheme } from "@/hooks/useTheme";
 import { useProfile } from "@/hooks/useProfile";
 
@@ -155,7 +155,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 
   return (
-    <div className="flex min-h-screen w-full text-foreground">
+    <WelcomeBackProvider>
+      <div className="flex min-h-screen w-full text-foreground">
       {/* Desktop sidebar */}
       <aside
         className={`${
@@ -222,6 +223,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <Tutorial />
       <WelcomeBackGreeter />
     </div>
+    </WelcomeBackProvider>
   );
 }
 

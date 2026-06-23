@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useProfile } from "@/hooks/useProfile";
 import { readActiveCoach, readJournal } from "@/lib/chat-client";
@@ -15,6 +15,25 @@ import {
 } from "@/lib/welcomeBack";
 
 type PreparedWindow = Window & { __trademindWelcomeAudio?: HTMLAudioElement };
+
+const WelcomeBackContext = createContext<{
+  recapText: string | null;
+  setRecapText: (text: string | null) => void;
+}>({ recapText: null, setRecapText: () => {} });
+
+export function WelcomeBackProvider({ children }: { children: ReactNode }) {
+  const [recapText, setRecapText] = useState<string | null>(null);
+  return (
+    <WelcomeBackContext.Provider value={{ recapText, setRecapText }}>
+      {children}
+    </WelcomeBackContext.Provider>
+  );
+}
+
+export function useWelcomeBackRecap() {
+  return useContext(WelcomeBackContext);
+}
+
 
 function shouldPlayWelcome(): boolean {
   if (typeof window === "undefined") return false;
@@ -38,13 +57,16 @@ function markPlayed() {
   }
 }
 
-export function WelcomeBackGreeter() {
+type WelcomeBackGreeterProps = { playOnMount?: boolean };
+
+export function WelcomeBackGreeter({ playOnMount = true }: WelcomeBackGreeterProps) {
   const { profile } = useProfile();
+  const { setRecapText } = useWelcomeBackRecap();
   const fetchContext = useServerFn(getLatestRecapContext);
   const runIdRef = useRef(0);
 
   useEffect(() => {
-    if (typeof window === "undefined" || !shouldPlayWelcome()) return;
+    if (typeof window === "undefined") return;
     const runId = runIdRef.current + 1;
     runIdRef.current = runId;
 
@@ -81,6 +103,11 @@ export function WelcomeBackGreeter() {
       }
       if (cancelled || runId !== runIdRef.current || !text) return;
 
+      // Always expose the text so the dashboard replay button can read it aloud.
+      setRecapText(text);
+
+      if (!playOnMount || !shouldPlayWelcome()) return;
+
       await speakWithElevenLabs(text, coach, preparedAudio, {
         onStart: markPlayed,
         onEnd: markPlayed,
@@ -90,7 +117,7 @@ export function WelcomeBackGreeter() {
     return () => {
       cancelled = true;
     };
-  }, [profile?.id, profile?.display_name, profile?.email, fetchContext]);
+  }, [profile?.id, profile?.display_name, profile?.email, fetchContext, playOnMount, setRecapText]);
 
   return null;
 }
