@@ -236,7 +236,7 @@ function AuthPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full h-10 rounded-md border border-border bg-background px-3 pr-10 text-sm focus:outline-none focus:border-primary/50"
-                  minLength={8}
+                  minLength={mode === "signup" ? 12 : 1}
                   maxLength={72}
                   required
                 />
@@ -251,7 +251,9 @@ function AuthPage() {
                 </button>
               </div>
               {mode === "signup" && (
-                <p className="mt-1 text-[11px] text-muted-foreground">At least 8 characters.</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  At least 12 characters, with a number and a special character.
+                </p>
               )}
             </div>
             <Button type="submit" className="w-full" disabled={busy}>
