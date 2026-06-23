@@ -49,32 +49,12 @@ export const acceptInvite = createServerFn({ method: "POST" })
   .inputValidator((data: { code: string }) => data)
   .handler(async ({ data, context }) => {
     const code = data.code.trim();
-    const { data: invite, error } = await context.supabase
-      .from("trader_invites")
-      .select("id,inviter_id,accepted_by")
-      .eq("code", code)
-      .maybeSingle();
+    const { data: inviterId, error } = await context.supabase.rpc("redeem_invite", { _code: code });
     if (error) throw new Error(error.message);
-    if (!invite) throw new Error("Invite not found");
-    if (invite.inviter_id === context.userId) throw new Error("That's your own invite link");
-
-    // mark accepted (only if not yet)
-    if (!invite.accepted_by) {
-      await context.supabase
-        .from("trader_invites")
-        .update({ accepted_by: context.userId, accepted_at: new Date().toISOString() })
-        .eq("id", invite.id);
-    }
-
-    // create connection with sorted ids
-    const [a, b] = [invite.inviter_id, context.userId].sort();
-    const { error: connErr } = await context.supabase
-      .from("trader_connections")
-      .upsert({ user_a: a, user_b: b }, { onConflict: "user_a,user_b" });
-    if (connErr) throw new Error(connErr.message);
-
-    return { ok: true, inviterId: invite.inviter_id };
+    if (!inviterId) throw new Error("Invite not found");
+    return { ok: true, inviterId: inviterId as string };
   });
+
 
 export const listRoster = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
