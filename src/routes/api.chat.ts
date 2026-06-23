@@ -248,6 +248,7 @@ export const Route = createFileRoute("/api/chat")({
     handlers: {
       OPTIONS: async ({ request }) => preflight(request) ?? new Response(null, { status: 204 }),
       POST: async ({ request }) => {
+        const reqId = getOrCreateRequestId(request);
         const originBlock = enforceOrigin(request);
         if (originBlock) return originBlock;
         const tooBig = enforceMaxBody(request, 512 * 1024); // 512 KB cap
@@ -255,7 +256,8 @@ export const Route = createFileRoute("/api/chat")({
         const limited = rateLimit(request, { key: "chat", limit: 20, windowMs: 60_000 });
         if (limited) return limited;
 
-        const cors = corsHeadersFor(request);
+        const cors = { ...corsHeadersFor(request), "X-Request-Id": reqId };
+        console.log(`[chat] req=${reqId} start`);
 
         // --- Auth: verify the bearer token ---
         const authHeader = request.headers.get("authorization") ?? "";
