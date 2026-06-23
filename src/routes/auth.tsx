@@ -40,9 +40,14 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
-const credSchema = z.object({
+const signInSchema = z.object({
   email: z.string().trim().email("Enter a valid email").max(255),
-  password: z.string().min(8, "Password must be at least 8 characters").max(72),
+  password: z.string().min(1, "Password is required").max(72),
+});
+
+const signUpSchema = z.object({
+  email: z.string().trim().email("Enter a valid email").max(255),
+  password: strongPasswordSchema,
 });
 
 async function buildLoginWelcomeRecap() {
