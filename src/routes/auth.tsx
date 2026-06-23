@@ -22,6 +22,7 @@ import {
 const searchSchema = z.object({
   redirect: z.string().optional(),
   mode: z.enum(["signin", "signup"]).optional(),
+  banned: z.string().optional(),
 });
 
 export const Route = createFileRoute("/auth")({
