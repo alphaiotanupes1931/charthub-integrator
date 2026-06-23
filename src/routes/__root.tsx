@@ -12,7 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import logoAsset from "../assets/logo.png.asset.json";
-import { getHost } from "../lib/host.functions";
+
 
 
 function NotFoundComponent() {
