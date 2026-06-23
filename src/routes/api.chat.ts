@@ -2,6 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
 import { createClient } from "@supabase/supabase-js";
 import { createAiGatewayProvider } from "@/lib/ai-gateway.server";
+import {
+  corsHeadersFor,
+  enforceMaxBody,
+  enforceOrigin,
+  preflight,
+  rateLimit,
+} from "@/lib/api-security";
 import type { Database, Json } from "@/integrations/supabase/types";
 
 type Trade = {
@@ -236,15 +243,25 @@ ${journalContext}
 export const Route = createFileRoute("/api/chat")({
   server: {
     handlers: {
+      OPTIONS: async ({ request }) => preflight(request) ?? new Response(null, { status: 204 }),
       POST: async ({ request }) => {
+        const originBlock = enforceOrigin(request);
+        if (originBlock) return originBlock;
+        const tooBig = enforceMaxBody(request, 512 * 1024); // 512 KB cap
+        if (tooBig) return tooBig;
+        const limited = rateLimit(request, { key: "chat", limit: 20, windowMs: 60_000 });
+        if (limited) return limited;
+
+        const cors = corsHeadersFor(request);
+
         // --- Auth: verify the bearer token ---
         const authHeader = request.headers.get("authorization") ?? "";
         if (!authHeader.startsWith("Bearer ")) {
-          return new Response("Unauthorized", { status: 401 });
+          return new Response("Unauthorized", { status: 401, headers: cors });
         }
         const token = authHeader.slice("Bearer ".length).trim();
         if (!token || token.split(".").length !== 3) {
-          return new Response("Unauthorized", { status: 401 });
+          return new Response("Unauthorized", { status: 401, headers: cors });
         }
 
         const sb = createClient<Database>(
@@ -258,7 +275,7 @@ export const Route = createFileRoute("/api/chat")({
 
         const { data: claims, error: claimsErr } = await sb.auth.getClaims(token);
         if (claimsErr || !claims?.claims?.sub) {
-          return new Response("Unauthorized", { status: 401 });
+          return new Response("Unauthorized", { status: 401, headers: cors });
         }
         const userId = claims.claims.sub;
 
@@ -267,15 +284,15 @@ export const Route = createFileRoute("/api/chat")({
         try {
           body = (await request.json()) as ChatRequestBody;
         } catch {
-          return new Response("Invalid JSON", { status: 400 });
+          return new Response("Invalid JSON", { status: 400, headers: cors });
         }
         const { messages, threadId, coach, journal, chart, strategy, lens } = body;
         if (!Array.isArray(messages) || !threadId) {
-          return new Response("messages, threadId required", { status: 400 });
+          return new Response("messages, threadId required", { status: 400, headers: cors });
         }
 
         const key = process.env.LOVABLE_API_KEY;
-        if (!key) return new Response("AI not configured", { status: 500 });
+        if (!key) return new Response("AI not configured", { status: 500, headers: cors });
 
         // --- Verify thread ownership when this is a persisted chat thread. ---
         // The dashboard coach can start in ephemeral mode while the protected
@@ -290,7 +307,7 @@ export const Route = createFileRoute("/api/chat")({
             .eq("id", threadId)
             .maybeSingle();
           if (threadErr || !threadRow || threadRow.user_id !== userId) {
-            return new Response("Forbidden", { status: 403 });
+            return new Response("Forbidden", { status: 403, headers: cors });
           }
           thread = threadRow;
         }

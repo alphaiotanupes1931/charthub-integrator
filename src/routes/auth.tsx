@@ -4,6 +4,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { signUpConfirmed } from "@/lib/auth.functions";
+import { strongPasswordSchema } from "@/lib/api-security";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import logoAsset from "@/assets/logo.png.asset.json";
@@ -39,9 +40,14 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
-const credSchema = z.object({
+const signInSchema = z.object({
   email: z.string().trim().email("Enter a valid email").max(255),
-  password: z.string().min(8, "Password must be at least 8 characters").max(72),
+  password: z.string().min(1, "Password is required").max(72),
+});
+
+const signUpSchema = z.object({
+  email: z.string().trim().email("Enter a valid email").max(255),
+  password: strongPasswordSchema,
 });
 
 async function buildLoginWelcomeRecap() {
@@ -111,7 +117,8 @@ function AuthPage() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const parsed = credSchema.safeParse({ email, password });
+    const schema = mode === "signup" ? signUpSchema : signInSchema;
+    const parsed = schema.safeParse({ email, password });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message ?? "Invalid input");
       return;
@@ -229,7 +236,7 @@ function AuthPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full h-10 rounded-md border border-border bg-background px-3 pr-10 text-sm focus:outline-none focus:border-primary/50"
-                  minLength={8}
+                  minLength={mode === "signup" ? 12 : 1}
                   maxLength={72}
                   required
                 />
@@ -244,7 +251,9 @@ function AuthPage() {
                 </button>
               </div>
               {mode === "signup" && (
-                <p className="mt-1 text-[11px] text-muted-foreground">At least 8 characters.</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  At least 12 characters, with a number and a special character.
+                </p>
               )}
             </div>
             <Button type="submit" className="w-full" disabled={busy}>
