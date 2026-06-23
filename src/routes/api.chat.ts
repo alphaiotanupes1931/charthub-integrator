@@ -2,6 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
 import { createClient } from "@supabase/supabase-js";
 import { createAiGatewayProvider } from "@/lib/ai-gateway.server";
+import {
+  corsHeadersFor,
+  enforceMaxBody,
+  enforceOrigin,
+  preflight,
+  rateLimit,
+} from "@/lib/api-security";
 import type { Database, Json } from "@/integrations/supabase/types";
 
 type Trade = {
