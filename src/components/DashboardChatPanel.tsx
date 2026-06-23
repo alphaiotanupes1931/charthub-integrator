@@ -47,16 +47,32 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
   const getThread = useServerFn(getOrCreateDashboardThread);
   const getMsgs = useServerFn(getChatMessages);
 
-  // Wait until the supabase session is hydrated before calling auth-protected
-  // server functions. On mobile (slower cold start, app resume from background)
-  // this is the difference between a 401 and a clean load.
-  const waitForSession = useCallback(async (): Promise<boolean> => {
-    for (let i = 0; i < 40; i++) {
-      const { data } = await supabase.auth.getSession();
-      if (data.session?.access_token) return true;
-      await new Promise((r) => setTimeout(r, 250));
-    }
-    return false;
+  // Wait for a real Supabase session before calling auth-protected server fns.
+  // On mobile (slow cold start, app resumed from background) the token can take
+  // a few seconds; we resolve immediately via onAuthStateChange when it arrives.
+  const waitForSession = useCallback(async (): Promise<string | null> => {
+    const immediate = await supabase.auth.getSession();
+    if (immediate.data.session?.access_token) return immediate.data.session.access_token;
+
+    return new Promise((resolve) => {
+      let done = false;
+      const finish = (token: string | null) => {
+        if (done) return;
+        done = true;
+        sub?.subscription.unsubscribe();
+        clearInterval(poll);
+        clearTimeout(deadline);
+        resolve(token);
+      };
+      const sub = supabase.auth.onAuthStateChange((_e, session) => {
+        if (session?.access_token) finish(session.access_token);
+      });
+      const poll = setInterval(async () => {
+        const { data } = await supabase.auth.getSession();
+        if (data.session?.access_token) finish(data.session.access_token);
+      }, 400);
+      const deadline = setTimeout(() => finish(null), 15_000);
+    });
   }, []);
 
   useEffect(() => {
@@ -73,34 +89,35 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
     };
 
     (async () => {
-      const ok = await waitForSession();
+      const token = await waitForSession();
       if (cancelled) return;
-      if (!ok) {
-        setLoadError("You're signed out. Sign in again to talk to your coach.");
+      if (!token) {
+        setLoadError("Sign-in hasn't finished loading. Tap retry.");
         return;
       }
-      try {
-        const rows = await tryOnce();
-        if (!cancelled && rows) setInitial(rows);
-      } catch (e1) {
-        console.warn("[coach] first load failed, retrying", e1);
-        // One retry with short backoff — handles mobile cold-start flakiness.
-        await new Promise((r) => setTimeout(r, 1200));
+
+      // Three attempts with backoff: handles worker cold starts and flaky mobile networks.
+      const delays = [0, 800, 2200];
+      let lastErr: unknown = null;
+      for (let i = 0; i < delays.length; i++) {
         if (cancelled) return;
+        if (delays[i]) await new Promise((r) => setTimeout(r, delays[i]));
         try {
           const rows = await tryOnce();
-          if (!cancelled && rows) setInitial(rows);
-        } catch (e2) {
-          console.error("[coach] load failed after retry", e2);
-          if (!cancelled) {
-            // Last-resort: let the user chat without history rather than blocking.
-            setInitial([]);
-            if (!threadId) {
-              setLoadError("Couldn't reach the coach. Tap retry.");
-            }
+          if (!cancelled && rows) {
+            setInitial(rows);
+            setLoadError(null);
           }
+          return;
+        } catch (e) {
+          lastErr = e;
+          console.warn(`[coach] load attempt ${i + 1} failed`, e);
+          // Refresh in case the token expired mid-flight.
+          try { await supabase.auth.refreshSession(); } catch { /* ignore */ }
         }
       }
+      console.error("[coach] all attempts failed", lastErr);
+      if (!cancelled) setLoadError("Couldn't reach the coach. Check your connection, then retry.");
     })();
 
     return () => { cancelled = true; };
