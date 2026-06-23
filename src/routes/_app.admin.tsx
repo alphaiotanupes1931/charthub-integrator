@@ -32,11 +32,6 @@ function AdminPage() {
   const [err, setErr] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
-  const loadUsers = async () => {
-    const { data: u, error } = await supabase.rpc("admin_users_overview");
-    if (error) { setErr(error.message); return; }
-    setUsers((u ?? []) as UserRow[]);
-  };
 
   const toggleBan = async (u: UserRow) => {
     const next = !u.banned;
