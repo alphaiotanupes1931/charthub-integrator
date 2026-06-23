@@ -23,6 +23,7 @@ const searchSchema = z.object({
   redirect: z.string().optional(),
   mode: z.enum(["signin", "signup"]).optional(),
   banned: z.string().optional(),
+  force: z.string().optional(),
 });
 
 export const Route = createFileRoute("/auth")({
@@ -92,6 +93,10 @@ function AuthPage() {
   // Already signed in? Bounce to redirect target (honoring any pending invite).
   useEffect(() => {
     let cancelled = false;
+    if (search.force === "1") {
+      supabase.auth.signOut().catch(() => {});
+      return () => { cancelled = true; };
+    }
     supabase.auth.getUser().then(({ data }) => {
       if (cancelled || !data.user) return;
       let target = search.redirect || "/dashboard";
@@ -102,7 +107,7 @@ function AuthPage() {
       navigate({ to: target, replace: true });
     });
     return () => { cancelled = true; };
-  }, [navigate, search.redirect]);
+  }, [navigate, search.force, search.redirect]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
