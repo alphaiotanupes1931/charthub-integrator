@@ -12,6 +12,8 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import logoAsset from "../assets/logo.png.asset.json";
+import { getHost } from "../lib/host.functions";
+
 
 function NotFoundComponent() {
   return (
@@ -74,13 +76,21 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
+  loader: async () => {
+    const host = await getHost();
+    const isLovableHost = /\.lovable\.app$/i.test(host);
+    return { isLovableHost };
+  },
+  head: ({ loaderData }) => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { name: "theme-color", content: "#0a0a0a" },
       { title: "TradeMind, AI Trading Coach & Live Charts" },
       { name: "description", content: "AI trading coach with live charts, trade journaling, and performance analytics for day, swing, and prop traders." },
+      ...(loaderData?.isLovableHost
+        ? [{ name: "robots", content: "noindex, nofollow" }]
+        : []),
       { property: "og:title", content: "TradeMind, AI Trading Coach" },
       { property: "og:description", content: "Live charts and AI-powered coaching for serious traders." },
       { property: "og:type", content: "website" },
@@ -93,6 +103,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: appCss },
       { rel: "icon", type: "image/png", href: logoAsset.url },
       { rel: "apple-touch-icon", href: logoAsset.url },
+      { rel: "canonical", href: "https://trademindaicoach.com/" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" },
@@ -103,6 +114,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
 });
+
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
