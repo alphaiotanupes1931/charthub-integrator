@@ -22,6 +22,7 @@ type UserRow = {
   broker_connected: boolean;
   broker_name: string | null;
   broker_account_type: string | null;
+  banned: boolean;
 };
 
 function AdminPage() {
