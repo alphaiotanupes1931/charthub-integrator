@@ -40,6 +40,8 @@ const SILENT_WAV =
 export function useCoachVoice() {
   const [enabled, setEnabledState] = useState<boolean>(() => readVoiceEnabled());
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const sourceRef = useRef<AudioBufferSourceNode | null>(null);
   const unlockedRef = useRef(false);
   const lastBlobUrlRef = useRef<string | null>(null);
   const syncedRef = useRef(false);
@@ -56,10 +58,37 @@ export function useCoachVoice() {
     return audioRef.current;
   }, []);
 
+  const getAudioContext = useCallback((): AudioContext | null => {
+    if (typeof window === "undefined") return null;
+    if (!audioContextRef.current) {
+      const AudioContextCtor = window.AudioContext ?? (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!AudioContextCtor) return null;
+      audioContextRef.current = new AudioContextCtor({ sampleRate: 44100 });
+    }
+    return audioContextRef.current;
+  }, []);
+
   // Call inside a user gesture (click/tap) to unlock mobile autoplay.
   // Safe to call repeatedly.
   const prime = useCallback(() => {
     if (unlockedRef.current) return;
+    const ctx = getAudioContext();
+    if (ctx) {
+      void ctx.resume().then(() => {
+        try {
+          const buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
+          const source = ctx.createBufferSource();
+          source.buffer = buffer;
+          source.connect(ctx.destination);
+          source.start();
+          unlockedRef.current = true;
+        } catch {
+          /* ignore */
+        }
+      }).catch(() => {
+        /* ignore */
+      });
+    }
     const el = getAudio();
     if (!el) return;
     try {
@@ -84,7 +113,7 @@ export function useCoachVoice() {
     } catch {
       /* ignore */
     }
-  }, [getAudio]);
+  }, [getAudio, getAudioContext]);
 
   useEffect(() => {
     const sync = () => setEnabledState(readVoiceEnabled());
@@ -138,6 +167,11 @@ export function useCoachVoice() {
   }, [prime]);
 
   const stop = useCallback(() => {
+    if (sourceRef.current) {
+      try { sourceRef.current.stop(); } catch { /* ignore */ }
+      try { sourceRef.current.disconnect(); } catch { /* ignore */ }
+      sourceRef.current = null;
+    }
     const a = audioRef.current;
     if (a) {
       try { a.pause(); } catch { /* ignore */ }
@@ -153,10 +187,16 @@ export function useCoachVoice() {
   const speak = useCallback(async (text: string, voiceId: string) => {
     if (!text.trim()) return;
     const el = getAudio();
-    if (!el) return;
+    const ctx = getAudioContext();
+    if (!el && !ctx) return;
     // Stop any previous playback but DON'T destroy the element — we need it
     // to keep its unlocked status for mobile autoplay.
-    try { el.pause(); } catch { /* ignore */ }
+    if (sourceRef.current) {
+      try { sourceRef.current.stop(); } catch { /* ignore */ }
+      try { sourceRef.current.disconnect(); } catch { /* ignore */ }
+      sourceRef.current = null;
+    }
+    if (el) try { el.pause(); } catch { /* ignore */ }
     if (lastBlobUrlRef.current) {
       URL.revokeObjectURL(lastBlobUrlRef.current);
       lastBlobUrlRef.current = null;
@@ -173,6 +213,24 @@ export function useCoachVoice() {
         return;
       }
       const blob = await res.blob();
+      if (ctx) {
+        try {
+          await ctx.resume();
+          const audioBuffer = await ctx.decodeAudioData(await blob.arrayBuffer());
+          const source = ctx.createBufferSource();
+          source.buffer = audioBuffer;
+          source.connect(ctx.destination);
+          source.onended = () => {
+            if (sourceRef.current === source) sourceRef.current = null;
+          };
+          sourceRef.current = source;
+          source.start(0);
+          return;
+        } catch (e) {
+          console.warn("[voice] web audio failed", e);
+        }
+      }
+      if (!el) return;
       const url = URL.createObjectURL(blob);
       lastBlobUrlRef.current = url;
       el.src = url;
@@ -188,7 +246,7 @@ export function useCoachVoice() {
     } catch (e) {
       console.error("[voice] error", e);
     }
-  }, [getAudio]);
+  }, [getAudio, getAudioContext]);
 
   useEffect(() => stop, [stop]);
 
