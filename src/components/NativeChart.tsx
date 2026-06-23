@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import {
   createChart,
@@ -11,7 +10,7 @@ import {
   LineStyle,
   CrosshairMode,
 } from "lightweight-charts";
-import { getOhlc } from "@/lib/ohlc.functions";
+import type { OhlcResponse, OhlcSource } from "@/routes/api.ohlc";
 import { useTimeFormat, formatTime } from "@/hooks/useTimeFormat";
 
 export type LevelKey = "VWAP" | "POC" | "SR" | "ZONES" | "FVG" | "FIB" | "LIQ" | "OF";
@@ -28,7 +27,7 @@ export const LEVEL_META: Record<LevelKey, { label: string; color: string; tone: 
 };
 
 export type ChartSnapshot = {
-  source: "coingecko" | "twelvedata" | "synthetic";
+  source: "coingecko" | "twelvedata" | "synthetic" | "unavailable";
   sourceLabel: string;
   ticker: string;
   interval: string;
@@ -67,85 +66,8 @@ const SESSIONS = [
 ];
 
 
-// --- Deterministic PRNG so each (symbol, interval) is stable & 1W ≠ 1M ---
-function hashSeed(s: string): number {
-  let h = 2166136261 >>> 0;
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 16777619) >>> 0;
-  }
-  return h >>> 0;
-}
-function mulberry32(seed: number) {
-  let a = seed >>> 0;
-  return function () {
-    a = (a + 0x6D2B79F5) >>> 0;
-    let t = a;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-// Map interval -> seconds per bar (so timeframes are visibly different)
-function secondsFor(interval: string): number {
-  switch (interval) {
-    case "1":   return 60;
-    case "5":   return 5 * 60;
-    case "15":  return 15 * 60;
-    case "60":  return 60 * 60;
-    case "240": return 4 * 60 * 60;
-    case "D":   return 24 * 60 * 60;
-    case "W":   return 7 * 24 * 60 * 60;
-    case "M":   return 30 * 24 * 60 * 60;
-    default:    return 60 * 60;
-  }
-}
-
-function basePriceFor(ticker: string): number {
-  const t = ticker.toUpperCase();
-  if (t.includes("XAU")) return 2380;
-  if (t.includes("BTC")) return 67000;
-  if (t.includes("ETH")) return 3500;
-  if (t.includes("NAS")) return 18500;
-  if (t.includes("SPX")) return 5200;
-  if (t.includes("DJI") || t.includes("US30")) return 39800;
-  if (t.includes("JPY")) return 156;
-  if (t.includes("EUR")) return 1.08;
-  if (t.includes("GBP")) return 1.27;
-  return 100;
-}
 
 type Candle = { time: Time; open: number; high: number; low: number; close: number };
-
-function generateCandles(symbol: string, interval: string, ticker: string, count = 220): Candle[] {
-  const seed = hashSeed(`${symbol}|${interval}`);
-  const rnd = mulberry32(seed);
-  const stepSec = secondsFor(interval);
-  const now = Math.floor(Date.now() / 1000);
-  const start = now - stepSec * (count - 1);
-
-  const base = basePriceFor(ticker);
-  // Volatility scales with interval — bigger TFs swing more
-  const vol = base * (0.0015 + Math.min(stepSec / (60 * 60 * 24 * 30), 1) * 0.03);
-
-  const out: Candle[] = [];
-  let price = base * (0.95 + rnd() * 0.1);
-  for (let i = 0; i < count; i++) {
-    const drift = (rnd() - 0.5) * vol * 0.6;
-    const wave = Math.sin(i / (8 + (seed % 7))) * vol * 0.4;
-    const open = price;
-    const close = Math.max(0.0001, open + drift + wave);
-    const high = Math.max(open, close) + rnd() * vol * 0.6;
-    const low  = Math.min(open, close) - rnd() * vol * 0.6;
-    out.push({
-      time: (start + i * stepSec) as Time,
-      open, high, low, close,
-    });
-    price = close;
-  }
-  return out;
-}
 
 // --- Compute levels from candles ---
 function computeLevels(candles: Candle[]) {
@@ -250,21 +172,23 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
   // Session band positions {key,color,label,left,width} in pixels for the overlay
   const [bands, setBands] = useState<Array<{ key: string; color: string; label: string; left: number; width: number; idx: number }>>([]);
 
-  const fetchOhlc = useServerFn(getOhlc);
-  const { data: liveOhlc, isLoading, isError } = useQuery({
+  const { data: liveOhlc, isLoading, isError } = useQuery<OhlcResponse>({
     queryKey: ["ohlc", ticker, interval],
-    queryFn: () => fetchOhlc({ data: { ticker, interval } }),
+    queryFn: async () => {
+      const params = new URLSearchParams({ ticker, interval });
+      const res = await fetch(`/api/ohlc?${params.toString()}`);
+      if (!res.ok) throw new Error(`OHLC fetch failed: ${res.status}`);
+      return (await res.json()) as OhlcResponse;
+    },
     staleTime: 30_000,
     refetchInterval: 30_000,
     refetchOnWindowFocus: false,
     retry: 1,
   });
 
-  const hasLive = !!liveOhlc && liveOhlc.source !== "synthetic" && liveOhlc.bars.length > 0;
-  const noLiveSource =
-    isError || (!!liveOhlc && (liveOhlc.source === "synthetic" || liveOhlc.bars.length === 0));
-  // Only show the loader while the first fetch is genuinely in flight.
-  // If it errored or the server reports no live source, fall back to synthetic candles immediately.
+  const hasLive = !!liveOhlc && !!liveOhlc.source && liveOhlc.bars.length > 0;
+  const noLiveSource = isError || (!!liveOhlc && (!liveOhlc.source || liveOhlc.bars.length === 0));
+  // Show the loader only while the first fetch is genuinely in flight.
   const showLoader = isLoading && !hasLive && !noLiveSource;
 
   const candles = useMemo<Candle[]>(() => {
@@ -277,12 +201,13 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
         close: b.close,
       }));
     }
-    if (noLiveSource || isError) return generateCandles(symbol, interval, ticker);
     return [];
-  }, [liveOhlc, hasLive, noLiveSource, isError, symbol, interval, ticker]);
+  }, [liveOhlc, hasLive]);
   const levels = useMemo(() => computeLevels(candles), [candles]);
   const isLive = hasLive;
   const sourceLabel = liveOhlc?.source === "coingecko" ? "CoinGecko" : liveOhlc?.source === "twelvedata" ? "Twelve Data" : "";
+  const snapshotSource = isLive ? (liveOhlc?.source ?? "unknown") : "unavailable";
+  const snapshotSourceLabel = isLive ? (sourceLabel || "Live") : "Unavailable";
 
   // Live clock for the on-chart overlay
   const { format: timeFormat } = useTimeFormat();
@@ -303,8 +228,8 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     const last50 = candles.slice(-50);
     const lastPrice = candles[candles.length - 1].close;
     const snap: ChartSnapshot = {
-      source: (liveOhlc?.source ?? "synthetic"),
-      sourceLabel: sourceLabel || "Synthetic",
+      source: snapshotSource as ChartSnapshot["source"],
+      sourceLabel: snapshotSourceLabel,
       ticker,
       interval,
       lastPrice,
@@ -465,7 +390,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
         </div>
       )}
       <div className="absolute left-3 top-3 z-10 rounded-md border border-border bg-background/70 backdrop-blur px-2 py-1 text-[10px] font-mono text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-        <span>{isLive ? "Live" : showLoader ? "Loading" : "Native"} · {ticker} · {interval}</span>
+        <span>{isLive ? "Live" : showLoader ? "Loading" : noLiveSource ? "Unavailable" : "Native"} · {ticker} · {interval}</span>
         {isLive && (
           <span className="inline-flex items-center gap-1 text-emerald-400 normal-case">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -483,6 +408,14 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
             Fetching live {ticker}…
+          </div>
+        </div>
+      )}
+      {noLiveSource && !showLoader && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/60 backdrop-blur-sm">
+          <div className="max-w-xs text-center text-xs text-muted-foreground">
+            <p className="font-medium text-foreground mb-1">Live chart data not loading</p>
+            <p>We can’t show {ticker} right now because the live feed is unavailable. Please check your connection or try again shortly.</p>
           </div>
         </div>
       )}
