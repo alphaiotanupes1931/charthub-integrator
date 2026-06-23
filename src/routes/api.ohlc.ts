@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
+import { corsHeadersFor, enforceOrigin, preflight, rateLimit } from "@/lib/api-security";
+
 
 // ----- CoinGecko (crypto, no key) -----
 const COIN_IDS: Record<string, string> = {
