@@ -121,7 +121,7 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getThread, getMsgs, waitForSession]);
 
-  return <ChatInner ref={ref} threadId={threadId} initial={initial} chart={chart} onClose={onClose} onMinimize={onMinimize} />;
+  return <ChatInner key={threadId} ref={ref} threadId={threadId} initial={initial} chart={chart} onClose={onClose} onMinimize={onMinimize} />;
 });
 
 
