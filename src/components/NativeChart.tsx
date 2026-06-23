@@ -10,7 +10,7 @@ import {
   LineStyle,
   CrosshairMode,
 } from "lightweight-charts";
-import type { OhlcResponse, OhlcSource } from "@/routes/api.ohlc";
+import type { OhlcResponse } from "@/routes/api.ohlc";
 import { useTimeFormat, formatTime } from "@/hooks/useTimeFormat";
 
 export type LevelKey = "VWAP" | "POC" | "SR" | "ZONES" | "FVG" | "FIB" | "LIQ" | "OF";
