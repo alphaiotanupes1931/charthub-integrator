@@ -81,6 +81,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          banned: boolean
           broker_account_type: string | null
           broker_connected: boolean
           broker_name: string | null
@@ -97,6 +98,7 @@ export type Database = {
           wins: number
         }
         Insert: {
+          banned?: boolean
           broker_account_type?: string | null
           broker_connected?: boolean
           broker_name?: string | null
@@ -113,6 +115,7 @@ export type Database = {
           wins?: number
         }
         Update: {
+          banned?: boolean
           broker_account_type?: string | null
           broker_connected?: boolean
           broker_name?: string | null
