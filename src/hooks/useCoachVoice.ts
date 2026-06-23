@@ -10,8 +10,17 @@ let voicePreferenceTouched = false;
 function readVoiceEnabled(): boolean {
   if (typeof window === "undefined") return false;
   if (inMemoryVoiceEnabled !== null) return inMemoryVoiceEnabled;
-  return window.localStorage.getItem(VOICE_KEY) === "1";
+  const v = window.localStorage.getItem(VOICE_KEY);
+  if (v === "1") return true;
+  if (v === "0") return false;
+  // Default ON unless the welcome-back greeting has been muted.
+  try {
+    return window.localStorage.getItem("trademind.welcomeBack.muted.v1") !== "1";
+  } catch {
+    return true;
+  }
 }
+
 
 function rememberVoiceEnabled(enabled: boolean) {
   inMemoryVoiceEnabled = enabled;
