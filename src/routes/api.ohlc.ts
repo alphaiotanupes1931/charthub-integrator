@@ -27,7 +27,7 @@ function daysForInterval(interval: string): number {
 }
 
 export type OhlcBar = { time: number; open: number; high: number; low: number; close: number };
-export type OhlcSource = "coingecko" | "twelvedata";
+export type OhlcSource = "coingecko" | "twelvedata" | "yahoo";
 export type OhlcResponse = {
   source: OhlcSource | null;
   bars: OhlcBar[];
@@ -35,18 +35,48 @@ export type OhlcResponse = {
   ttlMs: number;
 };
 
+async function fetchJsonWithTimeout<T>(url: string, timeoutMs = 8_000): Promise<T> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, {
+      headers: { accept: "application/json" },
+      signal: controller.signal,
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return (await res.json()) as T;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function cleanBars(bars: OhlcBar[]): OhlcBar[] {
+  const byTime = new Map<number, OhlcBar>();
+  for (const bar of bars) {
+    if (
+      Number.isFinite(bar.time) &&
+      Number.isFinite(bar.open) &&
+      Number.isFinite(bar.high) &&
+      Number.isFinite(bar.low) &&
+      Number.isFinite(bar.close) &&
+      bar.high >= bar.low
+    ) {
+      byTime.set(bar.time, bar);
+    }
+  }
+  return Array.from(byTime.values()).sort((a, b) => a.time - b.time);
+}
+
 async function fetchCoinGecko(coinId: string, days: number): Promise<OhlcBar[]> {
   const url = `https://api.coingecko.com/api/v3/coins/${coinId}/ohlc?vs_currency=usd&days=${days}`;
-  const res = await fetch(url, { headers: { accept: "application/json" } });
-  if (!res.ok) throw new Error(`CoinGecko ${res.status}`);
-  const raw = (await res.json()) as Array<[number, number, number, number, number]>;
-  return raw.map(([ms, o, h, l, c]) => ({
+  const raw = await fetchJsonWithTimeout<Array<[number, number, number, number, number]>>(url);
+  return cleanBars(raw.map(([ms, o, h, l, c]) => ({
     time: Math.floor(ms / 1000),
     open: o,
     high: h,
     low: l,
     close: c,
-  }));
+  })));
 }
 
 function tickerToCoin(ticker: string): string | null {
@@ -93,24 +123,88 @@ async function fetchTwelveData(symbol: string, interval: string): Promise<OhlcBa
   const apiKey = process.env.TWELVE_DATA_API_KEY;
   if (!apiKey) throw new Error("TWELVE_DATA_API_KEY not configured");
   const url = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(symbol)}&interval=${interval}&outputsize=220&apikey=${apiKey}&order=ASC&format=JSON`;
-  const res = await fetch(url, { headers: { accept: "application/json" } });
-  if (!res.ok) throw new Error(`TwelveData ${res.status}`);
-  const json = (await res.json()) as {
+  const json = await fetchJsonWithTimeout<{
     status?: string;
     code?: number;
     message?: string;
     values?: Array<{ datetime: string; open: string; high: string; low: string; close: string }>;
-  };
+  }>(url);
   if (json.status === "error" || !json.values) {
     throw new Error(`TwelveData: ${json.message ?? "no data"}`);
   }
-  return json.values.map((v) => ({
+  return cleanBars(json.values.map((v) => ({
     time: Math.floor(new Date(v.datetime.replace(" ", "T") + "Z").getTime() / 1000),
     open: parseFloat(v.open),
     high: parseFloat(v.high),
     low: parseFloat(v.low),
     close: parseFloat(v.close),
-  }));
+  })));
+}
+
+// ----- Yahoo Finance fallback (no key) -----
+function tickerToYahoo(ticker: string): string | null {
+  const t = ticker.toUpperCase();
+  if (t.includes("BTC")) return "BTC-USD";
+  if (t.includes("ETH")) return "ETH-USD";
+  if (t === "XAU/USD") return "GC=F";
+  if (t === "NAS100") return "QQQ";
+  if (t === "SPX500") return "SPY";
+  if (t === "US30") return "DIA";
+  if (t === "EUR/USD") return "EURUSD=X";
+  if (t === "GBP/USD") return "GBPUSD=X";
+  if (t === "USD/JPY") return "JPY=X";
+  return null;
+}
+
+function yahooInterval(interval: string): { interval: string; range: string } {
+  switch (interval) {
+    case "1":
+      return { interval: "1m", range: "1d" };
+    case "5":
+      return { interval: "5m", range: "5d" };
+    case "15":
+      return { interval: "15m", range: "5d" };
+    case "60":
+      return { interval: "1h", range: "1mo" };
+    case "240":
+      return { interval: "1h", range: "3mo" };
+    case "D":
+      return { interval: "1d", range: "6mo" };
+    case "W":
+      return { interval: "1wk", range: "2y" };
+    case "M":
+      return { interval: "1mo", range: "5y" };
+    default:
+      return { interval: "1h", range: "1mo" };
+  }
+}
+
+async function fetchYahoo(symbol: string, interval: string): Promise<OhlcBar[]> {
+  const iv = yahooInterval(interval);
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${iv.interval}&range=${iv.range}&includePrePost=true`;
+  const json = await fetchJsonWithTimeout<{
+    chart?: {
+      error?: { description?: string } | null;
+      result?: Array<{
+        timestamp?: number[];
+        indicators?: { quote?: Array<{ open?: Array<number | null>; high?: Array<number | null>; low?: Array<number | null>; close?: Array<number | null> }> };
+      }>;
+    };
+  }>(url);
+  const result = json.chart?.result?.[0];
+  const quote = result?.indicators?.quote?.[0];
+  if (json.chart?.error || !result?.timestamp || !quote) {
+    throw new Error(`Yahoo: ${json.chart?.error?.description ?? "no data"}`);
+  }
+  const bars = result.timestamp.map((time, i) => {
+    const open = quote.open?.[i];
+    const high = quote.high?.[i];
+    const low = quote.low?.[i];
+    const close = quote.close?.[i];
+    if (open == null || high == null || low == null || close == null) return null;
+    return { time, open, high, low, close } satisfies OhlcBar;
+  }).filter((bar): bar is OhlcBar => bar !== null);
+  return cleanBars(bars).slice(-220);
 }
 
 // --- Module-level cache (per worker instance). TTL 30s per key. ---
@@ -118,6 +212,34 @@ type CacheEntry = { at: number; bars: OhlcBar[]; source: OhlcSource };
 const CACHE = new Map<string, CacheEntry>();
 const TTL_MS = 30_000;
 const INFLIGHT = new Map<string, Promise<CacheEntry>>();
+
+async function fetchBestAvailable(ticker: string, interval: string): Promise<CacheEntry> {
+  const coin = tickerToCoin(ticker);
+  const tdSymbol = coin ? null : tickerToTwelveData(ticker);
+  const yahooSymbol = tickerToYahoo(ticker);
+  const attempts: Array<() => Promise<CacheEntry>> = [];
+
+  if (coin) {
+    attempts.push(async () => ({ at: Date.now(), bars: await fetchCoinGecko(coin, daysForInterval(interval)), source: "coingecko" }));
+  }
+  if (tdSymbol) {
+    attempts.push(async () => ({ at: Date.now(), bars: await fetchTwelveData(tdSymbol, tdInterval(interval)), source: "twelvedata" }));
+  }
+  if (yahooSymbol) {
+    attempts.push(async () => ({ at: Date.now(), bars: await fetchYahoo(yahooSymbol, interval), source: "yahoo" }));
+  }
+
+  let lastError: unknown;
+  for (const attempt of attempts) {
+    try {
+      const entry = await attempt();
+      if (entry.bars.length > 0) return entry;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error("No OHLC source available");
+}
 
 export const Route = createFileRoute("/api/ohlc")({
   server: {
@@ -141,28 +263,13 @@ export const Route = createFileRoute("/api/ohlc")({
         }
 
         const { ticker: t, interval: iv } = parsed.data;
-        const coin = tickerToCoin(t);
-        const tdSymbol = coin ? null : tickerToTwelveData(t);
-
-        let key: string;
-        let fetcher: () => Promise<OhlcBar[]>;
-        let source: OhlcSource;
-
-        if (coin) {
-          const days = daysForInterval(iv);
-          key = `cg:${coin}:${days}`;
-          source = "coingecko";
-          fetcher = () => fetchCoinGecko(coin, days);
-        } else if (tdSymbol) {
-          const tdIv = tdInterval(iv);
-          key = `td:${tdSymbol}:${tdIv}`;
-          source = "twelvedata";
-          fetcher = () => fetchTwelveData(tdSymbol, tdIv);
-        } else {
+        if (!tickerToCoin(t) && !tickerToTwelveData(t) && !tickerToYahoo(t)) {
           return new Response(JSON.stringify({ source: null, bars: [], cachedAt: Date.now(), ttlMs: 0 }), {
             headers: { "content-type": "application/json" },
           });
         }
+
+        const key = `ohlc:${t.toUpperCase()}:${iv}`;
 
         const now = Date.now();
         const cached = CACHE.get(key);
@@ -174,9 +281,8 @@ export const Route = createFileRoute("/api/ohlc")({
 
         let inflight = INFLIGHT.get(key);
         if (!inflight) {
-          inflight = fetcher()
-            .then((bars) => {
-              const entry: CacheEntry = { at: Date.now(), bars, source };
+          inflight = fetchBestAvailable(t, iv)
+            .then((entry) => {
               CACHE.set(key, entry);
               return entry;
             })
