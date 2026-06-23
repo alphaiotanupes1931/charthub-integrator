@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
+import { corsHeadersFor, enforceOrigin, preflight, rateLimit } from "@/lib/api-security";
+
 
 // ----- CoinGecko (crypto, no key) -----
 const COIN_IDS: Record<string, string> = {
@@ -244,28 +246,35 @@ async function fetchBestAvailable(ticker: string, interval: string): Promise<Cac
 export const Route = createFileRoute("/api/ohlc")({
   server: {
     handlers: {
+      OPTIONS: async ({ request }) => preflight(request) ?? new Response(null, { status: 204 }),
       GET: async ({ request }) => {
+        const originBlock = enforceOrigin(request);
+        if (originBlock) return originBlock;
+        const limited = rateLimit(request, { key: "ohlc", limit: 120, windowMs: 60_000 });
+        if (limited) return limited;
+        const cors = corsHeadersFor(request);
+        const jsonHeaders = { "content-type": "application/json", ...cors };
         const url = new URL(request.url);
         const ticker = url.searchParams.get("ticker");
         const interval = url.searchParams.get("interval");
         if (!ticker || !interval) {
           return new Response(JSON.stringify({ error: "ticker and interval required" }), {
             status: 400,
-            headers: { "content-type": "application/json" },
+            headers: jsonHeaders,
           });
         }
         const parsed = z.object({ ticker: z.string(), interval: z.string() }).safeParse({ ticker, interval });
         if (!parsed.success) {
           return new Response(JSON.stringify({ error: "invalid ticker or interval" }), {
             status: 400,
-            headers: { "content-type": "application/json" },
+            headers: jsonHeaders,
           });
         }
 
         const { ticker: t, interval: iv } = parsed.data;
         if (!tickerToCoin(t) && !tickerToTwelveData(t) && !tickerToYahoo(t)) {
           return new Response(JSON.stringify({ source: null, bars: [], cachedAt: Date.now(), ttlMs: 0 }), {
-            headers: { "content-type": "application/json" },
+            headers: jsonHeaders,
           });
         }
 
@@ -275,7 +284,7 @@ export const Route = createFileRoute("/api/ohlc")({
         const cached = CACHE.get(key);
         if (cached && now - cached.at < TTL_MS) {
           return new Response(JSON.stringify({ source: cached.source, bars: cached.bars, cachedAt: cached.at, ttlMs: TTL_MS }), {
-            headers: { "content-type": "application/json" },
+            headers: jsonHeaders,
           });
         }
 
@@ -293,16 +302,16 @@ export const Route = createFileRoute("/api/ohlc")({
         try {
           const entry = await inflight;
           return new Response(JSON.stringify({ source: entry.source, bars: entry.bars, cachedAt: entry.at, ttlMs: TTL_MS }), {
-            headers: { "content-type": "application/json" },
+            headers: jsonHeaders,
           });
         } catch {
           if (cached) {
             return new Response(JSON.stringify({ source: cached.source, bars: cached.bars, cachedAt: cached.at, ttlMs: TTL_MS }), {
-              headers: { "content-type": "application/json" },
+              headers: jsonHeaders,
             });
           }
           return new Response(JSON.stringify({ source: null, bars: [], cachedAt: Date.now(), ttlMs: 0 }), {
-            headers: { "content-type": "application/json" },
+            headers: jsonHeaders,
           });
         }
       },
