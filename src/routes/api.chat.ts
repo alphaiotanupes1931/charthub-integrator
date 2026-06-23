@@ -243,15 +243,25 @@ ${journalContext}
 export const Route = createFileRoute("/api/chat")({
   server: {
     handlers: {
+      OPTIONS: async ({ request }) => preflight(request) ?? new Response(null, { status: 204 }),
       POST: async ({ request }) => {
+        const originBlock = enforceOrigin(request);
+        if (originBlock) return originBlock;
+        const tooBig = enforceMaxBody(request, 512 * 1024); // 512 KB cap
+        if (tooBig) return tooBig;
+        const limited = rateLimit(request, { key: "chat", limit: 20, windowMs: 60_000 });
+        if (limited) return limited;
+
+        const cors = corsHeadersFor(request);
+
         // --- Auth: verify the bearer token ---
         const authHeader = request.headers.get("authorization") ?? "";
         if (!authHeader.startsWith("Bearer ")) {
-          return new Response("Unauthorized", { status: 401 });
+          return new Response("Unauthorized", { status: 401, headers: cors });
         }
         const token = authHeader.slice("Bearer ".length).trim();
         if (!token || token.split(".").length !== 3) {
-          return new Response("Unauthorized", { status: 401 });
+          return new Response("Unauthorized", { status: 401, headers: cors });
         }
 
         const sb = createClient<Database>(
