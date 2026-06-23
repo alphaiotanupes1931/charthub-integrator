@@ -2,6 +2,26 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 const VOICE_KEY = "trademind.voice.enabled";
+const VOICE_EVENT = "trademind.voice.enabled.changed";
+
+let inMemoryVoiceEnabled: boolean | null = null;
+let voicePreferenceTouched = false;
+
+function readVoiceEnabled(): boolean {
+  if (typeof window === "undefined") return false;
+  if (inMemoryVoiceEnabled !== null) return inMemoryVoiceEnabled;
+  return window.localStorage.getItem(VOICE_KEY) === "1";
+}
+
+function rememberVoiceEnabled(enabled: boolean) {
+  inMemoryVoiceEnabled = enabled;
+  try { window.localStorage.setItem(VOICE_KEY, enabled ? "1" : "0"); } catch { /* ignore */ }
+}
+
+function broadcastVoiceEnabled() {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event(VOICE_EVENT));
+}
 
 // 1-frame silent WAV — used to "unlock" the audio element inside a user gesture
 // so later .play() calls (after async fetch) are allowed on iOS / mobile Safari.
@@ -9,10 +29,7 @@ const SILENT_WAV =
   "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
 
 export function useCoachVoice() {
-  const [enabled, setEnabledState] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return window.localStorage.getItem(VOICE_KEY) === "1";
-  });
+  const [enabled, setEnabledState] = useState<boolean>(() => readVoiceEnabled());
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const unlockedRef = useRef(false);
   const lastBlobUrlRef = useRef<string | null>(null);
@@ -60,6 +77,22 @@ export function useCoachVoice() {
     }
   }, [getAudio]);
 
+  useEffect(() => {
+    const sync = () => setEnabledState(readVoiceEnabled());
+    const syncStorage = (event: StorageEvent) => {
+      if (event.key === VOICE_KEY) {
+        inMemoryVoiceEnabled = event.newValue === "1";
+        sync();
+      }
+    };
+    window.addEventListener(VOICE_EVENT, sync);
+    window.addEventListener("storage", syncStorage);
+    return () => {
+      window.removeEventListener(VOICE_EVENT, sync);
+      window.removeEventListener("storage", syncStorage);
+    };
+  }, []);
+
   // On mount: hydrate from profile (cross-device), fall back to localStorage
   useEffect(() => {
     if (syncedRef.current) return;
@@ -73,17 +106,21 @@ export function useCoachVoice() {
         .eq("id", data.user.id)
         .maybeSingle();
       if (prof && typeof prof.voice_enabled === "boolean") {
+        if (voicePreferenceTouched) return;
+        rememberVoiceEnabled(prof.voice_enabled);
         setEnabledState(prof.voice_enabled);
-        try { window.localStorage.setItem(VOICE_KEY, prof.voice_enabled ? "1" : "0"); } catch { /* ignore */ }
+        broadcastVoiceEnabled();
       }
     })();
   }, []);
 
   // Persist on change: local + profile. Toggling on is a gesture — prime now.
   const setEnabled = useCallback((v: boolean) => {
+    voicePreferenceTouched = true;
+    rememberVoiceEnabled(v);
     setEnabledState(v);
+    broadcastVoiceEnabled();
     if (v) prime();
-    try { window.localStorage.setItem(VOICE_KEY, v ? "1" : "0"); } catch { /* ignore */ }
     (async () => {
       const { data } = await supabase.auth.getUser();
       if (!data.user) return;
@@ -124,20 +161,14 @@ export function useCoachVoice() {
       if (!res.ok) {
         const body = await res.text().catch(() => "");
         console.error("[voice] tts failed", res.status, body);
-        if (res.status === 401 || res.status === 402 || body.includes("quota_exceeded")) {
-          setEnabledState(false);
-          try { window.localStorage.setItem(VOICE_KEY, "0"); } catch { /* ignore */ }
-          const { data } = await supabase.auth.getUser();
-          if (data.user) {
-            await supabase.from("profiles").update({ voice_enabled: false }).eq("id", data.user.id);
-          }
-        }
         return;
       }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       lastBlobUrlRef.current = url;
       el.src = url;
+      el.muted = false;
+      el.volume = 1;
       el.onended = () => {
         if (lastBlobUrlRef.current === url) {
           URL.revokeObjectURL(url);
