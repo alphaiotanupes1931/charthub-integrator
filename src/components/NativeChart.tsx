@@ -27,7 +27,7 @@ export const LEVEL_META: Record<LevelKey, { label: string; color: string; tone: 
 };
 
 export type ChartSnapshot = {
-  source: "coingecko" | "twelvedata" | "synthetic" | "unavailable";
+  source: "coingecko" | "twelvedata" | "yahoo" | "synthetic" | "unavailable";
   sourceLabel: string;
   ticker: string;
   interval: string;
@@ -176,9 +176,15 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     queryKey: ["ohlc", ticker, interval],
     queryFn: async () => {
       const params = new URLSearchParams({ ticker, interval });
-      const res = await fetch(`/api/ohlc?${params.toString()}`);
-      if (!res.ok) throw new Error(`OHLC fetch failed: ${res.status}`);
-      return (await res.json()) as OhlcResponse;
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 12_000);
+      try {
+        const res = await fetch(`/api/ohlc?${params.toString()}`, { signal: controller.signal });
+        if (!res.ok) throw new Error(`OHLC fetch failed: ${res.status}`);
+        return (await res.json()) as OhlcResponse;
+      } finally {
+        window.clearTimeout(timeout);
+      }
     },
     staleTime: 30_000,
     refetchInterval: 30_000,
@@ -205,7 +211,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
   }, [liveOhlc, hasLive]);
   const levels = useMemo(() => computeLevels(candles), [candles]);
   const isLive = hasLive;
-  const sourceLabel = liveOhlc?.source === "coingecko" ? "CoinGecko" : liveOhlc?.source === "twelvedata" ? "Twelve Data" : "";
+  const sourceLabel = liveOhlc?.source === "coingecko" ? "CoinGecko" : liveOhlc?.source === "twelvedata" ? "Twelve Data" : liveOhlc?.source === "yahoo" ? "Yahoo" : "";
   const snapshotSource = isLive ? (liveOhlc?.source ?? "unknown") : "unavailable";
   const snapshotSourceLabel = isLive ? (sourceLabel || "Live") : "Unavailable";
 
