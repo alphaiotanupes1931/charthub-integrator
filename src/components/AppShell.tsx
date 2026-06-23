@@ -155,7 +155,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 
   return (
-    <div className="flex min-h-screen w-full text-foreground">
+    <WelcomeBackProvider>
+      <div className="flex min-h-screen w-full text-foreground">
       {/* Desktop sidebar */}
       <aside
         className={`${
