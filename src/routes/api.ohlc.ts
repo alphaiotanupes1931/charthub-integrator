@@ -260,21 +260,21 @@ export const Route = createFileRoute("/api/ohlc")({
         if (!ticker || !interval) {
           return new Response(JSON.stringify({ error: "ticker and interval required" }), {
             status: 400,
-            headers: { "content-type": "application/json" },
+            headers: jsonHeaders,
           });
         }
         const parsed = z.object({ ticker: z.string(), interval: z.string() }).safeParse({ ticker, interval });
         if (!parsed.success) {
           return new Response(JSON.stringify({ error: "invalid ticker or interval" }), {
             status: 400,
-            headers: { "content-type": "application/json" },
+            headers: jsonHeaders,
           });
         }
 
         const { ticker: t, interval: iv } = parsed.data;
         if (!tickerToCoin(t) && !tickerToTwelveData(t) && !tickerToYahoo(t)) {
           return new Response(JSON.stringify({ source: null, bars: [], cachedAt: Date.now(), ttlMs: 0 }), {
-            headers: { "content-type": "application/json" },
+            headers: jsonHeaders,
           });
         }
 
@@ -284,7 +284,7 @@ export const Route = createFileRoute("/api/ohlc")({
         const cached = CACHE.get(key);
         if (cached && now - cached.at < TTL_MS) {
           return new Response(JSON.stringify({ source: cached.source, bars: cached.bars, cachedAt: cached.at, ttlMs: TTL_MS }), {
-            headers: { "content-type": "application/json" },
+            headers: jsonHeaders,
           });
         }
 
@@ -302,16 +302,16 @@ export const Route = createFileRoute("/api/ohlc")({
         try {
           const entry = await inflight;
           return new Response(JSON.stringify({ source: entry.source, bars: entry.bars, cachedAt: entry.at, ttlMs: TTL_MS }), {
-            headers: { "content-type": "application/json" },
+            headers: jsonHeaders,
           });
         } catch {
           if (cached) {
             return new Response(JSON.stringify({ source: cached.source, bars: cached.bars, cachedAt: cached.at, ttlMs: TTL_MS }), {
-              headers: { "content-type": "application/json" },
+              headers: jsonHeaders,
             });
           }
           return new Response(JSON.stringify({ source: null, bars: [], cachedAt: Date.now(), ttlMs: 0 }), {
-            headers: { "content-type": "application/json" },
+            headers: jsonHeaders,
           });
         }
       },
