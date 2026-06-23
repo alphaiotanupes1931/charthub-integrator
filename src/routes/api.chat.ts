@@ -298,7 +298,7 @@ export const Route = createFileRoute("/api/chat")({
         const journalCtx = buildJournalContext(journal ?? []);
         const system = systemPrompt(coach, journalCtx, chartContextBlock(chart), strategyContextBlock(strategy), lensContextBlock(lens));
 
-        const gateway = createLovableAiGatewayProvider(key);
+        const gateway = createAiGatewayProvider(key);
         const result = streamText({
           model: gateway("google/gemini-3-flash-preview"),
           system,
