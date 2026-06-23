@@ -245,29 +245,6 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                   </select>
                   <ChevronDown className="pointer-events-none absolute right-0.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                 </div>
-                <button
-                  onClick={() => {
-                    const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
-                    if (!lastAssistant) {
-                      toast.message("Nothing to replay yet — ask your coach something first.");
-                      return;
-                    }
-                    const text = lastAssistant.parts
-                      .map((p) => (p.type === "text" ? (p as { text: string }).text : ""))
-                      .join("")
-                      .trim();
-                    if (!text) return;
-                    voice.prime();
-                    voice.stop();
-                    lastSpokenIdRef.current = lastAssistant.id;
-                    void voice.speak(text, voiceForCoach(activeCoach));
-                  }}
-                  className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition"
-                  title="Replay last response"
-                  aria-label="Replay last response"
-                >
-                  <Volume2 className="h-3.5 w-3.5" />
-                </button>
               </div>
             </div>
           </div>
