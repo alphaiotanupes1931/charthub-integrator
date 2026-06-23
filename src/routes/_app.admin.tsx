@@ -30,6 +30,24 @@ function AdminPage() {
   const [stats, setStats] = useState<ReferralRow[] | null>(null);
   const [users, setUsers] = useState<UserRow[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  const loadUsers = async () => {
+    const { data: u, error } = await supabase.rpc("admin_users_overview");
+    if (error) { setErr(error.message); return; }
+    setUsers((u ?? []) as UserRow[]);
+  };
+
+  const toggleBan = async (u: UserRow) => {
+    const next = !u.banned;
+    if (next && !confirm(`Ban ${u.email}? They will be signed out and blocked from the app.`)) return;
+    setBusyId(u.id);
+    const { error } = await supabase.rpc("admin_set_banned" as never, { _user_id: u.id, _banned: next, _reason: null } as never);
+    setBusyId(null);
+    if (error) { toast.error(error.message); return; }
+    toast.success(next ? "User banned" : "User unbanned");
+    setUsers((prev) => prev?.map((x) => x.id === u.id ? { ...x, banned: next } : x) ?? prev);
+  };
 
   useEffect(() => {
     if (!isAdmin) return;
