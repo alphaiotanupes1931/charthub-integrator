@@ -11,6 +11,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
+import { supabase } from "@/integrations/supabase/client";
 // 3D candlestick scene removed for a more legitimate platform aesthetic
 import logoAsset from "@/assets/logo.png.asset.json";
 
