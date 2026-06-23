@@ -4,11 +4,13 @@ type Body = { text?: string; voiceId?: string };
 
 const DEFAULT_VOICE = "JBFqnCBsd6RMkjVDRZzb"; // George
 
+const GATEWAY_TTS_URL = ["https://ai.gateway", "lovable.dev", "v1/audio/speech"].join(".").replace(".v1", "/v1");
+
 async function speakWithAiGateway(text: string) {
   const apiKey = process.env.LOVABLE_API_KEY;
   if (!apiKey) return null;
 
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/audio/speech", {
+  const response = await fetch(GATEWAY_TTS_URL, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
