@@ -443,7 +443,7 @@ function Dashboard() {
           </button>
         </div>
 
-        <div className="h-[360px] sm:h-[460px] md:h-[520px]">
+        <div className="h-[360px] sm:h-[460px] md:h-[520px] overflow-hidden">
           {chartMode === "live" ? (
             <TradingViewChart symbol={symbol.tv} interval={interval} enabled={levels} />
           ) : (
