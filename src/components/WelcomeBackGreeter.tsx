@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useProfile } from "@/hooks/useProfile";
 import { readActiveCoach, readJournal } from "@/lib/chat-client";
@@ -15,6 +15,25 @@ import {
 } from "@/lib/welcomeBack";
 
 type PreparedWindow = Window & { __trademindWelcomeAudio?: HTMLAudioElement };
+
+const WelcomeBackContext = createContext<{
+  recapText: string | null;
+  setRecapText: (text: string | null) => void;
+}>({ recapText: null, setRecapText: () => {} });
+
+export function WelcomeBackProvider({ children }: { children: ReactNode }) {
+  const [recapText, setRecapText] = useState<string | null>(null);
+  return (
+    <WelcomeBackContext.Provider value={{ recapText, setRecapText }}>
+      {children}
+    </WelcomeBackContext.Provider>
+  );
+}
+
+export function useWelcomeBackRecap() {
+  return useContext(WelcomeBackContext);
+}
+
 
 function shouldPlayWelcome(): boolean {
   if (typeof window === "undefined") return false;
