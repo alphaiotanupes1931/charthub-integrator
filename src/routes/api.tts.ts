@@ -4,13 +4,40 @@ type Body = { text?: string; voiceId?: string };
 
 const DEFAULT_VOICE = "JBFqnCBsd6RMkjVDRZzb"; // George
 
+async function speakWithAiGateway(text: string) {
+  const apiKey = process.env.LOVABLE_API_KEY;
+  if (!apiKey) return null;
+
+  const response = await fetch("https://ai.gateway.lovable.dev/v1/audio/speech", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "openai/gpt-4o-mini-tts",
+      input: text,
+      voice: "alloy",
+      stream_format: "audio",
+      response_format: "mp3",
+    }),
+  });
+
+  if (!response.ok || !response.body) {
+    const err = await response.text().catch(() => "");
+    console.error("[tts] gateway error", response.status, err);
+    return null;
+  }
+
+  return new Response(response.body, {
+    headers: { "Content-Type": "audio/mpeg" },
+  });
+}
+
 export const Route = createFileRoute("/api/tts")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const apiKey = process.env.ELEVENLABS_API_KEY_OVERRIDE || process.env.ELEVENLABS_API_KEY;
-        if (!apiKey) return new Response("TTS not configured", { status: 500 });
-
         let body: Body;
         try {
           body = (await request.json()) as Body;
@@ -22,6 +49,11 @@ export const Route = createFileRoute("/api/tts")({
         if (!text) return new Response("text required", { status: 400 });
 
         const clipped = text.length > 1200 ? text.slice(0, 1200) + "…" : text;
+        const apiKey = process.env.ELEVENLABS_API_KEY_OVERRIDE || process.env.ELEVENLABS_API_KEY;
+        if (!apiKey) {
+          const gatewayAudio = await speakWithAiGateway(clipped);
+          return gatewayAudio ?? new Response("TTS not configured", { status: 500 });
+        }
 
         const upstream = await fetch(
           `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=mp3_44100_128`,
@@ -48,6 +80,11 @@ export const Route = createFileRoute("/api/tts")({
         if (!upstream.ok || !upstream.body) {
           const err = await upstream.text().catch(() => "");
           console.error("[tts] elevenlabs error", upstream.status, err);
+          const quotaBlocked = upstream.status === 401 || upstream.status === 402 || err.toLowerCase().includes("quota");
+          if (quotaBlocked) {
+            const gatewayAudio = await speakWithAiGateway(clipped);
+            if (gatewayAudio) return gatewayAudio;
+          }
           return new Response(err || "TTS failed", { status: upstream.status });
         }
 
