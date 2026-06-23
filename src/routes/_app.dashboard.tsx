@@ -212,8 +212,24 @@ function Dashboard() {
   return (
     <div className="mx-auto max-w-[1600px] px-4 sm:px-6 py-6 sm:py-10">
       {firstName && (
-        <div className="text-sm text-muted-foreground mb-5 sm:mb-6">
-          Welcome back, <span className="text-foreground font-medium">{profile?.display_name}</span>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-5 sm:mb-6">
+          <span>
+            Welcome back, <span className="text-foreground font-medium">{profile?.display_name}</span>
+          </span>
+          <button
+            onClick={() => {
+              if (!recapText) return;
+              voice.prime();
+              voice.stop();
+              void voice.speak(recapText, voiceForCoach(readActiveCoach()));
+            }}
+            disabled={!recapText}
+            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 disabled:opacity-40 disabled:cursor-not-allowed transition"
+            title={recapText ? "Replay welcome summary" : "Summary loading…"}
+            aria-label={recapText ? "Replay welcome summary" : "Summary loading"}
+          >
+            <Volume2 className="h-3.5 w-3.5" />
+          </button>
         </div>
       )}
 
