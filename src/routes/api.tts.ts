@@ -1,4 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
+import {
+  corsHeadersFor,
+  enforceMaxBody,
+  enforceOrigin,
+  preflight,
+  rateLimit,
+} from "@/lib/api-security";
+
 
 type Body = { text?: string; voiceId?: string };
 
