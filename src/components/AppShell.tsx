@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import logoAsset from "@/assets/logo.png.asset.json";
 import { Tutorial } from "@/components/Tutorial";
-import { WelcomeBackGreeter } from "@/components/WelcomeBackGreeter";
+import { WelcomeBackGreeter, WelcomeBackProvider } from "@/components/WelcomeBackGreeter";
 import { useTheme } from "@/hooks/useTheme";
 import { useProfile } from "@/hooks/useProfile";
 
