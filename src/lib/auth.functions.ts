@@ -1,9 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { strongPasswordSchema } from "@/lib/api-security";
 
 const schema = z.object({
   email: z.string().email().max(255),
-  password: z.string().min(8).max(72),
+  password: strongPasswordSchema,
 });
 
 export const signUpConfirmed = createServerFn({ method: "POST" })
