@@ -83,6 +83,12 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  useEffect(() => {
+    if (search.banned === "1") {
+      toast.error("This account has been suspended. Contact support if you believe this is a mistake.");
+    }
+  }, [search.banned]);
+
   // Already signed in? Bounce to redirect target (honoring any pending invite).
   useEffect(() => {
     let cancelled = false;
