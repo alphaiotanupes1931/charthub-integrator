@@ -239,6 +239,45 @@ function SettingsPage() {
     }
   }
 
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const data = await runExport({ data: undefined });
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `trademind-data-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast.success("Your data has been downloaded");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Export failed");
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  async function handleDelete() {
+    setDeleting(true);
+    try {
+      await runDelete({ data: undefined });
+      // Wipe local prefs/journal so a future signup on this browser starts clean.
+      try {
+        const keys = ["trademind.journal.trades.v1", "trademind.tradelocker.creds.v1", "trademind.welcome-back.muted"];
+        for (const k of keys) window.localStorage.removeItem(k);
+      } catch { /* ignore */ }
+      await supabase.auth.signOut();
+      toast.success("Your account has been deleted");
+      navigate({ to: "/" });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not delete account");
+      setDeleting(false);
+    }
+  }
+
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
       {/* PROFILE */}
