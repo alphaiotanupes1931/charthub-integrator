@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
 import { createClient } from "@supabase/supabase-js";
-import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
+import { createAiGatewayProvider } from "@/lib/ai-gateway.server";
 import type { Database, Json } from "@/integrations/supabase/types";
 
 type Trade = {
@@ -298,7 +298,7 @@ export const Route = createFileRoute("/api/chat")({
         const journalCtx = buildJournalContext(journal ?? []);
         const system = systemPrompt(coach, journalCtx, chartContextBlock(chart), strategyContextBlock(strategy), lensContextBlock(lens));
 
-        const gateway = createLovableAiGatewayProvider(key);
+        const gateway = createAiGatewayProvider(key);
         const result = streamText({
           model: gateway("google/gemini-3-flash-preview"),
           system,
