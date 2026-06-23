@@ -92,6 +92,20 @@ const FAQS = [
 ];
 
 function Landing() {
+  const [isAuthed, setIsAuthed] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    supabase.auth.getSession().then(({ data }) => {
+      if (!cancelled) setIsAuthed(!!data.session);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      setIsAuthed(!!session);
+    });
+    return () => {
+      cancelled = true;
+      sub.subscription.unsubscribe();
+    };
+  }, []);
   return (
     <div className="min-h-screen w-full text-foreground">
       <Nav />
