@@ -59,7 +59,7 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
       const finish = (token: string | null) => {
         if (done) return;
         done = true;
-        sub?.subscription.unsubscribe();
+        sub?.data.subscription.unsubscribe();
         clearInterval(poll);
         clearTimeout(deadline);
         resolve(token);
