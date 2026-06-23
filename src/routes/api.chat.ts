@@ -318,7 +318,6 @@ export const Route = createFileRoute("/api/chat")({
               const toInsert = finalMessages
                 .filter((m) => !existingIds.has(m.id))
                 .map((m) => ({
-                  id: m.id,
                   thread_id: threadId,
                   user_id: userId,
                   client_id: userId, // legacy NOT NULL column
