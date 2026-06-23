@@ -18,7 +18,7 @@ import logoAsset from "@/assets/logo.png.asset.json";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "TradeMind | Trade Smarter" },
+      { title: "TradeMind, AI Trading Coach" },
       {
         name: "description",
         content:
