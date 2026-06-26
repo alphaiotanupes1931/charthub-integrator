@@ -143,7 +143,7 @@ function Dashboard() {
     const left = Math.max(0, window.screen.availWidth - width);
     const features = `popup=yes,width=${width},height=${height},left=${left},top=0`;
     const w = window.open(url, "trademind_tv_floor", features);
-    if (!w) { toast.error("Popup blocked — allow popups to open the trading floor."); return; }
+    if (!w) { toast.error("Popup blocked - allow popups to open the trading floor."); return; }
     w.focus();
   };
 
@@ -233,7 +233,7 @@ function Dashboard() {
         </div>
       )}
 
-      {/* Today's recommendation — top of the dashboard */}
+      {/* Today's recommendation - top of the dashboard */}
       <div data-tour="recommendation">
         <TodaysRecommendation />
       </div>
@@ -298,7 +298,7 @@ function Dashboard() {
           <button
             onClick={() => setLensOpen((o) => !o)}
             className="inline-flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary hover:border-primary/60 transition"
-            title="Scan Lens — biases the AI's chart read"
+            title="Scan Lens - biases the AI's chart read"
           >
             <Crosshair className="h-3.5 w-3.5" />
             Lens: {activeLens.short}
@@ -408,7 +408,7 @@ function Dashboard() {
                 </div>
                 {chartMode === "live" && (
                   <div className="mt-2 px-1 text-[10px] text-muted-foreground leading-relaxed">
-                    On the Live chart, FVG and Liq are Native-only — switch to Native Chart to see them.
+                    On the Live chart, FVG and Liq are Native-only - switch to Native Chart to see them.
                   </div>
                 )}
                 <div className="mt-3 pt-3 border-t border-border/60 flex items-center justify-between text-[11px]">
@@ -451,7 +451,7 @@ function Dashboard() {
           )}
         </div>
 
-        {/* Broker strip — minimalist, only when chart is shown */}
+        {/* Broker strip - minimalist, only when chart is shown */}
         <div className="border-t border-border/60 px-3 py-2 flex items-center justify-between gap-2 flex-wrap text-xs">
           {broker ? (
             <div className="flex items-center gap-2 min-w-0 text-muted-foreground">
@@ -578,7 +578,7 @@ function FloatingCoach({
 
   return (
     <>
-      {/* Bubble — hidden when panel is open */}
+      {/* Bubble - hidden when panel is open */}
       {!open && (
         <button
           onClick={() => { setMinimized(false); onOpen(); }}
@@ -606,7 +606,7 @@ function FloatingCoach({
         </button>
       )}
 
-      {/* Mobile backdrop — tap to minimize */}
+      {/* Mobile backdrop - tap to minimize */}
       {expanded && (
         <button
           aria-label="Hide coach"
@@ -615,7 +615,7 @@ function FloatingCoach({
         />
       )}
 
-      {/* Expanded panel — full-screen sheet on mobile, anchored card on desktop. Always mounted so chat state survives. */}
+      {/* Expanded panel - full-screen sheet on mobile, anchored card on desktop. Always mounted so chat state survives. */}
       <div
         className={`fixed z-40 left-0 right-0 bottom-0 top-0 h-[100dvh] sm:h-[min(640px,calc(100vh-3rem))] sm:top-auto sm:left-auto sm:right-6 sm:bottom-6 sm:w-[min(420px,calc(100vw-3rem))] transition-transform duration-200 ease-out ${
           expanded

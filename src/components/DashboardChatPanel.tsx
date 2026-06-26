@@ -367,7 +367,7 @@ function EmptyStateSuggestions({
   const hasSnapshot = !!chart?.snapshot;
   const suggestions = [
     hasSnapshot
-      ? `Scan my chart right now — ${ticker} ${tf}. Use the live price, VWAP, POC, and any liquidity/order-flow data you can see to tell me bias, entry, stop, TP1 and TP2.`
+      ? `Scan my chart right now - ${ticker} ${tf}. Use the live price, VWAP, POC, and any liquidity/order-flow data you can see to tell me bias, entry, stop, TP1 and TP2.`
       : `Analyze ${ticker} for a trade setup. Give me entry, stop loss, and take profit levels.`,
     `What's my edge on ${ticker} based on my journal?`,
     `Walk me through a ${tf} ${ticker} plan using ${levels}.`,

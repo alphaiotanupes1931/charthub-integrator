@@ -8,13 +8,13 @@ import { HELP_ARTICLES, HELP_CATEGORIES, getArticlesByCategory } from "@/lib/hel
 export const Route = createFileRoute("/help")({
   head: () => ({
     meta: [
-      { title: "Help Center — TradeMind" },
+      { title: "Help Center - TradeMind" },
       {
         name: "description",
         content:
           "Guides and answers for using TradeMind: onboarding, AI coaching, broker connections, billing, privacy, and account safety.",
       },
-      { property: "og:title", content: "Help Center — TradeMind" },
+      { property: "og:title", content: "Help Center - TradeMind" },
       {
         property: "og:description",
         content:

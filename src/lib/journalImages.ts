@@ -1,6 +1,6 @@
 // Local-only image store for trade screenshots.
 // Images are kept in the user's IndexedDB on this device. They never touch
-// the network or our database — keeps storage costs at zero.
+// the network or our database - keeps storage costs at zero.
 
 const DB_NAME = "trademind.journal";
 const STORE = "images";

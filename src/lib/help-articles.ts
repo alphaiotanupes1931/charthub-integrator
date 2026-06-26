@@ -42,7 +42,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     title: "Create your account",
     description: "Sign up with email or Google and finish onboarding in under two minutes.",
     body: [
-      "Visit the sign-in page and choose either email + password or Google. Email signups require a working address — we send a confirmation link before your account is active.",
+      "Visit the sign-in page and choose either email + password or Google. Email signups require a working address - we send a confirmation link before your account is active.",
       "After confirming, you will be taken through a short onboarding flow: pick your trading style, choose a default AI coach, and (optionally) connect a broker.",
       "## Forgot your password?",
       "Use the 'reset password' link on the sign-in page. We email a one-time link valid for 60 minutes.",
@@ -54,7 +54,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     title: "Choose the right AI coach",
     description: "Five coaching personalities, from disciplined Analyst to aggressive Beast.",
     body: [
-      "TradeMind ships with five coaching personalities. Each one weighs setup quality, your track record, and risk differently — pick the voice that pushes you in the direction you actually need.",
+      "TradeMind ships with five coaching personalities. Each one weighs setup quality, your track record, and risk differently - pick the voice that pushes you in the direction you actually need.",
       "You can switch coaches at any time from the Coaches tab or directly inside a chat thread. Your trade history and journal carry across coaches.",
     ],
   },
@@ -65,7 +65,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     description: "What the AI is actually looking at when it scores your trade.",
     body: [
       "When you paste a chart or describe a setup, the coach scores it across structure, momentum, location, risk-reward, and fit with your personal stats.",
-      "The grade is an opinion, not a guarantee. Take it as a second pair of eyes — a senior trader who never gets tilted and never gets bored of reading your charts.",
+      "The grade is an opinion, not a guarantee. Take it as a second pair of eyes - a senior trader who never gets tilted and never gets bored of reading your charts.",
       "## What it does not do",
       "It does not place trades, move stops, or give regulated financial advice. Execution and risk stay with you and your broker.",
     ],
@@ -76,7 +76,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     title: "Using the voice coach",
     description: "Talk to your coach hands-free while you watch the chart.",
     body: [
-      "Open the Voice Coach from the side nav. Tap the mic and start talking — describe the setup, the news, what you are feeling. The coach responds in voice and the transcript saves to your chat history.",
+      "Open the Voice Coach from the side nav. Tap the mic and start talking - describe the setup, the news, what you are feeling. The coach responds in voice and the transcript saves to your chat history.",
       "Voice sessions count toward your daily AI quota the same way text chats do.",
     ],
   },
@@ -87,7 +87,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     description: "Import your trade history so the coach knows your real edge.",
     body: [
       "Go to Settings → Brokers and pick your broker. You will be guided through either an OAuth flow or a secure token paste, depending on the broker.",
-      "Once connected, your closed trades sync into your journal automatically. The coach uses them to spot patterns — symbols you keep losing on, sessions where you tilt, setups where you are statistically strong.",
+      "Once connected, your closed trades sync into your journal automatically. The coach uses them to spot patterns - symbols you keep losing on, sessions where you tilt, setups where you are statistically strong.",
       "## Disconnecting",
       "You can revoke broker access at any time from Settings → Brokers. Existing imported trades stay in your journal until you delete them.",
     ],
@@ -109,7 +109,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     description: "Why the coach sometimes asks you to wait until tomorrow.",
     body: [
       "Every plan has a daily cap on AI coaching messages. The cap resets at 00:00 UTC. Voice sessions and text chats both count.",
-      "If you hit the cap, upgrading takes effect immediately — your remaining requests jump to the new plan's allowance.",
+      "If you hit the cap, upgrading takes effect immediately - your remaining requests jump to the new plan's allowance.",
     ],
   },
   {
@@ -118,7 +118,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     title: "Change or cancel your plan",
     description: "Upgrade, downgrade, or end your subscription.",
     body: [
-      "Open Settings → Billing. You can switch plans at any time. Upgrades take effect immediately and are pro-rated. Downgrades take effect at the end of your current billing period — you keep the higher tier until then.",
+      "Open Settings → Billing. You can switch plans at any time. Upgrades take effect immediately and are pro-rated. Downgrades take effect at the end of your current billing period - you keep the higher tier until then.",
       "Cancelling stops the next renewal. You keep access until the period ends. We do not pro-rate refunds for the unused portion of a paid period.",
       "## Trial",
       "Cancelling during your 7-day trial means you are not charged. Your account stays active in read-only mode until you re-subscribe.",
@@ -131,7 +131,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     description: "Download everything we store about you as JSON.",
     body: [
       "Open Settings → Privacy & Data and click 'Download my data'. You get a single JSON file containing your profile, chat threads, messages, broker connections, and AI usage.",
-      "The export is generated on-demand — there is no waiting list and no email follow-up.",
+      "The export is generated on-demand - there is no waiting list and no email follow-up.",
     ],
   },
   {

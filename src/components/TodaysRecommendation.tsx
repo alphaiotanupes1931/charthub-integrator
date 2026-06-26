@@ -64,7 +64,7 @@ function buildRecommendation(trades: Trade[]): {
   if (!trades.length) {
     return {
       headline: "Log a few trades to unlock your edge",
-      body: "TradeMind grades patterns once you've logged at least 5 trades. Start by journaling today's session — wins, losses, and a one-line note.",
+      body: "TradeMind grades patterns once you've logged at least 5 trades. Start by journaling today's session - wins, losses, and a one-line note.",
     };
   }
 
@@ -96,7 +96,7 @@ function buildRecommendation(trades: Trade[]): {
   let body = `You've logged ${trades.length} sessions. Keep journaling to sharpen the AI's read on your edge.`;
 
   if (best && winRate >= 50) {
-    headline = `Lean into ${best.symbol} — it's your edge`;
+    headline = `Lean into ${best.symbol} - it's your edge`;
     body = `You're ${Math.round((best.wins / best.total) * 100)}% on ${best.symbol} across ${best.total} trades. Size up your A+ setups there and skip mediocre confluence elsewhere today.`;
   } else if (worst && worst.wins / Math.max(1, worst.total) < 0.4) {
     headline = `Stop scalping ${worst.symbol} until structure resets`;

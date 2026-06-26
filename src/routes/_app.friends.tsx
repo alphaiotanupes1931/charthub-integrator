@@ -103,7 +103,7 @@ function FriendsPage() {
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1500);
     } catch {
-      toast.error("Copy failed — select the link manually");
+      toast.error("Copy failed - select the link manually");
     }
   }
 
@@ -132,7 +132,7 @@ function FriendsPage() {
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
           <div className="flex-1 truncate rounded-md border border-border bg-background/60 px-3 py-2 font-mono text-xs text-muted-foreground">
-            {loading ? "Generating…" : link || "—"}
+            {loading ? "Generating…" : link || "-"}
           </div>
           <div className="flex gap-2">
             <Button onClick={copyLink} disabled={!link} variant="secondary" className="flex-1 sm:flex-none">
