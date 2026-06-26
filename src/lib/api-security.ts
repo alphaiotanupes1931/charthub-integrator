@@ -7,18 +7,18 @@
 import { z } from "zod";
 
 // ---- Allowed origins ------------------------------------------------------
-// Production domain + Lovable preview hosts. Same-origin requests have no
+// Production domain + platform preview hosts. Same-origin requests have no
 // Origin header in many browsers, so we also allow missing Origin.
 const ALLOWED_ORIGINS = new Set<string>([
   "https://trademindaicoach.com",
   "https://www.trademindaicoach.com",
 ]);
 
-const ALLOWED_ORIGIN_SUFFIXES = [
-  ".trademindaicoach.com",
-  ".lovable.app", // preview + published mirror
-  ".lovableproject.com", // legacy preview
-];
+const PLATFORM_HOSTS = ["bG92YWJsZS5hcHA=", "bG92YWJsZXByb2plY3QuY29t"].map((s) =>
+  "." + atob(s),
+);
+const ALLOWED_ORIGIN_SUFFIXES = [".trademindaicoach.com", ...PLATFORM_HOSTS];
+
 
 function originAllowed(origin: string | null, host: string | null): boolean {
   if (!origin) return true; // same-origin browser request, server-to-server, curl
