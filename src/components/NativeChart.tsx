@@ -141,7 +141,7 @@ function computeLevels(candles: Candle[]) {
   ];
 
   // --- Order Flow: per-bar delta proxy from body strength + cumulative delta ---
-  // delta = sign(close-open) * |body|/range — strongest absorption/initiative bars
+  // delta = sign(close-open) * |body|/range - strongest absorption/initiative bars
   const scored = candles.slice(-50).map((c) => {
     const body = c.close - c.open;
     const rng = Math.max(1e-9, c.high - c.low);

@@ -9,7 +9,7 @@ interface Props {
 
 /**
  * Demo sparkline for the public landing page.
- * Renders a deterministic synthetic price line — no network, no live data.
+ * Renders a deterministic synthetic price line - no network, no live data.
  */
 function seededSeries(seed: string, points = 48) {
   let h = 0;

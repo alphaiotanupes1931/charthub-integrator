@@ -132,7 +132,7 @@ export const Route = createFileRoute("/api/tradelocker/import")({
         const api = baseUrl(accountType);
 
         try {
-          // 1. Auth — get JWT
+          // 1. Auth - get JWT
           const auth = (await tlFetch(`${api}/auth/jwt/token`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },

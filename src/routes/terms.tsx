@@ -20,7 +20,7 @@ function TermsPage() {
 
       <Section title="1. What TradeMind is">
         TradeMind is an educational AI trading coach. It grades setups, journals trades, and explains market
-        structure. It is a research and education tool — not a broker, not a financial advisor, not a fund manager.
+        structure. It is a research and education tool - not a broker, not a financial advisor, not a fund manager.
       </Section>
 
       <Section title="2. Not financial advice">

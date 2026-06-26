@@ -30,7 +30,7 @@ function PrivacyPage() {
           <li><strong>Account data:</strong> email address, display name, password hash (managed by our auth provider).</li>
           <li><strong>Profile data:</strong> referral source, onboarding answers, broker connection status (you choose what to share).</li>
           <li><strong>Chat &amp; coaching:</strong> messages you send to the AI coach and the responses generated.</li>
-          <li><strong>Trade journal:</strong> trade entries you create or import. <strong>Stored locally in your browser</strong> — not on our servers.</li>
+          <li><strong>Trade journal:</strong> trade entries you create or import. <strong>Stored locally in your browser</strong> - not on our servers.</li>
           <li><strong>Broker credentials:</strong> when you sync TradeLocker, your password is used once per request and is <strong>never</strong> stored.</li>
           <li><strong>Usage data:</strong> daily AI request counts, server logs (IP, timestamp, request ID) for security and rate limiting.</li>
         </ul>
@@ -54,7 +54,7 @@ function PrivacyPage() {
           <li><strong>Hosting &amp; database:</strong> our managed cloud backend (stores account, profile, chat data).</li>
           <li><strong>AI provider:</strong> chat messages are sent to the AI inference provider that powers the coach. They process requests only and do not retain content for training.</li>
           <li><strong>Market data:</strong> public price data from Twelve Data and similar providers (no personal data shared).</li>
-          <li><strong>Voice synthesis:</strong> ElevenLabs (only the text being spoken is sent — no account identifiers).</li>
+          <li><strong>Voice synthesis:</strong> ElevenLabs (only the text being spoken is sent - no account identifiers).</li>
         </ul>
       </Section>
 
@@ -74,8 +74,8 @@ function PrivacyPage() {
           You can exercise these rights directly from <Link to="/_app/settings" className="text-primary underline">Settings → Privacy &amp; Data</Link>:
         </p>
         <ul className="list-disc pl-5 space-y-2 mt-3">
-          <li><strong>Download all my data</strong> — exports your account, profile, chats, and usage as a JSON file.</li>
-          <li><strong>Delete my account</strong> — permanently removes your account and all associated data.</li>
+          <li><strong>Download all my data</strong> - exports your account, profile, chats, and usage as a JSON file.</li>
+          <li><strong>Delete my account</strong> - permanently removes your account and all associated data.</li>
         </ul>
         <p className="mt-3">
           For anything else, email <a href="mailto:privacy@trademindaicoach.com" className="text-primary underline">privacy@trademindaicoach.com</a>.

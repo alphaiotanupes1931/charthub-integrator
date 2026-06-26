@@ -82,7 +82,7 @@ function MentorPage() {
       setCopiedId(inv.id);
       window.setTimeout(() => setCopiedId(null), 1500);
     } catch {
-      toast.error("Copy failed — select the link manually");
+      toast.error("Copy failed - select the link manually");
     }
   }
 

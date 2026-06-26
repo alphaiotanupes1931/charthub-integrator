@@ -6,13 +6,13 @@ import logoAsset from "@/assets/logo.png.asset.json";
 export const Route = createFileRoute("/status")({
   head: () => ({
     meta: [
-      { title: "System Status — TradeMind" },
+      { title: "System Status - TradeMind" },
       {
         name: "description",
         content:
           "Live operational status for TradeMind: app, database, AI coaching, and market data services.",
       },
-      { property: "og:title", content: "System Status — TradeMind" },
+      { property: "og:title", content: "System Status - TradeMind" },
       {
         property: "og:description",
         content:
@@ -67,7 +67,7 @@ function StatusPage() {
               };
             // AI and market data: treated as operational if app + db are up.
             // These are gated by upstream providers we don't synchronously ping
-            // from the public status endpoint — we report them as operational
+            // from the public status endpoint - we report them as operational
             // unless we have signal otherwise.
             return { ...c, state: dbOk ? "operational" : "degraded", detail: dbOk ? "No incidents" : "Reduced functionality" };
           }),

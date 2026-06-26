@@ -55,11 +55,11 @@ export function buildWelcomeBackRecap(
       typeof trade.entry === "number" && typeof trade.exit === "number"
         ? trade.exit >= trade.entry
           ? trade.side === "Short"
-            ? " — closed in the red."
-            : " — closed in the green."
+            ? " - closed in the red."
+            : " - closed in the green."
           : trade.side === "Short"
-            ? " — closed in the green."
-            : " — closed in the red."
+            ? " - closed in the green."
+            : " - closed in the red."
         : "";
     parts.push(`Last trade in your journal was a${side} on ${trade.symbol}${result}`);
   } else {
