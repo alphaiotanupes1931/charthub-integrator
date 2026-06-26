@@ -28,19 +28,19 @@ function CookiesPage() {
       <Section title="Strictly necessary">
         <ul className="list-disc pl-5 space-y-3">
           <li>
-            <strong>Auth session</strong> (<code>sb-*-auth-token</code>) — keeps you signed in. Cleared on sign-out
+            <strong>Auth session</strong> (<code>sb-*-auth-token</code>) - keeps you signed in. Cleared on sign-out
             or account deletion.
           </li>
           <li>
-            <strong>UI preferences</strong> (<code>trademind.timeFormat</code>, <code>trademind.welcome-back.muted</code>) — remember your
+            <strong>UI preferences</strong> (<code>trademind.timeFormat</code>, <code>trademind.welcome-back.muted</code>) - remember your
             chosen time format and welcome-voice setting.
           </li>
           <li>
-            <strong>Trade journal</strong> (<code>trademind.journal.trades.v1</code>) — your imported trades live in
+            <strong>Trade journal</strong> (<code>trademind.journal.trades.v1</code>) - your imported trades live in
             your browser only, never on our servers.
           </li>
           <li>
-            <strong>Broker preferences</strong> (<code>trademind.tradelocker.creds.v1</code>) — non-secret broker
+            <strong>Broker preferences</strong> (<code>trademind.tradelocker.creds.v1</code>) - non-secret broker
             connection prefs (email, server, account choice). <strong>Passwords are never stored.</strong>
           </li>
         </ul>

@@ -37,7 +37,7 @@ const STEPS: Step[] = [
   {
     icon: LayoutDashboard,
     title: "Pick any instrument",
-    body: "Change the symbol any time. Gold, indices, FX, crypto — all live data, no placeholders.",
+    body: "Change the symbol any time. Gold, indices, FX, crypto - all live data, no placeholders.",
     target: '[data-tour="symbol-picker"]',
     route: "/dashboard",
   },

@@ -4,7 +4,7 @@ const KEY = "trademind.cookie-notice.ack.v1";
 
 /**
  * Lightweight cookie notice. We only use strictly necessary storage (auth session,
- * UI prefs, local journal). No tracking, no consent toggles needed — just disclosure.
+ * UI prefs, local journal). No tracking, no consent toggles needed - just disclosure.
  */
 export function CookieBanner() {
   const [ack, setAck] = useState(true);

@@ -393,7 +393,7 @@ function SettingsPage() {
           )}
         </div>
         <p className="text-sm text-muted-foreground leading-relaxed mb-5">
-          Log in with your TradeLocker credentials to pull your trade history straight into the TradeMind journal. Credentials are sent over HTTPS to fetch your trades and are not stored on our servers — only your email, server, and account choice persist locally in this browser.
+          Log in with your TradeLocker credentials to pull your trade history straight into the TradeMind journal. Credentials are sent over HTTPS to fetch your trades and are not stored on our servers - only your email, server, and account choice persist locally in this browser.
         </p>
 
         <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 mb-6">
@@ -475,7 +475,7 @@ function SettingsPage() {
         )}
       </Card>
 
-      {/* STRATEGY moved to its own tab — see /scan-lens */}
+      {/* STRATEGY moved to its own tab - see /scan-lens */}
 
       {/* PRIVACY & DATA (GDPR) */}
       <SectionLabel>Privacy &amp; Data</SectionLabel>
@@ -500,7 +500,7 @@ function SettingsPage() {
           Delete my account
         </h2>
         <p className="text-sm text-muted-foreground mb-4">
-          Permanently deletes your account and every piece of data attached to it — profile, chats, usage
+          Permanently deletes your account and every piece of data attached to it - profile, chats, usage
           history, broker connections. <strong className="text-foreground">This cannot be undone.</strong>
         </p>
         {!confirmDelete ? (

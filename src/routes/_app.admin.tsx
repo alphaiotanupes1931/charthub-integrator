@@ -154,9 +154,9 @@ function AdminPage() {
                   <tr><td colSpan={7} className="p-6 text-muted-foreground">No users yet.</td></tr>
                 ) : users.map((u) => (
                   <tr key={u.id} className={u.banned ? "bg-destructive/5" : ""}>
-                    <td className="px-4 py-2.5">{u.display_name ?? <span className="text-muted-foreground">—</span>}</td>
+                    <td className="px-4 py-2.5">{u.display_name ?? <span className="text-muted-foreground">-</span>}</td>
                     <td className="px-4 py-2.5 text-muted-foreground">{u.email}</td>
-                    <td className="px-4 py-2.5 text-muted-foreground">{u.referral_source ?? <span className="opacity-60">—</span>}</td>
+                    <td className="px-4 py-2.5 text-muted-foreground">{u.referral_source ?? <span className="opacity-60">-</span>}</td>
                     <td className="px-4 py-2.5">
                       {u.broker_connected ? (
                         <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${u.broker_account_type === "live" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-amber-500/10 text-amber-400 border border-amber-500/20"}`}>

@@ -13,11 +13,11 @@ const DEMO_PRICES: Record<string, { price: string; change: string; up: boolean }
 
 /**
  * Demo ticker tape for the public landing page.
- * Static, deterministic values — no network, no live market data.
+ * Static, deterministic values - no network, no live market data.
  */
 export function TickerTape({ symbols }: Props) {
   const row = symbols.map((s) => {
-    const d = DEMO_PRICES[s.proName] ?? { price: "—", change: "0.00%", up: true };
+    const d = DEMO_PRICES[s.proName] ?? { price: "-", change: "0.00%", up: true };
     return { ...s, ...d };
   });
   // duplicate to make the marquee seamless

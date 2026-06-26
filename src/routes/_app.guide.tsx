@@ -14,7 +14,7 @@ const STEPS = [
   { icon: NotebookPen,   title: "Log every trade",       body: "Use the Trade Journal to record entries, exits, P&L and notes. We grade execution and behavior, not just luck." },
   { icon: Library,       title: "Pick a strategy",       body: "Tap any card in the Strategy Library to expand the full breakdown and set it as your active playbook." },
   { icon: Users,         title: "Choose your coach",     body: "Three coach personalities, each with a distinct voice. Preview the voice on the AI Coaches page." },
-  { icon: Activity,      title: "Trade from the chart",  body: "Connect your TradeLocker broker in Settings — the Dashboard then lets you open a docked trading floor next to TradeMind so you can execute without leaving the app." },
+  { icon: Activity,      title: "Trade from the chart",  body: "Connect your TradeLocker broker in Settings - the Dashboard then lets you open a docked trading floor next to TradeMind so you can execute without leaving the app." },
   { icon: Brain,         title: "Build your memory",     body: "Correct the AI when it's wrong. Those corrections live in Trading Memory and shape every future reply." },
 ];
 

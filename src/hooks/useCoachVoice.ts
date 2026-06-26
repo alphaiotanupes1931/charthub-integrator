@@ -32,7 +32,7 @@ function broadcastVoiceEnabled() {
   window.dispatchEvent(new Event(VOICE_EVENT));
 }
 
-// 1-frame silent WAV — used to "unlock" the audio element inside a user gesture
+// 1-frame silent WAV - used to "unlock" the audio element inside a user gesture
 // so later .play() calls (after async fetch) are allowed on iOS / mobile Safari.
 const SILENT_WAV =
   "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
@@ -156,7 +156,7 @@ export function useCoachVoice() {
     })();
   }, []);
 
-  // Persist on change: local + profile. Toggling on is a gesture — prime now.
+  // Persist on change: local + profile. Toggling on is a gesture - prime now.
   const setEnabled = useCallback((v: boolean) => {
     voicePreferenceTouched = true;
     rememberVoiceEnabled(v);
@@ -197,7 +197,7 @@ export function useCoachVoice() {
     const el = getAudio();
     const ctx = getAudioContext();
     if (!el && !ctx) return;
-    // Stop any previous playback but DON'T destroy the element — we need it
+    // Stop any previous playback but DON'T destroy the element - we need it
     // to keep its unlocked status for mobile autoplay.
     if (sourceRef.current) {
       try { sourceRef.current.stop(); } catch { /* ignore */ }
