@@ -11,7 +11,7 @@ export const Route = createFileRoute("/help/$slug")({
   },
   head: ({ loaderData }) => {
     const a = loaderData?.article;
-    const title = a ? `${a.title} — TradeMind Help` : "Help — TradeMind";
+    const title = a ? `${a.title} - TradeMind Help` : "Help - TradeMind";
     const desc = a?.description ?? "TradeMind help articles.";
     return {
       meta: [
@@ -88,7 +88,7 @@ function ArticlePage() {
             <div>
               <div className="font-medium">Did this help?</div>
               <div className="text-sm text-muted-foreground">
-                If not, ask your AI coach — it has full context on your account.
+                If not, ask your AI coach - it has full context on your account.
               </div>
             </div>
             <Link

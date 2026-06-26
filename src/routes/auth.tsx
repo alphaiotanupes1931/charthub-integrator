@@ -132,7 +132,7 @@ function AuthPage() {
     if (!muted && typeof window !== "undefined" && typeof Audio !== "undefined") {
       welcomeAudio = new Audio();
       welcomeAudio.preload = "auto";
-      // 1-frame silent WAV — primes the element so a later src swap can play.
+      // 1-frame silent WAV - primes the element so a later src swap can play.
       welcomeAudio.src =
         "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
       welcomeAudio.play().then(() => welcomeAudio?.pause()).catch(() => {});
@@ -158,7 +158,7 @@ function AuthPage() {
           let recap: string;
           if (mode === "signup") {
             const name = spokenName(null, parsed.data.email);
-            recap = `Hi ${name}, welcome to TradeMind. Make sure to complete your profile and pick your coach so I can tailor your feedback. I am here whenever you have questions — just click the chatbot in the bottom right corner and I will jump in.`;
+            recap = `Hi ${name}, welcome to TradeMind. Make sure to complete your profile and pick your coach so I can tailor your feedback. I am here whenever you have questions - just click the chatbot in the bottom right corner and I will jump in.`;
           } else {
             recap = await Promise.race([
               buildLoginWelcomeRecap(),

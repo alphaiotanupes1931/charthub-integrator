@@ -12,13 +12,13 @@ import {
 export const Route = createFileRoute("/faq")({
   head: () => ({
     meta: [
-      { title: "FAQ — TradeMind" },
+      { title: "FAQ - TradeMind" },
       {
         name: "description",
         content:
           "Answers to common questions about TradeMind, the AI trading coach, broker connections, data security, and pricing.",
       },
-      { property: "og:title", content: "FAQ — TradeMind" },
+      { property: "og:title", content: "FAQ - TradeMind" },
       {
         property: "og:description",
         content:

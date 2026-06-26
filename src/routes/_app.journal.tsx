@@ -53,7 +53,7 @@ type Trade = {
 
 const STORAGE_KEY = "trademind.journal.trades.v1";
 
-// --- Local-date helpers (NEVER use toISOString — it shifts to UTC) ---
+// --- Local-date helpers (NEVER use toISOString - it shifts to UTC) ---
 const pad = (n: number) => String(n).padStart(2, "0");
 const ymd = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const todayYmd = () => ymd(new Date());
@@ -181,7 +181,7 @@ function JournalPage() {
         description={
           <>
             Log every trade with its date, timeframe, and execution data. Entries save to the exact
-            day you pick — no second-guessing. R:R, P&amp;L, and grades are computed from your inputs.
+            day you pick - no second-guessing. R:R, P&amp;L, and grades are computed from your inputs.
           </>
         }
       />
@@ -323,7 +323,7 @@ function JournalPage() {
                         {pnl >= 0 ? "+" : ""}{pnl.toFixed(2)}
                       </div>
                       <div className="text-[11px] text-muted-foreground">
-                        R:R {rr == null ? "—" : `${rr.toFixed(2)}`}
+                        R:R {rr == null ? "-" : `${rr.toFixed(2)}`}
                       </div>
                     </div>
                     <button
@@ -595,7 +595,7 @@ function TradeFormModal({
               >
                 <Upload className="h-4 w-4" />
                 <span>Upload screenshot or paste from clipboard</span>
-                <span className="text-[10px]">Stored only on your device — never uploaded to our servers</span>
+                <span className="text-[10px]">Stored only on your device - never uploaded to our servers</span>
               </button>
             )}
           </Field>
@@ -609,7 +609,7 @@ function TradeFormModal({
             </div>
             <div>
               <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">R:R</div>
-              <div className="font-semibold">{previewRR == null ? "—" : previewRR.toFixed(2)}</div>
+              <div className="font-semibold">{previewRR == null ? "-" : previewRR.toFixed(2)}</div>
             </div>
           </div>
         </div>

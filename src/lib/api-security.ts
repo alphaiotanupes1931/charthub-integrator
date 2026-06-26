@@ -142,7 +142,7 @@ export function rateLimit(
 }
 
 // ---- Strong password ------------------------------------------------------
-// Top common passwords — short curated list to block the obvious ones.
+// Top common passwords - short curated list to block the obvious ones.
 // Anything longer than a quick check belongs in a HIBP integration.
 const COMMON_PASSWORDS = new Set<string>([
   "password", "password1", "password12", "password123", "password1234",
@@ -166,5 +166,5 @@ export const strongPasswordSchema = z
   )
   .refine(
     (p) => !COMMON_PASSWORDS.has(p.toLowerCase()),
-    "This password is too common — pick something less guessable",
+    "This password is too common - pick something less guessable",
   );

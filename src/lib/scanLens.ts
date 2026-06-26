@@ -1,4 +1,4 @@
-// Scan Lens — analysis emphasis filter applied to AI chart reads.
+// Scan Lens - analysis emphasis filter applied to AI chart reads.
 // Persisted per-browser in localStorage and injected into the chat system prompt.
 
 export type ScanLensId =

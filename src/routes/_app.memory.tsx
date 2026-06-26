@@ -52,7 +52,7 @@ function MemoryPage() {
         <StatCard
           icon={<Sparkles className="h-4 w-4 text-primary" />}
           label="AI accuracy"
-          value="—"
+          value="-"
           hint="How often the AI's grade matched the outcome"
         />
       </div>

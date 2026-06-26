@@ -37,7 +37,7 @@ function ScanLensPage() {
         <h1 className="text-2xl font-semibold tracking-tight">Scan Lens</h1>
       </div>
       <p className="text-sm text-muted-foreground mb-8 max-w-xl">
-        The lens controls how your AI coach reads charts. Wyckoff Sweep -&gt; BOS -&gt; Retest still runs on every scan — the lens only shifts emphasis, targets, and which setups get flagged off-playbook.
+        The lens controls how your AI coach reads charts. Wyckoff Sweep -&gt; BOS -&gt; Retest still runs on every scan - the lens only shifts emphasis, targets, and which setups get flagged off-playbook.
       </p>
 
       <div className="space-y-2.5">
@@ -73,7 +73,7 @@ function ScanLensPage() {
       </div>
 
       <p className="italic text-xs text-muted-foreground mt-6">
-        Strategy is the lens, not the law. No lens overrides Wyckoff grading — Sweep -&gt; BOS -&gt; Retest is always required for A+ entries.
+        Strategy is the lens, not the law. No lens overrides Wyckoff grading - Sweep -&gt; BOS -&gt; Retest is always required for A+ entries.
       </p>
     </div>
   );
