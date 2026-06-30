@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { TradingViewChart } from "@/components/TradingViewChart";
 import { NativeChart, LEVEL_META, type LevelKey, type ChartSnapshot } from "@/components/NativeChart";
-import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Sparkles, Clock, MessageSquare, X, Plug, Maximize2, Volume2, VolumeX } from "lucide-react";
+import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Sparkles, Clock, MessageSquare, X, Plug, Maximize2, Volume2, VolumeX, Square, Paperclip, ChevronUp } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { useCoachVoice } from "@/hooks/useCoachVoice";
 import { DashboardChatPanel, type DashboardChatHandle } from "@/components/DashboardChatPanel";
@@ -43,15 +43,18 @@ const INTERVALS = [
 type Symbol = { tv: string; ticker: string; name: string; venue: string };
 
 const SYMBOLS: Symbol[] = [
-  { tv: "OANDA:XAUUSD",      ticker: "XAU/USD", name: "Gold Spot",       venue: "OANDA"   },
-  { tv: "BINANCE:BTCUSDT",   ticker: "BTC/USD", name: "Bitcoin",         venue: "Binance" },
-  { tv: "BINANCE:ETHUSDT",   ticker: "ETH/USD", name: "Ethereum",        venue: "Binance" },
-  { tv: "FOREXCOM:NSXUSD",   ticker: "NAS100",  name: "US Nasdaq 100",   venue: "FOREX.com" },
-  { tv: "FOREXCOM:SPXUSD",   ticker: "SPX500",  name: "S&P 500",         venue: "FOREX.com" },
-  { tv: "FOREXCOM:DJI",      ticker: "US30",    name: "Dow Jones",       venue: "FOREX.com" },
-  { tv: "FX:EURUSD",         ticker: "EUR/USD", name: "Euro / Dollar",   venue: "FX"      },
-  { tv: "FX:GBPUSD",         ticker: "GBP/USD", name: "Pound / Dollar",  venue: "FX"      },
-  { tv: "FX:USDJPY",         ticker: "USD/JPY", name: "Dollar / Yen",    venue: "FX"      },
+  { tv: "OANDA:XAUUSD",      ticker: "XAU/USD", name: "Gold Spot",        venue: "OANDA"     },
+  { tv: "OANDA:XAGUSD",      ticker: "XAG/USD", name: "Silver Spot",      venue: "OANDA"     },
+  { tv: "FOREXCOM:NSXUSD",   ticker: "NAS100",  name: "US Nasdaq 100",    venue: "FOREX.com" },
+  { tv: "FOREXCOM:DJI",      ticker: "US30",    name: "Dow Jones",        venue: "FOREX.com" },
+  { tv: "FOREXCOM:SPXUSD",   ticker: "SPX500",  name: "S&P 500",          venue: "FOREX.com" },
+  { tv: "TVC:USOIL",         ticker: "WTI Oil", name: "US Crude Oil",     venue: "TVC"       },
+  { tv: "FX:EURUSD",         ticker: "EUR/USD", name: "Euro / Dollar",    venue: "FX"        },
+  { tv: "FX:GBPUSD",         ticker: "GBP/USD", name: "Pound / Dollar",   venue: "FX"        },
+  { tv: "FX:USDJPY",         ticker: "USD/JPY", name: "Dollar / Yen",     venue: "FX"        },
+  { tv: "BINANCE:BTCUSDT",   ticker: "BTC/USD", name: "Bitcoin",          venue: "Binance"   },
+  { tv: "BINANCE:ETHUSDT",   ticker: "ETH/USD", name: "Ethereum",         venue: "Binance"   },
+  { tv: "BINANCE:XRPUSDT",   ticker: "XRP/USD", name: "Ripple",           venue: "Binance"   },
 ];
 
 type ScanResult = {
@@ -59,9 +62,26 @@ type ScanResult = {
   bias: "Long" | "Short" | "Neutral";
   confidence: number;
   notes: string;
+  entry: string;
+  stop: string;
+  tp1: string;
+  tp2: string;
+  rr: string;
+  details: string;
 };
 
-function gradeFor(symbol: Symbol): ScanResult {
+function fmtPrice(n: number, decimals: number): string {
+  return n.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+
+function decimalsFor(price: number): number {
+  if (price >= 1000) return 2;
+  if (price >= 10) return 3;
+  if (price >= 1) return 4;
+  return 5;
+}
+
+function gradeFor(symbol: Symbol, lastPrice?: number): ScanResult {
   let h = 0;
   for (let i = 0; i < symbol.tv.length; i++) h = (h * 31 + symbol.tv.charCodeAt(i)) >>> 0;
   const grades: ScanResult["grade"][] = ["A+", "A", "B", "C", "NO ENTRY"];
@@ -75,7 +95,43 @@ function gradeFor(symbol: Symbol): ScanResult {
     C:   "Choppy structure. Liquidity above and below. Skip until one side resolves.",
     "NO ENTRY": "No edge. Range mid with conflicting HTF bias. Stand down.",
   };
-  return { grade, bias, confidence, notes: notesByGrade[grade] };
+  // Build plan numbers — anchored to lastPrice when we have it; otherwise illustrative.
+  const px = typeof lastPrice === "number" && isFinite(lastPrice) ? lastPrice : 100;
+  const dec = decimalsFor(px);
+  const stopPct = 0.004 + ((h >> 12) % 7) / 1000; // 0.4% – 1.1%
+  const tp1R = 1.5;
+  const tp2R = 3;
+  let entry = px;
+  let stop: number;
+  let tp1: number;
+  let tp2: number;
+  if (bias === "Long") {
+    stop = px * (1 - stopPct);
+    const risk = entry - stop;
+    tp1 = entry + risk * tp1R;
+    tp2 = entry + risk * tp2R;
+  } else if (bias === "Short") {
+    stop = px * (1 + stopPct);
+    const risk = stop - entry;
+    tp1 = entry - risk * tp1R;
+    tp2 = entry - risk * tp2R;
+  } else {
+    stop = px * (1 - stopPct);
+    tp1 = px * (1 + stopPct * tp1R);
+    tp2 = px * (1 + stopPct * tp2R);
+  }
+  return {
+    grade,
+    bias,
+    confidence,
+    notes: notesByGrade[grade],
+    entry: fmtPrice(entry, dec),
+    stop: fmtPrice(stop, dec),
+    tp1: fmtPrice(tp1, dec),
+    tp2: fmtPrice(tp2, dec),
+    rr: `1 : ${tp2R}`,
+    details: `Trigger: ${bias === "Neutral" ? "wait for a sweep + BOS in either direction" : `${bias.toLowerCase()} on a 5m close back through the retest`}. Invalidation: ${bias === "Long" ? "close below" : bias === "Short" ? "close above" : "structural break of"} ${fmtPrice(stop, dec)}. Manage to break-even at TP1 (${fmtPrice(tp1, dec)}), trail the runner toward TP2 (${fmtPrice(tp2, dec)}). Risk fixed at 0.5–1R of account.`,
+  };
 }
 
 const gradeColor: Record<ScanResult["grade"], string> = {
@@ -85,6 +141,126 @@ const gradeColor: Record<ScanResult["grade"], string> = {
   C:   "text-destructive",
   "NO ENTRY": "text-destructive",
 };
+
+function ScreenshotAttach({ onPick }: { onPick: (file: File) => void }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  return (
+    <>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) onPick(f);
+          e.target.value = "";
+        }}
+      />
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-sm font-medium hover:border-primary/50 transition"
+        title="Upload or paste a chart screenshot for the AI to scan"
+      >
+        <Paperclip className="h-3.5 w-3.5" /> Scan a screenshot
+      </button>
+    </>
+  );
+}
+
+function ScanTicket({
+  result, symbol, onRescan, onAttach, onStopVoice, voiceSpeaking,
+}: {
+  result: ScanResult;
+  symbol: Symbol;
+  onRescan: () => void;
+  onAttach: (file: File) => void;
+  onStopVoice: () => void;
+  voiceSpeaking: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const isNoEntry = result.grade === "NO ENTRY";
+  return (
+    <div className="space-y-4">
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div className="min-w-0">
+          <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground mb-1.5">
+            Setup ticket · {symbol.ticker} · {result.bias}
+          </div>
+          <div className={`font-display text-5xl sm:text-6xl leading-none ${gradeColor[result.grade]}`}>
+            {result.grade}
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {voiceSpeaking && (
+            <button
+              onClick={onStopVoice}
+              className="inline-flex items-center gap-1.5 rounded-md border border-destructive/40 bg-destructive/10 px-2.5 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/15"
+              title="Stop voice"
+            >
+              <Square className="h-3 w-3" /> Stop voice
+            </button>
+          )}
+          <button
+            onClick={onRescan}
+            className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium hover:border-primary/50 transition"
+          >
+            Re-scan
+          </button>
+        </div>
+      </div>
+
+      <p className="text-sm leading-relaxed">{result.notes}</p>
+
+      {!isNoEntry && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <TicketCell label="Entry" value={result.entry} />
+          <TicketCell label="Stop"  value={result.stop} tone="bad" />
+          <TicketCell label="TP1"   value={result.tp1} tone="good" />
+          <TicketCell label="TP2"   value={result.tp2} tone="good" />
+        </div>
+      )}
+
+      <div>
+        <div className="flex justify-between text-xs mb-2">
+          <span className="text-muted-foreground">Confidence · R:R {result.rr}</span>
+          <span className="text-primary font-semibold">{result.confidence}%</span>
+        </div>
+        <div className="h-1.5 rounded-full bg-border overflow-hidden">
+          <div className="h-full bg-primary transition-[width] duration-500" style={{ width: `${result.confidence}%` }} />
+        </div>
+      </div>
+
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="w-full inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background/60 px-3 py-2 text-xs font-medium hover:border-primary/40 transition"
+      >
+        {open ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+        {open ? "Hide details" : "Show details"}
+      </button>
+      {open && (
+        <div className="rounded-lg border border-border/60 bg-background/40 p-3 text-xs leading-relaxed text-foreground/90">
+          {result.details}
+        </div>
+      )}
+
+      <div className="pt-1 flex justify-center">
+        <ScreenshotAttach onPick={onAttach} />
+      </div>
+    </div>
+  );
+}
+
+function TicketCell({ label, value, tone }: { label: string; value: string; tone?: "good" | "bad" }) {
+  const color = tone === "good" ? "text-emerald-400" : tone === "bad" ? "text-destructive" : "text-foreground";
+  return (
+    <div className="rounded-md border border-border/60 bg-background/40 px-2.5 py-2">
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className={`font-mono text-sm font-semibold ${color}`}>{value}</div>
+    </div>
+  );
+}
 
 const ALL_LEVELS: LevelKey[] = ["VWAP","POC","SR","ZONES","FVG","FIB","LIQ","OF"];
 
@@ -199,7 +375,7 @@ function Dashboard() {
     setCoachOpen(true);
     chatRef.current?.scan(prompt);
     window.setTimeout(() => {
-      setResult(gradeFor(symbol));
+      setResult(gradeFor(symbol, snapshot?.lastPrice));
       setScanning(false);
     }, 400);
   };
@@ -498,14 +674,27 @@ function Dashboard() {
             <Crosshair className="h-6 w-6 text-primary" />
             <div className="font-semibold">Ready to scan</div>
             <p className="text-sm text-muted-foreground max-w-sm">
-              Grade the current setup on {symbol.ticker} and get a written breakdown.
+              Grade the current setup on {symbol.ticker}, or attach a chart screenshot to scan that instead.
             </p>
-            <button
-              onClick={runScan}
-              className="mt-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 transition"
-            >
-              Run scan
-            </button>
+            <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
+              <button
+                onClick={runScan}
+                className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 transition"
+              >
+                Run scan
+              </button>
+              <ScreenshotAttach
+                onPick={(file) => {
+                  setCoachOpen(true);
+                  chatRef.current?.attach(file, `Scan this chart screenshot for ${symbol.ticker} on ${intervalLabel}. Give me grade, bias, entry, stop, TP1, TP2, R:R, and a 1–2 sentence rationale.`);
+                  setScanning(true);
+                  window.setTimeout(() => {
+                    setResult(gradeFor(symbol, snapshot?.lastPrice));
+                    setScanning(false);
+                  }, 400);
+                }}
+              />
+            </div>
           </div>
         )}
 
@@ -514,38 +703,31 @@ function Dashboard() {
             <Loader2 className="h-6 w-6 text-primary animate-spin" />
             <div className="font-semibold">Scanning {symbol.ticker}…</div>
             <p className="text-sm text-muted-foreground">Reading structure, sweeps, BOS, retests.</p>
+            <button
+              onClick={() => {
+                chatRef.current?.stop();
+                voice.stop();
+                setScanning(false);
+              }}
+              className="mt-1 inline-flex items-center gap-1.5 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/15 transition"
+            >
+              <Square className="h-3 w-3" /> Stop scan
+            </button>
           </div>
         )}
 
         {result && !scanning && (
-          <div className="space-y-5">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground mb-1.5">
-                  Setup grade · {symbol.ticker} · {result.bias}
-                </div>
-                <div className={`font-display text-6xl leading-none ${gradeColor[result.grade]}`}>
-                  {result.grade}
-                </div>
-              </div>
-              <button
-                onClick={runScan}
-                className="rounded-md border border-border bg-background px-3 py-2 text-xs font-medium hover:border-primary/50 transition"
-              >
-                Re-scan
-              </button>
-            </div>
-            <p className="text-sm leading-relaxed">{result.notes}</p>
-            <div>
-              <div className="flex justify-between text-xs mb-2">
-                <span className="text-muted-foreground">Confidence</span>
-                <span className="text-primary font-semibold">{result.confidence}%</span>
-              </div>
-              <div className="h-1.5 rounded-full bg-border overflow-hidden">
-                <div className="h-full bg-primary transition-[width] duration-500" style={{ width: `${result.confidence}%` }} />
-              </div>
-            </div>
-          </div>
+          <ScanTicket
+            result={result}
+            symbol={symbol}
+            onRescan={runScan}
+            onAttach={(file) => {
+              setCoachOpen(true);
+              chatRef.current?.attach(file, `Re-scan using this chart screenshot for ${symbol.ticker} on ${intervalLabel}. Give me grade, bias, entry, stop, TP1, TP2, R:R, and rationale.`);
+            }}
+            onStopVoice={() => voice.stop()}
+            voiceSpeaking={voice.speaking}
+          />
         )}
       </div>
       </div>
