@@ -138,7 +138,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
     const voice = useCoachVoice();
     const lastSpokenIdRef = useRef<string | null>(null);
 
-    const { messages, sendMessage, status, setMessages } = useChat({
+    const { messages, sendMessage, status, setMessages, stop } = useChat({
       id: threadId,
       messages: initial,
       transport: new DefaultChatTransport({
