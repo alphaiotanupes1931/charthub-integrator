@@ -25,6 +25,9 @@ import {
   VolumeX,
   Download,
   Trash2,
+  KeyRound,
+  Copy,
+  Mail,
 } from "lucide-react";
 import { isWelcomeBackMuted, setWelcomeBackMuted } from "@/lib/welcomeBack";
 
