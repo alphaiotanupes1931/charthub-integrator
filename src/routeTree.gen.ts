@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as StatusRouteImport } from './routes/status'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as HelpRouteImport } from './routes/help'
@@ -51,6 +52,11 @@ const TermsRoute = TermsRouteImport.update({
 const StatusRoute = StatusRouteImport.update({
   id: '/status',
   path: '/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -216,6 +222,7 @@ export interface FileRoutesByFullPath {
   '/help': typeof HelpRouteWithChildren
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
   '/admin': typeof AppAdminRoute
@@ -250,6 +257,7 @@ export interface FileRoutesByTo {
   '/help': typeof HelpRouteWithChildren
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
   '/admin': typeof AppAdminRoute
@@ -285,6 +293,7 @@ export interface FileRoutesById {
   '/help': typeof HelpRouteWithChildren
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
   '/_app/admin': typeof AppAdminRoute
@@ -321,6 +330,7 @@ export interface FileRouteTypes {
     | '/help'
     | '/onboarding'
     | '/privacy'
+    | '/reset-password'
     | '/status'
     | '/terms'
     | '/admin'
@@ -355,6 +365,7 @@ export interface FileRouteTypes {
     | '/help'
     | '/onboarding'
     | '/privacy'
+    | '/reset-password'
     | '/status'
     | '/terms'
     | '/admin'
@@ -389,6 +400,7 @@ export interface FileRouteTypes {
     | '/help'
     | '/onboarding'
     | '/privacy'
+    | '/reset-password'
     | '/status'
     | '/terms'
     | '/_app/admin'
@@ -425,6 +437,7 @@ export interface RootRouteChildren {
   HelpRoute: typeof HelpRouteWithChildren
   OnboardingRoute: typeof OnboardingRoute
   PrivacyRoute: typeof PrivacyRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   StatusRoute: typeof StatusRoute
   TermsRoute: typeof TermsRoute
   ApiChatRoute: typeof ApiChatRoute
@@ -449,6 +462,13 @@ declare module '@tanstack/react-router' {
       path: '/status'
       fullPath: '/status'
       preLoaderRoute: typeof StatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -739,6 +759,7 @@ const rootRouteChildren: RootRouteChildren = {
   HelpRoute: HelpRouteWithChildren,
   OnboardingRoute: OnboardingRoute,
   PrivacyRoute: PrivacyRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   StatusRoute: StatusRoute,
   TermsRoute: TermsRoute,
   ApiChatRoute: ApiChatRoute,
