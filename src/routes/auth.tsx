@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, useSearch, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,11 +22,19 @@ import {
   type JournalTrade,
 } from "@/lib/welcomeBack";
 
+const optionalSearchString = z.preprocess(
+  (value) => (value == null ? undefined : String(value)),
+  z.string().optional(),
+);
+
 const searchSchema = z.object({
-  redirect: z.string().optional(),
-  mode: z.enum(["signin", "signup"]).optional(),
-  banned: z.string().optional(),
-  force: z.string().optional(),
+  redirect: optionalSearchString,
+  mode: z.preprocess(
+    (value) => (value == null ? undefined : String(value)),
+    z.enum(["signin", "signup"]).optional(),
+  ),
+  banned: optionalSearchString,
+  force: optionalSearchString,
 });
 
 export const Route = createFileRoute("/auth")({
@@ -83,9 +91,19 @@ async function buildLoginWelcomeRecap() {
   return buildWelcomeBackRecap(name, latestJournalTrade(trades), lastAssistant, thread?.title ?? null, lastUser);
 }
 
+async function waitForSignedInUser() {
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const { data } = await supabase.auth.getSession();
+    if (data.session?.user) return data.session.user;
+    await new Promise((resolve) => window.setTimeout(resolve, 125));
+  }
+  throw new Error("Signed in, but the session did not finish loading. Please try again.");
+}
+
 function AuthPage() {
   const navigate = useNavigate();
   const search = useSearch({ from: "/auth" });
+  const handledForceSignOut = useRef(false);
   const [mode, setMode] = useState<"signin" | "signup">(search.mode ?? "signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -106,8 +124,24 @@ function AuthPage() {
   // Already signed in? Bounce to redirect target (honoring any pending invite).
   useEffect(() => {
     let cancelled = false;
+    if (search.force === "1" && !handledForceSignOut.current) {
+      handledForceSignOut.current = true;
+
+      const cleanSearch = new URLSearchParams();
+      if (search.redirect) cleanSearch.set("redirect", search.redirect);
+      if (search.mode) cleanSearch.set("mode", search.mode);
+      const cleanPath = `/auth${cleanSearch.toString() ? `?${cleanSearch.toString()}` : ""}`;
+
+      if (typeof window !== "undefined") {
+        supabase.auth.signOut({ scope: "local" }).catch(() => {});
+        window.history.replaceState(null, "", cleanPath);
+      } else {
+        navigate({ to: "/auth", search: { redirect: search.redirect, mode: search.mode }, replace: true });
+      }
+
+      return () => { cancelled = true; };
+    }
     if (search.force === "1") {
-      supabase.auth.signOut().catch(() => {});
       return () => { cancelled = true; };
     }
     supabase.auth.getUser().then(({ data }) => {
@@ -192,13 +226,17 @@ function AuthPage() {
     setBusy(true);
     try {
       if (mode === "signin") {
-        const { error } = await supabase.auth.signInWithPassword(parsed.data);
+        const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
         if (error) throw error;
+        if (data.session) await supabase.auth.setSession(data.session);
+        await waitForSignedInUser();
         toast.success("Signed in");
       } else {
         await signUpConfirmed({ data: parsed.data });
-        const { error } = await supabase.auth.signInWithPassword(parsed.data);
+        const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
         if (error) throw error;
+        if (data.session) await supabase.auth.setSession(data.session);
+        await waitForSignedInUser();
         toast.success("Account created");
       }
       // Claim the welcome slot IMMEDIATELY so the post-nav WelcomeBackGreeter
