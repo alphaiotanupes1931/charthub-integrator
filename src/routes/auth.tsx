@@ -92,7 +92,7 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [recoveryMode_unused_placeholder] = useState(false); // placeholder removed below
+  
 
   const [recoveryMode, setRecoveryMode] = useState(false);
   const [recoveryCode, setRecoveryCodeInput] = useState("");
