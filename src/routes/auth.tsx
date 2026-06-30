@@ -93,8 +93,8 @@ async function buildLoginWelcomeRecap() {
 
 async function waitForSignedInUser() {
   for (let attempt = 0; attempt < 8; attempt += 1) {
-    const { data } = await supabase.auth.getUser();
-    if (data.user) return data.user;
+    const { data } = await supabase.auth.getSession();
+    if (data.session?.user) return data.session.user;
     await new Promise((resolve) => window.setTimeout(resolve, 125));
   }
   throw new Error("Signed in, but the session did not finish loading. Please try again.");
