@@ -201,7 +201,15 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
         if (voice.enabled) voice.prime();
         void sendMessage({ text: prompt });
       },
-    }), [sendMessage, loading, voice]);
+      attach: (file: File, prompt: string) => {
+        if (loading) return;
+        if (voice.enabled) voice.prime();
+        void sendMessage({ text: prompt, files: [file] });
+      },
+      stop: () => {
+        try { stop(); } catch { /* ignore */ }
+      },
+    }), [sendMessage, loading, voice, stop]);
 
     const handleSubmit = () => {
       const text = input.trim();
