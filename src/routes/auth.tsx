@@ -4,6 +4,8 @@ import { Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { signUpConfirmed } from "@/lib/auth.functions";
+import { redeemRecoveryCode } from "@/lib/recovery.functions";
+import { normalizeRecoveryCode } from "@/lib/recoveryCode";
 import { strongPasswordSchema } from "@/lib/api-security";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
