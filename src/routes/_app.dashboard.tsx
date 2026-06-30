@@ -292,6 +292,8 @@ function Dashboard() {
   const [sessionsOn, setSessionsOn] = useState(true);
   const [levelsOpen, setLevelsOpen] = useState(false);
   const [coachOpen, setCoachOpen] = useState(false);
+  const [rightTab, setRightTab] = useState<"analysis" | "coach">("analysis");
+  const [rightOpen, setRightOpen] = useState(true);
   const [snapshot, setSnapshot] = useState<ChartSnapshot | null>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
   const levelsRef = useRef<HTMLDivElement>(null);
