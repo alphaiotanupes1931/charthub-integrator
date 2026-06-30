@@ -39,12 +39,20 @@ const SILENT_WAV =
 
 export function useCoachVoice() {
   const [enabled, setEnabledState] = useState<boolean>(() => readVoiceEnabled());
+  const [speaking, setSpeaking] = useState(false);
+  const speakingRef = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const sourceRef = useRef<AudioBufferSourceNode | null>(null);
   const unlockedRef = useRef(false);
   const lastBlobUrlRef = useRef<string | null>(null);
   const syncedRef = useRef(false);
+
+  const markDone = useCallback(() => {
+    speakingRef.current = false;
+    setSpeaking(false);
+  }, []);
+
 
   // Lazily mint the persistent audio element on the client.
   const getAudio = useCallback((): HTMLAudioElement | null => {
