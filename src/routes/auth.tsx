@@ -147,6 +147,40 @@ function AuthPage() {
     }
   }
 
+  async function onRecoverySubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setErrorMsg(null);
+    const parsedEmail = z.string().trim().email("Enter a valid email").max(255).safeParse(email);
+    if (!parsedEmail.success) {
+      setErrorMsg(parsedEmail.error.issues[0]?.message ?? "Invalid email");
+      return;
+    }
+    const code = normalizeRecoveryCode(recoveryCode);
+    if (code.length < 8) {
+      setErrorMsg("Enter your recovery code");
+      return;
+    }
+    setBusy(true);
+    try {
+      const { actionLink } = await redeemRecoveryCode({
+        data: {
+          email: parsedEmail.data,
+          code,
+          redirectTo: `${window.location.origin}/reset-password`,
+        },
+      });
+      toast.success("Verified. Opening password reset...");
+      window.location.href = actionLink;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Couldn't verify your recovery code";
+      setErrorMsg(msg);
+      toast.error(msg);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErrorMsg(null);
