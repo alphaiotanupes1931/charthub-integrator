@@ -43,15 +43,18 @@ const INTERVALS = [
 type Symbol = { tv: string; ticker: string; name: string; venue: string };
 
 const SYMBOLS: Symbol[] = [
-  { tv: "OANDA:XAUUSD",      ticker: "XAU/USD", name: "Gold Spot",       venue: "OANDA"   },
-  { tv: "BINANCE:BTCUSDT",   ticker: "BTC/USD", name: "Bitcoin",         venue: "Binance" },
-  { tv: "BINANCE:ETHUSDT",   ticker: "ETH/USD", name: "Ethereum",        venue: "Binance" },
-  { tv: "FOREXCOM:NSXUSD",   ticker: "NAS100",  name: "US Nasdaq 100",   venue: "FOREX.com" },
-  { tv: "FOREXCOM:SPXUSD",   ticker: "SPX500",  name: "S&P 500",         venue: "FOREX.com" },
-  { tv: "FOREXCOM:DJI",      ticker: "US30",    name: "Dow Jones",       venue: "FOREX.com" },
-  { tv: "FX:EURUSD",         ticker: "EUR/USD", name: "Euro / Dollar",   venue: "FX"      },
-  { tv: "FX:GBPUSD",         ticker: "GBP/USD", name: "Pound / Dollar",  venue: "FX"      },
-  { tv: "FX:USDJPY",         ticker: "USD/JPY", name: "Dollar / Yen",    venue: "FX"      },
+  { tv: "OANDA:XAUUSD",      ticker: "XAU/USD", name: "Gold Spot",        venue: "OANDA"     },
+  { tv: "OANDA:XAGUSD",      ticker: "XAG/USD", name: "Silver Spot",      venue: "OANDA"     },
+  { tv: "FOREXCOM:NSXUSD",   ticker: "NAS100",  name: "US Nasdaq 100",    venue: "FOREX.com" },
+  { tv: "FOREXCOM:DJI",      ticker: "US30",    name: "Dow Jones",        venue: "FOREX.com" },
+  { tv: "FOREXCOM:SPXUSD",   ticker: "SPX500",  name: "S&P 500",          venue: "FOREX.com" },
+  { tv: "TVC:USOIL",         ticker: "WTI Oil", name: "US Crude Oil",     venue: "TVC"       },
+  { tv: "FX:EURUSD",         ticker: "EUR/USD", name: "Euro / Dollar",    venue: "FX"        },
+  { tv: "FX:GBPUSD",         ticker: "GBP/USD", name: "Pound / Dollar",   venue: "FX"        },
+  { tv: "FX:USDJPY",         ticker: "USD/JPY", name: "Dollar / Yen",     venue: "FX"        },
+  { tv: "BINANCE:BTCUSDT",   ticker: "BTC/USD", name: "Bitcoin",          venue: "Binance"   },
+  { tv: "BINANCE:ETHUSDT",   ticker: "ETH/USD", name: "Ethereum",         venue: "Binance"   },
+  { tv: "BINANCE:XRPUSDT",   ticker: "XRP/USD", name: "Ripple",           venue: "Binance"   },
 ];
 
 type ScanResult = {
@@ -59,9 +62,26 @@ type ScanResult = {
   bias: "Long" | "Short" | "Neutral";
   confidence: number;
   notes: string;
+  entry: string;
+  stop: string;
+  tp1: string;
+  tp2: string;
+  rr: string;
+  details: string;
 };
 
-function gradeFor(symbol: Symbol): ScanResult {
+function fmtPrice(n: number, decimals: number): string {
+  return n.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+
+function decimalsFor(price: number): number {
+  if (price >= 1000) return 2;
+  if (price >= 10) return 3;
+  if (price >= 1) return 4;
+  return 5;
+}
+
+function gradeFor(symbol: Symbol, lastPrice?: number): ScanResult {
   let h = 0;
   for (let i = 0; i < symbol.tv.length; i++) h = (h * 31 + symbol.tv.charCodeAt(i)) >>> 0;
   const grades: ScanResult["grade"][] = ["A+", "A", "B", "C", "NO ENTRY"];
@@ -75,7 +95,43 @@ function gradeFor(symbol: Symbol): ScanResult {
     C:   "Choppy structure. Liquidity above and below. Skip until one side resolves.",
     "NO ENTRY": "No edge. Range mid with conflicting HTF bias. Stand down.",
   };
-  return { grade, bias, confidence, notes: notesByGrade[grade] };
+  // Build plan numbers — anchored to lastPrice when we have it; otherwise illustrative.
+  const px = typeof lastPrice === "number" && isFinite(lastPrice) ? lastPrice : 100;
+  const dec = decimalsFor(px);
+  const stopPct = 0.004 + ((h >> 12) % 7) / 1000; // 0.4% – 1.1%
+  const tp1R = 1.5;
+  const tp2R = 3;
+  let entry = px;
+  let stop: number;
+  let tp1: number;
+  let tp2: number;
+  if (bias === "Long") {
+    stop = px * (1 - stopPct);
+    const risk = entry - stop;
+    tp1 = entry + risk * tp1R;
+    tp2 = entry + risk * tp2R;
+  } else if (bias === "Short") {
+    stop = px * (1 + stopPct);
+    const risk = stop - entry;
+    tp1 = entry - risk * tp1R;
+    tp2 = entry - risk * tp2R;
+  } else {
+    stop = px * (1 - stopPct);
+    tp1 = px * (1 + stopPct * tp1R);
+    tp2 = px * (1 + stopPct * tp2R);
+  }
+  return {
+    grade,
+    bias,
+    confidence,
+    notes: notesByGrade[grade],
+    entry: fmtPrice(entry, dec),
+    stop: fmtPrice(stop, dec),
+    tp1: fmtPrice(tp1, dec),
+    tp2: fmtPrice(tp2, dec),
+    rr: `1 : ${tp2R}`,
+    details: `Trigger: ${bias === "Neutral" ? "wait for a sweep + BOS in either direction" : `${bias.toLowerCase()} on a 5m close back through the retest`}. Invalidation: ${bias === "Long" ? "close below" : bias === "Short" ? "close above" : "structural break of"} ${fmtPrice(stop, dec)}. Manage to break-even at TP1 (${fmtPrice(tp1, dec)}), trail the runner toward TP2 (${fmtPrice(tp2, dec)}). Risk fixed at 0.5–1R of account.`,
+  };
 }
 
 const gradeColor: Record<ScanResult["grade"], string> = {
