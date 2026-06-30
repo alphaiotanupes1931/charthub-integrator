@@ -204,7 +204,15 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
       attach: (file: File, prompt: string) => {
         if (loading) return;
         if (voice.enabled) voice.prime();
-        void sendMessage({ text: prompt, files: [file] });
+        const reader = new FileReader();
+        reader.onload = () => {
+          const url = String(reader.result || "");
+          void sendMessage({
+            text: prompt,
+            files: [{ type: "file", mediaType: file.type || "image/png", url, filename: file.name }],
+          });
+        };
+        reader.readAsDataURL(file);
       },
       stop: () => {
         try { stop(); } catch { /* ignore */ }
