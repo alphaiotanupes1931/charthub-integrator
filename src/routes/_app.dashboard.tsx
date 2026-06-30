@@ -554,14 +554,27 @@ function Dashboard() {
             <Crosshair className="h-6 w-6 text-primary" />
             <div className="font-semibold">Ready to scan</div>
             <p className="text-sm text-muted-foreground max-w-sm">
-              Grade the current setup on {symbol.ticker} and get a written breakdown.
+              Grade the current setup on {symbol.ticker}, or attach a chart screenshot to scan that instead.
             </p>
-            <button
-              onClick={runScan}
-              className="mt-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 transition"
-            >
-              Run scan
-            </button>
+            <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
+              <button
+                onClick={runScan}
+                className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 transition"
+              >
+                Run scan
+              </button>
+              <ScreenshotAttach
+                onPick={(file) => {
+                  setCoachOpen(true);
+                  chatRef.current?.attach(file, `Scan this chart screenshot for ${symbol.ticker} on ${intervalLabel}. Give me grade, bias, entry, stop, TP1, TP2, R:R, and a 1–2 sentence rationale.`);
+                  setScanning(true);
+                  window.setTimeout(() => {
+                    setResult(gradeFor(symbol, snapshot?.lastPrice));
+                    setScanning(false);
+                  }, 400);
+                }}
+              />
+            </div>
           </div>
         )}
 
@@ -570,38 +583,31 @@ function Dashboard() {
             <Loader2 className="h-6 w-6 text-primary animate-spin" />
             <div className="font-semibold">Scanning {symbol.ticker}…</div>
             <p className="text-sm text-muted-foreground">Reading structure, sweeps, BOS, retests.</p>
+            <button
+              onClick={() => {
+                chatRef.current?.stop();
+                voice.stop();
+                setScanning(false);
+              }}
+              className="mt-1 inline-flex items-center gap-1.5 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/15 transition"
+            >
+              <Square className="h-3 w-3" /> Stop scan
+            </button>
           </div>
         )}
 
         {result && !scanning && (
-          <div className="space-y-5">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground mb-1.5">
-                  Setup grade · {symbol.ticker} · {result.bias}
-                </div>
-                <div className={`font-display text-6xl leading-none ${gradeColor[result.grade]}`}>
-                  {result.grade}
-                </div>
-              </div>
-              <button
-                onClick={runScan}
-                className="rounded-md border border-border bg-background px-3 py-2 text-xs font-medium hover:border-primary/50 transition"
-              >
-                Re-scan
-              </button>
-            </div>
-            <p className="text-sm leading-relaxed">{result.notes}</p>
-            <div>
-              <div className="flex justify-between text-xs mb-2">
-                <span className="text-muted-foreground">Confidence</span>
-                <span className="text-primary font-semibold">{result.confidence}%</span>
-              </div>
-              <div className="h-1.5 rounded-full bg-border overflow-hidden">
-                <div className="h-full bg-primary transition-[width] duration-500" style={{ width: `${result.confidence}%` }} />
-              </div>
-            </div>
-          </div>
+          <ScanTicket
+            result={result}
+            symbol={symbol}
+            onRescan={runScan}
+            onAttach={(file) => {
+              setCoachOpen(true);
+              chatRef.current?.attach(file, `Re-scan using this chart screenshot for ${symbol.ticker} on ${intervalLabel}. Give me grade, bias, entry, stop, TP1, TP2, R:R, and rationale.`);
+            }}
+            onStopVoice={() => voice.stop()}
+            voiceSpeaking={voice.speaking}
+          />
         )}
       </div>
       </div>
