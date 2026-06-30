@@ -233,6 +233,10 @@ export function useCoachVoice() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text, voiceId }),
       });
+      if (res.status === 204) {
+        await fallback();
+        return;
+      }
       if (!res.ok) {
         const body = await res.text().catch(() => "");
         console.warn("[voice] tts failed, falling back to browser voice", res.status, body);
