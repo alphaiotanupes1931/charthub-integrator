@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportError } from "../lib/error-reporting";
 import logoAsset from "../assets/logo.png.asset.json";
 import { CookieBanner } from "../components/CookieBanner";
+import { Toaster } from "../components/ui/sonner";
 
 
 
@@ -150,6 +151,7 @@ function RootComponent() {
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
       <CookieBanner />
+      <Toaster />
     </QueryClientProvider>
   );
 }
