@@ -20,6 +20,18 @@ export const setRecoveryCode = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const hasRecoveryCode = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("profiles")
+      .select("recovery_code_hash")
+      .eq("id", context.userId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return { hasCode: Boolean(data?.recovery_code_hash) };
+  });
+
 export const redeemRecoveryCode = createServerFn({ method: "POST" })
   .inputValidator((data) =>
     z.object({
