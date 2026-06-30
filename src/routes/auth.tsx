@@ -94,6 +94,8 @@ function AuthPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [resetMode, setResetMode] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [recoveryMode, setRecoveryMode] = useState(false);
+  const [recoveryCode, setRecoveryCodeInput] = useState("");
 
   useEffect(() => {
     if (search.banned === "1") {
