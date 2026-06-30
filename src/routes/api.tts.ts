@@ -16,6 +16,13 @@ const DEFAULT_VOICE = "JBFqnCBsd6RMkjVDRZzb"; // George
 
 const GATEWAY_TTS_URL = ["https://ai.gateway", "lovable.dev", "v1/audio/speech"].join(".").replace(".v1", "/v1");
 
+function emptyAudio(headers: Record<string, string>) {
+  return new Response(null, {
+    status: 204,
+    headers: { ...headers, "X-TTS-Fallback": "browser" },
+  });
+}
+
 async function speakWithAiGateway(text: string) {
   const apiKey = process.env.LOVABLE_API_KEY;
   if (!apiKey) return null;
@@ -80,7 +87,7 @@ export const Route = createFileRoute("/api/tts")({
             for (const [k, v] of Object.entries(cors)) h.set(k, v);
             return new Response(gatewayAudio.body, { headers: h });
           }
-          return new Response("TTS not configured", { status: 500, headers: cors });
+          return emptyAudio(cors);
         }
 
         const upstream = await fetch(
@@ -117,7 +124,7 @@ export const Route = createFileRoute("/api/tts")({
               return new Response(gatewayAudio.body, { headers: h });
             }
           }
-          return new Response(err || "TTS failed", { status: upstream.status, headers: cors });
+          return emptyAudio(cors);
         }
 
         return new Response(upstream.body, {
