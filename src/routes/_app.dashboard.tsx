@@ -255,7 +255,7 @@ function Dashboard() {
     setCoachOpen(true);
     chatRef.current?.scan(prompt);
     window.setTimeout(() => {
-      setResult(gradeFor(symbol));
+      setResult(gradeFor(symbol, snapshot?.lastPrice));
       setScanning(false);
     }, 400);
   };
