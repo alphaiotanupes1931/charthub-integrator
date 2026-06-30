@@ -28,6 +28,8 @@ import { toast } from "sonner";
 
 export type DashboardChatHandle = {
   scan: (prompt: string) => void;
+  attach: (file: File, prompt: string) => void;
+  stop: () => void;
 };
 
 export type ChartContext = {
@@ -136,7 +138,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
     const voice = useCoachVoice();
     const lastSpokenIdRef = useRef<string | null>(null);
 
-    const { messages, sendMessage, status, setMessages } = useChat({
+    const { messages, sendMessage, status, setMessages, stop } = useChat({
       id: threadId,
       messages: initial,
       transport: new DefaultChatTransport({
@@ -199,7 +201,23 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
         if (voice.enabled) voice.prime();
         void sendMessage({ text: prompt });
       },
-    }), [sendMessage, loading, voice]);
+      attach: (file: File, prompt: string) => {
+        if (loading) return;
+        if (voice.enabled) voice.prime();
+        const reader = new FileReader();
+        reader.onload = () => {
+          const url = String(reader.result || "");
+          void sendMessage({
+            text: prompt,
+            files: [{ type: "file", mediaType: file.type || "image/png", url, filename: file.name }],
+          });
+        };
+        reader.readAsDataURL(file);
+      },
+      stop: () => {
+        try { stop(); } catch { /* ignore */ }
+      },
+    }), [sendMessage, loading, voice, stop]);
 
     const handleSubmit = () => {
       const text = input.trim();
