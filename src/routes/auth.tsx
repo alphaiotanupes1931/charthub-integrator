@@ -368,7 +368,7 @@ function AuthPage() {
                   {mode === "signin" && (
                     <button
                       type="button"
-                      onClick={() => { setResetMode(true); setErrorMsg(null); }}
+                      onClick={() => { setRecoveryMode(true); setErrorMsg(null); }}
                       className="text-xs text-primary hover:underline"
                     >
                       Forgot password?
