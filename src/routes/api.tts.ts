@@ -79,16 +79,18 @@ export const Route = createFileRoute("/api/tts")({
         if (!text) return new Response("text required", { status: 400, headers: cors });
 
         const clipped = text.length > 1200 ? text.slice(0, 1200) + "…" : text;
-        const apiKey = process.env.ELEVENLABS_API_KEY_OVERRIDE || process.env.ELEVENLABS_API_KEY;
-        if (!apiKey) {
-          const gatewayAudio = await speakWithAiGateway(clipped);
-          if (gatewayAudio) {
-            const h = new Headers(gatewayAudio.headers);
-            for (const [k, v] of Object.entries(cors)) h.set(k, v);
-            return new Response(gatewayAudio.body, { headers: h });
-          }
-          return emptyAudio(cors);
+
+        // Try AI Gateway TTS first (reliable, billed via Lovable credits).
+        const gatewayAudio = await speakWithAiGateway(clipped);
+        if (gatewayAudio) {
+          const h = new Headers(gatewayAudio.headers);
+          for (const [k, v] of Object.entries(cors)) h.set(k, v);
+          return new Response(gatewayAudio.body, { headers: h });
         }
+
+        // Fallback to ElevenLabs if a key is configured.
+        const apiKey = process.env.ELEVENLABS_API_KEY_OVERRIDE || process.env.ELEVENLABS_API_KEY;
+        if (!apiKey) return emptyAudio(cors);
 
         const upstream = await fetch(
           `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=mp3_44100_128`,
@@ -115,21 +117,13 @@ export const Route = createFileRoute("/api/tts")({
         if (!upstream.ok || !upstream.body) {
           const err = await upstream.text().catch(() => "");
           console.error("[tts] elevenlabs error", upstream.status, err);
-          const quotaBlocked = upstream.status === 401 || upstream.status === 402 || err.toLowerCase().includes("quota");
-          if (quotaBlocked) {
-            const gatewayAudio = await speakWithAiGateway(clipped);
-            if (gatewayAudio) {
-              const h = new Headers(gatewayAudio.headers);
-              for (const [k, v] of Object.entries(cors)) h.set(k, v);
-              return new Response(gatewayAudio.body, { headers: h });
-            }
-          }
           return emptyAudio(cors);
         }
 
         return new Response(upstream.body, {
           headers: { "Content-Type": "audio/mpeg", ...cors },
         });
+
       },
     },
   },
