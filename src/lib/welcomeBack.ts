@@ -96,27 +96,59 @@ export function coachToElevenVoiceId(coach: string | null | undefined): string {
 // Plays the welcome-back recap using ElevenLabs (via /api/tts).
 // Pass `audio` from a user-gesture context (auth submit) so autoplay rules
 // allow .play() after navigation.
+// Module-level singletons - guarantee only ONE welcome voice plays at a time
+// (prevents the overlapping "two voices" issue when both auth.tsx and the
+// post-nav greeter race, or when the submit handler fires twice).
+let currentWelcomeAudio: HTMLAudioElement | null = null;
+let currentWelcomeUrl: string | null = null;
+let welcomeRequestToken = 0;
+
+function stopCurrentWelcomeAudio() {
+  if (currentWelcomeAudio) {
+    try { currentWelcomeAudio.pause(); } catch { /* ignore */ }
+    try { currentWelcomeAudio.removeAttribute("src"); currentWelcomeAudio.load(); } catch { /* ignore */ }
+    currentWelcomeAudio = null;
+  }
+  if (currentWelcomeUrl) {
+    try { URL.revokeObjectURL(currentWelcomeUrl); } catch { /* ignore */ }
+    currentWelcomeUrl = null;
+  }
+}
+
 export async function speakWithElevenLabs(
   text: string,
   coach: string | null | undefined,
   audio?: HTMLAudioElement | null,
   handlers?: { onStart?: () => void; onEnd?: () => void; onError?: () => void },
 ): Promise<boolean> {
+  // Cancel any previous welcome playback / in-flight request before starting a new one.
+  const token = ++welcomeRequestToken;
+  stopCurrentWelcomeAudio();
   try {
     const res = await fetch("/api/tts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text, voiceId: coachToElevenVoiceId(coach) }),
     });
+    if (token !== welcomeRequestToken) return false; // superseded
     if (!res.ok) throw new Error(`tts ${res.status}`);
     const blob = await res.blob();
+    if (token !== welcomeRequestToken) return false;
     const url = URL.createObjectURL(blob);
     const el = audio ?? new Audio();
+    // Make sure no other welcome audio is still playing before we start.
+    stopCurrentWelcomeAudio();
+    currentWelcomeAudio = el;
+    currentWelcomeUrl = url;
     el.src = url;
     el.onplay = () => handlers?.onStart?.();
     el.onended = () => {
       handlers?.onEnd?.();
-      URL.revokeObjectURL(url);
+      if (currentWelcomeUrl === url) {
+        URL.revokeObjectURL(url);
+        currentWelcomeUrl = null;
+      }
+      if (currentWelcomeAudio === el) currentWelcomeAudio = null;
     };
     el.onerror = () => handlers?.onError?.();
     await el.play();
