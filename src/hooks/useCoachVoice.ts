@@ -39,12 +39,20 @@ const SILENT_WAV =
 
 export function useCoachVoice() {
   const [enabled, setEnabledState] = useState<boolean>(() => readVoiceEnabled());
+  const [speaking, setSpeaking] = useState(false);
+  const speakingRef = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const sourceRef = useRef<AudioBufferSourceNode | null>(null);
   const unlockedRef = useRef(false);
   const lastBlobUrlRef = useRef<string | null>(null);
   const syncedRef = useRef(false);
+
+  const markDone = useCallback(() => {
+    speakingRef.current = false;
+    setSpeaking(false);
+  }, []);
+
 
   // Lazily mint the persistent audio element on the client.
   const getAudio = useCallback((): HTMLAudioElement | null => {
@@ -190,15 +198,18 @@ export function useCoachVoice() {
       URL.revokeObjectURL(lastBlobUrlRef.current);
       lastBlobUrlRef.current = null;
     }
-  }, []);
+    markDone();
+  }, [markDone]);
 
   const speak = useCallback(async (text: string, voiceId: string) => {
     if (!text.trim()) return;
+    // Ignore rapid repeat clicks while audio is already playing.
+    if (speakingRef.current) return;
     const el = getAudio();
     const ctx = getAudioContext();
     if (!el && !ctx) return;
-    // Stop any previous playback but DON'T destroy the element - we need it
-    // to keep its unlocked status for mobile autoplay.
+    speakingRef.current = true;
+    setSpeaking(true);
     if (sourceRef.current) {
       try { sourceRef.current.stop(); } catch { /* ignore */ }
       try { sourceRef.current.disconnect(); } catch { /* ignore */ }
@@ -209,6 +220,13 @@ export function useCoachVoice() {
       URL.revokeObjectURL(lastBlobUrlRef.current);
       lastBlobUrlRef.current = null;
     }
+    const fallback = async () => {
+      try {
+        const { speakWithWebSpeech } = await import("@/lib/webSpeech");
+        await speakWithWebSpeech(text, voiceId);
+      } catch { /* ignore */ }
+      markDone();
+    };
     try {
       const res = await fetch("/api/tts", {
         method: "POST",
@@ -218,16 +236,11 @@ export function useCoachVoice() {
       if (!res.ok) {
         const body = await res.text().catch(() => "");
         console.warn("[voice] tts failed, falling back to browser voice", res.status, body);
-        const { speakWithWebSpeech } = await import("@/lib/webSpeech");
-        await speakWithWebSpeech(text, voiceId);
+        await fallback();
         return;
       }
       const blob = await res.blob();
-      if (!blob.size) {
-        const { speakWithWebSpeech } = await import("@/lib/webSpeech");
-        await speakWithWebSpeech(text, voiceId);
-        return;
-      }
+      if (!blob.size) { await fallback(); return; }
       if (ctx) {
         try {
           await ctx.resume();
@@ -237,6 +250,7 @@ export function useCoachVoice() {
           source.connect(ctx.destination);
           source.onended = () => {
             if (sourceRef.current === source) sourceRef.current = null;
+            markDone();
           };
           sourceRef.current = source;
           source.start(0);
@@ -245,7 +259,7 @@ export function useCoachVoice() {
           console.warn("[voice] web audio failed", e);
         }
       }
-      if (!el) return;
+      if (!el) { markDone(); return; }
       const url = URL.createObjectURL(blob);
       lastBlobUrlRef.current = url;
       el.src = url;
@@ -256,22 +270,20 @@ export function useCoachVoice() {
           URL.revokeObjectURL(url);
           lastBlobUrlRef.current = null;
         }
+        markDone();
       };
       await el.play().catch(async (e) => {
         console.warn("[voice] play blocked, using browser voice", e);
-        const { speakWithWebSpeech } = await import("@/lib/webSpeech");
-        await speakWithWebSpeech(text, voiceId);
+        await fallback();
       });
     } catch (e) {
       console.warn("[voice] error, using browser voice", e);
-      try {
-        const { speakWithWebSpeech } = await import("@/lib/webSpeech");
-        await speakWithWebSpeech(text, voiceId);
-      } catch { /* ignore */ }
+      await fallback();
     }
-  }, [getAudio, getAudioContext]);
+  }, [getAudio, getAudioContext, markDone]);
 
   useEffect(() => stop, [stop]);
 
-  return { enabled, setEnabled, speak, stop, prime };
+  return { enabled, setEnabled, speak, stop, prime, speaking };
 }
+
