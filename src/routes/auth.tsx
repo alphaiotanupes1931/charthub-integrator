@@ -122,30 +122,8 @@ function AuthPage() {
     return () => { cancelled = true; };
   }, [navigate, search.force, search.redirect]);
 
-  async function onResetSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setErrorMsg(null);
-    const parsed = z.string().trim().email("Enter a valid email").max(255).safeParse(email);
-    if (!parsed.success) {
-      setErrorMsg(parsed.error.issues[0]?.message ?? "Invalid email");
-      return;
-    }
-    setBusy(true);
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(parsed.data, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-      if (error) throw error;
-      setResetSent(true);
-      toast.success("Password reset email sent");
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Could not send reset email";
-      setErrorMsg(msg);
-      toast.error(msg);
-    } finally {
-      setBusy(false);
-    }
-  }
+
+
 
   async function onRecoverySubmit(e: React.FormEvent) {
     e.preventDefault();
