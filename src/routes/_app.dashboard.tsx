@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { TradingViewChart } from "@/components/TradingViewChart";
 import { NativeChart, LEVEL_META, type LevelKey, type ChartSnapshot } from "@/components/NativeChart";
-import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Sparkles, Clock, MessageSquare, X, Plug, Maximize2, Volume2, VolumeX, Square, Paperclip, ChevronUp } from "lucide-react";
+import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Sparkles, Clock, MessageSquare, X, Plug, Maximize2, Volume2, VolumeX, Square, Paperclip, ChevronUp, PanelRightClose, PanelRightOpen, BarChart3 } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { useCoachVoice } from "@/hooks/useCoachVoice";
 import { DashboardChatPanel, type DashboardChatHandle } from "@/components/DashboardChatPanel";
@@ -292,6 +292,8 @@ function Dashboard() {
   const [sessionsOn, setSessionsOn] = useState(true);
   const [levelsOpen, setLevelsOpen] = useState(false);
   const [coachOpen, setCoachOpen] = useState(false);
+  const [rightTab, setRightTab] = useState<"analysis" | "coach">("analysis");
+  const [rightOpen, setRightOpen] = useState(true);
   const [snapshot, setSnapshot] = useState<ChartSnapshot | null>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
   const levelsRef = useRef<HTMLDivElement>(null);
@@ -531,221 +533,313 @@ function Dashboard() {
       </div>
 
 
-      {/* Chart card */}
-      <div className="rounded-xl border border-border bg-card" data-tour="chart">
-        {/* Chart toolbar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-3 py-2">
-          <div className="flex items-center gap-1 rounded-md border border-border p-0.5">
-            <button
-              onClick={() => setChartMode("live")}
-              className={`inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium transition ${
-                chartMode === "live" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Activity className="h-3.5 w-3.5" /> Live Chart
-            </button>
-            <button
-              onClick={() => setChartMode("native")}
-              className={`inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium transition ${
-                chartMode === "native" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <LayoutGrid className="h-3.5 w-3.5" /> Native Chart
-            </button>
-          </div>
+      {/* Chart + right rail (desktop split) */}
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-4 lg:items-stretch">
+        {/* Chart card */}
+        <div className="rounded-xl border border-border bg-card flex flex-col min-w-0" data-tour="chart">
+          {/* Chart toolbar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-3 py-2">
+            <div className="flex items-center gap-1 rounded-md border border-border p-0.5">
+              <button
+                onClick={() => setChartMode("live")}
+                className={`inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium transition ${
+                  chartMode === "live" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Activity className="h-3.5 w-3.5" /> Live Chart
+              </button>
+              <button
+                onClick={() => setChartMode("native")}
+                className={`inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium transition ${
+                  chartMode === "native" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <LayoutGrid className="h-3.5 w-3.5" /> Native Chart
+              </button>
+            </div>
 
-          <div className="relative" ref={levelsRef}>
-            <button
-              onClick={() => setLevelsOpen((o) => !o)}
-              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/60 px-2.5 py-1 text-xs font-medium hover:border-primary/50 transition"
-              title="Toggle overlay zones / levels"
-            >
-              Levels <span className="text-muted-foreground">({enabledCount})</span>
-              <ChevronDown className={`h-3 w-3 transition-transform ${levelsOpen ? "rotate-180" : ""}`} />
-            </button>
-            {levelsOpen && (
-              <div className="absolute right-0 mt-2 w-64 rounded-lg border border-border bg-card shadow-xl z-20 p-2.5">
-                <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-2 px-1">
-                  Overlay levels
-                </div>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {ALL_LEVELS.map((k) => {
-                    const on = levels[k];
-                    const meta = LEVEL_META[k];
-                    return (
+            <div className="flex items-center gap-2">
+              <div className="relative" ref={levelsRef}>
+                <button
+                  onClick={() => setLevelsOpen((o) => !o)}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/60 px-2.5 py-1 text-xs font-medium hover:border-primary/50 transition"
+                  title="Toggle overlay zones / levels"
+                >
+                  Levels <span className="text-muted-foreground">({enabledCount})</span>
+                  <ChevronDown className={`h-3 w-3 transition-transform ${levelsOpen ? "rotate-180" : ""}`} />
+                </button>
+                {levelsOpen && (
+                  <div className="absolute right-0 mt-2 w-64 rounded-lg border border-border bg-card shadow-xl z-20 p-2.5">
+                    <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-2 px-1">
+                      Overlay levels
+                    </div>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {ALL_LEVELS.map((k) => {
+                        const on = levels[k];
+                        const meta = LEVEL_META[k];
+                        return (
+                          <button
+                            key={k}
+                            onClick={() => toggleLevel(k)}
+                            className={`rounded-md border px-2 py-1.5 text-xs font-medium transition ${
+                              on ? meta.tone : "border-border text-muted-foreground hover:text-foreground"
+                            }`}
+                            style={on ? { boxShadow: `inset 0 0 0 1px ${meta.color}40` } : undefined}
+                          >
+                            {meta.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {chartMode === "live" && (
+                      <div className="mt-2 px-1 text-[10px] text-muted-foreground leading-relaxed">
+                        On the Live chart, FVG and Liq are Native-only - switch to Native Chart to see them.
+                      </div>
+                    )}
+                    <div className="mt-3 pt-3 border-t border-border/60 flex items-center justify-between text-[11px]">
                       <button
-                        key={k}
-                        onClick={() => toggleLevel(k)}
-                        className={`rounded-md border px-2 py-1.5 text-xs font-medium transition ${
-                          on ? meta.tone : "border-border text-muted-foreground hover:text-foreground"
-                        }`}
-                        style={on ? { boxShadow: `inset 0 0 0 1px ${meta.color}40` } : undefined}
+                        onClick={() => setLevels(Object.fromEntries(ALL_LEVELS.map((k) => [k, true])) as Record<LevelKey, boolean>)}
+                        className="text-muted-foreground hover:text-foreground"
                       >
-                        {meta.label}
+                        All on
                       </button>
-                    );
-                  })}
-                </div>
-                {chartMode === "live" && (
-                  <div className="mt-2 px-1 text-[10px] text-muted-foreground leading-relaxed">
-                    On the Live chart, FVG and Liq are Native-only - switch to Native Chart to see them.
+                      <button
+                        onClick={() => setLevels(Object.fromEntries(ALL_LEVELS.map((k) => [k, false])) as Record<LevelKey, boolean>)}
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        All off
+                      </button>
+                    </div>
                   </div>
                 )}
-                <div className="mt-3 pt-3 border-t border-border/60 flex items-center justify-between text-[11px]">
-                  <button
-                    onClick={() => setLevels(Object.fromEntries(ALL_LEVELS.map((k) => [k, true])) as Record<LevelKey, boolean>)}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    All on
-                  </button>
-                  <button
-                    onClick={() => setLevels(Object.fromEntries(ALL_LEVELS.map((k) => [k, false])) as Record<LevelKey, boolean>)}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    All off
-                  </button>
-                </div>
               </div>
+
+              <button
+                onClick={() => setSessionsOn((v) => !v)}
+                disabled={chartMode === "live"}
+                className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition disabled:opacity-40 disabled:cursor-not-allowed ${
+                  sessionsOn && chartMode !== "live"
+                    ? "border-primary/40 bg-primary/10 text-primary"
+                    : "border-border bg-background/60 text-muted-foreground hover:text-foreground hover:border-primary/40"
+                }`}
+                title={chartMode === "live" ? "Sessions are available on the Native chart" : "Highlight Sydney / Tokyo / London / New York trading sessions"}
+              >
+                <Clock className="h-3.5 w-3.5" /> Sessions
+              </button>
+
+              {/* Desktop right-rail toggle */}
+              <button
+                onClick={() => setRightOpen((v) => !v)}
+                className="hidden lg:inline-flex items-center gap-1.5 rounded-md border border-border bg-background/60 px-2.5 py-1 text-xs font-medium hover:border-primary/50 transition"
+                title={rightOpen ? "Hide side panel" : "Show side panel"}
+              >
+                {rightOpen ? <PanelRightClose className="h-3.5 w-3.5" /> : <PanelRightOpen className="h-3.5 w-3.5" />}
+                {rightOpen ? "Hide panel" : "Show panel"}
+              </button>
+            </div>
+          </div>
+
+          <div className="flex-1 min-h-0 h-[360px] sm:h-[460px] md:h-[520px] lg:h-[calc(100vh-14rem)] overflow-hidden">
+            {chartMode === "live" ? (
+              <TradingViewChart symbol={symbol.tv} interval={interval} enabled={levels} />
+            ) : (
+              <NativeChart symbol={symbol.tv} ticker={symbol.ticker} interval={interval} enabled={levels} sessions={sessionsOn} onSnapshot={setSnapshot} />
             )}
           </div>
 
-          <button
-            onClick={() => setSessionsOn((v) => !v)}
-            disabled={chartMode === "live"}
-            className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition disabled:opacity-40 disabled:cursor-not-allowed ${
-              sessionsOn && chartMode !== "live"
-                ? "border-primary/40 bg-primary/10 text-primary"
-                : "border-border bg-background/60 text-muted-foreground hover:text-foreground hover:border-primary/40"
-            }`}
-            title={chartMode === "live" ? "Sessions are available on the Native chart" : "Highlight Sydney / Tokyo / London / New York trading sessions"}
-          >
-            <Clock className="h-3.5 w-3.5" /> Sessions
-          </button>
-        </div>
-
-        <div className="h-[360px] sm:h-[460px] md:h-[520px] overflow-hidden">
-          {chartMode === "live" ? (
-            <TradingViewChart symbol={symbol.tv} interval={interval} enabled={levels} />
-          ) : (
-            <NativeChart symbol={symbol.tv} ticker={symbol.ticker} interval={interval} enabled={levels} sessions={sessionsOn} onSnapshot={setSnapshot} />
-          )}
-        </div>
-
-        {/* Broker strip - minimalist, only when chart is shown */}
-        <div className="border-t border-border/60 px-3 py-2 flex items-center justify-between gap-2 flex-wrap text-xs">
-          {broker ? (
-            <div className="flex items-center gap-2 min-w-0 text-muted-foreground">
-              <span className="relative flex h-2 w-2 shrink-0">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
-              </span>
-              <span className="truncate">
-                <span className="text-foreground font-medium">Broker connected</span>
-                <span className="hidden sm:inline"> · {broker.email} · {broker.accountType}</span>
-              </span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-1.5 text-muted-foreground min-w-0">
-              <Plug className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">Chart-only mode.&nbsp;
-                <Link to="/settings" className="text-primary hover:underline">Connect broker</Link>
-                <span className="hidden sm:inline"> to trade from here.</span>
-              </span>
-            </div>
-          )}
-          <button
-            onClick={openTradingFloor}
-            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground hover:opacity-90 shrink-0"
-            title="Open TradingView trading floor with your broker terminal"
-          >
-            <Maximize2 className="h-3 w-3" /> Trade
-          </button>
-        </div>
-
-
-      </div>
-
-
-      {/* Scan card */}
-      <div className="rounded-xl border border-border bg-card p-4 sm:p-6" data-tour="scan">
-
-        {!result && !scanning && (
-          <div className="flex flex-col items-center text-center gap-3">
-            <Crosshair className="h-6 w-6 text-primary" />
-            <div className="font-semibold">Ready to scan</div>
-            <p className="text-sm text-muted-foreground max-w-sm">
-              Grade the current setup on {symbol.ticker}, or attach a chart screenshot to scan that instead.
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
-              <button
-                onClick={runScan}
-                className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 transition"
-              >
-                Run scan
-              </button>
-              <ScreenshotAttach
-                onPick={(file) => {
-                  setCoachOpen(true);
-                  chatRef.current?.attach(file, `Scan this chart screenshot for ${symbol.ticker} on ${intervalLabel}. Give me grade, bias, entry, stop, TP1, TP2, R:R, and a 1–2 sentence rationale.`);
-                  setScanning(true);
-                  window.setTimeout(() => {
-                    setResult(gradeFor(symbol, snapshot?.lastPrice));
-                    setScanning(false);
-                  }, 400);
-                }}
-              />
-            </div>
-          </div>
-        )}
-
-        {scanning && (
-          <div className="flex flex-col items-center text-center gap-3 py-2">
-            <Loader2 className="h-6 w-6 text-primary animate-spin" />
-            <div className="font-semibold">Scanning {symbol.ticker}…</div>
-            <p className="text-sm text-muted-foreground">Reading structure, sweeps, BOS, retests.</p>
+          {/* Broker strip */}
+          <div className="border-t border-border/60 px-3 py-2 flex items-center justify-between gap-2 flex-wrap text-xs">
+            {broker ? (
+              <div className="flex items-center gap-2 min-w-0 text-muted-foreground">
+                <span className="relative flex h-2 w-2 shrink-0">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+                </span>
+                <span className="truncate">
+                  <span className="text-foreground font-medium">Broker connected</span>
+                  <span className="hidden sm:inline"> · {broker.email} · {broker.accountType}</span>
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 text-muted-foreground min-w-0">
+                <Plug className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">Chart-only mode.&nbsp;
+                  <Link to="/settings" className="text-primary hover:underline">Connect broker</Link>
+                  <span className="hidden sm:inline"> to trade from here.</span>
+                </span>
+              </div>
+            )}
             <button
-              onClick={() => {
-                chatRef.current?.stop();
-                voice.stop();
-                setScanning(false);
-              }}
-              className="mt-1 inline-flex items-center gap-1.5 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/15 transition"
+              onClick={openTradingFloor}
+              className="inline-flex items-center gap-1.5 rounded-md bg-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground hover:opacity-90 shrink-0"
+              title="Open TradingView trading floor with your broker terminal"
             >
-              <Square className="h-3 w-3" /> Stop scan
+              <Maximize2 className="h-3 w-3" /> Trade
             </button>
           </div>
-        )}
+        </div>
 
-        {result && !scanning && (
-          <ScanTicket
-            result={result}
-            symbol={symbol}
-            onRescan={runScan}
-            onAttach={(file) => {
-              setCoachOpen(true);
-              chatRef.current?.attach(file, `Re-scan using this chart screenshot for ${symbol.ticker} on ${intervalLabel}. Give me grade, bias, entry, stop, TP1, TP2, R:R, and rationale.`);
-            }}
-            onStopVoice={() => voice.stop()}
-            voiceSpeaking={voice.speaking}
-          />
+        {/* Desktop right rail */}
+        {rightOpen && (
+          <aside className="hidden lg:flex flex-col rounded-xl border border-border bg-card overflow-hidden min-h-0">
+            <div className="flex items-center gap-1 border-b border-border/60 p-1">
+              <button
+                onClick={() => setRightTab("analysis")}
+                className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded px-2.5 py-1.5 text-xs font-medium transition ${
+                  rightTab === "analysis" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <BarChart3 className="h-3.5 w-3.5" /> Analysis
+              </button>
+              <button
+                onClick={() => setRightTab("coach")}
+                className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded px-2.5 py-1.5 text-xs font-medium transition ${
+                  rightTab === "coach" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <MessageSquare className="h-3.5 w-3.5" /> Coach
+              </button>
+            </div>
+            <div className="flex-1 min-h-0 overflow-hidden">
+              {rightTab === "analysis" ? (
+                <div className="h-full overflow-y-auto p-4">
+                  <ScanBody
+                    result={result}
+                    scanning={scanning}
+                    symbol={symbol}
+                    intervalLabel={intervalLabel}
+                    runScan={runScan}
+                    onAttach={(file) => {
+                      setCoachOpen(true);
+                      setRightTab("coach");
+                      chatRef.current?.attach(file, `Scan this chart screenshot for ${symbol.ticker} on ${intervalLabel}. Give me grade, bias, entry, stop, TP1, TP2, R:R, and a 1–2 sentence rationale.`);
+                      setScanning(true);
+                      window.setTimeout(() => {
+                        setResult(gradeFor(symbol, snapshot?.lastPrice));
+                        setScanning(false);
+                      }, 400);
+                    }}
+                    onStopScan={() => { chatRef.current?.stop(); voice.stop(); setScanning(false); }}
+                    onStopVoice={() => voice.stop()}
+                    voiceSpeaking={voice.speaking}
+                  />
+                </div>
+              ) : (
+                <DashboardChatPanel
+                  ref={chatRef}
+                  chart={{
+                    ticker: symbol.ticker,
+                    intervalLabel,
+                    enabledLevels: ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none",
+                    snapshot: snapshot ?? undefined,
+                  }}
+                />
+              )}
+            </div>
+          </aside>
         )}
+      </div>
+
+      {/* Mobile scan card (desktop sees this in the right rail) */}
+      <div className="lg:hidden rounded-xl border border-border bg-card p-4 sm:p-6" data-tour="scan">
+        <ScanBody
+          result={result}
+          scanning={scanning}
+          symbol={symbol}
+          intervalLabel={intervalLabel}
+          runScan={runScan}
+          onAttach={(file) => {
+            setCoachOpen(true);
+            chatRef.current?.attach(file, `Scan this chart screenshot for ${symbol.ticker} on ${intervalLabel}. Give me grade, bias, entry, stop, TP1, TP2, R:R, and a 1–2 sentence rationale.`);
+            setScanning(true);
+            window.setTimeout(() => {
+              setResult(gradeFor(symbol, snapshot?.lastPrice));
+              setScanning(false);
+            }, 400);
+          }}
+          onStopScan={() => { chatRef.current?.stop(); voice.stop(); setScanning(false); }}
+          onStopVoice={() => voice.stop()}
+          voiceSpeaking={voice.speaking}
+        />
       </div>
       </div>
 
-      {/* Floating AI Coach bubble */}
-      <FloatingCoach
-        open={coachOpen}
-        onOpen={() => setCoachOpen(true)}
-        onClose={() => setCoachOpen(false)}
-        chatRef={chatRef}
-        chart={{
-          ticker: symbol.ticker,
-          intervalLabel,
-          enabledLevels: ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none",
-          snapshot: snapshot ?? undefined,
-        }}
-      />
+      {/* Floating AI Coach bubble - mobile/tablet only; desktop uses the right rail */}
+      <div className="lg:hidden">
+        <FloatingCoach
+          open={coachOpen}
+          onOpen={() => setCoachOpen(true)}
+          onClose={() => setCoachOpen(false)}
+          chatRef={chatRef}
+          chart={{
+            ticker: symbol.ticker,
+            intervalLabel,
+            enabledLevels: ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none",
+            snapshot: snapshot ?? undefined,
+          }}
+        />
+      </div>
     </div>
+  );
+}
+
+function ScanBody({
+  result, scanning, symbol, intervalLabel, runScan, onAttach, onStopScan, onStopVoice, voiceSpeaking,
+}: {
+  result: ScanResult | null;
+  scanning: boolean;
+  symbol: Symbol;
+  intervalLabel: string;
+  runScan: () => void;
+  onAttach: (file: File) => void;
+  onStopScan: () => void;
+  onStopVoice: () => void;
+  voiceSpeaking: boolean;
+}) {
+  if (!result && !scanning) {
+    return (
+      <div className="flex flex-col items-center text-center gap-3">
+        <Crosshair className="h-6 w-6 text-primary" />
+        <div className="font-semibold">Ready to scan</div>
+        <p className="text-sm text-muted-foreground max-w-sm">
+          Grade the current setup on {symbol.ticker}, or attach a chart screenshot to scan that instead.
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
+          <button
+            onClick={runScan}
+            className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 transition"
+          >
+            Run scan
+          </button>
+          <ScreenshotAttach onPick={onAttach} />
+        </div>
+      </div>
+    );
+  }
+  if (scanning) {
+    return (
+      <div className="flex flex-col items-center text-center gap-3 py-2">
+        <Loader2 className="h-6 w-6 text-primary animate-spin" />
+        <div className="font-semibold">Scanning {symbol.ticker}…</div>
+        <p className="text-sm text-muted-foreground">Reading structure, sweeps, BOS, retests.</p>
+        <button
+          onClick={onStopScan}
+          className="mt-1 inline-flex items-center gap-1.5 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/15 transition"
+        >
+          <Square className="h-3 w-3" /> Stop scan
+        </button>
+      </div>
+    );
+  }
+  return (
+    <ScanTicket
+      result={result!}
+      symbol={symbol}
+      onRescan={runScan}
+      onAttach={onAttach}
+      onStopVoice={onStopVoice}
+      voiceSpeaking={voiceSpeaking}
+    />
   );
 }
 
