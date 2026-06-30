@@ -216,7 +216,13 @@ function AuthPage() {
       } catch { /* ignore */ }
       navigate({ to: target, replace: true });
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Authentication failed";
+      let msg = err instanceof Error ? err.message : "Authentication failed";
+      if (/invalid login credentials/i.test(msg)) {
+        msg = "Incorrect email or password. Please try again.";
+      } else if (/user already registered|already exists/i.test(msg)) {
+        msg = "An account with this email already exists. Try signing in instead.";
+      }
+      setErrorMsg(msg);
       toast.error(msg);
     } finally {
       setBusy(false);
