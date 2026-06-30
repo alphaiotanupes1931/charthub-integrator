@@ -334,6 +334,13 @@ function AuthPage() {
               <Button type="submit" className="w-full" disabled={busy}>
                 {busy ? "Verifying..." : "Continue to reset password"}
               </Button>
+              <p className="text-xs text-muted-foreground text-center leading-relaxed">
+                If you haven't been assigned a recovery code or have lost it, please email{" "}
+                <a href="mailto:marcus@trademindai.ai" className="text-primary hover:underline">
+                  marcus@trademindai.ai
+                </a>
+                .
+              </p>
               <button
                 type="button"
                 onClick={() => { setRecoveryMode(false); setErrorMsg(null); }}
@@ -342,6 +349,7 @@ function AuthPage() {
                 Back to sign in
               </button>
             </form>
+
           ) : resetMode ? (
             resetSent ? (
               <div className="mt-5 space-y-3">
