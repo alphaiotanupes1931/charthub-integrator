@@ -282,8 +282,6 @@ function AuthPage() {
           <h1 className="text-xl font-semibold text-foreground">
             {recoveryMode
               ? "Use your recovery code"
-              : resetMode
-              ? "Reset your password"
               : mode === "signin"
               ? "Sign in"
               : "Create your account"}
@@ -291,12 +289,11 @@ function AuthPage() {
           <p className="mt-1 text-sm text-muted-foreground">
             {recoveryMode
               ? "Enter the recovery code you saved during onboarding."
-              : resetMode
-              ? "Enter your email and we'll send you a reset link."
               : mode === "signin"
               ? "Welcome back. Pick up where you left off."
               : "Track trades, talk to your AI coach, build your edge."}
           </p>
+
 
           {recoveryMode ? (
             <form onSubmit={onRecoverySubmit} className="mt-5 space-y-3">
