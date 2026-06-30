@@ -142,6 +142,126 @@ const gradeColor: Record<ScanResult["grade"], string> = {
   "NO ENTRY": "text-destructive",
 };
 
+function ScreenshotAttach({ onPick }: { onPick: (file: File) => void }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  return (
+    <>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) onPick(f);
+          e.target.value = "";
+        }}
+      />
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-sm font-medium hover:border-primary/50 transition"
+        title="Upload or paste a chart screenshot for the AI to scan"
+      >
+        <Paperclip className="h-3.5 w-3.5" /> Scan a screenshot
+      </button>
+    </>
+  );
+}
+
+function ScanTicket({
+  result, symbol, onRescan, onAttach, onStopVoice, voiceSpeaking,
+}: {
+  result: ScanResult;
+  symbol: Symbol;
+  onRescan: () => void;
+  onAttach: (file: File) => void;
+  onStopVoice: () => void;
+  voiceSpeaking: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const isNoEntry = result.grade === "NO ENTRY";
+  return (
+    <div className="space-y-4">
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div className="min-w-0">
+          <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground mb-1.5">
+            Setup ticket · {symbol.ticker} · {result.bias}
+          </div>
+          <div className={`font-display text-5xl sm:text-6xl leading-none ${gradeColor[result.grade]}`}>
+            {result.grade}
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {voiceSpeaking && (
+            <button
+              onClick={onStopVoice}
+              className="inline-flex items-center gap-1.5 rounded-md border border-destructive/40 bg-destructive/10 px-2.5 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/15"
+              title="Stop voice"
+            >
+              <Square className="h-3 w-3" /> Stop voice
+            </button>
+          )}
+          <button
+            onClick={onRescan}
+            className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium hover:border-primary/50 transition"
+          >
+            Re-scan
+          </button>
+        </div>
+      </div>
+
+      <p className="text-sm leading-relaxed">{result.notes}</p>
+
+      {!isNoEntry && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <TicketCell label="Entry" value={result.entry} />
+          <TicketCell label="Stop"  value={result.stop} tone="bad" />
+          <TicketCell label="TP1"   value={result.tp1} tone="good" />
+          <TicketCell label="TP2"   value={result.tp2} tone="good" />
+        </div>
+      )}
+
+      <div>
+        <div className="flex justify-between text-xs mb-2">
+          <span className="text-muted-foreground">Confidence · R:R {result.rr}</span>
+          <span className="text-primary font-semibold">{result.confidence}%</span>
+        </div>
+        <div className="h-1.5 rounded-full bg-border overflow-hidden">
+          <div className="h-full bg-primary transition-[width] duration-500" style={{ width: `${result.confidence}%` }} />
+        </div>
+      </div>
+
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="w-full inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background/60 px-3 py-2 text-xs font-medium hover:border-primary/40 transition"
+      >
+        {open ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+        {open ? "Hide details" : "Show details"}
+      </button>
+      {open && (
+        <div className="rounded-lg border border-border/60 bg-background/40 p-3 text-xs leading-relaxed text-foreground/90">
+          {result.details}
+        </div>
+      )}
+
+      <div className="pt-1 flex justify-center">
+        <ScreenshotAttach onPick={onAttach} />
+      </div>
+    </div>
+  );
+}
+
+function TicketCell({ label, value, tone }: { label: string; value: string; tone?: "good" | "bad" }) {
+  const color = tone === "good" ? "text-emerald-400" : tone === "bad" ? "text-destructive" : "text-foreground";
+  return (
+    <div className="rounded-md border border-border/60 bg-background/40 px-2.5 py-2">
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className={`font-mono text-sm font-semibold ${color}`}>{value}</div>
+    </div>
+  );
+}
+
 const ALL_LEVELS: LevelKey[] = ["VWAP","POC","SR","ZONES","FVG","FIB","LIQ","OF"];
 
 const STORAGE_KEY = "trademind.levels.enabled.v2";
