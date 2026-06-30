@@ -217,10 +217,17 @@ export function useCoachVoice() {
       });
       if (!res.ok) {
         const body = await res.text().catch(() => "");
-        console.error("[voice] tts failed", res.status, body);
+        console.warn("[voice] tts failed, falling back to browser voice", res.status, body);
+        const { speakWithWebSpeech } = await import("@/lib/webSpeech");
+        await speakWithWebSpeech(text, voiceId);
         return;
       }
       const blob = await res.blob();
+      if (!blob.size) {
+        const { speakWithWebSpeech } = await import("@/lib/webSpeech");
+        await speakWithWebSpeech(text, voiceId);
+        return;
+      }
       if (ctx) {
         try {
           await ctx.resume();
@@ -250,9 +257,17 @@ export function useCoachVoice() {
           lastBlobUrlRef.current = null;
         }
       };
-      await el.play().catch((e) => console.warn("[voice] play blocked", e));
+      await el.play().catch(async (e) => {
+        console.warn("[voice] play blocked, using browser voice", e);
+        const { speakWithWebSpeech } = await import("@/lib/webSpeech");
+        await speakWithWebSpeech(text, voiceId);
+      });
     } catch (e) {
-      console.error("[voice] error", e);
+      console.warn("[voice] error, using browser voice", e);
+      try {
+        const { speakWithWebSpeech } = await import("@/lib/webSpeech");
+        await speakWithWebSpeech(text, voiceId);
+      } catch { /* ignore */ }
     }
   }, [getAudio, getAudioContext]);
 

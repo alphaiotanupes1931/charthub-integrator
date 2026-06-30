@@ -124,19 +124,20 @@ export async function speakWithElevenLabs(
   // Cancel any previous welcome playback / in-flight request before starting a new one.
   const token = ++welcomeRequestToken;
   stopCurrentWelcomeAudio();
+  const voiceId = coachToElevenVoiceId(coach);
   try {
     const res = await fetch("/api/tts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text, voiceId: coachToElevenVoiceId(coach) }),
+      body: JSON.stringify({ text, voiceId }),
     });
     if (token !== welcomeRequestToken) return false; // superseded
     if (!res.ok) throw new Error(`tts ${res.status}`);
     const blob = await res.blob();
     if (token !== welcomeRequestToken) return false;
+    if (!blob.size) throw new Error("empty audio");
     const url = URL.createObjectURL(blob);
     const el = audio ?? new Audio();
-    // Make sure no other welcome audio is still playing before we start.
     stopCurrentWelcomeAudio();
     currentWelcomeAudio = el;
     currentWelcomeUrl = url;
@@ -154,8 +155,10 @@ export async function speakWithElevenLabs(
     await el.play();
     return true;
   } catch (err) {
-    console.warn("[welcomeBack] elevenlabs failed", err);
-    handlers?.onError?.();
-    return false;
+    console.warn("[welcomeBack] remote tts failed, using browser voice", err);
+    // Browser Web Speech API fallback - free, no API.
+    const { speakWithWebSpeech } = await import("./webSpeech");
+    if (token !== welcomeRequestToken) return false;
+    return speakWithWebSpeech(text, voiceId, handlers);
   }
 }
