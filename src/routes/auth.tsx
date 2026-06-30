@@ -92,8 +92,8 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [resetMode, setResetMode] = useState(false);
-  const [resetSent, setResetSent] = useState(false);
+  
+
   const [recoveryMode, setRecoveryMode] = useState(false);
   const [recoveryCode, setRecoveryCodeInput] = useState("");
 
@@ -122,30 +122,8 @@ function AuthPage() {
     return () => { cancelled = true; };
   }, [navigate, search.force, search.redirect]);
 
-  async function onResetSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setErrorMsg(null);
-    const parsed = z.string().trim().email("Enter a valid email").max(255).safeParse(email);
-    if (!parsed.success) {
-      setErrorMsg(parsed.error.issues[0]?.message ?? "Invalid email");
-      return;
-    }
-    setBusy(true);
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(parsed.data, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-      if (error) throw error;
-      setResetSent(true);
-      toast.success("Password reset email sent");
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Could not send reset email";
-      setErrorMsg(msg);
-      toast.error(msg);
-    } finally {
-      setBusy(false);
-    }
-  }
+
+
 
   async function onRecoverySubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -282,8 +260,6 @@ function AuthPage() {
           <h1 className="text-xl font-semibold text-foreground">
             {recoveryMode
               ? "Use your recovery code"
-              : resetMode
-              ? "Reset your password"
               : mode === "signin"
               ? "Sign in"
               : "Create your account"}
@@ -291,12 +267,11 @@ function AuthPage() {
           <p className="mt-1 text-sm text-muted-foreground">
             {recoveryMode
               ? "Enter the recovery code you saved during onboarding."
-              : resetMode
-              ? "Enter your email and we'll send you a reset link."
               : mode === "signin"
               ? "Welcome back. Pick up where you left off."
               : "Track trades, talk to your AI coach, build your edge."}
           </p>
+
 
           {recoveryMode ? (
             <form onSubmit={onRecoverySubmit} className="mt-5 space-y-3">
@@ -334,6 +309,13 @@ function AuthPage() {
               <Button type="submit" className="w-full" disabled={busy}>
                 {busy ? "Verifying..." : "Continue to reset password"}
               </Button>
+              <p className="text-xs text-muted-foreground text-center leading-relaxed">
+                If you haven't been assigned a recovery code or have lost it, please email{" "}
+                <a href="mailto:marcus@trademindai.ai" className="text-primary hover:underline">
+                  marcus@trademindai.ai
+                </a>
+                .
+              </p>
               <button
                 type="button"
                 onClick={() => { setRecoveryMode(false); setErrorMsg(null); }}
@@ -342,55 +324,9 @@ function AuthPage() {
                 Back to sign in
               </button>
             </form>
-          ) : resetMode ? (
-            resetSent ? (
-              <div className="mt-5 space-y-3">
-                <div className="rounded-md border border-border bg-muted/40 p-3 text-sm text-foreground">
-                  Check your inbox for a reset link sent to <strong>{email}</strong>. It may take a minute, and check spam.
-                </div>
-                <Button type="button" className="w-full" variant="outline" onClick={() => { setResetMode(false); setResetSent(false); setErrorMsg(null); }}>
-                  Back to sign in
-                </Button>
-              </div>
-            ) : (
-              <form onSubmit={onResetSubmit} className="mt-5 space-y-3">
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground" htmlFor="reset-email">Email</label>
-                  <input
-                    id="reset-email"
-                    type="email"
-                    autoComplete="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="mt-1 w-full h-10 rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:border-primary/50"
-                    required
-                  />
-                </div>
-                {errorMsg && (
-                  <div role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-                    {errorMsg}
-                  </div>
-                )}
-                <Button type="submit" className="w-full" disabled={busy}>
-                  {busy ? "Sending..." : "Send reset link"}
-                </Button>
-                <button
-                  type="button"
-                  onClick={() => { setResetMode(false); setRecoveryMode(true); setErrorMsg(null); }}
-                  className="block w-full text-center text-xs text-primary hover:underline"
-                >
-                  I have a recovery code instead
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setResetMode(false); setErrorMsg(null); }}
-                  className="block w-full text-center text-xs text-muted-foreground hover:text-foreground"
-                >
-                  Back to sign in
-                </button>
-              </form>
-            )
+
           ) : (
+
             <form onSubmit={onSubmit} className="mt-5 space-y-3">
               <div>
                 <label className="text-xs font-medium text-muted-foreground" htmlFor="email">Email</label>
@@ -410,7 +346,7 @@ function AuthPage() {
                   {mode === "signin" && (
                     <button
                       type="button"
-                      onClick={() => { setResetMode(true); setErrorMsg(null); }}
+                      onClick={() => { setRecoveryMode(true); setErrorMsg(null); }}
                       className="text-xs text-primary hover:underline"
                     >
                       Forgot password?
@@ -456,7 +392,7 @@ function AuthPage() {
             </form>
           )}
 
-          {!resetMode && (
+          {!recoveryMode && (
             <div className="mt-4 text-center text-xs text-muted-foreground">
               {mode === "signin" ? (
                 <>
