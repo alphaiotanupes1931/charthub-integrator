@@ -347,55 +347,8 @@ function AuthPage() {
               </button>
             </form>
 
-          ) : resetMode ? (
-            resetSent ? (
-              <div className="mt-5 space-y-3">
-                <div className="rounded-md border border-border bg-muted/40 p-3 text-sm text-foreground">
-                  Check your inbox for a reset link sent to <strong>{email}</strong>. It may take a minute, and check spam.
-                </div>
-                <Button type="button" className="w-full" variant="outline" onClick={() => { setResetMode(false); setResetSent(false); setErrorMsg(null); }}>
-                  Back to sign in
-                </Button>
-              </div>
-            ) : (
-              <form onSubmit={onResetSubmit} className="mt-5 space-y-3">
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground" htmlFor="reset-email">Email</label>
-                  <input
-                    id="reset-email"
-                    type="email"
-                    autoComplete="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="mt-1 w-full h-10 rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:border-primary/50"
-                    required
-                  />
-                </div>
-                {errorMsg && (
-                  <div role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-                    {errorMsg}
-                  </div>
-                )}
-                <Button type="submit" className="w-full" disabled={busy}>
-                  {busy ? "Sending..." : "Send reset link"}
-                </Button>
-                <button
-                  type="button"
-                  onClick={() => { setResetMode(false); setRecoveryMode(true); setErrorMsg(null); }}
-                  className="block w-full text-center text-xs text-primary hover:underline"
-                >
-                  I have a recovery code instead
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setResetMode(false); setErrorMsg(null); }}
-                  className="block w-full text-center text-xs text-muted-foreground hover:text-foreground"
-                >
-                  Back to sign in
-                </button>
-              </form>
-            )
           ) : (
+
             <form onSubmit={onSubmit} className="mt-5 space-y-3">
               <div>
                 <label className="text-xs font-medium text-muted-foreground" htmlFor="email">Email</label>
