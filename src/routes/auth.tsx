@@ -280,17 +280,69 @@ function AuthPage() {
 
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
           <h1 className="text-xl font-semibold text-foreground">
-            {resetMode ? "Reset your password" : mode === "signin" ? "Sign in" : "Create your account"}
+            {recoveryMode
+              ? "Use your recovery code"
+              : resetMode
+              ? "Reset your password"
+              : mode === "signin"
+              ? "Sign in"
+              : "Create your account"}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {resetMode
+            {recoveryMode
+              ? "Enter the recovery code you saved during onboarding."
+              : resetMode
               ? "Enter your email and we'll send you a reset link."
               : mode === "signin"
               ? "Welcome back. Pick up where you left off."
               : "Track trades, talk to your AI coach, build your edge."}
           </p>
 
-          {resetMode ? (
+          {recoveryMode ? (
+            <form onSubmit={onRecoverySubmit} className="mt-5 space-y-3">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground" htmlFor="recovery-email">Email</label>
+                <input
+                  id="recovery-email"
+                  type="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="mt-1 w-full h-10 rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:border-primary/50"
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground" htmlFor="recovery-code">Recovery code</label>
+                <input
+                  id="recovery-code"
+                  type="text"
+                  autoComplete="off"
+                  spellCheck={false}
+                  value={recoveryCode}
+                  onChange={(e) => setRecoveryCodeInput(e.target.value.toUpperCase())}
+                  placeholder="XXXX-XXXX-XXXX-XXXX"
+                  className="mt-1 w-full h-10 rounded-md border border-border bg-background px-3 font-mono text-sm tracking-widest focus:outline-none focus:border-primary/50"
+                  required
+                />
+              </div>
+              {errorMsg && (
+                <div role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                  {errorMsg}
+                </div>
+              )}
+              <Button type="submit" className="w-full" disabled={busy}>
+                {busy ? "Verifying..." : "Continue to reset password"}
+              </Button>
+              <button
+                type="button"
+                onClick={() => { setRecoveryMode(false); setErrorMsg(null); }}
+                className="block w-full text-center text-xs text-muted-foreground hover:text-foreground"
+              >
+                Back to sign in
+              </button>
+            </form>
+          ) : resetMode ? (
             resetSent ? (
               <div className="mt-5 space-y-3">
                 <div className="rounded-md border border-border bg-muted/40 p-3 text-sm text-foreground">
@@ -322,6 +374,13 @@ function AuthPage() {
                 <Button type="submit" className="w-full" disabled={busy}>
                   {busy ? "Sending..." : "Send reset link"}
                 </Button>
+                <button
+                  type="button"
+                  onClick={() => { setResetMode(true); setErrorMsg(null); setRecoveryMode(true); }}
+                  className="block w-full text-center text-xs text-primary hover:underline"
+                >
+                  I have a recovery code instead
+                </button>
                 <button
                   type="button"
                   onClick={() => { setResetMode(false); setErrorMsg(null); }}
