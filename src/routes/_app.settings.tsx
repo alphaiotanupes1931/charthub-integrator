@@ -146,6 +146,60 @@ function SettingsPage() {
 
   const recordBroker = useServerFn(recordBrokerConnection);
 
+  // Recovery code
+  const runSetRecovery = useServerFn(setRecoveryCode);
+  const runHasRecovery = useServerFn(hasRecoveryCode);
+  const [hasCode, setHasCode] = useState<boolean | null>(null);
+  const [newCode, setNewCode] = useState<string | null>(null);
+  const [savingCode, setSavingCode] = useState(false);
+  const [emailingCode, setEmailingCode] = useState(false);
+
+  useEffect(() => {
+    runHasRecovery({ data: undefined })
+      .then((r) => setHasCode(r.hasCode))
+      .catch(() => setHasCode(false));
+  }, [runHasRecovery]);
+
+  async function generateAndSaveCode() {
+    setSavingCode(true);
+    try {
+      const code = generateRecoveryCode();
+      await runSetRecovery({ data: { code } });
+      setNewCode(code);
+      setHasCode(true);
+      toast.success("Recovery code generated. Save it now.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not generate code");
+    } finally {
+      setSavingCode(false);
+    }
+  }
+
+  async function copyCode() {
+    if (!newCode) return;
+    try {
+      await navigator.clipboard.writeText(newCode);
+      toast.success("Copied to clipboard");
+    } catch {
+      toast.error("Could not copy");
+    }
+  }
+
+  async function emailCode() {
+    if (!newCode || !profile?.email) return;
+    setEmailingCode(true);
+    try {
+      const subject = encodeURIComponent("Your TradeMind recovery code");
+      const body = encodeURIComponent(
+        `Keep this somewhere safe. You can use it to reset your TradeMind password if you ever lose access.\n\nRecovery code: ${newCode}\n\nDo not share this with anyone.`,
+      );
+      window.location.href = `mailto:${profile.email}?subject=${subject}&body=${body}`;
+    } finally {
+      setEmailingCode(false);
+    }
+  }
+
+
   useEffect(() => {
 
     const id = window.setInterval(() => setClockNow(new Date()), 1000);
