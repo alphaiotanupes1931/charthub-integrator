@@ -117,7 +117,11 @@ function AuthPage() {
         const pending = localStorage.getItem("trademind.pendingInvite");
         if (pending) target = `/invite/${pending}`;
       } catch { /* ignore */ }
-      navigate({ to: target, replace: true });
+      if (typeof window !== "undefined") {
+        window.location.assign(target);
+      } else {
+        navigate({ to: target, replace: true });
+      }
     });
     return () => { cancelled = true; };
   }, [navigate, search.force, search.redirect]);
@@ -230,7 +234,15 @@ function AuthPage() {
         if (pending) target = `/invite/${pending}`;
         localStorage.removeItem(WELCOME_BACK_REQUEST_KEY);
       } catch { /* ignore */ }
-      navigate({ to: target, replace: true });
+      // Hard navigation so the protected layout's beforeLoad runs with a
+      // freshly-hydrated Supabase session on every host (Vercel + previews).
+      // Client-side router navigation occasionally raced the session write
+      // on the published domain and left users staring at the auth screen.
+      if (typeof window !== "undefined") {
+        window.location.assign(target);
+      } else {
+        navigate({ to: target, replace: true });
+      }
     } catch (err: unknown) {
       let msg = err instanceof Error ? err.message : "Authentication failed";
       if (/invalid login credentials/i.test(msg)) {
