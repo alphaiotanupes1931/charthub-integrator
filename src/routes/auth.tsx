@@ -376,7 +376,7 @@ function AuthPage() {
                 </Button>
                 <button
                   type="button"
-                  onClick={() => { setResetMode(true); setErrorMsg(null); setRecoveryMode(true); }}
+                  onClick={() => { setResetMode(false); setRecoveryMode(true); setErrorMsg(null); }}
                   className="block w-full text-center text-xs text-primary hover:underline"
                 >
                   I have a recovery code instead
