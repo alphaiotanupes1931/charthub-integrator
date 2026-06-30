@@ -112,6 +112,7 @@ export type Database = {
           id: string
           losses: number
           onboarded: boolean
+          recovery_code_hash: string | null
           referral_source: string | null
           updated_at: string
           voice_enabled: boolean
@@ -129,6 +130,7 @@ export type Database = {
           id: string
           losses?: number
           onboarded?: boolean
+          recovery_code_hash?: string | null
           referral_source?: string | null
           updated_at?: string
           voice_enabled?: boolean
@@ -146,6 +148,7 @@ export type Database = {
           id?: string
           losses?: number
           onboarded?: boolean
+          recovery_code_hash?: string | null
           referral_source?: string | null
           updated_at?: string
           voice_enabled?: boolean
