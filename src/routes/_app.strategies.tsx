@@ -221,11 +221,11 @@ function StrategyModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-xl rounded-2xl border border-border bg-card shadow-2xl animate-in zoom-in-95 duration-200"
+        className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-border bg-card shadow-2xl animate-in zoom-in-95 duration-200"
       >
         <button
           onClick={onClose}
-          className="absolute right-3 top-3 h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/40 flex items-center justify-center"
+          className="absolute right-3 top-3 h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/40 flex items-center justify-center z-10"
           aria-label="Close"
         >
           <X className="h-4 w-4" />
@@ -241,7 +241,9 @@ function StrategyModal({
             <h2 className="font-display text-2xl font-semibold tracking-tight">{s.name}</h2>
           </div>
 
-          <p className="text-sm text-muted-foreground leading-relaxed">{s.description}</p>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            {(s as Strategy).longDescription ?? s.description}
+          </p>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-lg border border-border bg-background/50 p-4">
@@ -263,12 +265,34 @@ function StrategyModal({
             </div>
           </div>
 
+          {(s as Strategy).playbook && (s as Strategy).playbook!.length > 0 && (
+            <div className="space-y-3">
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Playbook & rules</div>
+              <div className="space-y-3">
+                {(s as Strategy).playbook!.map((section) => (
+                  <div key={section.title} className="rounded-lg border border-border bg-background/40 p-4">
+                    <div className="text-xs font-semibold text-foreground mb-2">{section.title}</div>
+                    <ul className="space-y-1.5">
+                      {section.items.map((item, i) => (
+                        <li key={i} className="text-xs text-muted-foreground leading-relaxed flex gap-2">
+                          <span className="text-primary mt-0.5">-</span>
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {custom?.rules && (
             <div>
               <div className="text-xs font-semibold mb-2">Playbook rules</div>
               <pre className="whitespace-pre-wrap text-xs text-muted-foreground bg-background/50 border border-border rounded-lg p-3 font-mono leading-relaxed">{custom.rules}</pre>
             </div>
           )}
+
 
           <div className="flex items-center justify-between gap-2 pt-2">
             <div className="flex items-center gap-1">
