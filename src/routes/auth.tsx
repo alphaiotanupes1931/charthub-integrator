@@ -117,7 +117,11 @@ function AuthPage() {
         const pending = localStorage.getItem("trademind.pendingInvite");
         if (pending) target = `/invite/${pending}`;
       } catch { /* ignore */ }
-      navigate({ to: target, replace: true });
+      if (typeof window !== "undefined") {
+        window.location.assign(target);
+      } else {
+        navigate({ to: target, replace: true });
+      }
     });
     return () => { cancelled = true; };
   }, [navigate, search.force, search.redirect]);
