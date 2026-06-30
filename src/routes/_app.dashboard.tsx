@@ -218,18 +218,18 @@ function Dashboard() {
           </span>
           <button
             onClick={() => {
-              if (!recapText) return;
+              if (!recapText || voice.speaking) return;
               voice.prime();
-              voice.stop();
               void voice.speak(recapText, voiceForCoach(readActiveCoach()));
             }}
-            disabled={!recapText}
+            disabled={!recapText || voice.speaking}
             className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 disabled:opacity-40 disabled:cursor-not-allowed transition"
-            title={recapText ? "Replay welcome summary" : "Summary loading…"}
-            aria-label={recapText ? "Replay welcome summary" : "Summary loading"}
+            title={voice.speaking ? "Playing…" : recapText ? "Replay welcome summary" : "Summary loading…"}
+            aria-label={voice.speaking ? "Playing welcome summary" : recapText ? "Replay welcome summary" : "Summary loading"}
           >
             <Volume2 className="h-3.5 w-3.5" />
           </button>
+
         </div>
       )}
 
