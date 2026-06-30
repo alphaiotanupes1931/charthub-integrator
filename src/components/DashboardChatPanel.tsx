@@ -167,7 +167,10 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
       }),
       onError: (err) => {
         console.error(err);
-        toast.error(err?.message || "AI request failed");
+        const msg = err?.message?.trim() || "";
+        // Suppress the AI SDK's generic stream-end error; surface only real, actionable errors.
+        const generic = /^an error occurred\.?$/i.test(msg);
+        if (msg && !generic) toast.error(msg);
       },
     });
 
