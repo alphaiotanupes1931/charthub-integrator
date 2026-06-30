@@ -28,6 +28,8 @@ import { toast } from "sonner";
 
 export type DashboardChatHandle = {
   scan: (prompt: string) => void;
+  attach: (file: File, prompt: string) => void;
+  stop: () => void;
 };
 
 export type ChartContext = {
