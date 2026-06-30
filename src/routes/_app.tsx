@@ -6,12 +6,9 @@ export const Route = createFileRoute("/_app")({
   ssr: false,
   beforeLoad: async ({ location }) => {
     const { data: sessionData } = await supabase.auth.getSession();
-    const { data, error } = sessionData.session
-      ? await supabase.auth.getUser()
-      : { data: { user: null }, error: null };
-    const user = data.user ?? sessionData.session?.user ?? null;
+    const user = sessionData.session?.user ?? null;
 
-    if (error || !user) {
+    if (!user) {
       throw redirect({ to: "/auth", search: { redirect: location.href } });
     }
     // Force onboarding for new users
