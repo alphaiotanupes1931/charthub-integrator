@@ -729,6 +729,7 @@ function Dashboard() {
                   ref={chatRef}
                   onRunScan={runScan}
                   onStopScan={() => { voice.stop(); setScanning(false); }}
+                  scanning={scanning}
                   chart={{
                     ticker: symbol.ticker,
                     intervalLabel,
@@ -775,6 +776,7 @@ function Dashboard() {
           chatRef={chatRef}
           onRunScan={runScan}
           onStopScan={() => { voice.stop(); setScanning(false); }}
+          scanning={scanning}
           chart={{
             ticker: symbol.ticker,
             intervalLabel,
