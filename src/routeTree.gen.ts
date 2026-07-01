@@ -22,6 +22,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as InviteCodeRouteImport } from './routes/invite.$code'
 import { Route as HelpSlugRouteImport } from './routes/help.$slug'
+import { Route as ApiVersionRouteImport } from './routes/api.version'
 import { Route as ApiTtsRouteImport } from './routes/api.tts'
 import { Route as ApiOhlcRouteImport } from './routes/api.ohlc'
 import { Route as ApiHealthRouteImport } from './routes/api.health'
@@ -112,6 +113,11 @@ const HelpSlugRoute = HelpSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
   getParentRoute: () => HelpRoute,
+} as any)
+const ApiVersionRoute = ApiVersionRouteImport.update({
+  id: '/api/version',
+  path: '/api/version',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiTtsRoute = ApiTtsRouteImport.update({
   id: '/api/tts',
@@ -275,6 +281,7 @@ export interface FileRoutesByFullPath {
   '/api/health': typeof ApiHealthRoute
   '/api/ohlc': typeof ApiOhlcRoute
   '/api/tts': typeof ApiTtsRoute
+  '/api/version': typeof ApiVersionRoute
   '/help/$slug': typeof HelpSlugRoute
   '/invite/$code': typeof InviteCodeRoute
   '/admin/subscribers': typeof AppAdminSubscribersRoute
@@ -314,6 +321,7 @@ export interface FileRoutesByTo {
   '/api/health': typeof ApiHealthRoute
   '/api/ohlc': typeof ApiOhlcRoute
   '/api/tts': typeof ApiTtsRoute
+  '/api/version': typeof ApiVersionRoute
   '/help/$slug': typeof HelpSlugRoute
   '/invite/$code': typeof InviteCodeRoute
   '/admin/subscribers': typeof AppAdminSubscribersRoute
@@ -356,6 +364,7 @@ export interface FileRoutesById {
   '/api/health': typeof ApiHealthRoute
   '/api/ohlc': typeof ApiOhlcRoute
   '/api/tts': typeof ApiTtsRoute
+  '/api/version': typeof ApiVersionRoute
   '/help/$slug': typeof HelpSlugRoute
   '/invite/$code': typeof InviteCodeRoute
   '/_app/admin/subscribers': typeof AppAdminSubscribersRoute
@@ -398,6 +407,7 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/api/ohlc'
     | '/api/tts'
+    | '/api/version'
     | '/help/$slug'
     | '/invite/$code'
     | '/admin/subscribers'
@@ -437,6 +447,7 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/api/ohlc'
     | '/api/tts'
+    | '/api/version'
     | '/help/$slug'
     | '/invite/$code'
     | '/admin/subscribers'
@@ -478,6 +489,7 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/api/ohlc'
     | '/api/tts'
+    | '/api/version'
     | '/help/$slug'
     | '/invite/$code'
     | '/_app/admin/subscribers'
@@ -504,6 +516,7 @@ export interface RootRouteChildren {
   ApiHealthRoute: typeof ApiHealthRoute
   ApiOhlcRoute: typeof ApiOhlcRoute
   ApiTtsRoute: typeof ApiTtsRoute
+  ApiVersionRoute: typeof ApiVersionRoute
   InviteCodeRoute: typeof InviteCodeRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
   ApiTradelockerImportRoute: typeof ApiTradelockerImportRoute
@@ -601,6 +614,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/help/$slug'
       preLoaderRoute: typeof HelpSlugRouteImport
       parentRoute: typeof HelpRoute
+    }
+    '/api/version': {
+      id: '/api/version'
+      path: '/api/version'
+      fullPath: '/api/version'
+      preLoaderRoute: typeof ApiVersionRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/tts': {
       id: '/api/tts'
@@ -890,6 +910,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiHealthRoute: ApiHealthRoute,
   ApiOhlcRoute: ApiOhlcRoute,
   ApiTtsRoute: ApiTtsRoute,
+  ApiVersionRoute: ApiVersionRoute,
   InviteCodeRoute: InviteCodeRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
   ApiTradelockerImportRoute: ApiTradelockerImportRoute,
