@@ -287,6 +287,7 @@ function TicketCell({ label, value, tone }: { label: string; value: string; tone
 const ALL_LEVELS: LevelKey[] = ["VWAP","POC","SR","ZONES","FVG","FIB","LIQ","OF"];
 
 const STORAGE_KEY = "trademind.levels.enabled.v2";
+const SESSIONS_STORAGE_KEY = "trademind.sessions.enabled.v1";
 
 function loadLevels(): Record<LevelKey, boolean> {
   const def: Record<LevelKey, boolean> = { VWAP: true, POC: true, SR: true, ZONES: true, FVG: true, FIB: false, LIQ: true, OF: true };
@@ -295,6 +296,13 @@ function loadLevels(): Record<LevelKey, boolean> {
     if (!raw) return def;
     return { ...def, ...JSON.parse(raw) };
   } catch { return def; }
+}
+
+function loadSessionsOn(): boolean {
+  try {
+    const raw = window.localStorage.getItem(SESSIONS_STORAGE_KEY);
+    return raw === "true";
+  } catch { return false; }
 }
 
 function Dashboard() {
@@ -308,7 +316,9 @@ function Dashboard() {
   const [levels, setLevels] = useState<Record<LevelKey, boolean>>(() =>
     typeof window !== "undefined" ? loadLevels() : { VWAP: true, POC: true, SR: true, ZONES: true, FVG: true, FIB: false, LIQ: true, OF: true },
   );
-  const [sessionsOn, setSessionsOn] = useState(true);
+  const [sessionsOn, setSessionsOn] = useState(() =>
+    typeof window !== "undefined" ? loadSessionsOn() : false,
+  );
   const [levelsOpen, setLevelsOpen] = useState(false);
   const [coachOpen, setCoachOpen] = useState(false);
   const [rightTab, setRightTab] = useState<"analysis" | "coach">("analysis");
@@ -348,6 +358,10 @@ function Dashboard() {
   useEffect(() => {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(levels)); } catch { /* ignore */ }
   }, [levels]);
+
+  useEffect(() => {
+    try { localStorage.setItem(SESSIONS_STORAGE_KEY, sessionsOn ? "true" : "false"); } catch { /* ignore */ }
+  }, [sessionsOn]);
 
   useEffect(() => {
     const onDown = (e: MouseEvent) => {
@@ -561,6 +575,20 @@ function Dashboard() {
               </div>
             )}
           </div>
+
+          {/* Sessions toggle */}
+          <button
+            onClick={() => setSessionsOn((v) => !v)}
+            className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium transition ${
+              sessionsOn
+                ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
+                : "border-border bg-background/60 text-muted-foreground hover:text-foreground"
+            }`}
+            title="Toggle session boxes (Sydney, Tokyo, London, New York)"
+          >
+            <Clock className="h-3.5 w-3.5" />
+            Sessions <span className="text-muted-foreground">{sessionsOn ? "on" : "off"}</span>
+          </button>
 
           {/* Chart mode toggle */}
           <div className="hidden md:flex items-center gap-1 rounded-md border border-border p-0.5">
