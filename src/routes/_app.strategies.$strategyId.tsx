@@ -78,33 +78,15 @@ function StrategyDetailPage() {
         title={strategy.name}
         description={strategy.description}
         action={
-          <div className="flex items-center gap-2">
-            {custom && (
-              <>
-                <button
-                  onClick={() => { /* handled by parent route in full app, here just navigate with edit intent */ }}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/40"
-                >
-                  <Pencil className="h-4 w-4" /> Edit
-                </button>
-                <button
-                  onClick={removeCustom}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-destructive/30 px-3 py-2 text-sm text-destructive hover:bg-destructive/10"
-                >
-                  <Trash2 className="h-4 w-4" /> Delete
-                </button>
-              </>
-            )}
-            <button
-              onClick={select}
-              disabled={isActive}
-              className={`inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold ${
-                isActive ? "bg-primary/10 text-primary cursor-default" : "bg-primary text-primary-foreground hover:opacity-90"
-              }`}
-            >
-              {isActive ? <><CheckCircle2 className="h-4 w-4" /> Active</> : "Use this Strategy"}
-            </button>
-          </div>
+          <button
+            onClick={select}
+            disabled={isActive}
+            className={`inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold ${
+              isActive ? "bg-primary/10 text-primary cursor-default" : "bg-primary text-primary-foreground hover:opacity-90"
+            }`}
+          >
+            {isActive ? <><CheckCircle2 className="h-4 w-4" /> Active</> : "Use this Strategy"}
+          </button>
         }
       />
 
@@ -131,11 +113,11 @@ function StrategyDetailPage() {
             </p>
           </section>
 
-          {custom?.rules && (
+          {(strategy as CustomStrategy).custom && (strategy as CustomStrategy).rules && (
             <section className="rounded-xl border border-border bg-card p-6">
               <h2 className="text-lg font-semibold mb-3">Custom rules</h2>
               <pre className="whitespace-pre-wrap text-sm text-muted-foreground bg-background/50 border border-border rounded-lg p-4 font-mono leading-relaxed">
-                {custom.rules}
+                {(strategy as CustomStrategy).rules}
               </pre>
             </section>
           )}
