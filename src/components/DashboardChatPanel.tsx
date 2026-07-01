@@ -245,10 +245,20 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
 
     const handleSubmit = () => {
       const text = input.trim();
-      if (!text || loading) return;
+      const img = pendingImage;
+      if (!text && !img) return;
+      if (loading) return;
       if (voice.enabled) voice.prime();
       setInput("");
-      void sendMessage({ text });
+      setPendingImage(null);
+      if (img) {
+        void sendMessage({
+          text: text || "Scan this chart screenshot. Give me bias, entry, stop, TP1 and TP2 with a brief rationale.",
+          files: [{ type: "file", mediaType: img.mediaType, url: img.url, filename: img.name }],
+        });
+      } else {
+        void sendMessage({ text });
+      }
     };
 
     function clearChat() {
