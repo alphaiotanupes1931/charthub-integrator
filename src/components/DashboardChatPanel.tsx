@@ -24,6 +24,8 @@ import { findStrategyByName } from "@/lib/customStrategies";
 import { readActiveLensId, findLens } from "@/lib/scanLens";
 import { useCoachVoice } from "@/hooks/useCoachVoice";
 import { voiceForCoach, COACH_VOICES } from "@/lib/coachVoices";
+import { useProfile } from "@/hooks/useProfile";
+import { compressImage, getScreenshotQuota, bumpScreenshotQuota } from "@/lib/imageCompress";
 import { toast } from "sonner";
 
 export type DashboardChatHandle = {
