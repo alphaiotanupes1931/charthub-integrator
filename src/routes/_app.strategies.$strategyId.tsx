@@ -57,6 +57,8 @@ function StrategyDetailPage() {
     );
   }
 
+  const isCustom = (strategy as CustomStrategy).custom === true;
+  const custom = isCustom ? (strategy as CustomStrategy) : null;
   const StyleIcon = styleIcon[strategy.style];
   const isActive = active === strategy.name;
 
@@ -64,6 +66,17 @@ function StrategyDetailPage() {
     try { localStorage.setItem(STRAT_KEY, strategy.name); } catch { /* ignore */ }
     setActive(strategy.name);
     toast.success(`${strategy.name} is now your active strategy`);
+  };
+
+  const remove = () => {
+    if (!custom) return;
+    if (!confirm(`Delete "${custom.name}"?`)) return;
+    deleteCustomStrategy(custom.id);
+    if (active === custom.name) {
+      try { localStorage.removeItem(STRAT_KEY); } catch { /* ignore */ }
+    }
+    toast.success(`${custom.name} deleted`);
+    navigate({ to: "/strategies" });
   };
 
   const playbook = strategy.playbook ?? [];
