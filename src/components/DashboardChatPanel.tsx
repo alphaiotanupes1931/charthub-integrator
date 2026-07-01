@@ -176,7 +176,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
       },
     });
 
-    const loading = status === "submitted" || status === "streaming";
+    const loading = scanning || status === "submitted" || status === "streaming";
     const stopScan = () => {
       voice.stop();
       try { stop(); } catch { /* ignore */ }
