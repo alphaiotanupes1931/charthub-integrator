@@ -281,6 +281,11 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     return [];
   }, [liveOhlc, hasLive]);
   const levels = useMemo(() => computeLevels(candles), [candles]);
+  const cisd = useMemo<CisdInfo | null>(() => {
+    const base = detectCisd(candles);
+    if (!base) return null;
+    return { ...base, htfBias: detectHtfBias(candles) };
+  }, [candles]);
   const isLive = hasLive;
   const sourceLabel = liveOhlc?.source === "coingecko" ? "CoinGecko" : liveOhlc?.source === "twelvedata" ? "Twelve Data" : liveOhlc?.source === "yahoo" ? "Yahoo" : "";
   const snapshotSource = isLive ? (liveOhlc?.source ?? "unknown") : "unavailable";
