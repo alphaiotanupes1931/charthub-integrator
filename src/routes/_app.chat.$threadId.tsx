@@ -181,8 +181,9 @@ function ChatThreadInner({
               <button
                 type="button"
                 onClick={() => {
-                  if (voice.enabled) voice.stop();
-                  voice.setEnabled(!voice.enabled);
+                  const next = !voice.enabled;
+                  voice.setEnabled(next);
+                  if (next) voice.resumeAudio(); else voice.pauseAudio();
                 }}
                 className={`h-9 w-9 inline-flex items-center justify-center rounded-md transition ${voice.enabled ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-muted/60"}`}
                 title={voice.enabled ? "Mute coach voice" : "Hear coach replies aloud"}

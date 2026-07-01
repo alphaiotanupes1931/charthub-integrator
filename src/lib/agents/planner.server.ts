@@ -50,15 +50,17 @@ export async function runPlanner(
   snap: MarketSnapshot,
   memo: ResearchMemo,
   lensDesc?: string,
+  hermesMemory?: string,
 ): Promise<TradePlan> {
   const provider = createAiGatewayProvider(apiKey);
   const ctx = memoBlock(memo, snap, lensDesc);
+  const memoryLine = hermesMemory ? `\n\n${hermesMemory}` : "";
 
   // Step 1 — draft plan
   const draft = await generateText({
     model: provider(MODEL),
     output: Output.object({ schema: PlanSchema }),
-    system: "You are the head trader. Produce a concrete plan (entry/stop/tp1/tp2 as raw numbers) grounded in the analyst notes. Use ATR to size the stop (~1-1.5x ATR). TP1 near 1.5R, TP2 near 3R. If consensus is weak or conflicting, use grade C or NO ENTRY.",
+    system: "You are the head trader. Produce a concrete plan (entry/stop/tp1/tp2 as raw numbers) grounded in the analyst notes. Use ATR to size the stop (~1-1.5x ATR). TP1 near 1.5R, TP2 near 3R. If consensus is weak or conflicting, use grade C or NO ENTRY." + memoryLine,
     prompt: ctx,
   });
   let plan = draft.output;

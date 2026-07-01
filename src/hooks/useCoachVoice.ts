@@ -212,6 +212,36 @@ export function useCoachVoice() {
     markDone();
   }, [markDone]);
 
+  // Pause/resume audio without destroying it — used by the Mute toggle so
+  // toggling off then on continues speech instead of cutting it dead.
+  const pauseAudio = useCallback(() => {
+    const ctx = audioContextRef.current;
+    if (ctx && ctx.state === "running") {
+      void ctx.suspend().catch(() => { /* ignore */ });
+    }
+    const el = audioRef.current;
+    if (el && !el.paused) {
+      try { el.pause(); } catch { /* ignore */ }
+    }
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      try { window.speechSynthesis.pause(); } catch { /* ignore */ }
+    }
+  }, []);
+
+  const resumeAudio = useCallback(() => {
+    const ctx = audioContextRef.current;
+    if (ctx && ctx.state === "suspended") {
+      void ctx.resume().catch(() => { /* ignore */ });
+    }
+    const el = audioRef.current;
+    if (el && el.paused && el.src) {
+      el.play().catch(() => { /* ignore */ });
+    }
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      try { window.speechSynthesis.resume(); } catch { /* ignore */ }
+    }
+  }, []);
+
 
   const speak = useCallback(async (text: string, voiceId: string) => {
     if (!text.trim()) return;
@@ -314,6 +344,6 @@ export function useCoachVoice() {
 
   useEffect(() => stop, [stop]);
 
-  return { enabled, setEnabled, speak, stop, prime, speaking };
+  return { enabled, setEnabled, speak, stop, prime, speaking, pauseAudio, resumeAudio };
 }
 

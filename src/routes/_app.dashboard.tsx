@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { TradingViewChart } from "@/components/TradingViewChart";
 import { NativeChart, LEVEL_META, type LevelKey, type ChartSnapshot } from "@/components/NativeChart";
-import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Sparkles, Clock, MessageSquare, X, Plug, Maximize2, Square, Paperclip, ChevronUp, PanelRightClose, PanelRightOpen, BarChart3 } from "lucide-react";
+import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Sparkles, Clock, MessageSquare, X, Plug, Maximize2, Square, Paperclip, ChevronUp, PanelRightClose, PanelRightOpen, BarChart3, ThumbsUp, ThumbsDown, Brain } from "lucide-react";
 import { useCoachVoice } from "@/hooks/useCoachVoice";
 import { DashboardChatPanel, type DashboardChatHandle } from "@/components/DashboardChatPanel";
 import { TodaysRecommendation } from "@/components/TodaysRecommendation";
@@ -11,6 +11,7 @@ import { SCAN_LENSES, readActiveLensId, writeActiveLensId, findLens, type ScanLe
 import { readActiveCoach } from "@/lib/chat-client";
 import { voiceForCoach } from "@/lib/coachVoices";
 import { runResearchPlan } from "@/lib/agents/research.functions";
+import { recordHermesFeedback } from "@/lib/agents/hermes.functions";
 import type { ResearchMemo } from "@/lib/agents/types";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -186,6 +187,23 @@ function ScanTicket({
   const [lensOpen, setLensOpen] = useState(false);
   const isNoEntry = result.grade === "NO ENTRY";
   const lens = findLens(lensId);
+  const sendFeedback = useServerFn(recordHermesFeedback);
+  const [fbState, setFbState] = useState<null | 1 | -1>(null);
+  const [fbNote, setFbNote] = useState("");
+  const [fbNoteOpen, setFbNoteOpen] = useState(false);
+  const submitFeedback = (rating: 1 | -1, note?: string) => {
+    setFbState(rating);
+    sendFeedback({ data: {
+      kind: "scan",
+      ticker: symbol.ticker,
+      lens: lens.name,
+      rating,
+      note: note ?? null,
+      context: { bias: result.bias, grade: result.grade, confidence: result.confidence, entry: result.entry, stop: result.stop, tp1: result.tp1, tp2: result.tp2 },
+    } })
+      .then(() => toast.success("Hermes learned from that."))
+      .catch(() => toast.error("Couldn't save feedback."));
+  };
   return (
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -286,6 +304,49 @@ function ScanTicket({
           )}
         </div>
       )}
+
+      <div className="rounded-md border border-border/60 bg-background/40 p-3 space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <Brain className="h-3.5 w-3.5 text-primary" />
+            <span>Was this useful? Hermes will remember.</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => submitFeedback(1)}
+              className={`h-7 w-7 inline-flex items-center justify-center rounded-md border transition ${fbState === 1 ? "border-emerald-500/60 bg-emerald-500/15 text-emerald-400" : "border-border text-muted-foreground hover:text-foreground hover:border-primary/40"}`}
+              aria-label="Helpful"
+              title="Helpful"
+            >
+              <ThumbsUp className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={() => { setFbNoteOpen(true); }}
+              className={`h-7 w-7 inline-flex items-center justify-center rounded-md border transition ${fbState === -1 ? "border-destructive/60 bg-destructive/15 text-destructive" : "border-border text-muted-foreground hover:text-foreground hover:border-primary/40"}`}
+              aria-label="Not helpful"
+              title="Not helpful"
+            >
+              <ThumbsDown className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+        {fbNoteOpen && fbState !== -1 && (
+          <div className="flex items-center gap-2">
+            <input
+              value={fbNote}
+              onChange={(e) => setFbNote(e.target.value)}
+              placeholder="What was off? (optional)"
+              className="flex-1 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs focus:outline-none focus:border-primary/50"
+            />
+            <button
+              onClick={() => { submitFeedback(-1, fbNote.trim() || undefined); setFbNoteOpen(false); }}
+              className="rounded-md bg-primary px-2.5 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+            >
+              Send
+            </button>
+          </div>
+        )}
+      </div>
 
       <div className="pt-1 flex justify-center">
         <ScreenshotAttach onPick={onAttach} />

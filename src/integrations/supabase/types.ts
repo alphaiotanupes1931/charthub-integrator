@@ -100,6 +100,92 @@ export type Database = {
         }
         Relationships: []
       }
+      hermes_feedback: {
+        Row: {
+          coach: string | null
+          context: Json
+          created_at: string
+          id: string
+          interval: string | null
+          kind: string
+          lens: string | null
+          note: string | null
+          rating: number
+          ticker: string | null
+          user_id: string
+        }
+        Insert: {
+          coach?: string | null
+          context?: Json
+          created_at?: string
+          id?: string
+          interval?: string | null
+          kind: string
+          lens?: string | null
+          note?: string | null
+          rating: number
+          ticker?: string | null
+          user_id: string
+        }
+        Update: {
+          coach?: string | null
+          context?: Json
+          created_at?: string
+          id?: string
+          interval?: string | null
+          kind?: string
+          lens?: string | null
+          note?: string | null
+          rating?: number
+          ticker?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      hermes_lessons: {
+        Row: {
+          created_at: string
+          id: string
+          lesson: string
+          scope: string
+          source_feedback_id: string | null
+          topic: string
+          updated_at: string
+          user_id: string | null
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lesson: string
+          scope: string
+          source_feedback_id?: string | null
+          topic: string
+          updated_at?: string
+          user_id?: string | null
+          weight?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lesson?: string
+          scope?: string
+          source_feedback_id?: string | null
+          topic?: string
+          updated_at?: string
+          user_id?: string | null
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hermes_lessons_source_feedback_id_fkey"
+            columns: ["source_feedback_id"]
+            isOneToOne: false
+            referencedRelation: "hermes_feedback"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           banned: boolean
