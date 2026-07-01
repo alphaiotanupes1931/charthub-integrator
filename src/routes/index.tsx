@@ -535,11 +535,13 @@ function Footer({ isAuthed }: { isAuthed: boolean }) {
   const [year, setYear] = useState<number | null>(null);
   useEffect(() => setYear(new Date().getFullYear()), []);
 
+  const dashboardTo = isAuthed ? "/dashboard" : "/auth";
+  const dashboardSearch = isAuthed ? undefined : { mode: "signin" as const, redirect: "/dashboard" };
   const cols = [
     {
       title: "Product",
       items: [
-        { label: "Dashboard", to: (isAuthed ? "/dashboard" : "/auth") as const, search: isAuthed ? undefined : { mode: "signin", redirect: "/dashboard" } },
+        { label: "Dashboard", to: dashboardTo, search: dashboardSearch },
         { label: "Coaches", to: "/coaches" as const },
         { label: "Pricing", to: "/" as const },
         { label: "Mobile App", to: "/" as const },
@@ -590,7 +592,15 @@ function Footer({ isAuthed }: { isAuthed: boolean }) {
             <ul className="space-y-2.5">
               {c.items.map((i) => (
                 <li key={i.label}>
-                  <Link to={i.to} search={("search" in i ? i.search : undefined) as never} className="text-sm hover:text-primary transition">{i.label}</Link>
+                  {"search" in i ? (
+                    <Link to={i.to as "/dashboard" | "/auth"} search={i.search} className="text-sm hover:text-primary transition">
+                      {i.label}
+                    </Link>
+                  ) : (
+                    <Link to={i.to} className="text-sm hover:text-primary transition">
+                      {i.label}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
