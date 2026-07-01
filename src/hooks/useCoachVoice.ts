@@ -220,8 +220,12 @@ export function useCoachVoice() {
     const el = getAudio();
     const ctx = getAudioContext();
     if (!el && !ctx) return;
+    const myGen = ++genRef.current;
+    const controller = new AbortController();
+    abortRef.current = controller;
     speakingRef.current = true;
     setSpeaking(true);
+    const isStale = () => myGen !== genRef.current;
     if (sourceRef.current) {
       try { sourceRef.current.stop(); } catch { /* ignore */ }
       try { sourceRef.current.disconnect(); } catch { /* ignore */ }
@@ -233,18 +237,22 @@ export function useCoachVoice() {
       lastBlobUrlRef.current = null;
     }
     const fallback = async () => {
+      if (isStale()) return;
       try {
         const { speakWithWebSpeech } = await import("@/lib/webSpeech");
+        if (isStale()) return;
         await speakWithWebSpeech(text, voiceId);
       } catch { /* ignore */ }
-      markDone();
+      if (!isStale()) markDone();
     };
     try {
       const res = await fetch("/api/tts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text, voiceId }),
+        signal: controller.signal,
       });
+      if (isStale()) return;
       if (res.status === 204) {
         await fallback();
         return;
@@ -256,22 +264,25 @@ export function useCoachVoice() {
         return;
       }
       const blob = await res.blob();
+      if (isStale()) return;
       if (!blob.size) { await fallback(); return; }
       if (ctx) {
         try {
           await ctx.resume();
           const audioBuffer = await ctx.decodeAudioData(await blob.arrayBuffer());
+          if (isStale()) return;
           const source = ctx.createBufferSource();
           source.buffer = audioBuffer;
           source.connect(ctx.destination);
           source.onended = () => {
             if (sourceRef.current === source) sourceRef.current = null;
-            markDone();
+            if (!isStale()) markDone();
           };
           sourceRef.current = source;
           source.start(0);
           return;
         } catch (e) {
+          if (isStale()) return;
           console.warn("[voice] web audio failed", e);
         }
       }
@@ -286,17 +297,20 @@ export function useCoachVoice() {
           URL.revokeObjectURL(url);
           lastBlobUrlRef.current = null;
         }
-        markDone();
+        if (!isStale()) markDone();
       };
       await el.play().catch(async (e) => {
+        if (isStale()) return;
         console.warn("[voice] play blocked, using browser voice", e);
         await fallback();
       });
     } catch (e) {
+      if (isStale() || (e as { name?: string })?.name === "AbortError") return;
       console.warn("[voice] error, using browser voice", e);
       await fallback();
     }
   }, [getAudio, getAudioContext, markDone]);
+
 
   useEffect(() => stop, [stop]);
 
