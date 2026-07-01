@@ -1,4 +1,4 @@
-import { STRATEGIES, type Level, type Style, type Strategy } from "@/data/strategies";
+import { STRATEGIES, slugify, type Level, type Style, type Strategy } from "@/data/strategies";
 
 const CUSTOM_KEY = "trademind.customStrategies.v1";
 
@@ -14,8 +14,13 @@ export function readCustomStrategies(): CustomStrategy[] {
   try {
     const raw = localStorage.getItem(CUSTOM_KEY);
     if (!raw) return [];
-    const arr = JSON.parse(raw);
-    return Array.isArray(arr) ? arr : [];
+    const arr = JSON.parse(raw) as CustomStrategy[];
+    if (!Array.isArray(arr)) return [];
+    const migrated = arr.map((s) => ({ ...s, slug: s.slug || slugify(s.name) }));
+    if (migrated.some((s, i) => s.slug !== arr[i]?.slug)) {
+      writeCustomStrategies(migrated);
+    }
+    return migrated;
   } catch {
     return [];
   }
@@ -29,11 +34,23 @@ export function writeCustomStrategies(list: CustomStrategy[]) {
 export function saveCustomStrategy(s: Omit<CustomStrategy, "custom" | "id" | "createdAt"> & { id?: string }): CustomStrategy {
   const list = readCustomStrategies();
   const id = s.id ?? `cs_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
-  const next: CustomStrategy = { ...s, custom: true, id, createdAt: Date.now() };
+  const next: CustomStrategy = {
+    ...s,
+    slug: s.slug || slugify(s.name),
+    custom: true,
+    id,
+    createdAt: Date.now(),
+  };
   const idx = list.findIndex((c) => c.id === id);
   if (idx >= 0) list[idx] = next; else list.unshift(next);
   writeCustomStrategies(list);
   return next;
+}
+
+export function findStrategyBySlug(slug: string): Strategy | CustomStrategy | null {
+  return readCustomStrategies().find((c) => c.slug === slug)
+    ?? STRATEGIES.find((s) => s.slug === slug)
+    ?? null;
 }
 
 export function deleteCustomStrategy(id: string) {
