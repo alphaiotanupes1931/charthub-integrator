@@ -165,6 +165,7 @@ function AuthPage() {
 
   async function onRecoverySubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (busy) return;
     setErrorMsg(null);
     const parsedEmail = z.string().trim().email("Enter a valid email").max(255).safeParse(email);
     if (!parsedEmail.success) {
