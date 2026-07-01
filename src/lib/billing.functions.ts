@@ -107,6 +107,75 @@ export const getMySubscription = createServerFn({ method: "GET" })
     return data ?? null;
   });
 
+export const syncMySubscriptionFromStripe = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const email = context.claims?.email as string | undefined;
+    if (!email) return null;
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { getStripe, tierFromPrice } = await import("@/lib/stripe.server");
+    const stripe = getStripe();
+
+    const customers = await stripe.customers.list({ email, limit: 10 });
+    let best:
+      | {
+          user_id: string;
+          stripe_customer_id: string | null;
+          stripe_subscription_id: string;
+          tier: string | null;
+          status: string;
+          current_period_end: string | null;
+          trial_end: string | null;
+          cancel_at_period_end: boolean;
+          updated_at: string;
+        }
+      | null = null;
+
+    for (const customer of customers.data) {
+      await stripe.customers.update(customer.id, {
+        metadata: { ...(customer.metadata || {}), user_id: context.userId },
+      });
+
+      const subs = await stripe.subscriptions.list({
+        customer: customer.id,
+        status: "all",
+        limit: 100,
+        expand: ["data.items.data.price"],
+      });
+
+      for (const sub of subs.data) {
+        if (sub.status === "canceled" || sub.status === "incomplete_expired") continue;
+        const price = sub.items.data[0]?.price;
+        const cpe = (sub as unknown as { current_period_end?: number }).current_period_end;
+        const row = {
+          user_id: context.userId,
+          stripe_customer_id: customer.id,
+          stripe_subscription_id: sub.id,
+          tier: tierFromPrice(price),
+          status: sub.status,
+          current_period_end: cpe ? new Date(cpe * 1000).toISOString() : null,
+          trial_end: sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null,
+          cancel_at_period_end: !!sub.cancel_at_period_end,
+          updated_at: new Date().toISOString(),
+        };
+        if (!best || ["active", "trialing"].includes(row.status)) best = row;
+        if (best && ["active", "trialing"].includes(best.status)) break;
+      }
+      if (best && ["active", "trialing"].includes(best.status)) break;
+    }
+
+    if (!best) return null;
+
+    const { data, error } = await supabaseAdmin
+      .from("subscriptions")
+      .upsert(best, { onConflict: "user_id" })
+      .select("tier,status,current_period_end,trial_end,cancel_at_period_end")
+      .single();
+    if (error) throw new Error(error.message);
+    return data;
+  });
+
 export const listSubscribers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {

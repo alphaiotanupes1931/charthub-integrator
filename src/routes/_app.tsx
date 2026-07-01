@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
+import { syncMySubscriptionFromStripe } from "@/lib/billing.functions";
 
 const BILLING_ALLOWED_PATHS = ["/pricing", "/settings", "/onboarding"];
 
@@ -72,7 +73,15 @@ export const Route = createFileRoute("/_app")({
         .select("status")
         .eq("user_id", user.id)
         .maybeSingle();
-      const status = sub?.status ?? null;
+      let status = sub?.status ?? null;
+      if (status !== "active" && status !== "trialing") {
+        try {
+          const synced = await syncMySubscriptionFromStripe();
+          status = synced?.status ?? status;
+        } catch {
+          // If the live billing check fails, fall back to the local row.
+        }
+      }
       const active = status === "active" || status === "trialing";
       const onAllowedPath = BILLING_ALLOWED_PATHS.some((p) =>
         location.pathname.startsWith(p),
