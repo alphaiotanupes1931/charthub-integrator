@@ -152,8 +152,8 @@ function CoachesPage() {
                 <div className={`h-12 w-12 rounded-lg flex items-center justify-center ${c.iconBg}`}>
                   <Icon className="h-6 w-6" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-display text-xl font-semibold truncate">{c.name}</h3>
+                <div className={`flex-1 min-w-0 rounded-md px-2.5 py-1 ${c.nameBg}`}>
+                  <h3 className={`font-display text-xl font-semibold truncate ${c.nameText}`}>{c.name}</h3>
                   <p className="text-xs text-muted-foreground truncate">{c.subtitle}</p>
                 </div>
                 <button
