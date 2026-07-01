@@ -7,6 +7,7 @@ export interface PlaybookSection {
 }
 
 export interface Strategy {
+  slug: string;
   name: string;
   level: Level;
   style: Style;
@@ -18,8 +19,20 @@ export interface Strategy {
   playbook?: PlaybookSection[];
 }
 
+export function slugify(name: string) {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+export function findStrategyBySlug(slug: string, all: (Strategy | { slug: string })[] = STRATEGIES) {
+  return all.find((s) => s.slug === slug) ?? null;
+}
+
 export const STRATEGIES: Strategy[] = [
   {
+    slug: "breakout-retest",
     name: "Breakout & Retest",
     level: "Beginner",
     style: "Day",
