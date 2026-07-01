@@ -1,13 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
-import { findStrategyBySlug, readCustomStrategies, type CustomStrategy } from "@/lib/customStrategies";
+import { findStrategyBySlug, type CustomStrategy } from "@/lib/customStrategies";
 import { type Strategy } from "@/data/strategies";
-import { ArrowLeft, CheckCircle2, CircleDot, Pencil, Trash2, TrendingUp, Zap, BarChart2, BookOpen, ShieldAlert, Target, Clock, Layers } from "lucide-react";
+import { ArrowLeft, CheckCircle2, CircleDot, TrendingUp, Zap, BarChart2, BookOpen, ShieldAlert, Target, Clock, Layers } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/strategies/$strategyId")({
-  head: ({ params }) => ({ meta: [{ title: `${params.strategyId} | Strategy Library, TradeMind` }] }),
+  head: () => ({ meta: [{ title: "Strategy Details | TradeMind" }] }),
   component: StrategyDetailPage,
 });
 
@@ -57,8 +57,6 @@ function StrategyDetailPage() {
     );
   }
 
-  const isCustom = (strategy as CustomStrategy).custom === true;
-  const custom = isCustom ? (strategy as CustomStrategy) : null;
   const StyleIcon = styleIcon[strategy.style];
   const isActive = active === strategy.name;
 
@@ -66,18 +64,6 @@ function StrategyDetailPage() {
     try { localStorage.setItem(STRAT_KEY, strategy.name); } catch { /* ignore */ }
     setActive(strategy.name);
     toast.success(`${strategy.name} is now your active strategy`);
-  };
-
-  const removeCustom = () => {
-    if (!custom) return;
-    if (!confirm(`Delete "${custom.name}"?`)) return;
-    const { deleteCustomStrategy } = await import("@/lib/customStrategies");
-    deleteCustomStrategy(custom.id);
-    if (active === custom.name) {
-      try { localStorage.removeItem(STRAT_KEY); } catch { /* ignore */ }
-    }
-    toast.success(`${custom.name} deleted`);
-    navigate({ to: "/strategies" });
   };
 
   const playbook = strategy.playbook ?? [];
