@@ -803,6 +803,7 @@ function ScanBody({
     <ScanTicket
       result={result!}
       symbol={symbol}
+      lensId={lensId}
       onRescan={runScan}
       onAttach={onAttach}
       onStopVoice={onStopVoice}
