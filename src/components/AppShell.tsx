@@ -63,6 +63,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { theme, toggle } = useTheme();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isDashboard = pathname === "/dashboard";
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { isAdmin } = useProfile();
