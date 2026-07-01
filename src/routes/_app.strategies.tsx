@@ -361,6 +361,7 @@ function StrategyBuilderModal({
     const saved = saveCustomStrategy({
       id: editing?.id,
       name: name.trim(),
+      slug: editing?.slug ?? name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
       level,
       style,
       markets,
