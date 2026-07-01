@@ -67,6 +67,14 @@ export const SCAN_LENSES: ScanLens[] = [
     promptEmphasis:
       "Layer Fibonacci retracement (0.5 / 0.618 / 0.786) and extensions (1.272 / 1.618) on top of the Wyckoff read. Targets and stops should reference Fib levels explicitly.",
   },
+  {
+    id: "cisd",
+    name: "CISD (Change in State of Delivery)",
+    short: "CISD",
+    desc: "ICT delivery flips. Uses HTF bias + LTF trigger and projected measured moves.",
+    promptEmphasis:
+      "Use the CISD lens. Confirm bias against the HTF CISD state provided in the snapshot; require an LTF CISD flip (close through the opposing leg origin open) as the trigger. Entry on retest of the CISD level, stop just beyond the invalidation candle, targets at the 1x and 2x measured-move projections included in the snapshot. If no CISD flip is present, say so and stand down.",
+  },
 ];
 
 export const DEFAULT_LENS_ID: ScanLensId = "wyckoff";
