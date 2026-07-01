@@ -727,6 +727,8 @@ function Dashboard() {
               ) : (
                 <DashboardChatPanel
                   ref={chatRef}
+                  onRunScan={runScan}
+                  onStopScan={() => { voice.stop(); setScanning(false); }}
                   chart={{
                     ticker: symbol.ticker,
                     intervalLabel,
