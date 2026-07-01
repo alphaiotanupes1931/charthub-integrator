@@ -251,7 +251,7 @@ export const Route = createFileRoute("/api/chat")({
         const reqId = getOrCreateRequestId(request);
         const originBlock = enforceOrigin(request);
         if (originBlock) return originBlock;
-        const tooBig = enforceMaxBody(request, 512 * 1024); // 512 KB cap
+        const tooBig = enforceMaxBody(request, 8 * 1024 * 1024); // 8 MB cap (allows compressed screenshot attachments)
         if (tooBig) return tooBig;
         const limited = rateLimit(request, { key: "chat", limit: 20, windowMs: 60_000 });
         if (limited) return limited;
