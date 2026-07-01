@@ -773,6 +773,8 @@ function Dashboard() {
           onOpen={() => setCoachOpen(true)}
           onClose={() => setCoachOpen(false)}
           chatRef={chatRef}
+          onRunScan={runScan}
+          onStopScan={() => { voice.stop(); setScanning(false); }}
           chart={{
             ticker: symbol.ticker,
             intervalLabel,
