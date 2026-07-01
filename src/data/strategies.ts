@@ -253,6 +253,61 @@ export const STRATEGIES: Strategy[] = [
     ],
   },
   {
+    slug: "cisd-flip",
+    name: "CISD Flip (Change in State of Delivery)",
+    level: "Advanced",
+    style: "Day",
+    markets: ["Forex", "Stocks", "Crypto"],
+    description: "Trade the ICT delivery flip: HTF bias sets direction, LTF CISD confirms entry, targets are 1x and 2x measured-move projections.",
+    winRate: 54,
+    rr: 3.2,
+    longDescription:
+      "CISD marks the exact bar where price closes through the origin open of the prior opposing delivery leg. That flip prints a level (the broken open), a trigger (the confirming close) and a measured-move (the size of the leg it just consumed). This strategy pairs HTF CISD bias with a same-direction LTF CISD trigger and works the 1x / 2x projections as objective targets. The chart's CISD toggle plots all four references (level, trigger, 1x, 2x) automatically.",
+    playbook: [
+      {
+        title: "HTF Bias",
+        items: [
+          "Enable CISD on H4 or D. HTF bias in the snapshot must read bullish (long only) or bearish (short only).",
+          "If HTF bias is neutral, stand down - no trade.",
+        ],
+      },
+      {
+        title: "LTF Trigger",
+        items: [
+          "Drop to M15/M5 and wait for a same-direction CISD flip (state matches HTF).",
+          "Trigger is the closing candle that broke the opposing leg's origin open. That close is your reference.",
+        ],
+      },
+      {
+        title: "Entry",
+        items: [
+          "Limit at the CISD level (broken origin open) on the first retest, or",
+          "Confirmation entry on the first LTF rejection candle back off the CISD level.",
+        ],
+      },
+      {
+        title: "Stop & Targets",
+        items: [
+          "Stop: 1 ATR beyond the far side of the opposing leg (protects the flip).",
+          "TP1: the 1x measured-move projection printed by the CISD (scale 50%, move stop to BE).",
+          "TP2: the 2x extension. Trail behind each new same-direction CISD on the entry timeframe.",
+        ],
+      },
+      {
+        title: "Risk",
+        items: ["Risk 0.5-1% per trade.", "Skip if HTF bias flips against you before you fill."],
+      },
+      {
+        title: "Invalidations",
+        items: [
+          "Price closes back through the CISD level in the opposite direction - the flip is void.",
+          "HTF CISD state changes on the next HTF bar before TP1.",
+          "No fresh flip has printed in the current window (snapshot says \"no confirmed flip\") - stand down.",
+        ],
+      },
+    ],
+  },
+  {
     slug: "mean-reversion-bollinger",
     name: "Mean Reversion (Bollinger)",
     level: "Beginner",

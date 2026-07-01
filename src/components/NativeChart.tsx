@@ -13,7 +13,7 @@ import {
 import type { OhlcResponse } from "@/routes/api.ohlc";
 import { useTimeFormat, formatTime } from "@/hooks/useTimeFormat";
 
-export type LevelKey = "VWAP" | "POC" | "SR" | "ZONES" | "FVG" | "FIB" | "LIQ" | "OF";
+export type LevelKey = "VWAP" | "POC" | "SR" | "ZONES" | "FVG" | "FIB" | "LIQ" | "OF" | "CISD";
 
 export const LEVEL_META: Record<LevelKey, { label: string; color: string; tone: string }> = {
   VWAP:  { label: "VWAP",  color: "#fbbf24", tone: "bg-amber-500/10 text-amber-300 border-amber-500/30" },
@@ -24,6 +24,17 @@ export const LEVEL_META: Record<LevelKey, { label: string; color: string; tone: 
   FIB:   { label: "Fib",   color: "#f472b6", tone: "bg-pink-500/10 text-pink-300 border-pink-500/30" },
   LIQ:   { label: "Liq",   color: "#f87171", tone: "bg-red-500/10 text-red-300 border-red-500/30" },
   OF:    { label: "Order Flow", color: "#22d3ee", tone: "bg-cyan-500/10 text-cyan-300 border-cyan-500/30" },
+  CISD:  { label: "CISD",  color: "#a3e635", tone: "bg-lime-500/10 text-lime-300 border-lime-500/30" },
+};
+
+export type CisdInfo = {
+  state: "bullish" | "bearish";
+  level: number;        // the opposing-leg open that got broken
+  trigger: number;      // close price that confirmed the flip
+  proj1: number;        // 1x measured-move projection
+  proj2: number;        // 2x extension
+  legSize: number;
+  htfBias: "bullish" | "bearish" | "neutral";
 };
 
 export type ChartSnapshot = {
@@ -44,6 +55,7 @@ export type ChartSnapshot = {
   of: { price: number; side: "buy" | "sell"; strength: number }[];
   delta: number;
   sessionsActive: string[];
+  cisd: CisdInfo | null;
   fetchedAt: string;
 };
 
@@ -66,8 +78,67 @@ const SESSIONS = [
 ];
 
 
-
 type Candle = { time: Time; open: number; high: number; low: number; close: number };
+
+// --- CISD (Change in State of Delivery) ---
+// Detects the most recent flip where price closed through the origin open of the
+// prior opposing delivery leg. Returns level, trigger, and 1x/2x measured-move projections.
+function detectCisd(candles: Candle[]): Omit<CisdInfo, "htfBias"> | null {
+  if (candles.length < 6) return null;
+  for (let i = candles.length - 1; i >= 3; i--) {
+    const c = candles[i];
+    const isUp = c.close > c.open;
+    const isDn = c.close < c.open;
+    if (!isUp && !isDn) continue;
+    let j = i - 1;
+    let extreme = isUp ? -Infinity : Infinity;
+    let lo = Infinity, hi = -Infinity;
+    while (j >= 0) {
+      const p = candles[j];
+      const opposing = isUp ? p.close < p.open : p.close > p.open;
+      if (!opposing) break;
+      extreme = isUp ? Math.max(extreme, p.open) : Math.min(extreme, p.open);
+      lo = Math.min(lo, p.low); hi = Math.max(hi, p.high);
+      j--;
+    }
+    const legLen = i - 1 - j;
+    if (legLen < 2) continue;
+    const flipped = isUp ? c.close > extreme : c.close < extreme;
+    if (!flipped) continue;
+    const legSize = Math.max(1e-9, hi - lo);
+    const trigger = c.close;
+    return {
+      state: isUp ? "bullish" : "bearish",
+      level: extreme,
+      trigger,
+      proj1: isUp ? trigger + legSize : trigger - legSize,
+      proj2: isUp ? trigger + legSize * 2 : trigger - legSize * 2,
+      legSize,
+    };
+  }
+  return null;
+}
+
+// Aggregate candles into HTF groups (4x) and detect the CISD state there for bias.
+function detectHtfBias(candles: Candle[]): "bullish" | "bearish" | "neutral" {
+  if (candles.length < 20) return "neutral";
+  const groupSize = 4;
+  const agg: Candle[] = [];
+  for (let i = 0; i + groupSize <= candles.length; i += groupSize) {
+    const chunk = candles.slice(i, i + groupSize);
+    agg.push({
+      time: chunk[0].time,
+      open: chunk[0].open,
+      close: chunk[chunk.length - 1].close,
+      high: Math.max(...chunk.map((c) => c.high)),
+      low: Math.min(...chunk.map((c) => c.low)),
+    });
+  }
+  const htf = detectCisd(agg);
+  return htf?.state ?? "neutral";
+}
+
+
 
 // --- Compute levels from candles ---
 function computeLevels(candles: Candle[]) {
@@ -210,6 +281,11 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     return [];
   }, [liveOhlc, hasLive]);
   const levels = useMemo(() => computeLevels(candles), [candles]);
+  const cisd = useMemo<CisdInfo | null>(() => {
+    const base = detectCisd(candles);
+    if (!base) return null;
+    return { ...base, htfBias: detectHtfBias(candles) };
+  }, [candles]);
   const isLive = hasLive;
   const sourceLabel = liveOhlc?.source === "coingecko" ? "CoinGecko" : liveOhlc?.source === "twelvedata" ? "Twelve Data" : liveOhlc?.source === "yahoo" ? "Yahoo" : "";
   const snapshotSource = isLive ? (liveOhlc?.source ?? "unknown") : "unavailable";
@@ -251,6 +327,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       of: levels.of,
       delta: levels.delta,
       sessionsActive: activeSessionsNow,
+      cisd,
       fetchedAt: new Date().toISOString(),
     };
     onSnapshot(snap);
@@ -329,7 +406,14 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     if (enabled.OF) levels.of.forEach((o, i) =>
       add(o.price, LEVEL_META.OF.color, `${o.side === "buy" ? "OF↑" : "OF↓"} ${i + 1}`, true),
     );
-  }, [enabled, levels, ready]);
+    if (enabled.CISD && cisd) {
+      const arrow = cisd.state === "bullish" ? "↑" : "↓";
+      add(cisd.level,   LEVEL_META.CISD.color, `CISD ${arrow} ${cisd.state}`);
+      add(cisd.trigger, LEVEL_META.CISD.color, `CISD trigger`, true);
+      add(cisd.proj1,   LEVEL_META.CISD.color, `CISD 1x → ${cisd.proj1.toFixed(2)}`, true);
+      add(cisd.proj2,   LEVEL_META.CISD.color, `CISD 2x → ${cisd.proj2.toFixed(2)}`, true);
+    }
+  }, [enabled, levels, cisd, ready]);
 
   // ---- Sessions overlay ----
   useEffect(() => {
@@ -433,6 +517,11 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
         {enabled.OF && candles.length > 0 && (
           <span className={`inline-flex items-center gap-1 normal-case ${levels.delta >= 0 ? "text-emerald-400" : "text-red-400"}`}>
             Δ {levels.delta >= 0 ? "+" : ""}{levels.delta.toFixed(1)}
+          </span>
+        )}
+        {enabled.CISD && cisd && (
+          <span className={`inline-flex items-center gap-1 normal-case ${cisd.state === "bullish" ? "text-lime-300" : "text-red-300"}`}>
+            CISD {cisd.state === "bullish" ? "↑" : "↓"} · HTF {cisd.htfBias}
           </span>
         )}
       </div>
