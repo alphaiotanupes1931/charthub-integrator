@@ -266,8 +266,24 @@ function ScanTicket({
         {open ? "Hide details" : "Show details"}
       </button>
       {open && (
-        <div className="rounded-lg border border-border/60 bg-background/40 p-3 text-xs leading-relaxed text-foreground/90">
-          {result.details}
+        <div className="rounded-lg border border-border/60 bg-background/40 p-3 text-xs leading-relaxed text-foreground/90 space-y-3">
+          <div>{result.details}</div>
+          {result.memo && result.memo.notes.length > 0 && (
+            <div className="border-t border-border/50 pt-3 space-y-2">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                Research memo · consensus {result.memo.consensus} @ {result.memo.consensusConfidence}%
+              </div>
+              {result.memo.notes.map((n) => (
+                <div key={n.role} className="rounded-md border border-border/50 bg-card/50 px-2.5 py-2">
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="text-[10px] uppercase tracking-wider text-primary">{n.role}</span>
+                    <span className="text-[10px] text-muted-foreground">{n.bias} · {n.confidence}%</span>
+                  </div>
+                  <div className="text-xs text-foreground/85 leading-snug">{n.summary}</div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
