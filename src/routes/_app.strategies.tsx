@@ -50,6 +50,16 @@ function StrategiesPage() {
     toast.success(`${name} is now your active strategy`);
   };
 
+  const removeCustom = (s: CustomStrategy) => {
+    deleteCustomStrategy(s.id);
+    if (active === s.name) {
+      try { localStorage.removeItem(STRAT_KEY); } catch { /* ignore */ }
+      setActive(null);
+    }
+    refreshCustoms();
+    toast.success(`${s.name} deleted`);
+  };
+
   const list = useMemo(() => [...customs, ...allStrategies().filter((s) => !(s as CustomStrategy).custom)], [customs]);
   const filtered = list.filter((s) => s.name.toLowerCase().includes(q.toLowerCase()));
 
