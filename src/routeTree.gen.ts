@@ -32,6 +32,7 @@ import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppScanLensRouteImport } from './routes/_app.scan-lens'
 import { Route as AppMentorRouteImport } from './routes/_app.mentor'
 import { Route as AppMemoryRouteImport } from './routes/_app.memory'
+import { Route as AppLevelsRouteImport } from './routes/_app.levels'
 import { Route as AppJournalRouteImport } from './routes/_app.journal'
 import { Route as AppGuideRouteImport } from './routes/_app.guide'
 import { Route as AppFriendsRouteImport } from './routes/_app.friends'
@@ -158,6 +159,11 @@ const AppMemoryRoute = AppMemoryRouteImport.update({
   path: '/memory',
   getParentRoute: () => AppRoute,
 } as any)
+const AppLevelsRoute = AppLevelsRouteImport.update({
+  id: '/levels',
+  path: '/levels',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppJournalRoute = AppJournalRouteImport.update({
   id: '/journal',
   path: '/journal',
@@ -233,6 +239,7 @@ export interface FileRoutesByFullPath {
   '/friends': typeof AppFriendsRoute
   '/guide': typeof AppGuideRoute
   '/journal': typeof AppJournalRoute
+  '/levels': typeof AppLevelsRoute
   '/memory': typeof AppMemoryRoute
   '/mentor': typeof AppMentorRoute
   '/scan-lens': typeof AppScanLensRoute
@@ -267,6 +274,7 @@ export interface FileRoutesByTo {
   '/friends': typeof AppFriendsRoute
   '/guide': typeof AppGuideRoute
   '/journal': typeof AppJournalRoute
+  '/levels': typeof AppLevelsRoute
   '/memory': typeof AppMemoryRoute
   '/mentor': typeof AppMentorRoute
   '/scan-lens': typeof AppScanLensRoute
@@ -304,6 +312,7 @@ export interface FileRoutesById {
   '/_app/friends': typeof AppFriendsRoute
   '/_app/guide': typeof AppGuideRoute
   '/_app/journal': typeof AppJournalRoute
+  '/_app/levels': typeof AppLevelsRoute
   '/_app/memory': typeof AppMemoryRoute
   '/_app/mentor': typeof AppMentorRoute
   '/_app/scan-lens': typeof AppScanLensRoute
@@ -341,6 +350,7 @@ export interface FileRouteTypes {
     | '/friends'
     | '/guide'
     | '/journal'
+    | '/levels'
     | '/memory'
     | '/mentor'
     | '/scan-lens'
@@ -375,6 +385,7 @@ export interface FileRouteTypes {
     | '/friends'
     | '/guide'
     | '/journal'
+    | '/levels'
     | '/memory'
     | '/mentor'
     | '/scan-lens'
@@ -411,6 +422,7 @@ export interface FileRouteTypes {
     | '/_app/friends'
     | '/_app/guide'
     | '/_app/journal'
+    | '/_app/levels'
     | '/_app/memory'
     | '/_app/mentor'
     | '/_app/scan-lens'
@@ -611,6 +623,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMemoryRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/levels': {
+      id: '/_app/levels'
+      path: '/levels'
+      fullPath: '/levels'
+      preLoaderRoute: typeof AppLevelsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/journal': {
       id: '/_app/journal'
       path: '/journal'
@@ -713,6 +732,7 @@ interface AppRouteChildren {
   AppFriendsRoute: typeof AppFriendsRoute
   AppGuideRoute: typeof AppGuideRoute
   AppJournalRoute: typeof AppJournalRoute
+  AppLevelsRoute: typeof AppLevelsRoute
   AppMemoryRoute: typeof AppMemoryRoute
   AppMentorRoute: typeof AppMentorRoute
   AppScanLensRoute: typeof AppScanLensRoute
@@ -730,6 +750,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppFriendsRoute: AppFriendsRoute,
   AppGuideRoute: AppGuideRoute,
   AppJournalRoute: AppJournalRoute,
+  AppLevelsRoute: AppLevelsRoute,
   AppMemoryRoute: AppMemoryRoute,
   AppMentorRoute: AppMentorRoute,
   AppScanLensRoute: AppScanLensRoute,
