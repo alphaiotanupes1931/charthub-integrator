@@ -912,7 +912,7 @@ function FloatingCoach({
             : "translate-y-full sm:translate-y-4 pointer-events-none sm:opacity-0"
         }`}
       >
-        <DashboardChatPanel ref={chatRef} chart={chart} onClose={() => { setMinimized(false); onClose(); }} onMinimize={() => setMinimized(true)} onRunScan={onRunScan} onStopScan={onStopScan} />
+        <DashboardChatPanel ref={chatRef} chart={chart} onClose={() => { setMinimized(false); onClose(); }} onMinimize={() => setMinimized(true)} onRunScan={onRunScan} onStopScan={onStopScan} scanning={scanning} />
       </div>
     </>
   );
