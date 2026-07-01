@@ -13,6 +13,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as StatusRouteImport } from './routes/status'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as FaqRouteImport } from './routes/faq'
@@ -31,7 +32,6 @@ import { Route as AppVoiceCoachRouteImport } from './routes/_app.voice-coach'
 import { Route as AppStrategiesRouteImport } from './routes/_app.strategies'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppScanLensRouteImport } from './routes/_app.scan-lens'
-import { Route as AppPricingRouteImport } from './routes/_app.pricing'
 import { Route as AppMentorRouteImport } from './routes/_app.mentor'
 import { Route as AppMemoryRouteImport } from './routes/_app.memory'
 import { Route as AppLevelsRouteImport } from './routes/_app.levels'
@@ -68,6 +68,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -157,11 +162,6 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
 const AppScanLensRoute = AppScanLensRouteImport.update({
   id: '/scan-lens',
   path: '/scan-lens',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppPricingRoute = AppPricingRouteImport.update({
-  id: '/pricing',
-  path: '/pricing',
   getParentRoute: () => AppRoute,
 } as any)
 const AppMentorRoute = AppMentorRouteImport.update({
@@ -257,6 +257,7 @@ export interface FileRoutesByFullPath {
   '/faq': typeof FaqRoute
   '/help': typeof HelpRouteWithChildren
   '/onboarding': typeof OnboardingRoute
+  '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/status': typeof StatusRoute
@@ -272,7 +273,6 @@ export interface FileRoutesByFullPath {
   '/levels': typeof AppLevelsRoute
   '/memory': typeof AppMemoryRoute
   '/mentor': typeof AppMentorRoute
-  '/pricing': typeof AppPricingRoute
   '/scan-lens': typeof AppScanLensRoute
   '/settings': typeof AppSettingsRoute
   '/strategies': typeof AppStrategiesRouteWithChildren
@@ -298,6 +298,7 @@ export interface FileRoutesByTo {
   '/faq': typeof FaqRoute
   '/help': typeof HelpRouteWithChildren
   '/onboarding': typeof OnboardingRoute
+  '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/status': typeof StatusRoute
@@ -312,7 +313,6 @@ export interface FileRoutesByTo {
   '/levels': typeof AppLevelsRoute
   '/memory': typeof AppMemoryRoute
   '/mentor': typeof AppMentorRoute
-  '/pricing': typeof AppPricingRoute
   '/scan-lens': typeof AppScanLensRoute
   '/settings': typeof AppSettingsRoute
   '/strategies': typeof AppStrategiesRouteWithChildren
@@ -340,6 +340,7 @@ export interface FileRoutesById {
   '/faq': typeof FaqRoute
   '/help': typeof HelpRouteWithChildren
   '/onboarding': typeof OnboardingRoute
+  '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/status': typeof StatusRoute
@@ -355,7 +356,6 @@ export interface FileRoutesById {
   '/_app/levels': typeof AppLevelsRoute
   '/_app/memory': typeof AppMemoryRoute
   '/_app/mentor': typeof AppMentorRoute
-  '/_app/pricing': typeof AppPricingRoute
   '/_app/scan-lens': typeof AppScanLensRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/strategies': typeof AppStrategiesRouteWithChildren
@@ -383,6 +383,7 @@ export interface FileRouteTypes {
     | '/faq'
     | '/help'
     | '/onboarding'
+    | '/pricing'
     | '/privacy'
     | '/reset-password'
     | '/status'
@@ -398,7 +399,6 @@ export interface FileRouteTypes {
     | '/levels'
     | '/memory'
     | '/mentor'
-    | '/pricing'
     | '/scan-lens'
     | '/settings'
     | '/strategies'
@@ -424,6 +424,7 @@ export interface FileRouteTypes {
     | '/faq'
     | '/help'
     | '/onboarding'
+    | '/pricing'
     | '/privacy'
     | '/reset-password'
     | '/status'
@@ -438,7 +439,6 @@ export interface FileRouteTypes {
     | '/levels'
     | '/memory'
     | '/mentor'
-    | '/pricing'
     | '/scan-lens'
     | '/settings'
     | '/strategies'
@@ -465,6 +465,7 @@ export interface FileRouteTypes {
     | '/faq'
     | '/help'
     | '/onboarding'
+    | '/pricing'
     | '/privacy'
     | '/reset-password'
     | '/status'
@@ -480,7 +481,6 @@ export interface FileRouteTypes {
     | '/_app/levels'
     | '/_app/memory'
     | '/_app/mentor'
-    | '/_app/pricing'
     | '/_app/scan-lens'
     | '/_app/settings'
     | '/_app/strategies'
@@ -508,6 +508,7 @@ export interface RootRouteChildren {
   FaqRoute: typeof FaqRoute
   HelpRoute: typeof HelpRouteWithChildren
   OnboardingRoute: typeof OnboardingRoute
+  PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   StatusRoute: typeof StatusRoute
@@ -550,6 +551,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -676,13 +684,6 @@ declare module '@tanstack/react-router' {
       path: '/scan-lens'
       fullPath: '/scan-lens'
       preLoaderRoute: typeof AppScanLensRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/pricing': {
-      id: '/_app/pricing'
-      path: '/pricing'
-      fullPath: '/pricing'
-      preLoaderRoute: typeof AppPricingRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/mentor': {
@@ -856,7 +857,6 @@ interface AppRouteChildren {
   AppLevelsRoute: typeof AppLevelsRoute
   AppMemoryRoute: typeof AppMemoryRoute
   AppMentorRoute: typeof AppMentorRoute
-  AppPricingRoute: typeof AppPricingRoute
   AppScanLensRoute: typeof AppScanLensRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppStrategiesRoute: typeof AppStrategiesRouteWithChildren
@@ -875,7 +875,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppLevelsRoute: AppLevelsRoute,
   AppMemoryRoute: AppMemoryRoute,
   AppMentorRoute: AppMentorRoute,
-  AppPricingRoute: AppPricingRoute,
   AppScanLensRoute: AppScanLensRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppStrategiesRoute: AppStrategiesRouteWithChildren,
@@ -902,6 +901,7 @@ const rootRouteChildren: RootRouteChildren = {
   FaqRoute: FaqRoute,
   HelpRoute: HelpRouteWithChildren,
   OnboardingRoute: OnboardingRoute,
+  PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   StatusRoute: StatusRoute,
