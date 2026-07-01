@@ -55,6 +55,7 @@ export type ChartSnapshot = {
   of: { price: number; side: "buy" | "sell"; strength: number }[];
   delta: number;
   sessionsActive: string[];
+  cisd: CisdInfo | null;
   fetchedAt: string;
 };
 
