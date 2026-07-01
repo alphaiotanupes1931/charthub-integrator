@@ -102,6 +102,7 @@ function OnboardingPage() {
   }
 
   async function finishOnboarding() {
+    if (busy) return;
     if (!userId) return;
     const parsed = schema.safeParse({ name, source });
     if (!parsed.success) { toast.error("Missing profile info"); setStep("profile"); return; }
