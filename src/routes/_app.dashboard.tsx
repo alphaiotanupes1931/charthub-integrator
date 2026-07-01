@@ -275,10 +275,7 @@ function loadLevels(): Record<LevelKey, boolean> {
 }
 
 function Dashboard() {
-  const { profile } = useProfile();
   const voice = useCoachVoice();
-  const { recapText } = useWelcomeBackRecap();
-  const firstName = profile?.display_name?.split(" ")[0] ?? null;
   const [interval, setIntervalState] = useState("60");
   const [symbol, setSymbol] = useState<Symbol>(SYMBOLS[0]);
   const [pickerOpen, setPickerOpen] = useState(false);
