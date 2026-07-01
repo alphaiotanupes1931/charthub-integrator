@@ -691,32 +691,33 @@ function Dashboard() {
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <div className="flex-1 min-h-0 overflow-hidden">
-              {rightTab === "analysis" ? (
-                <div className="h-full overflow-y-auto p-4 space-y-6">
-                  <TodaysRecommendation />
-                  <ScanBody
-                    result={result}
-                    scanning={scanning}
-                    symbol={symbol}
-                    intervalLabel={intervalLabel}
-                    lensId={lensId}
-                    runScan={runScan}
-                    onAttach={(file) => {
-                      setRightTab("coach");
-                      chatRef.current?.attach(file, `Scan this chart screenshot for ${symbol.ticker} on ${intervalLabel}. Give me grade, bias, entry, stop, TP1, TP2, R:R, and a 1-2 sentence rationale.`);
-                      setScanning(true);
-                      window.setTimeout(() => {
-                        setResult(gradeFor(symbol, snapshot?.lastPrice));
-                        setScanning(false);
-                      }, 400);
-                    }}
-                    onStopScan={() => { chatRef.current?.stop(); voice.stop(); setScanning(false); }}
-                    onStopVoice={() => voice.stop()}
-                    voiceSpeaking={voice.speaking}
-                  />
-                </div>
-              ) : (
+            <div className="flex-1 min-h-0 overflow-hidden relative">
+              {/* Analysis panel - hidden when Coach tab active, but stays mounted */}
+              <div className={`absolute inset-0 overflow-y-auto p-4 space-y-6 ${rightTab === "analysis" ? "" : "hidden"}`}>
+                <TodaysRecommendation />
+                <ScanBody
+                  result={result}
+                  scanning={scanning}
+                  symbol={symbol}
+                  intervalLabel={intervalLabel}
+                  lensId={lensId}
+                  runScan={runScan}
+                  onAttach={(file) => {
+                    setRightTab("coach");
+                    chatRef.current?.attach(file, `Scan this chart screenshot for ${symbol.ticker} on ${intervalLabel}. Give me grade, bias, entry, stop, TP1, TP2, R:R, and a 1-2 sentence rationale.`);
+                    setScanning(true);
+                    window.setTimeout(() => {
+                      setResult(gradeFor(symbol, snapshot?.lastPrice));
+                      setScanning(false);
+                    }, 400);
+                  }}
+                  onStopScan={() => { chatRef.current?.stop(); voice.stop(); setScanning(false); }}
+                  onStopVoice={() => voice.stop()}
+                  voiceSpeaking={voice.speaking}
+                />
+              </div>
+              {/* Coach panel - stays mounted so in-flight scans keep streaming when switching tabs */}
+              <div className={`absolute inset-0 ${rightTab === "coach" ? "" : "hidden"}`}>
                 <DashboardChatPanel
                   ref={chatRef}
                   onRunScan={runScan}
@@ -729,7 +730,7 @@ function Dashboard() {
                     snapshot: snapshot ?? undefined,
                   }}
                 />
-              )}
+              </div>
             </div>
           </aside>
         )}
