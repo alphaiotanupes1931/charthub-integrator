@@ -284,18 +284,19 @@ function TicketCell({ label, value, tone }: { label: string; value: string; tone
   );
 }
 
-const ALL_LEVELS: LevelKey[] = ["VWAP","POC","SR","ZONES","FVG","FIB","LIQ","OF"];
+const ALL_LEVELS: LevelKey[] = ["VWAP","POC","SR","ZONES","FVG","FIB","LIQ","OF","CISD"];
 
 const STORAGE_KEY = "trademind.levels.enabled.v2";
 const SESSIONS_STORAGE_KEY = "trademind.sessions.enabled.v1";
 
+const DEFAULT_LEVELS: Record<LevelKey, boolean> = { VWAP: true, POC: true, SR: true, ZONES: true, FVG: true, FIB: false, LIQ: true, OF: true, CISD: true };
+
 function loadLevels(): Record<LevelKey, boolean> {
-  const def: Record<LevelKey, boolean> = { VWAP: true, POC: true, SR: true, ZONES: true, FVG: true, FIB: false, LIQ: true, OF: true };
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return def;
-    return { ...def, ...JSON.parse(raw) };
-  } catch { return def; }
+    if (!raw) return { ...DEFAULT_LEVELS };
+    return { ...DEFAULT_LEVELS, ...JSON.parse(raw) };
+  } catch { return { ...DEFAULT_LEVELS }; }
 }
 
 function loadSessionsOn(): boolean {
@@ -314,7 +315,7 @@ function Dashboard() {
   const [result, setResult] = useState<ScanResult | null>(null);
   const [chartMode, setChartMode] = useState<"live" | "native">("native");
   const [levels, setLevels] = useState<Record<LevelKey, boolean>>(() =>
-    typeof window !== "undefined" ? loadLevels() : { VWAP: true, POC: true, SR: true, ZONES: true, FVG: true, FIB: false, LIQ: true, OF: true },
+    typeof window !== "undefined" ? loadLevels() : { ...DEFAULT_LEVELS },
   );
   const [sessionsOn, setSessionsOn] = useState(() =>
     typeof window !== "undefined" ? loadSessionsOn() : false,
