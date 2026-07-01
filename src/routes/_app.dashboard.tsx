@@ -850,7 +850,7 @@ function ScanBody({
 }
 
 function FloatingCoach({
-  open, onOpen, onClose, chatRef, chart, onRunScan, onStopScan,
+  open, onOpen, onClose, chatRef, chart, onRunScan, onStopScan, scanning,
 }: {
   open: boolean;
   onOpen: () => void;
@@ -859,6 +859,7 @@ function FloatingCoach({
   chart: { ticker: string; intervalLabel: string; enabledLevels: string; snapshot?: ChartSnapshot };
   onRunScan?: () => void;
   onStopScan?: () => void;
+  scanning?: boolean;
 }) {
   const [minimized, setMinimized] = useState(false);
   const expanded = open && !minimized;
