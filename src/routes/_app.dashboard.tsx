@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { TradingViewChart } from "@/components/TradingViewChart";
 import { NativeChart, LEVEL_META, type LevelKey, type ChartSnapshot } from "@/components/NativeChart";
@@ -9,6 +10,8 @@ import { TodaysRecommendation } from "@/components/TodaysRecommendation";
 import { SCAN_LENSES, readActiveLensId, writeActiveLensId, findLens, type ScanLensId } from "@/lib/scanLens";
 import { readActiveCoach } from "@/lib/chat-client";
 import { voiceForCoach } from "@/lib/coachVoices";
+import { runResearchPlan } from "@/lib/agents/research.functions";
+import type { ResearchMemo } from "@/lib/agents/types";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 
@@ -66,6 +69,7 @@ type ScanResult = {
   tp2: string;
   rr: string;
   details: string;
+  memo?: ResearchMemo;
 };
 
 function fmtPrice(n: number, decimals: number): string {
