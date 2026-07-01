@@ -123,7 +123,7 @@ function Landing() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.05 }}
-            className="font-display mt-8 sm:mt-10 text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-medium leading-[1.05] tracking-tight"
+            className="h-display-xl mt-8 sm:mt-10"
           >
             TradeMind,
             <br />
