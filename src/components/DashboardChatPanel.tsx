@@ -177,6 +177,11 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
     });
 
     const loading = status === "submitted" || status === "streaming";
+    const stopScan = () => {
+      voice.stop();
+      try { stop(); } catch { /* ignore */ }
+      onStopScan?.();
+    };
 
     // Speak the last assistant message after streaming completes
     useEffect(() => {
