@@ -267,7 +267,38 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
     }
 
     return (
-      <div className="flex flex-col h-full min-h-0 bg-card overflow-hidden sm:rounded-xl border-y sm:border border-border shadow-2xl sm:shadow-xl">
+      <div
+        className="flex flex-col h-full min-h-0 bg-card overflow-hidden sm:rounded-xl border-y sm:border border-border shadow-2xl sm:shadow-xl relative"
+        onPaste={(e) => {
+          const items = e.clipboardData?.items;
+          if (!items) return;
+          for (let i = 0; i < items.length; i++) {
+            const it = items[i];
+            if (it.kind === "file" && it.type.startsWith("image/")) {
+              const f = it.getAsFile();
+              if (f) {
+                e.preventDefault();
+                ingestFile(f);
+                toast.success("Screenshot attached");
+                return;
+              }
+            }
+          }
+        }}
+        onDragOver={(e) => { e.preventDefault(); if (!dragging) setDragging(true); }}
+        onDragLeave={(e) => { if (e.currentTarget === e.target) setDragging(false); }}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragging(false);
+          const f = e.dataTransfer?.files?.[0];
+          if (f) ingestFile(f);
+        }}
+      >
+        {dragging && (
+          <div className="absolute inset-0 z-30 flex items-center justify-center bg-primary/10 border-2 border-dashed border-primary/60 pointer-events-none">
+            <div className="text-sm font-medium text-primary">Drop screenshot to attach</div>
+          </div>
+        )}
         {/* Header */}
         <div
           className="flex items-center justify-between gap-2 border-b border-border/60 px-3 py-2.5 bg-card/95 backdrop-blur"
