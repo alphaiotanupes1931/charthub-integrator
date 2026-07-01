@@ -187,6 +187,23 @@ function ScanTicket({
   const [lensOpen, setLensOpen] = useState(false);
   const isNoEntry = result.grade === "NO ENTRY";
   const lens = findLens(lensId);
+  const sendFeedback = useServerFn(recordHermesFeedback);
+  const [fbState, setFbState] = useState<null | 1 | -1>(null);
+  const [fbNote, setFbNote] = useState("");
+  const [fbNoteOpen, setFbNoteOpen] = useState(false);
+  const submitFeedback = (rating: 1 | -1, note?: string) => {
+    setFbState(rating);
+    sendFeedback({ data: {
+      kind: "scan",
+      ticker: symbol.ticker,
+      lens: lens.name,
+      rating,
+      note: note ?? null,
+      context: { bias: result.bias, grade: result.grade, confidence: result.confidence, entry: result.entry, stop: result.stop, tp1: result.tp1, tp2: result.tp2 },
+    } })
+      .then(() => toast.success("Hermes learned from that."))
+      .catch(() => toast.error("Couldn't save feedback."));
+  };
   return (
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-3 flex-wrap">
