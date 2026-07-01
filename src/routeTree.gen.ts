@@ -43,6 +43,7 @@ import { Route as AppAnalyticsRouteImport } from './routes/_app.analytics'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
 import { Route as AppChatIndexRouteImport } from './routes/_app.chat.index'
 import { Route as ApiTradelockerImportRouteImport } from './routes/api.tradelocker.import'
+import { Route as AppStrategiesStrategyIdRouteImport } from './routes/_app.strategies.$strategyId'
 import { Route as AppChatThreadIdRouteImport } from './routes/_app.chat.$threadId'
 
 const TermsRoute = TermsRouteImport.update({
@@ -214,6 +215,11 @@ const ApiTradelockerImportRoute = ApiTradelockerImportRouteImport.update({
   path: '/api/tradelocker/import',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppStrategiesStrategyIdRoute = AppStrategiesStrategyIdRouteImport.update({
+  id: '/$strategyId',
+  path: '/$strategyId',
+  getParentRoute: () => AppStrategiesRoute,
+} as any)
 const AppChatThreadIdRoute = AppChatThreadIdRouteImport.update({
   id: '/$threadId',
   path: '/$threadId',
@@ -244,7 +250,7 @@ export interface FileRoutesByFullPath {
   '/mentor': typeof AppMentorRoute
   '/scan-lens': typeof AppScanLensRoute
   '/settings': typeof AppSettingsRoute
-  '/strategies': typeof AppStrategiesRoute
+  '/strategies': typeof AppStrategiesRouteWithChildren
   '/voice-coach': typeof AppVoiceCoachRoute
   '/api/chat': typeof ApiChatRoute
   '/api/health': typeof ApiHealthRoute
@@ -253,6 +259,7 @@ export interface FileRoutesByFullPath {
   '/help/$slug': typeof HelpSlugRoute
   '/invite/$code': typeof InviteCodeRoute
   '/chat/$threadId': typeof AppChatThreadIdRoute
+  '/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/chat/': typeof AppChatIndexRoute
 }
@@ -279,7 +286,7 @@ export interface FileRoutesByTo {
   '/mentor': typeof AppMentorRoute
   '/scan-lens': typeof AppScanLensRoute
   '/settings': typeof AppSettingsRoute
-  '/strategies': typeof AppStrategiesRoute
+  '/strategies': typeof AppStrategiesRouteWithChildren
   '/voice-coach': typeof AppVoiceCoachRoute
   '/api/chat': typeof ApiChatRoute
   '/api/health': typeof ApiHealthRoute
@@ -288,6 +295,7 @@ export interface FileRoutesByTo {
   '/help/$slug': typeof HelpSlugRoute
   '/invite/$code': typeof InviteCodeRoute
   '/chat/$threadId': typeof AppChatThreadIdRoute
+  '/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/chat': typeof AppChatIndexRoute
 }
@@ -317,7 +325,7 @@ export interface FileRoutesById {
   '/_app/mentor': typeof AppMentorRoute
   '/_app/scan-lens': typeof AppScanLensRoute
   '/_app/settings': typeof AppSettingsRoute
-  '/_app/strategies': typeof AppStrategiesRoute
+  '/_app/strategies': typeof AppStrategiesRouteWithChildren
   '/_app/voice-coach': typeof AppVoiceCoachRoute
   '/api/chat': typeof ApiChatRoute
   '/api/health': typeof ApiHealthRoute
@@ -326,6 +334,7 @@ export interface FileRoutesById {
   '/help/$slug': typeof HelpSlugRoute
   '/invite/$code': typeof InviteCodeRoute
   '/_app/chat/$threadId': typeof AppChatThreadIdRoute
+  '/_app/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/_app/chat/': typeof AppChatIndexRoute
 }
@@ -364,6 +373,7 @@ export interface FileRouteTypes {
     | '/help/$slug'
     | '/invite/$code'
     | '/chat/$threadId'
+    | '/strategies/$strategyId'
     | '/api/tradelocker/import'
     | '/chat/'
   fileRoutesByTo: FileRoutesByTo
@@ -399,6 +409,7 @@ export interface FileRouteTypes {
     | '/help/$slug'
     | '/invite/$code'
     | '/chat/$threadId'
+    | '/strategies/$strategyId'
     | '/api/tradelocker/import'
     | '/chat'
   id:
@@ -436,6 +447,7 @@ export interface FileRouteTypes {
     | '/help/$slug'
     | '/invite/$code'
     | '/_app/chat/$threadId'
+    | '/_app/strategies/$strategyId'
     | '/api/tradelocker/import'
     | '/_app/chat/'
   fileRoutesById: FileRoutesById
@@ -700,6 +712,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTradelockerImportRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/strategies/$strategyId': {
+      id: '/_app/strategies/$strategyId'
+      path: '/$strategyId'
+      fullPath: '/strategies/$strategyId'
+      preLoaderRoute: typeof AppStrategiesStrategyIdRouteImport
+      parentRoute: typeof AppStrategiesRoute
+    }
     '/_app/chat/$threadId': {
       id: '/_app/chat/$threadId'
       path: '/$threadId'
@@ -723,6 +742,18 @@ const AppChatRouteChildren: AppChatRouteChildren = {
 const AppChatRouteWithChildren =
   AppChatRoute._addFileChildren(AppChatRouteChildren)
 
+interface AppStrategiesRouteChildren {
+  AppStrategiesStrategyIdRoute: typeof AppStrategiesStrategyIdRoute
+}
+
+const AppStrategiesRouteChildren: AppStrategiesRouteChildren = {
+  AppStrategiesStrategyIdRoute: AppStrategiesStrategyIdRoute,
+}
+
+const AppStrategiesRouteWithChildren = AppStrategiesRoute._addFileChildren(
+  AppStrategiesRouteChildren,
+)
+
 interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRoute
   AppAnalyticsRoute: typeof AppAnalyticsRoute
@@ -737,7 +768,7 @@ interface AppRouteChildren {
   AppMentorRoute: typeof AppMentorRoute
   AppScanLensRoute: typeof AppScanLensRoute
   AppSettingsRoute: typeof AppSettingsRoute
-  AppStrategiesRoute: typeof AppStrategiesRoute
+  AppStrategiesRoute: typeof AppStrategiesRouteWithChildren
   AppVoiceCoachRoute: typeof AppVoiceCoachRoute
 }
 
@@ -755,7 +786,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppMentorRoute: AppMentorRoute,
   AppScanLensRoute: AppScanLensRoute,
   AppSettingsRoute: AppSettingsRoute,
-  AppStrategiesRoute: AppStrategiesRoute,
+  AppStrategiesRoute: AppStrategiesRouteWithChildren,
   AppVoiceCoachRoute: AppVoiceCoachRoute,
 }
 
