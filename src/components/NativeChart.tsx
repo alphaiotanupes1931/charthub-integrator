@@ -78,8 +78,67 @@ const SESSIONS = [
 ];
 
 
-
 type Candle = { time: Time; open: number; high: number; low: number; close: number };
+
+// --- CISD (Change in State of Delivery) ---
+// Detects the most recent flip where price closed through the origin open of the
+// prior opposing delivery leg. Returns level, trigger, and 1x/2x measured-move projections.
+function detectCisd(candles: Candle[]): Omit<CisdInfo, "htfBias"> | null {
+  if (candles.length < 6) return null;
+  for (let i = candles.length - 1; i >= 3; i--) {
+    const c = candles[i];
+    const isUp = c.close > c.open;
+    const isDn = c.close < c.open;
+    if (!isUp && !isDn) continue;
+    let j = i - 1;
+    let extreme = isUp ? -Infinity : Infinity;
+    let lo = Infinity, hi = -Infinity;
+    while (j >= 0) {
+      const p = candles[j];
+      const opposing = isUp ? p.close < p.open : p.close > p.open;
+      if (!opposing) break;
+      extreme = isUp ? Math.max(extreme, p.open) : Math.min(extreme, p.open);
+      lo = Math.min(lo, p.low); hi = Math.max(hi, p.high);
+      j--;
+    }
+    const legLen = i - 1 - j;
+    if (legLen < 2) continue;
+    const flipped = isUp ? c.close > extreme : c.close < extreme;
+    if (!flipped) continue;
+    const legSize = Math.max(1e-9, hi - lo);
+    const trigger = c.close;
+    return {
+      state: isUp ? "bullish" : "bearish",
+      level: extreme,
+      trigger,
+      proj1: isUp ? trigger + legSize : trigger - legSize,
+      proj2: isUp ? trigger + legSize * 2 : trigger - legSize * 2,
+      legSize,
+    };
+  }
+  return null;
+}
+
+// Aggregate candles into HTF groups (4x) and detect the CISD state there for bias.
+function detectHtfBias(candles: Candle[]): "bullish" | "bearish" | "neutral" {
+  if (candles.length < 20) return "neutral";
+  const groupSize = 4;
+  const agg: Candle[] = [];
+  for (let i = 0; i + groupSize <= candles.length; i += groupSize) {
+    const chunk = candles.slice(i, i + groupSize);
+    agg.push({
+      time: chunk[0].time,
+      open: chunk[0].open,
+      close: chunk[chunk.length - 1].close,
+      high: Math.max(...chunk.map((c) => c.high)),
+      low: Math.min(...chunk.map((c) => c.low)),
+    });
+  }
+  const htf = detectCisd(agg);
+  return htf?.state ?? "neutral";
+}
+
+
 
 // --- Compute levels from candles ---
 function computeLevels(candles: Candle[]) {
