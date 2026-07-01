@@ -141,23 +141,33 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
     const chartRef = useRef<ChartContext | undefined>(chart);
     useEffect(() => { chartRef.current = chart; }, [chart]);
     const voice = useCoachVoice();
+    const { isAdmin } = useProfile();
     const lastSpokenIdRef = useRef<string | null>(null);
 
-    const ingestFile = useCallback((file: File) => {
+    const checkAndReserveQuota = useCallback((): boolean => {
+      if (isAdmin) return true;
+      const q = getScreenshotQuota();
+      if (q.remaining <= 0) {
+        toast.error(`Daily screenshot limit reached (${q.limit}/day). Try again tomorrow.`);
+        return false;
+      }
+      return true;
+    }, [isAdmin]);
+
+    const ingestFile = useCallback(async (file: File) => {
       if (!file.type.startsWith("image/")) {
         toast.error("Only image files can be attached");
         return;
       }
-      const reader = new FileReader();
-      reader.onload = () => {
-        setPendingImage({
-          url: String(reader.result || ""),
-          name: file.name || "screenshot.png",
-          mediaType: file.type || "image/png",
-        });
-      };
-      reader.readAsDataURL(file);
-    }, []);
+      if (!checkAndReserveQuota()) return;
+      try {
+        const { dataUrl, name, mediaType } = await compressImage(file);
+        setPendingImage({ url: dataUrl, name, mediaType });
+      } catch (e) {
+        console.error(e);
+        toast.error("Could not read that image");
+      }
+    }, [checkAndReserveQuota]);
 
     const { messages, sendMessage, status, setMessages, stop } = useChat({
       id: threadId,
