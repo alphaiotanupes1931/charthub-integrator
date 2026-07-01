@@ -423,34 +423,74 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
           className="border-t border-border bg-background/80 backdrop-blur p-2"
           style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
         >
+          {pendingImage && (
+            <div className="mb-2 flex items-center gap-2 rounded-md border border-border bg-muted/40 p-1.5">
+              <img src={pendingImage.url} alt="attachment preview" className="h-12 w-12 rounded object-cover border border-border/60" />
+              <div className="flex-1 min-w-0">
+                <div className="text-xs font-medium truncate">{pendingImage.name}</div>
+                <div className="text-[10px] text-muted-foreground">Ready to scan - press send</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPendingImage(null)}
+                className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
+                aria-label="Remove attachment"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) ingestFile(f);
+              e.target.value = "";
+            }}
+          />
           <PromptInput onSubmit={handleSubmit}>
             <PromptInputTextarea
               ref={textareaRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask your coach…"
+              placeholder={pendingImage ? "Add a note (optional) and send…" : "Ask your coach, or paste a screenshot…"}
               rows={2}
             />
             <PromptInputFooter className="justify-between">
-              {loading ? (
+              <div className="flex items-center gap-1.5">
                 <button
                   type="button"
-                  onClick={stopScan}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/15 transition"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-medium hover:border-primary/50 transition"
+                  title="Attach a screenshot"
+                  aria-label="Attach screenshot"
                 >
-                  <Square className="h-3 w-3" /> Stop scan
+                  <Paperclip className="h-3 w-3" />
+                  <ImageIcon className="h-3 w-3" />
                 </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={onRunScan}
-                  disabled={!onRunScan}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium hover:border-primary/50 transition disabled:opacity-40"
-                >
-                  <Crosshair className="h-3 w-3" /> Run scan
-                </button>
-              )}
-              <PromptInputSubmit status={status} onStop={stopScan} disabled={!input.trim() && !loading} />
+                {loading ? (
+                  <button
+                    type="button"
+                    onClick={stopScan}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/15 transition"
+                  >
+                    <Square className="h-3 w-3" /> Stop scan
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={onRunScan}
+                    disabled={!onRunScan}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium hover:border-primary/50 transition disabled:opacity-40"
+                  >
+                    <Crosshair className="h-3 w-3" /> Run scan
+                  </button>
+                )}
+              </div>
+              <PromptInputSubmit status={status} onStop={stopScan} disabled={!input.trim() && !pendingImage && !loading} />
             </PromptInputFooter>
           </PromptInput>
         </div>
