@@ -1,9 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
-import { findStrategyBySlug, type CustomStrategy } from "@/lib/customStrategies";
+import { findStrategyBySlug, deleteCustomStrategy, type CustomStrategy } from "@/lib/customStrategies";
 import { type Strategy } from "@/data/strategies";
-import { ArrowLeft, CheckCircle2, CircleDot, TrendingUp, Zap, BarChart2, BookOpen, ShieldAlert, Target, Clock, Layers } from "lucide-react";
+import { ArrowLeft, CheckCircle2, CircleDot, Pencil, Trash2, TrendingUp, Zap, BarChart2, BookOpen, ShieldAlert, Target, Clock, Layers } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/strategies/$strategyId")({
@@ -57,6 +57,8 @@ function StrategyDetailPage() {
     );
   }
 
+  const isCustom = (strategy as CustomStrategy).custom === true;
+  const custom = isCustom ? (strategy as CustomStrategy) : null;
   const StyleIcon = styleIcon[strategy.style];
   const isActive = active === strategy.name;
 
@@ -64,6 +66,17 @@ function StrategyDetailPage() {
     try { localStorage.setItem(STRAT_KEY, strategy.name); } catch { /* ignore */ }
     setActive(strategy.name);
     toast.success(`${strategy.name} is now your active strategy`);
+  };
+
+  const remove = () => {
+    if (!custom) return;
+    if (!confirm(`Delete "${custom.name}"?`)) return;
+    deleteCustomStrategy(custom.id);
+    if (active === custom.name) {
+      try { localStorage.removeItem(STRAT_KEY); } catch { /* ignore */ }
+    }
+    toast.success(`${custom.name} deleted`);
+    navigate({ to: "/strategies" });
   };
 
   const playbook = strategy.playbook ?? [];
@@ -78,15 +91,34 @@ function StrategyDetailPage() {
         title={strategy.name}
         description={strategy.description}
         action={
-          <button
-            onClick={select}
-            disabled={isActive}
-            className={`inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold ${
-              isActive ? "bg-primary/10 text-primary cursor-default" : "bg-primary text-primary-foreground hover:opacity-90"
-            }`}
-          >
-            {isActive ? <><CheckCircle2 className="h-4 w-4" /> Active</> : "Use this Strategy"}
-          </button>
+          <div className="flex items-center gap-2">
+            {custom && (
+              <>
+                <Link
+                  to="/strategies"
+                  search={{ edit: custom.id }}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/40"
+                >
+                  <Pencil className="h-4 w-4" /> Edit
+                </Link>
+                <button
+                  onClick={remove}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-destructive/30 px-3 py-2 text-sm text-destructive hover:bg-destructive/10"
+                >
+                  <Trash2 className="h-4 w-4" /> Delete
+                </button>
+              </>
+            )}
+            <button
+              onClick={select}
+              disabled={isActive}
+              className={`inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold ${
+                isActive ? "bg-primary/10 text-primary cursor-default" : "bg-primary text-primary-foreground hover:opacity-90"
+              }`}
+            >
+              {isActive ? <><CheckCircle2 className="h-4 w-4" /> Active</> : "Use this Strategy"}
+            </button>
+          </div>
         }
       />
 
