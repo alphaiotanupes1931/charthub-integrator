@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { TradingViewChart } from "@/components/TradingViewChart";
 import { NativeChart, LEVEL_META, type LevelKey, type ChartSnapshot } from "@/components/NativeChart";
@@ -9,6 +10,8 @@ import { TodaysRecommendation } from "@/components/TodaysRecommendation";
 import { SCAN_LENSES, readActiveLensId, writeActiveLensId, findLens, type ScanLensId } from "@/lib/scanLens";
 import { readActiveCoach } from "@/lib/chat-client";
 import { voiceForCoach } from "@/lib/coachVoices";
+import { runResearchPlan } from "@/lib/agents/research.functions";
+import type { ResearchMemo } from "@/lib/agents/types";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 
@@ -66,6 +69,7 @@ type ScanResult = {
   tp2: string;
   rr: string;
   details: string;
+  memo?: ResearchMemo;
 };
 
 function fmtPrice(n: number, decimals: number): string {
@@ -262,8 +266,24 @@ function ScanTicket({
         {open ? "Hide details" : "Show details"}
       </button>
       {open && (
-        <div className="rounded-lg border border-border/60 bg-background/40 p-3 text-xs leading-relaxed text-foreground/90">
-          {result.details}
+        <div className="rounded-lg border border-border/60 bg-background/40 p-3 text-xs leading-relaxed text-foreground/90 space-y-3">
+          <div>{result.details}</div>
+          {result.memo && result.memo.notes.length > 0 && (
+            <div className="border-t border-border/50 pt-3 space-y-2">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                Research memo · consensus {result.memo.consensus} @ {result.memo.consensusConfidence}%
+              </div>
+              {result.memo.notes.map((n) => (
+                <div key={n.role} className="rounded-md border border-border/50 bg-card/50 px-2.5 py-2">
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="text-[10px] uppercase tracking-wider text-primary">{n.role}</span>
+                    <span className="text-[10px] text-muted-foreground">{n.bias} · {n.confidence}%</span>
+                  </div>
+                  <div className="text-xs text-foreground/85 leading-snug">{n.summary}</div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -403,17 +423,27 @@ function Dashboard() {
 
   const intervalLabel = INTERVALS.find((i) => i.value === interval)?.label ?? interval;
 
+  const runPlan = useServerFn(runResearchPlan);
+
   const runScan = () => {
     setScanning(true);
     setResult(null);
     const enabledLevels = ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none";
+    const lens = findLens(lensId);
     const prompt = `Analyze ${symbol.ticker} (${symbol.name}, ${symbol.venue}) on the ${intervalLabel} chart for a trade setup. I'm watching these levels: ${enabledLevels}. Give me: bias (long/short/neutral), entry trigger, stop loss, take profit 1 and 2, R:R, and a short rationale grounded in price action. Be concrete with levels.`;
     setCoachOpen(true);
     chatRef.current?.scan(prompt);
-    window.setTimeout(() => {
-      setResult(gradeFor(symbol, snapshot?.lastPrice));
-      setScanning(false);
-    }, 400);
+    runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
+      .then((plan) => setResult(plan as ScanResult))
+      .catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : "Research pipeline failed.";
+        setResult({
+          grade: "NO ENTRY", bias: "Neutral", confidence: 0,
+          notes: msg, entry: "—", stop: "—", tp1: "—", tp2: "—", rr: "—",
+          details: "The 3-layer research pipeline could not complete. Try again shortly.",
+        });
+      })
+      .finally(() => setScanning(false));
   };
 
 
@@ -707,10 +737,11 @@ function Dashboard() {
                     setRightTab("coach");
                     chatRef.current?.attach(file, `Scan this chart screenshot for ${symbol.ticker} on ${intervalLabel}. Give me grade, bias, entry, stop, TP1, TP2, R:R, and a 1-2 sentence rationale.`);
                     setScanning(true);
-                    window.setTimeout(() => {
-                      setResult(gradeFor(symbol, snapshot?.lastPrice));
-                      setScanning(false);
-                    }, 400);
+                    const lens = findLens(lensId);
+                    runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
+                      .then((plan) => setResult(plan as ScanResult))
+                      .catch(() => { /* coach chat still runs the vision analysis */ })
+                      .finally(() => setScanning(false));
                   }}
                   onStopScan={() => { chatRef.current?.stop(); voice.stop(); setScanning(false); }}
                   onStopVoice={() => voice.stop()}
@@ -750,10 +781,11 @@ function Dashboard() {
             setCoachOpen(true);
             chatRef.current?.attach(file, `Scan this chart screenshot for ${symbol.ticker} on ${intervalLabel}. Give me grade, bias, entry, stop, TP1, TP2, R:R, and a 1-2 sentence rationale.`);
             setScanning(true);
-            window.setTimeout(() => {
-              setResult(gradeFor(symbol, snapshot?.lastPrice));
-              setScanning(false);
-            }, 400);
+            const lens = findLens(lensId);
+            runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
+              .then((plan) => setResult(plan as ScanResult))
+              .catch(() => { /* coach chat still runs the vision analysis */ })
+              .finally(() => setScanning(false));
           }}
           onStopScan={() => { chatRef.current?.stop(); voice.stop(); setScanning(false); }}
           onStopVoice={() => voice.stop()}
