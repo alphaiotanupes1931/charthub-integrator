@@ -7,12 +7,17 @@ const BILLING_ALLOWED_PATHS = ["/pricing", "/settings", "/onboarding"];
 export const Route = createFileRoute("/_app")({
   ssr: false,
   beforeLoad: async ({ location }) => {
+    // Admin-testing bypass: set from the auth page's "Admin testing" button.
+    if (typeof window !== "undefined" && sessionStorage.getItem("trademind.adminTesting") === "1") {
+      return { user: null };
+    }
     const { data: sessionData } = await supabase.auth.getSession();
     const user = sessionData.session?.user ?? null;
 
     if (!user) {
       throw redirect({ to: "/auth", search: { redirect: location.href } });
     }
+
     // Force onboarding for new users
     const { data: prof } = await supabase
       .from("profiles")
