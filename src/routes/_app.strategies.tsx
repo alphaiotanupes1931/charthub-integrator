@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { type Level, type Style, type Strategy } from "@/data/strategies";
@@ -36,11 +36,25 @@ function StrategiesPage() {
   const [builderOpen, setBuilderOpen] = useState(false);
   const [editing, setEditing] = useState<CustomStrategy | null>(null);
   const [customs, setCustoms] = useState<CustomStrategy[]>([]);
+  const navigate = useNavigate({ from: "/_app/strategies" });
+  const search = useSearch({ from: "/_app/strategies" }) as { edit?: string };
 
   useEffect(() => {
     try { setActive(localStorage.getItem(STRAT_KEY)); } catch { /* ignore */ }
     setCustoms(readCustomStrategies());
   }, []);
+
+  useEffect(() => {
+    if (search.edit) {
+      const found = readCustomStrategies().find((c) => c.id === search.edit || c.slug === search.edit);
+      if (found) {
+        setEditing(found);
+        setBuilderOpen(true);
+      } else {
+        navigate({ to: "/strategies", search: {} });
+      }
+    }
+  }, [search.edit]);
 
   const refreshCustoms = () => setCustoms(readCustomStrategies());
 
@@ -138,9 +152,31 @@ function StrategiesPage() {
                     </span>
                   )}
                 </h3>
-                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${levelColor[s.level]}`}>
-                  {s.level}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  {isCustom && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditing(s as CustomStrategy); setBuilderOpen(true); }}
+                        className="h-7 w-7 rounded-md border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent/40 flex items-center justify-center"
+                        aria-label="Edit custom strategy"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (confirm(`Delete "${s.name}"?`)) removeCustom(s as CustomStrategy); }}
+                        className="h-7 w-7 rounded-md border border-destructive/30 bg-card text-destructive hover:bg-destructive/10 flex items-center justify-center"
+                        aria-label="Delete custom strategy"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </>
+                  )}
+                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${levelColor[s.level]}`}>
+                    {s.level}
+                  </span>
+                </div>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 <span className="inline-flex items-center gap-1 rounded border border-border bg-background px-2 py-0.5 text-[11px] text-muted-foreground">
