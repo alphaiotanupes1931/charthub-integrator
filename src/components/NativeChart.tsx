@@ -406,7 +406,14 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     if (enabled.OF) levels.of.forEach((o, i) =>
       add(o.price, LEVEL_META.OF.color, `${o.side === "buy" ? "OF↑" : "OF↓"} ${i + 1}`, true),
     );
-  }, [enabled, levels, ready]);
+    if (enabled.CISD && cisd) {
+      const arrow = cisd.state === "bullish" ? "↑" : "↓";
+      add(cisd.level,   LEVEL_META.CISD.color, `CISD ${arrow} ${cisd.state}`);
+      add(cisd.trigger, LEVEL_META.CISD.color, `CISD trigger`, true);
+      add(cisd.proj1,   LEVEL_META.CISD.color, `CISD 1x → ${cisd.proj1.toFixed(2)}`, true);
+      add(cisd.proj2,   LEVEL_META.CISD.color, `CISD 2x → ${cisd.proj2.toFixed(2)}`, true);
+    }
+  }, [enabled, levels, cisd, ready]);
 
   // ---- Sessions overlay ----
   useEffect(() => {
