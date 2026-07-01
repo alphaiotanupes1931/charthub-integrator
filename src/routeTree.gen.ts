@@ -30,6 +30,7 @@ import { Route as AppVoiceCoachRouteImport } from './routes/_app.voice-coach'
 import { Route as AppStrategiesRouteImport } from './routes/_app.strategies'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppScanLensRouteImport } from './routes/_app.scan-lens'
+import { Route as AppPricingRouteImport } from './routes/_app.pricing'
 import { Route as AppMentorRouteImport } from './routes/_app.mentor'
 import { Route as AppMemoryRouteImport } from './routes/_app.memory'
 import { Route as AppLevelsRouteImport } from './routes/_app.levels'
@@ -43,8 +44,10 @@ import { Route as AppAnalyticsRouteImport } from './routes/_app.analytics'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
 import { Route as AppChatIndexRouteImport } from './routes/_app.chat.index'
 import { Route as ApiTradelockerImportRouteImport } from './routes/api.tradelocker.import'
+import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api.public.stripe-webhook'
 import { Route as AppStrategiesStrategyIdRouteImport } from './routes/_app.strategies.$strategyId'
 import { Route as AppChatThreadIdRouteImport } from './routes/_app.chat.$threadId'
+import { Route as AppAdminSubscribersRouteImport } from './routes/_app.admin.subscribers'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -150,6 +153,11 @@ const AppScanLensRoute = AppScanLensRouteImport.update({
   path: '/scan-lens',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPricingRoute = AppPricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppMentorRoute = AppMentorRouteImport.update({
   id: '/mentor',
   path: '/mentor',
@@ -215,6 +223,11 @@ const ApiTradelockerImportRoute = ApiTradelockerImportRouteImport.update({
   path: '/api/tradelocker/import',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
+  id: '/api/public/stripe-webhook',
+  path: '/api/public/stripe-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppStrategiesStrategyIdRoute = AppStrategiesStrategyIdRouteImport.update({
   id: '/$strategyId',
   path: '/$strategyId',
@@ -224,6 +237,11 @@ const AppChatThreadIdRoute = AppChatThreadIdRouteImport.update({
   id: '/$threadId',
   path: '/$threadId',
   getParentRoute: () => AppChatRoute,
+} as any)
+const AppAdminSubscribersRoute = AppAdminSubscribersRouteImport.update({
+  id: '/subscribers',
+  path: '/subscribers',
+  getParentRoute: () => AppAdminRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -237,7 +255,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
-  '/admin': typeof AppAdminRoute
+  '/admin': typeof AppAdminRouteWithChildren
   '/analytics': typeof AppAnalyticsRoute
   '/chat': typeof AppChatRouteWithChildren
   '/coaches': typeof AppCoachesRoute
@@ -248,6 +266,7 @@ export interface FileRoutesByFullPath {
   '/levels': typeof AppLevelsRoute
   '/memory': typeof AppMemoryRoute
   '/mentor': typeof AppMentorRoute
+  '/pricing': typeof AppPricingRoute
   '/scan-lens': typeof AppScanLensRoute
   '/settings': typeof AppSettingsRoute
   '/strategies': typeof AppStrategiesRouteWithChildren
@@ -258,8 +277,10 @@ export interface FileRoutesByFullPath {
   '/api/tts': typeof ApiTtsRoute
   '/help/$slug': typeof HelpSlugRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/admin/subscribers': typeof AppAdminSubscribersRoute
   '/chat/$threadId': typeof AppChatThreadIdRoute
   '/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/chat/': typeof AppChatIndexRoute
 }
@@ -274,7 +295,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
-  '/admin': typeof AppAdminRoute
+  '/admin': typeof AppAdminRouteWithChildren
   '/analytics': typeof AppAnalyticsRoute
   '/coaches': typeof AppCoachesRoute
   '/dashboard': typeof AppDashboardRoute
@@ -284,6 +305,7 @@ export interface FileRoutesByTo {
   '/levels': typeof AppLevelsRoute
   '/memory': typeof AppMemoryRoute
   '/mentor': typeof AppMentorRoute
+  '/pricing': typeof AppPricingRoute
   '/scan-lens': typeof AppScanLensRoute
   '/settings': typeof AppSettingsRoute
   '/strategies': typeof AppStrategiesRouteWithChildren
@@ -294,8 +316,10 @@ export interface FileRoutesByTo {
   '/api/tts': typeof ApiTtsRoute
   '/help/$slug': typeof HelpSlugRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/admin/subscribers': typeof AppAdminSubscribersRoute
   '/chat/$threadId': typeof AppChatThreadIdRoute
   '/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/chat': typeof AppChatIndexRoute
 }
@@ -312,7 +336,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
-  '/_app/admin': typeof AppAdminRoute
+  '/_app/admin': typeof AppAdminRouteWithChildren
   '/_app/analytics': typeof AppAnalyticsRoute
   '/_app/chat': typeof AppChatRouteWithChildren
   '/_app/coaches': typeof AppCoachesRoute
@@ -323,6 +347,7 @@ export interface FileRoutesById {
   '/_app/levels': typeof AppLevelsRoute
   '/_app/memory': typeof AppMemoryRoute
   '/_app/mentor': typeof AppMentorRoute
+  '/_app/pricing': typeof AppPricingRoute
   '/_app/scan-lens': typeof AppScanLensRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/strategies': typeof AppStrategiesRouteWithChildren
@@ -333,8 +358,10 @@ export interface FileRoutesById {
   '/api/tts': typeof ApiTtsRoute
   '/help/$slug': typeof HelpSlugRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/_app/admin/subscribers': typeof AppAdminSubscribersRoute
   '/_app/chat/$threadId': typeof AppChatThreadIdRoute
   '/_app/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/_app/chat/': typeof AppChatIndexRoute
 }
@@ -362,6 +389,7 @@ export interface FileRouteTypes {
     | '/levels'
     | '/memory'
     | '/mentor'
+    | '/pricing'
     | '/scan-lens'
     | '/settings'
     | '/strategies'
@@ -372,8 +400,10 @@ export interface FileRouteTypes {
     | '/api/tts'
     | '/help/$slug'
     | '/invite/$code'
+    | '/admin/subscribers'
     | '/chat/$threadId'
     | '/strategies/$strategyId'
+    | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
     | '/chat/'
   fileRoutesByTo: FileRoutesByTo
@@ -398,6 +428,7 @@ export interface FileRouteTypes {
     | '/levels'
     | '/memory'
     | '/mentor'
+    | '/pricing'
     | '/scan-lens'
     | '/settings'
     | '/strategies'
@@ -408,8 +439,10 @@ export interface FileRouteTypes {
     | '/api/tts'
     | '/help/$slug'
     | '/invite/$code'
+    | '/admin/subscribers'
     | '/chat/$threadId'
     | '/strategies/$strategyId'
+    | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
     | '/chat'
   id:
@@ -436,6 +469,7 @@ export interface FileRouteTypes {
     | '/_app/levels'
     | '/_app/memory'
     | '/_app/mentor'
+    | '/_app/pricing'
     | '/_app/scan-lens'
     | '/_app/settings'
     | '/_app/strategies'
@@ -446,8 +480,10 @@ export interface FileRouteTypes {
     | '/api/tts'
     | '/help/$slug'
     | '/invite/$code'
+    | '/_app/admin/subscribers'
     | '/_app/chat/$threadId'
     | '/_app/strategies/$strategyId'
+    | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
     | '/_app/chat/'
   fileRoutesById: FileRoutesById
@@ -469,6 +505,7 @@ export interface RootRouteChildren {
   ApiOhlcRoute: typeof ApiOhlcRoute
   ApiTtsRoute: typeof ApiTtsRoute
   InviteCodeRoute: typeof InviteCodeRoute
+  ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
   ApiTradelockerImportRoute: typeof ApiTradelockerImportRoute
 }
 
@@ -621,6 +658,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppScanLensRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/pricing': {
+      id: '/_app/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof AppPricingRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/mentor': {
       id: '/_app/mentor'
       path: '/mentor'
@@ -712,6 +756,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTradelockerImportRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/stripe-webhook': {
+      id: '/api/public/stripe-webhook'
+      path: '/api/public/stripe-webhook'
+      fullPath: '/api/public/stripe-webhook'
+      preLoaderRoute: typeof ApiPublicStripeWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app/strategies/$strategyId': {
       id: '/_app/strategies/$strategyId'
       path: '/$strategyId'
@@ -726,8 +777,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppChatThreadIdRouteImport
       parentRoute: typeof AppChatRoute
     }
+    '/_app/admin/subscribers': {
+      id: '/_app/admin/subscribers'
+      path: '/subscribers'
+      fullPath: '/admin/subscribers'
+      preLoaderRoute: typeof AppAdminSubscribersRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
   }
 }
+
+interface AppAdminRouteChildren {
+  AppAdminSubscribersRoute: typeof AppAdminSubscribersRoute
+}
+
+const AppAdminRouteChildren: AppAdminRouteChildren = {
+  AppAdminSubscribersRoute: AppAdminSubscribersRoute,
+}
+
+const AppAdminRouteWithChildren = AppAdminRoute._addFileChildren(
+  AppAdminRouteChildren,
+)
 
 interface AppChatRouteChildren {
   AppChatThreadIdRoute: typeof AppChatThreadIdRoute
@@ -755,7 +825,7 @@ const AppStrategiesRouteWithChildren = AppStrategiesRoute._addFileChildren(
 )
 
 interface AppRouteChildren {
-  AppAdminRoute: typeof AppAdminRoute
+  AppAdminRoute: typeof AppAdminRouteWithChildren
   AppAnalyticsRoute: typeof AppAnalyticsRoute
   AppChatRoute: typeof AppChatRouteWithChildren
   AppCoachesRoute: typeof AppCoachesRoute
@@ -766,6 +836,7 @@ interface AppRouteChildren {
   AppLevelsRoute: typeof AppLevelsRoute
   AppMemoryRoute: typeof AppMemoryRoute
   AppMentorRoute: typeof AppMentorRoute
+  AppPricingRoute: typeof AppPricingRoute
   AppScanLensRoute: typeof AppScanLensRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppStrategiesRoute: typeof AppStrategiesRouteWithChildren
@@ -773,7 +844,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
-  AppAdminRoute: AppAdminRoute,
+  AppAdminRoute: AppAdminRouteWithChildren,
   AppAnalyticsRoute: AppAnalyticsRoute,
   AppChatRoute: AppChatRouteWithChildren,
   AppCoachesRoute: AppCoachesRoute,
@@ -784,6 +855,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppLevelsRoute: AppLevelsRoute,
   AppMemoryRoute: AppMemoryRoute,
   AppMentorRoute: AppMentorRoute,
+  AppPricingRoute: AppPricingRoute,
   AppScanLensRoute: AppScanLensRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppStrategiesRoute: AppStrategiesRouteWithChildren,
@@ -819,6 +891,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiOhlcRoute: ApiOhlcRoute,
   ApiTtsRoute: ApiTtsRoute,
   InviteCodeRoute: InviteCodeRoute,
+  ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
   ApiTradelockerImportRoute: ApiTradelockerImportRoute,
 }
 export const routeTree = rootRouteImport
