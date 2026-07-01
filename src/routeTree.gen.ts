@@ -43,6 +43,7 @@ import { Route as AppAnalyticsRouteImport } from './routes/_app.analytics'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
 import { Route as AppChatIndexRouteImport } from './routes/_app.chat.index'
 import { Route as ApiTradelockerImportRouteImport } from './routes/api.tradelocker.import'
+import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api.public.stripe-webhook'
 import { Route as AppStrategiesStrategyIdRouteImport } from './routes/_app.strategies.$strategyId'
 import { Route as AppChatThreadIdRouteImport } from './routes/_app.chat.$threadId'
 
@@ -215,6 +216,11 @@ const ApiTradelockerImportRoute = ApiTradelockerImportRouteImport.update({
   path: '/api/tradelocker/import',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
+  id: '/api/public/stripe-webhook',
+  path: '/api/public/stripe-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppStrategiesStrategyIdRoute = AppStrategiesStrategyIdRouteImport.update({
   id: '/$strategyId',
   path: '/$strategyId',
@@ -260,6 +266,7 @@ export interface FileRoutesByFullPath {
   '/invite/$code': typeof InviteCodeRoute
   '/chat/$threadId': typeof AppChatThreadIdRoute
   '/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/chat/': typeof AppChatIndexRoute
 }
@@ -296,6 +303,7 @@ export interface FileRoutesByTo {
   '/invite/$code': typeof InviteCodeRoute
   '/chat/$threadId': typeof AppChatThreadIdRoute
   '/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/chat': typeof AppChatIndexRoute
 }
@@ -335,6 +343,7 @@ export interface FileRoutesById {
   '/invite/$code': typeof InviteCodeRoute
   '/_app/chat/$threadId': typeof AppChatThreadIdRoute
   '/_app/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/_app/chat/': typeof AppChatIndexRoute
 }
@@ -374,6 +383,7 @@ export interface FileRouteTypes {
     | '/invite/$code'
     | '/chat/$threadId'
     | '/strategies/$strategyId'
+    | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
     | '/chat/'
   fileRoutesByTo: FileRoutesByTo
@@ -410,6 +420,7 @@ export interface FileRouteTypes {
     | '/invite/$code'
     | '/chat/$threadId'
     | '/strategies/$strategyId'
+    | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
     | '/chat'
   id:
@@ -448,6 +459,7 @@ export interface FileRouteTypes {
     | '/invite/$code'
     | '/_app/chat/$threadId'
     | '/_app/strategies/$strategyId'
+    | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
     | '/_app/chat/'
   fileRoutesById: FileRoutesById
@@ -469,6 +481,7 @@ export interface RootRouteChildren {
   ApiOhlcRoute: typeof ApiOhlcRoute
   ApiTtsRoute: typeof ApiTtsRoute
   InviteCodeRoute: typeof InviteCodeRoute
+  ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
   ApiTradelockerImportRoute: typeof ApiTradelockerImportRoute
 }
 
@@ -712,6 +725,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTradelockerImportRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/stripe-webhook': {
+      id: '/api/public/stripe-webhook'
+      path: '/api/public/stripe-webhook'
+      fullPath: '/api/public/stripe-webhook'
+      preLoaderRoute: typeof ApiPublicStripeWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app/strategies/$strategyId': {
       id: '/_app/strategies/$strategyId'
       path: '/$strategyId'
@@ -819,6 +839,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiOhlcRoute: ApiOhlcRoute,
   ApiTtsRoute: ApiTtsRoute,
   InviteCodeRoute: InviteCodeRoute,
+  ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
   ApiTradelockerImportRoute: ApiTradelockerImportRoute,
 }
 export const routeTree = rootRouteImport
