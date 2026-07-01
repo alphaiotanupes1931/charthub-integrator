@@ -612,7 +612,7 @@ function Dashboard() {
 
         {/* Right rail overlay - desktop only */}
         {rightOpen && (
-          <aside className="absolute right-0 top-0 bottom-0 w-full sm:w-[400px] border-l border-border bg-card z-20 flex flex-col shadow-2xl">
+          <aside className="hidden lg:flex absolute right-0 top-0 bottom-0 w-[400px] border-l border-border bg-card z-20 flex-col shadow-2xl">
             <div className="flex items-center gap-1 border-b border-border/60 p-1">
               <button
                 onClick={() => setRightTab("analysis")}
