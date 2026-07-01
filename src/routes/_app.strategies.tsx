@@ -152,9 +152,31 @@ function StrategiesPage() {
                     </span>
                   )}
                 </h3>
-                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${levelColor[s.level]}`}>
-                  {s.level}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  {isCustom && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditing(s as CustomStrategy); setBuilderOpen(true); }}
+                        className="h-7 w-7 rounded-md border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent/40 flex items-center justify-center"
+                        aria-label="Edit custom strategy"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (confirm(`Delete "${s.name}"?`)) removeCustom(s as CustomStrategy); }}
+                        className="h-7 w-7 rounded-md border border-destructive/30 bg-card text-destructive hover:bg-destructive/10 flex items-center justify-center"
+                        aria-label="Delete custom strategy"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </>
+                  )}
+                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${levelColor[s.level]}`}>
+                    {s.level}
+                  </span>
+                </div>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 <span className="inline-flex items-center gap-1 rounded border border-border bg-background px-2 py-0.5 text-[11px] text-muted-foreground">
