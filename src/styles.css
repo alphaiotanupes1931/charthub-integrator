@@ -163,6 +163,57 @@
     background-size: 48px 48px;
     mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
   }
+
+  /* ==== Brand: fluid display headings (no more oversized H1s on mobile) ==== */
+  .h-display-xl { font-family: var(--font-display); font-weight: 500; letter-spacing: -0.025em; line-height: 1.02; font-size: clamp(2.25rem, 7.5vw, 6rem); }
+  .h-display-lg { font-family: var(--font-display); font-weight: 500; letter-spacing: -0.02em;  line-height: 1.05; font-size: clamp(1.875rem, 5.5vw, 4rem); }
+  .h-display-md { font-family: var(--font-display); font-weight: 500; letter-spacing: -0.015em; line-height: 1.1;  font-size: clamp(1.5rem, 4vw, 2.5rem); }
+  .h-display-sm { font-family: var(--font-display); font-weight: 500; letter-spacing: -0.01em;  line-height: 1.15; font-size: clamp(1.25rem, 3vw, 1.75rem); }
+
+  /* ==== Brand: interactive element states (normal / hover / active / focus / selected / disabled) ==== */
+  .interactive {
+    transition: background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease;
+    outline: none;
+  }
+  .interactive:hover { background-color: color-mix(in oklab, var(--gold) 8%, var(--card)); border-color: color-mix(in oklab, var(--gold) 30%, var(--border)); }
+  .interactive:active { transform: translateY(1px); }
+  .interactive:focus-visible { box-shadow: 0 0 0 2px var(--background), 0 0 0 4px color-mix(in oklab, var(--gold) 70%, transparent); }
+  .interactive[aria-selected="true"], .interactive[data-state="active"], .interactive[aria-current="page"], .interactive.is-selected {
+    background-color: color-mix(in oklab, var(--gold) 14%, var(--card));
+    border-color: color-mix(in oklab, var(--gold) 55%, var(--border));
+    color: var(--foreground);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--gold) 40%, transparent);
+  }
+  .interactive:disabled, .interactive[aria-disabled="true"] { opacity: .5; pointer-events: none; }
+
+  /* ==== Brand: navigation item states ==== */
+  .nav-item {
+    display: inline-flex; align-items: center; gap: .5rem;
+    padding: .5rem .75rem; border-radius: .5rem;
+    color: color-mix(in oklab, var(--foreground) 72%, transparent);
+    transition: background-color .18s ease, color .18s ease;
+  }
+  .nav-item:hover { background-color: color-mix(in oklab, var(--gold) 8%, transparent); color: var(--foreground); }
+  .nav-item[aria-current="page"], .nav-item.is-active {
+    color: var(--foreground);
+    background-color: color-mix(in oklab, var(--gold) 12%, transparent);
+    box-shadow: inset 0 -2px 0 0 var(--gold);
+  }
+  .nav-item:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--background), 0 0 0 4px color-mix(in oklab, var(--gold) 70%, transparent); }
+
+  /* Safe area + mobile container padding */
+  .safe-px { padding-left: max(1rem, env(safe-area-inset-left)); padding-right: max(1rem, env(safe-area-inset-right)); }
+  .safe-pb { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+}
+
+/* Global: prevent horizontal overflow on mobile and make text wrap gracefully */
+@layer base {
+  html, body { overflow-x: hidden; }
+  h1, h2, h3 { text-wrap: balance; overflow-wrap: anywhere; }
+  p, li { text-wrap: pretty; }
+  @media (max-width: 640px) {
+    h1 { font-size: clamp(1.875rem, 8vw, 3rem) !important; line-height: 1.08 !important; }
+  }
 }
 
 @keyframes gold-shimmer {
