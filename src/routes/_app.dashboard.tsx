@@ -360,6 +360,10 @@ function Dashboard() {
   }, [levels]);
 
   useEffect(() => {
+    try { localStorage.setItem(SESSIONS_STORAGE_KEY, sessionsOn ? "true" : "false"); } catch { /* ignore */ }
+  }, [sessionsOn]);
+
+  useEffect(() => {
     const onDown = (e: MouseEvent) => {
       if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) setPickerOpen(false);
       if (levelsRef.current && !levelsRef.current.contains(e.target as Node)) setLevelsOpen(false);
