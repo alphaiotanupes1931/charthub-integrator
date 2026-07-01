@@ -128,7 +128,21 @@ function OnboardingPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
+      {busy && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-background/70 backdrop-blur-sm"
+          aria-live="polite"
+          aria-busy="true"
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.preventDefault()}
+        >
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <p className="text-sm font-medium text-foreground">Saving your profile...</p>
+          <p className="text-xs text-muted-foreground">Please don't close this tab.</p>
+        </div>
+      )}
       <div className="w-full max-w-md">
+
         <LogoLink to="/" size="lg" variant="brand" textClassName="text-2xl" className="justify-center mb-8" />
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
           {step === "profile" && (
