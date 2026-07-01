@@ -14,8 +14,13 @@ export function readCustomStrategies(): CustomStrategy[] {
   try {
     const raw = localStorage.getItem(CUSTOM_KEY);
     if (!raw) return [];
-    const arr = JSON.parse(raw);
-    return Array.isArray(arr) ? arr : [];
+    const arr = JSON.parse(raw) as CustomStrategy[];
+    if (!Array.isArray(arr)) return [];
+    const migrated = arr.map((s) => ({ ...s, slug: s.slug || slugify(s.name) }));
+    if (migrated.some((s, i) => s.slug !== arr[i]?.slug)) {
+      writeCustomStrategies(migrated);
+    }
+    return migrated;
   } catch {
     return [];
   }
