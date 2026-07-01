@@ -1,69 +1,62 @@
-## Plans (from landing page)
-- Basic — $49/mo
-- Pro — $97/mo
-- Elite — $197/mo
-- 7-day free trial for every new signup
-- Admins bypass paywall
-- Monthly recurring, cancel anytime via Stripe portal
+## Goal
 
-## Flow
-1. New user signs up → onboarding → `/pricing` (blocked from `/dashboard`)
-2. Picks tier → Stripe Checkout (7-day trial, card required) → returns to `/dashboard`
-3. Stripe webhook writes `subscriptions` row → gate lets them in
-4. If payment fails / cancels → status flips to `past_due` or `canceled` → next page load redirects to `/pricing` with banner: "Your subscription is inactive. Reactivate to keep access."
-5. Settings → "Manage billing" opens Stripe Customer Portal (change plan, cancel, update card)
-6. Admins bypass the gate entirely
+Turn the coach into a real 3-layer agent stack. No new sidecars, no Python — everything runs inside our existing TanStack Start server functions using the AI Gateway and our current data providers. The three layers stay decoupled so any one can be swapped later.
 
-## Existing subscribers
-Once you drop your Stripe secret key in, I'll add an admin page (`/admin/subscribers`) that pulls the live list of active/trialing subscribers straight from Stripe (email, plan, MRR, status, next renewal). Anyone in that list is auto-granted access on their next login — I match by email against `auth.users`.
+## The 3 Layers
 
-## What I need from you
-- **STRIPE_SECRET_KEY** — your live secret key (`sk_live_...`). I'll request it via secure secret form.
-- **STRIPE_WEBHOOK_SECRET** — I'll give you the webhook URL to paste into Stripe Dashboard → Developers → Webhooks, then you paste back the signing secret.
-- **Stripe Price IDs** — after you create the 3 monthly prices in Stripe ($49/$97/$197), paste the `price_...` IDs. Or I can create them programmatically once the secret key is in.
-
-## Technical build
-
-**Database (migration)**
+```text
+┌──────────────────────────────────────────────────────────────┐
+│  L1 DATA  — MarketDataService (OpenBB-style unified fetch)  │
+│  Twelve Data · CoinGecko · Yahoo · (news feed placeholder)  │
+└──────────────────────────────────────────────────────────────┘
+                              ▲
+                              │  candles, quote, news, macro
+                              │
+┌──────────────────────────────────────────────────────────────┐
+│  L2 RESEARCH  — Multi-agent analyst pool (Tauric-style)     │
+│  Technical · Sentiment · Macro · Risk  ──►  ResearchMemo    │
+└──────────────────────────────────────────────────────────────┘
+                              ▲
+                              │  ResearchMemo (JSON)
+                              │
+┌──────────────────────────────────────────────────────────────┐
+│  L3 PLANNER  — Paperclip-style ReAct loop                   │
+│  Plan → Critic → Refine (max 3 steps)  ──►  TradePlan JSON  │
+└──────────────────────────────────────────────────────────────┘
+                              ▲
+                              │  TradePlan → ScanTicket UI + Coach chat
 ```
-subscriptions (
-  user_id uuid PK REFERENCES auth.users(id) ON DELETE CASCADE,
-  stripe_customer_id text UNIQUE,
-  stripe_subscription_id text UNIQUE,
-  tier text,                              -- 'basic' | 'pro' | 'elite'
-  status text,                            -- 'trialing'|'active'|'past_due'|'canceled'|'incomplete'
-  current_period_end timestamptz,
-  trial_end timestamptz,
-  updated_at timestamptz default now()
-)
-```
-+ GRANTs, RLS (user reads own row; service_role writes)
-+ SECURITY DEFINER `has_active_subscription(uuid)` helper
 
-**Server functions** (`src/lib/billing.functions.ts`)
-- `createCheckoutSession({ tier })` — auth required, creates/reuses customer, 7-day trial, returns URL
-- `createPortalSession()` — auth required, returns Stripe portal URL
-- `getMySubscription()` — reads row for gate
-- `listSubscribers()` — admin-only, pulls live list from Stripe API
+Each layer has one entry point and one JSON contract. The Coach and the Scan button both call L3, which internally calls L2, which calls L1.
 
-**Server route**
-- `src/routes/api.public.stripe-webhook.ts` — verifies signature, handles `customer.subscription.created|updated|deleted`, `invoice.payment_failed`, upserts subscriptions row
+## Files to add
 
-**Gate**
-- Extend `src/routes/_app.tsx` `beforeLoad`: after profile check, if `!isAdmin && status NOT IN ('active','trialing')` and pathname !== `/pricing`, redirect to `/pricing`
+- `src/lib/agents/types.ts` — shared TS types: `MarketSnapshot`, `AnalystNote`, `ResearchMemo`, `TradePlan`.
+- `src/lib/agents/market-data.server.ts` — L1. Wraps existing `/api/ohlc` logic plus a `getSnapshot(symbol, tf)` returning `{ candles, quote, sessions, cisd, htfBias }`. Reuses `NativeChart` detection helpers extracted into `src/lib/marketAnalysis.ts`.
+- `src/lib/agents/analysts/technical.ts` — prompt + zod schema, single AI call producing `AnalystNote`.
+- `src/lib/agents/analysts/sentiment.ts` — same shape, uses recent-news stub (returns "no data" cleanly if none).
+- `src/lib/agents/analysts/macro.ts` — DXY/yields context via existing OHLC route.
+- `src/lib/agents/analysts/risk.ts` — pure code, no LLM: computes ATR-based stop distance, R multiples, session-risk flags.
+- `src/lib/agents/research-orchestrator.server.ts` — L2. Runs the 4 analysts in parallel via `Promise.all`, merges into `ResearchMemo`.
+- `src/lib/agents/planner-loop.server.ts` — L3. ReAct loop: `draftPlan → critique → refine`, hard-capped at 3 iterations. Emits a `TradePlan` (entry, stop, TP1/TP2, size hint, thesis, invalidation, confidence).
+- `src/lib/agents/research.functions.ts` — `runResearch({ symbol, timeframe, lensId })` server function; admins uncapped, others share the existing 5/day scan cap.
+- `src/routes/api/research.$symbol.ts` — thin HTTP wrapper so the Coach chat route can stream reasoning tokens back.
 
-**UI**
-- `src/routes/_app.pricing.tsx` — 3 cards, "Start 7-day free trial" button per plan → checkout
-- Settings → "Manage billing" button → portal
-- `src/routes/_app.admin.subscribers.tsx` — admin table of Stripe subscribers
+## Wiring into existing UI
 
-**Landing page CTA** stays the same but "Get Started" now routes into signup → trial pick.
+- `ScanTicket`: when the user hits Run Scan, call `runResearch` instead of the current single-shot lens prompt. Render the `TradePlan` (already the ticket's shape) and expose a collapsible "Research" panel showing each analyst note.
+- `DashboardChatPanel`: the coach gets a new tool `get_trade_plan(symbol)` that returns the latest `TradePlan` so the user can ask "why long gold?" and the coach cites analyst notes.
+- No DB schema changes. Memos/plans are ephemeral per request; we can add a `research_runs` table later if the user wants history.
 
-## Order of operations
-1. You approve this plan
-2. I request `STRIPE_SECRET_KEY` via secure form
-3. I create DB migration + all code
-4. I give you the webhook URL to configure in Stripe Dashboard
-5. You paste `STRIPE_WEBHOOK_SECRET` back
-6. I create the 3 Prices in Stripe programmatically (or you paste IDs)
-7. I pull your existing subscriber list and show it to you
+## What we are NOT doing this round
+
+- No Python sidecar, no OpenBB container (kept as a future L1 swap).
+- No autonomous execution / broker connection.
+- No new billing tier — same admin bypass and 5/day cap.
+- No new voice or chart features.
+
+## Verification
+
+After building: run one `runResearch({ symbol: "XAUUSD", timeframe: "15m" })` from a temp server-function call, assert the returned `TradePlan` matches the zod schema, and check the Scan button in the dashboard renders the plan without regressing the current ticket UI.
+
+Approve and I'll build all three layers in one pass.
