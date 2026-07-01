@@ -1,9 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
-import { findStrategyBySlug, type CustomStrategy } from "@/lib/customStrategies";
+import { findStrategyBySlug, deleteCustomStrategy, type CustomStrategy } from "@/lib/customStrategies";
 import { type Strategy } from "@/data/strategies";
-import { ArrowLeft, CheckCircle2, CircleDot, TrendingUp, Zap, BarChart2, BookOpen, ShieldAlert, Target, Clock, Layers } from "lucide-react";
+import { ArrowLeft, CheckCircle2, CircleDot, Pencil, Trash2, TrendingUp, Zap, BarChart2, BookOpen, ShieldAlert, Target, Clock, Layers } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/strategies/$strategyId")({
