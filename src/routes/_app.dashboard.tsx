@@ -407,17 +407,27 @@ function Dashboard() {
 
   const intervalLabel = INTERVALS.find((i) => i.value === interval)?.label ?? interval;
 
+  const runPlan = useServerFn(runResearchPlan);
+
   const runScan = () => {
     setScanning(true);
     setResult(null);
     const enabledLevels = ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none";
+    const lens = findLens(lensId);
     const prompt = `Analyze ${symbol.ticker} (${symbol.name}, ${symbol.venue}) on the ${intervalLabel} chart for a trade setup. I'm watching these levels: ${enabledLevels}. Give me: bias (long/short/neutral), entry trigger, stop loss, take profit 1 and 2, R:R, and a short rationale grounded in price action. Be concrete with levels.`;
     setCoachOpen(true);
     chatRef.current?.scan(prompt);
-    window.setTimeout(() => {
-      setResult(gradeFor(symbol, snapshot?.lastPrice));
-      setScanning(false);
-    }, 400);
+    runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
+      .then((plan) => setResult(plan as ScanResult))
+      .catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : "Research pipeline failed.";
+        setResult({
+          grade: "NO ENTRY", bias: "Neutral", confidence: 0,
+          notes: msg, entry: "—", stop: "—", tp1: "—", tp2: "—", rr: "—",
+          details: "The 3-layer research pipeline could not complete. Try again shortly.",
+        });
+      })
+      .finally(() => setScanning(false));
   };
 
 
