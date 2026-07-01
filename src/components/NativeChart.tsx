@@ -519,6 +519,11 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
             Δ {levels.delta >= 0 ? "+" : ""}{levels.delta.toFixed(1)}
           </span>
         )}
+        {enabled.CISD && cisd && (
+          <span className={`inline-flex items-center gap-1 normal-case ${cisd.state === "bullish" ? "text-lime-300" : "text-red-300"}`}>
+            CISD {cisd.state === "bullish" ? "↑" : "↓"} · HTF {cisd.htfBias}
+          </span>
+        )}
       </div>
       {showLoader && (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/60 backdrop-blur-sm">
