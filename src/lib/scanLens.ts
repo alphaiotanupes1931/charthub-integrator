@@ -7,7 +7,8 @@ export type ScanLensId =
   | "dist"
   | "trend"
   | "range"
-  | "fib";
+  | "fib"
+  | "cisd";
 
 export type ScanLens = {
   id: ScanLensId;
