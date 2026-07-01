@@ -29,11 +29,23 @@ export function writeCustomStrategies(list: CustomStrategy[]) {
 export function saveCustomStrategy(s: Omit<CustomStrategy, "custom" | "id" | "createdAt"> & { id?: string }): CustomStrategy {
   const list = readCustomStrategies();
   const id = s.id ?? `cs_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
-  const next: CustomStrategy = { ...s, custom: true, id, createdAt: Date.now() };
+  const next: CustomStrategy = {
+    ...s,
+    slug: s.slug || slugify(s.name),
+    custom: true,
+    id,
+    createdAt: Date.now(),
+  };
   const idx = list.findIndex((c) => c.id === id);
   if (idx >= 0) list[idx] = next; else list.unshift(next);
   writeCustomStrategies(list);
   return next;
+}
+
+export function findStrategyBySlug(slug: string): Strategy | CustomStrategy | null {
+  return readCustomStrategies().find((c) => c.slug === slug)
+    ?? STRATEGIES.find((s) => s.slug === slug)
+    ?? null;
 }
 
 export function deleteCustomStrategy(id: string) {
