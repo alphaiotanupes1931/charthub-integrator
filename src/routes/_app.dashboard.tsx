@@ -6,7 +6,7 @@ import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Sparkles,
 import { useCoachVoice } from "@/hooks/useCoachVoice";
 import { DashboardChatPanel, type DashboardChatHandle } from "@/components/DashboardChatPanel";
 import { TodaysRecommendation } from "@/components/TodaysRecommendation";
-import { SCAN_LENSES, readActiveLensId, writeActiveLensId, type ScanLensId } from "@/lib/scanLens";
+import { SCAN_LENSES, readActiveLensId, writeActiveLensId, findLens, type ScanLensId } from "@/lib/scanLens";
 import { readActiveCoach } from "@/lib/chat-client";
 import { voiceForCoach } from "@/lib/coachVoices";
 import { Link } from "@tanstack/react-router";
