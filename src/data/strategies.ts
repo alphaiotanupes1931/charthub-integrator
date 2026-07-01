@@ -7,6 +7,7 @@ export interface PlaybookSection {
 }
 
 export interface Strategy {
+  slug: string;
   name: string;
   level: Level;
   style: Style;
@@ -18,8 +19,20 @@ export interface Strategy {
   playbook?: PlaybookSection[];
 }
 
+export function slugify(name: string) {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+export function findStrategyBySlug(slug: string, all: (Strategy | { slug: string })[] = STRATEGIES) {
+  return all.find((s) => s.slug === slug) ?? null;
+}
+
 export const STRATEGIES: Strategy[] = [
   {
+    slug: "breakout-retest",
     name: "Breakout & Retest",
     level: "Beginner",
     style: "Day",
@@ -67,6 +80,7 @@ export const STRATEGIES: Strategy[] = [
     ],
   },
   {
+    slug: "ema-crossover-trend",
     name: "EMA Crossover Trend",
     level: "Beginner",
     style: "Swing",
@@ -107,6 +121,7 @@ export const STRATEGIES: Strategy[] = [
     ],
   },
   {
+    slug: "fibonacci-retracement",
     name: "Fibonacci Retracement",
     level: "Intermediate",
     style: "Swing",
@@ -148,6 +163,7 @@ export const STRATEGIES: Strategy[] = [
     ],
   },
   {
+    slug: "gap-and-go",
     name: "Gap and Go",
     level: "Intermediate",
     style: "Scalp",
@@ -188,6 +204,7 @@ export const STRATEGIES: Strategy[] = [
     ],
   },
   {
+    slug: "ict-concepts",
     name: "ICT Concepts",
     level: "Advanced",
     style: "Day",
@@ -236,6 +253,7 @@ export const STRATEGIES: Strategy[] = [
     ],
   },
   {
+    slug: "mean-reversion-bollinger",
     name: "Mean Reversion (Bollinger)",
     level: "Beginner",
     style: "Scalp",
@@ -272,6 +290,7 @@ export const STRATEGIES: Strategy[] = [
     ],
   },
   {
+    slug: "supply-demand-zones",
     name: "Supply & Demand Zones",
     level: "Intermediate",
     style: "Swing",
@@ -310,6 +329,7 @@ export const STRATEGIES: Strategy[] = [
     ],
   },
   {
+    slug: "turtle-trading",
     name: "Turtle Trading",
     level: "Advanced",
     style: "Swing",
@@ -354,6 +374,7 @@ export const STRATEGIES: Strategy[] = [
     ],
   },
   {
+    slug: "vwap-trading",
     name: "VWAP Trading",
     level: "Intermediate",
     style: "Day",
