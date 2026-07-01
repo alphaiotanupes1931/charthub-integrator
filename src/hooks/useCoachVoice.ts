@@ -185,7 +185,13 @@ export function useCoachVoice() {
   }, [prime]);
 
   const stop = useCallback(() => {
+    genRef.current += 1;
+    if (abortRef.current) {
+      try { abortRef.current.abort(); } catch { /* ignore */ }
+      abortRef.current = null;
+    }
     if (sourceRef.current) {
+      try { sourceRef.current.onended = null; } catch { /* ignore */ }
       try { sourceRef.current.stop(); } catch { /* ignore */ }
       try { sourceRef.current.disconnect(); } catch { /* ignore */ }
       sourceRef.current = null;
@@ -200,8 +206,12 @@ export function useCoachVoice() {
       URL.revokeObjectURL(lastBlobUrlRef.current);
       lastBlobUrlRef.current = null;
     }
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      try { window.speechSynthesis.cancel(); } catch { /* ignore */ }
+    }
     markDone();
   }, [markDone]);
+
 
   const speak = useCallback(async (text: string, voiceId: string) => {
     if (!text.trim()) return;
