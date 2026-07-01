@@ -19,6 +19,18 @@ export const COACH_VOICES: Record<string, { id: string; label: string; preview: 
     preview:
       "Take a breath. Markets give you a thousand chances a week, you only need to take the clean ones. Walk me through what you're seeing.",
   },
+  "The Minimalist": {
+    id: "cjVigY5qzO86Huf0OWal", // Eric - direct, deep
+    label: "Eric (direct, no fluff)",
+    preview:
+      "Setup's clean. Entry 2418. Stop 2412. Target 2432. Take it or skip it.",
+  },
+  "The Psychologist": {
+    id: "FGY2WhTYpPnrIDTdsKH5", // Laura - warm, empathetic
+    label: "Laura (empathetic, calm)",
+    preview:
+      "That loss stings, I know. Let's sit with it for a moment. What were you feeling right before you clicked buy?",
+  },
   "Generic AI Coach": {
     id: "EXAVITQu4vr4xnSDxMaL", // Sarah - neutral
     label: "Sarah (clear, neutral)",

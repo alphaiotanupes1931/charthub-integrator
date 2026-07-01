@@ -85,6 +85,10 @@ export function coachToElevenVoiceId(coach: string | null | undefined): string {
       return "bIHbv24MWmeRgasZH58o"; // Will
     case "The Mentor":
       return "XrExE9yKIg1WjnnlVkGX"; // Matilda
+    case "The Minimalist":
+      return "cjVigY5qzO86Huf0OWal"; // Eric
+    case "The Psychologist":
+      return "FGY2WhTYpPnrIDTdsKH5"; // Laura
     case "The Analyst":
     case "The Sniper":
     case "The Monk":
