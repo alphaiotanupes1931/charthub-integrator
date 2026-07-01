@@ -9,7 +9,6 @@ import {
   allStrategies,
   readCustomStrategies,
   saveCustomStrategy,
-  deleteCustomStrategy,
   LEVELS,
   STYLES,
   MARKETS,
