@@ -672,6 +672,7 @@ function Dashboard() {
                     scanning={scanning}
                     symbol={symbol}
                     intervalLabel={intervalLabel}
+                    lensId={lensId}
                     runScan={runScan}
                     onAttach={(file) => {
                       setRightTab("coach");
@@ -713,6 +714,7 @@ function Dashboard() {
           scanning={scanning}
           symbol={symbol}
           intervalLabel={intervalLabel}
+          lensId={lensId}
           runScan={runScan}
           onAttach={(file) => {
             setCoachOpen(true);
@@ -752,12 +754,13 @@ function Dashboard() {
 }
 
 function ScanBody({
-  result, scanning, symbol, intervalLabel, runScan, onAttach, onStopScan, onStopVoice, voiceSpeaking,
+  result, scanning, symbol, intervalLabel, lensId, runScan, onAttach, onStopScan, onStopVoice, voiceSpeaking,
 }: {
   result: ScanResult | null;
   scanning: boolean;
   symbol: Symbol;
   intervalLabel: string;
+  lensId: ScanLensId;
   runScan: () => void;
   onAttach: (file: File) => void;
   onStopScan: () => void;
