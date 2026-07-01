@@ -7,7 +7,14 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { LogoLink } from "@/components/LogoLink";
 import { generateRecoveryCode } from "@/lib/recoveryCode";
-import { setRecoveryCode } from "@/lib/recovery.functions";
+
+async function hashRecoveryCode(code: string): Promise<string> {
+  const bytes = new TextEncoder().encode(code.trim().toUpperCase());
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
 
 export const Route = createFileRoute("/onboarding")({
   ssr: false,
@@ -100,15 +107,16 @@ function OnboardingPage() {
     if (!parsed.success) { toast.error("Missing profile info"); setStep("profile"); return; }
     setBusy(true);
     try {
-      await setRecoveryCode({ data: { code: recoveryCode } });
+      const recovery_code_hash = await hashRecoveryCode(recoveryCode);
       const { error } = await supabase.from("profiles").update({
         display_name: parsed.data.name,
         referral_source: parsed.data.source,
+        recovery_code_hash,
         onboarded: true,
       }).eq("id", userId);
       if (error) throw error;
       toast.success("Welcome aboard");
-      navigate({ to: "/dashboard", replace: true });
+      window.location.assign("/dashboard");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Couldn't save your profile";
       toast.error(msg);
