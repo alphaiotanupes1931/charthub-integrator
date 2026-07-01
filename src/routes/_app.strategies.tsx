@@ -124,10 +124,9 @@ function StrategiesPage() {
           const isActive = active === s.name;
           const isCustom = (s as CustomStrategy).custom === true;
           return (
-            <button
-              type="button"
+            <Link
+              to={`/strategies/${s.slug}`}
               key={isCustom ? (s as CustomStrategy).id : s.name}
-              onClick={() => setOpen(s)}
               className={`text-left rounded-xl border bg-card p-5 space-y-3 transition-colors ${
                 isActive ? "border-primary/60 ring-1 ring-primary/30" : "border-border hover:border-primary/40"
               }`}
@@ -167,7 +166,7 @@ function StrategiesPage() {
                   <span className="text-muted-foreground">Avg R:R</span>
                 </div>
               </div>
-            </button>
+            </Link>
           );
         })}
       </div>
