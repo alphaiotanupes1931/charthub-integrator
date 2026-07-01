@@ -721,10 +721,11 @@ function Dashboard() {
                     setRightTab("coach");
                     chatRef.current?.attach(file, `Scan this chart screenshot for ${symbol.ticker} on ${intervalLabel}. Give me grade, bias, entry, stop, TP1, TP2, R:R, and a 1-2 sentence rationale.`);
                     setScanning(true);
-                    window.setTimeout(() => {
-                      setResult(gradeFor(symbol, snapshot?.lastPrice));
-                      setScanning(false);
-                    }, 400);
+                    const lens = findLens(lensId);
+                    runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
+                      .then((plan) => setResult(plan as ScanResult))
+                      .catch(() => { /* coach chat still runs the vision analysis */ })
+                      .finally(() => setScanning(false));
                   }}
                   onStopScan={() => { chatRef.current?.stop(); voice.stop(); setScanning(false); }}
                   onStopVoice={() => voice.stop()}
@@ -764,10 +765,11 @@ function Dashboard() {
             setCoachOpen(true);
             chatRef.current?.attach(file, `Scan this chart screenshot for ${symbol.ticker} on ${intervalLabel}. Give me grade, bias, entry, stop, TP1, TP2, R:R, and a 1-2 sentence rationale.`);
             setScanning(true);
-            window.setTimeout(() => {
-              setResult(gradeFor(symbol, snapshot?.lastPrice));
-              setScanning(false);
-            }, 400);
+            const lens = findLens(lensId);
+            runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
+              .then((plan) => setResult(plan as ScanResult))
+              .catch(() => { /* coach chat still runs the vision analysis */ })
+              .finally(() => setScanning(false));
           }}
           onStopScan={() => { chatRef.current?.stop(); voice.stop(); setScanning(false); }}
           onStopVoice={() => voice.stop()}
