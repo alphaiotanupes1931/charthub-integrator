@@ -17,6 +17,8 @@ const COACHES = [
     subtitle: "Data-Driven Performance Optimizer",
     icon: BarChart2,
     iconBg: "bg-blue-500/20 text-blue-300",
+    nameText: "text-blue-300",
+    nameBg: "bg-blue-500/10 border border-blue-500/20",
     description:
       "Numbers don't lie. The Analyst breaks down your trading performance with surgical precision, win rates, R:R ratios, edge statistics, and pattern recognition across your data.",
     tone: "Precise & Analytical",
@@ -28,6 +30,8 @@ const COACHES = [
     subtitle: "Rule Enforcer & Accountability Partner",
     icon: Target,
     iconBg: "bg-rose-500/20 text-rose-300",
+    nameText: "text-rose-300",
+    nameBg: "bg-rose-500/10 border border-rose-500/20",
     description:
       "No excuses, no shortcuts. The Disciplinarian holds you to your trading plan with zero tolerance for rule-breaking. Every deviation is tracked, every excuse challenged.",
     tone: "Strict & Direct",
@@ -39,6 +43,8 @@ const COACHES = [
     subtitle: "Experienced Guide & Strategy Teacher",
     icon: GraduationCap,
     iconBg: "bg-purple-500/20 text-purple-300",
+    nameText: "text-purple-300",
+    nameBg: "bg-purple-500/10 border border-purple-500/20",
     description:
       "A patient, seasoned trader who's been through it all. The Mentor shares wisdom from decades of market experience, guiding you through concepts with real-world context.",
     tone: "Warm & Patient",
@@ -116,7 +122,9 @@ function CoachesPage() {
               <Bot className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h3 className="font-display text-2xl font-semibold">{activeCoach?.name ?? active}</h3>
+              <div className={`inline-block rounded-md px-2.5 py-1 ${activeCoach?.nameBg ?? ""} ${activeCoach?.nameText ?? ""}`}>
+                <h3 className="font-display text-2xl font-semibold truncate">{activeCoach?.name ?? active}</h3>
+              </div>
               <p className="text-sm text-muted-foreground">{activeCoach?.subtitle ?? "Active personality"}</p>
             </div>
           </div>
@@ -146,8 +154,8 @@ function CoachesPage() {
                 <div className={`h-12 w-12 rounded-lg flex items-center justify-center ${c.iconBg}`}>
                   <Icon className="h-6 w-6" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-display text-xl font-semibold truncate">{c.name}</h3>
+                <div className={`flex-1 min-w-0 rounded-md px-2.5 py-1 ${c.nameBg}`}>
+                  <h3 className={`font-display text-xl font-semibold truncate ${c.nameText}`}>{c.name}</h3>
                   <p className="text-xs text-muted-foreground truncate">{c.subtitle}</p>
                 </div>
                 <button
