@@ -208,6 +208,9 @@ function AuthPage() {
       toast.error(m);
       return;
     }
+    // Show busy state IMMEDIATELY so the button reacts on click without
+    // waiting on audio priming or any other setup work.
+    setBusy(true);
     // Pre-create an Audio element inside the user gesture so .play() will
     // be allowed after we receive the ElevenLabs MP3 bytes. Mobile Safari
     // requires the element to actually start playing inside the gesture, so
@@ -217,13 +220,12 @@ function AuthPage() {
     if (!muted && typeof window !== "undefined" && typeof Audio !== "undefined") {
       welcomeAudio = new Audio();
       welcomeAudio.preload = "auto";
-      // 1-frame silent WAV - primes the element so a later src swap can play.
       welcomeAudio.src =
         "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
       welcomeAudio.play().then(() => welcomeAudio?.pause()).catch(() => {});
       (window as Window & { __trademindWelcomeAudio?: HTMLAudioElement }).__trademindWelcomeAudio = welcomeAudio;
     }
-    setBusy(true);
+
     try {
       if (mode === "signin") {
         const { error } = await supabase.auth.signInWithPassword(parsed.data);
