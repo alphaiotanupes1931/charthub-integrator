@@ -47,6 +47,8 @@ export function useCoachVoice() {
   const unlockedRef = useRef(false);
   const lastBlobUrlRef = useRef<string | null>(null);
   const syncedRef = useRef(false);
+  const genRef = useRef(0);
+  const abortRef = useRef<AbortController | null>(null);
 
   const markDone = useCallback(() => {
     speakingRef.current = false;
