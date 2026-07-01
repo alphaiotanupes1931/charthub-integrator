@@ -32,7 +32,6 @@ const STRAT_KEY = "trademind.activeStrategy";
 
 function StrategiesPage() {
   const [q, setQ] = useState("");
-  const [open, setOpen] = useState<Strategy | CustomStrategy | null>(null);
   const [active, setActive] = useState<string | null>(null);
   const [builderOpen, setBuilderOpen] = useState(false);
   const [editing, setEditing] = useState<CustomStrategy | null>(null);
