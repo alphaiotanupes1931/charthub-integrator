@@ -154,7 +154,7 @@ export const listSubscribers = createServerFn({ method: "GET" })
           tier: tierFromPrice(price),
           amount,
           currency: price?.currency ?? "usd",
-          current_period_end: sub.current_period_end,
+          current_period_end: (sub as unknown as { current_period_end: number }).current_period_end,
           cancel_at_period_end: sub.cancel_at_period_end,
           customer_id: typeof sub.customer === "string" ? sub.customer : sub.customer?.id ?? "",
           subscription_id: sub.id,

@@ -38,6 +38,7 @@ async function upsertSubscription(sub: Stripe.Subscription) {
     return;
   }
 
+  const cpe = (sub as unknown as { current_period_end?: number }).current_period_end;
   await supabaseAdmin.from("subscriptions").upsert(
     {
       user_id: userId,
@@ -45,9 +46,7 @@ async function upsertSubscription(sub: Stripe.Subscription) {
       stripe_subscription_id: sub.id,
       tier,
       status: sub.status,
-      current_period_end: sub.current_period_end
-        ? new Date(sub.current_period_end * 1000).toISOString()
-        : null,
+      current_period_end: cpe ? new Date(cpe * 1000).toISOString() : null,
       trial_end: sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null,
       cancel_at_period_end: !!sub.cancel_at_period_end,
       updated_at: new Date().toISOString(),
