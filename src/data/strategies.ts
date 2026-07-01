@@ -80,6 +80,7 @@ export const STRATEGIES: Strategy[] = [
     ],
   },
   {
+    slug: "ema-crossover-trend",
     name: "EMA Crossover Trend",
     level: "Beginner",
     style: "Swing",
@@ -120,6 +121,7 @@ export const STRATEGIES: Strategy[] = [
     ],
   },
   {
+    slug: "fibonacci-retracement",
     name: "Fibonacci Retracement",
     level: "Intermediate",
     style: "Swing",
@@ -161,6 +163,7 @@ export const STRATEGIES: Strategy[] = [
     ],
   },
   {
+    slug: "gap-and-go",
     name: "Gap and Go",
     level: "Intermediate",
     style: "Scalp",
@@ -201,6 +204,7 @@ export const STRATEGIES: Strategy[] = [
     ],
   },
   {
+    slug: "ict-concepts",
     name: "ICT Concepts",
     level: "Advanced",
     style: "Day",
@@ -249,6 +253,7 @@ export const STRATEGIES: Strategy[] = [
     ],
   },
   {
+    slug: "mean-reversion-bollinger",
     name: "Mean Reversion (Bollinger)",
     level: "Beginner",
     style: "Scalp",
@@ -285,6 +290,7 @@ export const STRATEGIES: Strategy[] = [
     ],
   },
   {
+    slug: "supply-demand-zones",
     name: "Supply & Demand Zones",
     level: "Intermediate",
     style: "Swing",
@@ -323,6 +329,7 @@ export const STRATEGIES: Strategy[] = [
     ],
   },
   {
+    slug: "turtle-trading",
     name: "Turtle Trading",
     level: "Advanced",
     style: "Swing",
@@ -367,6 +374,7 @@ export const STRATEGIES: Strategy[] = [
     ],
   },
   {
+    slug: "vwap-trading",
     name: "VWAP Trading",
     level: "Intermediate",
     style: "Day",
