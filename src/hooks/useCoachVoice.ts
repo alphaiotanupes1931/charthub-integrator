@@ -344,6 +344,6 @@ export function useCoachVoice() {
 
   useEffect(() => stop, [stop]);
 
-  return { enabled, setEnabled, speak, stop, prime, speaking };
+  return { enabled, setEnabled, speak, stop, prime, speaking, pauseAudio, resumeAudio };
 }
 
