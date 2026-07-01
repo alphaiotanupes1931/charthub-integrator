@@ -165,6 +165,7 @@ function AuthPage() {
 
   async function onRecoverySubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (busy) return;
     setErrorMsg(null);
     const parsedEmail = z.string().trim().email("Enter a valid email").max(255).safeParse(email);
     if (!parsedEmail.success) {
@@ -199,6 +200,7 @@ function AuthPage() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (busy) return;
     setErrorMsg(null);
     const schema = mode === "signup" ? signUpSchema : signInSchema;
     const parsed = schema.safeParse({ email, password });
@@ -211,6 +213,7 @@ function AuthPage() {
     // Show busy state IMMEDIATELY so the button reacts on click without
     // waiting on audio priming or any other setup work.
     setBusy(true);
+
     // Pre-create an Audio element inside the user gesture so .play() will
     // be allowed after we receive the ElevenLabs MP3 bytes. Mobile Safari
     // requires the element to actually start playing inside the gesture, so
@@ -300,7 +303,23 @@ function AuthPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      {busy && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-background/70 backdrop-blur-sm"
+          aria-live="polite"
+          aria-busy="true"
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.preventDefault()}
+        >
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <p className="text-sm font-medium text-foreground">
+            {recoveryMode ? "Verifying your recovery code..." : mode === "signin" ? "Signing you in..." : "Creating your account..."}
+          </p>
+          <p className="text-xs text-muted-foreground">Please don't close this tab.</p>
+        </div>
+      )}
       <div className="w-full max-w-sm">
+
         <Link to="/" className="flex items-center justify-center gap-2.5 mb-8">
           <img src={logoAsset.url} alt="TradeMind" className="h-12 w-12 object-contain" />
           <span className="font-display text-2xl font-semibold tracking-tight">
@@ -444,11 +463,13 @@ function AuthPage() {
               </Button>
               <button
                 type="button"
+                disabled={busy}
                 onClick={() => {
+                  if (busy) return;
                   try { sessionStorage.setItem("trademind.adminTesting", "1"); } catch { /* ignore */ }
                   window.location.assign("/dashboard");
                 }}
-                className="w-full h-10 rounded-md border border-dashed border-border bg-background/40 px-3 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/50 transition"
+                className="w-full h-10 rounded-md border border-dashed border-border bg-background/40 px-3 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/50 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Admin testing → Open dashboard
               </button>
