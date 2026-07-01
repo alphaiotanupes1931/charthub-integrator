@@ -88,6 +88,8 @@ const FAQS = [
 
 function Landing() {
   const [isAuthed, setIsAuthed] = useState(false);
+  const dashboardHref = isAuthed ? "/dashboard" : "/auth?mode=signin&redirect=%2Fdashboard";
+  const signupHref = "/auth?mode=signup&redirect=%2Fpricing";
   useEffect(() => {
     let cancelled = false;
     supabase.auth.getSession().then(({ data }) => {
@@ -103,7 +105,7 @@ function Landing() {
   }, []);
   return (
     <div className="min-h-screen w-full text-foreground">
-      <Nav />
+      <Nav isAuthed={isAuthed} />
 
       {/* HERO */}
       <section className="relative px-5 sm:px-6 pt-12 sm:pt-20 pb-10 sm:pb-12">
@@ -148,23 +150,22 @@ function Landing() {
           >
             <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
               {isAuthed ? (
-                <Link
-                  to="/dashboard"
+                <a
+                  href="/dashboard"
                   className="group inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-7 py-3.5 text-sm font-semibold hover:scale-[1.02] transition shadow-2xl"
                 >
                   Open dashboard
                   <ArrowRight className="size-4 group-hover:translate-x-0.5 transition" />
-                </Link>
+                </a>
               ) : (
                 <>
-                  <Link
-                    to="/auth"
-                    search={{ mode: "signup" }}
+                  <a
+                    href="/auth?mode=signin&redirect=%2Fdashboard"
                     className="group inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-7 py-3.5 text-sm font-semibold hover:scale-[1.02] transition shadow-2xl"
                   >
-                    Get started
+                    Open dashboard
                     <ArrowRight className="size-4 group-hover:translate-x-0.5 transition" />
-                  </Link>
+                  </a>
                   <Link
                     to="/auth"
                     search={{ mode: "signin" }}
@@ -363,8 +364,8 @@ function Landing() {
                   <span className="font-display text-5xl sm:text-6xl font-medium">{p.price}</span>
                   <span className="text-sm text-muted-foreground ml-1">/month</span>
                 </div>
-                <Link
-                  to="/dashboard"
+                <a
+                  href={isAuthed ? "/dashboard" : signupHref}
                   className={`mt-6 sm:mt-8 block text-center rounded-full px-5 py-3 text-sm font-semibold transition ${
                     p.popular
                       ? "bg-primary text-primary-foreground hover:opacity-90"
@@ -372,7 +373,7 @@ function Landing() {
                   }`}
                 >
                   Start free trial
-                </Link>
+                </a>
                 <ul className="mt-6 sm:mt-8 space-y-3 pt-5 sm:pt-6 border-t border-border/60">
                   {p.features.map((f) => (
                     <li key={f} className="flex items-center gap-2.5 text-sm">
@@ -448,25 +449,26 @@ function Landing() {
           </h2>
           <p className="text-sm sm:text-base text-muted-foreground mt-5 sm:mt-6">Free for 7 days. Cancel anytime.</p>
           <div className="mt-8 sm:mt-10">
-            <Link
-              to="/dashboard"
+            <a
+              href={dashboardHref}
               className="group inline-flex items-center gap-2 rounded-full bg-foreground text-background px-7 sm:px-8 py-3.5 sm:py-4 text-sm font-semibold hover:scale-[1.02] transition"
             >
-              Get started
+              Open dashboard
               <ArrowRight className="size-4 group-hover:translate-x-0.5 transition" />
-            </Link>
+            </a>
           </div>
         </div>
       </section>
 
 
 
-      <Footer />
+      <Footer dashboardHref={dashboardHref} />
     </div>
   );
 }
 
-function Nav() {
+function Nav({ isAuthed }: { isAuthed: boolean }) {
+  const dashboardHref = isAuthed ? "/dashboard" : "/auth?mode=signin&redirect=%2Fdashboard";
   return (
     <header className="sticky top-0 z-40 backdrop-blur-xl bg-background/60 border-b border-border/40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-3">
@@ -505,29 +507,29 @@ function Nav() {
                   <Link to="/faq" className="text-lg font-medium hover:text-primary transition">FAQ</Link>
                 </SheetClose>
                 <SheetClose asChild>
-                  <Link
-                    to="/dashboard"
+                  <a
+                    href={dashboardHref}
                     className="mt-4 inline-flex items-center justify-center rounded-full bg-foreground text-background px-5 py-3 text-sm font-semibold hover:scale-[1.02] transition"
                   >
-                    Get started
-                  </Link>
+                    Open dashboard
+                  </a>
                 </SheetClose>
               </div>
             </SheetContent>
           </Sheet>
-          <Link
-            to="/dashboard"
+          <a
+            href={dashboardHref}
             className="hidden sm:inline-flex rounded-full bg-foreground text-background px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold hover:scale-[1.02] transition"
           >
-            Get started
-          </Link>
+            Open dashboard
+          </a>
         </div>
       </div>
     </header>
   );
 }
 
-function Footer() {
+function Footer({ dashboardHref }: { dashboardHref: string }) {
   const [year, setYear] = useState<number | null>(null);
   useEffect(() => setYear(new Date().getFullYear()), []);
 
@@ -535,7 +537,7 @@ function Footer() {
     {
       title: "Product",
       items: [
-        { label: "Dashboard", to: "/dashboard" as const },
+        { label: "Dashboard", href: dashboardHref },
         { label: "Coaches", to: "/coaches" as const },
         { label: "Pricing", to: "/" as const },
         { label: "Mobile App", to: "/" as const },
@@ -586,7 +588,15 @@ function Footer() {
             <ul className="space-y-2.5">
               {c.items.map((i) => (
                 <li key={i.label}>
-                  <Link to={i.to} className="text-sm hover:text-primary transition">{i.label}</Link>
+                  {"href" in i ? (
+                    <a href={i.href} className="text-sm hover:text-primary transition">
+                      {i.label}
+                    </a>
+                  ) : (
+                    <Link to={i.to} className="text-sm hover:text-primary transition">
+                      {i.label}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
