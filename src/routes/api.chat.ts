@@ -317,25 +317,37 @@ export const Route = createFileRoute("/api/chat")({
           thread = threadRow;
         }
 
-        // --- Daily AI cap per user (UTC) ---
-        const { data: usageCount, error: usageErr } = await sb.rpc("bump_ai_usage", { _cap: DAILY_AI_CAP });
-        if (usageErr) {
-          const msg = (usageErr.message || "").toLowerCase();
-          if (msg.includes("daily_cap_reached")) {
-            console.log(`[chat] req=${reqId} user=${userId} cap_reached`);
-            return new Response(
-              JSON.stringify({
-                error: "daily_cap_reached",
-                message: "You have ran out of AI credits for the day, feel free to keep trading. Your AI coach will be back tomorrow.",
-                cap: DAILY_AI_CAP,
-              }),
-              { status: 429, headers: { ...cors, "Content-Type": "application/json" } },
-            );
+        // --- Daily AI cap per user (UTC) - admins bypass ---
+        const { data: adminRow } = await sb
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", userId)
+          .eq("role", "admin")
+          .maybeSingle();
+        const isAdmin = !!adminRow;
+
+        if (!isAdmin) {
+          const { data: usageCount, error: usageErr } = await sb.rpc("bump_ai_usage", { _cap: DAILY_AI_CAP });
+          if (usageErr) {
+            const msg = (usageErr.message || "").toLowerCase();
+            if (msg.includes("daily_cap_reached")) {
+              console.log(`[chat] req=${reqId} user=${userId} cap_reached`);
+              return new Response(
+                JSON.stringify({
+                  error: "daily_cap_reached",
+                  message: "You have ran out of AI credits for the day, feel free to keep trading. Your AI coach will be back tomorrow.",
+                  cap: DAILY_AI_CAP,
+                }),
+                { status: 429, headers: { ...cors, "Content-Type": "application/json" } },
+              );
+            }
+            console.error(`[chat] req=${reqId} usage_error`, usageErr.message);
+            // Fail open on internal errors so a usage bug doesn't lock everyone out.
+          } else {
+            console.log(`[chat] req=${reqId} user=${userId} usage=${usageCount}/${DAILY_AI_CAP}`);
           }
-          console.error(`[chat] req=${reqId} usage_error`, usageErr.message);
-          // Fail open on internal errors so a usage bug doesn't lock everyone out.
         } else {
-          console.log(`[chat] req=${reqId} user=${userId} usage=${usageCount}/${DAILY_AI_CAP}`);
+          console.log(`[chat] req=${reqId} user=${userId} admin=unlimited`);
         }
 
         const journalCtx = buildJournalContext(journal ?? []);
