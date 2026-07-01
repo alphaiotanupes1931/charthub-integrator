@@ -4,6 +4,19 @@ import { supabase } from "@/integrations/supabase/client";
 
 const BILLING_ALLOWED_PATHS = ["/pricing", "/settings", "/onboarding"];
 
+async function getHydratedUser() {
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    const { data, error } = await supabase.auth.getUser();
+    if (!error && data.user) return data.user;
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (sessionData.session?.user) return sessionData.session.user;
+
+    await new Promise((resolve) => window.setTimeout(resolve, 125));
+  }
+  return null;
+}
+
 export const Route = createFileRoute("/_app")({
   ssr: false,
   beforeLoad: async ({ location }) => {
@@ -11,8 +24,7 @@ export const Route = createFileRoute("/_app")({
     if (typeof window !== "undefined" && sessionStorage.getItem("trademind.adminTesting") === "1") {
       return { user: null };
     }
-    const { data: sessionData } = await supabase.auth.getSession();
-    const user = sessionData.session?.user ?? null;
+    const user = await getHydratedUser();
 
     if (!user) {
       throw redirect({ to: "/auth", search: { redirect: location.href } });
@@ -24,6 +36,19 @@ export const Route = createFileRoute("/_app")({
       .select("onboarded,banned" as "onboarded")
       .eq("id", user.id)
       .maybeSingle() as { data: { onboarded: boolean; banned?: boolean } | null };
+
+    if (!prof) {
+      await supabase.from("profiles").upsert({
+        id: user.id,
+        email: user.email ?? null,
+        display_name: user.user_metadata?.display_name ?? user.email?.split("@")[0] ?? null,
+      });
+      if (!location.pathname.startsWith("/onboarding")) {
+        throw redirect({ to: "/onboarding" });
+      }
+      return { user };
+    }
+
     if (prof?.banned) {
       await supabase.auth.signOut();
       throw redirect({ to: "/auth", search: { banned: "1" } });
