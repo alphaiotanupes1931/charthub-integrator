@@ -329,6 +329,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               <EmptyStateSuggestions
                 chart={chart}
                 disabled={loading}
+                onRunScan={onRunScan}
                 onPick={(text) => {
                   if (voice.enabled) voice.prime();
                   void sendMessage({ text });
