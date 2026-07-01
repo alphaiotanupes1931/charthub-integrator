@@ -428,6 +428,16 @@ function EmptyStateSuggestions({
           Ask your coach, or tap a suggestion to get started.
         </div>
       </div>
+      {onRunScan && (
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={onRunScan}
+          className="w-full inline-flex items-center justify-center gap-1.5 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-xs font-medium text-primary hover:bg-primary/15 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Crosshair className="h-3.5 w-3.5" /> Run scan on {ticker}
+        </button>
+      )}
       <div className="w-full flex flex-col gap-1.5 mt-1">
         {suggestions.map((s) => (
           <button
