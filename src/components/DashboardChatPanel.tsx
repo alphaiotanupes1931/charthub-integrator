@@ -131,12 +131,31 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
   function ChatInner({ threadId, initial, chart, onClose, onMinimize, onRunScan, onStopScan, scanning }, ref) {
 
     const [input, setInput] = useState("");
+    const [pendingImage, setPendingImage] = useState<{ url: string; name: string; mediaType: string } | null>(null);
+    const [dragging, setDragging] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
     const [activeCoach, setActiveCoach] = useState<string>(() => readActiveCoach());
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const chartRef = useRef<ChartContext | undefined>(chart);
     useEffect(() => { chartRef.current = chart; }, [chart]);
     const voice = useCoachVoice();
     const lastSpokenIdRef = useRef<string | null>(null);
+
+    const ingestFile = useCallback((file: File) => {
+      if (!file.type.startsWith("image/")) {
+        toast.error("Only image files can be attached");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        setPendingImage({
+          url: String(reader.result || ""),
+          name: file.name || "screenshot.png",
+          mediaType: file.type || "image/png",
+        });
+      };
+      reader.readAsDataURL(file);
+    }, []);
 
     const { messages, sendMessage, status, setMessages, stop } = useChat({
       id: threadId,
