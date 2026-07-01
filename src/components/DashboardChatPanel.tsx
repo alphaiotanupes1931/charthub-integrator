@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { Link } from "@tanstack/react-router";
-import { MessageSquare, Sparkles, ExternalLink, Trash2, X, Minus, Volume2, VolumeX, ChevronDown, Crosshair, Square } from "lucide-react";
+import { MessageSquare, Sparkles, ExternalLink, Trash2, X, Minus, Volume2, VolumeX, ChevronDown, Crosshair, Square, Paperclip, ImageIcon } from "lucide-react";
 import {
   Conversation,
   ConversationContent,
@@ -131,12 +131,31 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
   function ChatInner({ threadId, initial, chart, onClose, onMinimize, onRunScan, onStopScan, scanning }, ref) {
 
     const [input, setInput] = useState("");
+    const [pendingImage, setPendingImage] = useState<{ url: string; name: string; mediaType: string } | null>(null);
+    const [dragging, setDragging] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
     const [activeCoach, setActiveCoach] = useState<string>(() => readActiveCoach());
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const chartRef = useRef<ChartContext | undefined>(chart);
     useEffect(() => { chartRef.current = chart; }, [chart]);
     const voice = useCoachVoice();
     const lastSpokenIdRef = useRef<string | null>(null);
+
+    const ingestFile = useCallback((file: File) => {
+      if (!file.type.startsWith("image/")) {
+        toast.error("Only image files can be attached");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        setPendingImage({
+          url: String(reader.result || ""),
+          name: file.name || "screenshot.png",
+          mediaType: file.type || "image/png",
+        });
+      };
+      reader.readAsDataURL(file);
+    }, []);
 
     const { messages, sendMessage, status, setMessages, stop } = useChat({
       id: threadId,
@@ -226,10 +245,20 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
 
     const handleSubmit = () => {
       const text = input.trim();
-      if (!text || loading) return;
+      const img = pendingImage;
+      if (!text && !img) return;
+      if (loading) return;
       if (voice.enabled) voice.prime();
       setInput("");
-      void sendMessage({ text });
+      setPendingImage(null);
+      if (img) {
+        void sendMessage({
+          text: text || "Scan this chart screenshot. Give me bias, entry, stop, TP1 and TP2 with a brief rationale.",
+          files: [{ type: "file", mediaType: img.mediaType, url: img.url, filename: img.name }],
+        });
+      } else {
+        void sendMessage({ text });
+      }
     };
 
     function clearChat() {
@@ -238,7 +267,38 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
     }
 
     return (
-      <div className="flex flex-col h-full min-h-0 bg-card overflow-hidden sm:rounded-xl border-y sm:border border-border shadow-2xl sm:shadow-xl">
+      <div
+        className="flex flex-col h-full min-h-0 bg-card overflow-hidden sm:rounded-xl border-y sm:border border-border shadow-2xl sm:shadow-xl relative"
+        onPaste={(e) => {
+          const items = e.clipboardData?.items;
+          if (!items) return;
+          for (let i = 0; i < items.length; i++) {
+            const it = items[i];
+            if (it.kind === "file" && it.type.startsWith("image/")) {
+              const f = it.getAsFile();
+              if (f) {
+                e.preventDefault();
+                ingestFile(f);
+                toast.success("Screenshot attached");
+                return;
+              }
+            }
+          }
+        }}
+        onDragOver={(e) => { e.preventDefault(); if (!dragging) setDragging(true); }}
+        onDragLeave={(e) => { if (e.currentTarget === e.target) setDragging(false); }}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragging(false);
+          const f = e.dataTransfer?.files?.[0];
+          if (f) ingestFile(f);
+        }}
+      >
+        {dragging && (
+          <div className="absolute inset-0 z-30 flex items-center justify-center bg-primary/10 border-2 border-dashed border-primary/60 pointer-events-none">
+            <div className="text-sm font-medium text-primary">Drop screenshot to attach</div>
+          </div>
+        )}
         {/* Header */}
         <div
           className="flex items-center justify-between gap-2 border-b border-border/60 px-3 py-2.5 bg-card/95 backdrop-blur"
@@ -363,34 +423,74 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
           className="border-t border-border bg-background/80 backdrop-blur p-2"
           style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
         >
+          {pendingImage && (
+            <div className="mb-2 flex items-center gap-2 rounded-md border border-border bg-muted/40 p-1.5">
+              <img src={pendingImage.url} alt="attachment preview" className="h-12 w-12 rounded object-cover border border-border/60" />
+              <div className="flex-1 min-w-0">
+                <div className="text-xs font-medium truncate">{pendingImage.name}</div>
+                <div className="text-[10px] text-muted-foreground">Ready to scan - press send</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPendingImage(null)}
+                className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
+                aria-label="Remove attachment"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) ingestFile(f);
+              e.target.value = "";
+            }}
+          />
           <PromptInput onSubmit={handleSubmit}>
             <PromptInputTextarea
               ref={textareaRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask your coach…"
+              placeholder={pendingImage ? "Add a note (optional) and send…" : "Ask your coach, or paste a screenshot…"}
               rows={2}
             />
             <PromptInputFooter className="justify-between">
-              {loading ? (
+              <div className="flex items-center gap-1.5">
                 <button
                   type="button"
-                  onClick={stopScan}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/15 transition"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-medium hover:border-primary/50 transition"
+                  title="Attach a screenshot"
+                  aria-label="Attach screenshot"
                 >
-                  <Square className="h-3 w-3" /> Stop scan
+                  <Paperclip className="h-3 w-3" />
+                  <ImageIcon className="h-3 w-3" />
                 </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={onRunScan}
-                  disabled={!onRunScan}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium hover:border-primary/50 transition disabled:opacity-40"
-                >
-                  <Crosshair className="h-3 w-3" /> Run scan
-                </button>
-              )}
-              <PromptInputSubmit status={status} onStop={stopScan} disabled={!input.trim() && !loading} />
+                {loading ? (
+                  <button
+                    type="button"
+                    onClick={stopScan}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/15 transition"
+                  >
+                    <Square className="h-3 w-3" /> Stop scan
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={onRunScan}
+                    disabled={!onRunScan}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium hover:border-primary/50 transition disabled:opacity-40"
+                  >
+                    <Crosshair className="h-3 w-3" /> Run scan
+                  </button>
+                )}
+              </div>
+              <PromptInputSubmit status={status} onStop={stopScan} disabled={!input.trim() && !pendingImage && !loading} />
             </PromptInputFooter>
           </PromptInput>
         </div>
