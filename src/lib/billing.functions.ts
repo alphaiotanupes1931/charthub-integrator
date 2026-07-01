@@ -167,3 +167,91 @@ export const listSubscribers = createServerFn({ method: "GET" })
 
     return { subscribers: rows, mrr_cents: mrr, currency: "usd" };
   });
+
+// Admin-triggered: pull every Stripe subscription and upsert to DB, matching
+// customers to existing users by metadata.user_id or email. Useful once after
+// wiring Stripe to grant access to pre-existing subscribers.
+export const syncSubscribersFromStripe = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: isAdmin } = await supabaseAdmin.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin) throw new Error("Forbidden");
+
+    const { getStripe, tierFromPrice } = await import("@/lib/stripe.server");
+    const stripe = getStripe();
+
+    // Preload all users once for email matching
+    const { data: usersPage } = await supabaseAdmin.auth.admin.listUsers({
+      page: 1,
+      perPage: 1000,
+    });
+    const emailToId = new Map<string, string>();
+    for (const u of usersPage?.users ?? []) {
+      if (u.email) emailToId.set(u.email.toLowerCase(), u.id);
+    }
+
+    let synced = 0;
+    let unmatched = 0;
+    let startingAfter: string | undefined;
+
+    for (let i = 0; i < 20; i++) {
+      const batch = await stripe.subscriptions.list({
+        status: "all",
+        limit: 100,
+        starting_after: startingAfter,
+        expand: ["data.customer", "data.items.data.price"],
+      });
+      for (const sub of batch.data) {
+        if (sub.status === "canceled" || sub.status === "incomplete_expired") continue;
+
+        const cust = sub.customer as import("stripe").default.Customer | null;
+        const custId = typeof sub.customer === "string" ? sub.customer : sub.customer?.id;
+        let userId: string | undefined =
+          (sub.metadata?.user_id as string | undefined) ||
+          (cust && !("deleted" in cust)
+            ? (cust.metadata?.user_id as string | undefined)
+            : undefined);
+        if (!userId && cust && !("deleted" in cust) && cust.email) {
+          userId = emailToId.get(cust.email.toLowerCase());
+          if (userId && custId) {
+            await stripe.customers.update(custId, {
+              metadata: { ...(cust.metadata || {}), user_id: userId },
+            });
+          }
+        }
+        if (!userId) {
+          unmatched++;
+          continue;
+        }
+
+        const price = sub.items.data[0]?.price;
+        const tier = tierFromPrice(price);
+        const cpe = (sub as unknown as { current_period_end?: number }).current_period_end;
+
+        await supabaseAdmin.from("subscriptions").upsert(
+          {
+            user_id: userId,
+            stripe_customer_id: custId ?? null,
+            stripe_subscription_id: sub.id,
+            tier,
+            status: sub.status,
+            current_period_end: cpe ? new Date(cpe * 1000).toISOString() : null,
+            trial_end: sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null,
+            cancel_at_period_end: !!sub.cancel_at_period_end,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id" },
+        );
+        synced++;
+      }
+      if (!batch.has_more) break;
+      startingAfter = batch.data[batch.data.length - 1]?.id;
+      if (!startingAfter) break;
+    }
+
+    return { synced, unmatched };
+  });
