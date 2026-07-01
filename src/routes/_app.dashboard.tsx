@@ -305,6 +305,49 @@ function ScanTicket({
         </div>
       )}
 
+      <div className="rounded-md border border-border/60 bg-background/40 p-3 space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <Brain className="h-3.5 w-3.5 text-primary" />
+            <span>Was this useful? Hermes will remember.</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => submitFeedback(1)}
+              className={`h-7 w-7 inline-flex items-center justify-center rounded-md border transition ${fbState === 1 ? "border-emerald-500/60 bg-emerald-500/15 text-emerald-400" : "border-border text-muted-foreground hover:text-foreground hover:border-primary/40"}`}
+              aria-label="Helpful"
+              title="Helpful"
+            >
+              <ThumbsUp className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={() => { setFbNoteOpen(true); }}
+              className={`h-7 w-7 inline-flex items-center justify-center rounded-md border transition ${fbState === -1 ? "border-destructive/60 bg-destructive/15 text-destructive" : "border-border text-muted-foreground hover:text-foreground hover:border-primary/40"}`}
+              aria-label="Not helpful"
+              title="Not helpful"
+            >
+              <ThumbsDown className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+        {fbNoteOpen && fbState !== -1 && (
+          <div className="flex items-center gap-2">
+            <input
+              value={fbNote}
+              onChange={(e) => setFbNote(e.target.value)}
+              placeholder="What was off? (optional)"
+              className="flex-1 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs focus:outline-none focus:border-primary/50"
+            />
+            <button
+              onClick={() => { submitFeedback(-1, fbNote.trim() || undefined); setFbNoteOpen(false); }}
+              className="rounded-md bg-primary px-2.5 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+            >
+              Send
+            </button>
+          </div>
+        )}
+      </div>
+
       <div className="pt-1 flex justify-center">
         <ScreenshotAttach onPick={onAttach} />
       </div>
