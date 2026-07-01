@@ -42,6 +42,7 @@ type ChartSnap = {
   of?: { price: number; side: string; strength: number }[];
   delta?: number;
   sessionsActive?: string[];
+  cisd?: { state: string; level: number; trigger: number; proj1: number; proj2: number; legSize: number; htfBias: string } | null;
   fetchedAt?: string;
 };
 type ChartCtx = { ticker?: string; intervalLabel?: string; enabledLevels?: string; snapshot?: ChartSnap };
