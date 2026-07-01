@@ -649,20 +649,8 @@ function SettingsPage() {
 
       {/* BILLING */}
       <SectionLabel>Billing</SectionLabel>
-      <Card>
-        <h2 className="flex items-center gap-2 text-lg font-semibold mb-4">
-          <CreditCard className="size-5 text-primary" />
-          Subscription
-        </h2>
-        <div className="text-sm text-muted-foreground mb-2">Status</div>
-        <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md bg-primary text-primary-foreground mb-5">
-          <ShieldCheck className="size-3.5" />
-          Active
-        </span>
-        <div>
-          <GhostButton><ExternalLink className="size-4" /> Manage Subscription</GhostButton>
-        </div>
-      </Card>
+      <BillingCard />
+
 
     </div>
   );
