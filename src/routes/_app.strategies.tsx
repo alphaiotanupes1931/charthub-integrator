@@ -36,11 +36,25 @@ function StrategiesPage() {
   const [builderOpen, setBuilderOpen] = useState(false);
   const [editing, setEditing] = useState<CustomStrategy | null>(null);
   const [customs, setCustoms] = useState<CustomStrategy[]>([]);
+  const navigate = useNavigate({ from: "/_app/strategies" });
+  const search = useSearch({ from: "/_app/strategies" }) as { edit?: string };
 
   useEffect(() => {
     try { setActive(localStorage.getItem(STRAT_KEY)); } catch { /* ignore */ }
     setCustoms(readCustomStrategies());
   }, []);
+
+  useEffect(() => {
+    if (search.edit) {
+      const found = readCustomStrategies().find((c) => c.id === search.edit || c.slug === search.edit);
+      if (found) {
+        setEditing(found);
+        setBuilderOpen(true);
+      } else {
+        navigate({ to: "/strategies", search: {} });
+      }
+    }
+  }, [search.edit]);
 
   const refreshCustoms = () => setCustoms(readCustomStrategies());
 
