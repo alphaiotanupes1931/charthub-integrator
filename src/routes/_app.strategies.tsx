@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { type Level, type Style, type Strategy } from "@/data/strategies";
-import { Search, Plus, ChevronDown, BarChart2, TrendingUp, CircleDot, Zap, X, CheckCircle2, Trash2, Pencil, Sparkles } from "lucide-react";
+import { Search, Plus, ChevronDown, BarChart2, TrendingUp, CircleDot, Zap, X, CheckCircle2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import {
   type CustomStrategy,
