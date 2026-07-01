@@ -63,6 +63,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { theme, toggle } = useTheme();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isDashboard = pathname === "/dashboard";
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { isAdmin } = useProfile();
@@ -155,7 +156,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <WelcomeBackProvider>
-      <div className="flex min-h-screen w-full text-foreground">
+      <div className={`flex w-full text-foreground ${isDashboard ? "h-screen overflow-hidden" : "min-h-screen"}`}>
       {/* Desktop sidebar */}
       <aside
         className={`${
@@ -211,7 +212,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <LogoLink to="/dashboard" size="md" showText={false} className="md:hidden shrink-0" />
         </header>
 
-        <main className="flex-1 min-w-0 overflow-x-hidden">{children}</main>
+        <main className={`flex-1 min-w-0 ${isDashboard ? "h-full overflow-hidden" : "overflow-x-hidden"}`}>{children}</main>
 
         <footer className="border-t border-border/60 px-4 md:px-6 py-3 text-center text-[11px] md:text-xs text-muted-foreground">
           Educational analysis only, not financial advice.
