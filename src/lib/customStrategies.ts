@@ -1,4 +1,4 @@
-import { STRATEGIES, type Level, type Style, type Strategy } from "@/data/strategies";
+import { STRATEGIES, slugify, type Level, type Style, type Strategy } from "@/data/strategies";
 
 const CUSTOM_KEY = "trademind.customStrategies.v1";
 
