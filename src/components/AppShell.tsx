@@ -212,7 +212,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <LogoLink to="/dashboard" size="md" showText={false} className="md:hidden shrink-0" />
         </header>
 
-        <main className="flex-1 min-w-0 overflow-x-hidden">{children}</main>
+        <main className={`flex-1 min-w-0 ${isDashboard ? "h-full overflow-hidden" : "overflow-x-hidden"}`}>{children}</main>
 
         <footer className="border-t border-border/60 px-4 md:px-6 py-3 text-center text-[11px] md:text-xs text-muted-foreground">
           Educational analysis only, not financial advice.
