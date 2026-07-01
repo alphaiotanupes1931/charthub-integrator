@@ -339,29 +339,45 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
 
     const recompute = () => {
       const ts = chart.timeScale();
+      const series = seriesRef.current;
       const visible = ts.getVisibleRange();
-      if (!visible) { setBands([]); return; }
+      if (!visible || !series) { setBands([]); return; }
       const from = Number(visible.from) * 1000;
       const to = Number(visible.to) * 1000;
       const DAY = 24 * 3600 * 1000;
-      // Walk each UTC day in the visible window and emit a band per session.
-      const out: Array<{ key: string; color: string; label: string; left: number; width: number; idx: number }> = [];
-      const firstDay = Math.floor(from / DAY) * DAY - DAY; // include prev day for sessions crossing midnight
+      const out: Array<{ key: string; color: string; label: string; left: number; width: number; top: number; height: number; high: number; low: number; idx: number }> = [];
+      const firstDay = Math.floor(from / DAY) * DAY - DAY;
       for (let d = firstDay; d <= to; d += DAY) {
         SESSIONS.forEach((sess, idx) => {
-          // session window: [d + startH, d + endH] (endH may wrap to next day if startH > endH)
           const startMs = d + sess.startH * 3600 * 1000;
           const endMs = sess.startH < sess.endH
             ? d + sess.endH * 3600 * 1000
             : d + (sess.endH + 24) * 3600 * 1000;
           if (endMs < from || startMs > to) return;
+          // Find candles within this session window to compute H/L box
+          const startSec = Math.floor(startMs / 1000);
+          const endSec = Math.floor(endMs / 1000);
+          let hi = -Infinity, lo = Infinity;
+          for (const c of candles) {
+            const t = Number(c.time);
+            if (t >= startSec && t <= endSec) {
+              if (c.high > hi) hi = c.high;
+              if (c.low < lo) lo = c.low;
+            }
+          }
+          if (!isFinite(hi) || !isFinite(lo)) return;
           const a = ts.timeToCoordinate(Math.floor(Math.max(startMs, from) / 1000) as Time);
           const b = ts.timeToCoordinate(Math.floor(Math.min(endMs, to) / 1000) as Time);
           if (a == null || b == null) return;
           const left = Math.min(a, b);
           const width = Math.abs(b - a);
           if (width < 2) return;
-          out.push({ key: `${d}-${sess.key}`, color: sess.color, label: sess.label, left, width, idx });
+          const yHi = series.priceToCoordinate(hi);
+          const yLo = series.priceToCoordinate(lo);
+          if (yHi == null || yLo == null) return;
+          const top = Math.min(yHi, yLo);
+          const height = Math.abs(yLo - yHi);
+          out.push({ key: `${d}-${sess.key}`, color: sess.color, label: sess.label, left, width, top, height, high: hi, low: lo, idx });
         });
       }
       setBands(out);
