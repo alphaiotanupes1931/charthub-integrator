@@ -402,13 +402,24 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       {/* Session bands overlay */}
       {sessions && bands.length > 0 && (
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          {bands.map((b) => (
-            <div
-              key={b.key}
-              className="absolute top-0 bottom-6"
-              style={{ left: b.left, width: b.width, background: b.color, borderLeft: `1px dashed ${b.color.replace("0.08", "0.35")}`, borderRight: `1px dashed ${b.color.replace("0.08", "0.35")}` }}
-            />
-          ))}
+          {bands.map((b) => {
+            const border = b.color.replace("0.08", "0.55");
+            const fill = b.color.replace("0.08", "0.12");
+            return (
+              <div
+                key={b.key}
+                className="absolute"
+                style={{ left: b.left, width: b.width, top: b.top, height: Math.max(2, b.height), background: fill, border: `1px solid ${border}`, borderRadius: 2 }}
+              >
+                <span
+                  className="absolute -top-4 left-1 text-[9px] font-mono uppercase tracking-wider whitespace-nowrap"
+                  style={{ color: border }}
+                >
+                  {b.label} · H {b.high.toFixed(2)} · L {b.low.toFixed(2)}
+                </span>
+              </div>
+            );
+          })}
         </div>
       )}
       <div className="absolute left-2 top-2 sm:left-3 sm:top-3 z-10 max-w-[55%] rounded-md border border-border bg-background/70 backdrop-blur px-1.5 py-1 sm:px-2 text-[9px] sm:text-[10px] font-mono text-muted-foreground uppercase tracking-wider flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
