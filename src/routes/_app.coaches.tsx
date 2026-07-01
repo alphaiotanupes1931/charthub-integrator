@@ -122,9 +122,7 @@ function CoachesPage() {
               <Bot className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h3 className="font-display text-2xl font-semibold">{activeCoach?.name ?? active}</h3>
-              <p className="text-sm text-muted-foreground">{activeCoach?.subtitle ?? "Active personality"}</p>
-            </div>
+              <div className={`inline-block rounded-md px-2.5 py-1 ${activeCoach?.nameBg ?? 
           </div>
           <span className="inline-flex items-center gap-1 rounded border border-primary/40 bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
             <CheckCircle2 className="h-3 w-3" /> Active
