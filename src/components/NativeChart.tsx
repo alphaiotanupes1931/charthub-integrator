@@ -327,6 +327,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       of: levels.of,
       delta: levels.delta,
       sessionsActive: activeSessionsNow,
+      cisd,
       fetchedAt: new Date().toISOString(),
     };
     onSnapshot(snap);
