@@ -284,17 +284,13 @@ function TicketCell({ label, value, tone }: { label: string; value: string; tone
   );
 }
 
-const ALL_LEVELS: LevelKey[] = ["VWAP","POC","SR","ZONES","FVG","FIB","LIQ","OF"];
+const SESSIONS_STORAGE_KEY = "trademind.sessions.enabled.v1";
 
-const STORAGE_KEY = "trademind.levels.enabled.v2";
-
-function loadLevels(): Record<LevelKey, boolean> {
-  const def: Record<LevelKey, boolean> = { VWAP: true, POC: true, SR: true, ZONES: true, FVG: true, FIB: false, LIQ: true, OF: true };
+function loadSessionsOn(): boolean {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return def;
-    return { ...def, ...JSON.parse(raw) };
-  } catch { return def; }
+    const raw = window.localStorage.getItem(SESSIONS_STORAGE_KEY);
+    return raw === "true" || raw === null; // default off: false
+  } catch { return false; }
 }
 
 function Dashboard() {
@@ -308,7 +304,9 @@ function Dashboard() {
   const [levels, setLevels] = useState<Record<LevelKey, boolean>>(() =>
     typeof window !== "undefined" ? loadLevels() : { VWAP: true, POC: true, SR: true, ZONES: true, FVG: true, FIB: false, LIQ: true, OF: true },
   );
-  const [sessionsOn, setSessionsOn] = useState(true);
+  const [sessionsOn, setSessionsOn] = useState(() =>
+    typeof window !== "undefined" ? loadSessionsOn() : false,
+  );
   const [levelsOpen, setLevelsOpen] = useState(false);
   const [coachOpen, setCoachOpen] = useState(false);
   const [rightTab, setRightTab] = useState<"analysis" | "coach">("analysis");
