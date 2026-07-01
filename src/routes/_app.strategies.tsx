@@ -48,18 +48,6 @@ function StrategiesPage() {
     try { localStorage.setItem(STRAT_KEY, name); } catch { /* ignore */ }
     setActive(name);
     toast.success(`${name} is now your active strategy`);
-    setOpen(null);
-  };
-
-  const removeCustom = (s: CustomStrategy) => {
-    deleteCustomStrategy(s.id);
-    if (active === s.name) {
-      try { localStorage.removeItem(STRAT_KEY); } catch { /* ignore */ }
-      setActive(null);
-    }
-    refreshCustoms();
-    setOpen(null);
-    toast.success(`${s.name} deleted`);
   };
 
   const list = useMemo(() => [...customs, ...allStrategies().filter((s) => !(s as CustomStrategy).custom)], [customs]);
