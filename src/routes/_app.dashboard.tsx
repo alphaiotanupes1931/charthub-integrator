@@ -2,12 +2,10 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { TradingViewChart } from "@/components/TradingViewChart";
 import { NativeChart, LEVEL_META, type LevelKey, type ChartSnapshot } from "@/components/NativeChart";
-import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Sparkles, Clock, MessageSquare, X, Plug, Maximize2, Volume2, VolumeX, Square, Paperclip, ChevronUp, PanelRightClose, PanelRightOpen, BarChart3 } from "lucide-react";
-import { useProfile } from "@/hooks/useProfile";
+import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Sparkles, Clock, MessageSquare, X, Plug, Maximize2, Square, Paperclip, ChevronUp, PanelRightClose, PanelRightOpen, BarChart3 } from "lucide-react";
 import { useCoachVoice } from "@/hooks/useCoachVoice";
 import { DashboardChatPanel, type DashboardChatHandle } from "@/components/DashboardChatPanel";
 import { TodaysRecommendation } from "@/components/TodaysRecommendation";
-import { useWelcomeBackRecap } from "@/components/WelcomeBackGreeter";
 import { SCAN_LENSES, readActiveLensId, writeActiveLensId, type ScanLensId } from "@/lib/scanLens";
 import { readActiveCoach } from "@/lib/chat-client";
 import { voiceForCoach } from "@/lib/coachVoices";
@@ -276,10 +274,7 @@ function loadLevels(): Record<LevelKey, boolean> {
 }
 
 function Dashboard() {
-  const { profile } = useProfile();
   const voice = useCoachVoice();
-  const { recapText } = useWelcomeBackRecap();
-  const firstName = profile?.display_name?.split(" ")[0] ?? null;
   const [interval, setIntervalState] = useState("60");
   const [symbol, setSymbol] = useState<Symbol>(SYMBOLS[0]);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -388,258 +383,197 @@ function Dashboard() {
   const enabledCount = ALL_LEVELS.filter((k) => levels[k]).length;
 
   return (
-    <div className="mx-auto max-w-[1600px] px-4 sm:px-6 py-6 sm:py-10">
-      {firstName && (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-5 sm:mb-6">
-          <span>
-            Welcome back, <span className="text-foreground font-medium">{profile?.display_name}</span>
-          </span>
-          <button
-            onClick={() => {
-              if (voice.speaking) {
-                voice.stop();
-                return;
-              }
-              if (!recapText) return;
-              voice.prime();
-              void voice.speak(recapText, voiceForCoach(readActiveCoach()));
-            }}
-            disabled={!recapText && !voice.speaking}
-            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 disabled:opacity-40 disabled:cursor-not-allowed transition"
-            title={voice.speaking ? "Stop" : recapText ? "Replay welcome summary" : "Summary loading…"}
-            aria-label={voice.speaking ? "Stop welcome summary" : recapText ? "Replay welcome summary" : "Summary loading"}
-          >
-            {voice.speaking ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
-          </button>
-
-        </div>
-      )}
-
-      {/* Today's recommendation - top of the dashboard */}
-      <div data-tour="recommendation">
-        <TodaysRecommendation />
-      </div>
-
-      <div className="space-y-6 sm:space-y-8 mt-6 sm:mt-8">
-        {/* Header */}
-        <header className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3 border-b border-border/60 pb-5 sm:pb-6">
-          <div className="min-w-0">
-
-          <div className="text-[10px] sm:text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground mb-1.5">
-            Active instrument
-          </div>
-          <h1 className="font-display text-2xl sm:text-3xl font-semibold tracking-tight truncate">
-            {symbol.ticker}
-          </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1 truncate">
-            {symbol.name} · {symbol.venue}
-          </p>
-        </div>
-
-        <div className="relative shrink-0" ref={pickerRef} data-tour="symbol-picker">
-          <button
-            onClick={() => setPickerOpen((o) => !o)}
-            className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-xs sm:text-sm font-medium hover:border-primary/50 transition"
-            aria-haspopup="listbox"
-            aria-expanded={pickerOpen}
-          >
-            <span className="hidden sm:inline">Change symbol</span>
-            <span className="sm:hidden">Change</span>
-            <ChevronDown className={`h-3.5 w-3.5 transition-transform ${pickerOpen ? "rotate-180" : ""}`} />
-          </button>
-          {pickerOpen && (
-            <div role="listbox" className="absolute right-0 mt-2 w-[min(18rem,calc(100vw-2rem))] max-h-80 overflow-y-auto rounded-lg border border-border bg-card shadow-xl z-20">
-              {SYMBOLS.map((s) => {
-                const active = s.tv === symbol.tv;
-                return (
-                  <button
-                    key={s.tv}
-                    role="option"
-                    aria-selected={active}
-                    onClick={() => { setSymbol(s); setPickerOpen(false); }}
-                    className={`w-full text-left px-3 py-2.5 text-sm flex items-center justify-between gap-3 hover:bg-accent/40 transition ${
-                      active ? "bg-primary/10 text-primary" : "text-foreground"
-                    }`}
-                  >
-                    <div className="min-w-0">
-                      <div className="font-medium truncate">{s.ticker}</div>
-                      <div className="text-[11px] text-muted-foreground truncate">{s.name} · {s.venue}</div>
-                    </div>
-                    {active && <Check className="h-4 w-4 shrink-0" />}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </header>
-
-      {/* Scan Lens + Interval row */}
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative" ref={lensRef}>
-          <button
-            onClick={() => setLensOpen((o) => !o)}
-            className="inline-flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary hover:border-primary/60 transition"
-            title="Scan Lens - biases the AI's chart read"
-          >
-            <Crosshair className="h-3.5 w-3.5" />
-            Lens: {activeLens.short}
-            <ChevronDown className={`h-3 w-3 transition-transform ${lensOpen ? "rotate-180" : ""}`} />
-          </button>
-          {lensOpen && (
-            <div role="listbox" className="absolute left-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-lg border border-border bg-card shadow-xl z-30">
-              {SCAN_LENSES.map((l) => {
-                const isActive = l.id === lensId;
-                return (
-                  <button
-                    key={l.id}
-                    role="option"
-                    aria-selected={isActive}
-                    onClick={() => pickLens(l.id)}
-                    className={`w-full text-left px-3 py-2.5 text-sm border-b border-border/40 last:border-0 hover:bg-accent/40 transition ${
-                      isActive ? "bg-primary/10 text-primary" : ""
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-medium">{l.name}</span>
-                      {isActive && <Check className="h-3.5 w-3.5 shrink-0" />}
-                    </div>
-                    <div className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{l.desc}</div>
-                  </button>
-                );
-              })}
-              <Link to="/scan-lens" className="block px-3 py-2 text-[11px] text-muted-foreground hover:text-foreground border-t border-border/60">
-                Manage all lenses →
-              </Link>
-            </div>
-          )}
-        </div>
-
-      {/* Interval bar */}
-      <div className="flex items-center gap-1 rounded-lg border border-border bg-card p-1 overflow-x-auto max-w-full">
-
-        {INTERVALS.map((i) => (
-          <button
-            key={i.value}
-            onClick={() => setIntervalState(i.value)}
-            className={`shrink-0 rounded-md px-3 py-1.5 text-xs font-medium transition ${
-              interval === i.value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {i.label}
-          </button>
-        ))}
-      </div>
-      </div>
-
-
-      {/* Chart + right rail (desktop split) */}
-      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-4 lg:items-stretch">
-        {/* Chart card */}
-        <div className="rounded-xl border border-border bg-card flex flex-col min-w-0" data-tour="chart">
-          {/* Chart toolbar */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-3 py-2">
-            <div className="flex items-center gap-1 rounded-md border border-border p-0.5">
-              <button
-                onClick={() => setChartMode("live")}
-                className={`inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium transition ${
-                  chartMode === "live" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <Activity className="h-3.5 w-3.5" /> Live Chart
-              </button>
-              <button
-                onClick={() => setChartMode("native")}
-                className={`inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium transition ${
-                  chartMode === "native" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <LayoutGrid className="h-3.5 w-3.5" /> Native Chart
-              </button>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <div className="relative" ref={levelsRef}>
-                <button
-                  onClick={() => setLevelsOpen((o) => !o)}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/60 px-2.5 py-1 text-xs font-medium hover:border-primary/50 transition"
-                  title="Toggle overlay zones / levels"
-                >
-                  Levels <span className="text-muted-foreground">({enabledCount})</span>
-                  <ChevronDown className={`h-3 w-3 transition-transform ${levelsOpen ? "rotate-180" : ""}`} />
-                </button>
-                {levelsOpen && (
-                  <div className="absolute right-0 mt-2 w-64 rounded-lg border border-border bg-card shadow-xl z-20 p-2.5">
-                    <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-2 px-1">
-                      Overlay levels
-                    </div>
-                    <div className="grid grid-cols-3 gap-1.5">
-                      {ALL_LEVELS.map((k) => {
-                        const on = levels[k];
-                        const meta = LEVEL_META[k];
-                        return (
-                          <button
-                            key={k}
-                            onClick={() => toggleLevel(k)}
-                            className={`rounded-md border px-2 py-1.5 text-xs font-medium transition ${
-                              on ? meta.tone : "border-border text-muted-foreground hover:text-foreground"
-                            }`}
-                            style={on ? { boxShadow: `inset 0 0 0 1px ${meta.color}40` } : undefined}
-                          >
-                            {meta.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    {chartMode === "live" && (
-                      <div className="mt-2 px-1 text-[10px] text-muted-foreground leading-relaxed">
-                        On the Live chart, FVG and Liq are Native-only - switch to Native Chart to see them.
+    <div className="h-full flex flex-col overflow-hidden">
+      {/* Compact top toolbar */}
+      <div className="shrink-0 flex items-center gap-2 px-3 py-2 border-b border-border/60 bg-card/50">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <div className="relative shrink-0" ref={pickerRef} data-tour="symbol-picker">
+            <button
+              onClick={() => setPickerOpen((o) => !o)}
+              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-sm font-medium hover:border-primary/50 transition"
+              aria-haspopup="listbox"
+              aria-expanded={pickerOpen}
+            >
+              <span className="font-display text-lg font-semibold tracking-tight">{symbol.ticker}</span>
+              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${pickerOpen ? "rotate-180" : ""}`} />
+            </button>
+            {pickerOpen && (
+              <div role="listbox" className="absolute left-0 mt-2 w-[min(18rem,calc(100vw-2rem))] max-h-80 overflow-y-auto rounded-lg border border-border bg-card shadow-xl z-50">
+                {SYMBOLS.map((s) => {
+                  const active = s.tv === symbol.tv;
+                  return (
+                    <button
+                      key={s.tv}
+                      role="option"
+                      aria-selected={active}
+                      onClick={() => { setSymbol(s); setPickerOpen(false); }}
+                      className={`w-full text-left px-3 py-2.5 text-sm flex items-center justify-between gap-3 hover:bg-accent/40 transition ${
+                        active ? "bg-primary/10 text-primary" : "text-foreground"
+                      }`}
+                    >
+                      <div className="min-w-0">
+                        <div className="font-medium truncate">{s.ticker}</div>
+                        <div className="text-[11px] text-muted-foreground truncate">{s.name} · {s.venue}</div>
                       </div>
-                    )}
-                    <div className="mt-3 pt-3 border-t border-border/60 flex items-center justify-between text-[11px]">
+                      {active && <Check className="h-4 w-4 shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+          <span className="hidden md:inline text-xs text-muted-foreground truncate">{symbol.name} · {symbol.venue}</span>
+        </div>
+
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {/* Interval bar */}
+          <div className="hidden sm:flex items-center gap-1 rounded-lg border border-border bg-card p-1 overflow-x-auto max-w-[16rem]">
+            {INTERVALS.map((i) => (
+              <button
+                key={i.value}
+                onClick={() => setIntervalState(i.value)}
+                className={`shrink-0 rounded-md px-2.5 py-1 text-xs font-medium transition ${
+                  interval === i.value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {i.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Scan Lens */}
+          <div className="relative" ref={lensRef}>
+            <button
+              onClick={() => setLensOpen((o) => !o)}
+              className="inline-flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/5 px-2 py-1 text-xs font-medium text-primary hover:border-primary/60 transition"
+              title="Scan Lens"
+            >
+              <Crosshair className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Lens:</span>
+              <span>{activeLens.short}</span>
+              <ChevronDown className={`h-3 w-3 transition-transform ${lensOpen ? "rotate-180" : ""}`} />
+            </button>
+            {lensOpen && (
+              <div role="listbox" className="absolute right-0 mt-2 w-72 max-h-96 overflow-y-auto rounded-lg border border-border bg-card shadow-xl z-50">
+                {SCAN_LENSES.map((l) => {
+                  const isActive = l.id === lensId;
+                  return (
+                    <button
+                      key={l.id}
+                      role="option"
+                      aria-selected={isActive}
+                      onClick={() => pickLens(l.id)}
+                      className={`w-full text-left px-3 py-2.5 text-sm border-b border-border/40 last:border-0 hover:bg-accent/40 transition ${
+                        isActive ? "bg-primary/10 text-primary" : ""
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-medium">{l.name}</span>
+                        {isActive && <Check className="h-3.5 w-3.5 shrink-0" />}
+                      </div>
+                      <div className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{l.desc}</div>
+                    </button>
+                  );
+                })}
+                <Link to="/scan-lens" className="block px-3 py-2 text-[11px] text-muted-foreground hover:text-foreground border-t border-border/60">
+                  Manage all lenses -
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Levels */}
+          <div className="relative" ref={levelsRef}>
+            <button
+              onClick={() => setLevelsOpen((o) => !o)}
+              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/60 px-2 py-1 text-xs font-medium hover:border-primary/50 transition"
+              title="Toggle overlay zones / levels"
+            >
+              Levels <span className="text-muted-foreground">({enabledCount})</span>
+              <ChevronDown className={`h-3 w-3 transition-transform ${levelsOpen ? "rotate-180" : ""}`} />
+            </button>
+            {levelsOpen && (
+              <div className="absolute right-0 mt-2 w-64 rounded-lg border border-border bg-card shadow-xl z-50 p-2.5">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-2 px-1">
+                  Overlay levels
+                </div>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {ALL_LEVELS.map((k) => {
+                    const on = levels[k];
+                    const meta = LEVEL_META[k];
+                    return (
                       <button
-                        onClick={() => setLevels(Object.fromEntries(ALL_LEVELS.map((k) => [k, true])) as Record<LevelKey, boolean>)}
-                        className="text-muted-foreground hover:text-foreground"
+                        key={k}
+                        onClick={() => toggleLevel(k)}
+                        className={`rounded-md border px-2 py-1.5 text-xs font-medium transition ${
+                          on ? meta.tone : "border-border text-muted-foreground hover:text-foreground"
+                        }`}
+                        style={on ? { boxShadow: `inset 0 0 0 1px ${meta.color}40` } : undefined}
                       >
-                        All on
+                        {meta.label}
                       </button>
-                      <button
-                        onClick={() => setLevels(Object.fromEntries(ALL_LEVELS.map((k) => [k, false])) as Record<LevelKey, boolean>)}
-                        className="text-muted-foreground hover:text-foreground"
-                      >
-                        All off
-                      </button>
-                    </div>
+                    );
+                  })}
+                </div>
+                {chartMode === "live" && (
+                  <div className="mt-2 px-1 text-[10px] text-muted-foreground leading-relaxed">
+                    On the Live chart, FVG and Liq are Native-only - switch to Native Chart to see them.
                   </div>
                 )}
+                <div className="mt-3 pt-3 border-t border-border/60 flex items-center justify-between text-[11px]">
+                  <button
+                    onClick={() => setLevels(Object.fromEntries(ALL_LEVELS.map((k) => [k, true])) as Record<LevelKey, boolean>)}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    All on
+                  </button>
+                  <button
+                    onClick={() => setLevels(Object.fromEntries(ALL_LEVELS.map((k) => [k, false])) as Record<LevelKey, boolean>)}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    All off
+                  </button>
+                </div>
               </div>
-
-              <button
-                onClick={() => setSessionsOn((v) => !v)}
-                disabled={chartMode === "live"}
-                className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition disabled:opacity-40 disabled:cursor-not-allowed ${
-                  sessionsOn && chartMode !== "live"
-                    ? "border-primary/40 bg-primary/10 text-primary"
-                    : "border-border bg-background/60 text-muted-foreground hover:text-foreground hover:border-primary/40"
-                }`}
-                title={chartMode === "live" ? "Sessions are available on the Native chart" : "Highlight Sydney / Tokyo / London / New York trading sessions"}
-              >
-                <Clock className="h-3.5 w-3.5" /> Sessions
-              </button>
-
-              {/* Desktop right-rail toggle */}
-              <button
-                onClick={() => setRightOpen((v) => !v)}
-                className="hidden lg:inline-flex items-center gap-1.5 rounded-md border border-border bg-background/60 px-2.5 py-1 text-xs font-medium hover:border-primary/50 transition"
-                title={rightOpen ? "Hide side panel" : "Show side panel"}
-              >
-                {rightOpen ? <PanelRightClose className="h-3.5 w-3.5" /> : <PanelRightOpen className="h-3.5 w-3.5" />}
-                {rightOpen ? "Hide panel" : "Show panel"}
-              </button>
-            </div>
+            )}
           </div>
 
-          <div className="flex-1 min-h-0 h-[360px] sm:h-[460px] md:h-[520px] lg:h-[calc(100vh-14rem)] overflow-hidden">
+          {/* Chart mode toggle */}
+          <div className="hidden md:flex items-center gap-1 rounded-md border border-border p-0.5">
+            <button
+              onClick={() => setChartMode("live")}
+              className={`inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium transition ${
+                chartMode === "live" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Activity className="h-3.5 w-3.5" /> Live
+            </button>
+            <button
+              onClick={() => setChartMode("native")}
+              className={`inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium transition ${
+                chartMode === "native" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <LayoutGrid className="h-3.5 w-3.5" /> Native
+            </button>
+          </div>
+
+          {/* Desktop right-rail toggle */}
+          <button
+            onClick={() => setRightOpen((v) => !v)}
+            className="hidden lg:inline-flex items-center gap-1.5 rounded-md border border-border bg-background/60 px-2 py-1 text-xs font-medium hover:border-primary/50 transition"
+            title={rightOpen ? "Hide side panel" : "Show side panel"}
+          >
+            {rightOpen ? <PanelRightClose className="h-3.5 w-3.5" /> : <PanelRightOpen className="h-3.5 w-3.5" />}
+            <span className="hidden xl:inline">{rightOpen ? "Hide" : "Show"}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Chart area */}
+      <div className="flex-1 min-h-0 relative bg-card" data-tour="chart">
+        <div className="absolute inset-0 flex flex-col">
+          <div className="flex-1 min-h-0 overflow-hidden">
             {chartMode === "live" ? (
               <TradingViewChart symbol={symbol.tv} interval={interval} enabled={levels} />
             ) : (
@@ -648,7 +582,7 @@ function Dashboard() {
           </div>
 
           {/* Broker strip */}
-          <div className="border-t border-border/60 px-3 py-2 flex items-center justify-between gap-2 flex-wrap text-xs">
+          <div className="shrink-0 border-t border-border/60 px-3 py-2 flex items-center justify-between gap-2 flex-wrap text-xs">
             {broker ? (
               <div className="flex items-center gap-2 min-w-0 text-muted-foreground">
                 <span className="relative flex h-2 w-2 shrink-0">
@@ -663,25 +597,22 @@ function Dashboard() {
             ) : (
               <div className="flex items-center gap-1.5 text-muted-foreground min-w-0">
                 <Plug className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">Chart-only mode.&nbsp;
-                  <Link to="/settings" className="text-primary hover:underline">Connect broker</Link>
-                  <span className="hidden sm:inline"> to trade from here.</span>
-                </span>
+                <span className="truncate">Chart-only mode. <Link to="/settings" className="text-primary hover:underline">Connect broker</Link></span>
               </div>
             )}
             <button
               onClick={openTradingFloor}
               className="inline-flex items-center gap-1.5 rounded-md bg-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground hover:opacity-90 shrink-0"
-              title="Open TradingView trading floor with your broker terminal"
+              title="Open TradingView trading floor"
             >
               <Maximize2 className="h-3 w-3" /> Trade
             </button>
           </div>
         </div>
 
-        {/* Desktop right rail */}
+        {/* Right rail overlay - desktop only */}
         {rightOpen && (
-          <aside className="hidden lg:flex flex-col rounded-xl border border-border bg-card overflow-hidden min-h-0">
+          <aside className="hidden lg:flex absolute right-0 top-0 bottom-0 w-[400px] border-l border-border bg-card z-20 flex-col shadow-2xl">
             <div className="flex items-center gap-1 border-b border-border/60 p-1">
               <button
                 onClick={() => setRightTab("analysis")}
@@ -699,10 +630,19 @@ function Dashboard() {
               >
                 <MessageSquare className="h-3.5 w-3.5" /> Coach
               </button>
+              <button
+                onClick={() => setRightOpen(false)}
+                className="h-8 w-8 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                title="Close panel"
+                aria-label="Close panel"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
             <div className="flex-1 min-h-0 overflow-hidden">
               {rightTab === "analysis" ? (
-                <div className="h-full overflow-y-auto p-4">
+                <div className="h-full overflow-y-auto p-4 space-y-6">
+                  <TodaysRecommendation />
                   <ScanBody
                     result={result}
                     scanning={scanning}
@@ -710,9 +650,8 @@ function Dashboard() {
                     intervalLabel={intervalLabel}
                     runScan={runScan}
                     onAttach={(file) => {
-                      setCoachOpen(true);
                       setRightTab("coach");
-                      chatRef.current?.attach(file, `Scan this chart screenshot for ${symbol.ticker} on ${intervalLabel}. Give me grade, bias, entry, stop, TP1, TP2, R:R, and a 1–2 sentence rationale.`);
+                      chatRef.current?.attach(file, `Scan this chart screenshot for ${symbol.ticker} on ${intervalLabel}. Give me grade, bias, entry, stop, TP1, TP2, R:R, and a 1-2 sentence rationale.`);
                       setScanning(true);
                       window.setTimeout(() => {
                         setResult(gradeFor(symbol, snapshot?.lastPrice));
@@ -743,8 +682,8 @@ function Dashboard() {
         )}
       </div>
 
-      {/* Mobile scan card (desktop sees this in the right rail) */}
-      <div className="lg:hidden rounded-xl border border-border bg-card p-4 sm:p-6" data-tour="scan">
+      {/* Mobile scan card */}
+      <div className="lg:hidden shrink-0 border-t border-border/60 bg-card p-3 sm:p-4" data-tour="scan">
         <ScanBody
           result={result}
           scanning={scanning}
@@ -753,7 +692,7 @@ function Dashboard() {
           runScan={runScan}
           onAttach={(file) => {
             setCoachOpen(true);
-            chatRef.current?.attach(file, `Scan this chart screenshot for ${symbol.ticker} on ${intervalLabel}. Give me grade, bias, entry, stop, TP1, TP2, R:R, and a 1–2 sentence rationale.`);
+            chatRef.current?.attach(file, `Scan this chart screenshot for ${symbol.ticker} on ${intervalLabel}. Give me grade, bias, entry, stop, TP1, TP2, R:R, and a 1-2 sentence rationale.`);
             setScanning(true);
             window.setTimeout(() => {
               setResult(gradeFor(symbol, snapshot?.lastPrice));
@@ -765,9 +704,8 @@ function Dashboard() {
           voiceSpeaking={voice.speaking}
         />
       </div>
-      </div>
 
-      {/* Floating AI Coach bubble - mobile/tablet only; desktop uses the right rail */}
+      {/* Floating AI Coach - mobile/tablet */}
       <div className="lg:hidden">
         <FloatingCoach
           open={coachOpen}
