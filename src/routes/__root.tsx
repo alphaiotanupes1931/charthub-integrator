@@ -14,6 +14,7 @@ import { reportError } from "../lib/error-reporting";
 import logoAsset from "../assets/logo.png.asset.json";
 import { CookieBanner } from "../components/CookieBanner";
 import { Toaster } from "../components/ui/sonner";
+import { VersionWatcher } from "../components/VersionWatcher";
 
 
 
@@ -151,6 +152,7 @@ function RootComponent() {
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
       <CookieBanner />
+      <VersionWatcher />
       <Toaster />
     </QueryClientProvider>
   );
