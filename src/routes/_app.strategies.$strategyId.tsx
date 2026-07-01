@@ -91,15 +91,34 @@ function StrategyDetailPage() {
         title={strategy.name}
         description={strategy.description}
         action={
-          <button
-            onClick={select}
-            disabled={isActive}
-            className={`inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold ${
-              isActive ? "bg-primary/10 text-primary cursor-default" : "bg-primary text-primary-foreground hover:opacity-90"
-            }`}
-          >
-            {isActive ? <><CheckCircle2 className="h-4 w-4" /> Active</> : "Use this Strategy"}
-          </button>
+          <div className="flex items-center gap-2">
+            {custom && (
+              <>
+                <Link
+                  to="/strategies"
+                  search={{ edit: custom.id }}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/40"
+                >
+                  <Pencil className="h-4 w-4" /> Edit
+                </Link>
+                <button
+                  onClick={remove}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-destructive/30 px-3 py-2 text-sm text-destructive hover:bg-destructive/10"
+                >
+                  <Trash2 className="h-4 w-4" /> Delete
+                </button>
+              </>
+            )}
+            <button
+              onClick={select}
+              disabled={isActive}
+              className={`inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold ${
+                isActive ? "bg-primary/10 text-primary cursor-default" : "bg-primary text-primary-foreground hover:opacity-90"
+              }`}
+            >
+              {isActive ? <><CheckCircle2 className="h-4 w-4" /> Active</> : "Use this Strategy"}
+            </button>
+          </div>
         }
       />
 
