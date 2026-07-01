@@ -127,8 +127,8 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
 });
 
 
-const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: UIMessage[]; chart?: ChartContext; onClose?: () => void; onMinimize?: () => void; onRunScan?: () => void; onStopScan?: () => void }>(
-  function ChatInner({ threadId, initial, chart, onClose, onMinimize, onRunScan, onStopScan }, ref) {
+const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: UIMessage[]; chart?: ChartContext; onClose?: () => void; onMinimize?: () => void; onRunScan?: () => void; onStopScan?: () => void; scanning?: boolean }>(
+  function ChatInner({ threadId, initial, chart, onClose, onMinimize, onRunScan, onStopScan, scanning }, ref) {
 
     const [input, setInput] = useState("");
     const [activeCoach, setActiveCoach] = useState<string>(() => readActiveCoach());
