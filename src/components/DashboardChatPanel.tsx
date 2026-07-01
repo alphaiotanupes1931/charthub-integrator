@@ -370,8 +370,26 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               placeholder="Ask your coach…"
               rows={2}
             />
-            <PromptInputFooter className="justify-end">
-              <PromptInputSubmit status={status} disabled={!input.trim() || loading} />
+            <PromptInputFooter className="justify-between">
+              {loading ? (
+                <button
+                  type="button"
+                  onClick={stopScan}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/15 transition"
+                >
+                  <Square className="h-3 w-3" /> Stop scan
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onRunScan}
+                  disabled={!onRunScan}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium hover:border-primary/50 transition disabled:opacity-40"
+                >
+                  <Crosshair className="h-3 w-3" /> Run scan
+                </button>
+              )}
+              <PromptInputSubmit status={status} onStop={stopScan} disabled={!input.trim() && !loading} />
             </PromptInputFooter>
           </PromptInput>
         </div>
