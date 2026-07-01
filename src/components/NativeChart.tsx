@@ -13,7 +13,7 @@ import {
 import type { OhlcResponse } from "@/routes/api.ohlc";
 import { useTimeFormat, formatTime } from "@/hooks/useTimeFormat";
 
-export type LevelKey = "VWAP" | "POC" | "SR" | "ZONES" | "FVG" | "FIB" | "LIQ" | "OF";
+export type LevelKey = "VWAP" | "POC" | "SR" | "ZONES" | "FVG" | "FIB" | "LIQ" | "OF" | "CISD";
 
 export const LEVEL_META: Record<LevelKey, { label: string; color: string; tone: string }> = {
   VWAP:  { label: "VWAP",  color: "#fbbf24", tone: "bg-amber-500/10 text-amber-300 border-amber-500/30" },
@@ -24,6 +24,17 @@ export const LEVEL_META: Record<LevelKey, { label: string; color: string; tone: 
   FIB:   { label: "Fib",   color: "#f472b6", tone: "bg-pink-500/10 text-pink-300 border-pink-500/30" },
   LIQ:   { label: "Liq",   color: "#f87171", tone: "bg-red-500/10 text-red-300 border-red-500/30" },
   OF:    { label: "Order Flow", color: "#22d3ee", tone: "bg-cyan-500/10 text-cyan-300 border-cyan-500/30" },
+  CISD:  { label: "CISD",  color: "#a3e635", tone: "bg-lime-500/10 text-lime-300 border-lime-500/30" },
+};
+
+export type CisdInfo = {
+  state: "bullish" | "bearish";
+  level: number;        // the opposing-leg open that got broken
+  trigger: number;      // close price that confirmed the flip
+  proj1: number;        // 1x measured-move projection
+  proj2: number;        // 2x extension
+  legSize: number;
+  htfBias: "bullish" | "bearish" | "neutral";
 };
 
 export type ChartSnapshot = {
