@@ -11,6 +11,7 @@ import { SCAN_LENSES, readActiveLensId, writeActiveLensId, findLens, type ScanLe
 import { readActiveCoach } from "@/lib/chat-client";
 import { voiceForCoach } from "@/lib/coachVoices";
 import { runResearchPlan } from "@/lib/agents/research.functions";
+import { recordHermesFeedback } from "@/lib/agents/hermes.functions";
 import type { ResearchMemo } from "@/lib/agents/types";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
