@@ -226,56 +226,57 @@ function AuthPage() {
     setBusy(true);
     try {
       if (mode === "signin") {
-        const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
+        const { error } = await supabase.auth.signInWithPassword(parsed.data);
         if (error) throw error;
-        if (data.session) await supabase.auth.setSession(data.session);
-        await waitForSignedInUser();
         toast.success("Signed in");
       } else {
         await signUpConfirmed({ data: parsed.data });
-        const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
+        const { error } = await supabase.auth.signInWithPassword(parsed.data);
         if (error) throw error;
-        if (data.session) await supabase.auth.setSession(data.session);
-        await waitForSignedInUser();
         toast.success("Account created");
       }
       // Claim the welcome slot IMMEDIATELY so the post-nav WelcomeBackGreeter
       // does not also start its own playback (which caused two overlapping voices).
       try { sessionStorage.setItem(WELCOME_BACK_SESSION_KEY, "1"); } catch { /* ignore */ }
-      if (!muted) {
-        try {
-          let recap: string;
-          if (mode === "signup") {
-            const name = spokenName(null, parsed.data.email);
-            recap = `Hi ${name}, welcome to TradeMind. Make sure to complete your profile and pick your coach so I can tailor your feedback. I am here whenever you have questions - just click the chatbot in the bottom right corner and I will jump in.`;
-          } else {
-            recap = await Promise.race([
-              buildLoginWelcomeRecap(),
-              new Promise<string>((resolve) =>
-                window.setTimeout(() => resolve(`Welcome back, ${spokenName(null, parsed.data.email)}. Ready when you are.`), 1600),
-              ),
-            ]);
-          }
-          // Fire-and-forget: don't block navigation on TTS fetch.
-          void speakWithElevenLabs(recap, readActiveCoach(), welcomeAudio);
-        } catch {
-          void speakWithElevenLabs(
-            `Welcome back, ${spokenName(null, parsed.data.email)}. Ready when you are.`,
-            readActiveCoach(),
-            welcomeAudio,
-          );
-        }
-      }
+
+      // Compute target and navigate FIRST. Everything else (welcome recap,
+      // TTS) is best-effort and must not block the redirect to the dashboard.
       let target = search.redirect || "/dashboard";
       try {
         const pending = localStorage.getItem("trademind.pendingInvite");
         if (pending) target = `/invite/${pending}`;
         localStorage.removeItem(WELCOME_BACK_REQUEST_KEY);
       } catch { /* ignore */ }
+
+      // Fire-and-forget welcome playback so navigation is never blocked.
+      if (!muted) {
+        (async () => {
+          try {
+            let recap: string;
+            if (mode === "signup") {
+              const name = spokenName(null, parsed.data.email);
+              recap = `Hi ${name}, welcome to TradeMind. Make sure to complete your profile and pick your coach so I can tailor your feedback.`;
+            } else {
+              recap = await Promise.race([
+                buildLoginWelcomeRecap(),
+                new Promise<string>((resolve) =>
+                  window.setTimeout(() => resolve(`Welcome back, ${spokenName(null, parsed.data.email)}. Ready when you are.`), 1200),
+                ),
+              ]);
+            }
+            void speakWithElevenLabs(recap, readActiveCoach(), welcomeAudio);
+          } catch {
+            void speakWithElevenLabs(
+              `Welcome back, ${spokenName(null, parsed.data.email)}. Ready when you are.`,
+              readActiveCoach(),
+              welcomeAudio,
+            );
+          }
+        })();
+      }
+
       // Hard navigation so the protected layout's beforeLoad runs with a
       // freshly-hydrated Supabase session on every host (Vercel + previews).
-      // Client-side router navigation occasionally raced the session write
-      // on the published domain and left users staring at the auth screen.
       if (typeof window !== "undefined") {
         window.location.assign(target);
       } else {
