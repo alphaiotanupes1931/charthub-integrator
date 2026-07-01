@@ -302,7 +302,23 @@ function AuthPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      {busy && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-background/70 backdrop-blur-sm"
+          aria-live="polite"
+          aria-busy="true"
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.preventDefault()}
+        >
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <p className="text-sm font-medium text-foreground">
+            {recoveryMode ? "Verifying your recovery code..." : mode === "signin" ? "Signing you in..." : "Creating your account..."}
+          </p>
+          <p className="text-xs text-muted-foreground">Please don't close this tab.</p>
+        </div>
+      )}
       <div className="w-full max-w-sm">
+
         <Link to="/" className="flex items-center justify-center gap-2.5 mb-8">
           <img src={logoAsset.url} alt="TradeMind" className="h-12 w-12 object-contain" />
           <span className="font-display text-2xl font-semibold tracking-tight">
