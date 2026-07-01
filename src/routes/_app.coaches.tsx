@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
-import { Bot, BarChart2, Target, GraduationCap, CheckCircle2, Volume2, Sparkles, Loader2, Square } from "lucide-react";
+import { Bot, BarChart2, Target, GraduationCap, Minus, HeartPulse, CheckCircle2, Volume2, Sparkles, Loader2, Square } from "lucide-react";
 import { COACH_VOICES } from "@/lib/coachVoices";
 import { readActiveCoach, writeActiveCoach } from "@/lib/chat-client";
 import { toast } from "sonner";
@@ -50,6 +50,32 @@ const COACHES = [
     tone: "Warm & Patient",
     strengths: ["Teaching through experience", "Building confidence", "Strategy development", "Long-term growth mindset"],
     bestFor: "Newer traders or those wanting a supportive, wisdom-driven coaching experience",
+  },
+  {
+    name: "The Minimalist",
+    subtitle: "Direct, No-Fluff Signal Caller",
+    icon: Minus,
+    iconBg: "bg-emerald-500/20 text-emerald-300",
+    nameText: "text-emerald-300",
+    nameBg: "bg-emerald-500/10 border border-emerald-500/20",
+    description:
+      "Cuts every response to the essentials. Entry, stop, target, or a flat 'no setup'. No filler, no hedging, no lectures. Built for traders who just want the call.",
+    tone: "Terse & Decisive",
+    strengths: ["One-line answers", "Fast decisions", "Zero filler", "Signal over story"],
+    bestFor: "Experienced traders who want signals fast without commentary",
+  },
+  {
+    name: "The Psychologist",
+    subtitle: "Emotional Regulation & Mindset Coach",
+    icon: HeartPulse,
+    iconBg: "bg-amber-500/20 text-amber-300",
+    nameText: "text-amber-300",
+    nameBg: "bg-amber-500/10 border border-amber-500/20",
+    description:
+      "Empathetic, calm, and emotionally attuned. The Psychologist notices tilt, FOMO, fear, and revenge before you do, validates it, then helps you reframe without shame.",
+    tone: "Empathetic & Calm",
+    strengths: ["Tilt detection", "Emotional regulation", "Non-judgmental support", "Identity vs outcome"],
+    bestFor: "Traders working on mindset, tilt, or the emotional side of losses and wins",
   },
 ];
 
