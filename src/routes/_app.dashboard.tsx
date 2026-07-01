@@ -848,13 +848,15 @@ function ScanBody({
 }
 
 function FloatingCoach({
-  open, onOpen, onClose, chatRef, chart,
+  open, onOpen, onClose, chatRef, chart, onRunScan, onStopScan,
 }: {
   open: boolean;
   onOpen: () => void;
   onClose: () => void;
   chatRef: React.RefObject<DashboardChatHandle | null>;
   chart: { ticker: string; intervalLabel: string; enabledLevels: string; snapshot?: ChartSnapshot };
+  onRunScan?: () => void;
+  onStopScan?: () => void;
 }) {
   const [minimized, setMinimized] = useState(false);
   const expanded = open && !minimized;
