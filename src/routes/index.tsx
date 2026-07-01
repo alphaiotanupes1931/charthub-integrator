@@ -103,7 +103,7 @@ function Landing() {
   }, []);
   return (
     <div className="min-h-screen w-full text-foreground">
-      <Nav />
+      <Nav isAuthed={isAuthed} />
 
       {/* HERO */}
       <section className="relative px-5 sm:px-6 pt-12 sm:pt-20 pb-10 sm:pb-12">
@@ -159,10 +159,10 @@ function Landing() {
                 <>
                   <Link
                     to="/auth"
-                    search={{ mode: "signup" }}
+                    search={{ mode: "signin", redirect: "/dashboard" }}
                     className="group inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-7 py-3.5 text-sm font-semibold hover:scale-[1.02] transition shadow-2xl"
                   >
-                    Get started
+                    Open dashboard
                     <ArrowRight className="size-4 group-hover:translate-x-0.5 transition" />
                   </Link>
                   <Link
@@ -364,7 +364,8 @@ function Landing() {
                   <span className="text-sm text-muted-foreground ml-1">/month</span>
                 </div>
                 <Link
-                  to="/dashboard"
+                  to={isAuthed ? "/dashboard" : "/auth"}
+                  search={isAuthed ? undefined : { mode: "signup", redirect: "/pricing" }}
                   className={`mt-6 sm:mt-8 block text-center rounded-full px-5 py-3 text-sm font-semibold transition ${
                     p.popular
                       ? "bg-primary text-primary-foreground hover:opacity-90"
@@ -449,10 +450,11 @@ function Landing() {
           <p className="text-sm sm:text-base text-muted-foreground mt-5 sm:mt-6">Free for 7 days. Cancel anytime.</p>
           <div className="mt-8 sm:mt-10">
             <Link
-              to="/dashboard"
+              to={isAuthed ? "/dashboard" : "/auth"}
+              search={isAuthed ? undefined : { mode: "signin", redirect: "/dashboard" }}
               className="group inline-flex items-center gap-2 rounded-full bg-foreground text-background px-7 sm:px-8 py-3.5 sm:py-4 text-sm font-semibold hover:scale-[1.02] transition"
             >
-              Get started
+              Open dashboard
               <ArrowRight className="size-4 group-hover:translate-x-0.5 transition" />
             </Link>
           </div>
@@ -461,12 +463,12 @@ function Landing() {
 
 
 
-      <Footer />
+      <Footer isAuthed={isAuthed} />
     </div>
   );
 }
 
-function Nav() {
+function Nav({ isAuthed }: { isAuthed: boolean }) {
   return (
     <header className="sticky top-0 z-40 backdrop-blur-xl bg-background/60 border-b border-border/40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-3">
@@ -506,20 +508,22 @@ function Nav() {
                 </SheetClose>
                 <SheetClose asChild>
                   <Link
-                    to="/dashboard"
+                    to={isAuthed ? "/dashboard" : "/auth"}
+                    search={isAuthed ? undefined : { mode: "signin", redirect: "/dashboard" }}
                     className="mt-4 inline-flex items-center justify-center rounded-full bg-foreground text-background px-5 py-3 text-sm font-semibold hover:scale-[1.02] transition"
                   >
-                    Get started
+                    Open dashboard
                   </Link>
                 </SheetClose>
               </div>
             </SheetContent>
           </Sheet>
           <Link
-            to="/dashboard"
+            to={isAuthed ? "/dashboard" : "/auth"}
+            search={isAuthed ? undefined : { mode: "signin", redirect: "/dashboard" }}
             className="hidden sm:inline-flex rounded-full bg-foreground text-background px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold hover:scale-[1.02] transition"
           >
-            Get started
+            Open dashboard
           </Link>
         </div>
       </div>
@@ -527,7 +531,7 @@ function Nav() {
   );
 }
 
-function Footer() {
+function Footer({ isAuthed }: { isAuthed: boolean }) {
   const [year, setYear] = useState<number | null>(null);
   useEffect(() => setYear(new Date().getFullYear()), []);
 
@@ -535,7 +539,7 @@ function Footer() {
     {
       title: "Product",
       items: [
-        { label: "Dashboard", to: "/dashboard" as const },
+        { label: "Dashboard", to: (isAuthed ? "/dashboard" : "/auth") as const, search: isAuthed ? undefined : { mode: "signin", redirect: "/dashboard" } },
         { label: "Coaches", to: "/coaches" as const },
         { label: "Pricing", to: "/" as const },
         { label: "Mobile App", to: "/" as const },
@@ -586,7 +590,7 @@ function Footer() {
             <ul className="space-y-2.5">
               {c.items.map((i) => (
                 <li key={i.label}>
-                  <Link to={i.to} className="text-sm hover:text-primary transition">{i.label}</Link>
+                  <Link to={i.to} search={("search" in i ? i.search : undefined) as never} className="text-sm hover:text-primary transition">{i.label}</Link>
                 </li>
               ))}
             </ul>
