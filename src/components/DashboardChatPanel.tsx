@@ -237,23 +237,26 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
         if (voice.enabled) voice.prime();
         void sendMessage({ text: prompt });
       },
-      attach: (file: File, prompt: string) => {
+      attach: async (file: File, prompt: string) => {
         if (loading) return;
+        if (!checkAndReserveQuota()) return;
         if (voice.enabled) voice.prime();
-        const reader = new FileReader();
-        reader.onload = () => {
-          const url = String(reader.result || "");
+        try {
+          const { dataUrl, name, mediaType } = await compressImage(file);
+          if (!isAdmin) bumpScreenshotQuota();
           void sendMessage({
             text: prompt,
-            files: [{ type: "file", mediaType: file.type || "image/png", url, filename: file.name }],
+            files: [{ type: "file", mediaType, url: dataUrl, filename: name }],
           });
-        };
-        reader.readAsDataURL(file);
+        } catch (e) {
+          console.error(e);
+          toast.error("Could not attach that screenshot");
+        }
       },
       stop: () => {
         try { stop(); } catch { /* ignore */ }
       },
-    }), [sendMessage, loading, voice, stop]);
+    }), [sendMessage, loading, voice, stop, checkAndReserveQuota, isAdmin]);
 
     const handleSubmit = () => {
       const text = input.trim();
@@ -264,8 +267,9 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
       setInput("");
       setPendingImage(null);
       if (img) {
+        if (!isAdmin) bumpScreenshotQuota();
         void sendMessage({
-          text: text || "Scan this chart screenshot. Give me bias, entry, stop, TP1 and TP2 with a brief rationale.",
+          text: text || "Scan THIS SCREENSHOT I just attached (not the current chart). Read the price action visible in the image and give me bias, entry, stop, TP1 and TP2 with a brief rationale.",
           files: [{ type: "file", mediaType: img.mediaType, url: img.url, filename: img.name }],
         });
       } else {
