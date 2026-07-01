@@ -444,11 +444,15 @@ function AuthPage() {
               </Button>
               <button
                 type="button"
-                onClick={() => { window.location.assign("/dashboard"); }}
+                onClick={() => {
+                  try { sessionStorage.setItem("trademind.adminTesting", "1"); } catch { /* ignore */ }
+                  window.location.assign("/dashboard");
+                }}
                 className="w-full h-10 rounded-md border border-dashed border-border bg-background/40 px-3 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/50 transition"
               >
                 Admin testing → Open dashboard
               </button>
+
             </form>
           )}
 
