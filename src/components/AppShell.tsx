@@ -14,6 +14,7 @@ import {
   MessageSquare,
   Brain,
   Crosshair,
+  Layers,
   Settings as SettingsIcon,
   UserCog,
   ShieldCheck,
