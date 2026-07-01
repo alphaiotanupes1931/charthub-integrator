@@ -168,17 +168,20 @@ function ScreenshotAttach({ onPick }: { onPick: (file: File) => void }) {
 }
 
 function ScanTicket({
-  result, symbol, onRescan, onAttach, onStopVoice, voiceSpeaking,
+  result, symbol, lensId, onRescan, onAttach, onStopVoice, voiceSpeaking,
 }: {
   result: ScanResult;
   symbol: Symbol;
+  lensId: ScanLensId;
   onRescan: () => void;
   onAttach: (file: File) => void;
   onStopVoice: () => void;
   voiceSpeaking: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const [lensOpen, setLensOpen] = useState(false);
   const isNoEntry = result.grade === "NO ENTRY";
+  const lens = findLens(lensId);
   return (
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -207,6 +210,27 @@ function ScanTicket({
             Re-scan
           </button>
         </div>
+      </div>
+
+      <div className="rounded-md border border-border/60 bg-background/40 p-3">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Crosshair className="h-3.5 w-3.5 text-primary" />
+            <span className="text-xs font-medium">Scan Lens: {lens.name}</span>
+          </div>
+          <button
+            onClick={() => setLensOpen((o) => !o)}
+            className="text-[11px] text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
+          >
+            {lensOpen ? "Hide" : "What does this mean?"}
+          </button>
+        </div>
+        {lensOpen && (
+          <div className="mt-2 text-xs text-muted-foreground leading-relaxed border-t border-border/50 pt-2">
+            <p className="mb-1">{lens.desc}</p>
+            <p className="italic">{lens.promptEmphasis}</p>
+          </div>
+        )}
       </div>
 
       <p className="text-sm leading-relaxed">{result.notes}</p>
