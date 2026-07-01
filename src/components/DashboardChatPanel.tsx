@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { Link } from "@tanstack/react-router";
-import { MessageSquare, Sparkles, ExternalLink, Trash2, X, Minus, Volume2, VolumeX, ChevronDown } from "lucide-react";
+import { MessageSquare, Sparkles, ExternalLink, Trash2, X, Minus, Volume2, VolumeX, ChevronDown, Crosshair, Square } from "lucide-react";
 import {
   Conversation,
   ConversationContent,
@@ -39,11 +39,11 @@ export type ChartContext = {
   snapshot?: import("@/components/NativeChart").ChartSnapshot;
 };
 
-type Props = { chart?: ChartContext; onClose?: () => void; onMinimize?: () => void };
+type Props = { chart?: ChartContext; onClose?: () => void; onMinimize?: () => void; onRunScan?: () => void; onStopScan?: () => void; scanning?: boolean; };
 
 const DASHBOARD_THREAD_FALLBACK_ID = "dashboard-scans";
 
-export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(function DashboardChatPanel({ chart, onClose, onMinimize }, ref) {
+export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(function DashboardChatPanel({ chart, onClose, onMinimize, onRunScan, onStopScan, scanning }, ref) {
   const [threadId, setThreadId] = useState(DASHBOARD_THREAD_FALLBACK_ID);
   const [initial, setInitial] = useState<UIMessage[]>([]);
   const getThread = useServerFn(getOrCreateDashboardThread);
@@ -123,12 +123,12 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getThread, getMsgs, waitForSession]);
 
-  return <ChatInner key={threadId} ref={ref} threadId={threadId} initial={initial} chart={chart} onClose={onClose} onMinimize={onMinimize} />;
+  return <ChatInner key={threadId} ref={ref} threadId={threadId} initial={initial} chart={chart} onClose={onClose} onMinimize={onMinimize} onRunScan={onRunScan} onStopScan={onStopScan} scanning={scanning} />;
 });
 
 
-const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: UIMessage[]; chart?: ChartContext; onClose?: () => void; onMinimize?: () => void }>(
-  function ChatInner({ threadId, initial, chart, onClose, onMinimize }, ref) {
+const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: UIMessage[]; chart?: ChartContext; onClose?: () => void; onMinimize?: () => void; onRunScan?: () => void; onStopScan?: () => void; scanning?: boolean }>(
+  function ChatInner({ threadId, initial, chart, onClose, onMinimize, onRunScan, onStopScan, scanning }, ref) {
 
     const [input, setInput] = useState("");
     const [activeCoach, setActiveCoach] = useState<string>(() => readActiveCoach());
@@ -176,7 +176,12 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
       },
     });
 
-    const loading = status === "submitted" || status === "streaming";
+    const loading = scanning || status === "submitted" || status === "streaming";
+    const stopScan = () => {
+      voice.stop();
+      try { stop(); } catch { /* ignore */ }
+      onStopScan?.();
+    };
 
     // Speak the last assistant message after streaming completes
     useEffect(() => {
@@ -324,6 +329,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               <EmptyStateSuggestions
                 chart={chart}
                 disabled={loading}
+                onRunScan={onRunScan}
                 onPick={(text) => {
                   if (voice.enabled) voice.prime();
                   void sendMessage({ text });
@@ -365,8 +371,26 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               placeholder="Ask your coach…"
               rows={2}
             />
-            <PromptInputFooter className="justify-end">
-              <PromptInputSubmit status={status} disabled={!input.trim() || loading} />
+            <PromptInputFooter className="justify-between">
+              {loading ? (
+                <button
+                  type="button"
+                  onClick={stopScan}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/15 transition"
+                >
+                  <Square className="h-3 w-3" /> Stop scan
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onRunScan}
+                  disabled={!onRunScan}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium hover:border-primary/50 transition disabled:opacity-40"
+                >
+                  <Crosshair className="h-3 w-3" /> Run scan
+                </button>
+              )}
+              <PromptInputSubmit status={status} onStop={stopScan} disabled={!input.trim() && !loading} />
             </PromptInputFooter>
           </PromptInput>
         </div>
@@ -377,10 +401,12 @@ function EmptyStateSuggestions({
   chart,
   disabled,
   onPick,
+  onRunScan,
 }: {
   chart?: ChartContext;
   disabled: boolean;
   onPick: (text: string) => void;
+  onRunScan?: () => void;
 }) {
   const ticker = chart?.ticker ?? "XAU/USD";
   const tf = chart?.intervalLabel ?? "1H";
@@ -402,6 +428,16 @@ function EmptyStateSuggestions({
           Ask your coach, or tap a suggestion to get started.
         </div>
       </div>
+      {onRunScan && (
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={onRunScan}
+          className="w-full inline-flex items-center justify-center gap-1.5 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-xs font-medium text-primary hover:bg-primary/15 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Crosshair className="h-3.5 w-3.5" /> Run scan on {ticker}
+        </button>
+      )}
       <div className="w-full flex flex-col gap-1.5 mt-1">
         {suggestions.map((s) => (
           <button

@@ -727,6 +727,9 @@ function Dashboard() {
               ) : (
                 <DashboardChatPanel
                   ref={chatRef}
+                  onRunScan={runScan}
+                  onStopScan={() => { voice.stop(); setScanning(false); }}
+                  scanning={scanning}
                   chart={{
                     ticker: symbol.ticker,
                     intervalLabel,
@@ -771,6 +774,9 @@ function Dashboard() {
           onOpen={() => setCoachOpen(true)}
           onClose={() => setCoachOpen(false)}
           chatRef={chatRef}
+          onRunScan={runScan}
+          onStopScan={() => { voice.stop(); setScanning(false); }}
+          scanning={scanning}
           chart={{
             ticker: symbol.ticker,
             intervalLabel,
@@ -844,13 +850,16 @@ function ScanBody({
 }
 
 function FloatingCoach({
-  open, onOpen, onClose, chatRef, chart,
+  open, onOpen, onClose, chatRef, chart, onRunScan, onStopScan, scanning,
 }: {
   open: boolean;
   onOpen: () => void;
   onClose: () => void;
   chatRef: React.RefObject<DashboardChatHandle | null>;
   chart: { ticker: string; intervalLabel: string; enabledLevels: string; snapshot?: ChartSnapshot };
+  onRunScan?: () => void;
+  onStopScan?: () => void;
+  scanning?: boolean;
 }) {
   const [minimized, setMinimized] = useState(false);
   const expanded = open && !minimized;
@@ -903,7 +912,7 @@ function FloatingCoach({
             : "translate-y-full sm:translate-y-4 pointer-events-none sm:opacity-0"
         }`}
       >
-        <DashboardChatPanel ref={chatRef} chart={chart} onClose={() => { setMinimized(false); onClose(); }} onMinimize={() => setMinimized(true)} />
+        <DashboardChatPanel ref={chatRef} chart={chart} onClose={() => { setMinimized(false); onClose(); }} onMinimize={() => setMinimized(true)} onRunScan={onRunScan} onStopScan={onStopScan} scanning={scanning} />
       </div>
     </>
   );
