@@ -401,10 +401,12 @@ function EmptyStateSuggestions({
   chart,
   disabled,
   onPick,
+  onRunScan,
 }: {
   chart?: ChartContext;
   disabled: boolean;
   onPick: (text: string) => void;
+  onRunScan?: () => void;
 }) {
   const ticker = chart?.ticker ?? "XAU/USD";
   const tf = chart?.intervalLabel ?? "1H";
