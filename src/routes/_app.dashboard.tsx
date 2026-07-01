@@ -5,9 +5,6 @@ import { NativeChart, LEVEL_META, type LevelKey, type ChartSnapshot } from "@/co
 import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Sparkles, Clock, MessageSquare, X, Plug, Maximize2, Square, Paperclip, ChevronUp, PanelRightClose, PanelRightOpen, BarChart3 } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { useCoachVoice } from "@/hooks/useCoachVoice";
-import { DashboardChatPanel, type DashboardChatHandle } from "@/components/DashboardChatPanel";
-import { TodaysRecommendation } from "@/components/TodaysRecommendation";
-import { useWelcomeBackRecap } from "@/components/WelcomeBackGreeter";
 import { SCAN_LENSES, readActiveLensId, writeActiveLensId, type ScanLensId } from "@/lib/scanLens";
 import { readActiveCoach } from "@/lib/chat-client";
 import { voiceForCoach } from "@/lib/coachVoices";
