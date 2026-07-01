@@ -199,6 +199,7 @@ function AuthPage() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (busy) return;
     setErrorMsg(null);
     const schema = mode === "signup" ? signUpSchema : signInSchema;
     const parsed = schema.safeParse({ email, password });
@@ -211,6 +212,7 @@ function AuthPage() {
     // Show busy state IMMEDIATELY so the button reacts on click without
     // waiting on audio priming or any other setup work.
     setBusy(true);
+
     // Pre-create an Audio element inside the user gesture so .play() will
     // be allowed after we receive the ElevenLabs MP3 bytes. Mobile Safari
     // requires the element to actually start playing inside the gesture, so
