@@ -170,7 +170,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
   const linesRef = useRef<IPriceLine[]>([]);
   const [ready, setReady] = useState(false);
   // Session band positions {key,color,label,left,width} in pixels for the overlay
-  const [bands, setBands] = useState<Array<{ key: string; color: string; label: string; left: number; width: number; idx: number }>>([]);
+  const [bands, setBands] = useState<Array<{ key: string; color: string; label: string; left: number; width: number; top: number; height: number; high: number; low: number; idx: number }>>([]);
 
   const { data: liveOhlc, isLoading, isError } = useQuery<OhlcResponse>({
     queryKey: ["ohlc", ticker, interval],
