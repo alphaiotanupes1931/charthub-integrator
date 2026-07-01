@@ -599,7 +599,7 @@ function Dashboard() {
         <div className="absolute inset-0 flex flex-col">
           <div className="flex-1 min-h-0 overflow-hidden">
             {chartMode === "live" ? (
-              <TradingViewChart symbol={symbol.tv} interval={interval} enabled={levels} />
+              <TradingViewChart symbol={symbol.tv} interval={interval} enabled={levels} sessions={sessionsOn} />
             ) : (
               <NativeChart symbol={symbol.tv} ticker={symbol.ticker} interval={interval} enabled={levels} sessions={sessionsOn} onSnapshot={setSnapshot} />
             )}

@@ -5,6 +5,7 @@ interface Props {
   symbol: string;
   interval?: string;
   enabled?: Partial<Record<LevelKey, boolean>>;
+  sessions?: boolean;
 }
 
 // Map our level toggles to TradingView embed-widget built-in studies.
@@ -17,14 +18,17 @@ const STUDY_MAP: Partial<Record<LevelKey, string>> = {
   FIB:   "ZigZag@tv-basicstudies",
 };
 
-export function TradingViewChart({ symbol, interval = "D", enabled }: Props) {
+const SESSIONS_STUDY = "Sessions@tv-basicstudies";
+
+export function TradingViewChart({ symbol, interval = "D", enabled, sessions }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const studies = enabled
-    ? (Object.keys(STUDY_MAP) as LevelKey[])
-        .filter((k) => enabled[k])
-        .map((k) => STUDY_MAP[k]!)
-    : [];
+  const studies = [
+    ...(enabled
+      ? (Object.keys(STUDY_MAP) as LevelKey[]).filter((k) => enabled[k]).map((k) => STUDY_MAP[k]!)
+      : []),
+    ...(sessions ? [SESSIONS_STUDY] : []),
+  ];
   // Re-init when toggles change
   const studiesKey = studies.join("|");
 
