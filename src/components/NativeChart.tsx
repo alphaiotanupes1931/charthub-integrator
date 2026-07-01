@@ -170,7 +170,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
   const linesRef = useRef<IPriceLine[]>([]);
   const [ready, setReady] = useState(false);
   // Session band positions {key,color,label,left,width} in pixels for the overlay
-  const [bands, setBands] = useState<Array<{ key: string; color: string; label: string; left: number; width: number; idx: number }>>([]);
+  const [bands, setBands] = useState<Array<{ key: string; color: string; label: string; left: number; width: number; top: number; height: number; high: number; low: number; idx: number }>>([]);
 
   const { data: liveOhlc, isLoading, isError } = useQuery<OhlcResponse>({
     queryKey: ["ohlc", ticker, interval],
@@ -339,29 +339,45 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
 
     const recompute = () => {
       const ts = chart.timeScale();
+      const series = seriesRef.current;
       const visible = ts.getVisibleRange();
-      if (!visible) { setBands([]); return; }
+      if (!visible || !series) { setBands([]); return; }
       const from = Number(visible.from) * 1000;
       const to = Number(visible.to) * 1000;
       const DAY = 24 * 3600 * 1000;
-      // Walk each UTC day in the visible window and emit a band per session.
-      const out: Array<{ key: string; color: string; label: string; left: number; width: number; idx: number }> = [];
-      const firstDay = Math.floor(from / DAY) * DAY - DAY; // include prev day for sessions crossing midnight
+      const out: Array<{ key: string; color: string; label: string; left: number; width: number; top: number; height: number; high: number; low: number; idx: number }> = [];
+      const firstDay = Math.floor(from / DAY) * DAY - DAY;
       for (let d = firstDay; d <= to; d += DAY) {
         SESSIONS.forEach((sess, idx) => {
-          // session window: [d + startH, d + endH] (endH may wrap to next day if startH > endH)
           const startMs = d + sess.startH * 3600 * 1000;
           const endMs = sess.startH < sess.endH
             ? d + sess.endH * 3600 * 1000
             : d + (sess.endH + 24) * 3600 * 1000;
           if (endMs < from || startMs > to) return;
+          // Find candles within this session window to compute H/L box
+          const startSec = Math.floor(startMs / 1000);
+          const endSec = Math.floor(endMs / 1000);
+          let hi = -Infinity, lo = Infinity;
+          for (const c of candles) {
+            const t = Number(c.time);
+            if (t >= startSec && t <= endSec) {
+              if (c.high > hi) hi = c.high;
+              if (c.low < lo) lo = c.low;
+            }
+          }
+          if (!isFinite(hi) || !isFinite(lo)) return;
           const a = ts.timeToCoordinate(Math.floor(Math.max(startMs, from) / 1000) as Time);
           const b = ts.timeToCoordinate(Math.floor(Math.min(endMs, to) / 1000) as Time);
           if (a == null || b == null) return;
           const left = Math.min(a, b);
           const width = Math.abs(b - a);
           if (width < 2) return;
-          out.push({ key: `${d}-${sess.key}`, color: sess.color, label: sess.label, left, width, idx });
+          const yHi = series.priceToCoordinate(hi);
+          const yLo = series.priceToCoordinate(lo);
+          if (yHi == null || yLo == null) return;
+          const top = Math.min(yHi, yLo);
+          const height = Math.abs(yLo - yHi);
+          out.push({ key: `${d}-${sess.key}`, color: sess.color, label: sess.label, left, width, top, height, high: hi, low: lo, idx });
         });
       }
       setBands(out);
@@ -386,13 +402,24 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       {/* Session bands overlay */}
       {sessions && bands.length > 0 && (
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          {bands.map((b) => (
-            <div
-              key={b.key}
-              className="absolute top-0 bottom-6"
-              style={{ left: b.left, width: b.width, background: b.color, borderLeft: `1px dashed ${b.color.replace("0.08", "0.35")}`, borderRight: `1px dashed ${b.color.replace("0.08", "0.35")}` }}
-            />
-          ))}
+          {bands.map((b) => {
+            const border = b.color.replace("0.08", "0.55");
+            const fill = b.color.replace("0.08", "0.12");
+            return (
+              <div
+                key={b.key}
+                className="absolute"
+                style={{ left: b.left, width: b.width, top: b.top, height: Math.max(2, b.height), background: fill, border: `1px solid ${border}`, borderRadius: 2 }}
+              >
+                <span
+                  className="absolute -top-4 left-1 text-[9px] font-mono uppercase tracking-wider whitespace-nowrap"
+                  style={{ color: border }}
+                >
+                  {b.label} · H {b.high.toFixed(2)} · L {b.low.toFixed(2)}
+                </span>
+              </div>
+            );
+          })}
         </div>
       )}
       <div className="absolute left-2 top-2 sm:left-3 sm:top-3 z-10 max-w-[55%] rounded-md border border-border bg-background/70 backdrop-blur px-1.5 py-1 sm:px-2 text-[9px] sm:text-[10px] font-mono text-muted-foreground uppercase tracking-wider flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
