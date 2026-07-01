@@ -6,6 +6,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { useTimeFormat, formatTime } from "@/hooks/useTimeFormat";
 import { recordBrokerConnection } from "@/lib/broker.functions";
 import { exportMyData, deleteMyAccount } from "@/lib/privacy.functions";
+import { createPortalSession, getMySubscription } from "@/lib/billing.functions";
 import { setRecoveryCode, hasRecoveryCode } from "@/lib/recovery.functions";
 import { generateRecoveryCode } from "@/lib/recoveryCode";
 import { toast } from "sonner";
@@ -649,21 +650,87 @@ function SettingsPage() {
 
       {/* BILLING */}
       <SectionLabel>Billing</SectionLabel>
-      <Card>
-        <h2 className="flex items-center gap-2 text-lg font-semibold mb-4">
-          <CreditCard className="size-5 text-primary" />
-          Subscription
-        </h2>
-        <div className="text-sm text-muted-foreground mb-2">Status</div>
-        <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md bg-primary text-primary-foreground mb-5">
-          <ShieldCheck className="size-3.5" />
-          Active
-        </span>
-        <div>
-          <GhostButton><ExternalLink className="size-4" /> Manage Subscription</GhostButton>
-        </div>
-      </Card>
+      <BillingCard />
+
 
     </div>
   );
 }
+
+function BillingCard() {
+  const navigate = useNavigate();
+  const openPortal = useServerFn(createPortalSession);
+  const getSub = useServerFn(getMySubscription);
+  const [sub, setSub] = useState<{
+    tier: string | null;
+    status: string;
+    current_period_end: string | null;
+    trial_end: string | null;
+    cancel_at_period_end: boolean;
+  } | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    getSub().then((s) => {
+      if (!cancelled) setSub(s as typeof sub);
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [getSub]);
+
+  const active = sub && (sub.status === "active" || sub.status === "trialing");
+
+  async function manage() {
+    setLoading(true);
+    try {
+      const { url } = await openPortal();
+      if (url) window.location.assign(url);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not open billing portal");
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Card>
+      <h2 className="flex items-center gap-2 text-lg font-semibold mb-4">
+        <CreditCard className="size-5 text-primary" />
+        Subscription
+      </h2>
+      <div className="text-sm text-muted-foreground mb-2">Status</div>
+      <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md mb-5 ${
+        active
+          ? "bg-primary text-primary-foreground"
+          : "bg-muted text-muted-foreground"
+      }`}>
+        <ShieldCheck className="size-3.5" />
+        {sub ? (
+          <>
+            {sub.status}
+            {sub.tier ? ` · ${sub.tier}` : ""}
+            {sub.cancel_at_period_end ? " (cancelling)" : ""}
+          </>
+        ) : "No subscription"}
+      </span>
+      {sub?.current_period_end && (
+        <div className="text-xs text-muted-foreground mb-4">
+          {sub.status === "trialing" ? "Trial ends" : "Renews"} on{" "}
+          {new Date(sub.current_period_end).toLocaleDateString()}
+        </div>
+      )}
+      <div className="flex flex-wrap gap-2">
+        {active ? (
+          <GhostButton onClick={manage} disabled={loading}>
+            <ExternalLink className="size-4" />
+            {loading ? "Opening…" : "Manage subscription"}
+          </GhostButton>
+        ) : (
+          <GhostButton onClick={() => navigate({ to: "/pricing" })}>
+            <CreditCard className="size-4" /> Choose a plan
+          </GhostButton>
+        )}
+      </div>
+    </Card>
+  );
+}
+

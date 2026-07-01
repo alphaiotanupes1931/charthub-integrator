@@ -85,6 +85,15 @@ function AdminPage() {
     <div className="p-4 md:p-8 max-w-[1100px] mx-auto space-y-8">
       <PageHeader title="Admin" description="User insights and acquisition stats." />
 
+      <div>
+        <a
+          href="/admin/subscribers"
+          className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted"
+        >
+          View Stripe subscribers →
+        </a>
+      </div>
+
       {err && (
         <div className="rounded-md border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">{err}</div>
       )}
