@@ -207,11 +207,12 @@ function StrategiesPage() {
       {builderOpen && (
         <StrategyBuilderModal
           editing={editing}
-          onClose={() => { setBuilderOpen(false); setEditing(null); }}
+          onClose={() => { setBuilderOpen(false); setEditing(null); navigate({ to: "/strategies", search: {} }); }}
           onSaved={(s) => {
             refreshCustoms();
             setBuilderOpen(false);
             setEditing(null);
+            navigate({ to: "/strategies", search: {} });
             toast.success(`${s.name} saved`);
           }}
         />
