@@ -404,7 +404,8 @@ function Dashboard() {
   );
   const [levelsOpen, setLevelsOpen] = useState(false);
   const [coachOpen, setCoachOpen] = useState(false);
-  const [rightTab, setRightTab] = useState<"analysis" | "coach">("analysis");
+  const [rightTab, setRightTab] = useState<"chat" | "history">("chat");
+  const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [rightOpen, setRightOpen] = useState(true);
   const [snapshot, setSnapshot] = useState<ChartSnapshot | null>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
