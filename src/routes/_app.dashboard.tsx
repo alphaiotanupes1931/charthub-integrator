@@ -652,7 +652,7 @@ function Dashboard() {
       </div>
 
       {/* Row 2: Live Chart / Setup View tabs + Indicators */}
-      <div className="shrink-0 flex items-center gap-4 px-4 py-2 border-b border-border/60 bg-card/30 text-xs">
+      <div className="shrink-0 flex flex-wrap items-center gap-x-5 gap-y-2 px-4 py-2.5 border-b border-border/60 bg-card/30 text-xs">
 
         <button
           onClick={() => setChartTab("live")}
@@ -805,8 +805,8 @@ function Dashboard() {
               <NativeChart symbol={symbol.tv} ticker={symbol.ticker} interval={interval} enabled={levels} sessions={sessionsOn} onSnapshot={setSnapshot} annotations={aiAnnotations} candleType={candleType} />
             )}
             {chartTab === "live" && aiAnnotations.length > 0 && (
-              <div className="pointer-events-none absolute left-1/2 top-2 z-20 -translate-x-1/2 rounded-md border border-primary/40 bg-background/90 px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-primary backdrop-blur">
-                Native view · AI annotations active
+              <div className="pointer-events-none absolute right-3 top-3 z-20 rounded-md border border-primary/40 bg-background/90 px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-primary backdrop-blur">
+                Native · AI annotations
               </div>
             )}
             {aiConcept && (
@@ -821,9 +821,9 @@ function Dashboard() {
               <button
                 type="button"
                 onClick={() => setAiAnnotationsRaw([])}
-                className="absolute right-3 bottom-3 z-30 rounded-md border border-border bg-background/90 px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-muted-foreground hover:text-foreground backdrop-blur"
+                className="absolute right-3 top-12 z-30 rounded-md border border-border bg-background/90 px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-muted-foreground hover:text-foreground backdrop-blur"
               >
-                Clear AI markers
+                Clear markers
               </button>
             )}
           </div>
@@ -901,24 +901,8 @@ function Dashboard() {
                   <X className="h-3.5 w-3.5" />
                 </button>
               </div>
-              <div className="flex items-center justify-between gap-2 px-3 pb-2">
-                <span className="text-[9px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Panel width</span>
-                <div className="flex items-center gap-0.5 rounded-md border border-border/60 bg-background/40 p-0.5">
-                  {(["narrow", "default", "wide"] as const).map((w) => (
-                    <button
-                      key={w}
-                      onClick={() => setPanelWidth(w)}
-                      className={`rounded px-2 py-0.5 text-[10px] font-medium capitalize transition ${
-                        panelWidth === w ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"
-                      }`}
-                      title={`${w} panel`}
-                    >
-                      {w}
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
+
 
             <div className="flex-1 min-h-0 overflow-hidden relative">
               <div className={`absolute inset-0 overflow-y-auto ${rightTab === "analysis" ? "" : "hidden"}`}>
@@ -961,6 +945,23 @@ function Dashboard() {
                   onPick={(id) => { setActiveThreadId(id); setRightTab("chat"); }}
                   onNew={() => { setActiveThreadId(null); setRightTab("chat"); }}
                 />
+              </div>
+            </div>
+            {/* Panel width footer */}
+            <div className="shrink-0 border-t border-border/60 px-3 py-2 flex items-center justify-between gap-2">
+              <span className="text-[9px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Width</span>
+              <div className="flex items-center gap-0.5 rounded-md border border-border/60 bg-background/40 p-0.5">
+                {(["narrow", "default", "wide"] as const).map((w) => (
+                  <button
+                    key={w}
+                    onClick={() => setPanelWidth(w)}
+                    className={`rounded px-2.5 py-0.5 text-[10px] font-medium capitalize transition ${
+                      panelWidth === w ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {w}
+                  </button>
+                ))}
               </div>
             </div>
           </aside>
