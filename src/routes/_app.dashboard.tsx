@@ -413,8 +413,19 @@ function Dashboard() {
   const [panelWidth, setPanelWidth] = useState<"narrow" | "default" | "wide">("default");
   const [chartTab, setChartTab] = useState<"live" | "setup">("live");
   const [snapshot, setSnapshot] = useState<ChartSnapshot | null>(null);
-  const [aiAnnotations, setAiAnnotations] = useState<import("@/lib/chartAnnotations").ChartAnnotation[]>([]);
+  const [aiAnnotationsRaw, setAiAnnotationsRaw] = useState<import("@/lib/chartAnnotations").ChartAnnotation[]>([]);
   const [aiConcept, setAiConcept] = useState<import("@/lib/chartAnnotations").ConceptRef | null>(null);
+  const [aiGrade, setAiGrade] = useState<import("@/lib/chartAnnotations").ChartGrade | null>(null);
+  // Reject AI prices that are wildly outside the current price (>8%).
+  const aiAnnotations = useMemo(() => {
+    const lp = snapshot?.lastPrice;
+    if (!lp || !isFinite(lp)) return aiAnnotationsRaw;
+    const ok = (p: number) => Math.abs((p - lp) / lp) <= 0.08;
+    return aiAnnotationsRaw.filter((a) => {
+      if (a.kind === "zone") return ok(a.top) && ok(a.bottom);
+      return ok(a.price);
+    });
+  }, [aiAnnotationsRaw, snapshot?.lastPrice]);
   const pickerRef = useRef<HTMLDivElement>(null);
   const levelsRef = useRef<HTMLDivElement>(null);
   const lensRef = useRef<HTMLDivElement>(null);
