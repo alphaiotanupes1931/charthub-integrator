@@ -66,6 +66,7 @@ interface Props {
   enabled: Record<LevelKey, boolean>;
   sessions?: boolean;
   onSnapshot?: (snap: ChartSnapshot) => void;
+  annotations?: import("@/lib/chartAnnotations").ChartAnnotation[];
   className?: string;
 }
 
@@ -236,14 +237,17 @@ function computeLevels(candles: Candle[]) {
   return { vwap, poc, sr: clustered, zones, fvg, fib, liq, of, delta };
 }
 
-export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSnapshot, className }: Props) {
+export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSnapshot, annotations, className }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
   const linesRef = useRef<IPriceLine[]>([]);
+  const annLinesRef = useRef<IPriceLine[]>([]);
   const [ready, setReady] = useState(false);
   // Session band positions {key,color,label,left,width} in pixels for the overlay
   const [bands, setBands] = useState<Array<{ key: string; color: string; label: string; left: number; width: number; top: number; height: number; high: number; low: number; idx: number }>>([]);
+  // AI annotation zones projected into pixel coords for a shaded overlay
+  const [annZones, setAnnZones] = useState<Array<{ key: string; top: number; height: number; color: string; label?: string }>>([]);
 
   const { data: liveOhlc, isLoading, isError } = useQuery<OhlcResponse>({
     queryKey: ["ohlc", ticker, interval],
@@ -482,6 +486,68 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     };
   }, [sessions, ready, candles]);
 
+  // ---- AI annotations (hlines / zones / labels) ----
+  useEffect(() => {
+    if (!ready || !seriesRef.current) { setAnnZones([]); return; }
+    const s = seriesRef.current;
+    // Clear previous AI lines
+    annLinesRef.current.forEach((l) => { try { s.removePriceLine(l); } catch { /* ignore */ } });
+    annLinesRef.current = [];
+    if (!annotations || annotations.length === 0) { setAnnZones([]); return; }
+
+    const push = (price: number, color: string, title: string, dashed = false) => {
+      if (!isFinite(price)) return;
+      try {
+        const line = s.createPriceLine({
+          price, color, lineWidth: 2,
+          lineStyle: dashed ? LineStyle.Dashed : LineStyle.Solid,
+          axisLabelVisible: true, title,
+        });
+        annLinesRef.current.push(line);
+      } catch { /* ignore invalid prices */ }
+    };
+
+    annotations.forEach((a, i) => {
+      if (a.kind === "hline") {
+        push(a.price, a.color || "#fbbf24", a.label || `L${i + 1}`, !!a.dashed);
+      } else if (a.kind === "label") {
+        push(a.price, a.color || "#c084fc", a.text, true);
+      } else if (a.kind === "zone") {
+        const color = a.color || "#34d399";
+        push(a.top, color, `${a.label || "Zone"} ↑`, true);
+        push(a.bottom, color, `${a.label || "Zone"} ↓`, true);
+      }
+    });
+
+    // Build zone overlays with pixel coords
+    const chart = chartRef.current;
+    const recomputeZones = () => {
+      if (!seriesRef.current || !chart) return;
+      const out: Array<{ key: string; top: number; height: number; color: string; label?: string }> = [];
+      annotations.forEach((a, i) => {
+        if (a.kind !== "zone") return;
+        const yTop = seriesRef.current!.priceToCoordinate(a.top);
+        const yBot = seriesRef.current!.priceToCoordinate(a.bottom);
+        if (yTop == null || yBot == null) return;
+        const top = Math.min(yTop, yBot);
+        const height = Math.max(2, Math.abs(yBot - yTop));
+        out.push({ key: `ann-${i}`, top, height, color: a.color || "#34d399", label: a.label });
+      });
+      setAnnZones(out);
+    };
+    recomputeZones();
+    const ts = chart!.timeScale();
+    ts.subscribeVisibleTimeRangeChange(recomputeZones);
+    const ro = new ResizeObserver(recomputeZones);
+    if (containerRef.current) ro.observe(containerRef.current);
+    return () => {
+      ts.unsubscribeVisibleTimeRangeChange(recomputeZones);
+      ro.disconnect();
+    };
+  }, [annotations, ready, candles]);
+
+
+
   return (
     <div className={`relative h-full w-full ${className ?? ""}`}>
       <div ref={containerRef} className="absolute inset-0" />
@@ -509,6 +575,28 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
           })}
         </div>
       )}
+      {/* AI annotation zones (shaded) */}
+      {annZones.length > 0 && (
+        <div className="pointer-events-none absolute inset-x-0" style={{ top: 0, bottom: 0 }}>
+          {annZones.map((z) => (
+            <div
+              key={z.key}
+              className="absolute left-0 right-14"
+              style={{ top: z.top, height: z.height, background: `${z.color}22`, border: `1px dashed ${z.color}` }}
+            >
+              {z.label && (
+                <span
+                  className="absolute -top-4 left-1 text-[9px] font-mono uppercase tracking-wider whitespace-nowrap"
+                  style={{ color: z.color }}
+                >
+                  {z.label}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="absolute left-2 top-2 sm:left-3 sm:top-3 z-10 max-w-[55%] rounded-md border border-border bg-background/70 backdrop-blur px-1.5 py-1 sm:px-2 text-[9px] sm:text-[10px] font-mono text-muted-foreground uppercase tracking-wider flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
         <span className="truncate">{isLive ? "Live" : showLoader ? "Loading" : noLiveSource ? "Unavailable" : "Native"} · {ticker} · {interval}</span>
         {isLive && (

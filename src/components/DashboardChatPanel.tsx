@@ -27,6 +27,8 @@ import { voiceForCoach, COACH_VOICES } from "@/lib/coachVoices";
 import { useProfile } from "@/hooks/useProfile";
 import { compressImage, getScreenshotQuota, bumpScreenshotQuota } from "@/lib/imageCompress";
 import { toast } from "sonner";
+import { parseAiPayload, type ChartAnnotation, type ChartGrade, type ConceptRef } from "@/lib/chartAnnotations";
+import { ConceptDiagram } from "@/components/ConceptDiagram";
 
 export type DashboardChatHandle = {
   scan: (prompt: string) => void;
@@ -41,11 +43,11 @@ export type ChartContext = {
   snapshot?: import("@/components/NativeChart").ChartSnapshot;
 };
 
-type Props = { chart?: ChartContext; onClose?: () => void; onMinimize?: () => void; onRunScan?: () => void; onStopScan?: () => void; scanning?: boolean; threadIdOverride?: string | null; };
+type Props = { chart?: ChartContext; onClose?: () => void; onMinimize?: () => void; onRunScan?: () => void; onStopScan?: () => void; scanning?: boolean; threadIdOverride?: string | null; onAnnotations?: (a: ChartAnnotation[]) => void; onConcept?: (c: ConceptRef | null) => void; };
 
 const DASHBOARD_THREAD_FALLBACK_ID = "dashboard-scans";
 
-export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(function DashboardChatPanel({ chart, onClose, onMinimize, onRunScan, onStopScan, scanning, threadIdOverride }, ref) {
+export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(function DashboardChatPanel({ chart, onClose, onMinimize, onRunScan, onStopScan, scanning, threadIdOverride, onAnnotations, onConcept }, ref) {
   const [threadId, setThreadId] = useState(threadIdOverride || DASHBOARD_THREAD_FALLBACK_ID);
   const [initial, setInitial] = useState<UIMessage[]>([]);
   const getThread = useServerFn(getOrCreateDashboardThread);
@@ -126,12 +128,57 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getThread, getMsgs, waitForSession, threadIdOverride]);
 
-  return <ChatInner key={threadId} ref={ref} threadId={threadId} initial={initial} chart={chart} onClose={onClose} onMinimize={onMinimize} onRunScan={onRunScan} onStopScan={onStopScan} scanning={scanning} />;
+  return <ChatInner key={threadId} ref={ref} threadId={threadId} initial={initial} chart={chart} onClose={onClose} onMinimize={onMinimize} onRunScan={onRunScan} onStopScan={onStopScan} scanning={scanning} onAnnotations={onAnnotations} onConcept={onConcept} />;
 });
 
 
-const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: UIMessage[]; chart?: ChartContext; onClose?: () => void; onMinimize?: () => void; onRunScan?: () => void; onStopScan?: () => void; scanning?: boolean }>(
-  function ChatInner({ threadId, initial, chart, onClose, onMinimize, onRunScan, onStopScan, scanning }, ref) {
+function GradeCard({ grade }: { grade: ChartGrade }) {
+  const g = grade.grade.toUpperCase();
+  const tone = g.startsWith("A") ? "text-emerald-300 border-emerald-500/40 bg-emerald-500/10"
+    : g.startsWith("B") ? "text-lime-300 border-lime-500/40 bg-lime-500/10"
+    : g.startsWith("C") ? "text-amber-300 border-amber-500/40 bg-amber-500/10"
+    : g.startsWith("D") ? "text-orange-300 border-orange-500/40 bg-orange-500/10"
+    : "text-red-300 border-red-500/40 bg-red-500/10";
+  const biasTone = grade.bias === "long" ? "text-emerald-300"
+    : grade.bias === "short" ? "text-red-300"
+    : "text-muted-foreground";
+  const fmt = (n?: number) => (typeof n === "number" && isFinite(n) ? n.toString() : "—");
+  return (
+    <div className="rounded-lg border border-border bg-card/60 overflow-hidden">
+      <div className={`flex items-center justify-between px-3 py-2 border-b border-border/60 ${tone.split(" ").filter((c) => c.startsWith("bg-")).join(" ")}`}>
+        <div className="flex items-baseline gap-2">
+          <span className={`text-lg font-bold leading-none ${tone.split(" ").filter((c) => c.startsWith("text-")).join(" ")}`}>{g}</span>
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Grade</span>
+        </div>
+        {grade.bias && (
+          <span className={`text-xs font-semibold uppercase ${biasTone}`}>{grade.bias}</span>
+        )}
+      </div>
+      <div className="grid grid-cols-4 divide-x divide-border/60 text-center">
+        {(["entry","stop","tp1","tp2"] as const).map((k) => (
+          <div key={k} className="p-2">
+            <div className="text-[9px] uppercase tracking-wider text-muted-foreground">{k}</div>
+            <div className="text-xs font-mono text-foreground">{fmt(grade[k])}</div>
+          </div>
+        ))}
+      </div>
+      {(grade.strength || grade.weakness) && (
+        <div className="p-2 space-y-1 text-xs border-t border-border/60">
+          {grade.strength && (
+            <div><span className="text-emerald-400 font-semibold">Strength: </span><span className="text-foreground/90">{grade.strength}</span></div>
+          )}
+          {grade.weakness && (
+            <div><span className="text-red-400 font-semibold">Weakness: </span><span className="text-foreground/90">{grade.weakness}</span></div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: UIMessage[]; chart?: ChartContext; onClose?: () => void; onMinimize?: () => void; onRunScan?: () => void; onStopScan?: () => void; scanning?: boolean; onAnnotations?: (a: ChartAnnotation[]) => void; onConcept?: (c: ConceptRef | null) => void }>(
+  function ChatInner({ threadId, initial, chart, onClose, onMinimize, onRunScan, onStopScan, scanning, onAnnotations, onConcept }, ref) {
 
     const [input, setInput] = useState("");
     const [pendingImage, setPendingImage] = useState<{ url: string; name: string; mediaType: string } | null>(null);
@@ -224,12 +271,25 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
       if (lastSpokenIdRef.current === last.id) return;
       const text = last.parts
         .map((p) => (p.type === "text" ? (p as { text: string }).text : ""))
-        .join("")
-        .trim();
-      if (!text) return;
+        .join("");
+      const spoken = parseAiPayload(text).cleanText.trim();
+      if (!spoken) return;
       lastSpokenIdRef.current = last.id;
-      void voice.speak(text, voiceForCoach(readActiveCoach()));
+      void voice.speak(spoken, voiceForCoach(readActiveCoach()));
     }, [messages, status, voice]);
+
+    // Parse latest assistant message for chart annotations / concept / grade
+    // and push to parent (dashboard) so the native chart can render them.
+    useEffect(() => {
+      const last = [...messages].reverse().find((m) => m.role === "assistant");
+      if (!last) return;
+      const text = last.parts.map((p) => (p.type === "text" ? (p as { text: string }).text : "")).join("");
+      const parsed = parseAiPayload(text);
+      if (onAnnotations) onAnnotations(parsed.annotations);
+      if (onConcept) onConcept(parsed.concept ?? null);
+    }, [messages, onAnnotations, onConcept]);
+
+
 
 
     useImperativeHandle(ref, () => ({
@@ -412,16 +472,29 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               </div>
             )}
             {messages.map((m) => {
-              const text = m.parts
+              const raw = m.parts
                 .map((p) => (p.type === "text" ? (p as { text: string }).text : ""))
                 .join("");
+              if (m.role === "assistant") {
+                const parsed = parseAiPayload(raw);
+                return (
+                  <Message key={m.id} from={m.role}>
+                    <div className="flex flex-col gap-2 max-w-full">
+                      {parsed.cleanText && <MessageResponse>{parsed.cleanText}</MessageResponse>}
+                      {parsed.grade && <GradeCard grade={parsed.grade} />}
+                      {parsed.concept && <ConceptDiagram concept={parsed.concept} />}
+                      {parsed.annotations.length > 0 && (
+                        <div className="text-[10px] uppercase tracking-wider text-primary/80">
+                          Drawn on chart · {parsed.annotations.length} marker{parsed.annotations.length === 1 ? "" : "s"}
+                        </div>
+                      )}
+                    </div>
+                  </Message>
+                );
+              }
               return (
                 <Message key={m.id} from={m.role}>
-                  {m.role === "assistant" ? (
-                    <MessageResponse>{text}</MessageResponse>
-                  ) : (
-                    <MessageContent>{text}</MessageContent>
-                  )}
+                  <MessageContent>{raw}</MessageContent>
                 </Message>
               );
             })}
