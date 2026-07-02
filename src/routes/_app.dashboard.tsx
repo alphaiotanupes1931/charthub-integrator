@@ -1017,7 +1017,7 @@ function ChatHistoryList({
   const load = () => {
     setLoading(true);
     listFn()
-      .then((rows) => setThreads(rows as Array<{ id: string; title: string; updated_at: string }>))
+      .then((rows: unknown) => setThreads(rows as Array<{ id: string; title: string; updated_at: string }>))
       .catch(() => { /* ignore */ })
       .finally(() => setLoading(false));
   };
