@@ -67,11 +67,20 @@ export function ChartSignalCards({ grade, lastPrice, onClear }: Props) {
           <span className="rounded border border-border/60 bg-background/60 px-1.5 py-0.5 text-[10px] font-bold text-foreground">
             {grade.grade.toUpperCase()}
           </span>
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            className="inline-flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted/60"
+            title={expanded ? "Collapse" : "Expand"}
+            aria-label={expanded ? "Collapse" : "Expand"}
+          >
+            {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+          </button>
           {onClear && (
             <button
               type="button"
               onClick={onClear}
-              className="text-[9px] uppercase tracking-wider text-muted-foreground hover:text-foreground"
+              className="text-[11px] leading-none text-muted-foreground hover:text-foreground"
               title="Clear signal"
             >
               ×
