@@ -88,35 +88,39 @@ export function ChartSignalCards({ grade, lastPrice, onClear }: Props) {
           )}
         </div>
       </div>
-      <div className="divide-y divide-border/40">
-        {rows.map((r) => {
-          const Icon = r.icon;
-          const delta = pct(r.from, r.value);
-          return (
-            <div key={r.key} className="flex items-center justify-between px-2.5 py-1.5">
-              <div className="flex items-center gap-1.5">
-                <Icon className={`h-3 w-3 ${r.tone}`} />
-                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{r.label}</span>
-              </div>
-              <div className="flex items-baseline gap-1.5">
-                <span className={`font-mono text-[11px] ${r.tone}`}>{fmt(r.value)}</span>
-                {delta && (
-                  <span className="font-mono text-[9px] text-muted-foreground">{delta}</span>
-                )}
-              </div>
+      {expanded && (
+        <>
+          <div className="divide-y divide-border/40">
+            {rows.map((r) => {
+              const Icon = r.icon;
+              const delta = pct(r.from, r.value);
+              return (
+                <div key={r.key} className="flex items-center justify-between px-2.5 py-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <Icon className={`h-3 w-3 ${r.tone}`} />
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{r.label}</span>
+                  </div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className={`font-mono text-[11px] ${r.tone}`}>{fmt(r.value)}</span>
+                    {delta && (
+                      <span className="font-mono text-[9px] text-muted-foreground">{delta}</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          {(grade.strength || grade.weakness) && (
+            <div className="space-y-0.5 border-t border-border/60 px-2.5 py-1.5 text-[10px] leading-snug">
+              {grade.strength && (
+                <div><span className="text-emerald-400 font-semibold">+ </span><span className="text-foreground/80">{grade.strength}</span></div>
+              )}
+              {grade.weakness && (
+                <div><span className="text-red-400 font-semibold">− </span><span className="text-foreground/80">{grade.weakness}</span></div>
+              )}
             </div>
-          );
-        })}
-      </div>
-      {(grade.strength || grade.weakness) && (
-        <div className="space-y-0.5 border-t border-border/60 px-2.5 py-1.5 text-[10px] leading-snug">
-          {grade.strength && (
-            <div><span className="text-emerald-400 font-semibold">+ </span><span className="text-foreground/80">{grade.strength}</span></div>
           )}
-          {grade.weakness && (
-            <div><span className="text-red-400 font-semibold">− </span><span className="text-foreground/80">{grade.weakness}</span></div>
-          )}
-        </div>
+        </>
       )}
     </div>
   );
