@@ -772,7 +772,7 @@ function Dashboard() {
             {aiAnnotations.length > 0 && (
               <button
                 type="button"
-                onClick={() => setAiAnnotations([])}
+                onClick={() => setAiAnnotationsRaw([])}
                 className="absolute right-3 bottom-3 z-30 rounded-md border border-border bg-background/90 px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-muted-foreground hover:text-foreground backdrop-blur"
               >
                 Clear AI markers
@@ -893,7 +893,7 @@ function Dashboard() {
                   onStopScan={() => { voice.stop(); setScanning(false); }}
                   scanning={scanning}
                   threadIdOverride={activeThreadId}
-                  onAnnotations={setAiAnnotations}
+                  onAnnotations={setAiAnnotationsRaw}
                   onConcept={setAiConcept}
                   chart={{
                     ticker: symbol.ticker,
