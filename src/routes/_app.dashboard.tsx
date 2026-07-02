@@ -683,7 +683,7 @@ function Dashboard() {
           </button>
 
           {/* Chart mode toggle */}
-          <div className="hidden md:flex items-center gap-1 rounded-md border border-border p-0.5">
+          <div className="flex items-center gap-1 rounded-md border border-border p-0.5">
             <button
               onClick={() => setChartMode("live")}
               className={`inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium transition ${
