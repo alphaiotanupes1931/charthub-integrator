@@ -805,8 +805,8 @@ function Dashboard() {
               <NativeChart symbol={symbol.tv} ticker={symbol.ticker} interval={interval} enabled={levels} sessions={sessionsOn} onSnapshot={setSnapshot} annotations={aiAnnotations} candleType={candleType} />
             )}
             {chartTab === "live" && aiAnnotations.length > 0 && (
-              <div className="pointer-events-none absolute left-1/2 top-2 z-20 -translate-x-1/2 rounded-md border border-primary/40 bg-background/90 px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-primary backdrop-blur">
-                Native view · AI annotations active
+              <div className="pointer-events-none absolute right-3 top-3 z-20 rounded-md border border-primary/40 bg-background/90 px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-primary backdrop-blur">
+                Native · AI annotations
               </div>
             )}
             {aiConcept && (
