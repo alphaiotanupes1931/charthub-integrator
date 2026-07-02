@@ -85,6 +85,8 @@ function AdminPage() {
     <div className="p-4 md:p-8 max-w-[1100px] mx-auto space-y-8">
       <PageHeader title="Admin" description="User insights and acquisition stats." />
 
+      <PlatformStatusEditor />
+
       <div>
         <a
           href="/admin/subscribers"
