@@ -818,7 +818,7 @@ function Dashboard() {
 
         {rightOpen && (
           <aside className={`hidden lg:flex shrink-0 border-l border-border bg-card flex-col ${
-            panelWidth === "narrow" ? "w-[320px]" : panelWidth === "wide" ? "w-[480px]" : "w-[400px]"
+            panelWidth === "narrow" ? "w-[280px]" : panelWidth === "wide" ? "w-[560px]" : "w-[400px]"
           }`}>
             {/* Panel width row */}
             <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-border/60">
@@ -900,6 +900,7 @@ function Dashboard() {
                   scanning={scanning}
                   threadIdOverride={activeThreadId}
                   onAnnotations={setAiAnnotationsRaw}
+                  onGrade={setAiGrade}
                   onConcept={setAiConcept}
                   chart={{
                     ticker: symbol.ticker,
