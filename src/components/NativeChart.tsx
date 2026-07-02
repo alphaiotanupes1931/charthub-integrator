@@ -486,6 +486,68 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     };
   }, [sessions, ready, candles]);
 
+  // ---- AI annotations (hlines / zones / labels) ----
+  useEffect(() => {
+    if (!ready || !seriesRef.current) { setAnnZones([]); return; }
+    const s = seriesRef.current;
+    // Clear previous AI lines
+    annLinesRef.current.forEach((l) => { try { s.removePriceLine(l); } catch { /* ignore */ } });
+    annLinesRef.current = [];
+    if (!annotations || annotations.length === 0) { setAnnZones([]); return; }
+
+    const push = (price: number, color: string, title: string, dashed = false) => {
+      if (!isFinite(price)) return;
+      try {
+        const line = s.createPriceLine({
+          price, color, lineWidth: 2,
+          lineStyle: dashed ? LineStyle.Dashed : LineStyle.Solid,
+          axisLabelVisible: true, title,
+        });
+        annLinesRef.current.push(line);
+      } catch { /* ignore invalid prices */ }
+    };
+
+    annotations.forEach((a, i) => {
+      if (a.kind === "hline") {
+        push(a.price, a.color || "#fbbf24", a.label || `L${i + 1}`, !!a.dashed);
+      } else if (a.kind === "label") {
+        push(a.price, a.color || "#c084fc", a.text, true);
+      } else if (a.kind === "zone") {
+        const color = a.color || "#34d399";
+        push(a.top, color, `${a.label || "Zone"} ↑`, true);
+        push(a.bottom, color, `${a.label || "Zone"} ↓`, true);
+      }
+    });
+
+    // Build zone overlays with pixel coords
+    const chart = chartRef.current;
+    const recomputeZones = () => {
+      if (!seriesRef.current || !chart) return;
+      const out: Array<{ key: string; top: number; height: number; color: string; label?: string }> = [];
+      annotations.forEach((a, i) => {
+        if (a.kind !== "zone") return;
+        const yTop = seriesRef.current!.priceToCoordinate(a.top);
+        const yBot = seriesRef.current!.priceToCoordinate(a.bottom);
+        if (yTop == null || yBot == null) return;
+        const top = Math.min(yTop, yBot);
+        const height = Math.max(2, Math.abs(yBot - yTop));
+        out.push({ key: `ann-${i}`, top, height, color: a.color || "#34d399", label: a.label });
+      });
+      setAnnZones(out);
+    };
+    recomputeZones();
+    const ts = chart!.timeScale();
+    ts.subscribeVisibleTimeRangeChange(recomputeZones);
+    const ro = new ResizeObserver(recomputeZones);
+    if (containerRef.current) ro.observe(containerRef.current);
+    return () => {
+      ts.unsubscribeVisibleTimeRangeChange(recomputeZones);
+      ro.disconnect();
+    };
+  }, [annotations, ready, candles]);
+
+
+
   return (
     <div className={`relative h-full w-full ${className ?? ""}`}>
       <div ref={containerRef} className="absolute inset-0" />
