@@ -411,6 +411,7 @@ function Dashboard() {
   const [rightOpen, setRightOpen] = useState(true);
   const [panelWidth, setPanelWidth] = useState<"narrow" | "default" | "wide">("default");
   const [chartTab, setChartTab] = useState<"live" | "setup">("live");
+  const [candleType, setCandleType] = useState<"candle" | "ha">("candle");
   const [snapshot, setSnapshot] = useState<ChartSnapshot | null>(null);
   const [aiAnnotationsRaw, setAiAnnotationsRaw] = useState<import("@/lib/chartAnnotations").ChartAnnotation[]>([]);
   const [aiConcept, setAiConcept] = useState<import("@/lib/chartAnnotations").ConceptRef | null>(null);
@@ -681,6 +682,43 @@ function Dashboard() {
 
         <div className="flex-1" />
 
+        {/* Candle / Heikin-Ashi toggle (Setup View only) */}
+        <div className="inline-flex items-center rounded-md border border-border bg-background/50 p-0.5" title={chartTab === "setup" ? "Candle style" : "Available in Setup View"}>
+          <button
+            onClick={() => {
+              if (chartTab !== "setup") {
+                toast.info("Candle style only works in Setup View", { description: "Switch to Setup View to change candle rendering." });
+                return;
+              }
+              setCandleType("candle");
+            }}
+            className={`px-2 py-0.5 rounded text-[11px] font-medium transition ${
+              candleType === "candle" && chartTab === "setup"
+                ? "bg-primary/15 text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Candle
+          </button>
+          <button
+            onClick={() => {
+              if (chartTab !== "setup") {
+                toast.info("Heikin-Ashi only works in Setup View", { description: "Switch to Setup View to change candle rendering." });
+                return;
+              }
+              setCandleType("ha");
+            }}
+            className={`px-2 py-0.5 rounded text-[11px] font-medium transition ${
+              candleType === "ha" && chartTab === "setup"
+                ? "bg-primary/15 text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            HA
+          </button>
+        </div>
+
+
         <button
           onClick={() => {
             if (chartTab !== "setup") {
@@ -773,7 +811,7 @@ function Dashboard() {
             {chartMode === "live" && aiAnnotations.length === 0 ? (
               <TradingViewChart symbol={symbol.tv} interval={interval} enabled={levels} sessions={sessionsOn} />
             ) : (
-              <NativeChart symbol={symbol.tv} ticker={symbol.ticker} interval={interval} enabled={levels} sessions={sessionsOn} onSnapshot={setSnapshot} annotations={aiAnnotations} />
+              <NativeChart symbol={symbol.tv} ticker={symbol.ticker} interval={interval} enabled={levels} sessions={sessionsOn} onSnapshot={setSnapshot} annotations={aiAnnotations} candleType={candleType} />
             )}
             {chartMode === "live" && aiAnnotations.length > 0 && (
               <div className="pointer-events-none absolute left-1/2 top-2 z-20 -translate-x-1/2 rounded-md border border-primary/40 bg-background/90 px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-primary backdrop-blur">
