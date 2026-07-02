@@ -58,12 +58,17 @@ async def main() -> int:
 
         # 1. Load /auth in create-account mode.
         await page.goto(f"{BASE_URL}/auth", wait_until="domcontentloaded")
+        # Dismiss cookie banner if present so it doesn't intercept clicks.
+        got_it = page.get_by_role("button", name="Got it")
+        if await got_it.count():
+            await got_it.click()
         # Toggle to signup if the page opens in signin mode.
         create_link = page.get_by_role("button", name="Create one")
         if await create_link.count():
             await create_link.click()
         await expect(page.get_by_role("heading", name="Create your account")).to_be_visible()
         await page.screenshot(path=str(SCREENSHOTS / "01_auth.png"))
+
 
         # 2. Fill and submit the signup form.
         await page.get_by_label("Email").fill(email)
