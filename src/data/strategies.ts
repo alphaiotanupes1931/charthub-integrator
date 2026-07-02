@@ -438,7 +438,7 @@ export const STRATEGIES: Strategy[] = [
     winRate: 60,
     rr: 2.1,
     longDescription:
-      "VWAP is where the average participant is positioned for the day. Above VWAP, intraday bulls are in control; below, bears. The cleanest plays are first-touch reclaims and rejections.",
+      "VWAP - Volume Weighted Average Price - is the single most important intraday reference used by institutional desks. It represents the average price every participant has paid for the session, weighted by the volume traded at each price. That makes it the closest thing to an objective 'fair value' for the day. Above VWAP, buyers are winning and the average long is profitable; below VWAP, sellers are in control. Every professional execution algorithm is benchmarked against it.\n\nThe cleanest plays are first-touch reclaims (price reclaims VWAP after being below) and first-touch rejections (price rejects VWAP from below). These moments represent the point where the day's directional conviction is being tested - either it holds and the trend continues, or it fails and the session flips. Deviation bands (1σ and 2σ) around VWAP give you additional targets and mean-reversion zones that mimic Bollinger bands but with volume weighting.\n\nVWAP works best on liquid intraday instruments: index futures (ES, NQ), high-volume single stocks, and BTC/ETH during US hours. It resets each session, so it's not a swing tool. The most common mistake is treating VWAP as a magic support line and blindly buying it - it only holds when the higher-timeframe trend and session bias agree with the trade. When trend, session, and VWAP all align, few intraday setups are cleaner.",
     playbook: [
       {
         title: "Bias",
