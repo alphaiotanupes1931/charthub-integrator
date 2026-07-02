@@ -682,6 +682,43 @@ function Dashboard() {
 
         <div className="flex-1" />
 
+        {/* Candle / Heikin-Ashi toggle (Setup View only) */}
+        <div className="inline-flex items-center rounded-md border border-border bg-background/50 p-0.5" title={chartTab === "setup" ? "Candle style" : "Available in Setup View"}>
+          <button
+            onClick={() => {
+              if (chartTab !== "setup") {
+                toast.info("Candle style only works in Setup View", { description: "Switch to Setup View to change candle rendering." });
+                return;
+              }
+              setCandleType("candle");
+            }}
+            className={`px-2 py-0.5 rounded text-[11px] font-medium transition ${
+              candleType === "candle" && chartTab === "setup"
+                ? "bg-primary/15 text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Candle
+          </button>
+          <button
+            onClick={() => {
+              if (chartTab !== "setup") {
+                toast.info("Heikin-Ashi only works in Setup View", { description: "Switch to Setup View to change candle rendering." });
+                return;
+              }
+              setCandleType("ha");
+            }}
+            className={`px-2 py-0.5 rounded text-[11px] font-medium transition ${
+              candleType === "ha" && chartTab === "setup"
+                ? "bg-primary/15 text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            HA
+          </button>
+        </div>
+
+
         <button
           onClick={() => {
             if (chartTab !== "setup") {
