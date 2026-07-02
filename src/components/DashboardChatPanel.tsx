@@ -82,48 +82,49 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
   useEffect(() => {
     let cancelled = false;
 
-    const tryOnce = async () => {
-      const t = await getThread();
-      if (!t) throw new Error("no thread returned");
-      if (cancelled) return null;
-      const rows = await getMsgs({ data: { threadId: t.id } });
-      return { threadId: t.id, rows: rows as UIMessage[] };
-    };
-
     (async () => {
       const token = await waitForSession();
       if (cancelled) return;
-      if (!token) {
-        console.warn("[coach] session not ready; using live chat fallback");
+      if (!token) return;
+
+      // If a specific thread was requested, just load its messages.
+      if (threadIdOverride) {
+        try {
+          const rows = await getMsgs({ data: { threadId: threadIdOverride } });
+          if (!cancelled) {
+            setThreadId(threadIdOverride);
+            setInitial(rows as UIMessage[]);
+          }
+        } catch (e) {
+          console.warn("[chat] load thread failed", e);
+        }
         return;
       }
 
-      // Three attempts with backoff: handles worker cold starts and flaky mobile networks.
+      // Default: get-or-create the dashboard scratch thread with retry.
       const delays = [0, 800, 2200];
-      let lastErr: unknown = null;
       for (let i = 0; i < delays.length; i++) {
         if (cancelled) return;
         if (delays[i]) await new Promise((r) => setTimeout(r, delays[i]));
         try {
-          const loaded = await tryOnce();
-          if (!cancelled && loaded) {
-            setThreadId(loaded.threadId);
-            setInitial(loaded.rows);
+          const t = await getThread();
+          if (!t) throw new Error("no thread returned");
+          const rows = await getMsgs({ data: { threadId: t.id } });
+          if (!cancelled) {
+            setThreadId(t.id);
+            setInitial(rows as UIMessage[]);
           }
           return;
         } catch (e) {
-          lastErr = e;
-          console.warn(`[coach] load attempt ${i + 1} failed`, e);
-          // Refresh in case the token expired mid-flight.
+          console.warn(`[chat] load attempt ${i + 1} failed`, e);
           try { await supabase.auth.refreshSession(); } catch { /* ignore */ }
         }
       }
-      console.error("[coach] all attempts failed", lastErr);
     })();
 
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [getThread, getMsgs, waitForSession]);
+  }, [getThread, getMsgs, waitForSession, threadIdOverride]);
 
   return <ChatInner key={threadId} ref={ref} threadId={threadId} initial={initial} chart={chart} onClose={onClose} onMinimize={onMinimize} onRunScan={onRunScan} onStopScan={onStopScan} scanning={scanning} />;
 });
