@@ -238,7 +238,7 @@ function computeLevels(candles: Candle[]) {
   return { vwap, poc, sr: clustered, zones, fvg, fib, liq, of, delta };
 }
 
-export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSnapshot, annotations, className }: Props) {
+export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSnapshot, annotations, candleType = "candle", className }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
