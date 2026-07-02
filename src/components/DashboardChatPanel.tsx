@@ -441,14 +441,6 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
             >
               <ExternalLink className="h-4 w-4" />
             </Link>
-            <button
-              onClick={onMinimize}
-              className="h-9 w-9 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60"
-              title="Hide coach (keeps audio playing)"
-              aria-label="Hide coach"
-            >
-              <Minus className="h-4 w-4" />
-            </button>
             {onClose && (
               <button
                 onClick={onClose}
