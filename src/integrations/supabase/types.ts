@@ -186,6 +186,30 @@ export type Database = {
           },
         ]
       }
+      platform_status: {
+        Row: {
+          id: boolean
+          level: string
+          message: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: boolean
+          level?: string
+          message?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: boolean
+          level?: string
+          message?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           banned: boolean
@@ -365,6 +389,22 @@ export type Database = {
           count: number
           source: string
         }[]
+      }
+      admin_set_platform_status: {
+        Args: { _level: string; _message: string }
+        Returns: {
+          id: boolean
+          level: string
+          message: string
+          updated_at: string
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "platform_status"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       admin_users_overview: {
         Args: never

@@ -85,6 +85,8 @@ function AdminPage() {
     <div className="p-4 md:p-8 max-w-[1100px] mx-auto space-y-8">
       <PageHeader title="Admin" description="User insights and acquisition stats." />
 
+      <PlatformStatusEditor />
+
       <div>
         <a
           href="/admin/subscribers"
@@ -208,5 +210,102 @@ function AdminPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+type StatusLevel = "operational" | "degraded" | "down";
+
+const LEVEL_OPTIONS: { value: StatusLevel; label: string; cls: string }[] = [
+  { value: "operational", label: "Operational", cls: "border-emerald-500/40 text-emerald-400 bg-emerald-500/10" },
+  { value: "degraded",    label: "Degraded",    cls: "border-amber-500/40 text-amber-400 bg-amber-500/10" },
+  { value: "down",        label: "Down",        cls: "border-red-500/40 text-red-400 bg-red-500/10" },
+];
+
+function PlatformStatusEditor() {
+  const [level, setLevel] = useState<StatusLevel>("operational");
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [updatedAt, setUpdatedAt] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data, error } = await supabase
+        .from("platform_status" as never)
+        .select("level,message,updated_at")
+        .maybeSingle();
+      if (!error && data) {
+        const row = data as { level: StatusLevel; message: string; updated_at: string };
+        setLevel(row.level);
+        setMessage(row.message);
+        setUpdatedAt(row.updated_at);
+      }
+      setLoading(false);
+    })();
+  }, []);
+
+  const save = async () => {
+    setSaving(true);
+    const { data, error } = await supabase.rpc(
+      "admin_set_platform_status" as never,
+      { _level: level, _message: message } as never,
+    );
+    setSaving(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Platform status updated");
+    const row = data as { updated_at: string } | null;
+    if (row?.updated_at) setUpdatedAt(row.updated_at);
+  };
+
+  return (
+    <section className="rounded-xl border border-border bg-card p-5 space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Platform status</h2>
+          <p className="text-xs text-muted-foreground mt-1">Shown as a banner above every user's dashboard.</p>
+        </div>
+        {updatedAt && (
+          <span className="text-[11px] text-muted-foreground">Updated {new Date(updatedAt).toLocaleString()}</span>
+        )}
+      </div>
+
+      {loading ? (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Loading…</div>
+      ) : (
+        <>
+          <div className="flex flex-wrap gap-2">
+            {LEVEL_OPTIONS.map((o) => (
+              <button
+                key={o.value}
+                type="button"
+                onClick={() => setLevel(o.value)}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition ${
+                  level === o.value ? o.cls : "border-border text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+          <textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            rows={3}
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/40"
+            placeholder="Message shown to all users…"
+          />
+          <div className="flex justify-end">
+            <button
+              onClick={save}
+              disabled={saving || !message.trim()}
+              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+            >
+              {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+              Save status
+            </button>
+          </div>
+        </>
+      )}
+    </section>
   );
 }
