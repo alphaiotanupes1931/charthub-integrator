@@ -40,6 +40,7 @@ import { Route as AppGuideRouteImport } from './routes/_app.guide'
 import { Route as AppFriendsRouteImport } from './routes/_app.friends'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppCoachesRouteImport } from './routes/_app.coaches'
+import { Route as AppCoachDashboardRouteImport } from './routes/_app.coach-dashboard'
 import { Route as AppChatRouteImport } from './routes/_app.chat'
 import { Route as AppAnalyticsRouteImport } from './routes/_app.analytics'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
@@ -204,6 +205,11 @@ const AppCoachesRoute = AppCoachesRouteImport.update({
   path: '/coaches',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCoachDashboardRoute = AppCoachDashboardRouteImport.update({
+  id: '/coach-dashboard',
+  path: '/coach-dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppChatRoute = AppChatRouteImport.update({
   id: '/chat',
   path: '/chat',
@@ -265,6 +271,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AppAdminRouteWithChildren
   '/analytics': typeof AppAnalyticsRoute
   '/chat': typeof AppChatRouteWithChildren
+  '/coach-dashboard': typeof AppCoachDashboardRoute
   '/coaches': typeof AppCoachesRoute
   '/dashboard': typeof AppDashboardRoute
   '/friends': typeof AppFriendsRoute
@@ -305,6 +312,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/admin': typeof AppAdminRouteWithChildren
   '/analytics': typeof AppAnalyticsRoute
+  '/coach-dashboard': typeof AppCoachDashboardRoute
   '/coaches': typeof AppCoachesRoute
   '/dashboard': typeof AppDashboardRoute
   '/friends': typeof AppFriendsRoute
@@ -348,6 +356,7 @@ export interface FileRoutesById {
   '/_app/admin': typeof AppAdminRouteWithChildren
   '/_app/analytics': typeof AppAnalyticsRoute
   '/_app/chat': typeof AppChatRouteWithChildren
+  '/_app/coach-dashboard': typeof AppCoachDashboardRoute
   '/_app/coaches': typeof AppCoachesRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/friends': typeof AppFriendsRoute
@@ -391,6 +400,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/analytics'
     | '/chat'
+    | '/coach-dashboard'
     | '/coaches'
     | '/dashboard'
     | '/friends'
@@ -431,6 +441,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/admin'
     | '/analytics'
+    | '/coach-dashboard'
     | '/coaches'
     | '/dashboard'
     | '/friends'
@@ -473,6 +484,7 @@ export interface FileRouteTypes {
     | '/_app/admin'
     | '/_app/analytics'
     | '/_app/chat'
+    | '/_app/coach-dashboard'
     | '/_app/coaches'
     | '/_app/dashboard'
     | '/_app/friends'
@@ -742,6 +754,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCoachesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/coach-dashboard': {
+      id: '/_app/coach-dashboard'
+      path: '/coach-dashboard'
+      fullPath: '/coach-dashboard'
+      preLoaderRoute: typeof AppCoachDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/chat': {
       id: '/_app/chat'
       path: '/chat'
@@ -849,6 +868,7 @@ interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRouteWithChildren
   AppAnalyticsRoute: typeof AppAnalyticsRoute
   AppChatRoute: typeof AppChatRouteWithChildren
+  AppCoachDashboardRoute: typeof AppCoachDashboardRoute
   AppCoachesRoute: typeof AppCoachesRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppFriendsRoute: typeof AppFriendsRoute
@@ -867,6 +887,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAdminRoute: AppAdminRouteWithChildren,
   AppAnalyticsRoute: AppAnalyticsRoute,
   AppChatRoute: AppChatRouteWithChildren,
+  AppCoachDashboardRoute: AppCoachDashboardRoute,
   AppCoachesRoute: AppCoachesRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppFriendsRoute: AppFriendsRoute,

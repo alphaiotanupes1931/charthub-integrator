@@ -11,16 +11,12 @@ import {
   Users,
   Mic,
   BarChart3,
-  MessageSquare,
   Brain,
-  Crosshair,
-  Layers,
+  Activity,
   Settings as SettingsIcon,
   UserCog,
   ShieldCheck,
   Search,
-  Sparkles,
-  BellOff,
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
@@ -34,6 +30,7 @@ import { Tutorial } from "@/components/Tutorial";
 import { WelcomeBackGreeter, WelcomeBackProvider } from "@/components/WelcomeBackGreeter";
 import { useTheme } from "@/hooks/useTheme";
 import { useProfile } from "@/hooks/useProfile";
+import { ActiveCoachCard } from "@/components/ActiveCoachCard";
 
 type NavItem = {
   to: string;
@@ -43,19 +40,20 @@ type NavItem = {
 };
 
 const NAV: NavItem[] = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/guide", label: "Guide", icon: BookOpen },
-  { to: "/journal", label: "Trade Journal", icon: NotebookPen },
-  { to: "/strategies", label: "Strategies", icon: Library },
-  { to: "/levels", label: "Levels", icon: Layers },
-  { to: "/scan-lens", label: "Scan Lens", icon: Crosshair },
-  { to: "/coaches", label: "AI Coaches", icon: Users },
-  { to: "/analytics", label: "Analytics", icon: BarChart3 },
-  { to: "/memory", label: "Trading Memory", icon: Brain },
-  { to: "/settings", label: "Settings", icon: SettingsIcon },
-  { to: "/friends", label: "Friends", icon: Users },
-  { to: "/admin", label: "Admin", icon: ShieldCheck, accent: true },
+  { to: "/dashboard",       label: "Dashboard",       icon: LayoutDashboard },
+  { to: "/guide",           label: "Guide",           icon: BookOpen },
+  { to: "/journal",         label: "Trade Journal",   icon: NotebookPen },
+  { to: "/strategies",      label: "Strategies",      icon: Library },
+  { to: "/coaches",         label: "AI Coaches",      icon: Users },
+  { to: "/voice-coach",     label: "Voice Coach",     icon: Mic },
+  { to: "/analytics",       label: "Analytics",       icon: BarChart3 },
+  { to: "/memory",          label: "Trading Memory",  icon: Brain },
+  { to: "/status",          label: "System Status",   icon: Activity },
+  { to: "/settings",        label: "Settings",        icon: SettingsIcon },
+  { to: "/coach-dashboard", label: "Coach Dashboard", icon: UserCog },
+  { to: "/admin",           label: "Admin",           icon: ShieldCheck, accent: true },
 ];
+
 
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -66,8 +64,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const isDashboard = pathname === "/dashboard";
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { isAdmin } = useProfile();
+  const { isAdmin, profile } = useProfile();
   const nav = NAV.filter((n) => n.to !== "/admin" || isAdmin);
+
 
   async function handleSignOut() {
     try {
@@ -115,6 +114,12 @@ export function AppShell({ children }: { children: ReactNode }) {
         </button>
       </div>
 
+      {!collapsed && (
+        <div className="px-3 pb-2">
+          <SidebarSearch nav={nav} />
+        </div>
+      )}
+
       <nav className="flex-1 px-2 py-2 space-y-0.5 overflow-y-auto">
         {nav.map((item) => {
           const active = pathname === item.to || pathname.startsWith(item.to + "/");
@@ -140,8 +145,15 @@ export function AppShell({ children }: { children: ReactNode }) {
         })}
       </nav>
 
+      <ActiveCoachCard collapsed={collapsed} />
+
       {!collapsed && (
-        <div className="px-3 pb-3 space-y-3 border-t border-border/60 pt-3">
+        <div className="px-3 pb-3 space-y-2 border-t border-border/60 pt-3">
+          {profile?.email && (
+            <div className="text-[11px] text-muted-foreground truncate px-1" title={profile.email}>
+              {profile.email}
+            </div>
+          )}
           <button
             onClick={handleSignOut}
             className="w-full flex items-center gap-2 text-sm text-foreground/80 hover:text-foreground px-1"
@@ -153,6 +165,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       )}
     </>
   );
+
 
   return (
     <WelcomeBackProvider>
@@ -198,7 +211,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           >
             {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
           </button>
-          <HeaderSearch nav={nav} />
+          <div className="flex-1" />
           {/* Theme toggle */}
           <button
             onClick={toggle}
@@ -225,7 +238,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 }
 
-function HeaderSearch({ nav }: { nav: NavItem[] }) {
+function SidebarSearch({ nav }: { nav: NavItem[] }) {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
