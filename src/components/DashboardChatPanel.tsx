@@ -128,12 +128,12 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getThread, getMsgs, waitForSession, threadIdOverride]);
 
-  return <ChatInner key={threadId} ref={ref} threadId={threadId} initial={initial} chart={chart} onClose={onClose} onMinimize={onMinimize} onRunScan={onRunScan} onStopScan={onStopScan} scanning={scanning} />;
+  return <ChatInner key={threadId} ref={ref} threadId={threadId} initial={initial} chart={chart} onClose={onClose} onMinimize={onMinimize} onRunScan={onRunScan} onStopScan={onStopScan} scanning={scanning} onAnnotations={onAnnotations} onConcept={onConcept} />;
 });
 
 
-const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: UIMessage[]; chart?: ChartContext; onClose?: () => void; onMinimize?: () => void; onRunScan?: () => void; onStopScan?: () => void; scanning?: boolean }>(
-  function ChatInner({ threadId, initial, chart, onClose, onMinimize, onRunScan, onStopScan, scanning }, ref) {
+const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: UIMessage[]; chart?: ChartContext; onClose?: () => void; onMinimize?: () => void; onRunScan?: () => void; onStopScan?: () => void; scanning?: boolean; onAnnotations?: (a: ChartAnnotation[]) => void; onConcept?: (c: ConceptRef | null) => void }>(
+  function ChatInner({ threadId, initial, chart, onClose, onMinimize, onRunScan, onStopScan, scanning, onAnnotations, onConcept }, ref) {
 
     const [input, setInput] = useState("");
     const [pendingImage, setPendingImage] = useState<{ url: string; name: string; mediaType: string } | null>(null);
