@@ -361,8 +361,8 @@ function ScanTicket({
 function TicketCell({ label, value, tone }: { label: string; value: string; tone?: "good" | "bad" }) {
   const color = tone === "good" ? "text-emerald-400" : tone === "bad" ? "text-destructive" : "text-foreground";
   return (
-    <div className="rounded-md border border-border/60 bg-background/40 px-2.5 py-2">
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+    <div className="rounded-lg border border-border/60 bg-background/30 px-3 py-2.5">
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">{label}</div>
       <div className={`font-mono text-sm font-semibold ${color}`}>{value}</div>
     </div>
   );
