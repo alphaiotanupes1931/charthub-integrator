@@ -287,7 +287,8 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
       const parsed = parseAiPayload(text);
       if (onAnnotations) onAnnotations(parsed.annotations);
       if (onConcept) onConcept(parsed.concept ?? null);
-    }, [messages, onAnnotations, onConcept]);
+      if (onGrade && parsed.grade) onGrade(parsed.grade);
+    }, [messages, onAnnotations, onConcept, onGrade]);
 
 
 
