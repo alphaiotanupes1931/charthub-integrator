@@ -560,7 +560,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
         <div className="absolute right-2 top-11 sm:right-3 sm:top-12 z-10 max-w-[60%] rounded-md border border-border bg-background/70 backdrop-blur px-1.5 py-1 sm:px-2 text-[9px] sm:text-[10px] font-mono text-muted-foreground flex flex-wrap items-center justify-end gap-x-1.5 gap-y-0.5">
           {SESSIONS.map((s) => (
             <span key={s.key} className="inline-flex items-center gap-1">
-              <span className="h-2 w-2 rounded-sm shrink-0" style={{ background: s.color.replace("0.08", "0.6") }} />
+              <span className="h-2 w-2 rounded-sm shrink-0" style={{ background: s.color.replace("0.10", "0.7") }} />
               {s.label}
             </span>
           ))}
