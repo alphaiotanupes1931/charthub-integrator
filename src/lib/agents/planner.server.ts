@@ -28,7 +28,7 @@ const CritiqueSchema = z.object({
 function fallbackPlan(snap: MarketSnapshot, memo: ResearchMemo): z.infer<typeof PlanSchema> {
   return {
     grade: "NO ENTRY",
-    bias: memo.consensus === "Long" ? "Long" : memo.consensus === "Short" ? "Short" : "Neutral",
+    bias: memo.consensus === "bullish" ? "Long" : memo.consensus === "bearish" ? "Short" : "Neutral",
     confidence: memo.consensusConfidence ?? 0,
     entry: snap.lastPrice,
     stop: snap.lastPrice,
