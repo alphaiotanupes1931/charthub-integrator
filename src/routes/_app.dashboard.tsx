@@ -767,20 +767,20 @@ function Dashboard() {
 
             <div className="flex items-center gap-1 border-b border-border/60 p-1">
               <button
-                onClick={() => setRightTab("analysis")}
+                onClick={() => setRightTab("chat")}
                 className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded px-2.5 py-1.5 text-xs font-medium transition ${
-                  rightTab === "analysis" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
+                  rightTab === "chat" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <BarChart3 className="h-3.5 w-3.5" /> Analysis
+                <MessageSquare className="h-3.5 w-3.5" /> Chat
               </button>
               <button
-                onClick={() => setRightTab("coach")}
+                onClick={() => setRightTab("history")}
                 className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded px-2.5 py-1.5 text-xs font-medium transition ${
-                  rightTab === "coach" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
+                  rightTab === "history" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <MessageSquare className="h-3.5 w-3.5" /> Coach
+                <Clock className="h-3.5 w-3.5" /> History
               </button>
               <button
                 onClick={() => setRightOpen(false)}
@@ -792,44 +792,27 @@ function Dashboard() {
               </button>
             </div>
             <div className="flex-1 min-h-0 overflow-hidden relative">
-              {/* Analysis panel - hidden when Coach tab active, but stays mounted */}
-              <div className={`absolute inset-0 overflow-y-auto p-4 space-y-6 ${rightTab === "analysis" ? "" : "hidden"}`}>
-                <TodaysRecommendation />
-                <ScanBody
-                  result={result}
-                  scanning={scanning}
-                  symbol={symbol}
-                  intervalLabel={intervalLabel}
-                  lensId={lensId}
-                  runScan={runScan}
-                  onAttach={(file) => {
-                    setRightTab("coach");
-                    chatRef.current?.attach(file, `Scan this chart screenshot for ${symbol.ticker} on ${intervalLabel}. Give me grade, bias, entry, stop, TP1, TP2, R:R, and a 1-2 sentence rationale.`);
-                    setScanning(true);
-                    const lens = findLens(lensId);
-                    runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
-                      .then((plan) => setResult(plan as ScanResult))
-                      .catch(() => { /* coach chat still runs the vision analysis */ })
-                      .finally(() => setScanning(false));
-                  }}
-                  onStopScan={() => { chatRef.current?.stop(); voice.stop(); setScanning(false); }}
-                  onStopVoice={() => voice.stop()}
-                  voiceSpeaking={voice.speaking}
-                />
-              </div>
-              {/* Coach panel - stays mounted so in-flight scans keep streaming when switching tabs */}
-              <div className={`absolute inset-0 ${rightTab === "coach" ? "" : "hidden"}`}>
+              {/* Chat panel - stays mounted so in-flight scans keep streaming when switching tabs */}
+              <div className={`absolute inset-0 ${rightTab === "chat" ? "" : "hidden"}`}>
                 <DashboardChatPanel
                   ref={chatRef}
                   onRunScan={runScan}
                   onStopScan={() => { voice.stop(); setScanning(false); }}
                   scanning={scanning}
+                  threadIdOverride={activeThreadId}
                   chart={{
                     ticker: symbol.ticker,
                     intervalLabel,
                     enabledLevels: ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none",
                     snapshot: snapshot ?? undefined,
                   }}
+                />
+              </div>
+              <div className={`absolute inset-0 overflow-y-auto ${rightTab === "history" ? "" : "hidden"}`}>
+                <ChatHistoryList
+                  activeThreadId={activeThreadId}
+                  onPick={(id) => { setActiveThreadId(id); setRightTab("chat"); }}
+                  onNew={() => { setActiveThreadId(null); setRightTab("chat"); }}
                 />
               </div>
             </div>
