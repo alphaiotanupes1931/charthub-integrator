@@ -575,6 +575,28 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
           })}
         </div>
       )}
+      {/* AI annotation zones (shaded) */}
+      {annZones.length > 0 && (
+        <div className="pointer-events-none absolute inset-x-0" style={{ top: 0, bottom: 0 }}>
+          {annZones.map((z) => (
+            <div
+              key={z.key}
+              className="absolute left-0 right-14"
+              style={{ top: z.top, height: z.height, background: `${z.color}22`, border: `1px dashed ${z.color}` }}
+            >
+              {z.label && (
+                <span
+                  className="absolute -top-4 left-1 text-[9px] font-mono uppercase tracking-wider whitespace-nowrap"
+                  style={{ color: z.color }}
+                >
+                  {z.label}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="absolute left-2 top-2 sm:left-3 sm:top-3 z-10 max-w-[55%] rounded-md border border-border bg-background/70 backdrop-blur px-1.5 py-1 sm:px-2 text-[9px] sm:text-[10px] font-mono text-muted-foreground uppercase tracking-wider flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
         <span className="truncate">{isLive ? "Live" : showLoader ? "Loading" : noLiveSource ? "Unavailable" : "Native"} · {ticker} · {interval}</span>
         {isLive && (
