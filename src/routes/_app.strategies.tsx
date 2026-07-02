@@ -173,11 +173,22 @@ function StrategiesPage() {
                       </button>
                     </>
                   )}
+                  <button
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (!isActive) select(s.name); }}
+                    className={`text-[10px] font-semibold px-2 py-1 rounded border transition ${
+                      isActive
+                        ? "border-primary/50 bg-primary/15 text-primary cursor-default"
+                        : "border-primary/40 bg-primary/5 text-primary hover:bg-primary/15"
+                    }`}
+                    aria-label={isActive ? "Active strategy" : `Use ${s.name}`}
+                  >
+                    {isActive ? "Active" : "Use"}
+                  </button>
                   <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${levelColor[s.level]}`}>
                     {s.level}
                   </span>
-                </div>
-              </div>
+
               <div className="flex flex-wrap gap-1.5">
                 <span className="inline-flex items-center gap-1 rounded border border-border bg-background px-2 py-0.5 text-[11px] text-muted-foreground">
                   <StyleIcon className="h-3 w-3" /> {s.style}
