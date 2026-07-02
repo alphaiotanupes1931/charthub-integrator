@@ -489,17 +489,18 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       {sessions && bands.length > 0 && (
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           {bands.map((b) => {
-            const border = b.color.replace("0.08", "0.55");
-            const fill = b.color.replace("0.08", "0.12");
+            const border = b.color.replace("0.10", "0.65");
+            const fill = b.color.replace("0.10", "0.18");
+            const labelTop = -4 - b.idx * 12;
             return (
               <div
                 key={b.key}
                 className="absolute"
-                style={{ left: b.left, width: b.width, top: b.top, height: Math.max(2, b.height), background: fill, border: `1px solid ${border}`, borderRadius: 2 }}
+                style={{ left: b.left, width: b.width, top: b.top, height: Math.max(2, b.height), background: fill, border: `1px solid ${border}`, borderRadius: 2, boxShadow: `inset 0 0 0 9999px ${fill}` }}
               >
                 <span
-                  className="absolute -top-4 left-1 text-[9px] font-mono uppercase tracking-wider whitespace-nowrap"
-                  style={{ color: border }}
+                  className="absolute left-1 text-[9px] font-mono uppercase tracking-wider whitespace-nowrap"
+                  style={{ top: labelTop, color: border }}
                 >
                   {b.label} · H {b.high.toFixed(2)} · L {b.low.toFixed(2)}
                 </span>
