@@ -404,15 +404,12 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
         <Conversation className="flex-1 min-h-0">
           <ConversationContent className="px-3 py-4">
             {messages.length === 0 && (
-              <EmptyStateSuggestions
-                chart={chart}
-                disabled={loading}
-                onRunScan={onRunScan}
-                onPick={(text) => {
-                  if (voice.enabled) voice.prime();
-                  void sendMessage({ text });
-                }}
-              />
+              <div className="py-10 px-4 flex flex-col items-center gap-2 text-center">
+                <MessageSquare className="h-5 w-5 text-muted-foreground/70" />
+                <div className="text-xs text-muted-foreground max-w-xs">
+                  Ask anything, or hit Run scan to grade the current setup. Every scan and reply lands here in your chat history.
+                </div>
+              </div>
             )}
             {messages.map((m) => {
               const text = m.parts
