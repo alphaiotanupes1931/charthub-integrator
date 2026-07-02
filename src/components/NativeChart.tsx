@@ -66,6 +66,7 @@ interface Props {
   enabled: Record<LevelKey, boolean>;
   sessions?: boolean;
   onSnapshot?: (snap: ChartSnapshot) => void;
+  annotations?: import("@/lib/chartAnnotations").ChartAnnotation[];
   className?: string;
 }
 
