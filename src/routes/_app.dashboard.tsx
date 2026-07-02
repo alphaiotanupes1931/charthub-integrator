@@ -3,7 +3,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { TradingViewChart } from "@/components/TradingViewChart";
 import { NativeChart, LEVEL_META, type LevelKey, type ChartSnapshot } from "@/components/NativeChart";
-import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Sparkles, Clock, MessageSquare, X, Plug, Maximize2, Square, Paperclip, ChevronUp, PanelRightClose, PanelRightOpen, BarChart3, ThumbsUp, ThumbsDown, Brain } from "lucide-react";
+import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Sparkles, Clock, MessageSquare, X, Plug, Maximize2, Square, Paperclip, ChevronUp, PanelRightClose, PanelRightOpen, BarChart3, ThumbsUp, ThumbsDown, Brain, LineChart, Settings2 } from "lucide-react";
+import { NextScanBar } from "@/components/NextScanBar";
 import { useCoachVoice } from "@/hooks/useCoachVoice";
 import { DashboardChatPanel, type DashboardChatHandle } from "@/components/DashboardChatPanel";
 import { TodaysRecommendation } from "@/components/TodaysRecommendation";
@@ -405,9 +406,11 @@ function Dashboard() {
   );
   const [levelsOpen, setLevelsOpen] = useState(false);
   const [coachOpen, setCoachOpen] = useState(false);
-  const [rightTab, setRightTab] = useState<"chat" | "history">("chat");
+  const [rightTab, setRightTab] = useState<"analysis" | "chat" | "history">("analysis");
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [rightOpen, setRightOpen] = useState(true);
+  const [panelWidth, setPanelWidth] = useState<"narrow" | "default" | "wide">("default");
+  const [chartTab, setChartTab] = useState<"live" | "setup">("live");
   const [snapshot, setSnapshot] = useState<ChartSnapshot | null>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
   const levelsRef = useRef<HTMLDivElement>(null);
@@ -521,73 +524,84 @@ function Dashboard() {
   return (
     <div className="h-full flex flex-col overflow-hidden">
       <PlatformStatusBanner />
-      {/* Compact top toolbar */}
-      <div className="shrink-0 flex items-center gap-2 px-3 py-2 border-b border-border/60 bg-card/50">
-        <div className="flex items-center gap-2 min-w-0 flex-1">
-          <div className="relative shrink-0" ref={pickerRef} data-tour="symbol-picker">
-            <button
-              onClick={() => setPickerOpen((o) => !o)}
-              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-sm font-medium hover:border-primary/50 transition"
-              aria-haspopup="listbox"
-              aria-expanded={pickerOpen}
-            >
-              <span className="font-display text-lg font-semibold tracking-tight">{symbol.ticker}</span>
-              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${pickerOpen ? "rotate-180" : ""}`} />
-            </button>
-            {pickerOpen && (
-              <div role="listbox" className="absolute left-0 mt-2 w-[min(18rem,calc(100vw-2rem))] max-h-80 overflow-y-auto rounded-lg border border-border bg-card shadow-xl z-50">
-                {SYMBOLS.map((s) => {
-                  const active = s.tv === symbol.tv;
-                  return (
-                    <button
-                      key={s.tv}
-                      role="option"
-                      aria-selected={active}
-                      onClick={() => { setSymbol(s); setPickerOpen(false); }}
-                      className={`w-full text-left px-3 py-2.5 text-sm flex items-center justify-between gap-3 hover:bg-accent/40 transition ${
-                        active ? "bg-primary/10 text-primary" : "text-foreground"
-                      }`}
-                    >
-                      <div className="min-w-0">
-                        <div className="font-medium truncate">{s.ticker}</div>
-                        <div className="text-[11px] text-muted-foreground truncate">{s.name} · {s.venue}</div>
-                      </div>
-                      {active && <Check className="h-4 w-4 shrink-0" />}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-          <span className="hidden md:inline text-xs text-muted-foreground truncate">{symbol.name} · {symbol.venue}</span>
+      <NextScanBar />
+
+      {/* Row 1: symbol + timeframes + right-side pickers */}
+      <div className="shrink-0 flex items-center gap-2 px-3 py-2 border-b border-border/60 bg-card/40">
+        <div className="relative shrink-0" ref={pickerRef} data-tour="symbol-picker">
+          <button
+            onClick={() => setPickerOpen((o) => !o)}
+            className="inline-flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm hover:bg-accent/40 transition"
+            aria-haspopup="listbox"
+            aria-expanded={pickerOpen}
+          >
+            <span className="h-2 w-2 rounded-full bg-primary shadow-[0_0_8px_var(--primary)]" />
+            <span className="font-display text-base font-semibold tracking-tight uppercase">{symbol.ticker.replace("/", "").replace("XAUUSD", "GOLD")}</span>
+            <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${pickerOpen ? "rotate-180" : ""}`} />
+          </button>
+          {pickerOpen && (
+            <div role="listbox" className="absolute left-0 mt-2 w-[min(18rem,calc(100vw-2rem))] max-h-80 overflow-y-auto rounded-lg border border-border bg-card shadow-xl z-50">
+              {SYMBOLS.map((s) => {
+                const active = s.tv === symbol.tv;
+                return (
+                  <button
+                    key={s.tv}
+                    role="option"
+                    aria-selected={active}
+                    onClick={() => { setSymbol(s); setPickerOpen(false); }}
+                    className={`w-full text-left px-3 py-2.5 text-sm flex items-center justify-between gap-3 hover:bg-accent/40 transition ${
+                      active ? "bg-primary/10 text-primary" : "text-foreground"
+                    }`}
+                  >
+                    <div className="min-w-0">
+                      <div className="font-medium truncate">{s.ticker}</div>
+                      <div className="text-[11px] text-muted-foreground truncate">{s.name} · {s.venue}</div>
+                    </div>
+                    {active && <Check className="h-4 w-4 shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {/* Interval bar */}
-          <div className="hidden sm:flex items-center gap-1 rounded-lg border border-border bg-card p-1 overflow-x-auto max-w-[16rem]">
-            {INTERVALS.map((i) => (
-              <button
-                key={i.value}
-                onClick={() => setIntervalState(i.value)}
-                className={`shrink-0 rounded-md px-2.5 py-1 text-xs font-medium transition ${
-                  interval === i.value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {i.label}
-              </button>
-            ))}
-          </div>
+        {/* Timeframe pills */}
+        <div className="flex items-center gap-0.5 overflow-x-auto min-w-0">
+          {INTERVALS.map((i) => (
+            <button
+              key={i.value}
+              onClick={() => setIntervalState(i.value)}
+              className={`shrink-0 rounded-md px-2.5 py-1 text-xs font-medium transition ${
+                interval === i.value ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-accent/40"
+              }`}
+            >
+              {i.label}
+            </button>
+          ))}
+        </div>
 
-          {/* Scan Lens */}
+        <div className="flex-1" />
+
+        {/* Right-side pickers: TradingView badge, Wyckoff (lens), The Analyst (coach) */}
+        <div className="hidden md:flex items-center gap-1.5 shrink-0">
+          <button
+            onClick={() => setChartTab("live")}
+            className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition ${
+              chartTab === "live" ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-background/50 text-muted-foreground hover:text-foreground"
+            }`}
+            title="TradingView live chart"
+          >
+            <LineChart className="h-3.5 w-3.5" /> TradingView
+          </button>
+
           <div className="relative" ref={lensRef}>
             <button
               onClick={() => setLensOpen((o) => !o)}
-              className="inline-flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/5 px-2 py-1 text-xs font-medium text-primary hover:border-primary/60 transition"
-              title="Scan Lens"
+              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/50 px-2.5 py-1.5 text-xs font-medium hover:border-primary/50 transition"
+              title="Scan lens"
             >
-              <Crosshair className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Lens:</span>
-              <span>{activeLens.short}</span>
+              <Crosshair className="h-3.5 w-3.5 text-primary" />
+              <span>{activeLens.name}</span>
               <ChevronDown className={`h-3 w-3 transition-transform ${lensOpen ? "rotate-180" : ""}`} />
             </button>
             {lensOpen && (
@@ -613,113 +627,115 @@ function Dashboard() {
                   );
                 })}
                 <Link to="/scan-lens" className="block px-3 py-2 text-[11px] text-muted-foreground hover:text-foreground border-t border-border/60">
-                  Manage all lenses -
+                  Manage all lenses →
                 </Link>
               </div>
             )}
           </div>
 
-          {/* Levels */}
-          <div className="relative" ref={levelsRef}>
-            <button
-              onClick={() => setLevelsOpen((o) => !o)}
-              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/60 px-2 py-1 text-xs font-medium hover:border-primary/50 transition"
-              title="Toggle overlay zones / levels"
-            >
-              Levels <span className="text-muted-foreground">({enabledCount})</span>
-              <ChevronDown className={`h-3 w-3 transition-transform ${levelsOpen ? "rotate-180" : ""}`} />
-            </button>
-            {levelsOpen && (
-              <div className="absolute right-0 mt-2 w-64 rounded-lg border border-border bg-card shadow-xl z-50 p-2.5">
-                <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-2 px-1">
-                  Overlay levels
-                </div>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {ALL_LEVELS.map((k) => {
-                    const on = levels[k];
-                    const meta = LEVEL_META[k];
-                    return (
-                      <button
-                        key={k}
-                        onClick={() => toggleLevel(k)}
-                        className={`rounded-md border px-2 py-1.5 text-xs font-medium transition ${
-                          on ? meta.tone : "border-border text-muted-foreground hover:text-foreground"
-                        }`}
-                        style={on ? { boxShadow: `inset 0 0 0 1px ${meta.color}40` } : undefined}
-                      >
-                        {meta.label}
-                      </button>
-                    );
-                  })}
-                </div>
-                {chartMode === "live" && (
-                  <div className="mt-2 px-1 text-[10px] text-muted-foreground leading-relaxed">
-                    On the Live chart, FVG and Liq are Native-only - switch to Native Chart to see them.
-                  </div>
-                )}
-                <div className="mt-3 pt-3 border-t border-border/60 flex items-center justify-between text-[11px]">
-                  <button
-                    onClick={() => setLevels(Object.fromEntries(ALL_LEVELS.map((k) => [k, true])) as Record<LevelKey, boolean>)}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    All on
-                  </button>
-                  <button
-                    onClick={() => setLevels(Object.fromEntries(ALL_LEVELS.map((k) => [k, false])) as Record<LevelKey, boolean>)}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    All off
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Sessions toggle */}
-          <button
-            onClick={() => setSessionsOn((v) => !v)}
-            className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium transition ${
-              sessionsOn
-                ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
-                : "border-border bg-background/60 text-muted-foreground hover:text-foreground"
-            }`}
-            title="Toggle session boxes (Sydney, Tokyo, London, New York)"
+          <Link
+            to="/coaches"
+            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/50 px-2.5 py-1.5 text-xs font-medium hover:border-primary/50 transition"
+            title="Change active AI coach"
           >
-            <Clock className="h-3.5 w-3.5" />
-            Sessions <span className="text-muted-foreground">{sessionsOn ? "on" : "off"}</span>
-          </button>
-
-          {/* Chart mode toggle */}
-          <div className="flex items-center gap-1 rounded-md border border-border p-0.5">
-            <button
-              onClick={() => setChartMode("live")}
-              className={`inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium transition ${
-                chartMode === "live" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Activity className="h-3.5 w-3.5" /> Live
-            </button>
-            <button
-              onClick={() => setChartMode("native")}
-              className={`inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium transition ${
-                chartMode === "native" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <LayoutGrid className="h-3.5 w-3.5" /> Native
-            </button>
-          </div>
-
-          {/* Desktop right-rail toggle */}
-          <button
-            onClick={() => setRightOpen((v) => !v)}
-            className="hidden lg:inline-flex items-center gap-1.5 rounded-md border border-border bg-background/60 px-2 py-1 text-xs font-medium hover:border-primary/50 transition"
-            title={rightOpen ? "Hide side panel" : "Show side panel"}
-          >
-            {rightOpen ? <PanelRightClose className="h-3.5 w-3.5" /> : <PanelRightOpen className="h-3.5 w-3.5" />}
-            <span className="hidden xl:inline">{rightOpen ? "Hide" : "Show"}</span>
-          </button>
+            <span className="h-2 w-2 rounded-full bg-pink-400" />
+            <span>{readActiveCoach()}</span>
+            <ChevronDown className="h-3 w-3 text-muted-foreground" />
+          </Link>
         </div>
       </div>
+
+      {/* Row 2: Live Chart / Setup View tabs + Indicators */}
+      <div className="shrink-0 flex items-center gap-3 px-3 py-1.5 border-b border-border/60 bg-card/30 text-xs">
+        <button
+          onClick={() => { setChartTab("live"); setChartMode("live"); }}
+          className={`inline-flex items-center gap-1.5 py-1.5 border-b-2 transition ${
+            chartTab === "live" ? "border-primary text-primary font-semibold" : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Activity className="h-3.5 w-3.5" /> Live Chart
+        </button>
+        <button
+          onClick={() => { setChartTab("setup"); setChartMode("native"); }}
+          className={`inline-flex items-center gap-1.5 py-1.5 border-b-2 transition ${
+            chartTab === "setup" ? "border-primary text-primary font-semibold" : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Crosshair className="h-3.5 w-3.5" /> Setup View
+        </button>
+
+        <div className="flex-1" />
+
+        <button
+          onClick={() => setSessionsOn((v) => !v)}
+          className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium transition ${
+            sessionsOn
+              ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
+              : "border-border bg-background/50 text-muted-foreground hover:text-foreground"
+          }`}
+          title="Toggle session boxes"
+        >
+          <Clock className="h-3 w-3" /> Sessions
+        </button>
+
+        <div className="relative" ref={levelsRef}>
+          <button
+            onClick={() => setLevelsOpen((o) => !o)}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/50 px-2 py-1 text-xs font-medium hover:border-primary/50 transition"
+          >
+            <Settings2 className="h-3 w-3" /> Indicators <span className="text-muted-foreground">({enabledCount})</span>
+            <ChevronDown className={`h-3 w-3 transition-transform ${levelsOpen ? "rotate-180" : ""}`} />
+          </button>
+          {levelsOpen && (
+            <div className="absolute right-0 mt-2 w-64 rounded-lg border border-border bg-card shadow-xl z-50 p-2.5">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-2 px-1">
+                Overlay indicators
+              </div>
+              <div className="grid grid-cols-3 gap-1.5">
+                {ALL_LEVELS.map((k) => {
+                  const on = levels[k];
+                  const meta = LEVEL_META[k];
+                  return (
+                    <button
+                      key={k}
+                      onClick={() => toggleLevel(k)}
+                      className={`rounded-md border px-2 py-1.5 text-xs font-medium transition ${
+                        on ? meta.tone : "border-border text-muted-foreground hover:text-foreground"
+                      }`}
+                      style={on ? { boxShadow: `inset 0 0 0 1px ${meta.color}40` } : undefined}
+                    >
+                      {meta.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="mt-3 pt-3 border-t border-border/60 flex items-center justify-between text-[11px]">
+                <button
+                  onClick={() => setLevels(Object.fromEntries(ALL_LEVELS.map((k) => [k, true])) as Record<LevelKey, boolean>)}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  All on
+                </button>
+                <button
+                  onClick={() => setLevels(Object.fromEntries(ALL_LEVELS.map((k) => [k, false])) as Record<LevelKey, boolean>)}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  All off
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <button
+          onClick={() => setRightOpen((v) => !v)}
+          className="hidden lg:inline-flex items-center gap-1.5 rounded-md border border-border bg-background/50 px-2 py-1 text-xs font-medium hover:border-primary/50 transition"
+          title={rightOpen ? "Hide side panel" : "Show side panel"}
+        >
+          {rightOpen ? <PanelRightClose className="h-3 w-3" /> : <PanelRightOpen className="h-3 w-3" />}
+        </button>
+      </div>
+
 
       {/* Chart area */}
       <div className="flex-1 min-h-0 flex bg-card overflow-hidden" data-tour="chart">
@@ -762,11 +778,46 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Right rail - desktop only. Sibling of chart so it never covers it. */}
         {rightOpen && (
-          <aside className="hidden lg:flex w-[400px] shrink-0 border-l border-border bg-card flex-col">
+          <aside className={`hidden lg:flex shrink-0 border-l border-border bg-card flex-col ${
+            panelWidth === "narrow" ? "w-[320px]" : panelWidth === "wide" ? "w-[480px]" : "w-[400px]"
+          }`}>
+            {/* Panel width row */}
+            <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-border/60">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Panel width</div>
+              <div className="flex items-center gap-1">
+                {(["narrow", "default", "wide"] as const).map((w) => (
+                  <button
+                    key={w}
+                    onClick={() => setPanelWidth(w)}
+                    className={`rounded px-2 py-1 text-[11px] font-medium capitalize transition ${
+                      panelWidth === w ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {w}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setRightOpen(false)}
+                  className="ml-1 h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                  title="Close panel"
+                  aria-label="Close panel"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
 
+            {/* Tabs */}
             <div className="flex items-center gap-1 border-b border-border/60 p-1">
+              <button
+                onClick={() => setRightTab("analysis")}
+                className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded px-2.5 py-1.5 text-xs font-medium transition ${
+                  rightTab === "analysis" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <BarChart3 className="h-3.5 w-3.5" /> Analysis
+              </button>
               <button
                 onClick={() => setRightTab("chat")}
                 className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded px-2.5 py-1.5 text-xs font-medium transition ${
@@ -783,17 +834,26 @@ function Dashboard() {
               >
                 <Clock className="h-3.5 w-3.5" /> History
               </button>
-              <button
-                onClick={() => setRightOpen(false)}
-                className="h-8 w-8 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                title="Close panel"
-                aria-label="Close panel"
-              >
-                <X className="h-4 w-4" />
-              </button>
             </div>
+
             <div className="flex-1 min-h-0 overflow-hidden relative">
-              {/* Chat panel - stays mounted so in-flight scans keep streaming when switching tabs */}
+              <div className={`absolute inset-0 overflow-y-auto ${rightTab === "analysis" ? "" : "hidden"}`}>
+                <div className="p-3 space-y-3">
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Order flow</div>
+                  <ScanBody
+                    result={result}
+                    scanning={scanning}
+                    symbol={symbol}
+                    intervalLabel={intervalLabel}
+                    lensId={lensId}
+                    runScan={runScan}
+                    onAttach={() => { /* handled in chat tab */ }}
+                    onStopScan={() => { chatRef.current?.stop(); voice.stop(); setScanning(false); }}
+                    onStopVoice={() => voice.stop()}
+                    voiceSpeaking={voice.speaking}
+                  />
+                </div>
+              </div>
               <div className={`absolute inset-0 ${rightTab === "chat" ? "" : "hidden"}`}>
                 <DashboardChatPanel
                   ref={chatRef}
@@ -819,6 +879,7 @@ function Dashboard() {
             </div>
           </aside>
         )}
+
       </div>
 
       {/* Mobile scan card */}
