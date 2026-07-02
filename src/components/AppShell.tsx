@@ -147,7 +147,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <ActiveCoachCard collapsed={collapsed} />
 
-      {!collapsed && (
+      {!collapsed ? (
         <div className="px-3 pb-3 space-y-2 border-t border-border/60 pt-3">
           {profile?.email && (
             <div className="text-[11px] text-muted-foreground truncate px-1" title={profile.email}>
@@ -155,11 +155,41 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           )}
           <button
+            onClick={toggle}
+            className="w-full flex items-center justify-between gap-2 rounded-md border border-border/60 px-2 py-1.5 text-sm text-foreground/80 hover:text-foreground hover:bg-accent/40"
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            <span className="flex items-center gap-2">
+              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              {theme === "dark" ? "Light mode" : "Dark mode"}
+            </span>
+            <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{theme}</span>
+          </button>
+          <button
             onClick={handleSignOut}
             className="w-full flex items-center gap-2 text-sm text-foreground/80 hover:text-foreground px-1"
           >
             <LogOut className="h-4 w-4" />
             Sign Out
+          </button>
+        </div>
+      ) : (
+        <div className="px-2 pb-3 pt-3 border-t border-border/60 flex flex-col items-center gap-2">
+          <button
+            onClick={toggle}
+            className="h-9 w-9 rounded-md border border-border/60 flex items-center justify-center text-muted-foreground hover:text-foreground"
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            title={theme === "dark" ? "Light mode" : "Dark mode"}
+          >
+            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
+          <button
+            onClick={handleSignOut}
+            className="h-9 w-9 rounded-md text-muted-foreground hover:text-foreground flex items-center justify-center"
+            aria-label="Sign out"
+            title="Sign out"
+          >
+            <LogOut className="h-4 w-4" />
           </button>
         </div>
       )}
