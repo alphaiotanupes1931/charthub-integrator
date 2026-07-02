@@ -15,6 +15,7 @@ import { recordHermesFeedback } from "@/lib/agents/hermes.functions";
 import type { ResearchMemo } from "@/lib/agents/types";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
+import { PlatformStatusBanner } from "@/components/PlatformStatusBanner";
 
 type DashboardSearch = { ask?: string };
 
