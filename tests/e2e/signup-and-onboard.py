@@ -133,8 +133,9 @@ async def main() -> int:
             )
             print("[e2e] /pricing rendered plan content correctly")
         elif "/dashboard" in landed:
-            await expect(page).to_have_url(lambda u: "/dashboard" in u)
+            assert "/dashboard" in page.url
             print("[e2e] landed on /dashboard")
+
         else:
             raise AssertionError(f"Unexpected final URL: {landed}")
 
