@@ -271,11 +271,11 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
       if (lastSpokenIdRef.current === last.id) return;
       const text = last.parts
         .map((p) => (p.type === "text" ? (p as { text: string }).text : ""))
-        .join("")
-        .trim();
-      if (!text) return;
+        .join("");
+      const spoken = parseAiPayload(text).cleanText.trim();
+      if (!spoken) return;
       lastSpokenIdRef.current = last.id;
-      void voice.speak(text, voiceForCoach(readActiveCoach()));
+      void voice.speak(spoken, voiceForCoach(readActiveCoach()));
     }, [messages, status, voice]);
 
     // Parse latest assistant message for chart annotations / concept / grade
