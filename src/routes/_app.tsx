@@ -117,7 +117,9 @@ export const Route = createFileRoute("/_app")({
     }
     logGate({ step: "hydrated", userId: user.id, email: user.email ?? null, attempts: 0 });
 
+    let gateSoftFailed = false;
     const gateSnapshot = await withTimeout(getDashboardGateSnapshot(), "access check", 12_000).catch((err) => {
+      gateSoftFailed = true;
       logGate({ step: "access-check-soft-failed", message: err instanceof Error ? err.message : String(err) });
       if (isTimeoutError(err, "access check")) {
         logGate({ step: "profile-timeout-soft-allow", message: err instanceof Error ? err.message : String(err) });
@@ -129,6 +131,7 @@ export const Route = createFileRoute("/_app")({
         subscriptionStatus: null,
       };
     });
+
     const prof = gateSnapshot.profile;
 
     logGate({
@@ -162,37 +165,43 @@ export const Route = createFileRoute("/_app")({
     logGate({ step: "role", isAdmin });
 
     if (!isAdmin) {
-      let status = gateSnapshot.subscriptionStatus;
-      let synced: string | null | undefined;
-      if (status !== "active" && status !== "trialing") {
-        try {
-          const s = await withTimeout(
-            syncMySubscriptionFromStripe(),
-            "billing sync",
-            4_500,
-          );
-          synced = s?.status ?? null;
-          status = synced ?? status;
-        } catch (err) {
-          synced = `error:${(err as Error)?.message ?? "unknown"}`;
-          // Fall back to the local row.
+      // If the access check itself failed, don't force-boot a possibly-paying user to /pricing.
+      if (gateSoftFailed) {
+        logGate({ step: "subscription-skip-soft-fail" });
+      } else {
+        let status = gateSnapshot.subscriptionStatus;
+        let synced: string | null | undefined;
+        if (status !== "active" && status !== "trialing") {
+          try {
+            const s = await withTimeout(
+              syncMySubscriptionFromStripe(),
+              "billing sync",
+              4_500,
+            );
+            synced = s?.status ?? null;
+            status = synced ?? status;
+          } catch (err) {
+            synced = `error:${(err as Error)?.message ?? "unknown"}`;
+            // Fall back to the local row.
+          }
+        }
+        const active = status === "active" || status === "trialing";
+        logGate({
+          step: "subscription",
+          localStatus: gateSnapshot.subscriptionStatus,
+          syncedStatus: synced,
+          active,
+        });
+        const onAllowedPath = BILLING_ALLOWED_PATHS.some((p) =>
+          location.pathname.startsWith(p),
+        );
+        if (!active && !onAllowedPath) {
+          logGate({ step: "redirect", to: "/pricing", reason: `inactive-subscription:${status ?? "none"}` });
+          throw redirect({ to: "/pricing" });
         }
       }
-      const active = status === "active" || status === "trialing";
-      logGate({
-        step: "subscription",
-        localStatus: gateSnapshot.subscriptionStatus,
-        syncedStatus: synced,
-        active,
-      });
-      const onAllowedPath = BILLING_ALLOWED_PATHS.some((p) =>
-        location.pathname.startsWith(p),
-      );
-      if (!active && !onAllowedPath) {
-        logGate({ step: "redirect", to: "/pricing", reason: `inactive-subscription:${status ?? "none"}` });
-        throw redirect({ to: "/pricing" });
-      }
     }
+
 
     logGate({ step: "allow", pathname: location.pathname });
     return { user };
