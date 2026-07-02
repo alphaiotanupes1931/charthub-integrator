@@ -115,11 +115,11 @@ function tdInterval(interval: string): string {
 function tickerToTwelveData(ticker: string): string | null {
   const t = ticker.toUpperCase();
   if (/^[A-Z]{3}\/[A-Z]{3}$/.test(t)) return t;
-  if (t === "NAS100") return "QQQ";
-  if (t === "SPX500") return "SPY";
-  if (t === "US30") return "DIA";
+  // Indices: TwelveData free tier doesn't cover ^NDX/^GSPC/^DJI reliably.
+  // Skip TD for indices; Yahoo fallback returns the real index prices.
   return null;
 }
+
 
 async function fetchTwelveData(symbol: string, interval: string): Promise<OhlcBar[]> {
   const apiKey = process.env.TWELVE_DATA_API_KEY;
@@ -148,15 +148,19 @@ function tickerToYahoo(ticker: string): string | null {
   const t = ticker.toUpperCase();
   if (t.includes("BTC")) return "BTC-USD";
   if (t.includes("ETH")) return "ETH-USD";
+  if (t.includes("XRP")) return "XRP-USD";
   if (t === "XAU/USD") return "GC=F";
-  if (t === "NAS100") return "QQQ";
-  if (t === "SPX500") return "SPY";
-  if (t === "US30") return "DIA";
+  if (t === "XAG/USD") return "SI=F";
+  if (t === "WTI OIL") return "CL=F";
+  if (t === "NAS100") return "^NDX";      // Real Nasdaq-100 index (~20,000+), not QQQ ETF (~500)
+  if (t === "SPX500") return "^GSPC";     // Real S&P 500 index
+  if (t === "US30")   return "^DJI";      // Real Dow Jones index
   if (t === "EUR/USD") return "EURUSD=X";
   if (t === "GBP/USD") return "GBPUSD=X";
   if (t === "USD/JPY") return "JPY=X";
   return null;
 }
+
 
 function yahooInterval(interval: string): { interval: string; range: string } {
   switch (interval) {
