@@ -172,7 +172,7 @@ export const STRATEGIES: Strategy[] = [
     winRate: 55,
     rr: 2,
     longDescription:
-      "A US equity open scalp. You are looking for stocks gapping 4%+ on news with relative volume well above average. The play is the first continuation off the opening range, not the gap itself.",
+      "Gap and Go is a US equities open-scalping strategy popularized by high-volume day traders. The setup begins pre-market: you scan for stocks gapping 4% or more on fresh catalysts (earnings beats, FDA news, sector momentum) with relative volume well above their 30-day average. These stocks arrive at the 9:30 open loaded with real interest, real emotion, and real order flow - all the ingredients you need for a clean continuation.\n\nThe actual entry is not the gap itself - it's the first breakout of the opening-range high (typically the 1- or 5-minute ORH) with volume expanding. The gap tells you which direction institutions have committed to; the opening range tells you when retail conviction confirms. Fading the gap is a completely different (and far more dangerous) strategy - Gap and Go only works with the trend of the gap, never against it.\n\nThis is a high-frequency, high-focus strategy that lives and dies in the first 30 minutes of the session. Winners are quick (1-2R inside 15 minutes); losers are killed just as fast because the invalidation - a break back into the pre-market range - happens on the same timeframe. It rewards preparation and punishes hesitation. Traders who watch too many tickers or hesitate on entries miss the entire move and end up chasing extended stocks into the 10am reversal.",
     playbook: [
       {
         title: "Setup",
