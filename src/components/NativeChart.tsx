@@ -70,11 +70,13 @@ interface Props {
 }
 
 // FX session windows in UTC (approximate, ignores DST).
+// Rendered as translucent full-range boxes framing each session's high/low,
+// mirroring TradingView's "Sessions" indicator seen in the reference chart.
 const SESSIONS = [
-  { key: "Sydney",   startH: 22, endH: 7,  color: "rgba(56, 189, 248, 0.08)",  label: "Sydney"   }, // sky
-  { key: "Tokyo",    startH: 0,  endH: 9,  color: "rgba(244, 114, 182, 0.08)", label: "Tokyo"    }, // pink
-  { key: "London",   startH: 8,  endH: 17, color: "rgba(251, 191, 36, 0.08)",  label: "London"   }, // amber
-  { key: "New York", startH: 13, endH: 22, color: "rgba(52, 211, 153, 0.08)",  label: "New York" }, // emerald
+  { key: "Sydney",   startH: 22, endH: 7,  color: "rgba(56, 189, 248, 0.10)",  label: "Sydney"   }, // sky
+  { key: "Tokyo",    startH: 0,  endH: 9,  color: "rgba(244, 114, 182, 0.10)", label: "Tokyo"    }, // pink
+  { key: "London",   startH: 8,  endH: 17, color: "rgba(251, 191, 36, 0.10)",  label: "London"   }, // amber
+  { key: "New York", startH: 13, endH: 22, color: "rgba(52, 211, 153, 0.10)",  label: "New York" }, // emerald
 ];
 
 
@@ -487,17 +489,18 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       {sessions && bands.length > 0 && (
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           {bands.map((b) => {
-            const border = b.color.replace("0.08", "0.55");
-            const fill = b.color.replace("0.08", "0.12");
+            const border = b.color.replace("0.10", "0.65");
+            const fill = b.color.replace("0.10", "0.18");
+            const labelTop = -4 - b.idx * 12;
             return (
               <div
                 key={b.key}
                 className="absolute"
-                style={{ left: b.left, width: b.width, top: b.top, height: Math.max(2, b.height), background: fill, border: `1px solid ${border}`, borderRadius: 2 }}
+                style={{ left: b.left, width: b.width, top: b.top, height: Math.max(2, b.height), background: fill, border: `1px solid ${border}`, borderRadius: 2, boxShadow: `inset 0 0 0 9999px ${fill}` }}
               >
                 <span
-                  className="absolute -top-4 left-1 text-[9px] font-mono uppercase tracking-wider whitespace-nowrap"
-                  style={{ color: border }}
+                  className="absolute left-1 text-[9px] font-mono uppercase tracking-wider whitespace-nowrap"
+                  style={{ top: labelTop, color: border }}
                 >
                   {b.label} · H {b.high.toFixed(2)} · L {b.low.toFixed(2)}
                 </span>
@@ -557,7 +560,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
         <div className="absolute right-2 top-11 sm:right-3 sm:top-12 z-10 max-w-[60%] rounded-md border border-border bg-background/70 backdrop-blur px-1.5 py-1 sm:px-2 text-[9px] sm:text-[10px] font-mono text-muted-foreground flex flex-wrap items-center justify-end gap-x-1.5 gap-y-0.5">
           {SESSIONS.map((s) => (
             <span key={s.key} className="inline-flex items-center gap-1">
-              <span className="h-2 w-2 rounded-sm shrink-0" style={{ background: s.color.replace("0.08", "0.6") }} />
+              <span className="h-2 w-2 rounded-sm shrink-0" style={{ background: s.color.replace("0.10", "0.7") }} />
               {s.label}
             </span>
           ))}
