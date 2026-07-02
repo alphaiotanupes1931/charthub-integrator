@@ -682,21 +682,34 @@ function Dashboard() {
         <div className="flex-1" />
 
         <button
-          onClick={() => setSessionsOn((v) => !v)}
+          onClick={() => {
+            if (chartTab !== "setup") {
+              toast.info("Sessions only work in Setup View", { description: "Switch to Setup View to overlay session boxes." });
+              return;
+            }
+            setSessionsOn((v) => !v);
+          }}
           className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium transition ${
-            sessionsOn
+            sessionsOn && chartTab === "setup"
               ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
               : "border-border bg-background/50 text-muted-foreground hover:text-foreground"
           }`}
-          title="Toggle session boxes"
+          title={chartTab === "setup" ? "Toggle session boxes" : "Available in Setup View"}
         >
           <Clock className="h-3 w-3" /> Sessions
         </button>
 
         <div className="relative" ref={levelsRef}>
           <button
-            onClick={() => setLevelsOpen((o) => !o)}
+            onClick={() => {
+              if (chartTab !== "setup") {
+                toast.info("Indicators only work in Setup View", { description: "Switch to Setup View to enable overlay indicators." });
+                return;
+              }
+              setLevelsOpen((o) => !o);
+            }}
             className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/50 px-2 py-1 text-xs font-medium hover:border-primary/50 transition"
+            title={chartTab === "setup" ? "Overlay indicators" : "Available in Setup View"}
           >
             <Settings2 className="h-3 w-3" /> Indicators <span className="text-muted-foreground">({enabledCount})</span>
             <ChevronDown className={`h-3 w-3 transition-transform ${levelsOpen ? "rotate-180" : ""}`} />
