@@ -317,7 +317,7 @@ export const STRATEGIES: Strategy[] = [
     winRate: 68,
     rr: 1.5,
     longDescription:
-      "Works only in ranging, non-trending markets. The bands (20, 2) define statistical extremes. The trade is a fade back to the mid-band (20 SMA). High hit rate, smaller R - position sizing discipline is critical.",
+      "Mean Reversion using Bollinger Bands is a statistical fade strategy that exploits the tendency of price to snap back to its short-term average after extreme moves. Bollinger Bands (20-period SMA, 2 standard deviations) define a live probability envelope: roughly 95% of price action should occur inside the bands, so a tag of the outer band represents a statistically stretched state that historically reverts.\n\nThe strategy is deceptively simple - short the upper band, long the lower band, exit at the middle band (20 SMA) - but its profitability depends entirely on regime selection. It only works in ranging, non-trending markets. In a real trend, price will ride the outer band for dozens of bars and each fade is a losing trade. Successful mean-reversion traders use a trend filter (ADX below 20, or a flat 200 EMA) to gate every setup and refuse to take signals when the environment is directional.\n\nBecause the average target (mid-band) is closer than a typical trend target, the reward-to-risk is modest (~1.4R) and the win rate needs to be high (60%+) to be profitable. Position sizing discipline is everything - one 'this time it'll turn' trade against a real trend erases weeks of small winners. This makes it an excellent starter strategy for traders who want to build the habit of trading only high-probability, well-defined setups and taking profits without hesitation.",
     playbook: [
       {
         title: "Setup",
