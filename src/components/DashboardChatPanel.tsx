@@ -512,63 +512,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
       </div>
 );
 
-function EmptyStateSuggestions({
-  chart,
-  disabled,
-  onPick,
-  onRunScan,
-}: {
-  chart?: ChartContext;
-  disabled: boolean;
-  onPick: (text: string) => void;
-  onRunScan?: () => void;
-}) {
-  const ticker = chart?.ticker ?? "XAU/USD";
-  const tf = chart?.intervalLabel ?? "1H";
-  const levels = chart?.enabledLevels || "VWAP, POC, S/R";
-  const hasSnapshot = !!chart?.snapshot;
-  const suggestions = [
-    hasSnapshot
-      ? `Scan my chart right now - ${ticker} ${tf}. Use the live price, VWAP, POC, and any liquidity/order-flow data you can see to tell me bias, entry, stop, TP1 and TP2.`
-      : `Analyze ${ticker} for a trade setup. Give me entry, stop loss, and take profit levels.`,
-    `What's my edge on ${ticker} based on my journal?`,
-    `Walk me through a ${tf} ${ticker} plan using ${levels}.`,
-    `What's my biggest weakness right now? Be specific with trade examples.`,
-  ];
-  return (
-    <div className="py-6 px-1 flex flex-col items-center gap-3">
-      <div className="flex flex-col items-center gap-1.5 text-center">
-        <MessageSquare className="h-5 w-5 text-muted-foreground/70" />
-        <div className="text-xs text-muted-foreground">
-          Ask your coach, or tap a suggestion to get started.
-        </div>
-      </div>
-      {onRunScan && (
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={onRunScan}
-          className="w-full inline-flex items-center justify-center gap-1.5 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-xs font-medium text-primary hover:bg-primary/15 transition disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Crosshair className="h-3.5 w-3.5" /> Run scan on {ticker}
-        </button>
-      )}
-      <div className="w-full flex flex-col gap-1.5 mt-1">
-        {suggestions.map((s) => (
-          <button
-            key={s}
-            type="button"
-            disabled={disabled}
-            onClick={() => onPick(s)}
-            className="text-left text-xs leading-snug rounded-lg border border-border/70 bg-background/40 hover:bg-primary/5 hover:border-primary/40 transition px-3 py-2 text-foreground/90 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {s}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
+
 
   },
 );
