@@ -132,6 +132,51 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
 });
 
 
+function GradeCard({ grade }: { grade: ChartGrade }) {
+  const g = grade.grade.toUpperCase();
+  const tone = g.startsWith("A") ? "text-emerald-300 border-emerald-500/40 bg-emerald-500/10"
+    : g.startsWith("B") ? "text-lime-300 border-lime-500/40 bg-lime-500/10"
+    : g.startsWith("C") ? "text-amber-300 border-amber-500/40 bg-amber-500/10"
+    : g.startsWith("D") ? "text-orange-300 border-orange-500/40 bg-orange-500/10"
+    : "text-red-300 border-red-500/40 bg-red-500/10";
+  const biasTone = grade.bias === "long" ? "text-emerald-300"
+    : grade.bias === "short" ? "text-red-300"
+    : "text-muted-foreground";
+  const fmt = (n?: number) => (typeof n === "number" && isFinite(n) ? n.toString() : "—");
+  return (
+    <div className="rounded-lg border border-border bg-card/60 overflow-hidden">
+      <div className={`flex items-center justify-between px-3 py-2 border-b border-border/60 ${tone.split(" ").filter((c) => c.startsWith("bg-")).join(" ")}`}>
+        <div className="flex items-baseline gap-2">
+          <span className={`text-lg font-bold leading-none ${tone.split(" ").filter((c) => c.startsWith("text-")).join(" ")}`}>{g}</span>
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Grade</span>
+        </div>
+        {grade.bias && (
+          <span className={`text-xs font-semibold uppercase ${biasTone}`}>{grade.bias}</span>
+        )}
+      </div>
+      <div className="grid grid-cols-4 divide-x divide-border/60 text-center">
+        {(["entry","stop","tp1","tp2"] as const).map((k) => (
+          <div key={k} className="p-2">
+            <div className="text-[9px] uppercase tracking-wider text-muted-foreground">{k}</div>
+            <div className="text-xs font-mono text-foreground">{fmt(grade[k])}</div>
+          </div>
+        ))}
+      </div>
+      {(grade.strength || grade.weakness) && (
+        <div className="p-2 space-y-1 text-xs border-t border-border/60">
+          {grade.strength && (
+            <div><span className="text-emerald-400 font-semibold">Strength: </span><span className="text-foreground/90">{grade.strength}</span></div>
+          )}
+          {grade.weakness && (
+            <div><span className="text-red-400 font-semibold">Weakness: </span><span className="text-foreground/90">{grade.weakness}</span></div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: UIMessage[]; chart?: ChartContext; onClose?: () => void; onMinimize?: () => void; onRunScan?: () => void; onStopScan?: () => void; scanning?: boolean; onAnnotations?: (a: ChartAnnotation[]) => void; onConcept?: (c: ConceptRef | null) => void }>(
   function ChatInner({ threadId, initial, chart, onClose, onMinimize, onRunScan, onStopScan, scanning, onAnnotations, onConcept }, ref) {
 
