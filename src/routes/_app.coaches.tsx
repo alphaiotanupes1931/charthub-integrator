@@ -103,18 +103,33 @@ function CoachesPage() {
     const v = COACH_VOICES[name];
     if (!v) return;
     setPreviewing(name);
+
+    const fallbackToWebSpeech = async () => {
+      const { speakWithWebSpeech } = await import("@/lib/webSpeech");
+      const ok = await speakWithWebSpeech(v.preview, v.id, {
+        onEnd: () => setPreviewing(null),
+        onError: () => { setPreviewing(null); toast.error("Voice preview failed"); },
+      });
+      if (!ok) { setPreviewing(null); toast.error("Voice preview failed"); }
+    };
+
     try {
       const res = await fetch("/api/tts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: v.preview, voiceId: v.id }),
       });
+      // 204 = server signalled "use browser TTS fallback"
+      if (res.status === 204 || res.headers.get("X-TTS-Fallback") === "browser") {
+        await fallbackToWebSpeech();
+        return;
+      }
       if (!res.ok) {
-        toast.error("Voice preview failed");
-        setPreviewing(null);
+        await fallbackToWebSpeech();
         return;
       }
       const blob = await res.blob();
+      if (!blob.size) { await fallbackToWebSpeech(); return; }
       const url = URL.createObjectURL(blob);
       const audio = new Audio(url);
       audioRef.current = audio;
@@ -122,10 +137,10 @@ function CoachesPage() {
       audio.onerror = () => { setPreviewing(null); };
       await audio.play();
     } catch {
-      setPreviewing(null);
-      toast.error("Voice preview failed");
+      await fallbackToWebSpeech();
     }
   };
+
 
   const activeCoach = COACHES.find((c) => c.name === active);
 
