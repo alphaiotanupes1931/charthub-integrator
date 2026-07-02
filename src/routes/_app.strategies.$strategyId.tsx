@@ -140,9 +140,13 @@ function StrategyDetailPage() {
         <div className="space-y-6">
           <section className="rounded-xl border border-border bg-card p-6">
             <h2 className="text-lg font-semibold mb-3">How it works</h2>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              {strategy.longDescription ?? strategy.description}
-            </p>
+            <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+              {(strategy.longDescription ?? strategy.description)
+                .split(/\n{2,}/)
+                .map((para, i) => (
+                  <p key={i}>{para}</p>
+                ))}
+            </div>
           </section>
 
           {(strategy as CustomStrategy).custom && (strategy as CustomStrategy).rules && (
