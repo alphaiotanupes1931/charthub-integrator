@@ -1,7 +1,7 @@
 // Layer 3 — Planner. Paperclip-style plan → critique → refine loop (max 2 iterations)
 // that consumes a ResearchMemo + MarketSnapshot and produces a concrete TradePlan.
 
-import { generateText, Output } from "ai";
+import { generateText, Output, NoObjectGeneratedError } from "ai";
 import { z } from "zod";
 import { createAiGatewayProvider } from "@/lib/ai-gateway.server";
 import type { MarketSnapshot, ResearchMemo, TradePlan } from "./types";
@@ -11,19 +11,33 @@ const MODEL = "google/gemini-3-flash-preview";
 const PlanSchema = z.object({
   grade: z.enum(["A+", "A", "B", "C", "NO ENTRY"]),
   bias: z.enum(["Long", "Short", "Neutral"]),
-  confidence: z.number().min(0).max(100),
+  confidence: z.number(),
   entry: z.number(),
   stop: z.number(),
   tp1: z.number(),
   tp2: z.number(),
-  thesis: z.string().min(10).max(400),
-  invalidation: z.string().min(5).max(200),
+  thesis: z.string(),
+  invalidation: z.string(),
 });
 
 const CritiqueSchema = z.object({
   verdict: z.enum(["approve", "revise"]),
-  reason: z.string().min(5).max(300),
+  reason: z.string(),
 });
+
+function fallbackPlan(snap: MarketSnapshot, memo: ResearchMemo): z.infer<typeof PlanSchema> {
+  return {
+    grade: "NO ENTRY",
+    bias: memo.consensus === "Long" ? "Long" : memo.consensus === "Short" ? "Short" : "Neutral",
+    confidence: memo.consensusConfidence ?? 0,
+    entry: snap.lastPrice,
+    stop: snap.lastPrice,
+    tp1: snap.lastPrice,
+    tp2: snap.lastPrice,
+    thesis: "Model did not return a structured plan; standing down until confluence is clearer.",
+    invalidation: "Any decisive move against the consensus bias.",
+  };
+}
 
 function decimalsFor(px: number): number {
   if (px >= 1000) return 2;
