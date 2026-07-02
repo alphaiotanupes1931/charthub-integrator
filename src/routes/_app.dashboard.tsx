@@ -412,6 +412,8 @@ function Dashboard() {
   const [panelWidth, setPanelWidth] = useState<"narrow" | "default" | "wide">("default");
   const [chartTab, setChartTab] = useState<"live" | "setup">("live");
   const [snapshot, setSnapshot] = useState<ChartSnapshot | null>(null);
+  const [aiAnnotations, setAiAnnotations] = useState<import("@/lib/chartAnnotations").ChartAnnotation[]>([]);
+  const [aiConcept, setAiConcept] = useState<import("@/lib/chartAnnotations").ConceptRef | null>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
   const levelsRef = useRef<HTMLDivElement>(null);
   const lensRef = useRef<HTMLDivElement>(null);
