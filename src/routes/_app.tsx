@@ -1,11 +1,18 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
+import { getDashboardGateSnapshot } from "@/lib/access-gate.functions";
 import { syncMySubscriptionFromStripe } from "@/lib/billing.functions";
 import { logGate } from "@/lib/gateLog";
 
 const BILLING_ALLOWED_PATHS = ["/pricing", "/settings", "/onboarding"];
-const GATE_STEP_TIMEOUT_MS = 5_000;
+const GATE_STEP_TIMEOUT_MS = 12_000;
+
+function isTimeoutError(error: unknown, label?: string) {
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  const expected = label ? `${label} timed out` : "timed out";
+  return message.toLowerCase().includes(expected.toLowerCase());
+}
 
 function GatePending() {
   return (
@@ -54,10 +61,24 @@ async function withTimeout<T>(promise: PromiseLike<T>, label: string, ms = GATE_
 
 async function getHydratedUser() {
   for (let attempt = 0; attempt < 12; attempt += 1) {
+    const { data: sessionData } = await withTimeout(
+      supabase.auth.getSession(),
+      "local session check",
+      1_000,
+    ).catch(() => ({ data: { session: null } }));
+    if (sessionData.session?.user) {
+      logGate({
+        step: "hydrate-attempt",
+        attempt,
+        hasUser: true,
+      });
+      return sessionData.session.user;
+    }
+
     const { data, error } = await withTimeout(
       supabase.auth.getUser(),
       "session check",
-      2_500,
+      1_500,
     ).catch((err) => ({ data: { user: null }, error: err as Error }));
     logGate({
       step: "hydrate-attempt",
@@ -66,13 +87,6 @@ async function getHydratedUser() {
       error: error?.message,
     });
     if (!error && data.user) return data.user;
-
-    const { data: sessionData } = await withTimeout(
-      supabase.auth.getSession(),
-      "local session check",
-      2_500,
-    ).catch(() => ({ data: { session: null } }));
-    if (sessionData.session?.user) return sessionData.session.user;
 
     await new Promise((resolve) => window.setTimeout(resolve, 125));
   }
@@ -103,20 +117,19 @@ export const Route = createFileRoute("/_app")({
     }
     logGate({ step: "hydrated", userId: user.id, email: user.email ?? null, attempts: 0 });
 
-    // Force onboarding for new users
-    const { data: prof, error: profileError } = await withTimeout(
-      supabase
-        .from("profiles")
-        .select("onboarded,banned" as "onboarded")
-        .eq("id", user.id)
-        .maybeSingle(),
-      "profile check",
-    ) as { data: { onboarded: boolean; banned?: boolean } | null; error?: { message: string } | null };
-
-    if (profileError) {
-      logGate({ step: "redirect", to: "/auth", reason: `profile-error:${profileError.message}` });
-      throw new Error(`Could not check your profile: ${profileError.message}`);
-    }
+    const gateSnapshot = await withTimeout(getDashboardGateSnapshot(), "access check", 12_000).catch((err) => {
+      logGate({ step: "access-check-soft-failed", message: err instanceof Error ? err.message : String(err) });
+      if (isTimeoutError(err, "access check")) {
+        logGate({ step: "profile-timeout-soft-allow", message: err instanceof Error ? err.message : String(err) });
+      }
+      return {
+        profile: { onboarded: true, banned: false },
+        profileCreated: false,
+        isAdmin: false,
+        subscriptionStatus: null,
+      };
+    });
+    const prof = gateSnapshot.profile;
 
     logGate({
       step: "profile",
@@ -125,16 +138,7 @@ export const Route = createFileRoute("/_app")({
       banned: prof?.banned,
     });
 
-    if (!prof) {
-      const { error: upsertError } = await withTimeout(
-        supabase.from("profiles").upsert({
-          id: user.id,
-          email: user.email ?? null,
-          display_name: user.user_metadata?.display_name ?? user.email?.split("@")[0] ?? null,
-        }),
-        "profile setup",
-      ) as { error?: { message: string } | null };
-      if (upsertError) throw new Error(`Could not set up your profile: ${upsertError.message}`);
+    if (gateSnapshot.profileCreated) {
       logGate({ step: "profile-created" });
       if (!location.pathname.startsWith("/onboarding")) {
         logGate({ step: "redirect", to: "/onboarding", reason: "no-profile-row" });
@@ -154,28 +158,11 @@ export const Route = createFileRoute("/_app")({
     }
 
     // Admins bypass paywall
-    const { data: adminRow } = await withTimeout(
-      supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .maybeSingle(),
-      "role check",
-    ).catch(() => ({ data: null }));
-    const isAdmin = !!adminRow;
+    const isAdmin = gateSnapshot.isAdmin;
     logGate({ step: "role", isAdmin });
 
     if (!isAdmin) {
-      const { data: sub } = await withTimeout(
-        supabase
-          .from("subscriptions")
-          .select("status")
-          .eq("user_id", user.id)
-          .maybeSingle(),
-        "subscription check",
-      ).catch(() => ({ data: null }));
-      let status = sub?.status ?? null;
+      let status = gateSnapshot.subscriptionStatus;
       let synced: string | null | undefined;
       if (status !== "active" && status !== "trialing") {
         try {
@@ -194,7 +181,7 @@ export const Route = createFileRoute("/_app")({
       const active = status === "active" || status === "trialing";
       logGate({
         step: "subscription",
-        localStatus: sub?.status ?? null,
+        localStatus: gateSnapshot.subscriptionStatus,
         syncedStatus: synced,
         active,
       });
