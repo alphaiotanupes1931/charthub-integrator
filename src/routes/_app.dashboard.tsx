@@ -663,7 +663,7 @@ function Dashboard() {
           <Activity className="h-3.5 w-3.5" /> Live Chart
         </button>
         <button
-          onClick={() => { setChartTab("setup"); setChartMode("native"); }}
+          onClick={() => setChartTab("setup")}
           className={`inline-flex items-center gap-1.5 py-1.5 border-b-2 transition ${
             chartTab === "setup" ? "border-primary text-primary font-semibold" : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
