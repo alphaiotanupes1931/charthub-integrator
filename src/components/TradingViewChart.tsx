@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { LevelKey } from "@/components/NativeChart";
 
 interface Props {
@@ -8,101 +8,87 @@ interface Props {
   sessions?: boolean;
 }
 
-// Map our level toggles to TradingView embed-widget built-in studies.
-// Levels without a TV equivalent (FVG, LIQ) are Native-only.
+// Map our level toggles to TradingView built-in studies (widgetembed name form).
 const STUDY_MAP: Partial<Record<LevelKey, string>> = {
-  VWAP:  "VWAP@tv-basicstudies",
-  SR:    "PivotPointsStandard@tv-basicstudies",
-  ZONES: "PivotPointsHighLow@tv-basicstudies",
-  POC:   "VbPSessions@tv-volumebyprice",
-  FIB:   "ZigZag@tv-basicstudies",
+  VWAP:  "STD;VWAP",
+  SR:    "STD;Pivot%1Points%1Standard",
+  ZONES: "STD;Pivot%1Points%1High%1Low",
+  POC:   "STD;Visible%20Average%20Price",
+  FIB:   "STD;Zig%20Zag",
 };
 
-const SESSIONS_STUDY = "Sessions@tv-basicstudies";
+// TradingView widgetembed interval codes.
+const INTERVAL_MAP: Record<string, string> = {
+  "1": "1", "3": "3", "5": "5", "15": "15", "30": "30", "45": "45",
+  "60": "60", "120": "120", "180": "180", "240": "240",
+  "D": "D", "1D": "D", "W": "W", "1W": "W", "M": "M", "1M": "M",
+};
 
-export function TradingViewChart({ symbol, interval = "D", enabled, sessions }: Props) {
-  const containerRef = useRef<HTMLDivElement>(null);
+export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _sessions }: Props) {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
-  const studies = [
-    ...(enabled
-      ? (Object.keys(STUDY_MAP) as LevelKey[]).filter((k) => enabled[k]).map((k) => STUDY_MAP[k]!)
-      : []),
-    ...(sessions ? [SESSIONS_STUDY] : []),
-  ];
-  const studiesKey = studies.join("|");
+  const studies = useMemo(() => {
+    const s: string[] = [];
+    if (enabled) {
+      (Object.keys(STUDY_MAP) as LevelKey[]).forEach((k) => {
+        if (enabled[k] && STUDY_MAP[k]) s.push(STUDY_MAP[k]!);
+      });
+    }
+    return s;
+  }, [enabled]);
 
-  useEffect(() => {
-    if (!containerRef.current) return;
-    setFailed(false);
-    setLoaded(false);
-    const host = containerRef.current;
-    host.innerHTML = "";
-    const inner = document.createElement("div");
-    inner.className = "tradingview-widget-container__widget";
-    inner.style.height = "100%";
-    inner.style.width = "100%";
-    host.appendChild(inner);
-
-    const script = document.createElement("script");
-    script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
-    script.type = "text/javascript";
-    // NOTE: do not set async — the TV loader reads its own script's
-    // innerHTML via document.currentScript at execution time.
-    script.innerHTML = JSON.stringify({
-      autosize: true,
+  const src = useMemo(() => {
+    const iv = INTERVAL_MAP[interval] ?? "D";
+    const params = new URLSearchParams({
       symbol,
-      interval,
-      timezone: "Etc/UTC",
+      interval: iv,
+      hidesidetoolbar: "0",
+      hidetoptoolbar: "0",
+      symboledit: "1",
+      saveimage: "0",
+      toolbarbg: "1a1f2e",
+      studies: JSON.stringify(studies),
       theme: "dark",
       style: "1",
+      timezone: "Etc/UTC",
+      withdateranges: "1",
+      showpopupbutton: "0",
       locale: "en",
-      toolbar_bg: "#1a1f2e",
-      enable_publishing: false,
-      allow_symbol_change: true,
-      hide_side_toolbar: false,
-      withdateranges: true,
-      details: true,
-      hotlist: true,
-      calendar: true,
-      studies,
-      support_host: "https://www.tradingview.com",
     });
-    script.onerror = () => setFailed(true);
-    host.appendChild(script);
+    return `https://s.tradingview.com/widgetembed/?${params.toString()}`;
+  }, [symbol, interval, studies]);
 
-    // Poll for the injected iframe. Some networks / slow devices take
-    // well past 6s to attach — fail only after we truly gave up.
-    let elapsed = 0;
-    const step = 500;
-    const maxWait = 20_000;
-    const poll = window.setInterval(() => {
-      const iframe = host.querySelector("iframe");
-      if (iframe) {
-        setLoaded(true);
-        setFailed(false);
-        window.clearInterval(poll);
-        return;
-      }
-      elapsed += step;
-      if (elapsed >= maxWait) {
-        window.clearInterval(poll);
+  useEffect(() => {
+    setFailed(false);
+    setLoaded(false);
+    const timer = window.setTimeout(() => {
+      if (!iframeRef.current?.contentDocument && !loaded) {
+        // Iframe still hasn't fired load after 15s → assume blocked.
         setFailed(true);
       }
-    }, step);
-
-    return () => window.clearInterval(poll);
-  }, [symbol, interval, studiesKey]);
+    }, 15_000);
+    return () => window.clearTimeout(timer);
+  }, [src]);
 
   return (
     <div className="relative h-full w-full">
-      <div className="tradingview-widget-container h-full w-full" ref={containerRef} />
+      <iframe
+        ref={iframeRef}
+        key={src}
+        src={src}
+        title="TradingView chart"
+        className="h-full w-full border-0"
+        allow="fullscreen"
+        onLoad={() => { setLoaded(true); setFailed(false); }}
+        onError={() => setFailed(true)}
+      />
       {failed && !loaded && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/70 backdrop-blur-sm p-4 text-center">
           <div className="max-w-sm text-xs text-muted-foreground">
             <p className="font-medium text-foreground mb-1">Live chart couldn't load</p>
-            <p>The TradingView widget was blocked or timed out. Switch to Native above for the live price feed.</p>
+            <p>The TradingView widget was blocked (ad blocker or network). Switch to Native above for the live price feed.</p>
           </div>
         </div>
       )}
