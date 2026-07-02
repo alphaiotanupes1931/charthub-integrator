@@ -877,8 +877,7 @@ function Dashboard() {
 
             <div className="flex-1 min-h-0 overflow-hidden relative">
               <div className={`absolute inset-0 overflow-y-auto ${rightTab === "analysis" ? "" : "hidden"}`}>
-                <div className="p-4 space-y-4">
-                  <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Order flow</div>
+                <div className="p-5">
                   <ScanBody
                     result={result}
                     scanning={scanning}
