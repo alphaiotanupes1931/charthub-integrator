@@ -47,7 +47,7 @@ type Props = { chart?: ChartContext; onClose?: () => void; onMinimize?: () => vo
 
 const DASHBOARD_THREAD_FALLBACK_ID = "dashboard-scans";
 
-export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(function DashboardChatPanel({ chart, onClose, onMinimize, onRunScan, onStopScan, scanning, threadIdOverride }, ref) {
+export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(function DashboardChatPanel({ chart, onClose, onMinimize, onRunScan, onStopScan, scanning, threadIdOverride, onAnnotations, onConcept }, ref) {
   const [threadId, setThreadId] = useState(threadIdOverride || DASHBOARD_THREAD_FALLBACK_ID);
   const [initial, setInitial] = useState<UIMessage[]>([]);
   const getThread = useServerFn(getOrCreateDashboardThread);
