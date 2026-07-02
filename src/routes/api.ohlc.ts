@@ -88,6 +88,69 @@ function tickerToCoin(ticker: string): string | null {
   return null;
 }
 
+// ----- OANDA v20 (FX, metals, indices - most accurate) -----
+function tickerToOanda(ticker: string): string | null {
+  const t = ticker.toUpperCase();
+  const map: Record<string, string> = {
+    "EUR/USD": "EUR_USD",
+    "GBP/USD": "GBP_USD",
+    "USD/JPY": "USD_JPY",
+    "XAU/USD": "XAU_USD",
+    "XAG/USD": "XAG_USD",
+    "NAS100": "NAS100_USD",
+    "SPX500": "SPX500_USD",
+    "US30": "US30_USD",
+    "WTI OIL": "WTICO_USD",
+  };
+  return map[t] ?? null;
+}
+
+function oandaGranularity(interval: string): string {
+  switch (interval) {
+    case "1": return "M1";
+    case "5": return "M5";
+    case "15": return "M15";
+    case "60": return "H1";
+    case "240": return "H4";
+    case "D": return "D";
+    case "W": return "W";
+    case "M": return "M";
+    default: return "H1";
+  }
+}
+
+async function fetchOanda(instrument: string, interval: string): Promise<OhlcBar[]> {
+  const apiKey = process.env.OANDA_API_KEY;
+  if (!apiKey) throw new Error("OANDA_API_KEY not configured");
+  const env = (process.env.OANDA_ENV ?? "live").toLowerCase();
+  const host = env === "practice" ? "api-fxpractice.oanda.com" : "api-fxtrade.oanda.com";
+  const granularity = oandaGranularity(interval);
+  const url = `https://${host}/v3/instruments/${instrument}/candles?granularity=${granularity}&count=220&price=M`;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8_000);
+  try {
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json" },
+      signal: controller.signal,
+    });
+    if (!res.ok) throw new Error(`OANDA HTTP ${res.status}`);
+    const json = (await res.json()) as {
+      candles?: Array<{ time: string; complete?: boolean; mid?: { o: string; h: string; l: string; c: string } }>;
+    };
+    if (!json.candles) throw new Error("OANDA: no candles");
+    return cleanBars(json.candles
+      .filter((c) => c.mid)
+      .map((c) => ({
+        time: Math.floor(new Date(c.time).getTime() / 1000),
+        open: parseFloat(c.mid!.o),
+        high: parseFloat(c.mid!.h),
+        low: parseFloat(c.mid!.l),
+        close: parseFloat(c.mid!.c),
+      })));
+  } finally {
+    clearTimeout(timeout);
+  }
+
 // ----- Twelve Data (FX, metals, indices) -----
 function tdInterval(interval: string): string {
   switch (interval) {
