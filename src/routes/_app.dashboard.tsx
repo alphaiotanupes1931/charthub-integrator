@@ -823,57 +823,55 @@ function Dashboard() {
           <aside className={`hidden lg:flex shrink-0 border-l border-border bg-card flex-col ${
             panelWidth === "narrow" ? "w-[280px]" : panelWidth === "wide" ? "w-[560px]" : "w-[400px]"
           }`}>
-            {/* Panel width row */}
-            <div className="flex items-center justify-between gap-2 px-4 py-2.5 border-b border-border/60">
-              <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Panel width</div>
-              <div className="flex items-center gap-1">
+            {/* Tabs + panel width in one row */}
+            <div className="flex items-center gap-2 border-b border-border/60 px-3 py-2">
+              <div className="flex items-center gap-1 flex-1 min-w-0">
+                <button
+                  onClick={() => setRightTab("analysis")}
+                  className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition ${
+                    rightTab === "analysis" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                  }`}
+                >
+                  <BarChart3 className="h-3.5 w-3.5" /> Analysis
+                </button>
+                <button
+                  onClick={() => setRightTab("chat")}
+                  className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition ${
+                    rightTab === "chat" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                  }`}
+                >
+                  <MessageSquare className="h-3.5 w-3.5" /> Chat
+                </button>
+                <button
+                  onClick={() => setRightTab("history")}
+                  className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition ${
+                    rightTab === "history" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                  }`}
+                >
+                  <Clock className="h-3.5 w-3.5" /> History
+                </button>
+              </div>
+              <div className="flex items-center gap-0.5 shrink-0 rounded-md border border-border/60 bg-background/40 p-0.5">
                 {(["narrow", "default", "wide"] as const).map((w) => (
                   <button
                     key={w}
                     onClick={() => setPanelWidth(w)}
-                    className={`rounded px-2.5 py-1 text-[11px] font-medium capitalize transition ${
-                      panelWidth === w ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
+                    className={`rounded px-2 py-1 text-[10px] font-medium capitalize transition ${
+                      panelWidth === w ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"
                     }`}
+                    title={`${w} panel`}
                   >
-                    {w}
+                    {w[0].toUpperCase()}
                   </button>
                 ))}
-                <button
-                  onClick={() => setRightOpen(false)}
-                  className="ml-1 h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                  title="Close panel"
-                  aria-label="Close panel"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
               </div>
-            </div>
-
-            {/* Tabs */}
-            <div className="flex items-center gap-1 border-b border-border/60 px-2 py-1.5">
               <button
-                onClick={() => setRightTab("analysis")}
-                className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded px-2.5 py-1.5 text-xs font-medium transition ${
-                  rightTab === "analysis" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
-                }`}
+                onClick={() => setRightOpen(false)}
+                className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 shrink-0"
+                title="Close panel"
+                aria-label="Close panel"
               >
-                <BarChart3 className="h-3.5 w-3.5" /> Analysis
-              </button>
-              <button
-                onClick={() => setRightTab("chat")}
-                className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded px-2.5 py-1.5 text-xs font-medium transition ${
-                  rightTab === "chat" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <MessageSquare className="h-3.5 w-3.5" /> Chat
-              </button>
-              <button
-                onClick={() => setRightTab("history")}
-                className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded px-2.5 py-1.5 text-xs font-medium transition ${
-                  rightTab === "history" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <Clock className="h-3.5 w-3.5" /> History
+                <X className="h-3.5 w-3.5" />
               </button>
             </div>
 
