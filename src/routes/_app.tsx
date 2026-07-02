@@ -5,10 +5,60 @@ import { syncMySubscriptionFromStripe } from "@/lib/billing.functions";
 import { logGate } from "@/lib/gateLog";
 
 const BILLING_ALLOWED_PATHS = ["/pricing", "/settings", "/onboarding"];
+const GATE_STEP_TIMEOUT_MS = 5_000;
+
+function GatePending() {
+  return (
+    <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-4">
+      <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 text-center shadow-sm">
+        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        <h1 className="mt-4 text-lg font-semibold">Opening your dashboard</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Checking your session and access.</p>
+      </div>
+    </div>
+  );
+}
+
+function GateError({ error }: { error: Error }) {
+  return (
+    <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-4">
+      <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 text-center shadow-sm">
+        <h1 className="text-lg font-semibold">Dashboard access did not load</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {error.message || "Your session could not be checked. Please sign in again."}
+        </p>
+        <div className="mt-5 flex flex-col gap-2">
+          <a className="inline-flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" href="/auth?mode=signin&redirect=%2Fdashboard">
+            Sign in again
+          </a>
+          <button className="inline-flex h-10 items-center justify-center rounded-lg border border-border px-4 text-sm font-medium" onClick={() => window.location.reload()}>
+            Refresh
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+async function withTimeout<T>(promise: PromiseLike<T>, label: string, ms = GATE_STEP_TIMEOUT_MS): Promise<T> {
+  let timeoutId: number | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = window.setTimeout(() => reject(new Error(`${label} timed out`)), ms);
+  });
+  try {
+    return await Promise.race([Promise.resolve(promise), timeout]);
+  } finally {
+    if (timeoutId) window.clearTimeout(timeoutId);
+  }
+}
 
 async function getHydratedUser() {
   for (let attempt = 0; attempt < 12; attempt += 1) {
-    const { data, error } = await supabase.auth.getUser();
+    const { data, error } = await withTimeout(
+      supabase.auth.getUser(),
+      "session check",
+      2_500,
+    ).catch((err) => ({ data: { user: null }, error: err as Error }));
     logGate({
       step: "hydrate-attempt",
       attempt,
@@ -17,7 +67,11 @@ async function getHydratedUser() {
     });
     if (!error && data.user) return data.user;
 
-    const { data: sessionData } = await supabase.auth.getSession();
+    const { data: sessionData } = await withTimeout(
+      supabase.auth.getSession(),
+      "local session check",
+      2_500,
+    ).catch(() => ({ data: { session: null } }));
     if (sessionData.session?.user) return sessionData.session.user;
 
     await new Promise((resolve) => window.setTimeout(resolve, 125));
@@ -27,6 +81,10 @@ async function getHydratedUser() {
 
 export const Route = createFileRoute("/_app")({
   ssr: false,
+  pendingMs: 0,
+  pendingMinMs: 300,
+  pendingComponent: GatePending,
+  errorComponent: ({ error }) => <GateError error={error instanceof Error ? error : new Error("Dashboard access failed")} />,
   beforeLoad: async ({ location }) => {
     logGate({ step: "start", pathname: location.pathname, href: location.href });
 
@@ -46,11 +104,19 @@ export const Route = createFileRoute("/_app")({
     logGate({ step: "hydrated", userId: user.id, email: user.email ?? null, attempts: 0 });
 
     // Force onboarding for new users
-    const { data: prof } = await supabase
-      .from("profiles")
-      .select("onboarded,banned" as "onboarded")
-      .eq("id", user.id)
-      .maybeSingle() as { data: { onboarded: boolean; banned?: boolean } | null };
+    const { data: prof, error: profileError } = await withTimeout(
+      supabase
+        .from("profiles")
+        .select("onboarded,banned" as "onboarded")
+        .eq("id", user.id)
+        .maybeSingle(),
+      "profile check",
+    ) as { data: { onboarded: boolean; banned?: boolean } | null; error?: { message: string } | null };
+
+    if (profileError) {
+      logGate({ step: "redirect", to: "/auth", reason: `profile-error:${profileError.message}` });
+      throw new Error(`Could not check your profile: ${profileError.message}`);
+    }
 
     logGate({
       step: "profile",
@@ -60,11 +126,15 @@ export const Route = createFileRoute("/_app")({
     });
 
     if (!prof) {
-      await supabase.from("profiles").upsert({
-        id: user.id,
-        email: user.email ?? null,
-        display_name: user.user_metadata?.display_name ?? user.email?.split("@")[0] ?? null,
-      });
+      const { error: upsertError } = await withTimeout(
+        supabase.from("profiles").upsert({
+          id: user.id,
+          email: user.email ?? null,
+          display_name: user.user_metadata?.display_name ?? user.email?.split("@")[0] ?? null,
+        }),
+        "profile setup",
+      ) as { error?: { message: string } | null };
+      if (upsertError) throw new Error(`Could not set up your profile: ${upsertError.message}`);
       logGate({ step: "profile-created" });
       if (!location.pathname.startsWith("/onboarding")) {
         logGate({ step: "redirect", to: "/onboarding", reason: "no-profile-row" });
@@ -84,26 +154,36 @@ export const Route = createFileRoute("/_app")({
     }
 
     // Admins bypass paywall
-    const { data: adminRow } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "admin")
-      .maybeSingle();
+    const { data: adminRow } = await withTimeout(
+      supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle(),
+      "role check",
+    ).catch(() => ({ data: null }));
     const isAdmin = !!adminRow;
     logGate({ step: "role", isAdmin });
 
     if (!isAdmin) {
-      const { data: sub } = await supabase
-        .from("subscriptions")
-        .select("status")
-        .eq("user_id", user.id)
-        .maybeSingle();
+      const { data: sub } = await withTimeout(
+        supabase
+          .from("subscriptions")
+          .select("status")
+          .eq("user_id", user.id)
+          .maybeSingle(),
+        "subscription check",
+      ).catch(() => ({ data: null }));
       let status = sub?.status ?? null;
       let synced: string | null | undefined;
       if (status !== "active" && status !== "trialing") {
         try {
-          const s = await syncMySubscriptionFromStripe();
+          const s = await withTimeout(
+            syncMySubscriptionFromStripe(),
+            "billing sync",
+            4_500,
+          );
           synced = s?.status ?? null;
           status = synced ?? status;
         } catch (err) {
