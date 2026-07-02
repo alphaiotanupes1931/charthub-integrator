@@ -354,7 +354,7 @@ export const STRATEGIES: Strategy[] = [
     winRate: 62,
     rr: 2.5,
     longDescription:
-      "Supply and demand zones are origins of strong impulsive moves - the base before the move is where unfilled orders likely remain. First touch back into a fresh zone offers the highest probability reaction.",
+      "Supply and Demand Zone trading is a top-down price-action framework built on the idea that large institutional orders leave behind visible footprints. When a market makes an unusually strong impulsive move away from a small consolidation, that base is treated as an origin - a place where big participants were still building positions when price ran out of shares/contracts to fill. Any return to that origin is likely to trigger the remaining unfilled orders, producing a fresh reaction in the original direction.\n\nZones are drawn from the base (the tight consolidation before the impulse), not from a single candle. The freshness of the zone matters enormously: first touch back to a zone offers the cleanest reaction, second touch is weaker, and by the third the zone is generally considered mitigated. Higher-timeframe zones dominate lower-timeframe zones, so a daily demand zone will absorb an intraday supply zone every time - context is everything.\n\nThe strategy excels in trending environments where zones stack in the direction of the trend, giving you multiple continuation entries. It fails in choppy, overlapping conditions where 'zones' become subjective and every retracement invalidates the last one. Discipline requires trading only fresh, HTF-aligned zones and using rejection candles (engulfing, pin bars) as triggers rather than blindly leaving limit orders inside the zone.",
     playbook: [
       {
         title: "Setup",
