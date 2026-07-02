@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
-import { Bot, BarChart2, Target, GraduationCap, Minus, HeartPulse, CheckCircle2, Volume2, Sparkles, Loader2, Square } from "lucide-react";
+import { Bot, BarChart2, Target, GraduationCap, Minus, HeartPulse, CheckCircle2, Volume2, Sparkles, Loader2, Square, X, Info } from "lucide-react";
 import { COACH_VOICES } from "@/lib/coachVoices";
 import { readActiveCoach, writeActiveCoach } from "@/lib/chat-client";
 import { toast } from "sonner";
+
 
 export const Route = createFileRoute("/_app/coaches")({
   head: () => ({ meta: [{ title: "AI Coaches, TradeMind" }] }),
@@ -24,6 +25,16 @@ const COACHES = [
     tone: "Precise & Analytical",
     strengths: ["Statistical analysis", "Pattern recognition", "Performance metrics", "Edge calculation"],
     bestFor: "Data-oriented traders who want to optimize performance through numbers and statistics",
+    deepDescription: [
+      "The Analyst thinks like a quant. Every response is grounded in your actual journal data, win rate, R-multiple, expectancy, hit rate by session, symbol, day of week, and timeframe. There is no gut talk, no vibes, no 'the market feels heavy today'. Only measured edge.",
+      "When you ask for a setup review, the Analyst grades it against your baseline. If your London-session XAU longs are running +68% at 1.9R, that's your A+ tier, and the Analyst will tell you plainly when a chart in front of you does not qualify.",
+      "Use this coach when you're serious about optimising: sizing decisions, cutting under-performing setups, and running your book like a small fund. Expect surgical, sometimes cold, always specific answers.",
+    ],
+    idealUser: "Systematic traders, prop-firm challengers, quants, and anyone building a track record they intend to defend with numbers.",
+    signatureLines: [
+      '"Your Tuesday London shorts are -0.4R expectancy over 22 trades. Stop taking them until it turns."',
+      '"This setup is B tier at best. Your A+ requires a swept high plus a bullish CISD. You have neither."',
+    ],
   },
   {
     name: "The Disciplinarian",
@@ -37,6 +48,16 @@ const COACHES = [
     tone: "Strict & Direct",
     strengths: ["Rule enforcement", "Accountability tracking", "Breaking bad habits", "Building discipline routines"],
     bestFor: "Traders who struggle with discipline, revenge trading, or breaking their own rules",
+    deepDescription: [
+      "The Disciplinarian is the coach that will not let you off the hook. Every trade is measured against your active strategy's rules. Break a rule and it will be named, logged in the conversation, and referred back to next time.",
+      "If you take a revenge trade after a loss, oversize a position, or move a stop, the Disciplinarian will call it out immediately, then walk you through exactly what your process said to do instead.",
+      "This is the coach for traders who know their edge but keep sabotaging it. Expect blunt language, direct questions, and zero sympathy for excuses. There is empathy underneath, but it does not soften the standard.",
+    ],
+    idealUser: "Traders bleeding from tilt, revenge trades, oversized positions, or chronic rule-breaks. If you know what to do but keep not doing it, this is your coach.",
+    signatureLines: [
+      '"You moved your stop. That is a broken rule, not a strategy adjustment. Log it."',
+      '"Third trade in an hour after two losses. Close the platform. We talk tomorrow."',
+    ],
   },
   {
     name: "The Mentor",
@@ -50,6 +71,16 @@ const COACHES = [
     tone: "Warm & Patient",
     strengths: ["Teaching through experience", "Building confidence", "Strategy development", "Long-term growth mindset"],
     bestFor: "Newer traders or those wanting a supportive, wisdom-driven coaching experience",
+    deepDescription: [
+      "The Mentor teaches. Every answer is a small lesson, an analogy, a story from the trenches. Concepts like liquidity sweeps, order blocks, and CISD are explained plainly the first time, then referenced by name once you've got them.",
+      "This coach frames losses as tuition, not failure, and pushes you toward process goals over P&L goals. Expect encouragement backed by real market structure, not empty positivity.",
+      "Best for the first 12 to 24 months of a trader's journey, when the biggest risk is confidence collapse or jumping between strategies every week.",
+    ],
+    idealUser: "New and developing traders, funded-account hopefuls, and anyone rebuilding after a rough drawdown.",
+    signatureLines: [
+      '"That loss taught you your stop was too tight for the London session. Cheap lesson. Next one."',
+      '"Before we look at entry, tell me what invalidates the idea. That question alone will save you accounts."',
+    ],
   },
   {
     name: "The Minimalist",
@@ -63,6 +94,16 @@ const COACHES = [
     tone: "Terse & Decisive",
     strengths: ["One-line answers", "Fast decisions", "Zero filler", "Signal over story"],
     bestFor: "Experienced traders who want signals fast without commentary",
+    deepDescription: [
+      "The Minimalist is built for speed. Chart open, question asked, answer delivered. No preamble, no chart-recap paragraphs, no 'as an AI'. Just bias, entry, stop, targets, or a flat no.",
+      "If there is no setup, it says 'No setup.' and stops. If the setup is a B, it says B and tells you why in one line. It never repeats itself, never hedges, and never lectures.",
+      "This coach assumes you already know what an FVG, CISD, or order block is. If you don't, pick The Mentor or The Analyst instead.",
+    ],
+    idealUser: "Experienced day traders and scalpers who want a signal-desk feel, not a coaching session.",
+    signatureLines: [
+      '"Long 2382.4. Stop 2378.9. TP1 2389.4. TP2 2396.4. B+."',
+      '"No setup."',
+    ],
   },
   {
     name: "The Psychologist",
@@ -76,13 +117,28 @@ const COACHES = [
     tone: "Empathetic & Calm",
     strengths: ["Tilt detection", "Emotional regulation", "Non-judgmental support", "Identity vs outcome"],
     bestFor: "Traders working on mindset, tilt, or the emotional side of losses and wins",
+    deepDescription: [
+      "The Psychologist leads with what you're feeling, not what the chart is doing. Tilt, FOMO, fear of missing the runner, revenge after a stop, the shame spiral after a rule-break, all named clearly and without judgment.",
+      "This coach will ask open questions instead of handing you an answer. It separates identity ('I am a bad trader') from outcome ('that trade was a poor decision'), then walks you back into process.",
+      "Best paired with a real strategy, so the emotional work has something concrete to attach to. Not a substitute for a licensed therapist.",
+    ],
+    idealUser: "Traders in a drawdown, anyone recovering from a blown account, and traders whose journal notes read like a mood diary.",
+    signatureLines: [
+      '"Before we open the chart, how are you actually feeling right now? Be honest."',
+      '"That loss doesn\'t make you a bad trader. It makes you a trader who took a loss. Different thing."',
+    ],
   },
 ];
+
+
+type CoachEntry = (typeof COACHES)[number];
 
 function CoachesPage() {
   const [active, setActive] = useState<string>(() => readActiveCoach());
   const [previewing, setPreviewing] = useState<string | null>(null);
+  const [detail, setDetail] = useState<CoachEntry | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
 
   const select = (name: string) => {
     writeActiveCoach(name);
@@ -232,23 +288,33 @@ function CoachesPage() {
                 <span className="font-semibold">Best for: </span>
                 <span className="text-muted-foreground">{c.bestFor}</span>
               </div>
-              <button
-                onClick={() => select(c.name)}
-                disabled={isActive}
-                className={`w-full rounded-md py-2 text-sm font-semibold transition ${
-                  isActive
-                    ? "bg-primary/10 text-primary cursor-default"
-                    : "bg-primary text-primary-foreground hover:opacity-90"
-                }`}
-              >
-                {isActive ? (
-                  <span className="inline-flex items-center justify-center gap-1.5">
-                    <CheckCircle2 className="h-4 w-4" /> Selected
-                  </span>
-                ) : (
-                  "Select Coach"
-                )}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setDetail(c)}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/40 transition"
+                  title="See a deeper description of this coach"
+                >
+                  <Info className="h-3.5 w-3.5" /> Learn more
+                </button>
+                <button
+                  onClick={() => select(c.name)}
+                  disabled={isActive}
+                  className={`flex-1 rounded-md py-2 text-sm font-semibold transition ${
+                    isActive
+                      ? "bg-primary/10 text-primary cursor-default"
+                      : "bg-primary text-primary-foreground hover:opacity-90"
+                  }`}
+                >
+                  {isActive ? (
+                    <span className="inline-flex items-center justify-center gap-1.5">
+                      <CheckCircle2 className="h-4 w-4" /> Selected
+                    </span>
+                  ) : (
+                    "Select Coach"
+                  )}
+                </button>
+              </div>
+
             </div>
           );
         })}
@@ -261,6 +327,113 @@ function CoachesPage() {
           <button onClick={stop} className="ml-2 text-muted-foreground hover:text-foreground">Stop</button>
         </div>
       )}
+
+      {detail && (
+        <CoachDetailModal
+          coach={detail}
+          isActive={detail.name === active}
+          onClose={() => setDetail(null)}
+          onSelect={() => { select(detail.name); setDetail(null); }}
+        />
+      )}
     </div>
   );
 }
+
+function CoachDetailModal({
+  coach, isActive, onClose, onSelect,
+}: {
+  coach: CoachEntry;
+  isActive: boolean;
+  onClose: () => void;
+  onSelect: () => void;
+}) {
+  const Icon = coach.icon;
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      className="fixed inset-0 z-[90] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-background/80 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full sm:max-w-2xl max-h-[95vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl border border-border bg-card shadow-2xl"
+      >
+        <div className="flex items-start justify-between gap-3 p-5 border-b border-border/60">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className={`h-12 w-12 rounded-lg flex items-center justify-center shrink-0 ${coach.iconBg}`}>
+              <Icon className="h-6 w-6" />
+            </div>
+            <div className="min-w-0">
+              <div className={`inline-block rounded-md px-2.5 py-1 ${coach.nameBg}`}>
+                <h2 className={`font-display text-xl font-semibold truncate ${coach.nameText}`}>{coach.name}</h2>
+              </div>
+              <p className="text-sm text-muted-foreground truncate">{coach.subtitle}</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/40 flex items-center justify-center shrink-0"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="p-5 space-y-5 text-sm">
+          <section className="space-y-3 leading-relaxed text-foreground/90">
+            {coach.deepDescription.map((p, i) => (
+              <p key={i}>{p}</p>
+            ))}
+          </section>
+
+          <section>
+            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-2">Ideal for</div>
+            <p className="text-sm text-foreground/90 leading-relaxed">{coach.idealUser}</p>
+          </section>
+
+          <section>
+            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-2">Strengths</div>
+            <div className="flex flex-wrap gap-1.5">
+              {coach.strengths.map((s) => (
+                <span key={s} className="rounded border border-border bg-background px-2 py-0.5 text-[11px]">{s}</span>
+              ))}
+            </div>
+          </section>
+
+          <section>
+            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-2">How it sounds</div>
+            <div className="space-y-2">
+              {coach.signatureLines.map((line, i) => (
+                <div key={i} className="rounded-md border border-border/60 bg-background/50 px-3 py-2 text-sm text-foreground/85 italic leading-relaxed">
+                  {line}
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        <div className="flex items-center justify-end gap-2 p-5 border-t border-border/60">
+          <button onClick={onClose} className="rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground">Close</button>
+          <button
+            onClick={onSelect}
+            disabled={isActive}
+            className={`rounded-md px-4 py-2 text-sm font-semibold ${
+              isActive ? "bg-primary/10 text-primary cursor-default" : "bg-primary text-primary-foreground hover:opacity-90"
+            }`}
+          >
+            {isActive ? "Already active" : "Select this coach"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+

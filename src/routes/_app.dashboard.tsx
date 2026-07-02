@@ -395,7 +395,7 @@ function Dashboard() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [result, setResult] = useState<ScanResult | null>(null);
-  const [chartMode, setChartMode] = useState<"live" | "native">("native");
+  const [chartMode, setChartMode] = useState<"live" | "native">("live");
   const [levels, setLevels] = useState<Record<LevelKey, boolean>>(() =>
     typeof window !== "undefined" ? loadLevels() : { ...DEFAULT_LEVELS },
   );
@@ -464,7 +464,9 @@ function Dashboard() {
     toast.success(`Scan Lens: ${lens?.name ?? id}`);
   }
 
-  useEffect(() => { setResult(null); }, [symbol]);
+  // Note: intentionally do NOT reset scan result or coach state when the symbol changes.
+  // The AI coach and analysis panel must persist exactly where the user left them.
+
 
   // Honor ?ask= deep links (from Analytics quick questions)
   const search = Route.useSearch();
@@ -492,21 +494,22 @@ function Dashboard() {
     setResult(null);
     const enabledLevels = ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none";
     const lens = findLens(lensId);
-    const prompt = `Analyze ${symbol.ticker} (${symbol.name}, ${symbol.venue}) on the ${intervalLabel} chart for a trade setup. I'm watching these levels: ${enabledLevels}. Give me: bias (long/short/neutral), entry trigger, stop loss, take profit 1 and 2, R:R, and a short rationale grounded in price action. Be concrete with levels.`;
+    const prompt = `Scan ${symbol.ticker} on the ${intervalLabel} chart. Keep it brief (3-6 short lines total). Give me: Grade, Bias, Entry, Stop, TP1, TP2. Then two bullets: "Strength:" (one line, the strongest thing about this setup) and "Weakness:" (one line, what could kill it). No preamble, no long paragraphs. Levels I'm watching: ${enabledLevels}.`;
     setCoachOpen(true);
     chatRef.current?.scan(prompt);
     runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
       .then((plan) => setResult(plan as ScanResult))
-      .catch((err: unknown) => {
-        const msg = err instanceof Error ? err.message : "Research pipeline failed.";
+      .catch(() => {
         setResult({
           grade: "NO ENTRY", bias: "Neutral", confidence: 0,
-          notes: msg, entry: "—", stop: "—", tp1: "—", tp2: "—", rr: "—",
-          details: "The 3-layer research pipeline could not complete. Try again shortly.",
+          notes: "Research service is temporarily unavailable. Please try again in a moment.",
+          entry: "—", stop: "—", tp1: "—", tp2: "—", rr: "—",
+          details: "The analysis engine couldn't be reached. Your chart and levels are unaffected.",
         });
       })
       .finally(() => setScanning(false));
   };
+
 
 
 
@@ -717,8 +720,9 @@ function Dashboard() {
       </div>
 
       {/* Chart area */}
-      <div className="flex-1 min-h-0 relative bg-card" data-tour="chart">
-        <div className="absolute inset-0 flex flex-col">
+      <div className="flex-1 min-h-0 flex bg-card overflow-hidden" data-tour="chart">
+        <div className="flex-1 min-w-0 flex flex-col">
+
           <div className="flex-1 min-h-0 overflow-hidden">
             {chartMode === "live" ? (
               <TradingViewChart symbol={symbol.tv} interval={interval} enabled={levels} sessions={sessionsOn} />
@@ -756,9 +760,10 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Right rail overlay - desktop only */}
+        {/* Right rail - desktop only. Sibling of chart so it never covers it. */}
         {rightOpen && (
-          <aside className="hidden lg:flex absolute right-0 top-0 bottom-0 w-[400px] border-l border-border bg-card z-20 flex-col shadow-2xl">
+          <aside className="hidden lg:flex w-[400px] shrink-0 border-l border-border bg-card flex-col">
+
             <div className="flex items-center gap-1 border-b border-border/60 p-1">
               <button
                 onClick={() => setRightTab("analysis")}
