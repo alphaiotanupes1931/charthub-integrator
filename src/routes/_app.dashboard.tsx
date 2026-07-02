@@ -823,14 +823,14 @@ function Dashboard() {
             panelWidth === "narrow" ? "w-[280px]" : panelWidth === "wide" ? "w-[560px]" : "w-[400px]"
           }`}>
             {/* Panel width row */}
-            <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-border/60">
+            <div className="flex items-center justify-between gap-2 px-4 py-2.5 border-b border-border/60">
               <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Panel width</div>
               <div className="flex items-center gap-1">
                 {(["narrow", "default", "wide"] as const).map((w) => (
                   <button
                     key={w}
                     onClick={() => setPanelWidth(w)}
-                    className={`rounded px-2 py-1 text-[11px] font-medium capitalize transition ${
+                    className={`rounded px-2.5 py-1 text-[11px] font-medium capitalize transition ${
                       panelWidth === w ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
@@ -849,7 +849,7 @@ function Dashboard() {
             </div>
 
             {/* Tabs */}
-            <div className="flex items-center gap-1 border-b border-border/60 p-1">
+            <div className="flex items-center gap-1 border-b border-border/60 px-2 py-1.5">
               <button
                 onClick={() => setRightTab("analysis")}
                 className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded px-2.5 py-1.5 text-xs font-medium transition ${
