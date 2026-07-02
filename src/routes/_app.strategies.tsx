@@ -188,6 +188,10 @@ function StrategiesPage() {
                   <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${levelColor[s.level]}`}>
                     {s.level}
                   </span>
+                </div>
+              </div>
+
+
 
               <div className="flex flex-wrap gap-1.5">
                 <span className="inline-flex items-center gap-1 rounded border border-border bg-background px-2 py-0.5 text-[11px] text-muted-foreground">
