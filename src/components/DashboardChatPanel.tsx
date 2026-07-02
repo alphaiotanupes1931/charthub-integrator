@@ -427,16 +427,29 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               </div>
             )}
             {messages.map((m) => {
-              const text = m.parts
+              const raw = m.parts
                 .map((p) => (p.type === "text" ? (p as { text: string }).text : ""))
                 .join("");
+              if (m.role === "assistant") {
+                const parsed = parseAiPayload(raw);
+                return (
+                  <Message key={m.id} from={m.role}>
+                    <div className="flex flex-col gap-2 max-w-full">
+                      {parsed.cleanText && <MessageResponse>{parsed.cleanText}</MessageResponse>}
+                      {parsed.grade && <GradeCard grade={parsed.grade} />}
+                      {parsed.concept && <ConceptDiagram concept={parsed.concept} />}
+                      {parsed.annotations.length > 0 && (
+                        <div className="text-[10px] uppercase tracking-wider text-primary/80">
+                          Drawn on chart · {parsed.annotations.length} marker{parsed.annotations.length === 1 ? "" : "s"}
+                        </div>
+                      )}
+                    </div>
+                  </Message>
+                );
+              }
               return (
                 <Message key={m.id} from={m.role}>
-                  {m.role === "assistant" ? (
-                    <MessageResponse>{text}</MessageResponse>
-                  ) : (
-                    <MessageContent>{text}</MessageContent>
-                  )}
+                  <MessageContent>{raw}</MessageContent>
                 </Message>
               );
             })}
