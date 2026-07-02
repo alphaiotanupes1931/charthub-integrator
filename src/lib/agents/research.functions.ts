@@ -21,7 +21,25 @@ export const runResearchPlan = createServerFn({ method: "POST" })
   .inputValidator((raw: unknown) => Input.parse(raw))
   .handler(async ({ data, context }): Promise<TradePlan> => {
     const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
+    if (!apiKey) {
+      return {
+        grade: "NO ENTRY",
+        bias: "Neutral",
+        confidence: 0,
+        notes: "The AI research service is temporarily unavailable. Please try again shortly.",
+        entry: "—", stop: "—", tp1: "—", tp2: "—", rr: "—",
+        details: "Our analysis engine is offline for maintenance. Your charts and data are unaffected — scans will resume automatically once the service is back.",
+        memo: {
+          ticker: data.ticker,
+          interval: data.interval,
+          generatedAt: new Date().toISOString(),
+          notes: [],
+          consensus: "neutral",
+          consensusConfidence: 0,
+        },
+      };
+    }
+
 
     const snap = await getSnapshot(data.ticker, data.interval);
     if (snap.source === "unavailable" || snap.candles.length < 20) {
