@@ -29,7 +29,7 @@ function daysForInterval(interval: string): number {
 }
 
 export type OhlcBar = { time: number; open: number; high: number; low: number; close: number };
-export type OhlcSource = "coingecko" | "twelvedata" | "yahoo";
+export type OhlcSource = "coingecko" | "oanda" | "twelvedata" | "yahoo";
 export type OhlcResponse = {
   source: OhlcSource | null;
   bars: OhlcBar[];
@@ -87,6 +87,72 @@ function tickerToCoin(ticker: string): string | null {
   if (t.includes("ETH")) return COIN_IDS.ETH;
   return null;
 }
+
+// ----- OANDA v20 (FX, metals, indices - most accurate) -----
+function tickerToOanda(ticker: string): string | null {
+  const t = ticker.toUpperCase();
+  const map: Record<string, string> = {
+    "EUR/USD": "EUR_USD",
+    "GBP/USD": "GBP_USD",
+    "USD/JPY": "USD_JPY",
+    "XAU/USD": "XAU_USD",
+    "XAG/USD": "XAG_USD",
+    "NAS100": "NAS100_USD",
+    "SPX500": "SPX500_USD",
+    "US30": "US30_USD",
+    "WTI OIL": "WTICO_USD",
+  };
+  return map[t] ?? null;
+}
+
+function oandaGranularity(interval: string): string {
+  switch (interval) {
+    case "1": return "M1";
+    case "5": return "M5";
+    case "15": return "M15";
+    case "60": return "H1";
+    case "240": return "H4";
+    case "D": return "D";
+    case "W": return "W";
+    case "M": return "M";
+    default: return "H1";
+  }
+}
+
+async function fetchOanda(instrument: string, interval: string): Promise<OhlcBar[]> {
+  const apiKey = process.env.OANDA_API_KEY;
+  if (!apiKey) throw new Error("OANDA_API_KEY not configured");
+  const env = (process.env.OANDA_ENV ?? "live").toLowerCase();
+  const host = env === "practice" ? "api-fxpractice.oanda.com" : "api-fxtrade.oanda.com";
+  const granularity = oandaGranularity(interval);
+  const url = `https://${host}/v3/instruments/${instrument}/candles?granularity=${granularity}&count=220&price=M`;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8_000);
+  try {
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json" },
+      signal: controller.signal,
+    });
+    if (!res.ok) throw new Error(`OANDA HTTP ${res.status}`);
+    const json = (await res.json()) as {
+      candles?: Array<{ time: string; complete?: boolean; mid?: { o: string; h: string; l: string; c: string } }>;
+    };
+    if (!json.candles) throw new Error("OANDA: no candles");
+    return cleanBars(json.candles
+      .filter((c) => c.mid)
+      .map((c) => ({
+        time: Math.floor(new Date(c.time).getTime() / 1000),
+        open: parseFloat(c.mid!.o),
+        high: parseFloat(c.mid!.h),
+        low: parseFloat(c.mid!.l),
+        close: parseFloat(c.mid!.c),
+      })));
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+
 
 // ----- Twelve Data (FX, metals, indices) -----
 function tdInterval(interval: string): string {
@@ -221,12 +287,16 @@ const INFLIGHT = new Map<string, Promise<CacheEntry>>();
 
 async function fetchBestAvailable(ticker: string, interval: string): Promise<CacheEntry> {
   const coin = tickerToCoin(ticker);
+  const oandaSymbol = coin ? null : tickerToOanda(ticker);
   const tdSymbol = coin ? null : tickerToTwelveData(ticker);
   const yahooSymbol = tickerToYahoo(ticker);
   const attempts: Array<() => Promise<CacheEntry>> = [];
 
   if (coin) {
     attempts.push(async () => ({ at: Date.now(), bars: await fetchCoinGecko(coin, daysForInterval(interval)), source: "coingecko" }));
+  }
+  if (oandaSymbol && process.env.OANDA_API_KEY) {
+    attempts.push(async () => ({ at: Date.now(), bars: await fetchOanda(oandaSymbol, interval), source: "oanda" }));
   }
   if (tdSymbol) {
     attempts.push(async () => ({ at: Date.now(), bars: await fetchTwelveData(tdSymbol, tdInterval(interval)), source: "twelvedata" }));
@@ -276,7 +346,7 @@ export const Route = createFileRoute("/api/ohlc")({
         }
 
         const { ticker: t, interval: iv } = parsed.data;
-        if (!tickerToCoin(t) && !tickerToTwelveData(t) && !tickerToYahoo(t)) {
+        if (!tickerToCoin(t) && !tickerToOanda(t) && !tickerToTwelveData(t) && !tickerToYahoo(t)) {
           return new Response(JSON.stringify({ source: null, bars: [], cachedAt: Date.now(), ttlMs: 0 }), {
             headers: jsonHeaders,
           });
