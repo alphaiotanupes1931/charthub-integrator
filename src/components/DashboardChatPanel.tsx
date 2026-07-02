@@ -326,7 +326,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               <Sparkles className="h-3.5 w-3.5" />
             </span>
             <div className="flex flex-col min-w-0">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground leading-none">AI Coach</span>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground leading-none">Chat</span>
               <div className="flex items-center gap-1 -ml-1">
                 <div className="relative">
                   <select
