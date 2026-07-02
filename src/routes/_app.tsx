@@ -117,7 +117,9 @@ export const Route = createFileRoute("/_app")({
     }
     logGate({ step: "hydrated", userId: user.id, email: user.email ?? null, attempts: 0 });
 
+    let gateSoftFailed = false;
     const gateSnapshot = await withTimeout(getDashboardGateSnapshot(), "access check", 12_000).catch((err) => {
+      gateSoftFailed = true;
       logGate({ step: "access-check-soft-failed", message: err instanceof Error ? err.message : String(err) });
       if (isTimeoutError(err, "access check")) {
         logGate({ step: "profile-timeout-soft-allow", message: err instanceof Error ? err.message : String(err) });
@@ -129,6 +131,7 @@ export const Route = createFileRoute("/_app")({
         subscriptionStatus: null,
       };
     });
+
     const prof = gateSnapshot.profile;
 
     logGate({
