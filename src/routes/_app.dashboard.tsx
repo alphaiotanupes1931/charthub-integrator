@@ -411,6 +411,7 @@ function Dashboard() {
   const [rightOpen, setRightOpen] = useState(true);
   const [panelWidth, setPanelWidth] = useState<"narrow" | "default" | "wide">("default");
   const [chartTab, setChartTab] = useState<"live" | "setup">("live");
+  const [candleType, setCandleType] = useState<"candle" | "ha">("candle");
   const [snapshot, setSnapshot] = useState<ChartSnapshot | null>(null);
   const [aiAnnotationsRaw, setAiAnnotationsRaw] = useState<import("@/lib/chartAnnotations").ChartAnnotation[]>([]);
   const [aiConcept, setAiConcept] = useState<import("@/lib/chartAnnotations").ConceptRef | null>(null);
