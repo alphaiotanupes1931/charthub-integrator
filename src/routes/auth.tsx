@@ -231,13 +231,24 @@ function AuthPage() {
 
     try {
       if (mode === "signin") {
-        const { error } = await supabase.auth.signInWithPassword(parsed.data);
+        const { data: signInData, error } = await supabase.auth.signInWithPassword(parsed.data);
         if (error) throw error;
+        // eslint-disable-next-line no-console
+        console.info("%c[auth]%c signInWithPassword ok", "color:#22c55e;font-weight:bold", "color:inherit", {
+          userId: signInData.user?.id,
+          hasSession: !!signInData.session,
+          expiresAt: signInData.session?.expires_at,
+        });
         toast.success("Signed in");
       } else {
         await signUpConfirmed({ data: parsed.data });
-        const { error } = await supabase.auth.signInWithPassword(parsed.data);
+        const { data: signInData, error } = await supabase.auth.signInWithPassword(parsed.data);
         if (error) throw error;
+        // eslint-disable-next-line no-console
+        console.info("%c[auth]%c signUp+signIn ok", "color:#22c55e;font-weight:bold", "color:inherit", {
+          userId: signInData.user?.id,
+          hasSession: !!signInData.session,
+        });
         toast.success("Account created");
       }
       // Claim the welcome slot IMMEDIATELY so the post-nav WelcomeBackGreeter
@@ -279,6 +290,9 @@ function AuthPage() {
           }
         })();
       }
+
+      // eslint-disable-next-line no-console
+      console.info("%c[auth]%c navigating", "color:#eab308;font-weight:bold", "color:inherit", { target });
 
       // Hard navigation so the protected layout's beforeLoad runs with a
       // freshly-hydrated Supabase session on every host (Vercel + previews).
