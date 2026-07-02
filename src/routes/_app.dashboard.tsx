@@ -542,7 +542,8 @@ function Dashboard() {
       <NextScanBar />
 
       {/* Row 1: symbol + timeframes + right-side pickers */}
-      <div className="shrink-0 flex items-center gap-2 px-3 py-2 border-b border-border/60 bg-card/40">
+      <div className="shrink-0 flex items-center gap-3 px-4 py-2.5 border-b border-border/60 bg-card/40">
+
         <div className="relative shrink-0" ref={pickerRef} data-tour="symbol-picker">
           <button
             onClick={() => setPickerOpen((o) => !o)}
@@ -581,12 +582,12 @@ function Dashboard() {
         </div>
 
         {/* Timeframe pills */}
-        <div className="flex items-center gap-0.5 overflow-x-auto min-w-0">
+        <div className="flex items-center gap-1 overflow-x-auto min-w-0">
           {INTERVALS.map((i) => (
             <button
               key={i.value}
               onClick={() => setIntervalState(i.value)}
-              className={`shrink-0 rounded-md px-2.5 py-1 text-xs font-medium transition ${
+              className={`shrink-0 rounded-md px-3 py-1.5 text-xs font-medium transition ${
                 interval === i.value ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-accent/40"
               }`}
             >
@@ -661,7 +662,8 @@ function Dashboard() {
       </div>
 
       {/* Row 2: Live Chart / Setup View tabs + Indicators */}
-      <div className="shrink-0 flex items-center gap-3 px-3 py-1.5 border-b border-border/60 bg-card/30 text-xs">
+      <div className="shrink-0 flex items-center gap-4 px-4 py-2 border-b border-border/60 bg-card/30 text-xs">
+
         <button
           onClick={() => { setChartTab("live"); setChartMode("live"); }}
           className={`inline-flex items-center gap-1.5 py-1.5 border-b-2 transition ${
@@ -788,7 +790,8 @@ function Dashboard() {
 
 
           {/* Broker strip */}
-          <div className="shrink-0 border-t border-border/60 px-3 py-2 flex items-center justify-between gap-2 flex-wrap text-xs">
+          <div className="shrink-0 border-t border-border/60 px-4 py-2.5 flex items-center justify-between gap-2 flex-wrap text-xs">
+
             {broker ? (
               <div className="flex items-center gap-2 min-w-0 text-muted-foreground">
                 <span className="relative flex h-2 w-2 shrink-0">
@@ -821,14 +824,14 @@ function Dashboard() {
             panelWidth === "narrow" ? "w-[280px]" : panelWidth === "wide" ? "w-[560px]" : "w-[400px]"
           }`}>
             {/* Panel width row */}
-            <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-border/60">
+            <div className="flex items-center justify-between gap-2 px-4 py-2.5 border-b border-border/60">
               <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Panel width</div>
               <div className="flex items-center gap-1">
                 {(["narrow", "default", "wide"] as const).map((w) => (
                   <button
                     key={w}
                     onClick={() => setPanelWidth(w)}
-                    className={`rounded px-2 py-1 text-[11px] font-medium capitalize transition ${
+                    className={`rounded px-2.5 py-1 text-[11px] font-medium capitalize transition ${
                       panelWidth === w ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
@@ -847,7 +850,7 @@ function Dashboard() {
             </div>
 
             {/* Tabs */}
-            <div className="flex items-center gap-1 border-b border-border/60 p-1">
+            <div className="flex items-center gap-1 border-b border-border/60 px-2 py-1.5">
               <button
                 onClick={() => setRightTab("analysis")}
                 className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded px-2.5 py-1.5 text-xs font-medium transition ${
@@ -876,7 +879,7 @@ function Dashboard() {
 
             <div className="flex-1 min-h-0 overflow-hidden relative">
               <div className={`absolute inset-0 overflow-y-auto ${rightTab === "analysis" ? "" : "hidden"}`}>
-                <div className="p-3 space-y-3">
+                <div className="p-4 space-y-4">
                   <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Order flow</div>
                   <ScanBody
                     result={result}
