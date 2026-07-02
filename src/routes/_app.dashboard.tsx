@@ -210,13 +210,13 @@ function ScanTicket({
       .catch(() => toast.error("Couldn't save feedback."));
   };
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="min-w-0">
-          <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground mb-1.5">
-            Setup ticket · {symbol.ticker} · {result.bias}
+          <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-2">
+            {symbol.ticker} · {result.bias}
           </div>
-          <div className={`font-display text-5xl sm:text-6xl leading-none ${gradeColor[result.grade]}`}>
+          <div className={`font-display text-6xl leading-none tracking-tight ${gradeColor[result.grade]}`}>
             {result.grade}
           </div>
         </div>
@@ -227,7 +227,7 @@ function ScanTicket({
               className="inline-flex items-center gap-1.5 rounded-md border border-destructive/40 bg-destructive/10 px-2.5 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/15"
               title="Stop voice"
             >
-              <Square className="h-3 w-3" /> Stop voice
+              <Square className="h-3 w-3" /> Stop
             </button>
           )}
           <button
@@ -239,31 +239,29 @@ function ScanTicket({
         </div>
       </div>
 
-      <div className="rounded-md border border-border/60 bg-background/40 p-3">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <Crosshair className="h-3.5 w-3.5 text-primary" />
-            <span className="text-xs font-medium">Scan Lens: {lens.name}</span>
-          </div>
-          <button
-            onClick={() => setLensOpen((o) => !o)}
-            className="text-[11px] text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
-          >
-            {lensOpen ? "Hide" : "What does this mean?"}
-          </button>
+      <div className="flex items-center justify-between gap-2 text-[11px]">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <Crosshair className="h-3 w-3 text-primary shrink-0" />
+          <span className="text-muted-foreground truncate">Lens · <span className="text-foreground font-medium">{lens.name}</span></span>
         </div>
-        {lensOpen && (
-          <div className="mt-2 text-xs text-muted-foreground leading-relaxed border-t border-border/50 pt-2">
-            <p className="mb-1">{lens.desc}</p>
-            <p className="italic">{lens.promptEmphasis}</p>
-          </div>
-        )}
+        <button
+          onClick={() => setLensOpen((o) => !o)}
+          className="text-muted-foreground hover:text-foreground underline-offset-2 hover:underline shrink-0"
+        >
+          {lensOpen ? "Hide" : "What's this?"}
+        </button>
       </div>
+      {lensOpen && (
+        <div className="text-xs text-muted-foreground leading-relaxed">
+          <p className="mb-1">{lens.desc}</p>
+          <p className="italic">{lens.promptEmphasis}</p>
+        </div>
+      )}
 
-      <p className="text-sm leading-relaxed">{result.notes}</p>
+      <p className="text-sm leading-relaxed text-foreground/90">{result.notes}</p>
 
       {!isNoEntry && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <TicketCell label="Entry" value={result.entry} />
           <TicketCell label="Stop"  value={result.stop} tone="bad" />
           <TicketCell label="TP1"   value={result.tp1} tone="good" />
@@ -272,11 +270,11 @@ function ScanTicket({
       )}
 
       <div>
-        <div className="flex justify-between text-xs mb-2">
+        <div className="flex justify-between text-[11px] mb-2">
           <span className="text-muted-foreground">Confidence · R:R {result.rr}</span>
           <span className="text-primary font-semibold">{result.confidence}%</span>
         </div>
-        <div className="h-1.5 rounded-full bg-border overflow-hidden">
+        <div className="h-1.5 rounded-full bg-border/60 overflow-hidden">
           <div className="h-full bg-primary transition-[width] duration-500" style={{ width: `${result.confidence}%` }} />
         </div>
       </div>
@@ -363,8 +361,8 @@ function ScanTicket({
 function TicketCell({ label, value, tone }: { label: string; value: string; tone?: "good" | "bad" }) {
   const color = tone === "good" ? "text-emerald-400" : tone === "bad" ? "text-destructive" : "text-foreground";
   return (
-    <div className="rounded-md border border-border/60 bg-background/40 px-2.5 py-2">
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+    <div className="rounded-lg border border-border/60 bg-background/30 px-3 py-2.5">
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">{label}</div>
       <div className={`font-mono text-sm font-semibold ${color}`}>{value}</div>
     </div>
   );
@@ -823,64 +821,61 @@ function Dashboard() {
           <aside className={`hidden lg:flex shrink-0 border-l border-border bg-card flex-col ${
             panelWidth === "narrow" ? "w-[280px]" : panelWidth === "wide" ? "w-[560px]" : "w-[400px]"
           }`}>
-            {/* Panel width row */}
-            <div className="flex items-center justify-between gap-2 px-4 py-2.5 border-b border-border/60">
-              <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Panel width</div>
-              <div className="flex items-center gap-1">
+            {/* Tabs + panel width in one row */}
+            <div className="flex items-center gap-2 border-b border-border/60 px-3 py-2">
+              <div className="flex items-center gap-1 flex-1 min-w-0">
+                <button
+                  onClick={() => setRightTab("analysis")}
+                  className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition ${
+                    rightTab === "analysis" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                  }`}
+                >
+                  <BarChart3 className="h-3.5 w-3.5" /> Analysis
+                </button>
+                <button
+                  onClick={() => setRightTab("chat")}
+                  className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition ${
+                    rightTab === "chat" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                  }`}
+                >
+                  <MessageSquare className="h-3.5 w-3.5" /> Chat
+                </button>
+                <button
+                  onClick={() => setRightTab("history")}
+                  className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition ${
+                    rightTab === "history" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                  }`}
+                >
+                  <Clock className="h-3.5 w-3.5" /> History
+                </button>
+              </div>
+              <div className="flex items-center gap-0.5 shrink-0 rounded-md border border-border/60 bg-background/40 p-0.5">
                 {(["narrow", "default", "wide"] as const).map((w) => (
                   <button
                     key={w}
                     onClick={() => setPanelWidth(w)}
-                    className={`rounded px-2.5 py-1 text-[11px] font-medium capitalize transition ${
-                      panelWidth === w ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
+                    className={`rounded px-2 py-1 text-[10px] font-medium capitalize transition ${
+                      panelWidth === w ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"
                     }`}
+                    title={`${w} panel`}
                   >
-                    {w}
+                    {w[0].toUpperCase()}
                   </button>
                 ))}
-                <button
-                  onClick={() => setRightOpen(false)}
-                  className="ml-1 h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                  title="Close panel"
-                  aria-label="Close panel"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
               </div>
-            </div>
-
-            {/* Tabs */}
-            <div className="flex items-center gap-1 border-b border-border/60 px-2 py-1.5">
               <button
-                onClick={() => setRightTab("analysis")}
-                className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded px-2.5 py-1.5 text-xs font-medium transition ${
-                  rightTab === "analysis" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
-                }`}
+                onClick={() => setRightOpen(false)}
+                className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 shrink-0"
+                title="Close panel"
+                aria-label="Close panel"
               >
-                <BarChart3 className="h-3.5 w-3.5" /> Analysis
-              </button>
-              <button
-                onClick={() => setRightTab("chat")}
-                className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded px-2.5 py-1.5 text-xs font-medium transition ${
-                  rightTab === "chat" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <MessageSquare className="h-3.5 w-3.5" /> Chat
-              </button>
-              <button
-                onClick={() => setRightTab("history")}
-                className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded px-2.5 py-1.5 text-xs font-medium transition ${
-                  rightTab === "history" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <Clock className="h-3.5 w-3.5" /> History
+                <X className="h-3.5 w-3.5" />
               </button>
             </div>
 
             <div className="flex-1 min-h-0 overflow-hidden relative">
               <div className={`absolute inset-0 overflow-y-auto ${rightTab === "analysis" ? "" : "hidden"}`}>
-                <div className="p-4 space-y-4">
-                  <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Order flow</div>
+                <div className="p-5">
                   <ScanBody
                     result={result}
                     scanning={scanning}
