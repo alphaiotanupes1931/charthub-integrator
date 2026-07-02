@@ -45,18 +45,18 @@ export function NextScanBar() {
   const next = nextSession(now);
 
   return (
-    <div className="shrink-0 flex items-center gap-2 px-3 py-2 border-b border-border/60 bg-background/60 text-xs">
-      <Crosshair className="h-3.5 w-3.5 text-primary shrink-0" />
+    <div className="shrink-0 flex items-center gap-2 px-4 py-1.5 bg-background/40 text-[11px]">
+      <Crosshair className="h-3 w-3 text-primary shrink-0" />
       <div className="flex-1 min-w-0 truncate text-muted-foreground">
-        Next scan: <span className="text-primary font-semibold">{next.label}</span>{" "}
-        <span className="text-foreground">in {formatDiff(next.diffMs)}</span>
+        Next scan <span className="text-primary font-semibold">{next.label}</span>{" "}
+        <span className="text-foreground/80">in {formatDiff(next.diffMs)}</span>
       </div>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="h-6 w-6 inline-flex items-center justify-center rounded text-muted-foreground hover:text-foreground"
+        className="h-5 w-5 inline-flex items-center justify-center rounded text-muted-foreground/70 hover:text-foreground"
         aria-label={open ? "Collapse" : "Expand"}
       >
-        {open ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+        {open ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
       </button>
     </div>
   );
