@@ -17,11 +17,15 @@ export type GateEvent =
   | { step: "hydrate-attempt"; attempt: number; hasUser: boolean; error?: string }
   | { step: "hydrated"; userId: string; email: string | null; attempts: number }
   | { step: "hydrate-failed"; attempts: number }
+  | { step: "access-check-soft-failed"; message: string }
   | { step: "profile"; found: boolean; onboarded?: boolean; banned?: boolean }
   | { step: "profile-created" }
+  | { step: "profile-timeout-soft-allow"; message: string }
   | { step: "redirect"; to: string; reason: string }
   | { step: "role"; isAdmin: boolean }
+  | { step: "role-check-soft-failed"; message: string }
   | { step: "subscription"; localStatus: string | null; syncedStatus?: string | null; active: boolean }
+  | { step: "subscription-check-soft-failed"; message: string }
   | { step: "allow"; pathname: string };
 
 interface GateLogEntry {
