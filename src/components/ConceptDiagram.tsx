@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { X } from "lucide-react";
 import { CONCEPT_LABELS, type ConceptId, type ConceptRef } from "@/lib/chartAnnotations";
 
