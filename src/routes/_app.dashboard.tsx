@@ -720,8 +720,9 @@ function Dashboard() {
       </div>
 
       {/* Chart area */}
-      <div className="flex-1 min-h-0 relative bg-card" data-tour="chart">
-        <div className="absolute inset-0 flex flex-col">
+      <div className="flex-1 min-h-0 flex bg-card overflow-hidden" data-tour="chart">
+        <div className="flex-1 min-w-0 flex flex-col">
+
           <div className="flex-1 min-h-0 overflow-hidden">
             {chartMode === "live" ? (
               <TradingViewChart symbol={symbol.tv} interval={interval} enabled={levels} sessions={sessionsOn} />
@@ -759,9 +760,10 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Right rail overlay - desktop only */}
+        {/* Right rail - desktop only. Sibling of chart so it never covers it. */}
         {rightOpen && (
-          <aside className="hidden lg:flex absolute right-0 top-0 bottom-0 w-[400px] border-l border-border bg-card z-20 flex-col shadow-2xl">
+          <aside className="hidden lg:flex w-[400px] shrink-0 border-l border-border bg-card flex-col">
+
             <div className="flex items-center gap-1 border-b border-border/60 p-1">
               <button
                 onClick={() => setRightTab("analysis")}
