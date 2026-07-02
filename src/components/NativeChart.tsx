@@ -374,12 +374,28 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     };
   }, []);
 
+  // Convert to Heikin-Ashi when requested
+  const displayCandles = useMemo<Candle[]>(() => {
+    if (candleType !== "ha" || candles.length === 0) return candles;
+    const out: Candle[] = [];
+    for (let i = 0; i < candles.length; i++) {
+      const c = candles[i];
+      const haClose = (c.open + c.high + c.low + c.close) / 4;
+      const prev = out[i - 1];
+      const haOpen = prev ? (prev.open + prev.close) / 2 : (c.open + c.close) / 2;
+      const haHigh = Math.max(c.high, haOpen, haClose);
+      const haLow  = Math.min(c.low,  haOpen, haClose);
+      out.push({ time: c.time, open: haOpen, high: haHigh, low: haLow, close: haClose });
+    }
+    return out;
+  }, [candles, candleType]);
+
   // Push candle data
   useEffect(() => {
     if (!ready || !seriesRef.current || !chartRef.current) return;
-    seriesRef.current.setData(candles);
+    seriesRef.current.setData(displayCandles);
     chartRef.current.timeScale().fitContent();
-  }, [candles, ready]);
+  }, [displayCandles, ready]);
 
   // Sync overlays from `enabled` toggles
   useEffect(() => {
