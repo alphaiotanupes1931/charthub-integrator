@@ -394,7 +394,7 @@ function Dashboard() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [result, setResult] = useState<ScanResult | null>(null);
-  const [chartMode, setChartMode] = useState<"live" | "native">("native");
+  const [chartMode, setChartMode] = useState<"live" | "native">("live");
   const [levels, setLevels] = useState<Record<LevelKey, boolean>>(() =>
     typeof window !== "undefined" ? loadLevels() : { ...DEFAULT_LEVELS },
   );
@@ -683,7 +683,7 @@ function Dashboard() {
           </button>
 
           {/* Chart mode toggle */}
-          <div className="hidden md:flex items-center gap-1 rounded-md border border-border p-0.5">
+          <div className="flex items-center gap-1 rounded-md border border-border p-0.5">
             <button
               onClick={() => setChartMode("live")}
               className={`inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium transition ${
