@@ -12,6 +12,7 @@ import { readActiveCoach } from "@/lib/chat-client";
 import { voiceForCoach } from "@/lib/coachVoices";
 import { runResearchPlan } from "@/lib/agents/research.functions";
 import { recordHermesFeedback } from "@/lib/agents/hermes.functions";
+import { listChatThreads, createChatThread, deleteChatThread } from "@/lib/chat.functions";
 import type { ResearchMemo } from "@/lib/agents/types";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -404,7 +405,8 @@ function Dashboard() {
   );
   const [levelsOpen, setLevelsOpen] = useState(false);
   const [coachOpen, setCoachOpen] = useState(false);
-  const [rightTab, setRightTab] = useState<"analysis" | "coach">("analysis");
+  const [rightTab, setRightTab] = useState<"chat" | "history">("chat");
+  const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [rightOpen, setRightOpen] = useState(true);
   const [snapshot, setSnapshot] = useState<ChartSnapshot | null>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
@@ -766,20 +768,20 @@ function Dashboard() {
 
             <div className="flex items-center gap-1 border-b border-border/60 p-1">
               <button
-                onClick={() => setRightTab("analysis")}
+                onClick={() => setRightTab("chat")}
                 className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded px-2.5 py-1.5 text-xs font-medium transition ${
-                  rightTab === "analysis" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
+                  rightTab === "chat" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <BarChart3 className="h-3.5 w-3.5" /> Analysis
+                <MessageSquare className="h-3.5 w-3.5" /> Chat
               </button>
               <button
-                onClick={() => setRightTab("coach")}
+                onClick={() => setRightTab("history")}
                 className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded px-2.5 py-1.5 text-xs font-medium transition ${
-                  rightTab === "coach" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
+                  rightTab === "history" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <MessageSquare className="h-3.5 w-3.5" /> Coach
+                <Clock className="h-3.5 w-3.5" /> History
               </button>
               <button
                 onClick={() => setRightOpen(false)}
@@ -791,44 +793,27 @@ function Dashboard() {
               </button>
             </div>
             <div className="flex-1 min-h-0 overflow-hidden relative">
-              {/* Analysis panel - hidden when Coach tab active, but stays mounted */}
-              <div className={`absolute inset-0 overflow-y-auto p-4 space-y-6 ${rightTab === "analysis" ? "" : "hidden"}`}>
-                <TodaysRecommendation />
-                <ScanBody
-                  result={result}
-                  scanning={scanning}
-                  symbol={symbol}
-                  intervalLabel={intervalLabel}
-                  lensId={lensId}
-                  runScan={runScan}
-                  onAttach={(file) => {
-                    setRightTab("coach");
-                    chatRef.current?.attach(file, `Scan this chart screenshot for ${symbol.ticker} on ${intervalLabel}. Give me grade, bias, entry, stop, TP1, TP2, R:R, and a 1-2 sentence rationale.`);
-                    setScanning(true);
-                    const lens = findLens(lensId);
-                    runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
-                      .then((plan) => setResult(plan as ScanResult))
-                      .catch(() => { /* coach chat still runs the vision analysis */ })
-                      .finally(() => setScanning(false));
-                  }}
-                  onStopScan={() => { chatRef.current?.stop(); voice.stop(); setScanning(false); }}
-                  onStopVoice={() => voice.stop()}
-                  voiceSpeaking={voice.speaking}
-                />
-              </div>
-              {/* Coach panel - stays mounted so in-flight scans keep streaming when switching tabs */}
-              <div className={`absolute inset-0 ${rightTab === "coach" ? "" : "hidden"}`}>
+              {/* Chat panel - stays mounted so in-flight scans keep streaming when switching tabs */}
+              <div className={`absolute inset-0 ${rightTab === "chat" ? "" : "hidden"}`}>
                 <DashboardChatPanel
                   ref={chatRef}
                   onRunScan={runScan}
                   onStopScan={() => { voice.stop(); setScanning(false); }}
                   scanning={scanning}
+                  threadIdOverride={activeThreadId}
                   chart={{
                     ticker: symbol.ticker,
                     intervalLabel,
                     enabledLevels: ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none",
                     snapshot: snapshot ?? undefined,
                   }}
+                />
+              </div>
+              <div className={`absolute inset-0 overflow-y-auto ${rightTab === "history" ? "" : "hidden"}`}>
+                <ChatHistoryList
+                  activeThreadId={activeThreadId}
+                  onPick={(id) => { setActiveThreadId(id); setRightTab("chat"); }}
+                  onNew={() => { setActiveThreadId(null); setRightTab("chat"); }}
                 />
               </div>
             </div>
@@ -1014,4 +999,90 @@ function FloatingCoach({
   );
 }
 
+function ChatHistoryList({
+  activeThreadId,
+  onPick,
+  onNew,
+}: {
+  activeThreadId: string | null;
+  onPick: (id: string) => void;
+  onNew: (id: string | null) => void;
+}) {
+  const listFn = useServerFn(listChatThreads);
+  const createFn = useServerFn(createChatThread);
+  const delFn = useServerFn(deleteChatThread);
+  const [threads, setThreads] = useState<Array<{ id: string; title: string; updated_at: string }>>([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = () => {
+    setLoading(true);
+    listFn()
+      .then((rows: unknown) => setThreads(rows as Array<{ id: string; title: string; updated_at: string }>))
+      .catch(() => { /* ignore */ })
+      .finally(() => setLoading(false));
+  };
+  useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+
+  const handleNew = async () => {
+    try {
+      const t = await createFn({ data: {} });
+      if (t) {
+        setThreads((prev) => [{ id: t.id, title: t.title, updated_at: t.updated_at }, ...prev]);
+        onNew(t.id);
+      }
+    } catch { toast.error("Could not start a new conversation"); }
+  };
+
+  const handleDelete = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm("Delete this conversation?")) return;
+    try {
+      await delFn({ data: { threadId: id } });
+      setThreads((prev) => prev.filter((t) => t.id !== id));
+      if (activeThreadId === id) onNew(null);
+    } catch { toast.error("Could not delete"); }
+  };
+
+  return (
+    <div className="p-3 space-y-2">
+      <div className="flex items-center justify-between">
+        <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Chat history</div>
+        <button
+          onClick={handleNew}
+          className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-2 py-1 text-[11px] font-medium hover:border-primary/50 transition"
+        >
+          + New
+        </button>
+      </div>
+      {loading && <div className="text-xs text-muted-foreground italic px-1 py-2">Loading…</div>}
+      {!loading && threads.length === 0 && (
+        <div className="text-xs text-muted-foreground italic px-1 py-2">No conversations yet.</div>
+      )}
+      <div className="space-y-1">
+        {threads.map((t) => {
+          const active = activeThreadId === t.id;
+          return (
+            <div
+              key={t.id}
+              onClick={() => onPick(t.id)}
+              className={`group flex items-center gap-2 rounded-md px-2 py-2 text-sm cursor-pointer transition ${
+                active ? "bg-primary/15 text-primary" : "hover:bg-accent/40 text-foreground/85"
+              }`}
+            >
+              <MessageSquare className="h-3.5 w-3.5 shrink-0 opacity-70" />
+              <span className="flex-1 min-w-0 truncate">{t.title}</span>
+              <button
+                onClick={(e) => handleDelete(t.id, e)}
+                className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive p-1"
+                aria-label="Delete conversation"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
