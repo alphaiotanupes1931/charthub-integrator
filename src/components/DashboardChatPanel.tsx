@@ -41,12 +41,12 @@ export type ChartContext = {
   snapshot?: import("@/components/NativeChart").ChartSnapshot;
 };
 
-type Props = { chart?: ChartContext; onClose?: () => void; onMinimize?: () => void; onRunScan?: () => void; onStopScan?: () => void; scanning?: boolean; };
+type Props = { chart?: ChartContext; onClose?: () => void; onMinimize?: () => void; onRunScan?: () => void; onStopScan?: () => void; scanning?: boolean; threadIdOverride?: string | null; };
 
 const DASHBOARD_THREAD_FALLBACK_ID = "dashboard-scans";
 
-export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(function DashboardChatPanel({ chart, onClose, onMinimize, onRunScan, onStopScan, scanning }, ref) {
-  const [threadId, setThreadId] = useState(DASHBOARD_THREAD_FALLBACK_ID);
+export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(function DashboardChatPanel({ chart, onClose, onMinimize, onRunScan, onStopScan, scanning, threadIdOverride }, ref) {
+  const [threadId, setThreadId] = useState(threadIdOverride || DASHBOARD_THREAD_FALLBACK_ID);
   const [initial, setInitial] = useState<UIMessage[]>([]);
   const getThread = useServerFn(getOrCreateDashboardThread);
   const getMsgs = useServerFn(getChatMessages);
@@ -82,48 +82,49 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
   useEffect(() => {
     let cancelled = false;
 
-    const tryOnce = async () => {
-      const t = await getThread();
-      if (!t) throw new Error("no thread returned");
-      if (cancelled) return null;
-      const rows = await getMsgs({ data: { threadId: t.id } });
-      return { threadId: t.id, rows: rows as UIMessage[] };
-    };
-
     (async () => {
       const token = await waitForSession();
       if (cancelled) return;
-      if (!token) {
-        console.warn("[coach] session not ready; using live chat fallback");
+      if (!token) return;
+
+      // If a specific thread was requested, just load its messages.
+      if (threadIdOverride) {
+        try {
+          const rows = await getMsgs({ data: { threadId: threadIdOverride } });
+          if (!cancelled) {
+            setThreadId(threadIdOverride);
+            setInitial(rows as UIMessage[]);
+          }
+        } catch (e) {
+          console.warn("[chat] load thread failed", e);
+        }
         return;
       }
 
-      // Three attempts with backoff: handles worker cold starts and flaky mobile networks.
+      // Default: get-or-create the dashboard scratch thread with retry.
       const delays = [0, 800, 2200];
-      let lastErr: unknown = null;
       for (let i = 0; i < delays.length; i++) {
         if (cancelled) return;
         if (delays[i]) await new Promise((r) => setTimeout(r, delays[i]));
         try {
-          const loaded = await tryOnce();
-          if (!cancelled && loaded) {
-            setThreadId(loaded.threadId);
-            setInitial(loaded.rows);
+          const t = await getThread();
+          if (!t) throw new Error("no thread returned");
+          const rows = await getMsgs({ data: { threadId: t.id } });
+          if (!cancelled) {
+            setThreadId(t.id);
+            setInitial(rows as UIMessage[]);
           }
           return;
         } catch (e) {
-          lastErr = e;
-          console.warn(`[coach] load attempt ${i + 1} failed`, e);
-          // Refresh in case the token expired mid-flight.
+          console.warn(`[chat] load attempt ${i + 1} failed`, e);
           try { await supabase.auth.refreshSession(); } catch { /* ignore */ }
         }
       }
-      console.error("[coach] all attempts failed", lastErr);
     })();
 
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [getThread, getMsgs, waitForSession]);
+  }, [getThread, getMsgs, waitForSession, threadIdOverride]);
 
   return <ChatInner key={threadId} ref={ref} threadId={threadId} initial={initial} chart={chart} onClose={onClose} onMinimize={onMinimize} onRunScan={onRunScan} onStopScan={onStopScan} scanning={scanning} />;
 });
@@ -325,7 +326,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               <Sparkles className="h-3.5 w-3.5" />
             </span>
             <div className="flex flex-col min-w-0">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground leading-none">AI Coach</span>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground leading-none">Chat</span>
               <div className="flex items-center gap-1 -ml-1">
                 <div className="relative">
                   <select
@@ -403,15 +404,12 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
         <Conversation className="flex-1 min-h-0">
           <ConversationContent className="px-3 py-4">
             {messages.length === 0 && (
-              <EmptyStateSuggestions
-                chart={chart}
-                disabled={loading}
-                onRunScan={onRunScan}
-                onPick={(text) => {
-                  if (voice.enabled) voice.prime();
-                  void sendMessage({ text });
-                }}
-              />
+              <div className="py-10 px-4 flex flex-col items-center gap-2 text-center">
+                <MessageSquare className="h-5 w-5 text-muted-foreground/70" />
+                <div className="text-xs text-muted-foreground max-w-xs">
+                  Ask anything, or hit Run scan to grade the current setup. Every scan and reply lands here in your chat history.
+                </div>
+              </div>
             )}
             {messages.map((m) => {
               const text = m.parts
@@ -514,63 +512,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
       </div>
 );
 
-function EmptyStateSuggestions({
-  chart,
-  disabled,
-  onPick,
-  onRunScan,
-}: {
-  chart?: ChartContext;
-  disabled: boolean;
-  onPick: (text: string) => void;
-  onRunScan?: () => void;
-}) {
-  const ticker = chart?.ticker ?? "XAU/USD";
-  const tf = chart?.intervalLabel ?? "1H";
-  const levels = chart?.enabledLevels || "VWAP, POC, S/R";
-  const hasSnapshot = !!chart?.snapshot;
-  const suggestions = [
-    hasSnapshot
-      ? `Scan my chart right now - ${ticker} ${tf}. Use the live price, VWAP, POC, and any liquidity/order-flow data you can see to tell me bias, entry, stop, TP1 and TP2.`
-      : `Analyze ${ticker} for a trade setup. Give me entry, stop loss, and take profit levels.`,
-    `What's my edge on ${ticker} based on my journal?`,
-    `Walk me through a ${tf} ${ticker} plan using ${levels}.`,
-    `What's my biggest weakness right now? Be specific with trade examples.`,
-  ];
-  return (
-    <div className="py-6 px-1 flex flex-col items-center gap-3">
-      <div className="flex flex-col items-center gap-1.5 text-center">
-        <MessageSquare className="h-5 w-5 text-muted-foreground/70" />
-        <div className="text-xs text-muted-foreground">
-          Ask your coach, or tap a suggestion to get started.
-        </div>
-      </div>
-      {onRunScan && (
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={onRunScan}
-          className="w-full inline-flex items-center justify-center gap-1.5 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-xs font-medium text-primary hover:bg-primary/15 transition disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Crosshair className="h-3.5 w-3.5" /> Run scan on {ticker}
-        </button>
-      )}
-      <div className="w-full flex flex-col gap-1.5 mt-1">
-        {suggestions.map((s) => (
-          <button
-            key={s}
-            type="button"
-            disabled={disabled}
-            onClick={() => onPick(s)}
-            className="text-left text-xs leading-snug rounded-lg border border-border/70 bg-background/40 hover:bg-primary/5 hover:border-primary/40 transition px-3 py-2 text-foreground/90 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {s}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
+
 
   },
 );
