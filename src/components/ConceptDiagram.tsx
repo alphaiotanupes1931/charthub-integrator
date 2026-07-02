@@ -163,7 +163,7 @@ function WyckoffDiagram() {
   );
 }
 
-const REGISTRY: Record<ConceptId, () => JSX.Element> = {
+const REGISTRY: Record<ConceptId, () => ReactElement> = {
   FVG: FVGDiagram,
   OrderBlock: OrderBlockDiagram,
   LiquiditySweep: LiquiditySweepDiagram,
