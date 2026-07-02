@@ -1,4 +1,5 @@
-import { ArrowUpRight, ArrowDownRight, Minus, Target, Shield, Flag, Clock } from "lucide-react";
+import { useState } from "react";
+import { ArrowUpRight, ArrowDownRight, Minus, Target, Shield, Flag, Clock, ChevronDown, ChevronUp } from "lucide-react";
 import type { ChartGrade } from "@/lib/chartAnnotations";
 
 type Props = {
