@@ -72,10 +72,11 @@ async def main() -> int:
 
 
         # 2. Fill and submit the signup form.
-        await page.get_by_label("Email").fill(email)
-        await page.get_by_label("Password").fill(password)
+        await page.locator("#email").fill(email)
+        await page.locator("#password").fill(password)
         submit = page.get_by_role("button", name="Create account")
         await submit.click()
+
 
         # 3. The click-blocking overlay should appear before we navigate.
         try:
