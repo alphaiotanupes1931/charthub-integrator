@@ -582,12 +582,12 @@ function Dashboard() {
         </div>
 
         {/* Timeframe pills */}
-        <div className="flex items-center gap-0.5 overflow-x-auto min-w-0">
+        <div className="flex items-center gap-1 overflow-x-auto min-w-0">
           {INTERVALS.map((i) => (
             <button
               key={i.value}
               onClick={() => setIntervalState(i.value)}
-              className={`shrink-0 rounded-md px-2.5 py-1 text-xs font-medium transition ${
+              className={`shrink-0 rounded-md px-3 py-1.5 text-xs font-medium transition ${
                 interval === i.value ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-accent/40"
               }`}
             >
