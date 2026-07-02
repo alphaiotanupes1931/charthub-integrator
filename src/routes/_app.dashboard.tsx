@@ -901,24 +901,8 @@ function Dashboard() {
                   <X className="h-3.5 w-3.5" />
                 </button>
               </div>
-              <div className="flex items-center justify-between gap-2 px-3 pb-2">
-                <span className="text-[9px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Panel width</span>
-                <div className="flex items-center gap-0.5 rounded-md border border-border/60 bg-background/40 p-0.5">
-                  {(["narrow", "default", "wide"] as const).map((w) => (
-                    <button
-                      key={w}
-                      onClick={() => setPanelWidth(w)}
-                      className={`rounded px-2 py-0.5 text-[10px] font-medium capitalize transition ${
-                        panelWidth === w ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"
-                      }`}
-                      title={`${w} panel`}
-                    >
-                      {w}
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
+
 
             <div className="flex-1 min-h-0 overflow-hidden relative">
               <div className={`absolute inset-0 overflow-y-auto ${rightTab === "analysis" ? "" : "hidden"}`}>
