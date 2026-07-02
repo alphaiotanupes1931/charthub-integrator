@@ -57,17 +57,18 @@ async def main() -> int:
         page.on("console", lambda msg: msg.type == "error" and console_errors.append(f"console: {msg.text}"))
 
         # 1. Load /auth in create-account mode.
-        await page.goto(f"{BASE_URL}/auth", wait_until="domcontentloaded")
+        await page.goto(f"{BASE_URL}/auth", wait_until="networkidle")
         # Dismiss cookie banner if present so it doesn't intercept clicks.
         got_it = page.get_by_role("button", name="Got it")
         if await got_it.count():
-            await got_it.click()
-        # Toggle to signup if the page opens in signin mode.
+            await got_it.first.click()
+        # Wait for the SPA to hydrate before toggling to signup.
+        await expect(page.get_by_role("heading", name="Sign in")).to_be_visible()
         create_link = page.get_by_role("button", name="Create one")
-        if await create_link.count():
-            await create_link.click()
+        await create_link.click()
         await expect(page.get_by_role("heading", name="Create your account")).to_be_visible()
         await page.screenshot(path=str(SCREENSHOTS / "01_auth.png"))
+
 
 
         # 2. Fill and submit the signup form.
