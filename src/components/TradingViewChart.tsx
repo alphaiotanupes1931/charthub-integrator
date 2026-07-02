@@ -37,18 +37,20 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions }: 
     if (!containerRef.current) return;
     setFailed(false);
     setLoaded(false);
-    containerRef.current.innerHTML = "";
+    const host = containerRef.current;
+    host.innerHTML = "";
     const inner = document.createElement("div");
     inner.className = "tradingview-widget-container__widget";
     inner.style.height = "100%";
     inner.style.width = "100%";
-    containerRef.current.appendChild(inner);
+    host.appendChild(inner);
 
     const script = document.createElement("script");
     script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
     script.type = "text/javascript";
-    script.async = true;
-    script.text = JSON.stringify({
+    // NOTE: do not set async — the TV loader reads its own script's
+    // innerHTML via document.currentScript at execution time.
+    script.innerHTML = JSON.stringify({
       autosize: true,
       symbol,
       interval,
@@ -68,16 +70,29 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions }: 
       support_host: "https://www.tradingview.com",
     });
     script.onerror = () => setFailed(true);
-    containerRef.current.appendChild(script);
+    host.appendChild(script);
 
-    // If TradingView never injects an iframe within ~6s, treat as failed
-    const check = window.setTimeout(() => {
-      const iframe = containerRef.current?.querySelector("iframe");
-      if (iframe) setLoaded(true);
-      else setFailed(true);
-    }, 6000);
+    // Poll for the injected iframe. Some networks / slow devices take
+    // well past 6s to attach — fail only after we truly gave up.
+    let elapsed = 0;
+    const step = 500;
+    const maxWait = 20_000;
+    const poll = window.setInterval(() => {
+      const iframe = host.querySelector("iframe");
+      if (iframe) {
+        setLoaded(true);
+        setFailed(false);
+        window.clearInterval(poll);
+        return;
+      }
+      elapsed += step;
+      if (elapsed >= maxWait) {
+        window.clearInterval(poll);
+        setFailed(true);
+      }
+    }, step);
 
-    return () => window.clearTimeout(check);
+    return () => window.clearInterval(poll);
   }, [symbol, interval, studiesKey]);
 
   return (
