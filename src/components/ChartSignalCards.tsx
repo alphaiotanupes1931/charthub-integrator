@@ -21,17 +21,14 @@ function pct(from?: number, to?: number) {
 }
 
 export function ChartSignalCards({ grade, lastPrice, onClear }: Props) {
-  // Waiting-for-signal state
+  const [expanded, setExpanded] = useState(false);
+
+  // Waiting-for-signal state — small pill only
   if (!grade) {
     return (
-      <div className="pointer-events-auto absolute left-3 top-3 z-20 w-[220px] rounded-lg border border-border/70 bg-background/85 p-2.5 backdrop-blur-md shadow-lg">
-        <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          <Clock className="h-3 w-3" />
-          Waiting for signal
-        </div>
-        <p className="mt-1.5 text-[11px] leading-snug text-foreground/80">
-          Run a scan or ask the chat to grade this setup. Signal cards with entry, stop, and take-profits will appear here.
-        </p>
+      <div className="pointer-events-auto absolute left-3 top-3 z-20 inline-flex items-center gap-1.5 rounded-md border border-border/70 bg-background/85 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground backdrop-blur-md shadow-md">
+        <Clock className="h-3 w-3" />
+        Waiting for signal
       </div>
     );
   }
