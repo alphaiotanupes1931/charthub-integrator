@@ -303,7 +303,8 @@ export const Route = createFileRoute("/api/chat")({
         }
 
         const key = process.env.LOVABLE_API_KEY;
-        if (!key) return new Response("AI not configured", { status: 500, headers: cors });
+        if (!key) return new Response("The AI coach is temporarily unavailable. Please try again shortly.", { status: 503, headers: cors });
+
 
         // --- Verify thread ownership when this is a persisted chat thread. ---
         // The dashboard coach can start in ephemeral mode while the protected
