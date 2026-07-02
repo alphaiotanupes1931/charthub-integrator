@@ -29,7 +29,7 @@ function daysForInterval(interval: string): number {
 }
 
 export type OhlcBar = { time: number; open: number; high: number; low: number; close: number };
-export type OhlcSource = "coingecko" | "twelvedata" | "yahoo";
+export type OhlcSource = "coingecko" | "oanda" | "twelvedata" | "yahoo";
 export type OhlcResponse = {
   source: OhlcSource | null;
   bars: OhlcBar[];
