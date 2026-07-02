@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { TradingViewChart } from "@/components/TradingViewChart";
 import { NativeChart, LEVEL_META, type LevelKey, type ChartSnapshot } from "@/components/NativeChart";
 import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Sparkles, Clock, MessageSquare, X, Plug, Maximize2, Square, Paperclip, ChevronUp, PanelRightClose, PanelRightOpen, BarChart3, ThumbsUp, ThumbsDown, Brain, LineChart, Settings2 } from "lucide-react";
@@ -8,6 +8,7 @@ import { NextScanBar } from "@/components/NextScanBar";
 import { useCoachVoice } from "@/hooks/useCoachVoice";
 import { DashboardChatPanel, type DashboardChatHandle } from "@/components/DashboardChatPanel";
 import { ChartConceptOverlay } from "@/components/ConceptDiagram";
+import { ChartSignalCards } from "@/components/ChartSignalCards";
 import { TodaysRecommendation } from "@/components/TodaysRecommendation";
 import { SCAN_LENSES, readActiveLensId, writeActiveLensId, findLens, type ScanLensId } from "@/lib/scanLens";
 import { readActiveCoach } from "@/lib/chat-client";
@@ -413,8 +414,19 @@ function Dashboard() {
   const [panelWidth, setPanelWidth] = useState<"narrow" | "default" | "wide">("default");
   const [chartTab, setChartTab] = useState<"live" | "setup">("live");
   const [snapshot, setSnapshot] = useState<ChartSnapshot | null>(null);
-  const [aiAnnotations, setAiAnnotations] = useState<import("@/lib/chartAnnotations").ChartAnnotation[]>([]);
+  const [aiAnnotationsRaw, setAiAnnotationsRaw] = useState<import("@/lib/chartAnnotations").ChartAnnotation[]>([]);
   const [aiConcept, setAiConcept] = useState<import("@/lib/chartAnnotations").ConceptRef | null>(null);
+  const [aiGrade, setAiGrade] = useState<import("@/lib/chartAnnotations").ChartGrade | null>(null);
+  // Reject AI prices that are wildly outside the current price (>8%).
+  const aiAnnotations = useMemo(() => {
+    const lp = snapshot?.lastPrice;
+    if (!lp || !isFinite(lp)) return aiAnnotationsRaw;
+    const ok = (p: number) => Math.abs((p - lp) / lp) <= 0.08;
+    return aiAnnotationsRaw.filter((a) => {
+      if (a.kind === "zone") return ok(a.top) && ok(a.bottom);
+      return ok(a.price);
+    });
+  }, [aiAnnotationsRaw, snapshot?.lastPrice]);
   const pickerRef = useRef<HTMLDivElement>(null);
   const levelsRef = useRef<HTMLDivElement>(null);
   const lensRef = useRef<HTMLDivElement>(null);
@@ -758,10 +770,15 @@ function Dashboard() {
             {aiConcept && (
               <ChartConceptOverlay concept={aiConcept} onClose={() => setAiConcept(null)} />
             )}
+            <ChartSignalCards
+              grade={aiGrade}
+              lastPrice={snapshot?.lastPrice}
+              onClear={aiGrade ? () => { setAiGrade(null); setAiAnnotationsRaw([]); } : undefined}
+            />
             {aiAnnotations.length > 0 && (
               <button
                 type="button"
-                onClick={() => setAiAnnotations([])}
+                onClick={() => setAiAnnotationsRaw([])}
                 className="absolute right-3 bottom-3 z-30 rounded-md border border-border bg-background/90 px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-muted-foreground hover:text-foreground backdrop-blur"
               >
                 Clear AI markers
@@ -801,7 +818,7 @@ function Dashboard() {
 
         {rightOpen && (
           <aside className={`hidden lg:flex shrink-0 border-l border-border bg-card flex-col ${
-            panelWidth === "narrow" ? "w-[320px]" : panelWidth === "wide" ? "w-[480px]" : "w-[400px]"
+            panelWidth === "narrow" ? "w-[280px]" : panelWidth === "wide" ? "w-[560px]" : "w-[400px]"
           }`}>
             {/* Panel width row */}
             <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-border/60">
@@ -882,7 +899,8 @@ function Dashboard() {
                   onStopScan={() => { voice.stop(); setScanning(false); }}
                   scanning={scanning}
                   threadIdOverride={activeThreadId}
-                  onAnnotations={setAiAnnotations}
+                  onAnnotations={setAiAnnotationsRaw}
+                  onGrade={setAiGrade}
                   onConcept={setAiConcept}
                   chart={{
                     ticker: symbol.ticker,
