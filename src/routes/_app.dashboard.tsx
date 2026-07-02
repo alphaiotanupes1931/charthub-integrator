@@ -769,6 +769,11 @@ function Dashboard() {
             {aiConcept && (
               <ChartConceptOverlay concept={aiConcept} onClose={() => setAiConcept(null)} />
             )}
+            <ChartSignalCards
+              grade={aiGrade}
+              lastPrice={snapshot?.lastPrice}
+              onClear={aiGrade ? () => { setAiGrade(null); setAiAnnotationsRaw([]); } : undefined}
+            />
             {aiAnnotations.length > 0 && (
               <button
                 type="button"
