@@ -26,6 +26,7 @@ export type GateEvent =
   | { step: "role-check-soft-failed"; message: string }
   | { step: "subscription"; localStatus: string | null; syncedStatus?: string | null; active: boolean }
   | { step: "subscription-check-soft-failed"; message: string }
+  | { step: "subscription-skip-soft-fail" }
   | { step: "allow"; pathname: string };
 
 interface GateLogEntry {
