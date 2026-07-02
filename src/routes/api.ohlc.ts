@@ -287,12 +287,16 @@ const INFLIGHT = new Map<string, Promise<CacheEntry>>();
 
 async function fetchBestAvailable(ticker: string, interval: string): Promise<CacheEntry> {
   const coin = tickerToCoin(ticker);
+  const oandaSymbol = coin ? null : tickerToOanda(ticker);
   const tdSymbol = coin ? null : tickerToTwelveData(ticker);
   const yahooSymbol = tickerToYahoo(ticker);
   const attempts: Array<() => Promise<CacheEntry>> = [];
 
   if (coin) {
     attempts.push(async () => ({ at: Date.now(), bars: await fetchCoinGecko(coin, daysForInterval(interval)), source: "coingecko" }));
+  }
+  if (oandaSymbol && process.env.OANDA_API_KEY) {
+    attempts.push(async () => ({ at: Date.now(), bars: await fetchOanda(oandaSymbol, interval), source: "oanda" }));
   }
   if (tdSymbol) {
     attempts.push(async () => ({ at: Date.now(), bars: await fetchTwelveData(tdSymbol, tdInterval(interval)), source: "twelvedata" }));
