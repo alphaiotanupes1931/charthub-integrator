@@ -514,6 +514,7 @@ function Dashboard() {
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
+      <PlatformStatusBanner />
       {/* Compact top toolbar */}
       <div className="shrink-0 flex items-center gap-2 px-3 py-2 border-b border-border/60 bg-card/50">
         <div className="flex items-center gap-2 min-w-0 flex-1">
