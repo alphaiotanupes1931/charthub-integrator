@@ -882,6 +882,8 @@ function Dashboard() {
                   onStopScan={() => { voice.stop(); setScanning(false); }}
                   scanning={scanning}
                   threadIdOverride={activeThreadId}
+                  onAnnotations={setAiAnnotations}
+                  onConcept={setAiConcept}
                   chart={{
                     ticker: symbol.ticker,
                     intervalLabel,
