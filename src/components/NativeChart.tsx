@@ -237,14 +237,17 @@ function computeLevels(candles: Candle[]) {
   return { vwap, poc, sr: clustered, zones, fvg, fib, liq, of, delta };
 }
 
-export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSnapshot, className }: Props) {
+export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSnapshot, annotations, className }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
   const linesRef = useRef<IPriceLine[]>([]);
+  const annLinesRef = useRef<IPriceLine[]>([]);
   const [ready, setReady] = useState(false);
   // Session band positions {key,color,label,left,width} in pixels for the overlay
   const [bands, setBands] = useState<Array<{ key: string; color: string; label: string; left: number; width: number; top: number; height: number; high: number; low: number; idx: number }>>([]);
+  // AI annotation zones projected into pixel coords for a shaded overlay
+  const [annZones, setAnnZones] = useState<Array<{ key: string; top: number; height: number; color: string; label?: string }>>([]);
 
   const { data: liveOhlc, isLoading, isError } = useQuery<OhlcResponse>({
     queryKey: ["ohlc", ticker, interval],
