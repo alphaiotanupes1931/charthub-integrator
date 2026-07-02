@@ -821,9 +821,9 @@ function Dashboard() {
               <button
                 type="button"
                 onClick={() => setAiAnnotationsRaw([])}
-                className="absolute right-3 bottom-3 z-30 rounded-md border border-border bg-background/90 px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-muted-foreground hover:text-foreground backdrop-blur"
+                className="absolute right-3 top-12 z-30 rounded-md border border-border bg-background/90 px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-muted-foreground hover:text-foreground backdrop-blur"
               >
-                Clear AI markers
+                Clear markers
               </button>
             )}
           </div>
