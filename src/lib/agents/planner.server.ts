@@ -70,33 +70,50 @@ export async function runPlanner(
   const ctx = memoBlock(memo, snap, lensDesc);
   const memoryLine = hermesMemory ? `\n\n${hermesMemory}` : "";
 
-  // Step 1 — draft plan
-  const draft = await generateText({
-    model: provider(MODEL),
-    output: Output.object({ schema: PlanSchema }),
-    system: "You are the head trader. Produce a concrete plan (entry/stop/tp1/tp2 as raw numbers) grounded in the analyst notes. Use ATR to size the stop (~1-1.5x ATR). TP1 near 1.5R, TP2 near 3R. If consensus is weak or conflicting, use grade C or NO ENTRY." + memoryLine,
-    prompt: ctx,
-  });
-  let plan = draft.output;
-
-  // Step 2 — critic
-  const critique = await generateText({
-    model: provider(MODEL),
-    output: Output.object({ schema: CritiqueSchema }),
-    system: "You are the risk manager. Approve the plan if entry/stop/TP are in sensible relation to price (stop within 3x ATR, TPs on the correct side of entry, R:R >= 1.5). Otherwise say revise.",
-    prompt: `${ctx}\n\nProposed plan: ${JSON.stringify(plan)}`,
-  });
-
-  // Step 3 — refine once if needed
-  if (critique.output.verdict === "revise") {
-    const revised = await generateText({
+  let plan: z.infer<typeof PlanSchema>;
+  try {
+    // Step 1 — draft plan
+    const draft = await generateText({
       model: provider(MODEL),
       output: Output.object({ schema: PlanSchema }),
-      system: "You are the head trader. Revise the previous plan per the risk manager's note. Keep bias unless the critique explicitly demands a flip.",
-      prompt: `${ctx}\n\nPrevious plan: ${JSON.stringify(plan)}\nRisk manager: ${critique.output.reason}`,
+      system: "You are the head trader. Produce a concrete plan (entry/stop/tp1/tp2 as raw numbers) grounded in the analyst notes. Use ATR to size the stop (~1-1.5x ATR). TP1 near 1.5R, TP2 near 3R. Keep thesis under 400 chars and invalidation under 200 chars. Confidence is 0-100. If consensus is weak or conflicting, use grade C or NO ENTRY." + memoryLine,
+      prompt: ctx,
     });
-    plan = revised.output;
+    plan = draft.output;
+  } catch (e) {
+    if (!NoObjectGeneratedError.isInstance(e)) throw e;
+    plan = fallbackPlan(snap, memo);
   }
+
+  // Step 2 — critic (best-effort)
+  try {
+    const critique = await generateText({
+      model: provider(MODEL),
+      output: Output.object({ schema: CritiqueSchema }),
+      system: "You are the risk manager. Approve the plan if entry/stop/TP are in sensible relation to price (stop within 3x ATR, TPs on the correct side of entry, R:R >= 1.5). Otherwise say revise. Keep reason under 300 chars.",
+      prompt: `${ctx}\n\nProposed plan: ${JSON.stringify(plan)}`,
+    });
+
+    // Step 3 — refine once if needed
+    if (critique.output.verdict === "revise") {
+      try {
+        const revised = await generateText({
+          model: provider(MODEL),
+          output: Output.object({ schema: PlanSchema }),
+          system: "You are the head trader. Revise the previous plan per the risk manager's note. Keep bias unless the critique explicitly demands a flip. Keep thesis under 400 chars and invalidation under 200 chars.",
+          prompt: `${ctx}\n\nPrevious plan: ${JSON.stringify(plan)}\nRisk manager: ${critique.output.reason}`,
+        });
+        plan = revised.output;
+      } catch (e) {
+        if (!NoObjectGeneratedError.isInstance(e)) throw e;
+        // keep prior plan
+      }
+    }
+  } catch (e) {
+    if (!NoObjectGeneratedError.isInstance(e)) throw e;
+    // skip critique step
+  }
+
 
   const dec = decimalsFor(snap.lastPrice || plan.entry || 1);
   const risk = Math.abs(plan.entry - plan.stop) || 1;
