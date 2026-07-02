@@ -597,17 +597,8 @@ function Dashboard() {
 
         <div className="flex-1" />
 
-        {/* Right-side pickers: TradingView badge, Wyckoff (lens), The Analyst (coach) */}
+        {/* Right-side pickers: Wyckoff (lens), The Analyst (coach) */}
         <div className="hidden md:flex items-center gap-1.5 shrink-0">
-          <button
-            onClick={() => setChartTab("live")}
-            className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition ${
-              chartTab === "live" ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-background/50 text-muted-foreground hover:text-foreground"
-            }`}
-            title="TradingView live chart"
-          >
-            <LineChart className="h-3.5 w-3.5" /> TradingView
-          </button>
 
           <div className="relative" ref={lensRef}>
             <button
@@ -664,7 +655,7 @@ function Dashboard() {
       <div className="shrink-0 flex items-center gap-4 px-4 py-2 border-b border-border/60 bg-card/30 text-xs">
 
         <button
-          onClick={() => { setChartTab("live"); setChartMode("live"); }}
+          onClick={() => setChartTab("live")}
           className={`inline-flex items-center gap-1.5 py-1.5 border-b-2 transition ${
             chartTab === "live" ? "border-primary text-primary font-semibold" : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
