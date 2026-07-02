@@ -27,6 +27,8 @@ import { voiceForCoach, COACH_VOICES } from "@/lib/coachVoices";
 import { useProfile } from "@/hooks/useProfile";
 import { compressImage, getScreenshotQuota, bumpScreenshotQuota } from "@/lib/imageCompress";
 import { toast } from "sonner";
+import { parseAiPayload, type ChartAnnotation, type ChartGrade, type ConceptRef } from "@/lib/chartAnnotations";
+import { ConceptDiagram } from "@/components/ConceptDiagram";
 
 export type DashboardChatHandle = {
   scan: (prompt: string) => void;
