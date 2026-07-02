@@ -244,7 +244,12 @@ When a concept, level, or setup can be SHOWN visually, append one or more fenced
   {"kind":"label","price":1.0795,"text":"Sweep low"}
 ]}
 \`\`\`
-Kinds: "hline" (with optional dashed), "zone" (top/bottom), "label" (text at price). Prices MUST be within ~2% of lastPrice.
+Kinds: "hline" (with optional dashed), "zone" (top/bottom), "label" (text at price).
+NUMBER RULES (STRICT - the client rejects violations):
+- Every price MUST be within 2% of the LIVE CHART "Last price" above. If you don't have a snapshot lastPrice, DO NOT emit chart-annotations or a chart-grade with numeric fields - use a concept-diagram instead.
+- Match the same decimal precision as lastPrice (e.g. lastPrice 1.0842 → 4 decimals; 21453.25 → 2 decimals). Never round to whole numbers when lastPrice has decimals.
+- Directional consistency: LONG requires stop < entry < tp1 < tp2. SHORT requires stop > entry > tp1 > tp2. Never violate this.
+- Entry must sit near lastPrice (within ~0.5%) unless you are explicitly proposing a pending order at a level shown on the chart.
 
 2) Concept diagram - when the concept doesn't cleanly map to current price or the user asked "what is X":
 \`\`\`concept-diagram
