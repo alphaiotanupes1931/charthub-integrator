@@ -808,12 +808,12 @@ function Dashboard() {
         <div className="flex-1 min-w-0 flex flex-col">
 
           <div className="flex-1 min-h-0 overflow-hidden relative">
-            {chartMode === "live" && aiAnnotations.length === 0 ? (
+            {chartTab === "live" && aiAnnotations.length === 0 ? (
               <TradingViewChart symbol={symbol.tv} interval={interval} enabled={levels} sessions={sessionsOn} />
             ) : (
               <NativeChart symbol={symbol.tv} ticker={symbol.ticker} interval={interval} enabled={levels} sessions={sessionsOn} onSnapshot={setSnapshot} annotations={aiAnnotations} candleType={candleType} />
             )}
-            {chartMode === "live" && aiAnnotations.length > 0 && (
+            {chartTab === "live" && aiAnnotations.length > 0 && (
               <div className="pointer-events-none absolute left-1/2 top-2 z-20 -translate-x-1/2 rounded-md border border-primary/40 bg-background/90 px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-primary backdrop-blur">
                 Native view · AI annotations active
               </div>
