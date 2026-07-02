@@ -70,11 +70,13 @@ interface Props {
 }
 
 // FX session windows in UTC (approximate, ignores DST).
+// Rendered as translucent full-range boxes framing each session's high/low,
+// mirroring TradingView's "Sessions" indicator seen in the reference chart.
 const SESSIONS = [
-  { key: "Sydney",   startH: 22, endH: 7,  color: "rgba(56, 189, 248, 0.08)",  label: "Sydney"   }, // sky
-  { key: "Tokyo",    startH: 0,  endH: 9,  color: "rgba(244, 114, 182, 0.08)", label: "Tokyo"    }, // pink
-  { key: "London",   startH: 8,  endH: 17, color: "rgba(251, 191, 36, 0.08)",  label: "London"   }, // amber
-  { key: "New York", startH: 13, endH: 22, color: "rgba(52, 211, 153, 0.08)",  label: "New York" }, // emerald
+  { key: "Sydney",   startH: 22, endH: 7,  color: "rgba(56, 189, 248, 0.10)",  label: "Sydney"   }, // sky
+  { key: "Tokyo",    startH: 0,  endH: 9,  color: "rgba(244, 114, 182, 0.10)", label: "Tokyo"    }, // pink
+  { key: "London",   startH: 8,  endH: 17, color: "rgba(251, 191, 36, 0.10)",  label: "London"   }, // amber
+  { key: "New York", startH: 13, endH: 22, color: "rgba(52, 211, 153, 0.10)",  label: "New York" }, // emerald
 ];
 
 
