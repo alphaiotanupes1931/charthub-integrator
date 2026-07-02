@@ -233,6 +233,19 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
       void voice.speak(text, voiceForCoach(readActiveCoach()));
     }, [messages, status, voice]);
 
+    // Parse latest assistant message for chart annotations / concept / grade
+    // and push to parent (dashboard) so the native chart can render them.
+    useEffect(() => {
+      const last = [...messages].reverse().find((m) => m.role === "assistant");
+      if (!last) return;
+      const text = last.parts.map((p) => (p.type === "text" ? (p as { text: string }).text : "")).join("");
+      const parsed = parseAiPayload(text);
+      if (onAnnotations) onAnnotations(parsed.annotations);
+      if (onConcept) onConcept(parsed.concept ?? null);
+    }, [messages, onAnnotations, onConcept]);
+
+
+
 
     useImperativeHandle(ref, () => ({
       scan: (prompt: string) => {
