@@ -89,7 +89,7 @@ export const STRATEGIES: Strategy[] = [
     winRate: 45,
     rr: 3.5,
     longDescription:
-      "A classic trend-following system. The 9 EMA crossing the 21 EMA defines bias; pullbacks into the 21 EMA in the direction of the cross are your entries. Lower hit rate, but each winner runs because you let trends extend.",
+      "EMA Crossover Trend is a classic systematic trend-following approach that has been used by professional CTAs and retail traders for decades. Two exponential moving averages - typically the 9 and 21 - are plotted on the chart. When the fast EMA (9) crosses above the slow EMA (21), bias is bullish; when it crosses below, bias is bearish. Rather than chasing the crossover itself, you use it purely as a directional filter and wait for price to pull back into the 21 EMA before entering in the direction of the trend.\n\nThe magic of this system is not in the crossovers - it's in the discipline of only taking trades that align with the higher-timeframe cross and cutting losers small. Most trades will fail because trends are rare; markets range 70-80% of the time. But when a real trend emerges, the winners run for weeks and dwarf the accumulated small losses. That's why the average R:R is high (3.5R+) but the win rate is deliberately low. Trying to raise the win rate by exiting early destroys the entire edge.\n\nIt works best on 4H and daily timeframes in trending assets - major FX pairs, index futures, and liquid crypto. It gets shredded in tight ranges where the EMAs whip back and forth. The single hardest thing about this strategy is psychological: sitting through 6-8 small losers in a row waiting for the one 5R+ trend that pays for the year.",
     playbook: [
       {
         title: "Setup",
