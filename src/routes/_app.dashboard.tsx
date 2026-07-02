@@ -210,13 +210,13 @@ function ScanTicket({
       .catch(() => toast.error("Couldn't save feedback."));
   };
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="min-w-0">
-          <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground mb-1.5">
-            Setup ticket · {symbol.ticker} · {result.bias}
+          <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-2">
+            {symbol.ticker} · {result.bias}
           </div>
-          <div className={`font-display text-5xl sm:text-6xl leading-none ${gradeColor[result.grade]}`}>
+          <div className={`font-display text-6xl leading-none tracking-tight ${gradeColor[result.grade]}`}>
             {result.grade}
           </div>
         </div>
@@ -227,7 +227,7 @@ function ScanTicket({
               className="inline-flex items-center gap-1.5 rounded-md border border-destructive/40 bg-destructive/10 px-2.5 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/15"
               title="Stop voice"
             >
-              <Square className="h-3 w-3" /> Stop voice
+              <Square className="h-3 w-3" /> Stop
             </button>
           )}
           <button
@@ -239,31 +239,29 @@ function ScanTicket({
         </div>
       </div>
 
-      <div className="rounded-md border border-border/60 bg-background/40 p-3">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <Crosshair className="h-3.5 w-3.5 text-primary" />
-            <span className="text-xs font-medium">Scan Lens: {lens.name}</span>
-          </div>
-          <button
-            onClick={() => setLensOpen((o) => !o)}
-            className="text-[11px] text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
-          >
-            {lensOpen ? "Hide" : "What does this mean?"}
-          </button>
+      <div className="flex items-center justify-between gap-2 text-[11px]">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <Crosshair className="h-3 w-3 text-primary shrink-0" />
+          <span className="text-muted-foreground truncate">Lens · <span className="text-foreground font-medium">{lens.name}</span></span>
         </div>
-        {lensOpen && (
-          <div className="mt-2 text-xs text-muted-foreground leading-relaxed border-t border-border/50 pt-2">
-            <p className="mb-1">{lens.desc}</p>
-            <p className="italic">{lens.promptEmphasis}</p>
-          </div>
-        )}
+        <button
+          onClick={() => setLensOpen((o) => !o)}
+          className="text-muted-foreground hover:text-foreground underline-offset-2 hover:underline shrink-0"
+        >
+          {lensOpen ? "Hide" : "What's this?"}
+        </button>
       </div>
+      {lensOpen && (
+        <div className="text-xs text-muted-foreground leading-relaxed">
+          <p className="mb-1">{lens.desc}</p>
+          <p className="italic">{lens.promptEmphasis}</p>
+        </div>
+      )}
 
-      <p className="text-sm leading-relaxed">{result.notes}</p>
+      <p className="text-sm leading-relaxed text-foreground/90">{result.notes}</p>
 
       {!isNoEntry && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <TicketCell label="Entry" value={result.entry} />
           <TicketCell label="Stop"  value={result.stop} tone="bad" />
           <TicketCell label="TP1"   value={result.tp1} tone="good" />
@@ -272,11 +270,11 @@ function ScanTicket({
       )}
 
       <div>
-        <div className="flex justify-between text-xs mb-2">
+        <div className="flex justify-between text-[11px] mb-2">
           <span className="text-muted-foreground">Confidence · R:R {result.rr}</span>
           <span className="text-primary font-semibold">{result.confidence}%</span>
         </div>
-        <div className="h-1.5 rounded-full bg-border overflow-hidden">
+        <div className="h-1.5 rounded-full bg-border/60 overflow-hidden">
           <div className="h-full bg-primary transition-[width] duration-500" style={{ width: `${result.confidence}%` }} />
         </div>
       </div>
