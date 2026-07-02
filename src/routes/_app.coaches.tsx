@@ -131,10 +131,14 @@ const COACHES = [
 ];
 
 
+type CoachEntry = (typeof COACHES)[number];
+
 function CoachesPage() {
   const [active, setActive] = useState<string>(() => readActiveCoach());
   const [previewing, setPreviewing] = useState<string | null>(null);
+  const [detail, setDetail] = useState<CoachEntry | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
 
   const select = (name: string) => {
     writeActiveCoach(name);
@@ -284,23 +288,33 @@ function CoachesPage() {
                 <span className="font-semibold">Best for: </span>
                 <span className="text-muted-foreground">{c.bestFor}</span>
               </div>
-              <button
-                onClick={() => select(c.name)}
-                disabled={isActive}
-                className={`w-full rounded-md py-2 text-sm font-semibold transition ${
-                  isActive
-                    ? "bg-primary/10 text-primary cursor-default"
-                    : "bg-primary text-primary-foreground hover:opacity-90"
-                }`}
-              >
-                {isActive ? (
-                  <span className="inline-flex items-center justify-center gap-1.5">
-                    <CheckCircle2 className="h-4 w-4" /> Selected
-                  </span>
-                ) : (
-                  "Select Coach"
-                )}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setDetail(c)}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/40 transition"
+                  title="See a deeper description of this coach"
+                >
+                  <Info className="h-3.5 w-3.5" /> Learn more
+                </button>
+                <button
+                  onClick={() => select(c.name)}
+                  disabled={isActive}
+                  className={`flex-1 rounded-md py-2 text-sm font-semibold transition ${
+                    isActive
+                      ? "bg-primary/10 text-primary cursor-default"
+                      : "bg-primary text-primary-foreground hover:opacity-90"
+                  }`}
+                >
+                  {isActive ? (
+                    <span className="inline-flex items-center justify-center gap-1.5">
+                      <CheckCircle2 className="h-4 w-4" /> Selected
+                    </span>
+                  ) : (
+                    "Select Coach"
+                  )}
+                </button>
+              </div>
+
             </div>
           );
         })}
@@ -313,6 +327,113 @@ function CoachesPage() {
           <button onClick={stop} className="ml-2 text-muted-foreground hover:text-foreground">Stop</button>
         </div>
       )}
+
+      {detail && (
+        <CoachDetailModal
+          coach={detail}
+          isActive={detail.name === active}
+          onClose={() => setDetail(null)}
+          onSelect={() => { select(detail.name); setDetail(null); }}
+        />
+      )}
     </div>
   );
 }
+
+function CoachDetailModal({
+  coach, isActive, onClose, onSelect,
+}: {
+  coach: CoachEntry;
+  isActive: boolean;
+  onClose: () => void;
+  onSelect: () => void;
+}) {
+  const Icon = coach.icon;
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      className="fixed inset-0 z-[90] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-background/80 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full sm:max-w-2xl max-h-[95vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl border border-border bg-card shadow-2xl"
+      >
+        <div className="flex items-start justify-between gap-3 p-5 border-b border-border/60">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className={`h-12 w-12 rounded-lg flex items-center justify-center shrink-0 ${coach.iconBg}`}>
+              <Icon className="h-6 w-6" />
+            </div>
+            <div className="min-w-0">
+              <div className={`inline-block rounded-md px-2.5 py-1 ${coach.nameBg}`}>
+                <h2 className={`font-display text-xl font-semibold truncate ${coach.nameText}`}>{coach.name}</h2>
+              </div>
+              <p className="text-sm text-muted-foreground truncate">{coach.subtitle}</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/40 flex items-center justify-center shrink-0"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="p-5 space-y-5 text-sm">
+          <section className="space-y-3 leading-relaxed text-foreground/90">
+            {coach.deepDescription.map((p, i) => (
+              <p key={i}>{p}</p>
+            ))}
+          </section>
+
+          <section>
+            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-2">Ideal for</div>
+            <p className="text-sm text-foreground/90 leading-relaxed">{coach.idealUser}</p>
+          </section>
+
+          <section>
+            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-2">Strengths</div>
+            <div className="flex flex-wrap gap-1.5">
+              {coach.strengths.map((s) => (
+                <span key={s} className="rounded border border-border bg-background px-2 py-0.5 text-[11px]">{s}</span>
+              ))}
+            </div>
+          </section>
+
+          <section>
+            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-2">How it sounds</div>
+            <div className="space-y-2">
+              {coach.signatureLines.map((line, i) => (
+                <div key={i} className="rounded-md border border-border/60 bg-background/50 px-3 py-2 text-sm text-foreground/85 italic leading-relaxed">
+                  {line}
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        <div className="flex items-center justify-end gap-2 p-5 border-t border-border/60">
+          <button onClick={onClose} className="rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground">Close</button>
+          <button
+            onClick={onSelect}
+            disabled={isActive}
+            className={`rounded-md px-4 py-2 text-sm font-semibold ${
+              isActive ? "bg-primary/10 text-primary cursor-default" : "bg-primary text-primary-foreground hover:opacity-90"
+            }`}
+          >
+            {isActive ? "Already active" : "Select this coach"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
