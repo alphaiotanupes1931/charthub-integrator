@@ -1,0 +1,131 @@
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { PageHeader } from "@/components/PageHeader";
+import { Radar, TrendingUp, TrendingDown, Minus, Loader2, RefreshCw } from "lucide-react";
+import { runSignalScan, type Signal } from "@/lib/agents/signal-engine.functions";
+
+export const Route = createFileRoute("/_app/signals")({
+  head: () => ({ meta: [{ title: "AI Signals, TradeMind" }] }),
+  component: SignalsPage,
+});
+
+const TF_OPTIONS = [
+  { v: "15", l: "15m" },
+  { v: "60", l: "1H" },
+  { v: "240", l: "4H" },
+  { v: "D", l: "1D" },
+];
+
+function SignalsPage() {
+  const navigate = useNavigate();
+  const scan = useServerFn(runSignalScan);
+  const [interval, setInterval] = useState("60");
+  const [signals, setSignals] = useState<Signal[]>([]);
+  const [scannedAt, setScannedAt] = useState<string | null>(null);
+
+  const mut = useMutation({
+    mutationFn: async () => scan({ data: { interval } }),
+    onSuccess: (data) => { setSignals(data); setScannedAt(new Date().toLocaleTimeString()); },
+  });
+
+  const grouped = {
+    BUY: signals.filter((s) => s.action === "BUY").sort((a, b) => b.confidence - a.confidence),
+    SELL: signals.filter((s) => s.action === "SELL").sort((a, b) => b.confidence - a.confidence),
+    HOLD: signals.filter((s) => s.action === "HOLD"),
+  };
+
+  return (
+    <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-6">
+      <PageHeader
+        title="AI Signal Engine"
+        description="Scans a watchlist through the 3-layer research stack and returns BUY/SELL/HOLD calls with entries, stops and targets."
+      />
+
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card p-4">
+        <div className="flex items-center gap-1 rounded-md border border-border p-1">
+          {TF_OPTIONS.map((o) => (
+            <button
+              key={o.v}
+              onClick={() => setInterval(o.v)}
+              className={`px-3 py-1 text-xs rounded ${interval === o.v ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+            >{o.l}</button>
+          ))}
+        </div>
+        <button
+          onClick={() => mut.mutate()}
+          disabled={mut.isPending}
+          className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+        >
+          {mut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+          {mut.isPending ? "Scanning 8 markets…" : "Run Scan"}
+        </button>
+        {scannedAt && <div className="text-xs text-muted-foreground">Last scan: {scannedAt}</div>}
+      </div>
+
+      {mut.isError && (
+        <div className="rounded-xl border border-red-500/40 bg-red-500/5 p-4 text-sm text-red-500">
+          Scan failed. Try again in a moment.
+        </div>
+      )}
+
+      {signals.length === 0 && !mut.isPending && (
+        <div className="rounded-xl border border-border bg-card p-12 text-center space-y-4">
+          <Radar className="h-10 w-10 mx-auto text-muted-foreground" />
+          <h3 className="text-lg font-semibold">Ready to scan</h3>
+          <p className="text-sm text-muted-foreground max-w-md mx-auto">
+            The engine reads market data, runs 4 analyst personas per instrument, then produces a trade plan graded A+ to NO ENTRY.
+          </p>
+        </div>
+      )}
+
+      {signals.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <SignalColumn title="BUY" tone="buy" signals={grouped.BUY} onClick={(t) => navigate({ to: "/dashboard", search: { symbol: t } as never })} />
+          <SignalColumn title="SELL" tone="sell" signals={grouped.SELL} onClick={(t) => navigate({ to: "/dashboard", search: { symbol: t } as never })} />
+          <SignalColumn title="HOLD" tone="hold" signals={grouped.HOLD} onClick={(t) => navigate({ to: "/dashboard", search: { symbol: t } as never })} />
+        </div>
+      )}
+
+      <div className="text-xs text-muted-foreground">
+        Signals are AI-generated and educational. Not financial advice. Use with the <Link to="/journal" className="text-primary underline">journal</Link> to track outcomes.
+      </div>
+    </div>
+  );
+}
+
+function SignalColumn({ title, tone, signals, onClick }: { title: string; tone: "buy" | "sell" | "hold"; signals: Signal[]; onClick: (ticker: string) => void }) {
+  const Icon = tone === "buy" ? TrendingUp : tone === "sell" ? TrendingDown : Minus;
+  const color = tone === "buy" ? "text-emerald-500" : tone === "sell" ? "text-red-500" : "text-muted-foreground";
+  return (
+    <div className="rounded-xl border border-border bg-card p-4">
+      <div className={`flex items-center gap-2 text-sm font-semibold mb-3 ${color}`}>
+        <Icon className="h-4 w-4" /> {title} <span className="text-muted-foreground font-normal">({signals.length})</span>
+      </div>
+      <div className="space-y-2">
+        {signals.length === 0 && <div className="text-xs text-muted-foreground py-4 text-center">No {title.toLowerCase()} signals</div>}
+        {signals.map((s) => (
+          <button key={s.ticker} onClick={() => onClick(s.ticker)} className="w-full text-left rounded-md border border-border/60 p-3 hover:bg-muted/40 transition">
+            <div className="flex items-center justify-between">
+              <div className="font-semibold text-sm">{s.ticker}</div>
+              <div className="text-xs px-1.5 py-0.5 rounded bg-muted">{s.grade}</div>
+            </div>
+            <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
+              <span>Conf {s.confidence}%</span>
+              <span>R:R {s.rr}</span>
+            </div>
+            {s.action !== "HOLD" && (
+              <div className="mt-2 grid grid-cols-3 gap-1 text-[10px] text-muted-foreground">
+                <div>Entry <div className="text-foreground">{s.entry}</div></div>
+                <div>Stop <div className="text-foreground">{s.stop}</div></div>
+                <div>TP1 <div className="text-foreground">{s.tp1}</div></div>
+              </div>
+            )}
+            <div className="mt-2 text-xs text-muted-foreground line-clamp-2">{s.notes}</div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
