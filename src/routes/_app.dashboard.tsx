@@ -20,7 +20,7 @@ import { listChatThreads, createChatThread, deleteChatThread } from "@/lib/chat.
 import type { ResearchMemo } from "@/lib/agents/types";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { PlatformStatusBanner } from "@/components/PlatformStatusBanner";
+import { DashboardStatusStrip } from "@/components/DashboardStatusStrip";
 
 type DashboardSearch = { ask?: string };
 
