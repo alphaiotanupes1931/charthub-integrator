@@ -115,7 +115,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 
 function RootShell({ children }: { children: ReactNode }) {
-  const themeScript = `(function(){try{var k='trademind.theme',t=localStorage.getItem(k);if(!t||t!=='light'){document.documentElement.classList.add('dark')}else{document.documentElement.classList.add('light')}}catch(e){document.documentElement.classList.add('dark')}})();`;
+  const themeScript = `(function(){try{localStorage.removeItem('trademind.theme');}catch(e){}document.documentElement.classList.remove('light');document.documentElement.classList.add('dark');})();`;
   return (
     <html lang="en">
       <head>
