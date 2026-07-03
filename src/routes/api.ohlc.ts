@@ -277,9 +277,9 @@ function yahooInterval(interval: string): { interval: string; range: string } {
   }
 }
 
-async function fetchYahoo(symbol: string, interval: string): Promise<OhlcBar[]> {
+async function fetchYahooHost(host: string, symbol: string, interval: string): Promise<OhlcBar[]> {
   const iv = yahooInterval(interval);
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${iv.interval}&range=${iv.range}&includePrePost=true`;
+  const url = `https://${host}/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${iv.interval}&range=${iv.range}&includePrePost=true`;
   const json = await fetchJsonWithTimeout<{
     chart?: {
       error?: { description?: string } | null;
@@ -304,6 +304,68 @@ async function fetchYahoo(symbol: string, interval: string): Promise<OhlcBar[]> 
   }).filter((bar): bar is OhlcBar => bar !== null);
   return cleanBars(bars).slice(-220);
 }
+
+async function fetchYahoo(symbol: string, interval: string): Promise<OhlcBar[]> {
+  // Yahoo intermittently returns 429/999 from one edge; race between the
+  // two public hosts and use whichever answers first.
+  const hosts = ["query1.finance.yahoo.com", "query2.finance.yahoo.com"];
+  let lastErr: unknown;
+  for (const host of hosts) {
+    try {
+      const bars = await fetchYahooHost(host, symbol, interval);
+      if (bars.length > 0) return bars;
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error("Yahoo unavailable");
+}
+
+// ----- Stooq (free, no key). Daily candles only, but always available. -----
+function tickerToStooq(ticker: string): string | null {
+  const t = ticker.toUpperCase();
+  const map: Record<string, string> = {
+    "EUR/USD": "eurusd",
+    "GBP/USD": "gbpusd",
+    "USD/JPY": "usdjpy",
+    "XAU/USD": "xauusd",
+    "XAG/USD": "xagusd",
+    "WTI OIL": "cl.f",
+    "NAS100": "^ndx",
+    "SPX500": "^spx",
+    "US30": "^dji",
+  };
+  if (map[t]) return map[t];
+  if (t.includes("BTC")) return "btcusd";
+  if (t.includes("ETH")) return "ethusd";
+  return null;
+}
+
+async function fetchStooq(symbol: string): Promise<OhlcBar[]> {
+  // Stooq exposes free daily CSV history at /q/d/l/. Intraday isn't public,
+  // so this is a daily-only safety net used when live intraday feeds are
+  // rate-limited or key-less.
+  const url = `https://stooq.com/q/d/l/?s=${encodeURIComponent(symbol)}&i=d`;
+  const csv = await fetchTextWithTimeout(url);
+  const lines = csv.trim().split(/\r?\n/);
+  if (lines.length < 2) throw new Error("Stooq: empty CSV");
+  // Header: Date,Open,High,Low,Close,Volume
+  const bars: OhlcBar[] = [];
+  for (let i = 1; i < lines.length; i++) {
+    const parts = lines[i].split(",");
+    if (parts.length < 5) continue;
+    const [date, o, h, l, c] = parts;
+    const t = Math.floor(new Date(date + "T00:00:00Z").getTime() / 1000);
+    const open = parseFloat(o);
+    const high = parseFloat(h);
+    const low = parseFloat(l);
+    const close = parseFloat(c);
+    if (!Number.isFinite(t) || !Number.isFinite(open)) continue;
+    bars.push({ time: t, open, high, low, close });
+  }
+  return cleanBars(bars).slice(-220);
+}
+
 
 // --- Module-level cache (per worker instance). TTL 30s per key. ---
 type CacheEntry = { at: number; bars: OhlcBar[]; source: OhlcSource };
