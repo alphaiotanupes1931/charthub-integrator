@@ -407,7 +407,6 @@ async function fetchBestAvailable(ticker: string, interval: string): Promise<Cac
       if (entry.bars.length > 0) return entry;
     } catch (error) {
       lastError = error;
-      console.error("[ohlc] source failed:", error instanceof Error ? error.message : String(error));
     }
   }
   throw lastError instanceof Error ? lastError : new Error("No OHLC source available");
