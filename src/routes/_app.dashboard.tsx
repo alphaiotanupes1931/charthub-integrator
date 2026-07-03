@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TradingViewChart } from "@/components/TradingViewChart";
 import { NativeChart, LEVEL_META, type LevelKey, type ChartSnapshot } from "@/components/NativeChart";
-import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Sparkles, Clock, MessageSquare, X, Plug, Maximize2, Square, Paperclip, ChevronUp, PanelRightClose, PanelRightOpen, BarChart3, ThumbsUp, ThumbsDown, Brain, LineChart, Settings2 } from "lucide-react";
+import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Clock, MessageSquare, X, Plug, Maximize2, Square, Paperclip, ChevronUp, PanelRightClose, PanelRightOpen, BarChart3, ThumbsUp, ThumbsDown, Brain, LineChart, Settings2 } from "lucide-react";
 import { NextScanBar } from "@/components/NextScanBar";
 import { useCoachVoice } from "@/hooks/useCoachVoice";
 import { DashboardChatPanel, type DashboardChatHandle } from "@/components/DashboardChatPanel";
@@ -13,6 +13,7 @@ import { TodaysRecommendation } from "@/components/TodaysRecommendation";
 import { SCAN_LENSES, readActiveLensId, writeActiveLensId, findLens, type ScanLensId } from "@/lib/scanLens";
 import { readActiveCoach } from "@/lib/chat-client";
 import { voiceForCoach } from "@/lib/coachVoices";
+import { COACH_ICON_META, DEFAULT_COACH_ICON } from "@/lib/coachMeta";
 import { runResearchPlan } from "@/lib/agents/research.functions";
 import { recordHermesFeedback } from "@/lib/agents/hermes.functions";
 import { listChatThreads, createChatThread, deleteChatThread } from "@/lib/chat.functions";
@@ -644,7 +645,15 @@ function Dashboard() {
             className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/50 px-2.5 py-1.5 text-xs font-medium hover:border-primary/50 transition"
             title="Change active AI coach"
           >
-            <span className="h-2 w-2 rounded-full bg-pink-400" />
+            {(() => {
+              const meta = COACH_ICON_META[readActiveCoach()] ?? DEFAULT_COACH_ICON;
+              const Icon = meta.icon;
+              return (
+                <span className={`inline-flex h-5 w-5 items-center justify-center rounded-md ${meta.iconBg} ${meta.iconText} shrink-0`}>
+                  <Icon className="h-3 w-3" />
+                </span>
+              );
+            })()}
             <span>{readActiveCoach()}</span>
             <ChevronDown className="h-3 w-3 text-muted-foreground" />
           </Link>
