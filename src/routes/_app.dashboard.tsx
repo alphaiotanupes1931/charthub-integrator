@@ -1042,7 +1042,7 @@ function Dashboard() {
                   onGrade={setAiGrade}
                   onConcept={setAiConcept}
                   chart={{
-                    ticker: symbol.ticker,
+                    ticker: symbolLabel(symbol),
                     intervalLabel,
                     enabledLevels: ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none",
                     snapshot: snapshot ?? undefined,
