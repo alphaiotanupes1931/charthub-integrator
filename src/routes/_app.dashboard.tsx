@@ -762,7 +762,7 @@ function Dashboard() {
       </div>
 
       {/* Row 2: Live Chart / Setup View tabs + Indicators */}
-      <div className="shrink-0 flex flex-wrap items-center gap-x-5 gap-y-2 px-4 py-2.5 border-b border-border/60 bg-card/30 text-xs">
+      <div className="shrink-0 flex flex-wrap items-center gap-x-4 gap-y-1 px-3 py-1.5 border-b border-border/60 bg-card/30 text-xs">
 
         <button
           onClick={() => setChartTab("live")}
