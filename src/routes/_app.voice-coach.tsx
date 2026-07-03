@@ -96,6 +96,7 @@ function VoiceCoachPage() {
         headers,
         body: JSON.stringify({
           messages: [{ id: crypto.randomUUID(), role: "user", parts: [{ type: "text", text: question }] }],
+          threadId: "voice-coach-ephemeral",
           coach: active,
         }),
       });
