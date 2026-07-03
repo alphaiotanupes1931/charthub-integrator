@@ -1,14 +1,38 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequestHeader } from "@tanstack/react-start/server";
+import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/integrations/supabase/types";
+
+function getBearerToken() {
+  const auth = getRequestHeader("authorization") ?? getRequestHeader("Authorization");
+  return auth?.toLowerCase().startsWith("bearer ") ? auth.slice(7).trim() : null;
+}
 
 export const listChatThreads = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { data, error } = await context.supabase
+  .handler(async () => {
+    // Auth-optional while the app is open for testing: no session means no saved history.
+    const token = getBearerToken();
+    if (!token) return [];
+
+    const supabase = createClient<Database>(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_PUBLISHABLE_KEY!,
+      {
+        auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
+        global: { headers: { Authorization: `Bearer ${token}` } },
+      },
+    );
+
+    const { data: userData } = await supabase.auth.getUser(token);
+    const userId = userData.user?.id;
+    if (!userId) return [];
+
+    const { data, error } = await supabase
       .from("chat_threads")
       .select("id,title,updated_at,created_at")
-      .eq("user_id", context.userId)
+      .eq("user_id", userId)
       .order("updated_at", { ascending: false });
     if (error) throw new Error(error.message);
     return data ?? [];
