@@ -30,7 +30,7 @@ import { Tutorial } from "@/components/Tutorial";
 import { WelcomeBackGreeter, WelcomeBackProvider } from "@/components/WelcomeBackGreeter";
 import { useTheme } from "@/hooks/useTheme";
 import { useProfile } from "@/hooks/useProfile";
-import { ActiveCoachCard } from "@/components/ActiveCoachCard";
+
 
 type NavItem = {
   to: string;
@@ -144,8 +144,6 @@ export function AppShell({ children }: { children: ReactNode }) {
           );
         })}
       </nav>
-
-      <ActiveCoachCard collapsed={collapsed} />
 
       {!collapsed ? (
         <div className="px-3 pb-3 space-y-2 border-t border-border/60 pt-3">
