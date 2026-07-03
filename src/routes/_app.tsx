@@ -100,17 +100,16 @@ export const Route = createFileRoute("/_app")({
   pendingComponent: GatePending,
   errorComponent: ({ error }) => <GateError error={error instanceof Error ? error : new Error("Dashboard access failed")} />,
   beforeLoad: async ({ location }) => {
-    // AUTH TEMPORARILY DISABLED for testing — bypass all gates.
-    logGate({ step: "admin-testing-bypass" });
-    return { user: null };
-    // eslint-disable-next-line no-unreachable
+    logGate({ step: "start", pathname: location.pathname, href: location.href });
+
+    // Admin-testing bypass: set from the auth page's "Admin testing" button.
     if (typeof window !== "undefined" && sessionStorage.getItem("trademind.adminTesting") === "1") {
       logGate({ step: "admin-testing-bypass" });
       return { user: null };
     }
 
-
     const user = await getHydratedUser();
+
 
     if (!user) {
       logGate({ step: "hydrate-failed", attempts: 12 });
