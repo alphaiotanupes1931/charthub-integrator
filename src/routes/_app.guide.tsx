@@ -142,7 +142,7 @@ const SECTIONS: Section[] = [
     title: "Appearance & accessibility",
     blurb: "Theme, accessibility, mobile, and keyboard shortcuts.",
     items: [
-      { q: "Dark / light theme", a: "Toggle in the sidebar footer (sun/moon icon) or Settings → Appearance. Saved to your account and synced across devices." },
+      { q: "Dark / light theme", a: "Theme follows your device system preference and is saved to your account, syncing across devices." },
       { q: "Mobile + PWA", a: "Fully responsive on phones. iOS: open in Safari, share menu, 'Add to Home Screen'. Android: Chrome shows an Install banner — tap it for a native-app feel." },
       { q: "Keyboard shortcuts", a: "Onboarding tour: ←/→ navigate, Enter advance, Esc skip. Forms: Enter submits when valid. Chat: Enter sends, Shift+Enter newline." },
       { q: "Keyboard focus", a: "Every interactive element has a 2px gold focus outline for keyboard navigation. Tab and Shift+Tab cycle through controls." },
