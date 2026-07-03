@@ -13,6 +13,7 @@ import {
   TrendingDown,
   ImageIcon,
   Upload,
+  Download,
 } from "lucide-react";
 import {
   putTradeImage,
