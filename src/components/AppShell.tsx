@@ -231,15 +231,6 @@ export function AppShell({ children }: { children: ReactNode }) {
           </button>
           <div className="flex-1" />
           <NotificationBell />
-          {/* Theme toggle */}
-          <button
-            onClick={toggle}
-            className="h-9 w-9 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:text-foreground shrink-0"
-            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-            title={theme === "dark" ? "Light mode" : "Dark mode"}
-          >
-            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </button>
           {/* Mobile logo */}
           <LogoLink to="/dashboard" size="md" showText={false} className="md:hidden shrink-0" />
         </header>
