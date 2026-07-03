@@ -970,8 +970,21 @@ function Dashboard() {
             ) : (
               <NativeChart symbol={symbol.tv} ticker={symbol.ticker} interval={interval} enabled={levels} sessions={sessionsOn} onSnapshot={setSnapshot} annotations={aiAnnotations} candleType={candleType} />
             )}
+
+            {/* Full-screen toggle */}
+            <button
+              type="button"
+              onClick={toggleChartFullscreen}
+              className="absolute right-3 top-3 z-40 rounded-md border border-border bg-background/90 px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-muted-foreground hover:text-foreground backdrop-blur inline-flex items-center gap-1"
+              title={isChartFullscreen ? "Exit full screen" : "Full screen chart"}
+              aria-label={isChartFullscreen ? "Exit full screen" : "Full screen chart"}
+            >
+              {isChartFullscreen ? <Minimize className="h-3 w-3" /> : <Maximize className="h-3 w-3" />}
+              {isChartFullscreen ? "Exit" : "Expand"}
+            </button>
+
             {chartTab === "live" && aiAnnotations.length > 0 && (
-              <div className="pointer-events-none absolute right-3 top-3 z-20 rounded-md border border-primary/40 bg-background/90 px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-primary backdrop-blur">
+              <div className="pointer-events-none absolute left-3 top-3 z-20 rounded-md border border-primary/40 bg-background/90 px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-primary backdrop-blur">
                 Native · AI annotations
               </div>
             )}
@@ -988,6 +1001,7 @@ function Dashboard() {
               </button>
             )}
           </div>
+
 
 
           {/* Broker strip — thin, single line so it doesn't eat chart height */}
