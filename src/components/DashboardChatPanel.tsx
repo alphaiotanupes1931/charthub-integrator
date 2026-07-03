@@ -3,7 +3,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { Link } from "@tanstack/react-router";
-import { MessageSquare, Sparkles, ExternalLink, Trash2, X, Minus, Volume2, VolumeX, ChevronDown, Crosshair, Square, Paperclip, ImageIcon } from "lucide-react";
+import { MessageSquare, ExternalLink, Trash2, X, Minus, Volume2, VolumeX, ChevronDown, Crosshair, Square, Paperclip, ImageIcon } from "lucide-react";
+import { COACH_ICON_META, DEFAULT_COACH_ICON } from "@/lib/coachMeta";
 import {
   Conversation,
   ConversationContent,
@@ -185,6 +186,8 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
     const [dragging, setDragging] = useState(false);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const [activeCoach, setActiveCoach] = useState<string>(() => readActiveCoach());
+    const coachMeta = COACH_ICON_META[activeCoach] ?? DEFAULT_COACH_ICON;
+    const CoachIcon = coachMeta.icon;
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const chartRef = useRef<ChartContext | undefined>(chart);
     useEffect(() => { chartRef.current = chart; }, [chart]);
@@ -383,8 +386,8 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
           style={{ paddingTop: "max(0.625rem, env(safe-area-inset-top))" }}
         >
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary/15 text-primary shrink-0">
-              <Sparkles className="h-3.5 w-3.5" />
+            <span className={`inline-flex h-7 w-7 items-center justify-center rounded-full ${coachMeta.iconBg} ${coachMeta.iconText} shrink-0`}>
+              <CoachIcon className="h-3.5 w-3.5" />
             </span>
             <div className="flex flex-col min-w-0">
               <span className="text-[10px] uppercase tracking-wider text-muted-foreground leading-none">Chat</span>
