@@ -454,6 +454,9 @@ function Dashboard() {
   const [rightOpen, setRightOpen] = useState(true);
   const [panelWidth, setPanelWidth] = useState<"narrow" | "default" | "wide">("default");
   const [chartTab, setChartTab] = useState<"live" | "setup">("live");
+  // Mobile-only: which pane is visible full-height (chart / scan / chat). On >=lg
+  // both are shown side-by-side and this state is ignored.
+  const [mobileView, setMobileView] = useState<"chart" | "scan" | "chat">("chart");
   const [candleType, setCandleType] = useState<"candle" | "ha">("candle");
   const [snapshot, setSnapshot] = useState<ChartSnapshot | null>(null);
   const [aiAnnotationsRaw, setAiAnnotationsRaw] = useState<import("@/lib/chartAnnotations").ChartAnnotation[]>([]);
