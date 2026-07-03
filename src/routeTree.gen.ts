@@ -43,6 +43,7 @@ import { Route as AppCoachesRouteImport } from './routes/_app.coaches'
 import { Route as AppCoachDashboardRouteImport } from './routes/_app.coach-dashboard'
 import { Route as AppChatRouteImport } from './routes/_app.chat'
 import { Route as AppAnalyticsRouteImport } from './routes/_app.analytics'
+import { Route as AppAlertsRouteImport } from './routes/_app.alerts'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
 import { Route as AppChatIndexRouteImport } from './routes/_app.chat.index'
 import { Route as ApiTradelockerImportRouteImport } from './routes/api.tradelocker.import'
@@ -50,6 +51,7 @@ import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api.public.
 import { Route as AppStrategiesStrategyIdRouteImport } from './routes/_app.strategies.$strategyId'
 import { Route as AppChatThreadIdRouteImport } from './routes/_app.chat.$threadId'
 import { Route as AppAdminSubscribersRouteImport } from './routes/_app.admin.subscribers'
+import { Route as ApiPublicHooksPriceAlertsTickRouteImport } from './routes/api.public.hooks.price-alerts-tick'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -220,6 +222,11 @@ const AppAnalyticsRoute = AppAnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAlertsRoute = AppAlertsRouteImport.update({
+  id: '/alerts',
+  path: '/alerts',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAdminRoute = AppAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -255,6 +262,12 @@ const AppAdminSubscribersRoute = AppAdminSubscribersRouteImport.update({
   path: '/subscribers',
   getParentRoute: () => AppAdminRoute,
 } as any)
+const ApiPublicHooksPriceAlertsTickRoute =
+  ApiPublicHooksPriceAlertsTickRouteImport.update({
+    id: '/api/public/hooks/price-alerts-tick',
+    path: '/api/public/hooks/price-alerts-tick',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -269,6 +282,7 @@ export interface FileRoutesByFullPath {
   '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
   '/admin': typeof AppAdminRouteWithChildren
+  '/alerts': typeof AppAlertsRoute
   '/analytics': typeof AppAnalyticsRoute
   '/chat': typeof AppChatRouteWithChildren
   '/coach-dashboard': typeof AppCoachDashboardRoute
@@ -297,6 +311,7 @@ export interface FileRoutesByFullPath {
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/chat/': typeof AppChatIndexRoute
+  '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -311,6 +326,7 @@ export interface FileRoutesByTo {
   '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
   '/admin': typeof AppAdminRouteWithChildren
+  '/alerts': typeof AppAlertsRoute
   '/analytics': typeof AppAnalyticsRoute
   '/coach-dashboard': typeof AppCoachDashboardRoute
   '/coaches': typeof AppCoachesRoute
@@ -338,6 +354,7 @@ export interface FileRoutesByTo {
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/chat': typeof AppChatIndexRoute
+  '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -354,6 +371,7 @@ export interface FileRoutesById {
   '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
   '/_app/admin': typeof AppAdminRouteWithChildren
+  '/_app/alerts': typeof AppAlertsRoute
   '/_app/analytics': typeof AppAnalyticsRoute
   '/_app/chat': typeof AppChatRouteWithChildren
   '/_app/coach-dashboard': typeof AppCoachDashboardRoute
@@ -382,6 +400,7 @@ export interface FileRoutesById {
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/_app/chat/': typeof AppChatIndexRoute
+  '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -398,6 +417,7 @@ export interface FileRouteTypes {
     | '/status'
     | '/terms'
     | '/admin'
+    | '/alerts'
     | '/analytics'
     | '/chat'
     | '/coach-dashboard'
@@ -426,6 +446,7 @@ export interface FileRouteTypes {
     | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
     | '/chat/'
+    | '/api/public/hooks/price-alerts-tick'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -440,6 +461,7 @@ export interface FileRouteTypes {
     | '/status'
     | '/terms'
     | '/admin'
+    | '/alerts'
     | '/analytics'
     | '/coach-dashboard'
     | '/coaches'
@@ -467,6 +489,7 @@ export interface FileRouteTypes {
     | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
     | '/chat'
+    | '/api/public/hooks/price-alerts-tick'
   id:
     | '__root__'
     | '/'
@@ -482,6 +505,7 @@ export interface FileRouteTypes {
     | '/status'
     | '/terms'
     | '/_app/admin'
+    | '/_app/alerts'
     | '/_app/analytics'
     | '/_app/chat'
     | '/_app/coach-dashboard'
@@ -510,6 +534,7 @@ export interface FileRouteTypes {
     | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
     | '/_app/chat/'
+    | '/api/public/hooks/price-alerts-tick'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -533,6 +558,7 @@ export interface RootRouteChildren {
   InviteCodeRoute: typeof InviteCodeRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
   ApiTradelockerImportRoute: typeof ApiTradelockerImportRoute
+  ApiPublicHooksPriceAlertsTickRoute: typeof ApiPublicHooksPriceAlertsTickRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -775,6 +801,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAnalyticsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/alerts': {
+      id: '/_app/alerts'
+      path: '/alerts'
+      fullPath: '/alerts'
+      preLoaderRoute: typeof AppAlertsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/admin': {
       id: '/_app/admin'
       path: '/admin'
@@ -824,6 +857,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminSubscribersRouteImport
       parentRoute: typeof AppAdminRoute
     }
+    '/api/public/hooks/price-alerts-tick': {
+      id: '/api/public/hooks/price-alerts-tick'
+      path: '/api/public/hooks/price-alerts-tick'
+      fullPath: '/api/public/hooks/price-alerts-tick'
+      preLoaderRoute: typeof ApiPublicHooksPriceAlertsTickRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -866,6 +906,7 @@ const AppStrategiesRouteWithChildren = AppStrategiesRoute._addFileChildren(
 
 interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRouteWithChildren
+  AppAlertsRoute: typeof AppAlertsRoute
   AppAnalyticsRoute: typeof AppAnalyticsRoute
   AppChatRoute: typeof AppChatRouteWithChildren
   AppCoachDashboardRoute: typeof AppCoachDashboardRoute
@@ -885,6 +926,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAdminRoute: AppAdminRouteWithChildren,
+  AppAlertsRoute: AppAlertsRoute,
   AppAnalyticsRoute: AppAnalyticsRoute,
   AppChatRoute: AppChatRouteWithChildren,
   AppCoachDashboardRoute: AppCoachDashboardRoute,
@@ -935,6 +977,7 @@ const rootRouteChildren: RootRouteChildren = {
   InviteCodeRoute: InviteCodeRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
   ApiTradelockerImportRoute: ApiTradelockerImportRoute,
+  ApiPublicHooksPriceAlertsTickRoute: ApiPublicHooksPriceAlertsTickRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
