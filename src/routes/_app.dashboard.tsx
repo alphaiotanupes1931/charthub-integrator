@@ -452,7 +452,8 @@ function Dashboard() {
   const [rightTab, setRightTab] = useState<"analysis" | "chat" | "history">("analysis");
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [rightOpen, setRightOpen] = useState(true);
-  const [panelWidth, setPanelWidth] = useState<"narrow" | "default" | "wide">("default");
+  const [panelWidth, setPanelWidth] = useState<"narrow" | "default" | "wide">("narrow");
+
   const [chartTab, setChartTab] = useState<"live" | "setup">("live");
   // Mobile-only: which pane is visible full-height (chart / scan / chat). On >=lg
   // both are shown side-by-side and this state is ignored.
@@ -906,7 +907,7 @@ function Dashboard() {
 
       {/* Mobile-only view switcher: Chart / Scan / Chat are mutually exclusive on small screens
           so the coach panel never squishes the chart and vice versa. */}
-      <div className="lg:hidden shrink-0 flex items-center gap-1 px-3 py-2 border-b border-border/60 bg-card/40">
+      <div className="lg:hidden shrink-0 flex items-center gap-1 px-3 py-1 border-b border-border/60 bg-card/40">
         {([
           { id: "chart", label: "Chart", Icon: LineChart },
           { id: "scan",  label: "Scan",  Icon: BarChart3 },
@@ -966,7 +967,8 @@ function Dashboard() {
 
 
           {/* Broker strip — thin, single line so it doesn't eat chart height */}
-          <div className="shrink-0 border-t border-border/60 px-3 py-1 flex items-center justify-between gap-2 text-[11px]">
+          <div className="shrink-0 border-t border-border/60 px-3 py-0.5 flex items-center justify-between gap-2 text-[11px]">
+
 
             {broker ? (
               <div className="flex items-center gap-2 min-w-0 text-muted-foreground">
@@ -1001,7 +1003,8 @@ function Dashboard() {
           }`}>
             {/* Header: tabs row + width controls row */}
             <div className="border-b border-border/60">
-              <div className="flex items-center gap-1 px-2 py-2">
+              <div className="flex items-center gap-1 px-2 py-1.5">
+
                 <div className="flex items-center gap-0.5 flex-1 min-w-0 overflow-x-auto no-scrollbar">
                   <button
                     onClick={() => setRightTab("analysis")}
@@ -1084,7 +1087,8 @@ function Dashboard() {
               </div>
             </div>
             {/* Panel width footer */}
-            <div className="shrink-0 border-t border-border/60 px-3 py-2 flex items-center justify-between gap-2">
+            <div className="shrink-0 border-t border-border/60 px-3 py-1.5 flex items-center justify-between gap-2">
+
               <span className="text-[9px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Width</span>
               <div className="flex items-center gap-0.5 rounded-md border border-border/60 bg-background/40 p-0.5">
                 {(["narrow", "default", "wide"] as const).map((w) => (
