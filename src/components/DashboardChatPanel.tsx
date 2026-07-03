@@ -226,8 +226,16 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
       transport: new DefaultChatTransport({
         api: "/api/chat",
         fetch: async (input, init) => {
-          const { data } = await supabase.auth.getSession();
-          const token = data.session?.access_token;
+          let { data } = await supabase.auth.getSession();
+          let token = data.session?.access_token;
+          // Refresh if missing/near-expiry so scans don't fail with "Unauthorized".
+          const expiresAt = data.session?.expires_at ?? 0;
+          if (!token || expiresAt * 1000 < Date.now() + 30_000) {
+            try {
+              const { data: refreshed } = await supabase.auth.refreshSession();
+              token = refreshed.session?.access_token ?? token;
+            } catch { /* ignore */ }
+          }
           const headers = new Headers(init?.headers);
           if (token) headers.set("Authorization", `Bearer ${token}`);
           return fetch(input, { ...init, headers });
@@ -252,9 +260,9 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
       onError: (err) => {
         console.error(err);
         const msg = err?.message?.trim() || "";
-        // Suppress the AI SDK's generic stream-end error; surface only real, actionable errors.
-        const generic = /^an error occurred\.?$/i.test(msg);
-        if (msg && !generic) toast.error(msg);
+        // Suppress generic stream-end errors and transient auth blips.
+        const suppress = /^(an error occurred\.?|unauthorized|forbidden)$/i.test(msg);
+        if (msg && !suppress) toast.error(msg);
       },
     });
 
