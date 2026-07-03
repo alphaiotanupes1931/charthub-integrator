@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, useSearch, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch, Link, redirect } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
@@ -40,6 +40,10 @@ const searchSchema = z.object({
 export const Route = createFileRoute("/auth")({
   validateSearch: (s) => searchSchema.parse(s),
   ssr: false,
+  beforeLoad: () => {
+    // AUTH TEMPORARILY DISABLED for testing — skip sign-in and go straight in.
+    throw redirect({ to: "/dashboard" });
+  },
   head: () => ({
     meta: [
       { title: "Sign in, TradeMind" },
@@ -49,6 +53,7 @@ export const Route = createFileRoute("/auth")({
   }),
   component: AuthPage,
 });
+
 
 const signInSchema = z.object({
   email: z.string().trim().email("Enter a valid email").max(255),
