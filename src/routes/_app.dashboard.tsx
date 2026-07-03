@@ -627,7 +627,7 @@ function Dashboard() {
       <NextScanBar />
 
       {/* Row 1: symbol + timeframes + right-side pickers */}
-      <div className="shrink-0 flex items-center gap-3 px-4 py-2.5 border-b border-border/60 bg-card/40">
+      <div className="shrink-0 flex items-center gap-3 px-3 py-1.5 border-b border-border/60 bg-card/40">
 
         <div className="relative shrink-0" ref={pickerRef} data-tour="symbol-picker">
           <button
@@ -762,7 +762,7 @@ function Dashboard() {
       </div>
 
       {/* Row 2: Live Chart / Setup View tabs + Indicators */}
-      <div className="shrink-0 flex flex-wrap items-center gap-x-5 gap-y-2 px-4 py-2.5 border-b border-border/60 bg-card/30 text-xs">
+      <div className="shrink-0 flex flex-wrap items-center gap-x-4 gap-y-1 px-3 py-1.5 border-b border-border/60 bg-card/30 text-xs">
 
         <button
           onClick={() => setChartTab("live")}
@@ -965,8 +965,8 @@ function Dashboard() {
           </div>
 
 
-          {/* Broker strip */}
-          <div className="shrink-0 border-t border-border/60 px-4 py-2.5 flex items-center justify-between gap-2 flex-wrap text-xs">
+          {/* Broker strip — thin, single line so it doesn't eat chart height */}
+          <div className="shrink-0 border-t border-border/60 px-3 py-1 flex items-center justify-between gap-2 text-[11px]">
 
             {broker ? (
               <div className="flex items-center gap-2 min-w-0 text-muted-foreground">
