@@ -145,11 +145,7 @@ function oandaGranularity(interval: string): string {
   }
 }
 
-async function fetchOanda(instrument: string, interval: string): Promise<OhlcBar[]> {
-  const apiKey = process.env.OANDA_API_KEY;
-  if (!apiKey) throw new Error("OANDA_API_KEY not configured");
-  const env = (process.env.OANDA_ENV ?? "live").toLowerCase();
-  const host = env === "practice" ? "api-fxpractice.oanda.com" : "api-fxtrade.oanda.com";
+async function fetchOandaHost(host: string, apiKey: string, instrument: string, interval: string): Promise<OhlcBar[]> {
   const granularity = oandaGranularity(interval);
   const url = `https://${host}/v3/instruments/${instrument}/candles?granularity=${granularity}&count=220&price=M`;
   const controller = new AbortController();
@@ -176,6 +172,26 @@ async function fetchOanda(instrument: string, interval: string): Promise<OhlcBar
   } finally {
     clearTimeout(timeout);
   }
+}
+
+async function fetchOanda(instrument: string, interval: string): Promise<OhlcBar[]> {
+  const apiKey = process.env.OANDA_API_KEY;
+  if (!apiKey) throw new Error("OANDA_API_KEY not configured");
+  // OANDA_ENV usually not set — the same key type only works against one host,
+  // so try the configured host first, then fall back to the other on 401.
+  const preferred = (process.env.OANDA_ENV ?? "live").toLowerCase() === "practice"
+    ? ["api-fxpractice.oanda.com", "api-fxtrade.oanda.com"]
+    : ["api-fxtrade.oanda.com", "api-fxpractice.oanda.com"];
+  let lastErr: unknown;
+  for (const host of preferred) {
+    try {
+      const bars = await fetchOandaHost(host, apiKey, instrument, interval);
+      if (bars.length > 0) return bars;
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error("OANDA unavailable");
 }
 
 
