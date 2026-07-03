@@ -94,6 +94,36 @@ function saveTrades(trades: Trade[]) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(trades)); } catch { /* ignore */ }
 }
 
+function csvEscape(v: unknown): string {
+  const s = v == null ? "" : String(v);
+  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+
+function exportTradesCsv(trades: Trade[]) {
+  const headers = ["date","timeframe","symbol","side","entry","exit","stop","size","pnl","rr","notes"];
+  const rows = trades.map((t) => {
+    const rr = tradeRR(t);
+    return [
+      t.date, t.timeframe, t.symbol, t.side,
+      t.entry, t.exit, t.stop, t.size,
+      tradePnl(t).toFixed(2),
+      rr == null ? "" : rr.toFixed(3),
+      t.notes ?? "",
+    ].map(csvEscape).join(",");
+  });
+  const csv = [headers.join(","), ...rows].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `trademind-journal-${todayYmd()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 function JournalPage() {
   const [tab, setTab] = useState<"calendar" | "trades">("calendar");
   const [cursor, setCursor] = useState(() => {
