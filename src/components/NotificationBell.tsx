@@ -149,7 +149,12 @@ export function NotificationBell() {
   return (
     <>
       <button
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          setOpen(true);
+          if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
+            Notification.requestPermission().catch(() => {});
+          }
+        }}
         className="relative h-9 w-9 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:text-foreground shrink-0"
         aria-label={`Notifications${unread ? ` (${unread} unread)` : ""}`}
         title="Notifications"
