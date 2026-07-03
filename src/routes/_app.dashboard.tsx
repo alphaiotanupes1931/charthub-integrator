@@ -1082,7 +1082,7 @@ function Dashboard() {
                 setScanning(true);
                 const lens = findLens(lensId);
                 runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
-                  .then((plan) => setResult(plan as ScanResult))
+                  .then((plan) => { const r = plan as ScanResult; setResult(r); applyPlanToSignalCards(r); })
                   .catch(() => { /* coach chat still runs the vision analysis */ })
                   .finally(() => setScanning(false));
               }}
