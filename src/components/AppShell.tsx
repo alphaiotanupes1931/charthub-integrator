@@ -145,8 +145,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         })}
       </nav>
 
-      <ActiveCoachCard collapsed={collapsed} />
-
       {!collapsed ? (
         <div className="px-3 pb-3 space-y-2 border-t border-border/60 pt-3">
           {profile?.email && (
