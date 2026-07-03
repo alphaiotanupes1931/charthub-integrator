@@ -65,17 +65,8 @@ function AdminPage() {
     );
   }
 
-  if (!isAdmin) {
-    return (
-      <div className="p-4 md:p-8 max-w-[1100px] mx-auto">
-        <PageHeader title="Admin" description="Restricted area." />
-        <div className="rounded-xl border border-destructive/40 bg-destructive/5 p-12 text-center">
-          <ShieldAlert className="h-8 w-8 mx-auto text-destructive mb-3" />
-          <p className="text-sm text-muted-foreground">This page is restricted to admin accounts.</p>
-        </div>
-      </div>
-    );
-  }
+  // Admin gate temporarily disabled — panel visible to all users for testing.
+
 
   const totalUsers = users?.length ?? 0;
   const totalReferrals = stats?.reduce((a, r) => a + Number(r.count), 0) ?? 0;
