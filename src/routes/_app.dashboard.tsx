@@ -999,7 +999,7 @@ function Dashboard() {
 
             {chartTab === "live" && aiAnnotations.length > 0 && (
               <div className="pointer-events-none absolute left-3 top-12 z-20 rounded-md border border-primary/40 bg-background/90 px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-primary backdrop-blur">
-                Native · AI annotations
+                Native · Chat annotations
               </div>
             )}
             {aiConcept && (
@@ -1339,7 +1339,7 @@ function FloatingCoach({
       {!open && (
         <button
           onClick={() => { setMinimized(false); onOpen(); }}
-          aria-label="Open AI coach"
+          aria-label="Open chat"
           data-tour="coach-bubble"
           className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-40 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/30 ring-1 ring-primary/40 hover:scale-105 active:scale-95 transition flex items-center justify-center"
         >
@@ -1351,14 +1351,14 @@ function FloatingCoach({
       {collapsed && (
         <button
           onClick={() => setMinimized(false)}
-          aria-label="Expand AI coach"
+          aria-label="Expand chat"
           className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 inline-flex items-center gap-2 rounded-full border border-border bg-card/95 backdrop-blur px-3 py-2 shadow-xl hover:bg-card transition"
         >
           <span className="relative flex h-2.5 w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary" />
           </span>
-          <span className="text-xs font-medium">AI Coach</span>
+          <span className="text-xs font-medium">Chat</span>
           <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" />
         </button>
       )}
