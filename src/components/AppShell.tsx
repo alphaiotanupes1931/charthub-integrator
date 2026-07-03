@@ -23,8 +23,6 @@ import {
   PanelLeftOpen,
   Menu,
   X,
-  Sun,
-  Moon,
   Radar,
 } from "lucide-react";
 import { LogoLink } from "@/components/LogoLink";
