@@ -109,3 +109,21 @@ export const forgetLesson = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export type HermesStats = { helpful: number; unhelpful: number; total: number; accuracy: number | null };
+export const getHermesStats = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<HermesStats> => {
+    const { supabase, userId } = context as { supabase: import("@supabase/supabase-js").SupabaseClient; userId: string };
+    const { data, error } = await supabase
+      .from("hermes_feedback")
+      .select("rating")
+      .eq("user_id", userId);
+    if (error) throw new Error(error.message);
+    const rows = (data ?? []) as Array<{ rating: number }>;
+    const helpful = rows.filter((r) => r.rating > 0).length;
+    const unhelpful = rows.filter((r) => r.rating < 0).length;
+    const total = helpful + unhelpful;
+    const accuracy = total > 0 ? Math.round((helpful / total) * 100) : null;
+    return { helpful, unhelpful, total, accuracy };
+  });
