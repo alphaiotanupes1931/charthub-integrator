@@ -952,7 +952,8 @@ function Dashboard() {
       </div>
 
       {/* Chart area */}
-      <div className={`flex-1 min-h-0 bg-card overflow-hidden ${mobileView === "chart" ? "flex" : "hidden"} lg:flex`} data-tour="chart">
+      <div ref={chartAreaRef} className={`flex-1 min-h-0 bg-card overflow-hidden ${mobileView === "chart" ? "flex" : "hidden"} lg:flex`} data-tour="chart">
+
         <div className="flex-1 min-w-0 flex flex-col">
 
           {/* Scan output preview — sits above the chart so it never overlaps candles */}
