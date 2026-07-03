@@ -22,7 +22,7 @@ function pct(from?: number, to?: number) {
 }
 
 export function ChartSignalCards({ grade, lastPrice, onClear, scanning }: Props) {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
 
   // Empty state — render nothing when idle so the chart can fill the whole area.
   // While actively scanning, show a very thin one-line status so the user gets
@@ -116,16 +116,8 @@ export function ChartSignalCards({ grade, lastPrice, onClear, scanning }: Props)
               </div>
             );
           })}
-          {(grade.strength || grade.weakness) && (
-            <div className="col-span-2 sm:col-span-4 space-y-0.5 text-[11px] leading-snug">
-              {grade.strength && (
-                <div><span className="text-emerald-400 font-semibold">+ </span><span className="text-foreground/80">{grade.strength}</span></div>
-              )}
-              {grade.weakness && (
-                <div><span className="text-red-400 font-semibold">− </span><span className="text-foreground/80">{grade.weakness}</span></div>
-              )}
-            </div>
-          )}
+          {/* Strength/weakness prose lives in the Analysis sidebar — kept out
+              of the chart overlay so the chart isn't squeezed. */}
         </div>
       )}
     </div>
