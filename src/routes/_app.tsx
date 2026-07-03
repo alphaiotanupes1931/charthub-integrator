@@ -101,7 +101,7 @@ export const Route = createFileRoute("/_app")({
   errorComponent: ({ error }) => <GateError error={error instanceof Error ? error : new Error("Dashboard access failed")} />,
   beforeLoad: async ({ location }) => {
     // AUTH TEMPORARILY DISABLED for testing — bypass all gates.
-    logGate({ step: "admin-testing-bypass", pathname: location.pathname });
+    logGate({ step: "admin-testing-bypass" });
     return { user: null };
     // eslint-disable-next-line no-unreachable
     if (typeof window !== "undefined" && sessionStorage.getItem("trademind.adminTesting") === "1") {
