@@ -452,7 +452,8 @@ function Dashboard() {
   const [rightTab, setRightTab] = useState<"analysis" | "chat" | "history">("analysis");
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [rightOpen, setRightOpen] = useState(true);
-  const [panelWidth, setPanelWidth] = useState<"narrow" | "default" | "wide">("default");
+  const [panelWidth, setPanelWidth] = useState<"narrow" | "default" | "wide">("narrow");
+
   const [chartTab, setChartTab] = useState<"live" | "setup">("live");
   // Mobile-only: which pane is visible full-height (chart / scan / chat). On >=lg
   // both are shown side-by-side and this state is ignored.
@@ -966,7 +967,8 @@ function Dashboard() {
 
 
           {/* Broker strip — thin, single line so it doesn't eat chart height */}
-          <div className="shrink-0 border-t border-border/60 px-3 py-1 flex items-center justify-between gap-2 text-[11px]">
+          <div className="shrink-0 border-t border-border/60 px-3 py-0.5 flex items-center justify-between gap-2 text-[11px]">
+
 
             {broker ? (
               <div className="flex items-center gap-2 min-w-0 text-muted-foreground">

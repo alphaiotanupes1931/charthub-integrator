@@ -54,8 +54,9 @@ export function ChartSignalCards({ grade, lastPrice, onClear, scanning }: Props)
 
   return (
     <div className="shrink-0 border-b border-border/60 bg-card/40">
-      {/* Header strip — always visible */}
-      <div className="flex items-center gap-2 px-3 py-1.5 overflow-x-auto">
+      {/* Header strip — always visible, kept as thin as possible */}
+      <div className="flex items-center gap-2 px-3 py-1 overflow-x-auto">
+
         <span className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 ${biasBg}`}>
           <BiasIcon className={`h-3 w-3 ${biasText}`} />
           <span className={`text-[10px] font-bold tracking-wider ${biasText}`}>{actionLabel}</span>
