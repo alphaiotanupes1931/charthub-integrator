@@ -785,7 +785,7 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Row 2: Live / Setup tabs + compact View menu */}
+      {/* Row 2: Live / Setup tabs + compact View menu + fullscreen */}
       <div className="shrink-0 flex items-center gap-3 px-3 py-1 border-b border-border/60 bg-card/30 text-xs">
         <button
           onClick={() => setChartTab("live")}
@@ -802,6 +802,17 @@ function Dashboard() {
           }`}
         >
           <Crosshair className="h-3.5 w-3.5" /> Setup
+        </button>
+
+        <button
+          type="button"
+          onClick={toggleChartFullscreen}
+          className="inline-flex items-center gap-1 rounded-md border border-border bg-background/50 px-2 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground hover:border-primary/40 transition"
+          title={isChartFullscreen ? "Exit full screen" : "Full screen chart"}
+          aria-label={isChartFullscreen ? "Exit full screen" : "Full screen chart"}
+        >
+          {isChartFullscreen ? <Minimize className="h-3 w-3" /> : <Maximize className="h-3 w-3" />}
+          <span className="hidden sm:inline">{isChartFullscreen ? "Exit" : "Expand"}</span>
         </button>
 
         <div className="flex-1" />
