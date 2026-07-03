@@ -1105,8 +1105,10 @@ function Dashboard() {
 
       </div>
 
-      {/* Mobile panel: tabbed Analysis / Chat / History */}
-      <div className="lg:hidden shrink-0 border-t border-border/60 bg-card" data-tour="scan">
+      {/* Mobile panel: Analysis / Chat / History. Only visible when the mobile view
+          switcher is on Scan or Chat, and expands to fill the remaining height so it
+          isn't squished under the chart. */}
+      <div className={`lg:hidden ${mobileView === "chart" ? "hidden" : "flex-1 min-h-0 flex flex-col"} bg-card`} data-tour="scan">
         <div className="flex items-center gap-0.5 border-b border-border/60 px-2 py-2 overflow-x-auto no-scrollbar">
           <button
             onClick={() => setRightTab("analysis")}
