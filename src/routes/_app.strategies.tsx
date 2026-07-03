@@ -135,63 +135,26 @@ function StrategiesPage() {
           const isActive = active === s.name;
           const isCustom = (s as CustomStrategy).custom === true;
           return (
-            <Link
-              to={`/strategies/${s.slug}`}
+            <div
               key={isCustom ? (s as CustomStrategy).id : s.name}
-              className={`text-left rounded-xl border bg-card p-5 space-y-3 transition-colors ${
+              className={`rounded-xl border bg-card p-5 flex flex-col gap-3 transition-colors ${
                 isActive ? "border-primary/60 ring-1 ring-primary/30" : "border-border hover:border-primary/40"
               }`}
             >
               <div className="flex items-start justify-between gap-2">
-                <h3 className="font-semibold text-base flex items-center gap-2">
-                  {s.name}
-                  {isActive && <CheckCircle2 className="h-3.5 w-3.5 text-primary" />}
+                <h3 className="font-semibold text-base flex items-center gap-2 min-w-0">
+                  <span className="truncate">{s.name}</span>
+                  {isActive && <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />}
                   {isCustom && (
-                    <span className="inline-flex items-center gap-1 rounded border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold text-primary uppercase tracking-wider">
+                    <span className="inline-flex items-center gap-1 rounded border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold text-primary uppercase tracking-wider shrink-0">
                       <Sparkles className="h-2.5 w-2.5" /> Custom
                     </span>
                   )}
                 </h3>
-                <div className="flex items-center gap-1.5">
-                  {isCustom && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditing(s as CustomStrategy); setBuilderOpen(true); }}
-                        className="h-7 w-7 rounded-md border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent/40 flex items-center justify-center"
-                        aria-label="Edit custom strategy"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (confirm(`Delete "${s.name}"?`)) removeCustom(s as CustomStrategy); }}
-                        className="h-7 w-7 rounded-md border border-destructive/30 bg-card text-destructive hover:bg-destructive/10 flex items-center justify-center"
-                        aria-label="Delete custom strategy"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </>
-                  )}
-                  <button
-                    type="button"
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (!isActive) select(s.name); }}
-                    className={`text-[10px] font-semibold px-2 py-1 rounded border transition ${
-                      isActive
-                        ? "border-primary/50 bg-primary/15 text-primary cursor-default"
-                        : "border-primary/40 bg-primary/5 text-primary hover:bg-primary/15"
-                    }`}
-                    aria-label={isActive ? "Active strategy" : `Use ${s.name}`}
-                  >
-                    {isActive ? "Active" : "Use"}
-                  </button>
-                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${levelColor[s.level]}`}>
-                    {s.level}
-                  </span>
-                </div>
+                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border shrink-0 ${levelColor[s.level]}`}>
+                  {s.level}
+                </span>
               </div>
-
-
 
               <div className="flex flex-wrap gap-1.5">
                 <span className="inline-flex items-center gap-1 rounded border border-border bg-background px-2 py-0.5 text-[11px] text-muted-foreground">
@@ -214,7 +177,48 @@ function StrategiesPage() {
                   <span className="text-muted-foreground">Avg R:R</span>
                 </div>
               </div>
-            </Link>
+
+              <div className="flex items-center gap-2 pt-1 mt-auto">
+                <button
+                  type="button"
+                  onClick={() => { if (!isActive) select(s.name); }}
+                  disabled={isActive}
+                  className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-semibold transition ${
+                    isActive
+                      ? "bg-primary/15 text-primary border border-primary/40 cursor-default"
+                      : "bg-primary text-primary-foreground hover:opacity-90"
+                  }`}
+                >
+                  {isActive ? (<><CheckCircle2 className="h-4 w-4" /> Selected</>) : "Select strategy"}
+                </button>
+                <Link
+                  to={`/strategies/${s.slug}`}
+                  className="rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-primary/40"
+                >
+                  Details
+                </Link>
+                {isCustom && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => { setEditing(s as CustomStrategy); setBuilderOpen(true); }}
+                      className="h-9 w-9 rounded-md border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent/40 flex items-center justify-center shrink-0"
+                      aria-label="Edit custom strategy"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { if (confirm(`Delete "${s.name}"?`)) removeCustom(s as CustomStrategy); }}
+                      className="h-9 w-9 rounded-md border border-destructive/30 bg-card text-destructive hover:bg-destructive/10 flex items-center justify-center shrink-0"
+                      aria-label="Delete custom strategy"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
           );
         })}
       </div>
