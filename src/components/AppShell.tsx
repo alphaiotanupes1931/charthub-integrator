@@ -25,6 +25,7 @@ import {
   X,
   Sun,
   Moon,
+  Radar,
 } from "lucide-react";
 import { LogoLink } from "@/components/LogoLink";
 import { Tutorial } from "@/components/Tutorial";
@@ -49,6 +50,7 @@ const NAV: NavItem[] = [
   { to: "/coaches",         label: "AI Coaches",      icon: Users },
   { to: "/voice-coach",     label: "Voice Coach",     icon: Mic },
   { to: "/analytics",       label: "Analytics",       icon: BarChart3 },
+  { to: "/signals",         label: "AI Signals",      icon: Radar },
   { to: "/memory",          label: "Trading Memory",  icon: Brain },
   { to: "/alerts",          label: "Price Alerts",    icon: Bell },
   { to: "/status",          label: "System Status",   icon: Activity },
