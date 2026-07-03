@@ -304,31 +304,6 @@ export const Route = createFileRoute("/api/chat")({
         const cors = { ...corsHeadersFor(request), "X-Request-Id": reqId };
         console.log(`[chat] req=${reqId} start`);
 
-        // --- Auth: verify the bearer token ---
-        const authHeader = request.headers.get("authorization") ?? "";
-        if (!authHeader.startsWith("Bearer ")) {
-          return new Response("Unauthorized", { status: 401, headers: cors });
-        }
-        const token = authHeader.slice("Bearer ".length).trim();
-        if (!token || token.split(".").length !== 3) {
-          return new Response("Unauthorized", { status: 401, headers: cors });
-        }
-
-        const sb = createClient<Database>(
-          process.env.SUPABASE_URL!,
-          process.env.SUPABASE_PUBLISHABLE_KEY!,
-          {
-            global: { headers: { Authorization: `Bearer ${token}` } },
-            auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
-          },
-        );
-
-        const { data: claims, error: claimsErr } = await sb.auth.getClaims(token);
-        if (claimsErr || !claims?.claims?.sub) {
-          return new Response("Unauthorized", { status: 401, headers: cors });
-        }
-        const userId = claims.claims.sub;
-
         // --- Parse body ---
         let body: ChatRequestBody;
         try {
@@ -341,6 +316,38 @@ export const Route = createFileRoute("/api/chat")({
           return new Response("messages, threadId required", { status: 400, headers: cors });
         }
 
+        // --- Optional auth: public dashboard scans use a non-UUID scratch thread. ---
+        const shouldPersist = UUID_RE.test(threadId);
+        const authHeader = request.headers.get("authorization") ?? "";
+        const hasBearer = authHeader.startsWith("Bearer ");
+        if (!hasBearer && shouldPersist) {
+          return new Response("Unauthorized", { status: 401, headers: cors });
+        }
+
+        let sb: ReturnType<typeof createClient<Database>> | null = null;
+        let userId: string | null = null;
+        if (hasBearer) {
+          const token = authHeader.slice("Bearer ".length).trim();
+          if (!token || token.split(".").length !== 3) {
+            return new Response("Unauthorized", { status: 401, headers: cors });
+          }
+
+          sb = createClient<Database>(
+            process.env.SUPABASE_URL!,
+            process.env.SUPABASE_PUBLISHABLE_KEY!,
+            {
+              global: { headers: { Authorization: `Bearer ${token}` } },
+              auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
+            },
+          );
+
+          const { data: claims, error: claimsErr } = await sb.auth.getClaims(token);
+          if (claimsErr || !claims?.claims?.sub) {
+            return new Response("Unauthorized", { status: 401, headers: cors });
+          }
+          userId = claims.claims.sub;
+        }
+
         const key = process.env.LOVABLE_API_KEY;
         if (!key) return new Response("The AI coach is temporarily unavailable. Please try again shortly.", { status: 503, headers: cors });
 
@@ -349,9 +356,9 @@ export const Route = createFileRoute("/api/chat")({
         // The dashboard coach can start in ephemeral mode while the protected
         // thread loader is still warming up, so non-UUID thread IDs are allowed
         // for a live AI response but are not written to the database.
-        const shouldPersist = UUID_RE.test(threadId);
         let thread: { id: string; title: string; user_id: string | null } | null = null;
         if (shouldPersist) {
+          if (!sb || !userId) return new Response("Unauthorized", { status: 401, headers: cors });
           const { data: threadRow, error: threadErr } = await sb
             .from("chat_threads")
             .select("id,title,user_id")
@@ -364,15 +371,18 @@ export const Route = createFileRoute("/api/chat")({
         }
 
         // --- Daily AI cap per user (UTC) - admins bypass ---
-        const { data: adminRow } = await sb
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", userId)
-          .eq("role", "admin")
-          .maybeSingle();
-        const isAdmin = !!adminRow;
+        let isAdmin = false;
+        if (sb && userId) {
+          const { data: adminRow } = await sb
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", userId)
+            .eq("role", "admin")
+            .maybeSingle();
+          isAdmin = !!adminRow;
+        }
 
-        if (!isAdmin) {
+        if (sb && userId && !isAdmin) {
           const { data: usageCount, error: usageErr } = await sb.rpc("bump_ai_usage", { _cap: DAILY_AI_CAP });
           if (usageErr) {
             const msg = (usageErr.message || "").toLowerCase();
@@ -392,8 +402,10 @@ export const Route = createFileRoute("/api/chat")({
           } else {
             console.log(`[chat] req=${reqId} user=${userId} usage=${usageCount}/${DAILY_AI_CAP}`);
           }
-        } else {
+        } else if (userId) {
           console.log(`[chat] req=${reqId} user=${userId} admin=unlimited`);
+        } else {
+          console.log(`[chat] req=${reqId} public_ephemeral`);
         }
 
         const journalCtx = buildJournalContext(journal ?? []);
@@ -412,6 +424,7 @@ export const Route = createFileRoute("/api/chat")({
           onFinish: async ({ messages: finalMessages }) => {
             if (!shouldPersist || !thread) return;
             try {
+              if (!sb || !userId) return;
               const { data: existing } = await sb
                 .from("chat_messages")
                 .select("id")
