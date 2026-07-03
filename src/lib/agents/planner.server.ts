@@ -106,19 +106,22 @@ export async function runPlanner(
   const ctx = memoBlock(memo, snap, lensDesc);
   const memoryLine = hermesMemory ? `\n\n${hermesMemory}` : "";
 
-  let plan: z.infer<typeof PlanSchema>;
+  let plan: RawPlan;
   try {
     // Step 1 — draft plan
     const draft = await generateText({
       model: provider(MODEL),
       output: Output.object({ schema: PlanSchema }),
-      system: "You are the head trader. Produce a concrete plan (entry/stop/tp1/tp2 as raw numbers) grounded in the analyst notes. Use ATR to size the stop (~1-1.5x ATR). TP1 near 1.5R, TP2 near 3R. Keep thesis under 400 chars and invalidation under 200 chars. Confidence is 0-100. If consensus is weak or conflicting, use grade C or NO ENTRY." + memoryLine,
+      system: "You are the head trader. Produce a concrete plan (entry/stop/tp1/tp2 as raw numbers) grounded in the analyst notes. Grade MUST be one of: A+, A, B, C, NO ENTRY. Bias MUST be Long, Short, or Neutral. Use ATR to size the stop (~1-1.5x ATR). TP1 near 1.5R, TP2 near 3R. Keep thesis under 400 chars and invalidation under 200 chars. Confidence is 0-100. If consensus is weak or conflicting, use grade C or NO ENTRY." + memoryLine,
       prompt: ctx,
     });
     plan = draft.output;
   } catch (e) {
     if (!NoObjectGeneratedError.isInstance(e)) throw e;
-    plan = fallbackPlan(snap, memo);
+    // Salvage: the model likely returned valid JSON that just failed strict
+    // schema validation. Try to parse the raw text before giving up.
+    const salvaged = salvagePlanFromText(e.text);
+    plan = salvaged ?? fallbackPlan(snap, memo);
   }
 
   // Step 2 — critic (best-effort)
@@ -136,13 +139,15 @@ export async function runPlanner(
         const revised = await generateText({
           model: provider(MODEL),
           output: Output.object({ schema: PlanSchema }),
-          system: "You are the head trader. Revise the previous plan per the risk manager's note. Keep bias unless the critique explicitly demands a flip. Keep thesis under 400 chars and invalidation under 200 chars.",
+          system: "You are the head trader. Revise the previous plan per the risk manager's note. Grade MUST be one of: A+, A, B, C, NO ENTRY. Bias MUST be Long, Short, or Neutral. Keep bias unless the critique explicitly demands a flip. Keep thesis under 400 chars and invalidation under 200 chars.",
           prompt: `${ctx}\n\nPrevious plan: ${JSON.stringify(plan)}\nRisk manager: ${critique.output.reason}`,
         });
         plan = revised.output;
       } catch (e) {
         if (!NoObjectGeneratedError.isInstance(e)) throw e;
-        // keep prior plan
+        const salvaged = salvagePlanFromText(e.text);
+        if (salvaged) plan = salvaged;
+        // otherwise keep prior plan
       }
     }
   } catch (e) {
@@ -150,17 +155,18 @@ export async function runPlanner(
     // skip critique step
   }
 
-
+  const grade = normalizeGrade(plan.grade);
+  const bias = normalizeBias(plan.bias);
   const dec = decimalsFor(snap.lastPrice || plan.entry || 1);
   const risk = Math.abs(plan.entry - plan.stop) || 1;
   const reward = Math.abs(plan.tp2 - plan.entry);
   const rr = `1 : ${(reward / risk).toFixed(1)}`;
-  const isNoEntry = plan.grade === "NO ENTRY";
+  const isNoEntry = grade === "NO ENTRY";
   const details = `${plan.thesis} Invalidation: ${plan.invalidation}. Manage to break-even at TP1 (${fmt(plan.tp1, dec)}), trail runner to TP2 (${fmt(plan.tp2, dec)}). Risk 0.5-1R of account.`;
 
   return {
-    grade: plan.grade,
-    bias: plan.bias,
+    grade,
+    bias,
     confidence: Math.round(plan.confidence),
     notes: plan.thesis,
     entry: isNoEntry ? "—" : fmt(plan.entry, dec),
