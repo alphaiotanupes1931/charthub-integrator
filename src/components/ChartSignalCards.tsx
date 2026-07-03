@@ -22,7 +22,7 @@ function pct(from?: number, to?: number) {
 }
 
 export function ChartSignalCards({ grade, lastPrice, onClear, scanning }: Props) {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
 
   // Empty state — render nothing when idle so the chart can fill the whole area.
   // While actively scanning, show a very thin one-line status so the user gets
