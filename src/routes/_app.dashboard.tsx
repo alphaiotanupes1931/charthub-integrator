@@ -928,10 +928,10 @@ function Dashboard() {
         <button
           onClick={() => setRightOpen((v) => !v)}
           className="hidden lg:inline-flex items-center gap-1.5 rounded-md border border-border bg-background/50 px-2 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground hover:border-primary/40 transition"
-          title={rightOpen ? "Hide side panel" : "Show AI panel"}
+          title={rightOpen ? "Hide side panel" : "Show chat panel"}
         >
           {rightOpen ? <PanelRightClose className="h-3 w-3" /> : <PanelRightOpen className="h-3 w-3" />}
-          <span>AI</span>
+          <span>Chat</span>
         </button>
       </div>
 
