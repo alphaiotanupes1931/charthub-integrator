@@ -116,7 +116,7 @@ export const Route = createFileRoute("/_app")({
       logGate({ step: "redirect", to: "/auth", reason: "no-session-after-hydration" });
       throw redirect({ to: "/auth", search: { redirect: location.href } });
     }
-    logGate({ step: "hydrated", userId: user!.id, email: user!.email ?? null, attempts: 0 });
+    logGate({ step: "hydrated", userId: user.id, email: user.email ?? null, attempts: 0 });
 
     let gateSoftFailed = false;
     const gateSnapshot = await withTimeout(getDashboardGateSnapshot(), "access check", 12_000).catch((err) => {
