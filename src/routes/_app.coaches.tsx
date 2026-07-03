@@ -215,8 +215,12 @@ function CoachesPage() {
       <div className="rounded-xl border-2 border-primary/60 bg-primary/[0.03] p-6 mb-8">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="h-11 w-11 rounded-lg bg-muted flex items-center justify-center">
-              <Bot className="h-6 w-6 text-primary" />
+            <div className={`h-11 w-11 rounded-lg flex items-center justify-center ${activeCoach?.iconBg ?? "bg-muted text-primary"}`}>
+              {activeCoach ? (
+                <activeCoach.icon className="h-6 w-6" />
+              ) : (
+                <Bot className="h-6 w-6 text-primary" />
+              )}
             </div>
             <div>
               <div className={`inline-block rounded-md px-2.5 py-1 ${activeCoach?.nameBg ?? ""} ${activeCoach?.nameText ?? ""}`}>
