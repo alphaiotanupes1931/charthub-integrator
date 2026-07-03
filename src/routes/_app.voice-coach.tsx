@@ -87,14 +87,24 @@ function VoiceCoachPage() {
     setReplying(true);
     setStatus("Thinking…");
     try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
       const res = await fetch("/api/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
           messages: [{ id: crypto.randomUUID(), role: "user", parts: [{ type: "text", text: question }] }],
           coach: active,
         }),
       });
+      if (res.status === 401) {
+        const fallback = "Sign in to unlock live coaching replies. In the meantime, focus on your plan: define entry, stop, and target before you take the trade.";
+        setStatus(fallback);
+        await speak(fallback);
+        return;
+      }
       if (!res.ok || !res.body) throw new Error("chat failed");
       const reader = res.body.getReader();
       const dec = new TextDecoder();
@@ -117,12 +127,14 @@ function VoiceCoachPage() {
       setStatus(clean.slice(0, 220));
       await speak(clean);
     } catch {
-      toast.error("Coach unavailable");
-      setStatus("Tap the mic to talk");
+      const fallback = "I'm having trouble reaching the coach right now. Try again in a moment, or use the AI Chat on the dashboard.";
+      setStatus(fallback);
+      await speak(fallback);
     } finally {
       setReplying(false);
     }
   };
+
 
   const toggleMic = () => {
     if (listening) { try { recRef.current?.stop(); } catch { /* ignore */ } return; }
