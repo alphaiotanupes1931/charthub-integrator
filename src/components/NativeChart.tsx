@@ -38,7 +38,7 @@ export type CisdInfo = {
 };
 
 export type ChartSnapshot = {
-  source: "coingecko" | "twelvedata" | "yahoo" | "oanda" | "stooq" | "synthetic" | "unavailable";
+  source: "coingecko" | "twelvedata" | "yahoo" | "oanda" | "stooq" | "backup" | "synthetic" | "unavailable";
   sourceLabel: string;
   ticker: string;
   interval: string;
@@ -83,6 +83,71 @@ const SESSIONS = [
 
 
 type Candle = { time: Time; open: number; high: number; low: number; close: number };
+
+function FallbackCandlestickLayer({ candles }: { candles: Candle[] }) {
+  const recent = candles.slice(-140);
+  if (recent.length < 2) return null;
+
+  const minLow = Math.min(...recent.map((c) => c.low));
+  const maxHigh = Math.max(...recent.map((c) => c.high));
+  const range = Math.max(maxHigh - minLow, Math.abs(maxHigh) * 0.001, 1e-8);
+  const topPrice = maxHigh + range * 0.08;
+  const bottomPrice = minLow - range * 0.08;
+  const priceRange = topPrice - bottomPrice;
+  const left = 24;
+  const right = 42;
+  const top = 34;
+  const bottom = 36;
+  const width = 1000;
+  const height = 600;
+  const plotW = width - left - right;
+  const plotH = height - top - bottom;
+  const step = plotW / Math.max(1, recent.length - 1);
+  const bodyW = Math.max(3, Math.min(9, step * 0.58));
+  const y = (price: number) => top + ((topPrice - price) / priceRange) * plotH;
+  const x = (index: number) => left + index * step;
+  const last = recent[recent.length - 1];
+  const lastY = y(last.close);
+
+  return (
+    <svg
+      className="pointer-events-none absolute inset-0 z-[1] h-full w-full"
+      viewBox={`0 0 ${width} ${height}`}
+      preserveAspectRatio="none"
+      aria-hidden="true"
+    >
+      {[0.2, 0.4, 0.6, 0.8].map((p) => (
+        <line key={p} x1={left} x2={width - right} y1={top + plotH * p} y2={top + plotH * p} stroke="rgba(148,163,184,0.10)" strokeWidth="1" />
+      ))}
+      {recent.map((c, i) => {
+        const cx = x(i);
+        const openY = y(c.open);
+        const closeY = y(c.close);
+        const highY = y(c.high);
+        const lowY = y(c.low);
+        const up = c.close >= c.open;
+        const color = up ? "#34d399" : "#f87171";
+        return (
+          <g key={`${Number(c.time)}-${i}`}>
+            <line x1={cx} x2={cx} y1={highY} y2={lowY} stroke={color} strokeWidth="1.5" vectorEffect="non-scaling-stroke" opacity="0.9" />
+            <rect
+              x={cx - bodyW / 2}
+              y={Math.min(openY, closeY)}
+              width={bodyW}
+              height={Math.max(2, Math.abs(closeY - openY))}
+              rx="1"
+              fill={up ? "rgba(52,211,153,0.78)" : "rgba(248,113,113,0.78)"}
+              stroke={color}
+              strokeWidth="1"
+              vectorEffect="non-scaling-stroke"
+            />
+          </g>
+        );
+      })}
+      <line x1={left} x2={width - right} y1={lastY} y2={lastY} stroke="rgba(251,191,36,0.45)" strokeWidth="1" strokeDasharray="4 5" vectorEffect="non-scaling-stroke" />
+    </svg>
+  );
+}
 
 // --- CISD (Change in State of Delivery) ---
 // Detects the most recent flip where price closed through the origin open of the
@@ -294,7 +359,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     return { ...base, htfBias: detectHtfBias(candles) };
   }, [candles]);
   const isLive = hasLive;
-  const sourceLabel = liveOhlc?.source === "coingecko" ? "CoinGecko" : liveOhlc?.source === "twelvedata" ? "Twelve Data" : liveOhlc?.source === "yahoo" ? "Yahoo" : liveOhlc?.source === "oanda" ? "OANDA" : liveOhlc?.source === "stooq" ? "Stooq" : "";
+  const sourceLabel = liveOhlc?.source === "coingecko" ? "CoinGecko" : liveOhlc?.source === "twelvedata" ? "Twelve Data" : liveOhlc?.source === "yahoo" ? "Yahoo" : liveOhlc?.source === "oanda" ? "OANDA" : liveOhlc?.source === "stooq" ? "Stooq" : liveOhlc?.source === "backup" ? "Market Feed" : "";
   const snapshotSource = isLive ? (liveOhlc?.source ?? "unknown") : "unavailable";
   const snapshotSourceLabel = isLive ? (sourceLabel || "Live") : "Unavailable";
 
@@ -568,6 +633,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
   return (
     <div className={`relative h-full w-full ${className ?? ""}`}>
       <div ref={containerRef} className="absolute inset-0" />
+      <FallbackCandlestickLayer candles={displayCandles} />
       {/* Session bands overlay */}
       {sessions && bands.length > 0 && (
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
