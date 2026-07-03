@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { ArrowUpRight, ArrowDownRight, Minus, Target, Shield, Flag, Clock, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, Minus, Target, Shield, Flag, Clock, ChevronDown, ChevronUp, X } from "lucide-react";
 import type { ChartGrade } from "@/lib/chartAnnotations";
 
 type Props = {
   grade: ChartGrade | null;
   lastPrice?: number;
   onClear?: () => void;
+  scanning?: boolean;
 };
 
 function fmt(n?: number) {
@@ -20,15 +21,20 @@ function pct(from?: number, to?: number) {
   return `${(((to - from) / from) * 100).toFixed(2)}%`;
 }
 
-export function ChartSignalCards({ grade, lastPrice, onClear }: Props) {
-  const [expanded, setExpanded] = useState(false);
+export function ChartSignalCards({ grade, lastPrice, onClear, scanning }: Props) {
+  const [expanded, setExpanded] = useState(true);
 
-  // Waiting-for-signal state — small pill only
+  // Empty state — compact status strip above the chart
   if (!grade) {
     return (
-      <div className="pointer-events-auto absolute left-3 top-3 z-20 inline-flex items-center gap-1.5 rounded-md border border-border/70 bg-background/85 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground backdrop-blur-md shadow-md">
-        <Clock className="h-3 w-3" />
-        Waiting for signal
+      <div className="shrink-0 flex items-center justify-between gap-3 px-3 py-1.5 border-b border-border/60 bg-card/40">
+        <div className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          <Clock className="h-3 w-3" />
+          {scanning ? "Scanning setup…" : "Waiting for signal"}
+        </div>
+        <span className="text-[10px] text-muted-foreground/70">
+          Run a scan to preview grade, entry, stop and targets here.
+        </span>
       </div>
     );
   }
@@ -36,82 +42,84 @@ export function ChartSignalCards({ grade, lastPrice, onClear }: Props) {
   const bias = grade.bias ?? "neutral";
   const isLong = bias === "long";
   const isShort = bias === "short";
-  const biasTone = isLong
-    ? "text-emerald-300 border-emerald-500/40 bg-emerald-500/10"
-    : isShort
-    ? "text-red-300 border-red-500/40 bg-red-500/10"
-    : "text-muted-foreground border-border bg-muted/20";
+  const biasText = isLong ? "text-emerald-300" : isShort ? "text-red-300" : "text-muted-foreground";
+  const biasBg = isLong ? "bg-emerald-500/10 border-emerald-500/40" : isShort ? "bg-red-500/10 border-red-500/40" : "bg-muted/20 border-border";
   const BiasIcon = isLong ? ArrowUpRight : isShort ? ArrowDownRight : Minus;
   const actionLabel = isLong ? "BUY" : isShort ? "SELL" : "WAIT";
 
   const rows: Array<{ key: string; label: string; value?: number; tone: string; icon: React.ComponentType<{ className?: string }>; from?: number }> = [
     { key: "entry", label: "Entry", value: grade.entry, tone: "text-foreground", icon: Target, from: lastPrice },
-    { key: "stop", label: "Stop Loss", value: grade.stop, tone: "text-red-300", icon: Shield, from: grade.entry },
-    { key: "tp1", label: "Take Profit 1", value: grade.tp1, tone: "text-emerald-300", icon: Flag, from: grade.entry },
-    { key: "tp2", label: "Take Profit 2", value: grade.tp2, tone: "text-emerald-200", icon: Flag, from: grade.entry },
+    { key: "stop", label: "Stop", value: grade.stop, tone: "text-red-300", icon: Shield, from: grade.entry },
+    { key: "tp1", label: "TP1", value: grade.tp1, tone: "text-emerald-300", icon: Flag, from: grade.entry },
+    { key: "tp2", label: "TP2", value: grade.tp2, tone: "text-emerald-200", icon: Flag, from: grade.entry },
   ];
 
   return (
-    <div className="pointer-events-auto absolute left-3 top-3 z-20 w-[240px] rounded-lg border border-border/70 bg-background/90 backdrop-blur-md shadow-lg overflow-hidden">
-      <div className={`flex items-center justify-between gap-2 px-2.5 py-1.5 border-b border-border/60 ${biasTone.split(" ").filter((c) => c.startsWith("bg-")).join(" ")}`}>
-        <div className="flex items-center gap-1.5">
-          <span className={`inline-flex h-5 w-5 items-center justify-center rounded ${biasTone}`}>
-            <BiasIcon className="h-3 w-3" />
-          </span>
-          <span className={`text-[11px] font-bold tracking-wider ${biasTone.split(" ").filter((c) => c.startsWith("text-")).join(" ")}`}>
-            {actionLabel}
-          </span>
-          <span className="text-[9px] uppercase tracking-wider text-muted-foreground">Signal</span>
+    <div className="shrink-0 border-b border-border/60 bg-card/40">
+      {/* Header strip — always visible */}
+      <div className="flex items-center gap-2 px-3 py-1.5 overflow-x-auto">
+        <span className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 ${biasBg}`}>
+          <BiasIcon className={`h-3 w-3 ${biasText}`} />
+          <span className={`text-[10px] font-bold tracking-wider ${biasText}`}>{actionLabel}</span>
+        </span>
+        <span className="rounded border border-border/60 bg-background/60 px-1.5 py-0.5 text-[10px] font-bold text-foreground">
+          {grade.grade.toUpperCase()}
+        </span>
+
+        {/* Inline preview of key numbers */}
+        <div className="hidden sm:flex items-center gap-3 ml-1 text-[11px] font-mono">
+          {rows.map((r) => (
+            <span key={r.key} className="inline-flex items-baseline gap-1">
+              <span className="text-[9px] uppercase tracking-wider text-muted-foreground">{r.label}</span>
+              <span className={r.tone}>{fmt(r.value)}</span>
+            </span>
+          ))}
         </div>
-        <div className="flex items-center gap-1.5">
-          <span className="rounded border border-border/60 bg-background/60 px-1.5 py-0.5 text-[10px] font-bold text-foreground">
-            {grade.grade.toUpperCase()}
-          </span>
+
+        <div className="flex-1" />
+
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="inline-flex h-6 items-center gap-1 rounded px-1.5 text-[10px] uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-muted/60"
+          title={expanded ? "Hide details" : "Show details"}
+        >
+          {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+          {expanded ? "Hide" : "Details"}
+        </button>
+        {onClear && (
           <button
             type="button"
-            onClick={() => setExpanded((v) => !v)}
-            className="inline-flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted/60"
-            title={expanded ? "Collapse" : "Expand"}
-            aria-label={expanded ? "Collapse" : "Expand"}
+            onClick={onClear}
+            className="inline-flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted/60"
+            title="Clear signal"
+            aria-label="Clear signal"
           >
-            {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+            <X className="h-3 w-3" />
           </button>
-          {onClear && (
-            <button
-              type="button"
-              onClick={onClear}
-              className="text-[11px] leading-none text-muted-foreground hover:text-foreground"
-              title="Clear signal"
-            >
-              ×
-            </button>
-          )}
-        </div>
+        )}
       </div>
+
       {expanded && (
-        <>
-          <div className="divide-y divide-border/40">
-            {rows.map((r) => {
-              const Icon = r.icon;
-              const delta = pct(r.from, r.value);
-              return (
-                <div key={r.key} className="flex items-center justify-between px-2.5 py-1.5">
-                  <div className="flex items-center gap-1.5">
-                    <Icon className={`h-3 w-3 ${r.tone}`} />
-                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{r.label}</span>
-                  </div>
-                  <div className="flex items-baseline gap-1.5">
-                    <span className={`font-mono text-[11px] ${r.tone}`}>{fmt(r.value)}</span>
-                    {delta && (
-                      <span className="font-mono text-[9px] text-muted-foreground">{delta}</span>
-                    )}
-                  </div>
+        <div className="border-t border-border/40 px-3 py-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {rows.map((r) => {
+            const Icon = r.icon;
+            const delta = pct(r.from, r.value);
+            return (
+              <div key={r.key} className="flex items-center justify-between gap-2 rounded-md border border-border/50 bg-background/40 px-2 py-1.5">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <Icon className={`h-3 w-3 shrink-0 ${r.tone}`} />
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground truncate">{r.label}</span>
                 </div>
-              );
-            })}
-          </div>
+                <div className="flex items-baseline gap-1.5 shrink-0">
+                  <span className={`font-mono text-[11px] ${r.tone}`}>{fmt(r.value)}</span>
+                  {delta && <span className="font-mono text-[9px] text-muted-foreground">{delta}</span>}
+                </div>
+              </div>
+            );
+          })}
           {(grade.strength || grade.weakness) && (
-            <div className="space-y-0.5 border-t border-border/60 px-2.5 py-1.5 text-[10px] leading-snug">
+            <div className="col-span-2 sm:col-span-4 space-y-0.5 text-[11px] leading-snug">
               {grade.strength && (
                 <div><span className="text-emerald-400 font-semibold">+ </span><span className="text-foreground/80">{grade.strength}</span></div>
               )}
@@ -120,7 +128,7 @@ export function ChartSignalCards({ grade, lastPrice, onClear }: Props) {
               )}
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   );
