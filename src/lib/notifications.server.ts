@@ -30,7 +30,7 @@ export async function createNotification(input: CreateNotificationInput) {
       title: input.title,
       body: input.body ?? null,
       url: input.url ?? null,
-      meta: input.meta ?? {},
+      meta: (input.meta ?? {}) as never,
     })
     .select("id")
     .single();
