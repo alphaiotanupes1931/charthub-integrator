@@ -4,7 +4,20 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 
 import { useNavigate } from "@tanstack/react-router";
-import { Bell, Check, CheckCheck, Trash2, X, Sparkles } from "lucide-react";
+import {
+  Bell,
+  BellRing,
+  Check,
+  CheckCheck,
+  Trash2,
+  X,
+  Activity,
+  TrendingUp,
+  DollarSign,
+  Info,
+  Radar,
+  type LucideIcon,
+} from "lucide-react";
 import {
   listMyNotifications,
   markNotificationRead,
@@ -18,34 +31,46 @@ import {
 function timeAgo(iso: string): string {
   const then = new Date(iso).getTime();
   const s = Math.max(0, Math.floor((Date.now() - then) / 1000));
-  if (s < 60) return `${s}s`;
+  if (s < 60) return `just now`;
   const m = Math.floor(s / 60);
-  if (m < 60) return `${m}m`;
+  if (m < 60) return `${m}m ago`;
   const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h`;
+  if (h < 24) return `${h}h ago`;
   const d = Math.floor(h / 24);
-  return `${d}d`;
+  if (d < 7) return `${d}d ago`;
+  return new Date(iso).toLocaleDateString();
 }
 
-function kindDot(kind: string): string {
+type KindStyle = {
+  Icon: LucideIcon;
+  ring: string;
+  bg: string;
+  fg: string;
+  label: string;
+};
+
+function kindStyle(kind: string): KindStyle {
   switch (kind) {
     case "signal":
+      return { Icon: TrendingUp, ring: "ring-emerald-500/30", bg: "bg-emerald-500/10", fg: "text-emerald-500", label: "Signal" };
     case "scanner":
-      return "bg-emerald-500";
+      return { Icon: Radar, ring: "ring-sky-500/30", bg: "bg-sky-500/10", fg: "text-sky-500", label: "Scanner" };
     case "alert":
+      return { Icon: BellRing, ring: "ring-amber-500/30", bg: "bg-amber-500/10", fg: "text-amber-500", label: "Alert" };
     case "price":
-      return "bg-amber-500";
+      return { Icon: DollarSign, ring: "ring-amber-500/30", bg: "bg-amber-500/10", fg: "text-amber-500", label: "Price" };
     case "trade":
-      return "bg-sky-500";
+      return { Icon: Activity, ring: "ring-primary/30", bg: "bg-primary/10", fg: "text-primary", label: "Trade" };
     case "system":
-      return "bg-rose-500";
+      return { Icon: Info, ring: "ring-rose-500/30", bg: "bg-rose-500/10", fg: "text-rose-500", label: "System" };
     default:
-      return "bg-muted-foreground";
+      return { Icon: Info, ring: "ring-border", bg: "bg-muted", fg: "text-muted-foreground", label: "Notice" };
   }
 }
 
 export function NotificationBell() {
   const [open, setOpen] = useState(false);
+  const [filter, setFilter] = useState<"all" | "unread">("all");
   const qc = useQueryClient();
 
   const listFn = useServerFn(listMyNotifications);
@@ -140,11 +165,11 @@ export function NotificationBell() {
 
   const navigate = useNavigate();
 
-  const grouped = useMemo(() => {
-    const unreadRows = rows.filter((r) => !r.read_at);
-    const readRows = rows.filter((r) => r.read_at);
-    return { unreadRows, readRows };
-  }, [rows]);
+  const visibleRows = useMemo(() => {
+    return filter === "unread" ? rows.filter((r) => !r.read_at) : rows;
+  }, [rows, filter]);
+
+  const hasRead = useMemo(() => rows.some((r) => r.read_at), [rows]);
 
   return (
     <>
@@ -155,13 +180,13 @@ export function NotificationBell() {
             Notification.requestPermission().catch(() => {});
           }
         }}
-        className="relative h-9 w-9 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:text-foreground shrink-0"
+        className="relative h-9 w-9 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/40 transition shrink-0"
         aria-label={`Notifications${unread ? ` (${unread} unread)` : ""}`}
         title="Notifications"
       >
         <Bell className="h-4 w-4" />
         {unread > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold leading-none flex items-center justify-center">
+          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold leading-none flex items-center justify-center ring-2 ring-background">
             {unread > 99 ? "99+" : unread}
           </span>
         )}
@@ -169,38 +194,71 @@ export function NotificationBell() {
 
       {open && (
         <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="Notifications">
-          <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" onClick={() => setOpen(false)} />
-          <aside className="absolute right-0 top-0 h-full w-full sm:w-[420px] bg-card border-l border-border shadow-xl flex flex-col">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-              <div className="flex items-center gap-2">
-                <Bell className="h-4 w-4 text-muted-foreground" />
-                <h2 className="text-sm font-semibold">Notifications</h2>
-                {unread > 0 && (
-                  <span className="text-[11px] text-muted-foreground">{unread} unread</span>
-                )}
+          <div className="absolute inset-0 bg-background/70 backdrop-blur-md" onClick={() => setOpen(false)} />
+          <aside className="absolute right-0 top-0 h-full w-full sm:w-[440px] bg-card border-l border-border shadow-2xl flex flex-col animate-in slide-in-from-right duration-200">
+            {/* Header */}
+            <div className="relative shrink-0 px-5 pt-5 pb-4 border-b border-border/60 bg-gradient-to-b from-primary/[0.06] to-transparent">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="relative h-10 w-10 rounded-full bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center">
+                    <Bell className="h-5 w-5 text-primary" />
+                    {unread > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-primary ring-2 ring-card animate-pulse" />
+                    )}
+                  </div>
+                  <div>
+                    <h2 className="text-base font-semibold leading-tight">Notifications</h2>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {unread > 0 ? `${unread} new ${unread === 1 ? "update" : "updates"}` : "You're all caught up"}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setOpen(false)}
+                  className="h-8 w-8 rounded-md hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition"
+                  aria-label="Close"
+                >
+                  <X className="h-4 w-4" />
+                </button>
               </div>
-              <button
-                onClick={() => setOpen(false)}
-                className="h-8 w-8 rounded-md hover:bg-muted flex items-center justify-center"
-                aria-label="Close"
-              >
-                <X className="h-4 w-4" />
-              </button>
+
+              {/* Filter tabs */}
+              <div className="mt-4 inline-flex items-center gap-1 rounded-lg bg-muted/60 p-1">
+                {(["all", "unread"] as const).map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setFilter(f)}
+                    className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition ${
+                      filter === f
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <span className="capitalize">{f}</span>
+                    {f === "unread" && unread > 0 && (
+                      <span className="inline-flex min-w-[16px] h-4 px-1 items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-semibold">
+                        {unread}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="flex items-center gap-1 px-3 py-2 border-b border-border/60 text-xs">
+            {/* Action bar */}
+            <div className="shrink-0 flex items-center gap-1 px-3 py-2 border-b border-border/60 text-xs bg-card">
               <button
                 onClick={() => mAll.mutate()}
                 disabled={unread === 0 || mAll.isPending}
-                className="inline-flex items-center gap-1.5 h-7 px-2 rounded-md hover:bg-muted disabled:opacity-40"
+                className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition"
               >
                 <CheckCheck className="h-3.5 w-3.5" />
                 Mark all read
               </button>
               <button
                 onClick={() => mClr.mutate()}
-                disabled={grouped.readRows.length === 0 || mClr.isPending}
-                className="inline-flex items-center gap-1.5 h-7 px-2 rounded-md hover:bg-muted disabled:opacity-40"
+                disabled={!hasRead || mClr.isPending}
+                className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition"
               >
                 <Trash2 className="h-3.5 w-3.5" />
                 Clear read
@@ -209,34 +267,46 @@ export function NotificationBell() {
               <button
                 onClick={() => mTest.mutate()}
                 disabled={mTest.isPending}
-                className="inline-flex items-center gap-1.5 h-7 px-2 rounded-md text-muted-foreground hover:bg-muted"
+                className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-muted-foreground/70 hover:text-foreground hover:bg-muted transition"
                 title="Create a test notification"
               >
-                <Sparkles className="h-3.5 w-3.5" />
                 Test
               </button>
             </div>
 
+            {/* List */}
             <div className="flex-1 overflow-y-auto">
-              {rows.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-center px-6 py-12 text-muted-foreground">
-                  <Bell className="h-8 w-8 opacity-40 mb-3" />
-                  <p className="text-sm font-medium">No notifications yet</p>
-                  <p className="text-xs mt-1">
-                    Signals, price alerts, and scanner hits will land here.
+              {visibleRows.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-center px-6 py-16 text-muted-foreground">
+                  <div className="h-14 w-14 rounded-full bg-muted/60 flex items-center justify-center mb-4">
+                    <Bell className="h-6 w-6 opacity-50" />
+                  </div>
+                  <p className="text-sm font-semibold text-foreground">
+                    {filter === "unread" ? "No unread notifications" : "No notifications yet"}
+                  </p>
+                  <p className="text-xs mt-1.5 max-w-[260px]">
+                    Signals, price alerts, and scanner hits will show up here as they happen.
                   </p>
                 </div>
               ) : (
-                <ul className="divide-y divide-border/60">
-                  {rows.map((n) => {
+                <ul className="p-2 space-y-1.5">
+                  {visibleRows.map((n) => {
                     const isUnread = !n.read_at;
+                    const style = kindStyle(n.kind);
+                    const { Icon } = style;
                     return (
                       <li
                         key={n.id}
-                        className={`group px-4 py-3 hover:bg-muted/40 ${isUnread ? "bg-muted/20" : ""}`}
+                        className={`group relative rounded-lg border transition-all ${
+                          isUnread
+                            ? "bg-primary/[0.04] border-primary/20 hover:border-primary/40 hover:bg-primary/[0.07]"
+                            : "bg-transparent border-transparent hover:bg-muted/40 hover:border-border/60"
+                        }`}
                       >
-                        <div className="flex items-start gap-3">
-                          <span className={`mt-1.5 h-2 w-2 rounded-full shrink-0 ${kindDot(n.kind)}`} />
+                        <div className="flex items-start gap-3 p-3">
+                          <div className={`shrink-0 h-9 w-9 rounded-lg ring-1 ${style.ring} ${style.bg} flex items-center justify-center`}>
+                            <Icon className={`h-4 w-4 ${style.fg}`} />
+                          </div>
                           <button
                             className="flex-1 text-left min-w-0"
                             onClick={() => {
@@ -248,23 +318,29 @@ export function NotificationBell() {
                               }
                             }}
                           >
-                            <div className="flex items-baseline gap-2">
-                              <p className={`text-sm truncate ${isUnread ? "font-semibold" : "font-medium text-muted-foreground"}`}>
-                                {n.title}
-                              </p>
-                              <span className="text-[10px] text-muted-foreground shrink-0">
+                            <div className="flex items-center gap-2">
+                              <span className={`text-[10px] uppercase tracking-wide font-semibold ${style.fg}`}>
+                                {style.label}
+                              </span>
+                              {isUnread && (
+                                <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-label="Unread" />
+                              )}
+                              <span className="ml-auto text-[10px] text-muted-foreground shrink-0">
                                 {timeAgo(n.created_at)}
                               </span>
                             </div>
+                            <p className={`mt-1 text-sm leading-snug ${isUnread ? "font-semibold text-foreground" : "font-medium text-foreground/80"}`}>
+                              {n.title}
+                            </p>
                             {n.body && (
-                              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>
+                              <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">{n.body}</p>
                             )}
                           </button>
-                          <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
                             {isUnread && (
                               <button
                                 onClick={() => mRead.mutate(n.id)}
-                                className="h-6 w-6 rounded hover:bg-muted flex items-center justify-center text-muted-foreground"
+                                className="h-7 w-7 rounded-md hover:bg-background border border-transparent hover:border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition"
                                 title="Mark read"
                               >
                                 <Check className="h-3.5 w-3.5" />
@@ -272,7 +348,7 @@ export function NotificationBell() {
                             )}
                             <button
                               onClick={() => mDel.mutate(n.id)}
-                              className="h-6 w-6 rounded hover:bg-muted flex items-center justify-center text-muted-foreground"
+                              className="h-7 w-7 rounded-md hover:bg-background border border-transparent hover:border-destructive/30 flex items-center justify-center text-muted-foreground hover:text-destructive transition"
                               title="Delete"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
