@@ -439,7 +439,7 @@ export const Route = createFileRoute("/api/ohlc")({
         }
 
         const { ticker: t, interval: iv } = parsed.data;
-        if (!tickerToCoin(t) && !tickerToOanda(t) && !tickerToTwelveData(t) && !tickerToYahoo(t)) {
+        if (!tickerToCoin(t) && !tickerToOanda(t) && !tickerToTwelveData(t) && !tickerToYahoo(t) && !tickerToStooq(t)) {
           return new Response(JSON.stringify({ source: null, bars: [], cachedAt: Date.now(), ttlMs: 0 }), {
             headers: jsonHeaders,
           });
