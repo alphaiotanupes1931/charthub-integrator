@@ -1,6 +1,8 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { supabase } from "@/integrations/supabase/client";
+
 import { useNavigate } from "@tanstack/react-router";
 import { Bell, Check, CheckCheck, Trash2, X, Sparkles } from "lucide-react";
 import {
@@ -53,12 +55,24 @@ export function NotificationBell() {
   const clearReadFn = useServerFn(clearReadNotifications);
   const createTestFn = useServerFn(createTestNotification);
 
+  const [hasSession, setHasSession] = useState(false);
+  useEffect(() => {
+    let mounted = true;
+    supabase.auth.getSession().then(({ data }) => { if (mounted) setHasSession(!!data.session); });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      if (mounted) setHasSession(!!session);
+    });
+    return () => { mounted = false; sub.subscription.unsubscribe(); };
+  }, []);
+
   const { data } = useQuery({
     queryKey: ["notifications"],
     queryFn: () => listFn(),
     refetchInterval: 15_000,
     staleTime: 5_000,
+    enabled: hasSession,
   });
+
 
   const rows: NotificationRow[] = data?.rows ?? [];
   const unread = data?.unread ?? 0;
