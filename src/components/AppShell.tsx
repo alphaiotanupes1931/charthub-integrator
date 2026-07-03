@@ -54,6 +54,14 @@ const NAV: NavItem[] = [
   { to: "/admin",           label: "Admin",           icon: ShieldCheck, accent: true },
 ];
 
+// Robinhood-style bottom tab bar (mobile only). Four primary tabs + More.
+const MOBILE_TABS: { to: string; label: string; icon: typeof LayoutDashboard }[] = [
+  { to: "/dashboard", label: "Chart",     icon: LayoutDashboard },
+  { to: "/journal",   label: "Journal",   icon: NotebookPen },
+  { to: "/analytics", label: "Analytics", icon: BarChart3 },
+  { to: "/coaches",   label: "Coaches",   icon: Users },
+];
+
 
 
 export function AppShell({ children }: { children: ReactNode }) {
