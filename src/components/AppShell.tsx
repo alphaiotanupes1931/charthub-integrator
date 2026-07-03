@@ -30,6 +30,7 @@ import { Tutorial } from "@/components/Tutorial";
 import { WelcomeBackGreeter, WelcomeBackProvider } from "@/components/WelcomeBackGreeter";
 import { useTheme } from "@/hooks/useTheme";
 import { useProfile } from "@/hooks/useProfile";
+import { NotificationBell } from "@/components/NotificationBell";
 
 
 type NavItem = {
@@ -248,6 +249,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
           </button>
           <div className="flex-1" />
+          <NotificationBell />
           {/* Theme toggle */}
           <button
             onClick={toggle}
