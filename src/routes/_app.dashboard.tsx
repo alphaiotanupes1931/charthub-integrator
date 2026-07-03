@@ -50,6 +50,12 @@ const INTERVALS = [
 
 type Symbol = { tv: string; ticker: string; name: string; venue: string };
 
+function symbolLabel(s: Symbol) {
+  // Human-friendly label used in AI prompts so the assistant refers to the
+  // instrument the trader sees on the chart (e.g. "Gold" instead of "XAU/USD").
+  return s.name ? `${s.name} (${s.ticker})` : s.ticker;
+}
+
 const SYMBOLS: Symbol[] = [
   { tv: "OANDA:XAUUSD",      ticker: "XAU/USD", name: "Gold Spot",        venue: "OANDA"     },
   { tv: "OANDA:XAGUSD",      ticker: "XAG/USD", name: "Silver Spot",      venue: "OANDA"     },
