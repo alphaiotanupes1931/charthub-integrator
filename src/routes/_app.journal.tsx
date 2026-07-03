@@ -286,6 +286,20 @@ function JournalPage() {
 
       {tab === "trades" && (
         <div className="rounded-xl border border-border bg-card overflow-hidden">
+          {sortedTrades.length > 0 && (
+            <div className="flex items-center justify-between gap-2 p-3 border-b border-border/60 bg-card/60">
+              <div className="text-xs text-muted-foreground">
+                {sortedTrades.length} {sortedTrades.length === 1 ? "trade" : "trades"}
+              </div>
+              <button
+                onClick={() => exportTradesCsv(sortedTrades)}
+                className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-foreground/80 hover:bg-accent/40 transition"
+                title="Download all trades as CSV"
+              >
+                <Download className="h-3.5 w-3.5" /> Export CSV
+              </button>
+            </div>
+          )}
           {sortedTrades.length === 0 ? (
             <div className="p-12 text-center text-sm text-muted-foreground">
               No trades logged yet. Hit <span className="text-foreground font-medium">Log trade</span> to add one.
