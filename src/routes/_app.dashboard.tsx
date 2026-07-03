@@ -868,6 +868,14 @@ function Dashboard() {
       <div className="flex-1 min-h-0 flex bg-card overflow-hidden" data-tour="chart">
         <div className="flex-1 min-w-0 flex flex-col">
 
+          {/* Scan output preview — sits above the chart so it never overlaps candles */}
+          <ChartSignalCards
+            grade={aiGrade}
+            lastPrice={snapshot?.lastPrice}
+            scanning={scanning}
+            onClear={aiGrade ? () => { setAiGrade(null); setAiAnnotationsRaw([]); } : undefined}
+          />
+
           <div className="flex-1 min-h-0 overflow-hidden relative">
             {chartTab === "live" && aiAnnotations.length === 0 ? (
               <TradingViewChart symbol={symbol.tv} interval={interval} enabled={levels} sessions={sessionsOn} />
@@ -882,11 +890,6 @@ function Dashboard() {
             {aiConcept && (
               <ChartConceptOverlay concept={aiConcept} onClose={() => setAiConcept(null)} />
             )}
-            <ChartSignalCards
-              grade={aiGrade}
-              lastPrice={snapshot?.lastPrice}
-              onClear={aiGrade ? () => { setAiGrade(null); setAiAnnotationsRaw([]); } : undefined}
-            />
             {aiAnnotations.length > 0 && (
               <button
                 type="button"
