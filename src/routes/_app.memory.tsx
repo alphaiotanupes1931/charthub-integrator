@@ -3,8 +3,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/PageHeader";
-import { Brain, Activity, TrendingUp, TrendingDown, Sparkles, Trash2, Globe2, User2 } from "lucide-react";
-import { listMyLessons, forgetLesson } from "@/lib/agents/hermes.functions";
+import { Brain, ThumbsUp, ThumbsDown, Sparkles, Trash2, Globe2, User2 } from "lucide-react";
+import { listMyLessons, forgetLesson, getHermesStats } from "@/lib/agents/hermes.functions";
 
 export const Route = createFileRoute("/_app/memory")({
   head: () => ({ meta: [{ title: "Trading Memory, TradeMind" }] }),
@@ -12,56 +12,64 @@ export const Route = createFileRoute("/_app/memory")({
 });
 
 function MemoryPage() {
+  const statsFn = useServerFn(getHermesStats);
+  const { data: stats } = useQuery({
+    queryKey: ["hermes-stats"],
+    queryFn: () => statsFn(),
+  });
+
   return (
     <div className="p-4 md:p-8 max-w-[1400px] mx-auto">
       <PageHeader
         title="My Trading Memory"
         icon={<Brain className="h-9 w-9 text-primary" />}
         description="Hermes — the learning layer — remembers your thumbs-up/down on every scan and distills a short lesson from each. Those lessons are injected into future scans so the AI adapts to how you actually trade."
-        action={
-          <button className="flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
-            <Activity className="h-4 w-4" /> Log Outcome
-          </button>
-        }
       />
 
       <HermesMemoryPanel />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <StatCard
-          icon={<TrendingUp className="h-4 w-4 text-emerald-400" />}
-          label="Wins logged"
-          value="0"
-          hint="Trades that closed in profit"
+          icon={<ThumbsUp className="h-4 w-4 text-emerald-400" />}
+          label="Helpful scans"
+          value={stats ? String(stats.helpful) : "—"}
+          hint="Times you thumbed-up a scan"
         />
         <StatCard
-          icon={<TrendingDown className="h-4 w-4 text-destructive" />}
-          label="Losses logged"
-          value="0"
-          hint="Trades that closed at a loss"
+          icon={<ThumbsDown className="h-4 w-4 text-destructive" />}
+          label="Unhelpful scans"
+          value={stats ? String(stats.unhelpful) : "—"}
+          hint="Times you thumbed-down a scan"
         />
         <StatCard
           icon={<Sparkles className="h-4 w-4 text-primary" />}
-          label="AI accuracy"
-          value="-"
-          hint="How often the AI's grade matched the outcome"
+          label="AI helpfulness"
+          value={stats?.accuracy != null ? `${stats.accuracy}%` : "—"}
+          hint="Share of scans you marked helpful"
         />
       </div>
 
       <div className="rounded-xl border border-border bg-card p-6">
         <h2 className="flex items-center gap-2 font-semibold mb-2">
-          <Sparkles className="h-4 w-4 text-primary" /> AI calls, scored against reality
+          <Sparkles className="h-4 w-4 text-primary" /> AI calls, scored by your feedback
         </h2>
         <p className="text-xs text-muted-foreground mb-4">
-          Every time you mark a trade a win or a loss, TradeMind cross-references the AI's original grade. Patterns the AI gets right get reinforced; patterns it gets wrong get down-weighted in future reads.
+          Every thumbs-up or thumbs-down feeds Hermes. Patterns you like get reinforced; patterns you reject get down-weighted in future reads.
         </p>
-        <p className="text-sm text-muted-foreground italic">
-          No AI calls scored yet. Log a trade outcome from the journal to start building the feedback loop.
-        </p>
+        {stats && stats.total > 0 ? (
+          <p className="text-sm text-foreground/90">
+            <span className="font-semibold text-primary">{stats.total}</span> feedback events recorded so far.
+          </p>
+        ) : (
+          <p className="text-sm text-muted-foreground italic">
+            No feedback yet. Rate a scan on the dashboard to start training Hermes.
+          </p>
+        )}
       </div>
     </div>
   );
 }
+
 
 function HermesMemoryPanel() {
   const qc = useQueryClient();
