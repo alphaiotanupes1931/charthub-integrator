@@ -38,7 +38,7 @@ export type CisdInfo = {
 };
 
 export type ChartSnapshot = {
-  source: "coingecko" | "twelvedata" | "yahoo" | "synthetic" | "unavailable";
+  source: "coingecko" | "twelvedata" | "yahoo" | "oanda" | "stooq" | "synthetic" | "unavailable";
   sourceLabel: string;
   ticker: string;
   interval: string;
