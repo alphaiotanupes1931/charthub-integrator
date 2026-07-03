@@ -20,7 +20,7 @@ import { listChatThreads, createChatThread, deleteChatThread } from "@/lib/chat.
 import type { ResearchMemo } from "@/lib/agents/types";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { DashboardStatusStrip } from "@/components/DashboardStatusStrip";
+
 
 type DashboardSearch = { ask?: string };
 
@@ -650,8 +650,6 @@ function Dashboard() {
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      <DashboardStatusStrip />
-
       {/* Row 1: symbol + timeframes + right-side pickers */}
       <div className="shrink-0 flex items-center gap-3 px-3 py-1.5 border-b border-border/60 bg-card/40">
 
@@ -787,7 +785,7 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Row 2: Live / Setup tabs + compact View menu */}
+      {/* Row 2: Live / Setup tabs + compact View menu + fullscreen */}
       <div className="shrink-0 flex items-center gap-3 px-3 py-1 border-b border-border/60 bg-card/30 text-xs">
         <button
           onClick={() => setChartTab("live")}
@@ -804,6 +802,17 @@ function Dashboard() {
           }`}
         >
           <Crosshair className="h-3.5 w-3.5" /> Setup
+        </button>
+
+        <button
+          type="button"
+          onClick={toggleChartFullscreen}
+          className="inline-flex items-center gap-1 rounded-md border border-border bg-background/50 px-2 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground hover:border-primary/40 transition"
+          title={isChartFullscreen ? "Exit full screen" : "Full screen chart"}
+          aria-label={isChartFullscreen ? "Exit full screen" : "Full screen chart"}
+        >
+          {isChartFullscreen ? <Minimize className="h-3 w-3" /> : <Maximize className="h-3 w-3" />}
+          <span className="hidden sm:inline">{isChartFullscreen ? "Exit" : "Expand"}</span>
         </button>
 
         <div className="flex-1" />
@@ -974,20 +983,21 @@ function Dashboard() {
               <NativeChart symbol={symbol.tv} ticker={symbol.ticker} interval={interval} enabled={levels} sessions={sessionsOn} onSnapshot={setSnapshot} annotations={aiAnnotations} candleType={candleType} />
             )}
 
-            {/* Full-screen toggle */}
-            <button
-              type="button"
-              onClick={toggleChartFullscreen}
-              className="absolute right-3 top-3 z-40 rounded-md border border-border bg-background/90 px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-muted-foreground hover:text-foreground backdrop-blur inline-flex items-center gap-1"
-              title={isChartFullscreen ? "Exit full screen" : "Full screen chart"}
-              aria-label={isChartFullscreen ? "Exit full screen" : "Full screen chart"}
-            >
-              {isChartFullscreen ? <Minimize className="h-3 w-3" /> : <Maximize className="h-3 w-3" />}
-              {isChartFullscreen ? "Exit" : "Expand"}
-            </button>
+            {/* Exit-fullscreen floater (only visible in fullscreen, top-left so it never covers TradingView's camera button) */}
+            {isChartFullscreen && (
+              <button
+                type="button"
+                onClick={toggleChartFullscreen}
+                className="absolute left-3 top-3 z-40 rounded-md border border-border bg-background/90 px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-muted-foreground hover:text-foreground backdrop-blur inline-flex items-center gap-1"
+                title="Exit full screen"
+                aria-label="Exit full screen"
+              >
+                <Minimize className="h-3 w-3" /> Exit
+              </button>
+            )}
 
             {chartTab === "live" && aiAnnotations.length > 0 && (
-              <div className="pointer-events-none absolute left-3 top-3 z-20 rounded-md border border-primary/40 bg-background/90 px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-primary backdrop-blur">
+              <div className="pointer-events-none absolute left-3 top-12 z-20 rounded-md border border-primary/40 bg-background/90 px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-primary backdrop-blur">
                 Native · AI annotations
               </div>
             )}
