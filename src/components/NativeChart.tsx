@@ -692,6 +692,29 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
           })}
         </div>
       )}
+      {/* Session VWAP / mean / regression lines */}
+      {sessions && bands.length > 0 && (
+        <svg className="pointer-events-none absolute inset-0 h-full w-full overflow-visible">
+          {bands.map((b) => {
+            const stroke = b.color.replace("0.10", "0.9");
+            const meanStroke = b.color.replace("0.10", "0.7");
+            const poly = b.vwap.length >= 2 ? b.vwap.map((p) => `${p.x},${p.y}`).join(" ") : "";
+            return (
+              <g key={`ln-${b.key}`}>
+                {poly && (
+                  <polyline points={poly} fill="none" stroke={stroke} strokeWidth={1.25} strokeDasharray="3 2" />
+                )}
+                {b.meanY != null && (
+                  <line x1={b.left} y1={b.meanY} x2={b.left + b.width} y2={b.meanY} stroke={meanStroke} strokeWidth={1} strokeDasharray="1 3" />
+                )}
+                {b.regX2 > b.regX1 && (
+                  <line x1={b.regX1} y1={b.regY1} x2={b.regX2} y2={b.regY2} stroke={stroke} strokeWidth={1.25} />
+                )}
+              </g>
+            );
+          })}
+        </svg>
+      )}
       {/* AI annotation zones (shaded) */}
       {annZones.length > 0 && (
         <div className="pointer-events-none absolute inset-x-0" style={{ top: 0, bottom: 0 }}>
