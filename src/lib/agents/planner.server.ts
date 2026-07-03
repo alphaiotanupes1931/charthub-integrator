@@ -8,17 +8,53 @@ import type { MarketSnapshot, ResearchMemo, TradePlan } from "./types";
 
 const MODEL = "google/gemini-3-flash-preview";
 
+// Permissive schema: accept strings that look like numbers/enums, then coerce.
+// Gemini via the OpenAI-compat gateway does not enforce strict json_schema, so
+// slight deviations (extra whitespace, "A+ setup", numbers-as-strings) would
+// otherwise trip NoObjectGeneratedError and collapse to the fallback plan.
 const PlanSchema = z.object({
-  grade: z.enum(["A+", "A", "B", "C", "NO ENTRY"]),
-  bias: z.enum(["Long", "Short", "Neutral"]),
-  confidence: z.number(),
-  entry: z.number(),
-  stop: z.number(),
-  tp1: z.number(),
-  tp2: z.number(),
+  grade: z.string(),
+  bias: z.string(),
+  confidence: z.coerce.number(),
+  entry: z.coerce.number(),
+  stop: z.coerce.number(),
+  tp1: z.coerce.number(),
+  tp2: z.coerce.number(),
   thesis: z.string(),
   invalidation: z.string(),
 });
+
+type RawPlan = z.infer<typeof PlanSchema>;
+
+const GRADES = ["A+", "A", "B", "C", "NO ENTRY"] as const;
+const BIASES = ["Long", "Short", "Neutral"] as const;
+
+function normalizeGrade(g: string): typeof GRADES[number] {
+  const up = g.toUpperCase().trim();
+  const hit = GRADES.find((x) => up.includes(x));
+  return hit ?? "NO ENTRY";
+}
+function normalizeBias(b: string): typeof BIASES[number] {
+  const low = b.toLowerCase();
+  if (low.startsWith("long") || low.includes("bull")) return "Long";
+  if (low.startsWith("short") || low.includes("bear")) return "Short";
+  return "Neutral";
+}
+
+function salvagePlanFromText(text: string | undefined): RawPlan | null {
+  if (!text) return null;
+  // Strip markdown code fences and try to isolate the JSON object.
+  const cleaned = text.replace(/```json/gi, "```").replace(/```/g, "").trim();
+  const start = cleaned.indexOf("{");
+  const end = cleaned.lastIndexOf("}");
+  if (start < 0 || end <= start) return null;
+  try {
+    const parsed = JSON.parse(cleaned.slice(start, end + 1));
+    return PlanSchema.parse(parsed);
+  } catch {
+    return null;
+  }
+}
 
 const CritiqueSchema = z.object({
   verdict: z.enum(["approve", "revise"]),
