@@ -1,6 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
 import { PageHeader } from "@/components/PageHeader";
-import { Brain, Activity, Plus, TrendingUp, TrendingDown, Sparkles } from "lucide-react";
+import { Brain, Activity, TrendingUp, TrendingDown, Sparkles, Trash2, Globe2, User2 } from "lucide-react";
+import { listMyLessons, forgetLesson } from "@/lib/agents/hermes.functions";
 
 export const Route = createFileRoute("/_app/memory")({
   head: () => ({ meta: [{ title: "Trading Memory, TradeMind" }] }),
@@ -13,7 +17,7 @@ function MemoryPage() {
       <PageHeader
         title="My Trading Memory"
         icon={<Brain className="h-9 w-9 text-primary" />}
-        description="The AI remembers every win, every loss, and every time it was right or wrong about a setup, so its next read of the chart is sharper than the last."
+        description="Hermes — the learning layer — remembers your thumbs-up/down on every scan and distills a short lesson from each. Those lessons are injected into future scans so the AI adapts to how you actually trade."
         action={
           <button className="flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
             <Activity className="h-4 w-4" /> Log Outcome
@@ -21,20 +25,7 @@ function MemoryPage() {
         }
       />
 
-      <div className="rounded-xl border border-border bg-card p-6 mb-6">
-        <h2 className="flex items-center gap-2 font-semibold mb-2">
-          <Brain className="h-4 w-4 text-primary" /> What the AI has learned about you
-        </h2>
-        <p className="text-xs text-muted-foreground mb-4">
-          Corrections you've given the AI in chat. Injected into every system prompt so the AI doesn't repeat the same mistake.
-        </p>
-        <p className="text-sm text-primary/80 italic mb-4">
-          No corrections yet. Tell the AI when it's wrong (e.g. "my broker is OANDA, not IC Markets") and TradeMind will remember.
-        </p>
-        <button className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm text-muted-foreground hover:text-foreground">
-          <Plus className="h-4 w-4" /> Add a correction manually
-        </button>
-      </div>
+      <HermesMemoryPanel />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <StatCard
@@ -68,6 +59,99 @@ function MemoryPage() {
           No AI calls scored yet. Log a trade outcome from the journal to start building the feedback loop.
         </p>
       </div>
+    </div>
+  );
+}
+
+function HermesMemoryPanel() {
+  const qc = useQueryClient();
+  const list = useServerFn(listMyLessons);
+  const forget = useServerFn(forgetLesson);
+
+  const { data: lessons = [], isLoading, error } = useQuery({
+    queryKey: ["hermes-lessons"],
+    queryFn: () => list(),
+  });
+
+  const del = useMutation({
+    mutationFn: (id: string) => forget({ data: { id } }),
+    onSuccess: () => {
+      toast.success("Forgotten. Hermes won't apply it again.");
+      qc.invalidateQueries({ queryKey: ["hermes-lessons"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Could not forget lesson."),
+  });
+
+  return (
+    <div className="rounded-xl border border-border bg-card p-6 mb-6">
+      <div className="flex items-start justify-between gap-4 mb-2">
+        <div>
+          <h2 className="flex items-center gap-2 font-semibold">
+            <Brain className="h-4 w-4 text-primary" /> Hermes memory
+          </h2>
+          <p className="text-xs text-muted-foreground mt-1 max-w-2xl">
+            Lessons distilled from your feedback. Higher weight = applied more strongly. Prune anything that's outdated or wrong — it's dropped from every future scan immediately.
+          </p>
+        </div>
+        <span className="shrink-0 rounded-md border border-border bg-background/60 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          {lessons.length} {lessons.length === 1 ? "lesson" : "lessons"}
+        </span>
+      </div>
+
+      {isLoading && (
+        <p className="text-sm text-muted-foreground italic mt-4">Loading Hermes memory…</p>
+      )}
+
+      {error && !isLoading && (
+        <p className="text-sm text-destructive mt-4">
+          Couldn't load lessons: {error instanceof Error ? error.message : "unknown error"}
+        </p>
+      )}
+
+      {!isLoading && !error && lessons.length === 0 && (
+        <p className="text-sm text-primary/80 italic mt-4">
+          No lessons yet. Thumbs-up or thumbs-down a scan on the dashboard and Hermes will start remembering what worked and what didn't.
+        </p>
+      )}
+
+      {!isLoading && lessons.length > 0 && (
+        <ul className="mt-4 divide-y divide-border/60">
+          {lessons.map((l) => (
+            <li key={l.id} className="flex items-start gap-3 py-3">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <span className="inline-flex items-center gap-1 rounded border border-border bg-background/60 px-1.5 py-0.5">
+                    {l.scope === "global" ? <Globe2 className="h-3 w-3" /> : <User2 className="h-3 w-3" />}
+                    {l.scope}
+                  </span>
+                  <span className="inline-flex items-center rounded border border-border bg-background/60 px-1.5 py-0.5 text-foreground/80">
+                    {l.topic}
+                  </span>
+                  <span className="inline-flex items-center rounded border border-primary/40 bg-primary/10 px-1.5 py-0.5 text-primary">
+                    weight {l.weight}
+                  </span>
+                  <span className="ml-auto text-muted-foreground/70">
+                    {new Date(l.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+                <p className="mt-1.5 text-sm text-foreground/90 leading-snug">{l.lesson}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirm("Forget this lesson? It won't be applied to future scans.")) del.mutate(l.id);
+                }}
+                disabled={del.isPending || l.scope === "global"}
+                className="shrink-0 inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-background/60 text-muted-foreground hover:text-destructive hover:border-destructive/60 disabled:opacity-40 disabled:hover:text-muted-foreground disabled:hover:border-border transition"
+                title={l.scope === "global" ? "Global lessons are curated and can't be pruned here" : "Forget this lesson"}
+                aria-label="Forget lesson"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
