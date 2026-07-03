@@ -8,7 +8,7 @@ export type Candle = { time: number; open: number; high: number; low: number; cl
 export type MarketSnapshot = {
   ticker: string;
   interval: string;
-  source: "yahoo" | "coingecko" | "unavailable";
+  source: "yahoo" | "coingecko" | "backup" | "unavailable";
   lastPrice: number;
   candles: Candle[];
   stats: {
