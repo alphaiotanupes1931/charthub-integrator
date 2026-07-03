@@ -246,6 +246,54 @@ export type Database = {
         }
         Relationships: []
       }
+      price_alerts: {
+        Row: {
+          active: boolean
+          auto_delete: boolean
+          created_at: string
+          id: string
+          last_checked_at: string | null
+          last_checked_price: number | null
+          note: string | null
+          price: number
+          side: string
+          symbol: string
+          triggered_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          auto_delete?: boolean
+          created_at?: string
+          id?: string
+          last_checked_at?: string | null
+          last_checked_price?: number | null
+          note?: string | null
+          price: number
+          side: string
+          symbol: string
+          triggered_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          auto_delete?: boolean
+          created_at?: string
+          id?: string
+          last_checked_at?: string | null
+          last_checked_price?: number | null
+          note?: string | null
+          price?: number
+          side?: string
+          symbol?: string
+          triggered_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           banned: boolean
