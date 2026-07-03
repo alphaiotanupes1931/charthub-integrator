@@ -162,17 +162,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           )}
           <button
-            onClick={toggle}
-            className="w-full flex items-center justify-between gap-2 rounded-md border border-border/60 px-2 py-1.5 text-sm text-foreground/80 hover:text-foreground hover:bg-accent/40"
-            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-          >
-            <span className="flex items-center gap-2">
-              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-              {theme === "dark" ? "Light mode" : "Dark mode"}
-            </span>
-            <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{theme}</span>
-          </button>
-          <button
             onClick={handleSignOut}
             className="w-full flex items-center gap-2 text-sm text-foreground/80 hover:text-foreground px-1"
           >
