@@ -11,7 +11,7 @@ import { ChartConceptOverlay } from "@/components/ConceptDiagram";
 import { ChartSignalCards } from "@/components/ChartSignalCards";
 import { TodaysRecommendation } from "@/components/TodaysRecommendation";
 import { SCAN_LENSES, readActiveLensId, writeActiveLensId, findLens, type ScanLensId } from "@/lib/scanLens";
-import { readActiveCoach } from "@/lib/chat-client";
+import { readActiveCoach, writeActiveCoach, COACH_KEY } from "@/lib/chat-client";
 import { voiceForCoach } from "@/lib/coachVoices";
 import { COACH_ICON_META, DEFAULT_COACH_ICON } from "@/lib/coachMeta";
 import { runResearchPlan } from "@/lib/agents/research.functions";
@@ -434,7 +434,20 @@ function Dashboard() {
   const [lensId, setLensId] = useState<ScanLensId>("wyckoff");
   const [lensOpen, setLensOpen] = useState(false);
   const [broker, setBroker] = useState<{ email: string; server: string; accountType: "demo" | "live" } | null>(null);
+  const [activeCoach, setActiveCoach] = useState<string>(() =>
+    typeof window === "undefined" ? "The Analyst" : readActiveCoach(),
+  );
   useEffect(() => { setLensId(readActiveLensId()); }, []);
+  useEffect(() => {
+    const sync = () => setActiveCoach(readActiveCoach());
+    const onStorage = (e: StorageEvent) => { if (e.key === COACH_KEY) sync(); };
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("focus", sync);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("focus", sync);
+    };
+  }, []);
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem("trademind.tradelocker.creds.v1");
@@ -640,23 +653,39 @@ function Dashboard() {
             )}
           </div>
 
-          <Link
-            to="/coaches"
-            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/50 px-2.5 py-1.5 text-xs font-medium hover:border-primary/50 transition"
-            title="Change active AI coach"
-          >
-            {(() => {
-              const meta = COACH_ICON_META[readActiveCoach()] ?? DEFAULT_COACH_ICON;
-              const Icon = meta.icon;
-              return (
+          {(() => {
+            const meta = COACH_ICON_META[activeCoach] ?? DEFAULT_COACH_ICON;
+            const Icon = meta.icon;
+            const coachNames = Object.keys(COACH_ICON_META);
+            return (
+              <div
+                className="relative inline-flex items-center gap-1.5 rounded-md border border-border bg-background/50 px-2.5 py-1.5 text-xs font-medium hover:border-primary/50 transition"
+                title="Change active AI coach"
+              >
                 <span className={`inline-flex h-5 w-5 items-center justify-center rounded-md ${meta.iconBg} ${meta.iconText} shrink-0`}>
                   <Icon className="h-3 w-3" />
                 </span>
-              );
-            })()}
-            <span>{readActiveCoach()}</span>
-            <ChevronDown className="h-3 w-3 text-muted-foreground" />
-          </Link>
+                <span className="pr-4">{activeCoach}</span>
+                <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                <select
+                  value={activeCoach}
+                  onChange={(e) => {
+                    const name = e.target.value;
+                    if (name === activeCoach) return;
+                    writeActiveCoach(name);
+                    setActiveCoach(name);
+                    toast.success(`${name} is now your coach`);
+                  }}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  aria-label="Change active AI coach"
+                >
+                  {coachNames.map((name) => (
+                    <option key={name} value={name}>{name}</option>
+                  ))}
+                </select>
+              </div>
+            );
+          })()}
         </div>
       </div>
 
