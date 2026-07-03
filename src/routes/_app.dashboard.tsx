@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { TradingViewChart } from "@/components/TradingViewChart";
 import { NativeChart, LEVEL_META, type LevelKey, type ChartSnapshot } from "@/components/NativeChart";
 import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Clock, MessageSquare, X, Plug, Maximize2, Square, Paperclip, ChevronUp, PanelRightClose, PanelRightOpen, BarChart3, ThumbsUp, ThumbsDown, Brain, LineChart, Settings2, Maximize, Minimize } from "lucide-react";
-import { NextScanBar } from "@/components/NextScanBar";
+
 import { useCoachVoice } from "@/hooks/useCoachVoice";
 import { DashboardChatPanel, type DashboardChatHandle } from "@/components/DashboardChatPanel";
 import { ChartConceptOverlay } from "@/components/ConceptDiagram";
@@ -20,7 +20,7 @@ import { listChatThreads, createChatThread, deleteChatThread } from "@/lib/chat.
 import type { ResearchMemo } from "@/lib/agents/types";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { PlatformStatusBanner } from "@/components/PlatformStatusBanner";
+import { DashboardStatusStrip } from "@/components/DashboardStatusStrip";
 
 type DashboardSearch = { ask?: string };
 
@@ -451,7 +451,9 @@ function Dashboard() {
   const [coachOpen, setCoachOpen] = useState(false);
   const [rightTab, setRightTab] = useState<"analysis" | "chat" | "history">("analysis");
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
-  const [rightOpen, setRightOpen] = useState(true);
+  const [rightOpen, setRightOpen] = useState(false);
+  const [viewMenuOpen, setViewMenuOpen] = useState(false);
+  const viewMenuRef = useRef<HTMLDivElement>(null);
   const [panelWidth, setPanelWidth] = useState<"narrow" | "default" | "wide">("narrow");
 
   const [chartTab, setChartTab] = useState<"live" | "setup">("live");
@@ -553,6 +555,7 @@ function Dashboard() {
       if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) setPickerOpen(false);
       if (levelsRef.current && !levelsRef.current.contains(e.target as Node)) setLevelsOpen(false);
       if (lensRef.current && !lensRef.current.contains(e.target as Node)) setLensOpen(false);
+      if (viewMenuRef.current && !viewMenuRef.current.contains(e.target as Node)) setViewMenuOpen(false);
     };
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
@@ -647,8 +650,7 @@ function Dashboard() {
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      <PlatformStatusBanner />
-      <NextScanBar />
+      <DashboardStatusStrip />
 
       {/* Row 1: symbol + timeframes + right-side pickers */}
       <div className="shrink-0 flex items-center gap-3 px-3 py-1.5 border-b border-border/60 bg-card/40">
@@ -785,134 +787,130 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Row 2: Live Chart / Setup View tabs + Indicators */}
-      <div className="shrink-0 flex flex-wrap items-center gap-x-4 gap-y-1 px-3 py-1.5 border-b border-border/60 bg-card/30 text-xs">
-
+      {/* Row 2: Live / Setup tabs + compact View menu */}
+      <div className="shrink-0 flex items-center gap-3 px-3 py-1 border-b border-border/60 bg-card/30 text-xs">
         <button
           onClick={() => setChartTab("live")}
-          className={`inline-flex items-center gap-1.5 py-1.5 border-b-2 transition ${
+          className={`inline-flex items-center gap-1.5 py-1 border-b-2 transition ${
             chartTab === "live" ? "border-primary text-primary font-semibold" : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
-          <Activity className="h-3.5 w-3.5" /> Live Chart
+          <Activity className="h-3.5 w-3.5" /> Live
         </button>
         <button
           onClick={() => setChartTab("setup")}
-          className={`inline-flex items-center gap-1.5 py-1.5 border-b-2 transition ${
+          className={`inline-flex items-center gap-1.5 py-1 border-b-2 transition ${
             chartTab === "setup" ? "border-primary text-primary font-semibold" : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
-          <Crosshair className="h-3.5 w-3.5" /> Setup View
+          <Crosshair className="h-3.5 w-3.5" /> Setup
         </button>
 
         <div className="flex-1" />
 
-        {/* Candle / Heikin-Ashi toggle (Setup View only) */}
-        <div className="inline-flex items-center rounded-md border border-border bg-background/50 p-0.5" title={chartTab === "setup" ? "Candle style" : "Available in Setup View"}>
+        {/* Single "View" popover holding candle style, sessions, and indicators */}
+        <div className="relative" ref={viewMenuRef}>
           <button
-            onClick={() => {
-              if (chartTab !== "setup") {
-                toast.info("Candle style only works in Setup View", { description: "Switch to Setup View to change candle rendering." });
-                return;
-              }
-              setCandleType("candle");
-            }}
-            className={`px-2 py-0.5 rounded text-[11px] font-medium transition ${
-              candleType === "candle" && chartTab === "setup"
-                ? "bg-primary/15 text-primary"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
+            onClick={() => setViewMenuOpen((o) => !o)}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/50 px-2 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground hover:border-primary/40 transition"
+            title="Chart view options"
           >
-            Candle
+            <Settings2 className="h-3 w-3" />
+            <span>View</span>
+            {chartTab === "setup" && enabledCount > 0 && (
+              <span className="text-primary">· {enabledCount}</span>
+            )}
+            <ChevronDown className={`h-3 w-3 transition-transform ${viewMenuOpen ? "rotate-180" : ""}`} />
           </button>
-          <button
-            onClick={() => {
-              if (chartTab !== "setup") {
-                toast.info("Heikin-Ashi only works in Setup View", { description: "Switch to Setup View to change candle rendering." });
-                return;
-              }
-              setCandleType("ha");
-            }}
-            className={`px-2 py-0.5 rounded text-[11px] font-medium transition ${
-              candleType === "ha" && chartTab === "setup"
-                ? "bg-primary/15 text-primary"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            HA
-          </button>
-        </div>
+          {viewMenuOpen && (
+            <div className="absolute right-0 mt-2 w-72 rounded-lg border border-border bg-card shadow-xl z-50 p-3 space-y-3">
+              {chartTab !== "setup" && (
+                <div className="text-[10px] text-muted-foreground italic border-b border-border/40 pb-2">
+                  Switch to Setup for candle style, sessions, and indicators.
+                </div>
+              )}
 
-
-        <button
-          onClick={() => {
-            if (chartTab !== "setup") {
-              toast.info("Sessions only work in Setup View", { description: "Switch to Setup View to overlay session boxes." });
-              return;
-            }
-            setSessionsOn((v) => !v);
-          }}
-          className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium transition ${
-            sessionsOn && chartTab === "setup"
-              ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
-              : "border-border bg-background/50 text-muted-foreground hover:text-foreground"
-          }`}
-          title={chartTab === "setup" ? "Toggle session boxes" : "Available in Setup View"}
-        >
-          <Clock className="h-3 w-3" /> Sessions
-        </button>
-
-        <div className="relative" ref={levelsRef}>
-          <button
-            onClick={() => {
-              if (chartTab !== "setup") {
-                toast.info("Indicators only work in Setup View", { description: "Switch to Setup View to enable overlay indicators." });
-                return;
-              }
-              setLevelsOpen((o) => !o);
-            }}
-            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/50 px-2 py-1 text-xs font-medium hover:border-primary/50 transition"
-            title={chartTab === "setup" ? "Overlay indicators" : "Available in Setup View"}
-          >
-            <Settings2 className="h-3 w-3" /> Indicators <span className="text-muted-foreground">({enabledCount})</span>
-            <ChevronDown className={`h-3 w-3 transition-transform ${levelsOpen ? "rotate-180" : ""}`} />
-          </button>
-          {levelsOpen && (
-            <div className="absolute right-0 mt-2 w-64 rounded-lg border border-border bg-card shadow-xl z-50 p-2.5">
-              <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-2 px-1">
-                Overlay indicators
+              {/* Candle style */}
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-medium text-foreground/80">Candle</span>
+                <div className="inline-flex items-center rounded-md border border-border bg-background/50 p-0.5">
+                  <button
+                    disabled={chartTab !== "setup"}
+                    onClick={() => setCandleType("candle")}
+                    className={`px-2 py-0.5 rounded text-[11px] font-medium transition disabled:opacity-40 ${
+                      candleType === "candle" && chartTab === "setup" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Candle
+                  </button>
+                  <button
+                    disabled={chartTab !== "setup"}
+                    onClick={() => setCandleType("ha")}
+                    className={`px-2 py-0.5 rounded text-[11px] font-medium transition disabled:opacity-40 ${
+                      candleType === "ha" && chartTab === "setup" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    HA
+                  </button>
+                </div>
               </div>
-              <div className="grid grid-cols-3 gap-1.5">
-                {ALL_LEVELS.map((k) => {
-                  const on = levels[k];
-                  const meta = LEVEL_META[k];
-                  return (
-                    <button
-                      key={k}
-                      onClick={() => toggleLevel(k)}
-                      className={`rounded-md border px-2 py-1.5 text-xs font-medium transition ${
-                        on ? meta.tone : "border-border text-muted-foreground hover:text-foreground"
-                      }`}
-                      style={on ? { boxShadow: `inset 0 0 0 1px ${meta.color}40` } : undefined}
-                    >
-                      {meta.label}
-                    </button>
-                  );
-                })}
+
+              {/* Sessions */}
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-medium text-foreground/80 inline-flex items-center gap-1.5">
+                  <Clock className="h-3 w-3" /> Sessions
+                </span>
+                <button
+                  disabled={chartTab !== "setup"}
+                  onClick={() => setSessionsOn((v) => !v)}
+                  className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-medium transition disabled:opacity-40 ${
+                    sessionsOn && chartTab === "setup"
+                      ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
+                      : "border-border bg-background/50 text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {sessionsOn ? "On" : "Off"}
+                </button>
               </div>
-              <div className="mt-3 pt-3 border-t border-border/60 flex items-center justify-between text-[11px]">
-                <button
-                  onClick={() => setLevels(Object.fromEntries(ALL_LEVELS.map((k) => [k, true])) as Record<LevelKey, boolean>)}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  All on
-                </button>
-                <button
-                  onClick={() => setLevels(Object.fromEntries(ALL_LEVELS.map((k) => [k, false])) as Record<LevelKey, boolean>)}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  All off
-                </button>
+
+              {/* Indicators */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[11px] font-medium text-foreground/80">Indicators</span>
+                  <span className="text-[10px] text-muted-foreground">{enabledCount} / {ALL_LEVELS.length}</span>
+                </div>
+                <div className={`grid grid-cols-3 gap-1.5 ${chartTab !== "setup" ? "opacity-40 pointer-events-none" : ""}`}>
+                  {ALL_LEVELS.map((k) => {
+                    const on = levels[k];
+                    const meta = LEVEL_META[k];
+                    return (
+                      <button
+                        key={k}
+                        onClick={() => toggleLevel(k)}
+                        className={`rounded-md border px-1.5 py-1 text-[11px] font-medium transition ${
+                          on ? meta.tone : "border-border text-muted-foreground hover:text-foreground"
+                        }`}
+                        style={on ? { boxShadow: `inset 0 0 0 1px ${meta.color}40` } : undefined}
+                      >
+                        {meta.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className={`mt-2 pt-2 border-t border-border/60 flex items-center justify-between text-[10px] ${chartTab !== "setup" ? "opacity-40 pointer-events-none" : ""}`}>
+                  <button
+                    onClick={() => setLevels(Object.fromEntries(ALL_LEVELS.map((k) => [k, true])) as Record<LevelKey, boolean>)}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    All on
+                  </button>
+                  <button
+                    onClick={() => setLevels(Object.fromEntries(ALL_LEVELS.map((k) => [k, false])) as Record<LevelKey, boolean>)}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    All off
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -920,12 +918,14 @@ function Dashboard() {
 
         <button
           onClick={() => setRightOpen((v) => !v)}
-          className="hidden lg:inline-flex items-center gap-1.5 rounded-md border border-border bg-background/50 px-2 py-1 text-xs font-medium hover:border-primary/50 transition"
-          title={rightOpen ? "Hide side panel" : "Show side panel"}
+          className="hidden lg:inline-flex items-center gap-1.5 rounded-md border border-border bg-background/50 px-2 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground hover:border-primary/40 transition"
+          title={rightOpen ? "Hide side panel" : "Show AI panel"}
         >
           {rightOpen ? <PanelRightClose className="h-3 w-3" /> : <PanelRightOpen className="h-3 w-3" />}
+          <span>AI</span>
         </button>
       </div>
+
 
 
       {/* Mobile-only view switcher: Chart / Scan / Chat are mutually exclusive on small screens
