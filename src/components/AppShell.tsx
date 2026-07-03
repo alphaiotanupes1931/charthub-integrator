@@ -25,6 +25,7 @@ import {
   X,
   Sun,
   Moon,
+  Radar,
 } from "lucide-react";
 import { LogoLink } from "@/components/LogoLink";
 import { Tutorial } from "@/components/Tutorial";
