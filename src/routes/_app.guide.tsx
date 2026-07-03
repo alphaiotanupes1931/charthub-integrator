@@ -334,8 +334,9 @@ function GuidePage() {
           <button
             onClick={scrollToTop}
             className="mt-2 w-full text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground py-2 border-t border-border/60"
+            aria-label="Back to top"
           >
-            ↑ Back to top
+            ↑
           </button>
         </aside>
 
@@ -400,9 +401,10 @@ function GuidePage() {
             </div>
             <button
               onClick={scrollToTop}
+              aria-label="Back to top"
               className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:border-primary/50 hover:text-foreground"
             >
-              <ArrowUp className="h-3.5 w-3.5" /> Back to top
+              <ArrowUp className="h-3.5 w-3.5" />
             </button>
           </div>
         </main>
