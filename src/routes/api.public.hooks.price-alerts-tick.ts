@@ -79,7 +79,7 @@ export const Route = createFileRoute("/api/public/hooks/price-alerts-tick")({
           // Fire notification.
           try {
             await createNotification({
-              user_id: row.user_id,
+              userId: row.user_id,
               kind: "price",
               title: `${row.symbol} ${row.side === "above" ? "≥" : "≤"} ${row.price}`,
               body: `Price hit ${p.toFixed(5)}${row.note ? ` — ${row.note}` : ""}`,
