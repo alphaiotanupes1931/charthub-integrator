@@ -378,6 +378,7 @@ async function fetchBestAvailable(ticker: string, interval: string): Promise<Cac
   const oandaSymbol = coin ? null : tickerToOanda(ticker);
   const tdSymbol = coin ? null : tickerToTwelveData(ticker);
   const yahooSymbol = tickerToYahoo(ticker);
+  const stooqSymbol = tickerToStooq(ticker);
   const attempts: Array<() => Promise<CacheEntry>> = [];
 
   if (coin) {
@@ -391,6 +392,10 @@ async function fetchBestAvailable(ticker: string, interval: string): Promise<Cac
   }
   if (yahooSymbol) {
     attempts.push(async () => ({ at: Date.now(), bars: await fetchYahoo(yahooSymbol, interval), source: "yahoo" }));
+  }
+  if (stooqSymbol) {
+    // Daily-only, but ensures a chart always renders when live intraday feeds fail.
+    attempts.push(async () => ({ at: Date.now(), bars: await fetchStooq(stooqSymbol), source: "stooq" }));
   }
 
   let lastError: unknown;
