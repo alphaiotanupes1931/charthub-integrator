@@ -421,7 +421,3 @@ function GuidePage() {
     </div>
   );
 }
-
-    </div>
-  );
-}
