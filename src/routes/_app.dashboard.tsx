@@ -999,7 +999,7 @@ function Dashboard() {
 
             {chartTab === "live" && aiAnnotations.length > 0 && (
               <div className="pointer-events-none absolute left-3 top-12 z-20 rounded-md border border-primary/40 bg-background/90 px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-primary backdrop-blur">
-                Native · AI annotations
+                Native · Chat annotations
               </div>
             )}
             {aiConcept && (
