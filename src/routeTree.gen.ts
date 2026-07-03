@@ -30,6 +30,7 @@ import { Route as ApiHealthRouteImport } from './routes/api.health'
 import { Route as ApiChatRouteImport } from './routes/api.chat'
 import { Route as AppVoiceCoachRouteImport } from './routes/_app.voice-coach'
 import { Route as AppStrategiesRouteImport } from './routes/_app.strategies'
+import { Route as AppSignalsRouteImport } from './routes/_app.signals'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppScanLensRouteImport } from './routes/_app.scan-lens'
 import { Route as AppMentorRouteImport } from './routes/_app.mentor'
@@ -155,6 +156,11 @@ const AppVoiceCoachRoute = AppVoiceCoachRouteImport.update({
 const AppStrategiesRoute = AppStrategiesRouteImport.update({
   id: '/strategies',
   path: '/strategies',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSignalsRoute = AppSignalsRouteImport.update({
+  id: '/signals',
+  path: '/signals',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
@@ -296,6 +302,7 @@ export interface FileRoutesByFullPath {
   '/mentor': typeof AppMentorRoute
   '/scan-lens': typeof AppScanLensRoute
   '/settings': typeof AppSettingsRoute
+  '/signals': typeof AppSignalsRoute
   '/strategies': typeof AppStrategiesRouteWithChildren
   '/voice-coach': typeof AppVoiceCoachRoute
   '/api/chat': typeof ApiChatRoute
@@ -339,6 +346,7 @@ export interface FileRoutesByTo {
   '/mentor': typeof AppMentorRoute
   '/scan-lens': typeof AppScanLensRoute
   '/settings': typeof AppSettingsRoute
+  '/signals': typeof AppSignalsRoute
   '/strategies': typeof AppStrategiesRouteWithChildren
   '/voice-coach': typeof AppVoiceCoachRoute
   '/api/chat': typeof ApiChatRoute
@@ -385,6 +393,7 @@ export interface FileRoutesById {
   '/_app/mentor': typeof AppMentorRoute
   '/_app/scan-lens': typeof AppScanLensRoute
   '/_app/settings': typeof AppSettingsRoute
+  '/_app/signals': typeof AppSignalsRoute
   '/_app/strategies': typeof AppStrategiesRouteWithChildren
   '/_app/voice-coach': typeof AppVoiceCoachRoute
   '/api/chat': typeof ApiChatRoute
@@ -431,6 +440,7 @@ export interface FileRouteTypes {
     | '/mentor'
     | '/scan-lens'
     | '/settings'
+    | '/signals'
     | '/strategies'
     | '/voice-coach'
     | '/api/chat'
@@ -474,6 +484,7 @@ export interface FileRouteTypes {
     | '/mentor'
     | '/scan-lens'
     | '/settings'
+    | '/signals'
     | '/strategies'
     | '/voice-coach'
     | '/api/chat'
@@ -519,6 +530,7 @@ export interface FileRouteTypes {
     | '/_app/mentor'
     | '/_app/scan-lens'
     | '/_app/settings'
+    | '/_app/signals'
     | '/_app/strategies'
     | '/_app/voice-coach'
     | '/api/chat'
@@ -708,6 +720,13 @@ declare module '@tanstack/react-router' {
       path: '/strategies'
       fullPath: '/strategies'
       preLoaderRoute: typeof AppStrategiesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/signals': {
+      id: '/_app/signals'
+      path: '/signals'
+      fullPath: '/signals'
+      preLoaderRoute: typeof AppSignalsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/settings': {
@@ -920,6 +939,7 @@ interface AppRouteChildren {
   AppMentorRoute: typeof AppMentorRoute
   AppScanLensRoute: typeof AppScanLensRoute
   AppSettingsRoute: typeof AppSettingsRoute
+  AppSignalsRoute: typeof AppSignalsRoute
   AppStrategiesRoute: typeof AppStrategiesRouteWithChildren
   AppVoiceCoachRoute: typeof AppVoiceCoachRoute
 }
@@ -940,6 +960,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppMentorRoute: AppMentorRoute,
   AppScanLensRoute: AppScanLensRoute,
   AppSettingsRoute: AppSettingsRoute,
+  AppSignalsRoute: AppSignalsRoute,
   AppStrategiesRoute: AppStrategiesRouteWithChildren,
   AppVoiceCoachRoute: AppVoiceCoachRoute,
 }
