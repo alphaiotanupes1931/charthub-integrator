@@ -11,7 +11,7 @@ export interface NotificationRow {
   title: string;
   body: string | null;
   url: string | null;
-  meta: Record<string, unknown>;
+  meta: Record<string, string | number | boolean | null>;
   read_at: string | null;
   created_at: string;
 }
