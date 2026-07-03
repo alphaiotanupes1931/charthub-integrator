@@ -45,7 +45,6 @@ function AdminPage() {
   };
 
   useEffect(() => {
-    if (!isAdmin) return;
     (async () => {
       const [{ data: s, error: e1 }, { data: u, error: e2 }] = await Promise.all([
         supabase.rpc("admin_referral_stats"),
@@ -55,7 +54,8 @@ function AdminPage() {
       setStats((s ?? []) as ReferralRow[]);
       setUsers((u ?? []) as UserRow[]);
     })();
-  }, [isAdmin]);
+  }, []);
+
 
   if (profileLoading) {
     return (
