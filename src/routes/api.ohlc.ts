@@ -279,7 +279,9 @@ function yahooInterval(interval: string): { interval: string; range: string } {
 
 async function fetchYahooHost(host: string, symbol: string, interval: string): Promise<OhlcBar[]> {
   const iv = yahooInterval(interval);
-  const url = `https://${host}/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${iv.interval}&range=${iv.range}&includePrePost=true`;
+  // Yahoo symbols (e.g. "SI=F", "EURUSD=X") must keep their literal "=" and "^" —
+  // encodeURIComponent would turn "SI=F" into "SI%3DF" which Yahoo rejects.
+  const url = `https://${host}/v8/finance/chart/${symbol}?interval=${iv.interval}&range=${iv.range}&includePrePost=true`;
   const json = await fetchJsonWithTimeout<{
     chart?: {
       error?: { description?: string } | null;
