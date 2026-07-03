@@ -311,7 +311,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
   const annLinesRef = useRef<IPriceLine[]>([]);
   const [ready, setReady] = useState(false);
   // Session band positions {key,color,label,left,width} in pixels for the overlay
-  const [bands, setBands] = useState<Array<{ key: string; color: string; label: string; left: number; width: number; top: number; height: number; high: number; low: number; idx: number }>>([]);
+  const [bands, setBands] = useState<Array<{ key: string; color: string; label: string; left: number; width: number; top: number; height: number; high: number; low: number; idx: number; vwap: Array<{ x: number; y: number }>; meanY: number | null; regX1: number; regY1: number; regX2: number; regY2: number }>>([]);
   // AI annotation zones projected into pixel coords for a shaded overlay
   const [annZones, setAnnZones] = useState<Array<{ key: string; top: number; height: number; color: string; label?: string }>>([]);
 
