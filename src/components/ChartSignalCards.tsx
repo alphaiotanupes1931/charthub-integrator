@@ -24,17 +24,15 @@ function pct(from?: number, to?: number) {
 export function ChartSignalCards({ grade, lastPrice, onClear, scanning }: Props) {
   const [expanded, setExpanded] = useState(true);
 
-  // Empty state — compact status strip above the chart
+  // Empty state — render nothing when idle so the chart can fill the whole area.
+  // While actively scanning, show a very thin one-line status so the user gets
+  // feedback without eating chart height.
   if (!grade) {
+    if (!scanning) return null;
     return (
-      <div className="shrink-0 flex items-center justify-between gap-3 px-3 py-1.5 border-b border-border/60 bg-card/40">
-        <div className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          <Clock className="h-3 w-3" />
-          {scanning ? "Scanning setup…" : "Waiting for signal"}
-        </div>
-        <span className="text-[10px] text-muted-foreground/70">
-          Run a scan to preview grade, entry, stop and targets here.
-        </span>
+      <div className="shrink-0 flex items-center gap-2 px-3 py-1 border-b border-border/60 bg-card/40 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
+        <Clock className="h-3 w-3 animate-pulse" />
+        Scanning setup…
       </div>
     );
   }
