@@ -48,7 +48,7 @@ export function NextScanBar() {
     <div className="shrink-0 flex items-center gap-2 px-4 py-1.5 bg-background/40 text-[11px]">
       <Crosshair className="h-3 w-3 text-primary shrink-0" />
       <div className="flex-1 min-w-0 truncate text-muted-foreground">
-        Next scan <span className="text-primary font-semibold">{next.label}</span>{" "}
+        Next session <span className="text-primary font-semibold">{next.label}</span>{" "}
         <span className="text-foreground/80">in {formatDiff(next.diffMs)}</span>
       </div>
       <button
