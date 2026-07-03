@@ -451,7 +451,9 @@ function Dashboard() {
   const [coachOpen, setCoachOpen] = useState(false);
   const [rightTab, setRightTab] = useState<"analysis" | "chat" | "history">("analysis");
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
-  const [rightOpen, setRightOpen] = useState(true);
+  const [rightOpen, setRightOpen] = useState(false);
+  const [viewMenuOpen, setViewMenuOpen] = useState(false);
+  const viewMenuRef = useRef<HTMLDivElement>(null);
   const [panelWidth, setPanelWidth] = useState<"narrow" | "default" | "wide">("narrow");
 
   const [chartTab, setChartTab] = useState<"live" | "setup">("live");
