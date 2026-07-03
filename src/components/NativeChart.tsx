@@ -267,7 +267,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     staleTime: 30_000,
     refetchInterval: 30_000,
     refetchOnWindowFocus: false,
-    retry: 1,
+    retry: 2,
   });
 
   const hasLive = !!liveOhlc && !!liveOhlc.source && liveOhlc.bars.length > 0;
