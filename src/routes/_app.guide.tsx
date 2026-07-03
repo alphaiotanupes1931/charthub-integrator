@@ -191,6 +191,9 @@ const SECTIONS: Section[] = [
 function GuidePage() {
   const [query, setQuery] = useState("");
   const [active, setActive] = useState<string>(SECTIONS[0].id);
+  const [activeGroup, setActiveGroup] = useState<string>(SECTIONS[0].group);
+  const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
+  const [showTop, setShowTop] = useState(false);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -209,6 +212,25 @@ function GuidePage() {
     return Array.from(map.entries());
   }, [filtered]);
 
+  const allGroups = useMemo(() => {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const s of SECTIONS) if (!seen.has(s.group)) { seen.add(s.group); out.push(s.group); }
+    return out;
+  }, []);
+
+  const visibleGroups = query.trim()
+    ? groups
+    : groups.filter(([g]) => g === activeGroup);
+
+  // When searching, auto-expand matching items so answers are visible.
+  useEffect(() => {
+    if (!query.trim()) return;
+    const next: Record<string, boolean> = {};
+    for (const s of filtered) for (const i of s.items) next[`${s.id}::${i.q}`] = true;
+    setOpenItems(next);
+  }, [query, filtered]);
+
   useEffect(() => {
     const onScroll = () => {
       let current = SECTIONS[0].id;
@@ -217,10 +239,24 @@ function GuidePage() {
         if (el && el.getBoundingClientRect().top < 120) current = s.id;
       }
       setActive(current);
+      setShowTop(window.scrollY > 400);
     };
     window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  const toggleItem = (key: string) =>
+    setOpenItems((p) => ({ ...p, [key]: !p[key] }));
+
+  const expandAll = (section: Section) => {
+    const next = { ...openItems };
+    const allOpen = section.items.every((i) => next[`${section.id}::${i.q}`]);
+    for (const i of section.items) next[`${section.id}::${i.q}`] = !allOpen;
+    setOpenItems(next);
+  };
+
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   return (
     <div className="p-4 md:p-8 max-w-[1200px] mx-auto">
@@ -238,10 +274,42 @@ function GuidePage() {
         }
       />
 
+      {/* Search — sticky so it's always reachable */}
+      <div className="sticky top-0 z-20 -mx-4 md:-mx-8 px-4 md:px-8 py-3 bg-background/85 backdrop-blur border-b border-border/60 mb-4">
+        <div className="relative max-w-[1136px] mx-auto">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search the docs…"
+            className="w-full rounded-lg border border-border bg-card/70 pl-9 pr-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+          />
+        </div>
+      </div>
+
+      {/* Group tabs — visible on all breakpoints; drives desktop content filter too */}
+      {!query.trim() && (
+        <div className="flex flex-wrap gap-1.5 mb-6 pb-1">
+          {allGroups.map((g) => (
+            <button
+              key={g}
+              onClick={() => { setActiveGroup(g); scrollToTop(); }}
+              className={`text-xs font-medium rounded-full px-3 py-1.5 border transition ${
+                activeGroup === g
+                  ? "bg-primary/15 border-primary/50 text-primary"
+                  : "bg-card/40 border-border text-muted-foreground hover:text-foreground hover:border-border/80"
+              }`}
+            >
+              {g}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-8">
         {/* Sidebar TOC */}
-        <aside className="hidden md:block sticky top-6 self-start max-h-[calc(100vh-3rem)] overflow-y-auto pr-2">
-          {groups.map(([group, sections]) => (
+        <aside className="hidden md:block sticky top-20 self-start max-h-[calc(100vh-6rem)] overflow-y-auto pr-2">
+          {(query.trim() ? groups : groups.filter(([g]) => g === activeGroup)).map(([group, sections]) => (
             <div key={group} className="mb-5">
               <div className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-2">{group}</div>
               <ul className="space-y-1">
@@ -249,63 +317,111 @@ function GuidePage() {
                   <li key={s.id}>
                     <a
                       href={`#${s.id}`}
-                      className={`block text-sm rounded-md px-2 py-1 transition-colors ${
+                      className={`flex items-center justify-between gap-2 text-sm rounded-md px-2 py-1 transition-colors ${
                         active === s.id
                           ? "bg-primary/10 text-primary font-medium"
                           : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
                       }`}
                     >
-                      {s.title}
+                      <span className="truncate">{s.title}</span>
+                      <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground/70">{s.items.length}</span>
                     </a>
                   </li>
                 ))}
               </ul>
             </div>
           ))}
+          <button
+            onClick={scrollToTop}
+            className="mt-2 w-full text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground py-2 border-t border-border/60"
+          >
+            ↑ Back to top
+          </button>
         </aside>
 
         {/* Main content */}
         <main className="min-w-0">
-          <div className="relative mb-8">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search the docs…"
-              className="w-full rounded-lg border border-border bg-card/50 pl-9 pr-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/40"
-            />
-          </div>
-
           {filtered.length === 0 && (
             <div className="text-sm text-muted-foreground border border-dashed border-border rounded-lg p-6 text-center">
               No results for "{query}".
             </div>
           )}
 
-          {filtered.map((section) => (
-            <section key={section.id} id={section.id} className="mb-12 scroll-mt-24">
-              <h2 className="text-2xl font-semibold mb-1">{section.title}</h2>
-              {section.blurb && <p className="text-sm text-muted-foreground mb-5">{section.blurb}</p>}
-              <div className="rounded-xl border border-border bg-card divide-y divide-border">
-                {section.items.map((item) => (
-                  <div key={item.q} className="p-5">
-                    <h3 className="font-semibold mb-1.5">{item.q}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{item.a}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-          ))}
+          {visibleGroups.flatMap(([, sections]) => sections).map((section) => {
+            const allOpen = section.items.every((i) => openItems[`${section.id}::${i.q}`]);
+            return (
+              <section key={section.id} id={section.id} className="mb-10 scroll-mt-24">
+                <div className="flex items-start justify-between gap-3 mb-1">
+                  <h2 className="text-xl md:text-2xl font-semibold">{section.title}</h2>
+                  <button
+                    onClick={() => expandAll(section)}
+                    className="shrink-0 text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground border border-border rounded-md px-2 py-1"
+                  >
+                    {allOpen ? "Collapse all" : "Expand all"}
+                  </button>
+                </div>
+                {section.blurb && <p className="text-sm text-muted-foreground mb-4">{section.blurb}</p>}
+                <div className="rounded-xl border border-border bg-card divide-y divide-border overflow-hidden">
+                  {section.items.map((item) => {
+                    const key = `${section.id}::${item.q}`;
+                    const open = !!openItems[key];
+                    return (
+                      <div key={item.q}>
+                        <button
+                          onClick={() => toggleItem(key)}
+                          className="w-full flex items-center justify-between gap-3 text-left px-4 py-3.5 hover:bg-muted/30 transition"
+                          aria-expanded={open}
+                        >
+                          <span className="font-medium text-sm">{item.q}</span>
+                          <ChevronDown
+                            className={`h-4 w-4 text-muted-foreground shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
+                          />
+                        </button>
+                        {open && (
+                          <div className="px-4 pb-4 -mt-1">
+                            <p className="text-sm text-muted-foreground leading-relaxed">{item.a}</p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })}
 
-          <div className="border-t border-border pt-6 mt-8 text-sm text-muted-foreground">
-            Need help? Email{" "}
-            <a href="mailto:support@trademindaicoach.com" className="text-primary hover:underline">
-              support@trademindaicoach.com
-            </a>
-            . This is also how everything should work as well.
+          <div className="border-t border-border pt-6 mt-8 flex items-center justify-between gap-4 flex-wrap text-sm text-muted-foreground">
+            <div>
+              Need help? Email{" "}
+              <a href="mailto:support@trademindaicoach.com" className="text-primary hover:underline">
+                support@trademindaicoach.com
+              </a>
+              .
+            </div>
+            <button
+              onClick={scrollToTop}
+              className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:border-primary/50 hover:text-foreground"
+            >
+              <ArrowUp className="h-3.5 w-3.5" /> Back to top
+            </button>
           </div>
         </main>
       </div>
+
+      {/* Floating back-to-top */}
+      {showTop && (
+        <button
+          onClick={scrollToTop}
+          aria-label="Back to top"
+          className="fixed bottom-6 right-6 z-30 inline-flex h-11 w-11 items-center justify-center rounded-full border border-primary/40 bg-primary/15 text-primary shadow-lg backdrop-blur hover:bg-primary/25 transition"
+        >
+          <ArrowUp className="h-5 w-5" />
+        </button>
+      )}
+    </div>
+  );
+}
+
     </div>
   );
 }
