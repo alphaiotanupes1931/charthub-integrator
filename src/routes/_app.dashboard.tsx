@@ -936,6 +936,19 @@ function Dashboard() {
         </div>
 
         <button
+          onClick={scanning ? () => { chatRef.current?.stop(); voice.stop(); setScanning(false); } : runScan}
+          className={`hidden lg:inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-semibold transition ${
+            scanning
+              ? "border border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/15"
+              : "bg-primary text-primary-foreground hover:opacity-90"
+          }`}
+          title={scanning ? "Stop scan" : "Run scan on this chart"}
+        >
+          {scanning ? <Square className="h-3 w-3" /> : <Crosshair className="h-3 w-3" />}
+          <span>{scanning ? "Stop Scan" : "Run Scan"}</span>
+        </button>
+
+        <button
           onClick={() => setRightOpen((v) => !v)}
           className="hidden lg:inline-flex items-center gap-1.5 rounded-md border border-border bg-background/50 px-3 py-1 text-xs font-semibold text-foreground hover:border-primary/40 transition"
           title={rightOpen ? "Hide chat panel" : "Open chat panel"}
