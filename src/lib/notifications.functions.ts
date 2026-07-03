@@ -29,7 +29,10 @@ export const listMyNotifications = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .limit(100);
     if (error) throw new Error(error.message);
-    const rows = (data ?? []) as NotificationRow[];
+    const rows = ((data ?? []) as unknown as NotificationRow[]).map((r) => ({
+      ...r,
+      meta: (r.meta ?? {}) as NotificationRow["meta"],
+    }));
     const unread = rows.filter((r) => !r.read_at).length;
     return { rows, unread };
   });
