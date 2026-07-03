@@ -1251,6 +1251,22 @@ function Dashboard() {
           </div>
         )}
       </div>
+
+      {/* Always-visible entry point to Chat & Analysis. Older users can miss the
+          Chat tab in the side panel, so this large labeled button opens the chat
+          from anywhere on the dashboard. */}
+      <button
+        onClick={() => {
+          setRightOpen(true);
+          setRightTab("chat");
+          setMobileView("chat");
+        }}
+        aria-label="Open chat and analysis"
+        className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-40 inline-flex items-center gap-2.5 rounded-full bg-primary px-5 py-3.5 text-sm font-semibold text-primary-foreground shadow-xl shadow-primary/30 ring-1 ring-primary/50 hover:scale-[1.03] active:scale-95 transition"
+      >
+        <MessageSquare className="h-5 w-5" />
+        <span>Ask a question</span>
+      </button>
     </div>
   );
 }
