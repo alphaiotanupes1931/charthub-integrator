@@ -11,7 +11,7 @@ import { ChartConceptOverlay } from "@/components/ConceptDiagram";
 import { ChartSignalCards } from "@/components/ChartSignalCards";
 import { TodaysRecommendation } from "@/components/TodaysRecommendation";
 import { SCAN_LENSES, readActiveLensId, writeActiveLensId, findLens, type ScanLensId } from "@/lib/scanLens";
-import { readActiveCoach } from "@/lib/chat-client";
+import { readActiveCoach, writeActiveCoach, COACH_KEY } from "@/lib/chat-client";
 import { voiceForCoach } from "@/lib/coachVoices";
 import { COACH_ICON_META, DEFAULT_COACH_ICON } from "@/lib/coachMeta";
 import { runResearchPlan } from "@/lib/agents/research.functions";
