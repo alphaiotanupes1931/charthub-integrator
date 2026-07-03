@@ -627,7 +627,7 @@ function Dashboard() {
       <NextScanBar />
 
       {/* Row 1: symbol + timeframes + right-side pickers */}
-      <div className="shrink-0 flex items-center gap-3 px-4 py-2.5 border-b border-border/60 bg-card/40">
+      <div className="shrink-0 flex items-center gap-3 px-3 py-1.5 border-b border-border/60 bg-card/40">
 
         <div className="relative shrink-0" ref={pickerRef} data-tour="symbol-picker">
           <button
