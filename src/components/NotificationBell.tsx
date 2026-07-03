@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
@@ -77,7 +77,50 @@ export function NotificationBell() {
   const rows: NotificationRow[] = data?.rows ?? [];
   const unread = data?.unread ?? 0;
 
+  // Browser Notification + beep for newly-arrived alerts.
+  const seenIdsRef = useRef<Set<string>>(new Set());
+  const firstLoadRef = useRef(true);
+  useEffect(() => {
+    if (!rows.length) return;
+    if (firstLoadRef.current) {
+      firstLoadRef.current = false;
+      rows.forEach((r) => seenIdsRef.current.add(r.id));
+      return;
+    }
+    const fresh = rows.filter((r) => !seenIdsRef.current.has(r.id) && !r.read_at);
+    if (fresh.length === 0) return;
+    fresh.forEach((r) => seenIdsRef.current.add(r.id));
+
+    // Beep
+    try {
+      const Ctx = (window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext);
+      if (Ctx) {
+        const ctx = new Ctx();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = "sine";
+        o.frequency.value = 880;
+        g.gain.value = 0.05;
+        o.connect(g); g.connect(ctx.destination);
+        o.start();
+        o.stop(ctx.currentTime + 0.18);
+        setTimeout(() => ctx.close().catch(() => {}), 400);
+      }
+    } catch { /* ignore */ }
+
+    // Desktop notification
+    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+      fresh.slice(0, 3).forEach((r) => {
+        try {
+          const n = new Notification(r.title, { body: r.body ?? undefined, tag: r.id });
+          if (r.url) n.onclick = () => { window.focus(); window.location.href = r.url!; };
+        } catch { /* ignore */ }
+      });
+    }
+  }, [rows]);
+
   const invalidate = () => qc.invalidateQueries({ queryKey: ["notifications"] });
+
 
   const mRead = useMutation({ mutationFn: (id: string) => markReadFn({ data: { id } }), onSuccess: invalidate });
   const mAll = useMutation({ mutationFn: () => markAllFn(), onSuccess: invalidate });
@@ -106,7 +149,12 @@ export function NotificationBell() {
   return (
     <>
       <button
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          setOpen(true);
+          if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
+            Notification.requestPermission().catch(() => {});
+          }
+        }}
         className="relative h-9 w-9 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:text-foreground shrink-0"
         aria-label={`Notifications${unread ? ` (${unread} unread)` : ""}`}
         title="Notifications"
