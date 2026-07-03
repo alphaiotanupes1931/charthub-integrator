@@ -347,7 +347,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     if (!containerRef.current) return;
     const chart = createChart(containerRef.current, {
       autoSize: true,
-      layout: { background: { color: "transparent" }, textColor: "#94a3b8", fontFamily: "ui-sans-serif, system-ui, sans-serif" },
+      layout: { background: { color: "transparent" }, textColor: "#94a3b8", fontFamily: "ui-sans-serif, system-ui, sans-serif", attributionLogo: false },
       grid: { vertLines: { color: "rgba(148, 163, 184, 0.06)" }, horzLines: { color: "rgba(148, 163, 184, 0.06)" } },
       crosshair: {
         mode: CrosshairMode.Normal,
