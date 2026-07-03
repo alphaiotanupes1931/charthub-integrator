@@ -56,6 +56,42 @@ function symbolLabel(s: Symbol) {
   return s.name ? `${s.name} (${s.ticker})` : s.ticker;
 }
 
+// Guard: any scan prompt must reference the symbol currently shown on the chart.
+// If the prompt is missing the friendly name or the ticker, we warn loudly so the
+// mismatch can never silently ship (e.g. "analyzing XAU/USD" while viewing Gold,
+// or scanning Silver while Gold is loaded).
+function assertScanPromptMatchesSymbol(prompt: string, symbol: Symbol, ctx: string) {
+  const p = prompt.toLowerCase();
+  const missing: string[] = [];
+  if (symbol.name && !p.includes(symbol.name.toLowerCase())) missing.push(`name "${symbol.name}"`);
+  if (symbol.ticker && !p.includes(symbol.ticker.toLowerCase())) missing.push(`ticker "${symbol.ticker}"`);
+
+  // Detect a foreign symbol slipping into the prompt (e.g. Gold prompt mentioning EUR/USD).
+  const foreign = SYMBOLS.find(
+    (s) =>
+      s.tv !== symbol.tv &&
+      (p.includes(s.ticker.toLowerCase()) ||
+        (s.name && p.includes(s.name.toLowerCase()))),
+  );
+
+  if (missing.length === 0 && !foreign) return true;
+
+  const detail = [
+    missing.length ? `missing ${missing.join(", ")}` : null,
+    foreign ? `references other symbol "${foreign.ticker}"` : null,
+  ]
+    .filter(Boolean)
+    .join("; ");
+
+  const msg = `Scan/symbol mismatch (${ctx}): chart is ${symbolLabel(symbol)} [${symbol.tv}] but prompt ${detail}.`;
+  console.warn("[scan-guard]", msg, { prompt, symbol });
+  toast.warning("Scan/symbol mismatch", {
+    description: `Chart is ${symbolLabel(symbol)} but the scan prompt ${detail}.`,
+  });
+  return false;
+}
+
+
 const SYMBOLS: Symbol[] = [
   { tv: "OANDA:XAUUSD",      ticker: "XAU/USD", name: "Gold Spot",        venue: "OANDA"     },
   { tv: "OANDA:XAGUSD",      ticker: "XAG/USD", name: "Silver Spot",      venue: "OANDA"     },
