@@ -653,23 +653,39 @@ function Dashboard() {
             )}
           </div>
 
-          <Link
-            to="/coaches"
-            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/50 px-2.5 py-1.5 text-xs font-medium hover:border-primary/50 transition"
-            title="Change active AI coach"
-          >
-            {(() => {
-              const meta = COACH_ICON_META[readActiveCoach()] ?? DEFAULT_COACH_ICON;
-              const Icon = meta.icon;
-              return (
+          {(() => {
+            const meta = COACH_ICON_META[activeCoach] ?? DEFAULT_COACH_ICON;
+            const Icon = meta.icon;
+            const coachNames = Object.keys(COACH_ICON_META);
+            return (
+              <div
+                className="relative inline-flex items-center gap-1.5 rounded-md border border-border bg-background/50 px-2.5 py-1.5 text-xs font-medium hover:border-primary/50 transition"
+                title="Change active AI coach"
+              >
                 <span className={`inline-flex h-5 w-5 items-center justify-center rounded-md ${meta.iconBg} ${meta.iconText} shrink-0`}>
                   <Icon className="h-3 w-3" />
                 </span>
-              );
-            })()}
-            <span>{readActiveCoach()}</span>
-            <ChevronDown className="h-3 w-3 text-muted-foreground" />
-          </Link>
+                <span className="pr-4">{activeCoach}</span>
+                <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                <select
+                  value={activeCoach}
+                  onChange={(e) => {
+                    const name = e.target.value;
+                    if (name === activeCoach) return;
+                    writeActiveCoach(name);
+                    setActiveCoach(name);
+                    toast.success(`${name} is now your coach`);
+                  }}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  aria-label="Change active AI coach"
+                >
+                  {coachNames.map((name) => (
+                    <option key={name} value={name}>{name}</option>
+                  ))}
+                </select>
+              </div>
+            );
+          })()}
         </div>
       </div>
 
