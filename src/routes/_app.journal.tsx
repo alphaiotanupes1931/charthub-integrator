@@ -13,6 +13,7 @@ import {
   TrendingDown,
   ImageIcon,
   Upload,
+  Download,
 } from "lucide-react";
 import {
   putTradeImage,
@@ -91,6 +92,36 @@ function loadTrades(): Trade[] {
 }
 function saveTrades(trades: Trade[]) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(trades)); } catch { /* ignore */ }
+}
+
+function csvEscape(v: unknown): string {
+  const s = v == null ? "" : String(v);
+  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+
+function exportTradesCsv(trades: Trade[]) {
+  const headers = ["date","timeframe","symbol","side","entry","exit","stop","size","pnl","rr","notes"];
+  const rows = trades.map((t) => {
+    const rr = tradeRR(t);
+    return [
+      t.date, t.timeframe, t.symbol, t.side,
+      t.entry, t.exit, t.stop, t.size,
+      tradePnl(t).toFixed(2),
+      rr == null ? "" : rr.toFixed(3),
+      t.notes ?? "",
+    ].map(csvEscape).join(",");
+  });
+  const csv = [headers.join(","), ...rows].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `trademind-journal-${todayYmd()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 function JournalPage() {
@@ -285,6 +316,20 @@ function JournalPage() {
 
       {tab === "trades" && (
         <div className="rounded-xl border border-border bg-card overflow-hidden">
+          {sortedTrades.length > 0 && (
+            <div className="flex items-center justify-between gap-2 p-3 border-b border-border/60 bg-card/60">
+              <div className="text-xs text-muted-foreground">
+                {sortedTrades.length} {sortedTrades.length === 1 ? "trade" : "trades"}
+              </div>
+              <button
+                onClick={() => exportTradesCsv(sortedTrades)}
+                className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-foreground/80 hover:bg-accent/40 transition"
+                title="Download all trades as CSV"
+              >
+                <Download className="h-3.5 w-3.5" /> Export CSV
+              </button>
+            </div>
+          )}
           {sortedTrades.length === 0 ? (
             <div className="p-12 text-center text-sm text-muted-foreground">
               No trades logged yet. Hit <span className="text-foreground font-medium">Log trade</span> to add one.
