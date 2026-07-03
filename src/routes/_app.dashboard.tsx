@@ -434,7 +434,20 @@ function Dashboard() {
   const [lensId, setLensId] = useState<ScanLensId>("wyckoff");
   const [lensOpen, setLensOpen] = useState(false);
   const [broker, setBroker] = useState<{ email: string; server: string; accountType: "demo" | "live" } | null>(null);
+  const [activeCoach, setActiveCoach] = useState<string>(() =>
+    typeof window === "undefined" ? "The Analyst" : readActiveCoach(),
+  );
   useEffect(() => { setLensId(readActiveLensId()); }, []);
+  useEffect(() => {
+    const sync = () => setActiveCoach(readActiveCoach());
+    const onStorage = (e: StorageEvent) => { if (e.key === COACH_KEY) sync(); };
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("focus", sync);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("focus", sync);
+    };
+  }, []);
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem("trademind.tradelocker.creds.v1");
