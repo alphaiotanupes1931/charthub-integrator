@@ -528,16 +528,42 @@ function Dashboard() {
 
   const runPlan = useServerFn(runResearchPlan);
 
+  const applyPlanToSignalCards = (plan: ScanResult) => {
+    const num = (s: string): number | undefined => {
+      if (!s || s === "—") return undefined;
+      const n = parseFloat(String(s).replace(/[^0-9.\-]/g, ""));
+      return isFinite(n) ? n : undefined;
+    };
+    const biasMap: Record<string, "long" | "short" | "neutral"> = {
+      Long: "long", Short: "short", Neutral: "neutral",
+    };
+    setAiGrade({
+      grade: plan.grade,
+      bias: biasMap[plan.bias] ?? "neutral",
+      entry: num(plan.entry),
+      stop: num(plan.stop),
+      tp1: num(plan.tp1),
+      tp2: num(plan.tp2),
+      strength: plan.notes,
+      weakness: plan.details,
+    });
+  };
+
   const runScan = () => {
     setScanning(true);
     setResult(null);
+    setAiGrade(null);
     const enabledLevels = ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none";
     const lens = findLens(lensId);
     const prompt = `Scan ${symbolLabel(symbol)} on the ${intervalLabel} chart. Keep it brief (3-6 short lines total). Give me: Grade, Bias, Entry, Stop, TP1, TP2. Then two bullets: "Strength:" (one line, the strongest thing about this setup) and "Weakness:" (one line, what could kill it). No preamble, no long paragraphs. Refer to the instrument by its friendly name (e.g. "Gold"), not the raw ticker. Levels I'm watching: ${enabledLevels}.`;
     setCoachOpen(true);
     chatRef.current?.scan(prompt);
     runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
-      .then((plan) => setResult(plan as ScanResult))
+      .then((plan) => {
+        const r = plan as ScanResult;
+        setResult(r);
+        applyPlanToSignalCards(r);
+      })
       .catch(() => {
         setResult({
           grade: "NO ENTRY", bias: "Neutral", confidence: 0,
@@ -1056,7 +1082,7 @@ function Dashboard() {
                 setScanning(true);
                 const lens = findLens(lensId);
                 runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
-                  .then((plan) => setResult(plan as ScanResult))
+                  .then((plan) => { const r = plan as ScanResult; setResult(r); applyPlanToSignalCards(r); })
                   .catch(() => { /* coach chat still runs the vision analysis */ })
                   .finally(() => setScanning(false));
               }}
