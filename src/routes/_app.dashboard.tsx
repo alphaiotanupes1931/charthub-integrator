@@ -50,6 +50,12 @@ const INTERVALS = [
 
 type Symbol = { tv: string; ticker: string; name: string; venue: string };
 
+function symbolLabel(s: Symbol) {
+  // Human-friendly label used in AI prompts so the assistant refers to the
+  // instrument the trader sees on the chart (e.g. "Gold" instead of "XAU/USD").
+  return s.name ? `${s.name} (${s.ticker})` : s.ticker;
+}
+
 const SYMBOLS: Symbol[] = [
   { tv: "OANDA:XAUUSD",      ticker: "XAU/USD", name: "Gold Spot",        venue: "OANDA"     },
   { tv: "OANDA:XAGUSD",      ticker: "XAG/USD", name: "Silver Spot",      venue: "OANDA"     },
@@ -527,7 +533,7 @@ function Dashboard() {
     setResult(null);
     const enabledLevels = ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none";
     const lens = findLens(lensId);
-    const prompt = `Scan ${symbol.ticker} on the ${intervalLabel} chart. Keep it brief (3-6 short lines total). Give me: Grade, Bias, Entry, Stop, TP1, TP2. Then two bullets: "Strength:" (one line, the strongest thing about this setup) and "Weakness:" (one line, what could kill it). No preamble, no long paragraphs. Levels I'm watching: ${enabledLevels}.`;
+    const prompt = `Scan ${symbolLabel(symbol)} on the ${intervalLabel} chart. Keep it brief (3-6 short lines total). Give me: Grade, Bias, Entry, Stop, TP1, TP2. Then two bullets: "Strength:" (one line, the strongest thing about this setup) and "Weakness:" (one line, what could kill it). No preamble, no long paragraphs. Refer to the instrument by its friendly name (e.g. "Gold"), not the raw ticker. Levels I'm watching: ${enabledLevels}.`;
     setCoachOpen(true);
     chatRef.current?.scan(prompt);
     runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
@@ -1046,7 +1052,7 @@ function Dashboard() {
               runScan={runScan}
               onAttach={(file) => {
                 setRightTab("chat");
-                chatRef.current?.attach(file, `Scan this chart screenshot for ${symbol.ticker} on ${intervalLabel}. Give me grade, bias, entry, stop, TP1, TP2, R:R, and a 1-2 sentence rationale.`);
+                chatRef.current?.attach(file, `Scan this chart screenshot for ${symbolLabel(symbol)} on ${intervalLabel}. Refer to the instrument by its friendly name (e.g. "Gold"), not the raw ticker. Give me grade, bias, entry, stop, TP1, TP2, R:R, and a 1-2 sentence rationale.`);
                 setScanning(true);
                 const lens = findLens(lensId);
                 runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
@@ -1072,7 +1078,7 @@ function Dashboard() {
               onGrade={setAiGrade}
               onConcept={setAiConcept}
               chart={{
-                ticker: symbol.ticker,
+                ticker: symbolLabel(symbol),
                 intervalLabel,
                 enabledLevels: ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none",
                 snapshot: snapshot ?? undefined,
