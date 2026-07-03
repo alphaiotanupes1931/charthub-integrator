@@ -904,8 +904,31 @@ function Dashboard() {
       </div>
 
 
+      {/* Mobile-only view switcher: Chart / Scan / Chat are mutually exclusive on small screens
+          so the coach panel never squishes the chart and vice versa. */}
+      <div className="lg:hidden shrink-0 flex items-center gap-1 px-3 py-2 border-b border-border/60 bg-card/40">
+        {([
+          { id: "chart", label: "Chart", Icon: LineChart },
+          { id: "scan",  label: "Scan",  Icon: BarChart3 },
+          { id: "chat",  label: "Chat",  Icon: MessageSquare },
+        ] as const).map(({ id, label, Icon }) => {
+          const active = mobileView === id;
+          return (
+            <button
+              key={id}
+              onClick={() => { setMobileView(id); if (id !== "chart") setRightTab(id === "scan" ? "analysis" : "chat"); }}
+              className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded-md px-2 py-2 text-xs font-semibold transition ${
+                active ? "bg-primary/15 text-primary ring-1 ring-primary/40" : "text-muted-foreground hover:text-foreground hover:bg-accent/40"
+              }`}
+            >
+              <Icon className="h-3.5 w-3.5" /> {label}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Chart area */}
-      <div className="flex-1 min-h-0 flex bg-card overflow-hidden" data-tour="chart">
+      <div className={`flex-1 min-h-0 bg-card overflow-hidden ${mobileView === "chart" ? "flex" : "hidden"} lg:flex`} data-tour="chart">
         <div className="flex-1 min-w-0 flex flex-col">
 
           {/* Scan output preview — sits above the chart so it never overlaps candles */}
