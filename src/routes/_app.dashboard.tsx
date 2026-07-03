@@ -454,6 +454,9 @@ function Dashboard() {
   const [rightOpen, setRightOpen] = useState(true);
   const [panelWidth, setPanelWidth] = useState<"narrow" | "default" | "wide">("default");
   const [chartTab, setChartTab] = useState<"live" | "setup">("live");
+  // Mobile-only: which pane is visible full-height (chart / scan / chat). On >=lg
+  // both are shown side-by-side and this state is ignored.
+  const [mobileView, setMobileView] = useState<"chart" | "scan" | "chat">("chart");
   const [candleType, setCandleType] = useState<"candle" | "ha">("candle");
   const [snapshot, setSnapshot] = useState<ChartSnapshot | null>(null);
   const [aiAnnotationsRaw, setAiAnnotationsRaw] = useState<import("@/lib/chartAnnotations").ChartAnnotation[]>([]);
@@ -901,8 +904,31 @@ function Dashboard() {
       </div>
 
 
+      {/* Mobile-only view switcher: Chart / Scan / Chat are mutually exclusive on small screens
+          so the coach panel never squishes the chart and vice versa. */}
+      <div className="lg:hidden shrink-0 flex items-center gap-1 px-3 py-2 border-b border-border/60 bg-card/40">
+        {([
+          { id: "chart", label: "Chart", Icon: LineChart },
+          { id: "scan",  label: "Scan",  Icon: BarChart3 },
+          { id: "chat",  label: "Chat",  Icon: MessageSquare },
+        ] as const).map(({ id, label, Icon }) => {
+          const active = mobileView === id;
+          return (
+            <button
+              key={id}
+              onClick={() => { setMobileView(id); if (id !== "chart") setRightTab(id === "scan" ? "analysis" : "chat"); }}
+              className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded-md px-2 py-2 text-xs font-semibold transition ${
+                active ? "bg-primary/15 text-primary ring-1 ring-primary/40" : "text-muted-foreground hover:text-foreground hover:bg-accent/40"
+              }`}
+            >
+              <Icon className="h-3.5 w-3.5" /> {label}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Chart area */}
-      <div className="flex-1 min-h-0 flex bg-card overflow-hidden" data-tour="chart">
+      <div className={`flex-1 min-h-0 bg-card overflow-hidden ${mobileView === "chart" ? "flex" : "hidden"} lg:flex`} data-tour="chart">
         <div className="flex-1 min-w-0 flex flex-col">
 
           {/* Scan output preview — sits above the chart so it never overlaps candles */}
@@ -1042,7 +1068,7 @@ function Dashboard() {
                   onGrade={setAiGrade}
                   onConcept={setAiConcept}
                   chart={{
-                    ticker: symbol.ticker,
+                    ticker: symbolLabel(symbol),
                     intervalLabel,
                     enabledLevels: ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none",
                     snapshot: snapshot ?? undefined,
@@ -1079,9 +1105,11 @@ function Dashboard() {
 
       </div>
 
-      {/* Mobile panel: tabbed Analysis / Chat / History */}
-      <div className="lg:hidden shrink-0 border-t border-border/60 bg-card" data-tour="scan">
-        <div className="flex items-center gap-0.5 border-b border-border/60 px-2 py-2 overflow-x-auto no-scrollbar">
+      {/* Mobile panel: Analysis / Chat / History. Only visible when the mobile view
+          switcher is on Scan or Chat, and expands to fill the remaining height so it
+          isn't squished under the chart. */}
+      <div className={`lg:hidden ${mobileView === "chart" ? "hidden" : "flex-1 min-h-0 flex flex-col"} bg-card`} data-tour="scan">
+        <div className="shrink-0 flex items-center gap-0.5 border-b border-border/60 px-2 py-2 overflow-x-auto no-scrollbar">
           <button
             onClick={() => setRightTab("analysis")}
             className={`shrink-0 inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
@@ -1108,7 +1136,7 @@ function Dashboard() {
           </button>
         </div>
         {rightTab === "analysis" && (
-          <div className="p-3 sm:p-4">
+          <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4">
             <ScanBody
               result={result}
               scanning={scanning}
@@ -1135,7 +1163,7 @@ function Dashboard() {
           </div>
         )}
         {rightTab === "chat" && (
-          <div className="h-[70vh] min-h-[420px]">
+          <div className="flex-1 min-h-0">
             <DashboardChatPanel
               ref={chatRef}
               onRunScan={runScan}
@@ -1155,7 +1183,7 @@ function Dashboard() {
           </div>
         )}
         {rightTab === "history" && (
-          <div className="max-h-[70vh] overflow-y-auto">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             <ChatHistoryList
               activeThreadId={activeThreadId}
               onPick={(id) => { setActiveThreadId(id); setRightTab("chat"); }}
