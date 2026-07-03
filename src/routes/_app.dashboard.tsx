@@ -449,7 +449,6 @@ function Dashboard() {
     typeof window !== "undefined" ? loadSessionsOn() : false,
   );
   const [levelsOpen, setLevelsOpen] = useState(false);
-  const [coachOpen, setCoachOpen] = useState(false);
   const [rightTab, setRightTab] = useState<"analysis" | "chat" | "history">("analysis");
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [rightOpen, setRightOpen] = useState(false);
@@ -578,22 +577,33 @@ function Dashboard() {
   const search = Route.useSearch();
   const navigate = useNavigate();
   const askedRef = useRef<string | null>(null);
-  useEffect(() => {
-    const q = search.ask?.trim();
-    if (!q || askedRef.current === q) return;
-    const tryRun = () => {
-      if (!chatRef.current) { window.setTimeout(tryRun, 150); return; }
-      askedRef.current = q;
-      setCoachOpen(true);
-      chatRef.current.scan(q);
-      navigate({ to: "/dashboard", search: {}, replace: true });
-    };
-    tryRun();
-  }, [search.ask, navigate]);
-
   const intervalLabel = INTERVALS.find((i) => i.value === interval)?.label ?? interval;
 
   const runPlan = useServerFn(runResearchPlan);
+
+  const sendToChat = (prompt: string) => {
+    setRightOpen(true);
+    setRightTab("chat");
+    setMobileView("chat");
+    let attempts = 0;
+    const trySend = () => {
+      attempts += 1;
+      if (chatRef.current) {
+        chatRef.current.scan(prompt);
+        return;
+      }
+      if (attempts < 20) window.setTimeout(trySend, 100);
+    };
+    window.setTimeout(trySend, 0);
+  };
+
+  useEffect(() => {
+    const q = search.ask?.trim();
+    if (!q || askedRef.current === q) return;
+    askedRef.current = q;
+    sendToChat(q);
+    navigate({ to: "/dashboard", search: {}, replace: true });
+  }, [search.ask, navigate]);
 
   const applyPlanToSignalCards = (plan: ScanResult) => {
     const num = (s: string): number | undefined => {
@@ -624,8 +634,7 @@ function Dashboard() {
     const lens = findLens(lensId);
     const prompt = `Scan ${symbolLabel(symbol)} on the ${intervalLabel} chart. Keep it brief (3-6 short lines total). Give me: Grade, Bias, Entry, Stop, TP1, TP2. Then two bullets: "Strength:" (one line, the strongest thing about this setup) and "Weakness:" (one line, what could kill it). No preamble, no long paragraphs. Refer to the instrument by its friendly name (e.g. "Gold"), not the raw ticker. Levels I'm watching: ${enabledLevels}.`;
     assertScanPromptMatchesSymbol(prompt, symbol, "runScan");
-    setCoachOpen(true);
-    chatRef.current?.scan(prompt);
+    sendToChat(prompt);
     runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
       .then((plan) => {
         const r = plan as ScanResult;
@@ -928,11 +937,11 @@ function Dashboard() {
 
         <button
           onClick={() => setRightOpen((v) => !v)}
-          className="hidden lg:inline-flex items-center gap-1.5 rounded-md border border-border bg-background/50 px-2 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground hover:border-primary/40 transition"
-          title={rightOpen ? "Hide side panel" : "Show chat panel"}
+          className="hidden lg:inline-flex items-center gap-1.5 rounded-md border border-border bg-background/50 px-3 py-1 text-xs font-semibold text-foreground hover:border-primary/40 transition"
+          title={rightOpen ? "Hide chat panel" : "Open chat panel"}
         >
           {rightOpen ? <PanelRightClose className="h-3 w-3" /> : <PanelRightOpen className="h-3 w-3" />}
-          <span>Chat</span>
+          <span>{rightOpen ? "Hide Chat" : "Open Chat"}</span>
         </button>
       </div>
 

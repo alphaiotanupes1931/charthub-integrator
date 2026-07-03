@@ -258,7 +258,8 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
       },
     });
 
-    const loading = scanning || status === "submitted" || status === "streaming";
+    const chatBusy = status === "submitted" || status === "streaming";
+    const loading = scanning || chatBusy;
     const stopScan = () => {
       voice.stop();
       try { stop(); } catch { /* ignore */ }
@@ -298,12 +299,12 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
 
     useImperativeHandle(ref, () => ({
       scan: (prompt: string) => {
-        if (loading) return;
+        if (chatBusy) return;
         if (voice.enabled) voice.prime();
         void sendMessage({ text: prompt });
       },
       attach: async (file: File, prompt: string) => {
-        if (loading) return;
+        if (chatBusy) return;
         if (!checkAndReserveQuota()) return;
         if (voice.enabled) voice.prime();
         try {
@@ -321,13 +322,13 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
       stop: () => {
         try { stop(); } catch { /* ignore */ }
       },
-    }), [sendMessage, loading, voice, stop, checkAndReserveQuota, isAdmin]);
+    }), [sendMessage, chatBusy, voice, stop, checkAndReserveQuota, isAdmin]);
 
     const handleSubmit = () => {
       const text = input.trim();
       const img = pendingImage;
       if (!text && !img) return;
-      if (loading) return;
+      if (chatBusy) return;
       if (voice.enabled) voice.prime();
       setInput("");
       setPendingImage(null);
