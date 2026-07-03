@@ -1118,7 +1118,9 @@ function Dashboard() {
               runScan={runScan}
               onAttach={(file) => {
                 setRightTab("chat");
-                chatRef.current?.attach(file, `Scan this chart screenshot for ${symbolLabel(symbol)} on ${intervalLabel}. Refer to the instrument by its friendly name (e.g. "Gold"), not the raw ticker. Give me grade, bias, entry, stop, TP1, TP2, R:R, and a 1-2 sentence rationale.`);
+                const attachPrompt = `Scan this chart screenshot for ${symbolLabel(symbol)} on ${intervalLabel}. Refer to the instrument by its friendly name (e.g. "Gold"), not the raw ticker. Give me grade, bias, entry, stop, TP1, TP2, R:R, and a 1-2 sentence rationale.`;
+                assertScanPromptMatchesSymbol(attachPrompt, symbol, "attachScan");
+                chatRef.current?.attach(file, attachPrompt);
                 setScanning(true);
                 const lens = findLens(lensId);
                 runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
