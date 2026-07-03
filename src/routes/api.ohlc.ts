@@ -37,16 +37,42 @@ export type OhlcResponse = {
   ttlMs: number;
 };
 
-async function fetchJsonWithTimeout<T>(url: string, timeoutMs = 8_000): Promise<T> {
+async function fetchJsonWithTimeout<T>(url: string, timeoutMs = 8_000, headers?: Record<string, string>): Promise<T> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const res = await fetch(url, {
-      headers: { accept: "application/json" },
+      headers: {
+        accept: "application/json",
+        // Yahoo (and several other free feeds) rate-limit / 403 requests
+        // that arrive with the default Worker UA. A browser-ish UA fixes it.
+        "user-agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+        ...(headers ?? {}),
+      },
       signal: controller.signal,
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return (await res.json()) as T;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function fetchTextWithTimeout(url: string, timeoutMs = 8_000): Promise<string> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, {
+      headers: {
+        accept: "text/csv,text/plain,*/*",
+        "user-agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+      },
+      signal: controller.signal,
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.text();
   } finally {
     clearTimeout(timeout);
   }
