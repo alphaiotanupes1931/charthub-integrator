@@ -275,9 +275,10 @@ function ScanTicket({
           )}
           <button
             onClick={onRescan}
-            className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium hover:border-primary/50 transition"
+            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90 transition"
+            title="Run a new scan on the current chart"
           >
-            Re-scan
+            <Crosshair className="h-3 w-3" /> New scan
           </button>
         </div>
       </div>
