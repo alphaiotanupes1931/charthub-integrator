@@ -517,7 +517,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       const from = Number(visible.from) * 1000;
       const to = Number(visible.to) * 1000;
       const DAY = 24 * 3600 * 1000;
-      const out: Array<{ key: string; color: string; label: string; left: number; width: number; top: number; height: number; high: number; low: number; idx: number }> = [];
+      const out: Array<{ key: string; color: string; label: string; left: number; width: number; top: number; height: number; high: number; low: number; idx: number; vwap: Array<{ x: number; y: number }>; meanY: number | null; regX1: number; regY1: number; regX2: number; regY2: number }> = [];
       const firstDay = Math.floor(from / DAY) * DAY - DAY;
       for (let d = firstDay; d <= to; d += DAY) {
         SESSIONS.forEach((sess, idx) => {
@@ -526,15 +526,17 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
             ? d + sess.endH * 3600 * 1000
             : d + (sess.endH + 24) * 3600 * 1000;
           if (endMs < from || startMs > to) return;
-          // Find candles within this session window to compute H/L box
+          // Collect candles within this session window
           const startSec = Math.floor(startMs / 1000);
           const endSec = Math.floor(endMs / 1000);
           let hi = -Infinity, lo = Infinity;
+          const bars: Array<{ t: number; c: number; tp: number }> = [];
           for (const c of candles) {
             const t = Number(c.time);
             if (t >= startSec && t <= endSec) {
               if (c.high > hi) hi = c.high;
               if (c.low < lo) lo = c.low;
+              bars.push({ t, c: c.close, tp: (c.high + c.low + c.close) / 3 });
             }
           }
           if (!isFinite(hi) || !isFinite(lo)) return;
@@ -549,7 +551,40 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
           if (yHi == null || yLo == null) return;
           const top = Math.min(yHi, yLo);
           const height = Math.abs(yLo - yHi);
-          out.push({ key: `${d}-${sess.key}`, color: sess.color, label: sess.label, left, width, top, height, high: hi, low: lo, idx });
+
+          // Cumulative VWAP (HLC/3 as volume proxy — no volume in feed)
+          const vwapPts: Array<{ x: number; y: number }> = [];
+          let cumNum = 0, cumDen = 0;
+          let sumC = 0, sumCC = 0, sumCT = 0, n = 0;
+          for (const bar of bars) {
+            cumNum += bar.tp; cumDen += 1;
+            const vw = cumNum / cumDen;
+            const x = ts.timeToCoordinate(bar.t as Time);
+            const y = series.priceToCoordinate(vw);
+            if (x != null && y != null) vwapPts.push({ x, y });
+            n += 1;
+            sumC += bar.c;
+            sumCC += bar.c * bar.c;
+            sumCT += bar.c * n;
+          }
+          let meanY: number | null = null;
+          let regX1 = 0, regY1 = 0, regX2 = 0, regY2 = 0;
+          if (bars.length >= 2) {
+            const sma = sumC / n;
+            const wma = sumCT / (n * (n + 1) / 2);
+            const y1p = 4 * sma - 3 * wma;
+            const y2p = 3 * wma - 2 * sma;
+            const mY = series.priceToCoordinate(sma);
+            if (mY != null) meanY = mY;
+            const xa = ts.timeToCoordinate(bars[0].t as Time);
+            const xb = ts.timeToCoordinate(bars[bars.length - 1].t as Time);
+            const ya = series.priceToCoordinate(y1p);
+            const yb = series.priceToCoordinate(y2p);
+            if (xa != null && xb != null && ya != null && yb != null) {
+              regX1 = xa; regY1 = ya; regX2 = xb; regY2 = yb;
+            }
+          }
+          out.push({ key: `${d}-${sess.key}`, color: sess.color, label: sess.label, left, width, top, height, high: hi, low: lo, idx, vwap: vwapPts, meanY, regX1, regY1, regX2, regY2 });
         });
       }
       setBands(out);
