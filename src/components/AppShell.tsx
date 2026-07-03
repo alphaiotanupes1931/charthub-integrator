@@ -69,7 +69,6 @@ const MOBILE_TABS: { to: string; label: string; icon: typeof LayoutDashboard }[]
 export function AppShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { theme, toggle } = useTheme();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isDashboard = pathname === "/dashboard";
   const navigate = useNavigate();
