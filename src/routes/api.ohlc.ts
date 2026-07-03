@@ -29,7 +29,7 @@ function daysForInterval(interval: string): number {
 }
 
 export type OhlcBar = { time: number; open: number; high: number; low: number; close: number };
-export type OhlcSource = "coingecko" | "oanda" | "twelvedata" | "yahoo";
+export type OhlcSource = "coingecko" | "oanda" | "twelvedata" | "yahoo" | "stooq";
 export type OhlcResponse = {
   source: OhlcSource | null;
   bars: OhlcBar[];
@@ -37,16 +37,42 @@ export type OhlcResponse = {
   ttlMs: number;
 };
 
-async function fetchJsonWithTimeout<T>(url: string, timeoutMs = 8_000): Promise<T> {
+async function fetchJsonWithTimeout<T>(url: string, timeoutMs = 8_000, headers?: Record<string, string>): Promise<T> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const res = await fetch(url, {
-      headers: { accept: "application/json" },
+      headers: {
+        accept: "application/json",
+        // Yahoo (and several other free feeds) rate-limit / 403 requests
+        // that arrive with the default Worker UA. A browser-ish UA fixes it.
+        "user-agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+        ...(headers ?? {}),
+      },
       signal: controller.signal,
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return (await res.json()) as T;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function fetchTextWithTimeout(url: string, timeoutMs = 8_000): Promise<string> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, {
+      headers: {
+        accept: "text/csv,text/plain,*/*",
+        "user-agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+      },
+      signal: controller.signal,
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.text();
   } finally {
     clearTimeout(timeout);
   }
@@ -119,11 +145,7 @@ function oandaGranularity(interval: string): string {
   }
 }
 
-async function fetchOanda(instrument: string, interval: string): Promise<OhlcBar[]> {
-  const apiKey = process.env.OANDA_API_KEY;
-  if (!apiKey) throw new Error("OANDA_API_KEY not configured");
-  const env = (process.env.OANDA_ENV ?? "live").toLowerCase();
-  const host = env === "practice" ? "api-fxpractice.oanda.com" : "api-fxtrade.oanda.com";
+async function fetchOandaHost(host: string, apiKey: string, instrument: string, interval: string): Promise<OhlcBar[]> {
   const granularity = oandaGranularity(interval);
   const url = `https://${host}/v3/instruments/${instrument}/candles?granularity=${granularity}&count=220&price=M`;
   const controller = new AbortController();
@@ -150,6 +172,26 @@ async function fetchOanda(instrument: string, interval: string): Promise<OhlcBar
   } finally {
     clearTimeout(timeout);
   }
+}
+
+async function fetchOanda(instrument: string, interval: string): Promise<OhlcBar[]> {
+  const apiKey = process.env.OANDA_API_KEY;
+  if (!apiKey) throw new Error("OANDA_API_KEY not configured");
+  // OANDA_ENV usually not set — the same key type only works against one host,
+  // so try the configured host first, then fall back to the other on 401.
+  const preferred = (process.env.OANDA_ENV ?? "live").toLowerCase() === "practice"
+    ? ["api-fxpractice.oanda.com", "api-fxtrade.oanda.com"]
+    : ["api-fxtrade.oanda.com", "api-fxpractice.oanda.com"];
+  let lastErr: unknown;
+  for (const host of preferred) {
+    try {
+      const bars = await fetchOandaHost(host, apiKey, instrument, interval);
+      if (bars.length > 0) return bars;
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error("OANDA unavailable");
 }
 
 
@@ -251,9 +293,11 @@ function yahooInterval(interval: string): { interval: string; range: string } {
   }
 }
 
-async function fetchYahoo(symbol: string, interval: string): Promise<OhlcBar[]> {
+async function fetchYahooHost(host: string, symbol: string, interval: string): Promise<OhlcBar[]> {
   const iv = yahooInterval(interval);
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${iv.interval}&range=${iv.range}&includePrePost=true`;
+  // Yahoo symbols (e.g. "SI=F", "EURUSD=X") must keep their literal "=" and "^" —
+  // encodeURIComponent would turn "SI=F" into "SI%3DF" which Yahoo rejects.
+  const url = `https://${host}/v8/finance/chart/${symbol}?interval=${iv.interval}&range=${iv.range}&includePrePost=true`;
   const json = await fetchJsonWithTimeout<{
     chart?: {
       error?: { description?: string } | null;
@@ -279,6 +323,68 @@ async function fetchYahoo(symbol: string, interval: string): Promise<OhlcBar[]> 
   return cleanBars(bars).slice(-220);
 }
 
+async function fetchYahoo(symbol: string, interval: string): Promise<OhlcBar[]> {
+  // Yahoo intermittently returns 429/999 from one edge; race between the
+  // two public hosts and use whichever answers first.
+  const hosts = ["query1.finance.yahoo.com", "query2.finance.yahoo.com"];
+  let lastErr: unknown;
+  for (const host of hosts) {
+    try {
+      const bars = await fetchYahooHost(host, symbol, interval);
+      if (bars.length > 0) return bars;
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error("Yahoo unavailable");
+}
+
+// ----- Stooq (free, no key). Daily candles only, but always available. -----
+function tickerToStooq(ticker: string): string | null {
+  const t = ticker.toUpperCase();
+  const map: Record<string, string> = {
+    "EUR/USD": "eurusd",
+    "GBP/USD": "gbpusd",
+    "USD/JPY": "usdjpy",
+    "XAU/USD": "xauusd",
+    "XAG/USD": "xagusd",
+    "WTI OIL": "cl.f",
+    "NAS100": "^ndx",
+    "SPX500": "^spx",
+    "US30": "^dji",
+  };
+  if (map[t]) return map[t];
+  if (t.includes("BTC")) return "btcusd";
+  if (t.includes("ETH")) return "ethusd";
+  return null;
+}
+
+async function fetchStooq(symbol: string): Promise<OhlcBar[]> {
+  // Stooq exposes free daily CSV history at /q/d/l/. Intraday isn't public,
+  // so this is a daily-only safety net used when live intraday feeds are
+  // rate-limited or key-less.
+  const url = `https://stooq.com/q/d/l/?s=${encodeURIComponent(symbol)}&i=d`;
+  const csv = await fetchTextWithTimeout(url);
+  const lines = csv.trim().split(/\r?\n/);
+  if (lines.length < 2) throw new Error("Stooq: empty CSV");
+  // Header: Date,Open,High,Low,Close,Volume
+  const bars: OhlcBar[] = [];
+  for (let i = 1; i < lines.length; i++) {
+    const parts = lines[i].split(",");
+    if (parts.length < 5) continue;
+    const [date, o, h, l, c] = parts;
+    const t = Math.floor(new Date(date + "T00:00:00Z").getTime() / 1000);
+    const open = parseFloat(o);
+    const high = parseFloat(h);
+    const low = parseFloat(l);
+    const close = parseFloat(c);
+    if (!Number.isFinite(t) || !Number.isFinite(open)) continue;
+    bars.push({ time: t, open, high, low, close });
+  }
+  return cleanBars(bars).slice(-220);
+}
+
+
 // --- Module-level cache (per worker instance). TTL 30s per key. ---
 type CacheEntry = { at: number; bars: OhlcBar[]; source: OhlcSource };
 const CACHE = new Map<string, CacheEntry>();
@@ -290,6 +396,7 @@ async function fetchBestAvailable(ticker: string, interval: string): Promise<Cac
   const oandaSymbol = coin ? null : tickerToOanda(ticker);
   const tdSymbol = coin ? null : tickerToTwelveData(ticker);
   const yahooSymbol = tickerToYahoo(ticker);
+  const stooqSymbol = tickerToStooq(ticker);
   const attempts: Array<() => Promise<CacheEntry>> = [];
 
   if (coin) {
@@ -303,6 +410,10 @@ async function fetchBestAvailable(ticker: string, interval: string): Promise<Cac
   }
   if (yahooSymbol) {
     attempts.push(async () => ({ at: Date.now(), bars: await fetchYahoo(yahooSymbol, interval), source: "yahoo" }));
+  }
+  if (stooqSymbol) {
+    // Daily-only, but ensures a chart always renders when live intraday feeds fail.
+    attempts.push(async () => ({ at: Date.now(), bars: await fetchStooq(stooqSymbol), source: "stooq" }));
   }
 
   let lastError: unknown;
@@ -346,7 +457,7 @@ export const Route = createFileRoute("/api/ohlc")({
         }
 
         const { ticker: t, interval: iv } = parsed.data;
-        if (!tickerToCoin(t) && !tickerToOanda(t) && !tickerToTwelveData(t) && !tickerToYahoo(t)) {
+        if (!tickerToCoin(t) && !tickerToOanda(t) && !tickerToTwelveData(t) && !tickerToYahoo(t) && !tickerToStooq(t)) {
           return new Response(JSON.stringify({ source: null, bars: [], cachedAt: Date.now(), ttlMs: 0 }), {
             headers: jsonHeaders,
           });

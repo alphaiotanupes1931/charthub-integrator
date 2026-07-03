@@ -38,7 +38,7 @@ export type CisdInfo = {
 };
 
 export type ChartSnapshot = {
-  source: "coingecko" | "twelvedata" | "yahoo" | "synthetic" | "unavailable";
+  source: "coingecko" | "twelvedata" | "yahoo" | "oanda" | "stooq" | "synthetic" | "unavailable";
   sourceLabel: string;
   ticker: string;
   interval: string;
@@ -267,7 +267,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     staleTime: 30_000,
     refetchInterval: 30_000,
     refetchOnWindowFocus: false,
-    retry: 1,
+    retry: 2,
   });
 
   const hasLive = !!liveOhlc && !!liveOhlc.source && liveOhlc.bars.length > 0;
@@ -294,7 +294,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     return { ...base, htfBias: detectHtfBias(candles) };
   }, [candles]);
   const isLive = hasLive;
-  const sourceLabel = liveOhlc?.source === "coingecko" ? "CoinGecko" : liveOhlc?.source === "twelvedata" ? "Twelve Data" : liveOhlc?.source === "yahoo" ? "Yahoo" : "";
+  const sourceLabel = liveOhlc?.source === "coingecko" ? "CoinGecko" : liveOhlc?.source === "twelvedata" ? "Twelve Data" : liveOhlc?.source === "yahoo" ? "Yahoo" : liveOhlc?.source === "oanda" ? "OANDA" : liveOhlc?.source === "stooq" ? "Stooq" : "";
   const snapshotSource = isLive ? (liveOhlc?.source ?? "unknown") : "unavailable";
   const snapshotSourceLabel = isLive ? (sourceLabel || "Live") : "Unavailable";
 
