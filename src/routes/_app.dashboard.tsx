@@ -1182,7 +1182,7 @@ function Dashboard() {
               rightTab === "chat" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
             }`}
           >
-            <MessageSquare className="h-3.5 w-3.5" /> AI Chat
+            <MessageSquare className="h-3.5 w-3.5" /> Chat
           </button>
           <button
             onClick={() => setRightTab("history")}
