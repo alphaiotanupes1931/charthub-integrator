@@ -965,8 +965,8 @@ function Dashboard() {
           </div>
 
 
-          {/* Broker strip */}
-          <div className="shrink-0 border-t border-border/60 px-4 py-2.5 flex items-center justify-between gap-2 flex-wrap text-xs">
+          {/* Broker strip — thin, single line so it doesn't eat chart height */}
+          <div className="shrink-0 border-t border-border/60 px-3 py-1 flex items-center justify-between gap-2 text-[11px]">
 
             {broker ? (
               <div className="flex items-center gap-2 min-w-0 text-muted-foreground">
