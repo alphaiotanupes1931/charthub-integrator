@@ -8,17 +8,53 @@ import type { MarketSnapshot, ResearchMemo, TradePlan } from "./types";
 
 const MODEL = "google/gemini-3-flash-preview";
 
+// Permissive schema: accept strings that look like numbers/enums, then coerce.
+// Gemini via the OpenAI-compat gateway does not enforce strict json_schema, so
+// slight deviations (extra whitespace, "A+ setup", numbers-as-strings) would
+// otherwise trip NoObjectGeneratedError and collapse to the fallback plan.
 const PlanSchema = z.object({
-  grade: z.enum(["A+", "A", "B", "C", "NO ENTRY"]),
-  bias: z.enum(["Long", "Short", "Neutral"]),
-  confidence: z.number(),
-  entry: z.number(),
-  stop: z.number(),
-  tp1: z.number(),
-  tp2: z.number(),
+  grade: z.string(),
+  bias: z.string(),
+  confidence: z.coerce.number(),
+  entry: z.coerce.number(),
+  stop: z.coerce.number(),
+  tp1: z.coerce.number(),
+  tp2: z.coerce.number(),
   thesis: z.string(),
   invalidation: z.string(),
 });
+
+type RawPlan = z.infer<typeof PlanSchema>;
+
+const GRADES = ["A+", "A", "B", "C", "NO ENTRY"] as const;
+const BIASES = ["Long", "Short", "Neutral"] as const;
+
+function normalizeGrade(g: string): typeof GRADES[number] {
+  const up = g.toUpperCase().trim();
+  const hit = GRADES.find((x) => up.includes(x));
+  return hit ?? "NO ENTRY";
+}
+function normalizeBias(b: string): typeof BIASES[number] {
+  const low = b.toLowerCase();
+  if (low.startsWith("long") || low.includes("bull")) return "Long";
+  if (low.startsWith("short") || low.includes("bear")) return "Short";
+  return "Neutral";
+}
+
+function salvagePlanFromText(text: string | undefined): RawPlan | null {
+  if (!text) return null;
+  // Strip markdown code fences and try to isolate the JSON object.
+  const cleaned = text.replace(/```json/gi, "```").replace(/```/g, "").trim();
+  const start = cleaned.indexOf("{");
+  const end = cleaned.lastIndexOf("}");
+  if (start < 0 || end <= start) return null;
+  try {
+    const parsed = JSON.parse(cleaned.slice(start, end + 1));
+    return PlanSchema.parse(parsed);
+  } catch {
+    return null;
+  }
+}
 
 const CritiqueSchema = z.object({
   verdict: z.enum(["approve", "revise"]),
@@ -70,19 +106,22 @@ export async function runPlanner(
   const ctx = memoBlock(memo, snap, lensDesc);
   const memoryLine = hermesMemory ? `\n\n${hermesMemory}` : "";
 
-  let plan: z.infer<typeof PlanSchema>;
+  let plan: RawPlan;
   try {
     // Step 1 — draft plan
     const draft = await generateText({
       model: provider(MODEL),
       output: Output.object({ schema: PlanSchema }),
-      system: "You are the head trader. Produce a concrete plan (entry/stop/tp1/tp2 as raw numbers) grounded in the analyst notes. Use ATR to size the stop (~1-1.5x ATR). TP1 near 1.5R, TP2 near 3R. Keep thesis under 400 chars and invalidation under 200 chars. Confidence is 0-100. If consensus is weak or conflicting, use grade C or NO ENTRY." + memoryLine,
+      system: "You are the head trader. Produce a concrete plan (entry/stop/tp1/tp2 as raw numbers) grounded in the analyst notes. Grade MUST be one of: A+, A, B, C, NO ENTRY. Bias MUST be Long, Short, or Neutral. Use ATR to size the stop (~1-1.5x ATR). TP1 near 1.5R, TP2 near 3R. Keep thesis under 400 chars and invalidation under 200 chars. Confidence is 0-100. If consensus is weak or conflicting, use grade C or NO ENTRY." + memoryLine,
       prompt: ctx,
     });
     plan = draft.output;
   } catch (e) {
     if (!NoObjectGeneratedError.isInstance(e)) throw e;
-    plan = fallbackPlan(snap, memo);
+    // Salvage: the model likely returned valid JSON that just failed strict
+    // schema validation. Try to parse the raw text before giving up.
+    const salvaged = salvagePlanFromText(e.text);
+    plan = salvaged ?? fallbackPlan(snap, memo);
   }
 
   // Step 2 — critic (best-effort)
@@ -100,13 +139,15 @@ export async function runPlanner(
         const revised = await generateText({
           model: provider(MODEL),
           output: Output.object({ schema: PlanSchema }),
-          system: "You are the head trader. Revise the previous plan per the risk manager's note. Keep bias unless the critique explicitly demands a flip. Keep thesis under 400 chars and invalidation under 200 chars.",
+          system: "You are the head trader. Revise the previous plan per the risk manager's note. Grade MUST be one of: A+, A, B, C, NO ENTRY. Bias MUST be Long, Short, or Neutral. Keep bias unless the critique explicitly demands a flip. Keep thesis under 400 chars and invalidation under 200 chars.",
           prompt: `${ctx}\n\nPrevious plan: ${JSON.stringify(plan)}\nRisk manager: ${critique.output.reason}`,
         });
         plan = revised.output;
       } catch (e) {
         if (!NoObjectGeneratedError.isInstance(e)) throw e;
-        // keep prior plan
+        const salvaged = salvagePlanFromText(e.text);
+        if (salvaged) plan = salvaged;
+        // otherwise keep prior plan
       }
     }
   } catch (e) {
@@ -114,17 +155,18 @@ export async function runPlanner(
     // skip critique step
   }
 
-
+  const grade = normalizeGrade(plan.grade);
+  const bias = normalizeBias(plan.bias);
   const dec = decimalsFor(snap.lastPrice || plan.entry || 1);
   const risk = Math.abs(plan.entry - plan.stop) || 1;
   const reward = Math.abs(plan.tp2 - plan.entry);
   const rr = `1 : ${(reward / risk).toFixed(1)}`;
-  const isNoEntry = plan.grade === "NO ENTRY";
+  const isNoEntry = grade === "NO ENTRY";
   const details = `${plan.thesis} Invalidation: ${plan.invalidation}. Manage to break-even at TP1 (${fmt(plan.tp1, dec)}), trail runner to TP2 (${fmt(plan.tp2, dec)}). Risk 0.5-1R of account.`;
 
   return {
-    grade: plan.grade,
-    bias: plan.bias,
+    grade,
+    bias,
     confidence: Math.round(plan.confidence),
     notes: plan.thesis,
     entry: isNoEntry ? "—" : fmt(plan.entry, dec),
