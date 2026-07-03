@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
 import { PageHeader } from "@/components/PageHeader";
-import { BookOpen, Search, PlayCircle } from "lucide-react";
+import { BookOpen, Search, PlayCircle, ChevronDown, ArrowUp } from "lucide-react";
 import { restartTutorial } from "@/components/Tutorial";
 
 export const Route = createFileRoute("/_app/guide")({
