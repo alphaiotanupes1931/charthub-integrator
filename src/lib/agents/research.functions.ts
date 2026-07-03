@@ -2,8 +2,10 @@
 // L1: getSnapshot   L2: runResearch   L3: runPlanner (+ Hermes memory)
 
 import { createServerFn } from "@tanstack/react-start";
+import { getRequestHeader } from "@tanstack/react-start/server";
+import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/integrations/supabase/types";
 import { getSnapshot } from "./market-data.server";
 import { runResearch } from "./research.server";
 import { runPlanner } from "./planner.server";
@@ -17,9 +19,8 @@ const Input = z.object({
 });
 
 export const runResearchPlan = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((raw: unknown) => Input.parse(raw))
-  .handler(async ({ data, context }): Promise<TradePlan> => {
+  .handler(async ({ data }): Promise<TradePlan> => {
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) {
       return {
@@ -64,17 +65,32 @@ export const runResearchPlan = createServerFn({ method: "POST" })
     // Load Hermes memory relevant to this ticker / lens.
     let hermesPrompt = "";
     try {
-      const { supabase, userId } = context as { supabase: import("@supabase/supabase-js").SupabaseClient; userId: string };
-      const topics = [data.ticker, "general", data.lensDesc?.split(":")[0] ?? ""].filter(Boolean);
-      const { data: lessons } = await supabase
-        .from("hermes_lessons")
-        .select("id,user_id,scope,topic,lesson,weight,created_at")
-        .or(`user_id.eq.${userId},user_id.is.null`)
-        .in("topic", topics)
-        .order("weight", { ascending: false })
-        .order("created_at", { ascending: false })
-        .limit(8);
-      hermesPrompt = formatLessonsForPrompt((lessons ?? []) as HermesLessonRow[]);
+      const auth = getRequestHeader("authorization") ?? getRequestHeader("Authorization");
+      const token = auth?.toLowerCase().startsWith("bearer ") ? auth.slice(7).trim() : null;
+      if (token) {
+        const supabase = createClient<Database>(
+          process.env.SUPABASE_URL!,
+          process.env.SUPABASE_PUBLISHABLE_KEY!,
+          {
+            auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
+            global: { headers: { Authorization: `Bearer ${token}` } },
+          },
+        );
+        const { data: userData } = await supabase.auth.getUser(token);
+        const userId = userData.user?.id;
+        if (userId) {
+          const topics = [data.ticker, "general", data.lensDesc?.split(":")[0] ?? ""].filter(Boolean);
+          const { data: lessons } = await supabase
+            .from("hermes_lessons")
+            .select("id,user_id,scope,topic,lesson,weight,created_at")
+            .or(`user_id.eq.${userId},user_id.is.null`)
+            .in("topic", topics)
+            .order("weight", { ascending: false })
+            .order("created_at", { ascending: false })
+            .limit(8);
+          hermesPrompt = formatLessonsForPrompt((lessons ?? []) as HermesLessonRow[]);
+        }
+      }
     } catch { /* memory is best-effort */ }
 
     const memo = await runResearch(apiKey, snap);
