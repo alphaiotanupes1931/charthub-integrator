@@ -555,7 +555,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
           // Cumulative VWAP (HLC/3 as volume proxy — no volume in feed)
           const vwapPts: Array<{ x: number; y: number }> = [];
           let cumNum = 0, cumDen = 0;
-          let sumC = 0, sumCC = 0, sumCT = 0, n = 0;
+          let sumC = 0, sumCT = 0, n = 0;
           for (const bar of bars) {
             cumNum += bar.tp; cumDen += 1;
             const vw = cumNum / cumDen;
@@ -564,7 +564,6 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
             if (x != null && y != null) vwapPts.push({ x, y });
             n += 1;
             sumC += bar.c;
-            sumCC += bar.c * bar.c;
             sumCT += bar.c * n;
           }
           let meanY: number | null = null;
