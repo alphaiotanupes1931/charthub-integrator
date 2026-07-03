@@ -969,48 +969,88 @@ function Dashboard() {
 
       </div>
 
-      {/* Mobile scan card */}
-      <div className="lg:hidden shrink-0 border-t border-border/60 bg-card p-3 sm:p-4" data-tour="scan">
-        <ScanBody
-          result={result}
-          scanning={scanning}
-          symbol={symbol}
-          intervalLabel={intervalLabel}
-          lensId={lensId}
-          runScan={runScan}
-          onAttach={(file) => {
-            setCoachOpen(true);
-            chatRef.current?.attach(file, `Scan this chart screenshot for ${symbol.ticker} on ${intervalLabel}. Give me grade, bias, entry, stop, TP1, TP2, R:R, and a 1-2 sentence rationale.`);
-            setScanning(true);
-            const lens = findLens(lensId);
-            runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
-              .then((plan) => setResult(plan as ScanResult))
-              .catch(() => { /* coach chat still runs the vision analysis */ })
-              .finally(() => setScanning(false));
-          }}
-          onStopScan={() => { chatRef.current?.stop(); voice.stop(); setScanning(false); }}
-          onStopVoice={() => voice.stop()}
-          voiceSpeaking={voice.speaking}
-        />
-      </div>
-
-      {/* Floating AI Coach - mobile/tablet */}
-      <div className="lg:hidden">
-        <FloatingCoach
-          open={coachOpen}
-          onOpen={() => setCoachOpen(true)}
-          onClose={() => setCoachOpen(false)}
-          chatRef={chatRef}
-          onRunScan={runScan}
-          onStopScan={() => { voice.stop(); setScanning(false); }}
-          scanning={scanning}
-          chart={{
-            ticker: symbol.ticker,
-            intervalLabel,
-            enabledLevels: ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none",
-            snapshot: snapshot ?? undefined,
-          }}
-        />
+      {/* Mobile panel: tabbed Analysis / Chat / History */}
+      <div className="lg:hidden shrink-0 border-t border-border/60 bg-card" data-tour="scan">
+        <div className="flex items-center gap-0.5 border-b border-border/60 px-2 py-2 overflow-x-auto no-scrollbar">
+          <button
+            onClick={() => setRightTab("analysis")}
+            className={`shrink-0 inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
+              rightTab === "analysis" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+            }`}
+          >
+            <BarChart3 className="h-3.5 w-3.5" /> Analysis
+          </button>
+          <button
+            onClick={() => setRightTab("chat")}
+            className={`shrink-0 inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
+              rightTab === "chat" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+            }`}
+          >
+            <MessageSquare className="h-3.5 w-3.5" /> AI Chat
+          </button>
+          <button
+            onClick={() => setRightTab("history")}
+            className={`shrink-0 inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
+              rightTab === "history" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+            }`}
+          >
+            <Clock className="h-3.5 w-3.5" /> History
+          </button>
+        </div>
+        {rightTab === "analysis" && (
+          <div className="p-3 sm:p-4">
+            <ScanBody
+              result={result}
+              scanning={scanning}
+              symbol={symbol}
+              intervalLabel={intervalLabel}
+              lensId={lensId}
+              runScan={runScan}
+              onAttach={(file) => {
+                setRightTab("chat");
+                chatRef.current?.attach(file, `Scan this chart screenshot for ${symbol.ticker} on ${intervalLabel}. Give me grade, bias, entry, stop, TP1, TP2, R:R, and a 1-2 sentence rationale.`);
+                setScanning(true);
+                const lens = findLens(lensId);
+                runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
+                  .then((plan) => setResult(plan as ScanResult))
+                  .catch(() => { /* coach chat still runs the vision analysis */ })
+                  .finally(() => setScanning(false));
+              }}
+              onStopScan={() => { chatRef.current?.stop(); voice.stop(); setScanning(false); }}
+              onStopVoice={() => voice.stop()}
+              voiceSpeaking={voice.speaking}
+            />
+          </div>
+        )}
+        {rightTab === "chat" && (
+          <div className="h-[70vh] min-h-[420px]">
+            <DashboardChatPanel
+              ref={chatRef}
+              onRunScan={runScan}
+              onStopScan={() => { voice.stop(); setScanning(false); }}
+              scanning={scanning}
+              threadIdOverride={activeThreadId}
+              onAnnotations={setAiAnnotationsRaw}
+              onGrade={setAiGrade}
+              onConcept={setAiConcept}
+              chart={{
+                ticker: symbol.ticker,
+                intervalLabel,
+                enabledLevels: ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none",
+                snapshot: snapshot ?? undefined,
+              }}
+            />
+          </div>
+        )}
+        {rightTab === "history" && (
+          <div className="max-h-[70vh] overflow-y-auto">
+            <ChatHistoryList
+              activeThreadId={activeThreadId}
+              onPick={(id) => { setActiveThreadId(id); setRightTab("chat"); }}
+              onNew={() => { setActiveThreadId(null); setRightTab("chat"); }}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
