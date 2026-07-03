@@ -261,12 +261,47 @@ export function AppShell({ children }: { children: ReactNode }) {
           <LogoLink to="/dashboard" size="md" showText={false} className="md:hidden shrink-0" />
         </header>
 
-        <main className={`flex-1 min-w-0 ${isDashboard ? "h-full overflow-hidden" : "overflow-x-hidden"}`}>{children}</main>
+        <main className={`flex-1 min-w-0 ${isDashboard ? "h-full overflow-hidden pb-16 md:pb-0" : "overflow-x-hidden pb-16 md:pb-0"}`}>{children}</main>
 
-        <footer className="border-t border-border/60 px-4 md:px-6 py-3 text-center text-[11px] md:text-xs text-muted-foreground">
+        <footer className="hidden md:block border-t border-border/60 px-4 md:px-6 py-3 text-center text-[11px] md:text-xs text-muted-foreground">
           Educational analysis only, not financial advice.
         </footer>
       </div>
+
+      {/* Mobile bottom tab bar (Robinhood-style). Fixed to the viewport, safe-area aware. */}
+      <nav
+        className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border/60 bg-background/95 backdrop-blur-xl"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        aria-label="Primary"
+      >
+        <div className="grid grid-cols-5 h-16">
+          {MOBILE_TABS.map((t) => {
+            const active = pathname === t.to || pathname.startsWith(t.to + "/");
+            const Icon = t.icon;
+            return (
+              <Link
+                key={t.to}
+                to={t.to}
+                className={`flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition ${
+                  active ? "text-primary" : "text-muted-foreground"
+                }`}
+              >
+                <Icon className={`h-5 w-5 ${active ? "drop-shadow-[0_0_6px_color-mix(in_oklab,var(--gold)_60%,transparent)]" : ""}`} />
+                {t.label}
+              </Link>
+            );
+          })}
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium text-muted-foreground"
+            aria-label="More"
+          >
+            <Menu className="h-5 w-5" />
+            More
+          </button>
+        </div>
+      </nav>
+
       <Tutorial />
       <WelcomeBackGreeter />
     </div>
