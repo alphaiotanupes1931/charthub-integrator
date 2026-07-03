@@ -166,8 +166,16 @@ function coachPersona(coach?: string) {
 
 function chartContextBlock(chart?: ChartCtx): string {
   if (!chart?.ticker) return "The trader has not selected a chart yet.";
+  // The client sends a friendly label such as "Gold Spot (XAU/USD)". Extract the
+  // display name so the coach ALWAYS refers to it that way (never as raw
+  // "XAU/USD") in prose, while keeping the raw ticker available for data lookups.
+  const raw = chart.ticker;
+  const m = raw.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
+  const displayName = m ? m[1].trim() : raw;
+  const rawTicker = m ? m[2].trim() : raw;
   const lines: string[] = [
-    `Symbol: ${chart.ticker}`,
+    `Instrument display name (ALWAYS refer to the instrument by this name in your replies — never the raw ticker): ${displayName}`,
+    `Raw ticker (for internal reference only, do NOT say this to the trader): ${rawTicker}`,
     `Timeframe: ${chart.intervalLabel ?? "?"}`,
     `Levels currently on chart: ${chart.enabledLevels || "none"}`,
   ];
