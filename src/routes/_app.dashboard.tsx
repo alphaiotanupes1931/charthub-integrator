@@ -1035,7 +1035,7 @@ function Dashboard() {
           </div>
         </div>
 
-        {rightOpen && (
+        {rightOpen && !isChartFullscreen && (
           <aside className={`hidden lg:flex shrink-0 border-l border-border bg-card flex-col ${
             panelWidth === "narrow" ? "w-[280px]" : panelWidth === "wide" ? "w-[560px]" : "w-[400px]"
           }`}>
