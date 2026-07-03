@@ -10,15 +10,14 @@ function apply(theme: Theme) {
 }
 
 export function useTheme() {
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof window === "undefined") return "dark";
-    return (localStorage.getItem(KEY) as Theme) || "dark";
-  });
+  // Always boot in dark mode on every fresh load. The toggle still works
+  // for the current session, but reloading the site resets to dark.
+  const [theme, setTheme] = useState<Theme>("dark");
 
   useEffect(() => {
     apply(theme);
-    try { localStorage.setItem(KEY, theme); } catch {}
   }, [theme]);
+
 
   return {
     theme,
