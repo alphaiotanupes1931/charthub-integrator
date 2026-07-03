@@ -164,10 +164,22 @@ export async function runPlanner(
   const isNoEntry = grade === "NO ENTRY";
   const details = `${plan.thesis} Invalidation: ${plan.invalidation}. Manage to break-even at TP1 (${fmt(plan.tp1, dec)}), trail runner to TP2 (${fmt(plan.tp2, dec)}). Risk 0.5-1R of account.`;
 
+  // Backfill confidence: models frequently return 0 or omit the field. Fall
+  // back to the analyst-consensus confidence and enforce a per-grade floor
+  // so a real setup never displays as 0%.
+  const gradeFloor: Record<typeof GRADES[number], number> = {
+    "A+": 85, "A": 75, "B": 60, "C": 40, "NO ENTRY": 0,
+  };
+  const modelConf = Number.isFinite(plan.confidence) ? Math.round(plan.confidence) : 0;
+  const consensusConf = Number.isFinite(memo.consensusConfidence) ? memo.consensusConfidence : 0;
+  const confidence = isNoEntry
+    ? Math.min(modelConf || consensusConf, 40)
+    : Math.max(modelConf, consensusConf, gradeFloor[grade]);
+
   return {
     grade,
     bias,
-    confidence: Math.round(plan.confidence),
+    confidence,
     notes: plan.thesis,
     entry: isNoEntry ? "—" : fmt(plan.entry, dec),
     stop:  isNoEntry ? "—" : fmt(plan.stop,  dec),
