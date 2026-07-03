@@ -634,7 +634,12 @@ function Dashboard() {
     const lens = findLens(lensId);
     const prompt = `Scan ${symbolLabel(symbol)} on the ${intervalLabel} chart. Keep it brief (3-6 short lines total). Give me: Grade, Bias, Entry, Stop, TP1, TP2. Then two bullets: "Strength:" (one line, the strongest thing about this setup) and "Weakness:" (one line, what could kill it). No preamble, no long paragraphs. Refer to the instrument by its friendly name (e.g. "Gold"), not the raw ticker. Levels I'm watching: ${enabledLevels}.`;
     assertScanPromptMatchesSymbol(prompt, symbol, "runScan");
+    // Open the AI analysis panel first, but still send the scan to the chat thread
+    // in the background so the conversation history stays intact.
     sendToChat(prompt);
+    setRightOpen(true);
+    setRightTab("analysis");
+    setMobileView("scan");
     runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
       .then((plan) => {
         const r = plan as ScanResult;
@@ -651,6 +656,7 @@ function Dashboard() {
       })
       .finally(() => setScanning(false));
   };
+
 
 
 
