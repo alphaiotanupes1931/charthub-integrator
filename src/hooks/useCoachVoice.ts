@@ -245,8 +245,11 @@ export function useCoachVoice() {
 
   const speak = useCallback(async (text: string, voiceId: string) => {
     if (!text.trim()) return;
-    // Ignore rapid repeat clicks while audio is already playing.
-    if (speakingRef.current) return;
+    // Cancel any in-flight or currently-playing audio so a new call never
+    // replays the previous scan's stale text.
+    if (speakingRef.current || abortRef.current || sourceRef.current || audioRef.current?.src) {
+      stop();
+    }
     const el = getAudio();
     const ctx = getAudioContext();
     if (!el && !ctx) return;
@@ -255,6 +258,7 @@ export function useCoachVoice() {
     abortRef.current = controller;
     speakingRef.current = true;
     setSpeaking(true);
+
     const isStale = () => myGen !== genRef.current;
     if (sourceRef.current) {
       try { sourceRef.current.stop(); } catch { /* ignore */ }
@@ -339,7 +343,7 @@ export function useCoachVoice() {
       console.warn("[voice] error, using browser voice", e);
       await fallback();
     }
-  }, [getAudio, getAudioContext, markDone]);
+  }, [getAudio, getAudioContext, markDone, stop]);
 
 
   useEffect(() => stop, [stop]);
