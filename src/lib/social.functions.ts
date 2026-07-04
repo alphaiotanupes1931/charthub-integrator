@@ -49,7 +49,8 @@ export const acceptInvite = createServerFn({ method: "POST" })
   .inputValidator((data: { code: string }) => data)
   .handler(async ({ data, context }) => {
     const code = data.code.trim();
-    const { data: inviterId, error } = await context.supabase.rpc("redeem_invite", { _code: code });
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: inviterId, error } = await supabaseAdmin.rpc("redeem_invite", { _user_id: context.userId, _code: code });
     if (error) throw new Error(error.message);
     if (!inviterId) throw new Error("Invite not found");
     return { ok: true, inviterId: inviterId as string };
