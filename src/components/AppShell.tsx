@@ -44,7 +44,6 @@ const NAV: NavItem[] = [
   { to: "/journal",         label: "Trade Journal",   icon: NotebookPen },
   { to: "/strategies",      label: "Strategies",      icon: Library },
   { to: "/coaches",         label: "AI Coaches",      icon: Users },
-  { to: "/voice-coach",     label: "Voice Coach",     icon: Mic },
   { to: "/analytics",       label: "Analytics",       icon: BarChart3 },
   { to: "/signals",         label: "AI Signals",      icon: Radar },
   { to: "/memory",          label: "Trading Memory",  icon: Brain },
