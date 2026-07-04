@@ -243,107 +243,11 @@ export function useCoachVoice() {
   }, []);
 
 
-  const speak = useCallback(async (text: string, voiceId: string) => {
-    if (!text.trim()) return;
-    // Cancel any in-flight or currently-playing audio so a new call never
-    // replays the previous scan's stale text.
-    if (speakingRef.current || abortRef.current || sourceRef.current || audioRef.current?.src) {
-      stop();
-    }
-    const el = getAudio();
-    const ctx = getAudioContext();
-    if (!el && !ctx) return;
-    const myGen = ++genRef.current;
-    const controller = new AbortController();
-    abortRef.current = controller;
-    speakingRef.current = true;
-    setSpeaking(true);
+  const speak = useCallback(async (_text: string, _voiceId: string) => {
+    // AI voice output has been removed.
+    return;
+  }, []);
 
-    const isStale = () => myGen !== genRef.current;
-    if (sourceRef.current) {
-      try { sourceRef.current.stop(); } catch { /* ignore */ }
-      try { sourceRef.current.disconnect(); } catch { /* ignore */ }
-      sourceRef.current = null;
-    }
-    if (el) try { el.pause(); } catch { /* ignore */ }
-    if (lastBlobUrlRef.current) {
-      URL.revokeObjectURL(lastBlobUrlRef.current);
-      lastBlobUrlRef.current = null;
-    }
-    const fallback = async () => {
-      if (isStale()) return;
-      try {
-        const { speakWithWebSpeech } = await import("@/lib/webSpeech");
-        if (isStale()) return;
-        await speakWithWebSpeech(text, voiceId);
-      } catch { /* ignore */ }
-      if (!isStale()) markDone();
-    };
-    try {
-      const res = await fetch("/api/tts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, voiceId }),
-        signal: controller.signal,
-      });
-      if (isStale()) return;
-      if (res.status === 204) {
-        await fallback();
-        return;
-      }
-      if (!res.ok) {
-        const body = await res.text().catch(() => "");
-        console.warn("[voice] tts failed, falling back to browser voice", res.status, body);
-        await fallback();
-        return;
-      }
-      const blob = await res.blob();
-      if (isStale()) return;
-      if (!blob.size) { await fallback(); return; }
-      if (ctx) {
-        try {
-          await ctx.resume();
-          const audioBuffer = await ctx.decodeAudioData(await blob.arrayBuffer());
-          if (isStale()) return;
-          const source = ctx.createBufferSource();
-          source.buffer = audioBuffer;
-          source.connect(ctx.destination);
-          source.onended = () => {
-            if (sourceRef.current === source) sourceRef.current = null;
-            if (!isStale()) markDone();
-          };
-          sourceRef.current = source;
-          source.start(0);
-          return;
-        } catch (e) {
-          if (isStale()) return;
-          console.warn("[voice] web audio failed", e);
-        }
-      }
-      if (!el) { markDone(); return; }
-      const url = URL.createObjectURL(blob);
-      lastBlobUrlRef.current = url;
-      el.src = url;
-      el.muted = false;
-      el.volume = 1;
-      el.onended = () => {
-        if (lastBlobUrlRef.current === url) {
-          URL.revokeObjectURL(url);
-          lastBlobUrlRef.current = null;
-        }
-        if (!isStale()) markDone();
-      };
-      await el.play().catch(async (e) => {
-        if (isStale()) return;
-        console.warn("[voice] play blocked, using browser voice", e);
-        await fallback();
-      });
-    } catch (e) {
-      if (isStale() || (e as { name?: string })?.name === "AbortError") return;
-      console.warn("[voice] error, using browser voice", e);
-      await fallback();
-    }
-  }, [getAudio, getAudioContext, markDone, stop]);
 
 
   useEffect(() => stop, [stop]);
