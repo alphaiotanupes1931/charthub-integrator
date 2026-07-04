@@ -40,12 +40,11 @@ async function askAnalyst(apiKey: string, system: string, snap: MarketSnapshot):
     system,
     prompt: buildContext(snap),
   });
-  return {
-    bias: output.bias,
-    confidence: Math.round(output.confidence),
-    summary: output.summary,
-    keyLevels: output.keyLevels,
-  };
+  const confRaw = Number.isFinite(output.confidence) ? output.confidence : 0;
+  const conf = Math.max(0, Math.min(100, Math.round(confRaw)));
+  const summary = (output.summary ?? "").slice(0, 600);
+  const keyLevels = Array.isArray(output.keyLevels) ? output.keyLevels.slice(0, 6) : undefined;
+  return { bias: output.bias, confidence: conf, summary, keyLevels };
 }
 
 export async function technicalAnalyst(apiKey: string, snap: MarketSnapshot): Promise<AnalystNote> {
