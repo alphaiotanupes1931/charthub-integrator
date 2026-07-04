@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
-import { Mic, Volume2, VolumeX, Play, Square, ChevronDown, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Mic, Volume2, VolumeX, ChevronDown, Loader2 } from "lucide-react";
 import { COACH_VOICES } from "@/lib/coachVoices";
 import { readActiveCoach, writeActiveCoach } from "@/lib/chat-client";
-import { speakWithWebSpeech, cancelWebSpeech } from "@/lib/webSpeech";
 import { toast } from "sonner";
+
 
 export const Route = createFileRoute("/_app/voice-coach")({
   head: () => ({ meta: [{ title: "Voice Coach, TradeMind" }] }),
