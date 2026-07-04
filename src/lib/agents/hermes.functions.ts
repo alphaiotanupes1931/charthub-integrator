@@ -85,14 +85,31 @@ export const getHermesLessons = createServerFn({ method: "POST" })
     return (rows ?? []) as HermesLessonRow[];
   });
 
+// Soft-auth: dashboard access is currently open, so return empty data when
+// the caller has no session instead of throwing "Unauthorized".
+async function getSoftAuthedClient() {
+  const { getRequestHeader } = await import("@tanstack/react-start/server");
+  const auth = getRequestHeader("authorization");
+  if (!auth) return null;
+  const { createClient } = await import("@supabase/supabase-js");
+  const supabase = createClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_PUBLISHABLE_KEY!,
+    { global: { headers: { Authorization: auth } }, auth: { persistSession: false, autoRefreshToken: false } },
+  );
+  const { data } = await supabase.auth.getUser();
+  if (!data.user) return null;
+  return { supabase, userId: data.user.id };
+}
+
 export const listMyLessons = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<HermesLessonRow[]> => {
-    const { supabase, userId } = context as { supabase: import("@supabase/supabase-js").SupabaseClient; userId: string };
-    const { data, error } = await supabase
+  .handler(async (): Promise<HermesLessonRow[]> => {
+    const ctx = await getSoftAuthedClient();
+    if (!ctx) return [];
+    const { data, error } = await ctx.supabase
       .from("hermes_lessons")
       .select("id,user_id,scope,topic,lesson,weight,created_at")
-      .or(`user_id.eq.${userId},user_id.is.null`)
+      .or(`user_id.eq.${ctx.userId},user_id.is.null`)
       .order("created_at", { ascending: false })
       .limit(200);
     if (error) throw new Error(error.message);
@@ -112,13 +129,13 @@ export const forgetLesson = createServerFn({ method: "POST" })
 
 export type HermesStats = { helpful: number; unhelpful: number; total: number; accuracy: number | null };
 export const getHermesStats = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<HermesStats> => {
-    const { supabase, userId } = context as { supabase: import("@supabase/supabase-js").SupabaseClient; userId: string };
-    const { data, error } = await supabase
+  .handler(async (): Promise<HermesStats> => {
+    const ctx = await getSoftAuthedClient();
+    if (!ctx) return { helpful: 0, unhelpful: 0, total: 0, accuracy: null };
+    const { data, error } = await ctx.supabase
       .from("hermes_feedback")
       .select("rating")
-      .eq("user_id", userId);
+      .eq("user_id", ctx.userId);
     if (error) throw new Error(error.message);
     const rows = (data ?? []) as Array<{ rating: number }>;
     const helpful = rows.filter((r) => r.rating > 0).length;
