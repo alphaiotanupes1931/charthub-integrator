@@ -441,6 +441,8 @@ function Dashboard() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [result, setResult] = useState<ScanResult | null>(null);
+  const [levelsOpen, setLevelsOpen] = useState(false);
+
   
   const [levels, setLevels] = useState<Record<LevelKey, boolean>>(() =>
     typeof window !== "undefined" ? loadLevels() : { ...DEFAULT_LEVELS },
@@ -448,7 +450,24 @@ function Dashboard() {
   const [sessionsOn, setSessionsOn] = useState(() =>
     typeof window !== "undefined" ? loadSessionsOn() : false,
   );
-  const [levelsOpen, setLevelsOpen] = useState(false);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(Date.now());
+
+  const [lastUpdatedText, setLastUpdatedText] = useState<string>("");
+
+  useEffect(() => {
+    if (!lastUpdatedAt) {
+      setLastUpdatedText("");
+      return;
+    }
+    const update = () => {
+      const diff = Math.max(0, Math.floor((Date.now() - lastUpdatedAt) / 60000));
+      setLastUpdatedText(diff === 0 ? "just now" : `${diff} min ago`);
+    };
+    update();
+    const id = setInterval(update, 60000);
+    return () => clearInterval(id);
+  }, [lastUpdatedAt]);
+
   const [rightTab, setRightTab] = useState<"analysis" | "chat" | "history">("analysis");
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [rightOpen, setRightOpen] = useState(false);
@@ -657,8 +676,12 @@ function Dashboard() {
           details: "The analysis engine couldn't be reached. Your chart and levels are unaffected.",
         });
       })
-      .finally(() => setScanning(false));
+      .finally(() => {
+        setScanning(false);
+        setLastUpdatedAt(Date.now());
+      });
   };
+
 
 
 
@@ -669,8 +692,15 @@ function Dashboard() {
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
+      {lastUpdatedText && (
+        <div className="shrink-0 flex items-center justify-center gap-2 px-3 py-1 text-[11px] font-medium text-primary bg-primary/10 border-b border-primary/20">
+          <Clock className="h-3 w-3" />
+          Last update {lastUpdatedText}
+        </div>
+      )}
       {/* Row 1: symbol + timeframes + right-side pickers */}
       <div className="shrink-0 flex items-center gap-3 px-3 py-1.5 border-b border-border/60 bg-card/40">
+
 
         <div className="relative shrink-0" ref={pickerRef} data-tour="symbol-picker">
           <button
