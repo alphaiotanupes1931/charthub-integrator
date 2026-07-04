@@ -12,7 +12,7 @@ import {
   BarChart3,
   Brain,
   Bell,
-  Activity,
+  
   Settings as SettingsIcon,
   UserCog,
   ShieldCheck,
