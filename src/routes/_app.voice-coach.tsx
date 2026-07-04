@@ -289,11 +289,12 @@ function VoiceCoachPage() {
                 </div>
                 <button
                   onClick={() => previewVoice(n)}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 text-primary px-3 py-1.5 text-xs font-medium hover:bg-primary/20"
+                  disabled={true}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 text-primary px-3 py-1.5 text-xs font-medium opacity-50 cursor-not-allowed"
                 >
-                  {isPrev ? <Square className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
-                  {isPrev ? "Stop" : "Preview"}
+                  Preview
                 </button>
+
               </div>
             );
           })}
