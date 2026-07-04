@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Mic, Volume2, VolumeX, Play, Square, ChevronDown, Loader2 } from "lucide-react";
+import { Mic, Volume2, VolumeX, ChevronDown, Loader2 } from "lucide-react";
 import { COACH_VOICES } from "@/lib/coachVoices";
 import { readActiveCoach, writeActiveCoach } from "@/lib/chat-client";
-import { speakWithWebSpeech, cancelWebSpeech } from "@/lib/webSpeech";
 import { toast } from "sonner";
+
+
 
 export const Route = createFileRoute("/_app/voice-coach")({
   head: () => ({ meta: [{ title: "Voice Coach, TradeMind" }] }),
@@ -42,14 +43,12 @@ function VoiceCoachPage() {
   const [status, setStatus] = useState("Tap the mic to talk");
   const [previewing, setPreviewing] = useState<string | null>(null);
   const [replying, setReplying] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const recRef = useRef<any>(null);
 
   useEffect(() => () => {
-    cancelWebSpeech();
-    audioRef.current?.pause();
     try { recRef.current?.stop(); } catch { /* ignore */ }
   }, []);
+
 
   const selectCoach = (name: string) => {
     writeActiveCoach(name);
@@ -57,31 +56,10 @@ function VoiceCoachPage() {
     setDropdown(false);
   };
 
-  const speak = async (text: string) => {
-    if (!voiceOn) return;
-    const v = COACH_VOICES[active];
-    try {
-      const res = await fetch("/api/tts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, voiceId: v?.id }),
-      });
-      if (res.ok && res.status !== 204 && res.headers.get("X-TTS-Fallback") !== "browser") {
-        const blob = await res.blob();
-        if (blob.size) {
-          const url = URL.createObjectURL(blob);
-          const audio = new Audio(url);
-          audio.volume = volume / 100;
-          audio.playbackRate = speed;
-          audioRef.current = audio;
-          audio.onended = () => URL.revokeObjectURL(url);
-          await audio.play();
-          return;
-        }
-      }
-    } catch { /* fall through */ }
-    await speakWithWebSpeech(text, v?.id);
+  const speak = async (_text: string) => {
+    // AI voice output has been removed.
   };
+
 
   const askCoach = async (question: string) => {
     setReplying(true);
@@ -161,37 +139,14 @@ function VoiceCoachPage() {
   };
 
   const previewVoice = async (name: string) => {
+    // AI voice output has been removed.
     if (previewing === name) {
-      audioRef.current?.pause(); cancelWebSpeech();
-      setPreviewing(null); return;
-    }
-    audioRef.current?.pause(); cancelWebSpeech();
-    const v = COACH_VOICES[name];
-    if (!v) return;
-    setPreviewing(name);
-    try {
-      const res = await fetch("/api/tts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: v.preview, voiceId: v.id }),
-      });
-      if (res.ok && res.status !== 204 && res.headers.get("X-TTS-Fallback") !== "browser") {
-        const blob = await res.blob();
-        if (blob.size) {
-          const url = URL.createObjectURL(blob);
-          const audio = new Audio(url);
-          audio.volume = volume / 100;
-          audioRef.current = audio;
-          audio.onended = () => { URL.revokeObjectURL(url); setPreviewing(null); };
-          await audio.play();
-          return;
-        }
-      }
-      await speakWithWebSpeech(v.preview, v.id, { onEnd: () => setPreviewing(null), onError: () => setPreviewing(null) });
-    } catch {
-      await speakWithWebSpeech(v.preview, v.id, { onEnd: () => setPreviewing(null), onError: () => setPreviewing(null) });
+      setPreviewing(null);
+    } else {
+      setPreviewing(name);
     }
   };
+
 
   return (
     <div className="p-4 md:p-8 max-w-[1000px] mx-auto">
@@ -275,13 +230,14 @@ function VoiceCoachPage() {
           <div className="flex items-center gap-2">
             {voiceOn ? <Volume2 className="h-4 w-4 text-primary" /> : <VolumeX className="h-4 w-4 text-muted-foreground" />}
             <button
-              onClick={() => { setVoiceOn((v) => !v); if (voiceOn) { audioRef.current?.pause(); cancelWebSpeech(); } }}
+              onClick={() => { setVoiceOn((v) => !v); }}
               className={`relative h-6 w-11 rounded-full transition ${voiceOn ? "bg-primary" : "bg-muted"}`}
               aria-label="Toggle voice output"
             >
               <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition ${voiceOn ? "left-5" : "left-0.5"}`} />
             </button>
           </div>
+
         </div>
         <div className="space-y-5">
           <div>
@@ -333,11 +289,12 @@ function VoiceCoachPage() {
                 </div>
                 <button
                   onClick={() => previewVoice(n)}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 text-primary px-3 py-1.5 text-xs font-medium hover:bg-primary/20"
+                  disabled={true}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 text-primary px-3 py-1.5 text-xs font-medium opacity-50 cursor-not-allowed"
                 >
-                  {isPrev ? <Square className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
-                  {isPrev ? "Stop" : "Preview"}
+                  Preview
                 </button>
+
               </div>
             );
           })}
