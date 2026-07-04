@@ -28,12 +28,24 @@ function AlertsPage() {
   const deleteFn = useServerFn(deletePriceAlert);
   const toggleFn = useServerFn(togglePriceAlert);
 
+  const [hasSession, setHasSession] = useState(false);
+  useEffect(() => {
+    let mounted = true;
+    supabase.auth.getSession().then(({ data }) => { if (mounted) setHasSession(!!data.session); });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      if (mounted) setHasSession(!!session);
+    });
+    return () => { mounted = false; sub.subscription.unsubscribe(); };
+  }, []);
+
   const { data, isLoading } = useQuery({
     queryKey: ["price-alerts"],
     queryFn: () => listFn(),
     refetchInterval: 20_000,
+    enabled: hasSession,
   });
   const rows: PriceAlertRow[] = data?.rows ?? [];
+
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["price-alerts"] });
 
