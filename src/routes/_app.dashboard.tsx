@@ -692,8 +692,15 @@ function Dashboard() {
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
+      {lastUpdatedText && (
+        <div className="shrink-0 flex items-center justify-center gap-2 px-3 py-1 text-[11px] font-medium text-primary bg-primary/10 border-b border-primary/20">
+          <Clock className="h-3 w-3" />
+          Last update {lastUpdatedText}
+        </div>
+      )}
       {/* Row 1: symbol + timeframes + right-side pickers */}
       <div className="shrink-0 flex items-center gap-3 px-3 py-1.5 border-b border-border/60 bg-card/40">
+
 
         <div className="relative shrink-0" ref={pickerRef} data-tour="symbol-picker">
           <button
