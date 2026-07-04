@@ -15,7 +15,14 @@ function MemoryPage() {
   const statsFn = useServerFn(getHermesStats);
   const { data: stats } = useQuery({
     queryKey: ["hermes-stats"],
-    queryFn: () => statsFn(),
+    queryFn: async () => {
+      try {
+        return await statsFn();
+      } catch (error) {
+        if (isAuthHeaderError(error)) return { helpful: 0, unhelpful: 0, total: 0, accuracy: null };
+        throw error;
+      }
+    },
   });
 
   return (
@@ -78,7 +85,14 @@ function HermesMemoryPanel() {
 
   const { data: lessons = [], isLoading, error } = useQuery({
     queryKey: ["hermes-lessons"],
-    queryFn: () => list(),
+    queryFn: async () => {
+      try {
+        return await list();
+      } catch (error) {
+        if (isAuthHeaderError(error)) return [];
+        throw error;
+      }
+    },
   });
 
   const del = useMutation({
@@ -162,6 +176,11 @@ function HermesMemoryPanel() {
       )}
     </div>
   );
+}
+
+function isAuthHeaderError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  return message.toLowerCase().includes("no authorization header");
 }
 
 function StatCard({ icon, label, value, hint }: { icon: React.ReactNode; label: string; value: string; hint: string }) {
