@@ -447,7 +447,9 @@ function Dashboard() {
   );
   const [sessionsOn, setSessionsOn] = useState(() =>
     typeof window !== "undefined" ? loadSessionsOn() : false,
+  );
   const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
+
   const [lastUpdatedText, setLastUpdatedText] = useState<string>("");
 
   useEffect(() => {
