@@ -43,14 +43,12 @@ function VoiceCoachPage() {
   const [status, setStatus] = useState("Tap the mic to talk");
   const [previewing, setPreviewing] = useState<string | null>(null);
   const [replying, setReplying] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const recRef = useRef<any>(null);
 
   useEffect(() => () => {
-    cancelWebSpeech();
-    audioRef.current?.pause();
     try { recRef.current?.stop(); } catch { /* ignore */ }
   }, []);
+
 
   const selectCoach = (name: string) => {
     writeActiveCoach(name);
