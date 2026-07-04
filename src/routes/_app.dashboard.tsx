@@ -676,8 +676,12 @@ function Dashboard() {
           details: "The analysis engine couldn't be reached. Your chart and levels are unaffected.",
         });
       })
-      .finally(() => setScanning(false));
+      .finally(() => {
+        setScanning(false);
+        setLastUpdatedAt(Date.now());
+      });
   };
+
 
 
 
