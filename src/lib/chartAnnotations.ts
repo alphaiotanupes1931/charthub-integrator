@@ -31,6 +31,7 @@ export type ChartAnnotation = ChartHLine | ChartZone | ChartLabel;
 export type ChartGrade = {
   grade: string; // A, B+, C, F, etc.
   bias?: "long" | "short" | "neutral";
+  confidence?: number; // 0..100
   entry?: number;
   stop?: number;
   tp1?: number;
