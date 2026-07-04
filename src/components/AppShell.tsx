@@ -9,7 +9,6 @@ import {
   NotebookPen,
   Library,
   Users,
-  Mic,
   BarChart3,
   Brain,
   Bell,
