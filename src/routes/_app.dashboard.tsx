@@ -441,6 +441,8 @@ function Dashboard() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [result, setResult] = useState<ScanResult | null>(null);
+  const [levelsOpen, setLevelsOpen] = useState(false);
+
   
   const [levels, setLevels] = useState<Record<LevelKey, boolean>>(() =>
     typeof window !== "undefined" ? loadLevels() : { ...DEFAULT_LEVELS },
