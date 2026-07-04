@@ -32,10 +32,10 @@ const BIASES = ["Long", "Short", "Neutral"] as const;
 function normalizeGrade(g: string): typeof GRADES[number] {
   const up = g.toUpperCase().trim();
   if (up.includes("NO ENTRY") || up.includes("WAIT") || up.includes("HOLD")) return "NO ENTRY";
-  if (/\bA\+\b|^A\+/.test(up)) return "A+";
-  if (/\bA[- ]?\b|^A(?!\+)/.test(up)) return "A";
-  if (/\bB[+\-]?\b|^B[+\-]?/.test(up)) return "B";
-  if (/\bC[+\-]?\b|^C[+\-]?/.test(up)) return "C";
+  if (/\bA\+(?=\s|$)|^A\+(?=\s|$)/.test(up)) return "A+";
+  if (/\bA[\-]?(?=\s|$)|^A[\-]?(?=\s|$)/.test(up)) return "A";
+  if (/\bB[+\-]?(?=\s|$)|^B[+\-]?(?=\s|$)/.test(up)) return "B";
+  if (/\bC[+\-]?(?=\s|$)|^C[+\-]?(?=\s|$)/.test(up)) return "C";
   return "NO ENTRY";
 }
 function normalizeBias(b: string): typeof BIASES[number] {
