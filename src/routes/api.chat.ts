@@ -391,7 +391,8 @@ export const Route = createFileRoute("/api/chat")({
         }
 
         if (sb && userId && !isAdmin) {
-          const { data: usageCount, error: usageErr } = await sb.rpc("bump_ai_usage", { _cap: DAILY_AI_CAP });
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          const { data: usageCount, error: usageErr } = await supabaseAdmin.rpc("bump_ai_usage", { _user_id: userId, _cap: DAILY_AI_CAP });
           if (usageErr) {
             const msg = (usageErr.message || "").toLowerCase();
             if (msg.includes("daily_cap_reached")) {
