@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Mic, Volume2, VolumeX, ChevronDown, Loader2 } from "lucide-react";
 import { COACH_VOICES } from "@/lib/coachVoices";
 import { readActiveCoach, writeActiveCoach } from "@/lib/chat-client";
 import { toast } from "sonner";
+
 
 
 export const Route = createFileRoute("/_app/voice-coach")({
