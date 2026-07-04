@@ -617,6 +617,7 @@ function Dashboard() {
     setAiGrade({
       grade: plan.grade,
       bias: biasMap[plan.bias] ?? "neutral",
+      confidence: typeof plan.confidence === "number" ? plan.confidence : undefined,
       entry: num(plan.entry),
       stop: num(plan.stop),
       tp1: num(plan.tp1),
