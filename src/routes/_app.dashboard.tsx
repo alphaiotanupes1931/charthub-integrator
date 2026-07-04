@@ -450,7 +450,7 @@ function Dashboard() {
   const [sessionsOn, setSessionsOn] = useState(() =>
     typeof window !== "undefined" ? loadSessionsOn() : false,
   );
-  const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(Date.now());
 
   const [lastUpdatedText, setLastUpdatedText] = useState<string>("");
 
