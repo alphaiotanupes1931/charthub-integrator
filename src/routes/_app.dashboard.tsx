@@ -447,8 +447,23 @@ function Dashboard() {
   );
   const [sessionsOn, setSessionsOn] = useState(() =>
     typeof window !== "undefined" ? loadSessionsOn() : false,
-  );
-  const [levelsOpen, setLevelsOpen] = useState(false);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
+  const [lastUpdatedText, setLastUpdatedText] = useState<string>("");
+
+  useEffect(() => {
+    if (!lastUpdatedAt) {
+      setLastUpdatedText("");
+      return;
+    }
+    const update = () => {
+      const diff = Math.max(0, Math.floor((Date.now() - lastUpdatedAt) / 60000));
+      setLastUpdatedText(diff === 0 ? "just now" : `${diff} min ago`);
+    };
+    update();
+    const id = setInterval(update, 60000);
+    return () => clearInterval(id);
+  }, [lastUpdatedAt]);
+
   const [rightTab, setRightTab] = useState<"analysis" | "chat" | "history">("analysis");
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [rightOpen, setRightOpen] = useState(false);
