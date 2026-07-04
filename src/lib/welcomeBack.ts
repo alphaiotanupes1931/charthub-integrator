@@ -120,49 +120,11 @@ function stopCurrentWelcomeAudio() {
 }
 
 export async function speakWithElevenLabs(
-  text: string,
-  coach: string | null | undefined,
-  audio?: HTMLAudioElement | null,
-  handlers?: { onStart?: () => void; onEnd?: () => void; onError?: () => void },
+  _text: string,
+  _coach: string | null | undefined,
+  _audio?: HTMLAudioElement | null,
+  _handlers?: { onStart?: () => void; onEnd?: () => void; onError?: () => void },
 ): Promise<boolean> {
-  // Cancel any previous welcome playback / in-flight request before starting a new one.
-  const token = ++welcomeRequestToken;
-  stopCurrentWelcomeAudio();
-  const voiceId = coachToElevenVoiceId(coach);
-  try {
-    const res = await fetch("/api/tts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text, voiceId }),
-    });
-    if (token !== welcomeRequestToken) return false; // superseded
-    if (!res.ok) throw new Error(`tts ${res.status}`);
-    const blob = await res.blob();
-    if (token !== welcomeRequestToken) return false;
-    if (!blob.size) throw new Error("empty audio");
-    const url = URL.createObjectURL(blob);
-    const el = audio ?? new Audio();
-    stopCurrentWelcomeAudio();
-    currentWelcomeAudio = el;
-    currentWelcomeUrl = url;
-    el.src = url;
-    el.onplay = () => handlers?.onStart?.();
-    el.onended = () => {
-      handlers?.onEnd?.();
-      if (currentWelcomeUrl === url) {
-        URL.revokeObjectURL(url);
-        currentWelcomeUrl = null;
-      }
-      if (currentWelcomeAudio === el) currentWelcomeAudio = null;
-    };
-    el.onerror = () => handlers?.onError?.();
-    await el.play();
-    return true;
-  } catch (err) {
-    console.warn("[welcomeBack] remote tts failed, using browser voice", err);
-    // Browser Web Speech API fallback - free, no API.
-    const { speakWithWebSpeech } = await import("./webSpeech");
-    if (token !== welcomeRequestToken) return false;
-    return speakWithWebSpeech(text, voiceId, handlers);
-  }
+  // AI voice output has been removed.
+  return false;
 }
