@@ -57,31 +57,10 @@ function VoiceCoachPage() {
     setDropdown(false);
   };
 
-  const speak = async (text: string) => {
-    if (!voiceOn) return;
-    const v = COACH_VOICES[active];
-    try {
-      const res = await fetch("/api/tts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, voiceId: v?.id }),
-      });
-      if (res.ok && res.status !== 204 && res.headers.get("X-TTS-Fallback") !== "browser") {
-        const blob = await res.blob();
-        if (blob.size) {
-          const url = URL.createObjectURL(blob);
-          const audio = new Audio(url);
-          audio.volume = volume / 100;
-          audio.playbackRate = speed;
-          audioRef.current = audio;
-          audio.onended = () => URL.revokeObjectURL(url);
-          await audio.play();
-          return;
-        }
-      }
-    } catch { /* fall through */ }
-    await speakWithWebSpeech(text, v?.id);
+  const speak = async (_text: string) => {
+    // AI voice output has been removed.
   };
+
 
   const askCoach = async (question: string) => {
     setReplying(true);
