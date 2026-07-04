@@ -140,37 +140,14 @@ function VoiceCoachPage() {
   };
 
   const previewVoice = async (name: string) => {
+    // AI voice output has been removed.
     if (previewing === name) {
-      audioRef.current?.pause(); cancelWebSpeech();
-      setPreviewing(null); return;
-    }
-    audioRef.current?.pause(); cancelWebSpeech();
-    const v = COACH_VOICES[name];
-    if (!v) return;
-    setPreviewing(name);
-    try {
-      const res = await fetch("/api/tts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: v.preview, voiceId: v.id }),
-      });
-      if (res.ok && res.status !== 204 && res.headers.get("X-TTS-Fallback") !== "browser") {
-        const blob = await res.blob();
-        if (blob.size) {
-          const url = URL.createObjectURL(blob);
-          const audio = new Audio(url);
-          audio.volume = volume / 100;
-          audioRef.current = audio;
-          audio.onended = () => { URL.revokeObjectURL(url); setPreviewing(null); };
-          await audio.play();
-          return;
-        }
-      }
-      await speakWithWebSpeech(v.preview, v.id, { onEnd: () => setPreviewing(null), onError: () => setPreviewing(null) });
-    } catch {
-      await speakWithWebSpeech(v.preview, v.id, { onEnd: () => setPreviewing(null), onError: () => setPreviewing(null) });
+      setPreviewing(null);
+    } else {
+      setPreviewing(name);
     }
   };
+
 
   return (
     <div className="p-4 md:p-8 max-w-[1000px] mx-auto">
