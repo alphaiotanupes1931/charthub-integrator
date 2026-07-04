@@ -581,10 +581,12 @@ function Dashboard() {
 
   const runPlan = useServerFn(runResearchPlan);
 
-  const sendToChat = (prompt: string) => {
+  const sendToChat = (prompt: string, opts?: { focusChat?: boolean }) => {
     setRightOpen(true);
-    setRightTab("chat");
-    setMobileView("chat");
+    if (opts?.focusChat !== false) {
+      setRightTab("chat");
+      setMobileView("chat");
+    }
     let attempts = 0;
     const trySend = () => {
       attempts += 1;
