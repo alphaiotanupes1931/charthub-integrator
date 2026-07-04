@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
 import { Loader2, ShieldAlert, Users, BarChart3, CircleDot, CircleOff, CircleDashed, Ban, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
+import { adminReferralStats, adminUsersOverview, adminSetPlatformStatus } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_app/admin")({
   head: () => ({ meta: [{ title: "Admin, TradeMind" }] }),
@@ -46,13 +47,16 @@ function AdminPage() {
 
   useEffect(() => {
     (async () => {
-      const [{ data: s, error: e1 }, { data: u, error: e2 }] = await Promise.all([
-        supabase.rpc("admin_referral_stats"),
-        supabase.rpc("admin_users_overview"),
-      ]);
-      if (e1 || e2) { setErr(e1?.message ?? e2?.message ?? "Failed to load"); return; }
-      setStats((s ?? []) as ReferralRow[]);
-      setUsers((u ?? []) as UserRow[]);
+      try {
+        const [s, u] = await Promise.all([
+          adminReferralStats(),
+          adminUsersOverview(),
+        ]);
+        setStats((s ?? []) as ReferralRow[]);
+        setUsers((u ?? []) as UserRow[]);
+      } catch (e) {
+        setErr(e instanceof Error ? e.message : "Failed to load");
+      }
     })();
   }, []);
 
@@ -237,15 +241,15 @@ function PlatformStatusEditor() {
 
   const save = async () => {
     setSaving(true);
-    const { data, error } = await supabase.rpc(
-      "admin_set_platform_status" as never,
-      { _level: level, _message: message } as never,
-    );
-    setSaving(false);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Platform status updated");
-    const row = data as { updated_at: string } | null;
-    if (row?.updated_at) setUpdatedAt(row.updated_at);
+    try {
+      const row = await adminSetPlatformStatus({ data: { level, message } }) as { updated_at: string } | null;
+      setSaving(false);
+      toast.success("Platform status updated");
+      if (row?.updated_at) setUpdatedAt(row.updated_at);
+    } catch (e) {
+      setSaving(false);
+      toast.error(e instanceof Error ? e.message : "Failed to save");
+    }
   };
 
   return (
