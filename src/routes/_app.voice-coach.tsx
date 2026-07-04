@@ -230,13 +230,14 @@ function VoiceCoachPage() {
           <div className="flex items-center gap-2">
             {voiceOn ? <Volume2 className="h-4 w-4 text-primary" /> : <VolumeX className="h-4 w-4 text-muted-foreground" />}
             <button
-              onClick={() => { setVoiceOn((v) => !v); if (voiceOn) { audioRef.current?.pause(); cancelWebSpeech(); } }}
+              onClick={() => { setVoiceOn((v) => !v); }}
               className={`relative h-6 w-11 rounded-full transition ${voiceOn ? "bg-primary" : "bg-muted"}`}
               aria-label="Toggle voice output"
             >
               <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition ${voiceOn ? "left-5" : "left-0.5"}`} />
             </button>
           </div>
+
         </div>
         <div className="space-y-5">
           <div>
