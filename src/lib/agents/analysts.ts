@@ -8,11 +8,15 @@ import type { AnalystNote, MarketSnapshot } from "./types";
 
 const MODEL = "google/gemini-3-flash-preview";
 
+// No .min/.max bounds — schema-level constraints cause NoObjectGeneratedError
+// when the model exceeds them, collapsing every analyst to neutral/0 and
+// forcing the planner into NO ENTRY. Bounds are stated in the prompt and
+// clamped in code below.
 const NoteSchema = z.object({
   bias: z.enum(["bullish", "bearish", "neutral"]),
-  confidence: z.number().min(0).max(100),
-  summary: z.string().min(10).max(600),
-  keyLevels: z.array(z.number()).max(6).optional(),
+  confidence: z.coerce.number(),
+  summary: z.string(),
+  keyLevels: z.array(z.coerce.number()).optional(),
 });
 
 function buildContext(snap: MarketSnapshot): string {
@@ -36,12 +40,11 @@ async function askAnalyst(apiKey: string, system: string, snap: MarketSnapshot):
     system,
     prompt: buildContext(snap),
   });
-  return {
-    bias: output.bias,
-    confidence: Math.round(output.confidence),
-    summary: output.summary,
-    keyLevels: output.keyLevels,
-  };
+  const confRaw = Number.isFinite(output.confidence) ? output.confidence : 0;
+  const conf = Math.max(0, Math.min(100, Math.round(confRaw)));
+  const summary = (output.summary ?? "").slice(0, 600);
+  const keyLevels = Array.isArray(output.keyLevels) ? output.keyLevels.slice(0, 6) : undefined;
+  return { bias: output.bias, confidence: conf, summary, keyLevels };
 }
 
 export async function technicalAnalyst(apiKey: string, snap: MarketSnapshot): Promise<AnalystNote> {

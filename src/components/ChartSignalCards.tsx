@@ -64,6 +64,14 @@ export function ChartSignalCards({ grade, lastPrice, onClear, scanning }: Props)
         <span className="rounded border border-border/60 bg-background/60 px-1.5 py-0.5 text-[10px] font-bold text-foreground">
           {grade.grade.toUpperCase()}
         </span>
+        {typeof grade.confidence === "number" && (
+          <span
+            className="rounded border border-border/60 bg-background/60 px-1.5 py-0.5 text-[10px] font-mono text-foreground"
+            title="Model confidence"
+          >
+            {Math.round(grade.confidence)}%
+          </span>
+        )}
 
         {/* Inline preview of key numbers */}
         <div className="hidden sm:flex items-center gap-3 ml-1 text-[11px] font-mono">
