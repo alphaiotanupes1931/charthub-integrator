@@ -48,7 +48,7 @@ const NAV: NavItem[] = [
   { to: "/signals",         label: "AI Signals",      icon: Radar },
   { to: "/memory",          label: "Trading Memory",  icon: Brain },
   { to: "/alerts",          label: "Price Alerts",    icon: Bell },
-  { to: "/status",          label: "System Status",   icon: Activity },
+  
   { to: "/settings",        label: "Settings",        icon: SettingsIcon },
   { to: "/coach-dashboard", label: "Coach Dashboard", icon: UserCog },
   { to: "/admin",           label: "Admin",           icon: ShieldCheck, accent: true },
