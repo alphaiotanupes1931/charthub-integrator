@@ -505,7 +505,10 @@ export type Database = {
           referral_source: string
         }[]
       }
-      bump_ai_usage: { Args: { _cap: number }; Returns: number }
+      bump_ai_usage: {
+        Args: { _cap: number; _user_id: string }
+        Returns: number
+      }
       has_active_subscription: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
@@ -514,7 +517,10 @@ export type Database = {
         }
         Returns: boolean
       }
-      redeem_invite: { Args: { _code: string }; Returns: string }
+      redeem_invite: {
+        Args: { _code: string; _user_id: string }
+        Returns: string
+      }
     }
     Enums: {
       app_role: "admin" | "user"
