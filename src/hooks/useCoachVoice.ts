@@ -343,7 +343,7 @@ export function useCoachVoice() {
       console.warn("[voice] error, using browser voice", e);
       await fallback();
     }
-  }, [getAudio, getAudioContext, markDone]);
+  }, [getAudio, getAudioContext, markDone, stop]);
 
 
   useEffect(() => stop, [stop]);
