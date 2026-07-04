@@ -31,8 +31,12 @@ const BIASES = ["Long", "Short", "Neutral"] as const;
 
 function normalizeGrade(g: string): typeof GRADES[number] {
   const up = g.toUpperCase().trim();
-  const hit = GRADES.find((x) => up.includes(x));
-  return hit ?? "NO ENTRY";
+  if (up.includes("NO ENTRY") || up.includes("WAIT") || up.includes("HOLD")) return "NO ENTRY";
+  if (/\bA\+(?=\s|$)|^A\+(?=\s|$)/.test(up)) return "A+";
+  if (/\bA[\-]?(?=\s|$)|^A[\-]?(?=\s|$)/.test(up)) return "A";
+  if (/\bB[+\-]?(?=\s|$)|^B[+\-]?(?=\s|$)/.test(up)) return "B";
+  if (/\bC[+\-]?(?=\s|$)|^C[+\-]?(?=\s|$)/.test(up)) return "C";
+  return "NO ENTRY";
 }
 function normalizeBias(b: string): typeof BIASES[number] {
   const low = b.toLowerCase();
@@ -45,14 +49,19 @@ function salvagePlanFromText(text: string | undefined): RawPlan | null {
   if (!text) return null;
   // Strip markdown code fences and try to isolate the JSON object.
   const cleaned = text.replace(/```json/gi, "```").replace(/```/g, "").trim();
-  const start = cleaned.indexOf("{");
-  const end = cleaned.lastIndexOf("}");
-  if (start < 0 || end <= start) return null;
   try {
-    const parsed = JSON.parse(cleaned.slice(start, end + 1));
-    return PlanSchema.parse(parsed);
+    const parsed = JSON.parse(cleaned);
+    return PlanSchema.parse(Array.isArray(parsed) ? parsed[0] : parsed);
   } catch {
-    return null;
+    const start = cleaned.indexOf("{");
+    const end = cleaned.lastIndexOf("}");
+    if (start < 0 || end <= start) return null;
+    try {
+      const parsed = JSON.parse(cleaned.slice(start, end + 1));
+      return PlanSchema.parse(Array.isArray(parsed) ? parsed[0] : parsed);
+    } catch {
+      return null;
+    }
   }
 }
 
@@ -62,17 +71,44 @@ const CritiqueSchema = z.object({
 });
 
 function fallbackPlan(snap: MarketSnapshot, memo: ResearchMemo): z.infer<typeof PlanSchema> {
+  return systematicPlan(snap, memo, "Model output was incomplete; using the rule-based scan from current price, ATR, CISD, and consensus.");
+}
+
+function systematicPlan(snap: MarketSnapshot, memo: ResearchMemo, thesisPrefix?: string): RawPlan {
+  const last = snap.lastPrice || 1;
+  const atr = Math.max(snap.stats.atr14 || Math.abs(last) * 0.002, Math.abs(last) * 0.0005);
+  const directional = memo.consensus !== "neutral" ? memo.consensus : snap.cisd.state !== "none" ? snap.cisd.state : snap.cisd.htfBias;
+  const bias: RawPlan["bias"] = directional === "bullish" ? "Long" : directional === "bearish" ? "Short" : "Neutral";
+  const aligned = snap.cisd.state !== "none" && snap.cisd.state === snap.cisd.htfBias;
+  const hasTrigger = snap.cisd.state !== "none";
+  const confBase = Math.max(memo.consensusConfidence || 0, aligned ? 68 : hasTrigger ? 58 : 42);
+  const grade = bias === "Neutral" ? "NO ENTRY" : aligned || (memo.consensus !== "neutral" && hasTrigger) ? "B" : "C";
+  const entry = last;
+  const stopDist = atr * (grade === "B" ? 1.25 : 1.5);
+  const stop = bias === "Short" ? entry + stopDist : entry - stopDist;
+  const tp1 = bias === "Short" ? entry - stopDist * 1.5 : entry + stopDist * 1.5;
+  const tp2 = bias === "Short" ? entry - stopDist * 3 : entry + stopDist * 3;
+  const setup = snap.cisd.state === "none" ? "range structure" : `${snap.cisd.state} CISD`;
   return {
-    grade: "NO ENTRY",
-    bias: memo.consensus === "bullish" ? "Long" : memo.consensus === "bearish" ? "Short" : "Neutral",
-    confidence: memo.consensusConfidence ?? 0,
-    entry: snap.lastPrice,
-    stop: snap.lastPrice,
-    tp1: snap.lastPrice,
-    tp2: snap.lastPrice,
-    thesis: "Model did not return a structured plan; standing down until confluence is clearer.",
-    invalidation: "Any decisive move against the consensus bias.",
+    grade,
+    bias,
+    confidence: confBase,
+    entry,
+    stop,
+    tp1,
+    tp2,
+    thesis: `${thesisPrefix ? `${thesisPrefix} ` : ""}${setup} with ${memo.consensus} consensus; ${grade === "NO ENTRY" ? "no directional edge confirmed." : `${bias.toLowerCase()} plan is valid only while price respects ATR-defined risk.`}`,
+    invalidation: bias === "Short" ? `Sustained trade above ${fmt(stop, decimalsFor(last))}.` : bias === "Long" ? `Sustained trade below ${fmt(stop, decimalsFor(last))}.` : "Wait for a directional CISD or consensus shift.",
   };
+}
+
+function shouldReplaceNoEntry(plan: RawPlan, snap: MarketSnapshot, memo: ResearchMemo): boolean {
+  const grade = normalizeGrade(plan.grade);
+  if (grade !== "NO ENTRY") return false;
+  const hasDirectionalConsensus = memo.consensus !== "neutral" && (memo.consensusConfidence ?? 0) >= 45;
+  const hasDirectionalStructure = snap.cisd.state !== "none";
+  const modelWantedDirection = normalizeBias(plan.bias) !== "Neutral";
+  return hasDirectionalConsensus || (hasDirectionalStructure && modelWantedDirection);
 }
 
 function decimalsFor(px: number): number {
@@ -112,7 +148,7 @@ export async function runPlanner(
     const draft = await generateText({
       model: provider(MODEL),
       output: Output.object({ schema: PlanSchema }),
-      system: "You are the head trader. Produce a concrete plan (entry/stop/tp1/tp2 as raw numbers) grounded in the analyst notes. Grade MUST be one of: A+, A, B, C, NO ENTRY. Bias MUST be Long, Short, or Neutral. Use ATR to size the stop (~1-1.5x ATR). TP1 near 1.5R, TP2 near 3R. Keep thesis under 400 chars and invalidation under 200 chars. Confidence is 0-100. If consensus is weak or conflicting, use grade C or NO ENTRY." + memoryLine,
+      system: "You are the head trader. Return exactly one flat JSON object, not an array. Produce a concrete plan (entry/stop/tp1/tp2 as raw numbers) grounded in the analyst notes. Grade MUST be one of: A+, A, B, C, NO ENTRY. Bias MUST be Long, Short, or Neutral. Use ATR to size the stop (~1-1.5x ATR). TP1 near 1.5R, TP2 near 3R. Keep thesis under 400 chars and invalidation under 200 chars. Confidence is 0-100. Use grade C for weak but directional setups; use NO ENTRY only when there is no directional trigger, no consensus, and no tradable risk box." + memoryLine,
       prompt: ctx,
     });
     plan = draft.output;
@@ -139,7 +175,7 @@ export async function runPlanner(
         const revised = await generateText({
           model: provider(MODEL),
           output: Output.object({ schema: PlanSchema }),
-          system: "You are the head trader. Revise the previous plan per the risk manager's note. Grade MUST be one of: A+, A, B, C, NO ENTRY. Bias MUST be Long, Short, or Neutral. Keep bias unless the critique explicitly demands a flip. Keep thesis under 400 chars and invalidation under 200 chars.",
+          system: "You are the head trader. Return exactly one flat JSON object, not an array. Revise the previous plan per the risk manager's note. Grade MUST be one of: A+, A, B, C, NO ENTRY. Bias MUST be Long, Short, or Neutral. Keep bias unless the critique explicitly demands a flip. Keep thesis under 400 chars and invalidation under 200 chars.",
           prompt: `${ctx}\n\nPrevious plan: ${JSON.stringify(plan)}\nRisk manager: ${critique.output.reason}`,
         });
         plan = revised.output;
@@ -155,14 +191,15 @@ export async function runPlanner(
     // skip critique step
   }
 
-  const grade = normalizeGrade(plan.grade);
-  const bias = normalizeBias(plan.bias);
-  const dec = decimalsFor(snap.lastPrice || plan.entry || 1);
-  const risk = Math.abs(plan.entry - plan.stop) || 1;
-  const reward = Math.abs(plan.tp2 - plan.entry);
+  const finalPlan = shouldReplaceNoEntry(plan, snap, memo) ? systematicPlan(snap, memo, "AI marked no entry despite directional evidence;") : plan;
+  const grade = normalizeGrade(finalPlan.grade);
+  const bias = normalizeBias(finalPlan.bias);
+  const dec = decimalsFor(snap.lastPrice || finalPlan.entry || 1);
+  const risk = Math.abs(finalPlan.entry - finalPlan.stop) || 1;
+  const reward = Math.abs(finalPlan.tp2 - finalPlan.entry);
   const rr = `1 : ${(reward / risk).toFixed(1)}`;
   const isNoEntry = grade === "NO ENTRY";
-  const details = `${plan.thesis} Invalidation: ${plan.invalidation}. Manage to break-even at TP1 (${fmt(plan.tp1, dec)}), trail runner to TP2 (${fmt(plan.tp2, dec)}). Risk 0.5-1R of account.`;
+  const details = `${finalPlan.thesis} Invalidation: ${finalPlan.invalidation}. Manage to break-even at TP1 (${fmt(finalPlan.tp1, dec)}), trail runner to TP2 (${fmt(finalPlan.tp2, dec)}). Risk 0.5-1R of account.`;
 
   // Backfill confidence: models frequently return 0 or omit the field. Fall
   // back to the analyst-consensus confidence and enforce a per-grade floor
@@ -170,21 +207,22 @@ export async function runPlanner(
   const gradeFloor: Record<typeof GRADES[number], number> = {
     "A+": 85, "A": 75, "B": 60, "C": 40, "NO ENTRY": 0,
   };
-  const modelConf = Number.isFinite(plan.confidence) ? Math.round(plan.confidence) : 0;
+  const rawModelConf = Number.isFinite(finalPlan.confidence) ? Number(finalPlan.confidence) : 0;
+  const modelConf = Math.round(rawModelConf > 0 && rawModelConf <= 1 ? rawModelConf * 100 : rawModelConf);
   const consensusConf = Number.isFinite(memo.consensusConfidence) ? memo.consensusConfidence : 0;
   const confidence = isNoEntry
-    ? Math.min(modelConf || consensusConf, 40)
+    ? Math.max(25, Math.min(modelConf || consensusConf || 35, 45))
     : Math.max(modelConf, consensusConf, gradeFloor[grade]);
 
   return {
     grade,
     bias,
     confidence,
-    notes: plan.thesis,
-    entry: isNoEntry ? "—" : fmt(plan.entry, dec),
-    stop:  isNoEntry ? "—" : fmt(plan.stop,  dec),
-    tp1:   isNoEntry ? "—" : fmt(plan.tp1,   dec),
-    tp2:   isNoEntry ? "—" : fmt(plan.tp2,   dec),
+    notes: finalPlan.thesis,
+    entry: isNoEntry ? "—" : fmt(finalPlan.entry, dec),
+    stop:  isNoEntry ? "—" : fmt(finalPlan.stop,  dec),
+    tp1:   isNoEntry ? "—" : fmt(finalPlan.tp1,   dec),
+    tp2:   isNoEntry ? "—" : fmt(finalPlan.tp2,   dec),
     rr:    isNoEntry ? "—" : rr,
     details,
     memo,

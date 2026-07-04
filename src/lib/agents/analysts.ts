@@ -1,7 +1,7 @@
 // Layer 2 — analyst personas. Each returns an AnalystNote.
 // Technical / Sentiment / Macro use the AI gateway; Risk is pure code.
 
-import { generateText, Output } from "ai";
+import { generateText, Output, NoObjectGeneratedError } from "ai";
 import { z } from "zod";
 import { createAiGatewayProvider } from "@/lib/ai-gateway.server";
 import type { AnalystNote, MarketSnapshot } from "./types";
@@ -13,11 +13,82 @@ const MODEL = "google/gemini-3-flash-preview";
 // forcing the planner into NO ENTRY. Bounds are stated in the prompt and
 // clamped in code below.
 const NoteSchema = z.object({
-  bias: z.enum(["bullish", "bearish", "neutral"]),
-  confidence: z.coerce.number(),
-  summary: z.string(),
-  keyLevels: z.array(z.coerce.number()).optional(),
-});
+  bias: z.unknown().optional(),
+  confidence: z.unknown().optional(),
+  confidence_score: z.unknown().optional(),
+  summary: z.unknown().optional(),
+  analysis: z.unknown().optional(),
+  keyLevels: z.unknown().optional(),
+  levels: z.unknown().optional(),
+}).passthrough();
+
+type RawNote = z.infer<typeof NoteSchema>;
+
+function textOf(v: unknown): string {
+  if (typeof v === "string") return v;
+  if (typeof v === "number" || typeof v === "boolean") return String(v);
+  if (Array.isArray(v)) return v.map(textOf).filter(Boolean).join(" ");
+  if (v && typeof v === "object") return Object.values(v as Record<string, unknown>).map(textOf).filter(Boolean).join(" ");
+  return "";
+}
+
+function normalizeBias(raw: unknown, snap: MarketSnapshot): AnalystNote["bias"] {
+  const text = textOf(raw).toLowerCase();
+  const bullish = /bull|long|upside|risk-on|strength/.test(text);
+  const bearish = /bear|short|downside|risk-off|weakness|reversal/.test(text);
+  if (bullish && !bearish) return "bullish";
+  if (bearish && !bullish) return "bearish";
+  if (snap.cisd.state === "bullish" && snap.cisd.htfBias === "bullish") return "bullish";
+  if (snap.cisd.state === "bearish" && snap.cisd.htfBias === "bearish") return "bearish";
+  if (snap.cisd.state !== "none") return snap.cisd.state;
+  return "neutral";
+}
+
+function normalizeConfidence(raw: unknown, bias: AnalystNote["bias"], body: string, snap: MarketSnapshot): number {
+  const parsed = typeof raw === "number" ? raw : typeof raw === "string" ? Number(raw.replace(/[^0-9.\-]/g, "")) : NaN;
+  if (Number.isFinite(parsed)) {
+    const scaled = parsed > 0 && parsed <= 1 ? parsed * 100 : parsed;
+    return Math.max(0, Math.min(100, Math.round(scaled)));
+  }
+  const low = body.toLowerCase();
+  if (/strong|decisive|confirmed|clear/.test(low)) return bias === "neutral" ? 45 : 72;
+  if (/moderate|developing|potential/.test(low)) return bias === "neutral" ? 40 : 62;
+  if (/weak|conflicting|mixed|thin/.test(low)) return bias === "neutral" ? 35 : 52;
+  if (snap.cisd.state !== "none") return snap.cisd.state === snap.cisd.htfBias ? 68 : 56;
+  return bias === "neutral" ? 35 : 55;
+}
+
+function extractSummary(raw: RawNote): string {
+  const direct = textOf(raw.summary).trim();
+  if (direct) return direct.slice(0, 600);
+  const body = textOf(raw.analysis || raw).trim();
+  return (body || "Analyst read generated from the current market snapshot.").slice(0, 600);
+}
+
+function extractLevels(raw: RawNote): number[] | undefined {
+  const nums: number[] = [];
+  const visit = (v: unknown) => {
+    if (nums.length >= 6) return;
+    if (typeof v === "number" && Number.isFinite(v)) nums.push(v);
+    else if (typeof v === "string") {
+      const n = Number(v.replace(/[^0-9.\-]/g, ""));
+      if (Number.isFinite(n)) nums.push(n);
+    } else if (Array.isArray(v)) v.forEach(visit);
+    else if (v && typeof v === "object") Object.values(v as Record<string, unknown>).forEach(visit);
+  };
+  visit(raw.keyLevels ?? raw.levels);
+  return nums.length ? nums.slice(0, 6) : undefined;
+}
+
+function salvageNoteFromText(text: string | undefined): RawNote | null {
+  if (!text) return null;
+  const cleaned = text.replace(/```json/gi, "```").replace(/```/g, "").trim();
+  const start = cleaned.indexOf("{");
+  const end = cleaned.lastIndexOf("}");
+  if (start < 0 || end <= start) return null;
+  try { return NoteSchema.parse(JSON.parse(cleaned.slice(start, end + 1))); }
+  catch { return null; }
+}
 
 function buildContext(snap: MarketSnapshot): string {
   return [
@@ -34,17 +105,23 @@ function buildContext(snap: MarketSnapshot): string {
 
 async function askAnalyst(apiKey: string, system: string, snap: MarketSnapshot): Promise<Omit<AnalystNote, "role">> {
   const provider = createAiGatewayProvider(apiKey);
-  const { output } = await generateText({
-    model: provider(MODEL),
-    output: Output.object({ schema: NoteSchema }),
-    system,
-    prompt: buildContext(snap),
-  });
-  const confRaw = Number.isFinite(output.confidence) ? output.confidence : 0;
-  const conf = Math.max(0, Math.min(100, Math.round(confRaw)));
-  const summary = (output.summary ?? "").slice(0, 600);
-  const keyLevels = Array.isArray(output.keyLevels) ? output.keyLevels.slice(0, 6) : undefined;
-  return { bias: output.bias, confidence: conf, summary, keyLevels };
+  let output: RawNote;
+  try {
+    const result = await generateText({
+      model: provider(MODEL),
+      output: Output.object({ schema: NoteSchema }),
+      system: `${system} Return exactly one flat JSON object with keys: bias (bullish, bearish, or neutral), confidence (0-100), summary (one sentence), keyLevels (numbers). Do not nest the answer.`,
+      prompt: buildContext(snap),
+    });
+    output = result.output;
+  } catch (e) {
+    if (!NoObjectGeneratedError.isInstance(e)) throw e;
+    output = salvageNoteFromText(e.text) ?? { bias: snap.cisd.state, confidence: snap.cisd.state === "none" ? 35 : 55, summary: e.text ?? "Analyst output could not be structured." };
+  }
+  const body = textOf(output);
+  const bias = normalizeBias(output.bias ?? output, snap);
+  const confidence = normalizeConfidence(output.confidence ?? output.confidence_score, bias, body, snap);
+  return { bias, confidence, summary: extractSummary(output), keyLevels: extractLevels(output) };
 }
 
 export async function technicalAnalyst(apiKey: string, snap: MarketSnapshot): Promise<AnalystNote> {
