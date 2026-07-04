@@ -194,7 +194,7 @@ export async function runPlanner(
   const finalPlan = shouldReplaceNoEntry(plan, snap, memo) ? systematicPlan(snap, memo, "AI marked no entry despite directional evidence;") : plan;
   const grade = normalizeGrade(finalPlan.grade);
   const bias = normalizeBias(finalPlan.bias);
-  const dec = decimalsFor(snap.lastPrice || plan.entry || 1);
+  const dec = decimalsFor(snap.lastPrice || finalPlan.entry || 1);
   const risk = Math.abs(finalPlan.entry - finalPlan.stop) || 1;
   const reward = Math.abs(finalPlan.tp2 - finalPlan.entry);
   const rr = `1 : ${(reward / risk).toFixed(1)}`;
