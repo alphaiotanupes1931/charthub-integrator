@@ -421,7 +421,34 @@ export const Route = createFileRoute("/api/chat")({
         }
 
         const journalCtx = buildJournalContext(journal ?? []);
-        const system = systemPrompt(coach, journalCtx, chartContextBlock(chart), strategyContextBlock(strategy), lensContextBlock(lens));
+
+        // If the client didn't attach a live snapshot but we know the ticker,
+        // best-effort fetch a spot price server-side so the coach can still
+        // ground numeric levels instead of stalling on "waiting for feed".
+        let enrichedChart = chart;
+        if (chart?.ticker && !chart.snapshot?.lastPrice) {
+          try {
+            const { getSpotPrice } = await import("@/lib/quote.server");
+            const rawTicker = (chart.ticker.match(/\(([^)]+)\)\s*$/)?.[1] ?? chart.ticker).trim();
+            const spot = await getSpotPrice(rawTicker);
+            if (spot != null) {
+              enrichedChart = {
+                ...chart,
+                snapshot: {
+                  ...(chart.snapshot ?? {}),
+                  lastPrice: spot,
+                  source: "spot",
+                  sourceLabel: "Spot quote (server)",
+                  fetchedAt: new Date().toISOString(),
+                },
+              };
+            }
+          } catch (e) {
+            console.warn(`[chat] req=${reqId} spot_enrich_failed`, (e as Error).message);
+          }
+        }
+
+        const system = systemPrompt(coach, journalCtx, chartContextBlock(enrichedChart), strategyContextBlock(strategy), lensContextBlock(lens));
 
         const gateway = createAiGatewayProvider(key);
         const result = streamText({
