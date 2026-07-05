@@ -180,7 +180,8 @@ function chartContextBlock(chart?: ChartCtx): string {
     `Levels currently on chart: ${chart.enabledLevels || "none"}`,
   ];
   const s = chart.snapshot;
-  if (s) {
+  const hasLivePrice = typeof s?.lastPrice === "number" && isFinite(s.lastPrice);
+  if (s && hasLivePrice) {
     const fmt = (n?: number, d = 2) => (typeof n === "number" && isFinite(n) ? n.toFixed(d) : "?");
     lines.push(
       "",
@@ -197,9 +198,20 @@ function chartContextBlock(chart?: ChartCtx): string {
       s.sessionsActive?.length ? `  Active sessions right now: ${s.sessionsActive.join(", ")}` : `  Active sessions right now: none (off-hours)`,
     );
   } else {
+    if (s) {
+      const fmt = (n?: number, d = 2) => (typeof n === "number" && isFinite(n) ? n.toFixed(d) : "?");
+      lines.push(
+        "",
+        `PARTIAL CHART DATA (snapshot attached, but no usable last price; source: ${s.sourceLabel ?? s.source ?? "?"}, fetched ${s.fetchedAt ?? "?"}):`,
+        `  20-bar range: ${fmt(s.low20, 4)} → ${fmt(s.high20, 4)}`,
+        `  50-bar range: ${fmt(s.low50, 4)} → ${fmt(s.high50, 4)}`,
+        s.sr?.length ? `  Swing S/R (recent): ${s.sr.map((p) => fmt(p, 4)).join(", ")}` : "",
+        s.cisd ? `  CISD: ${s.cisd.state} flip · level ${fmt(s.cisd.level, 4)} · trigger ${fmt(s.cisd.trigger, 4)} · proj 1x ${fmt(s.cisd.proj1, 4)} / 2x ${fmt(s.cisd.proj2, 4)} · HTF bias ${s.cisd.htfBias}` : `  CISD: no confirmed flip in the current window`,
+      );
+    }
     lines.push(
       "",
-      "No live snapshot was attached to this request. Do NOT tell the trader you're 'waiting for a price feed' or ask them to wait — they can't force it. Give a complete plan using recent well-known price context for this instrument (your own knowledge of typical range) and clearly label numeric levels as APPROXIMATE / illustrative. Still produce bias, entry zone, invalidation, TP1, TP2 and R:R. Skip the chart-annotations block (numbers can't be pinned to live price), but you MAY still emit a chart-grade block using approximate numbers.",
+      "Live last price is unavailable or delayed. Do NOT tell the trader you're waiting for a price feed, waiting for live data, or ask them to wait — they can't force it. Give the scan now using the attached structure plus recent well-known price context for this instrument. Clearly label any numeric levels as APPROXIMATE / illustrative. Still produce bias, entry zone, invalidation, TP1, TP2 and R:R. Skip the chart-annotations block because numbers can't be pinned to live price, but still emit a chart-grade block with approximate numeric fields when you produce a concrete plan.",
     );
   }
   return lines.filter(Boolean).join("\n");
@@ -241,6 +253,7 @@ Rules:
 - Be conversational, like a real coach and teacher. Short paragraphs. Direct. Use examples.
 - Explain any term plainly when asked (FVG, OB, liquidity sweep, R-multiple, Wyckoff phases, etc.).
 - Never invent trades that aren't in their journal. If you don't have the data, say so.
+- Never say you are waiting for a live price feed, waiting for live data, or unable to provide levels because the feed has not loaded. If exact live price is unavailable, proceed with approximate/illustrative levels and label them clearly.
 - Do not use emojis or decorative symbols.
 
 VISUALIZATION PROTOCOL (very important - the client renders these on the chart):
@@ -257,7 +270,7 @@ When a concept, level, or setup can be SHOWN visually, append one or more fenced
 \`\`\`
 Kinds: "hline" (with optional dashed), "zone" (top/bottom), "label" (text at price).
 NUMBER RULES (STRICT - the client rejects violations):
-- Every price MUST be within 2% of the LIVE CHART "Last price" above. If you don't have a snapshot lastPrice, DO NOT emit chart-annotations or a chart-grade with numeric fields - use a concept-diagram instead.
+- Every chart-annotation price MUST be within 2% of the LIVE CHART "Last price" above. If you don't have a snapshot lastPrice, DO NOT emit chart-annotations; emit the chart-grade with APPROXIMATE numeric fields for the scan instead.
 - Match the same decimal precision as lastPrice (e.g. lastPrice 1.0842 → 4 decimals; 21453.25 → 2 decimals). Never round to whole numbers when lastPrice has decimals.
 - Directional consistency: LONG requires stop < entry < tp1 < tp2. SHORT requires stop > entry > tp1 > tp2. Never violate this.
 - Entry must sit near lastPrice (within ~0.5%) unless you are explicitly proposing a pending order at a level shown on the chart.
