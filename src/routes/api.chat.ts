@@ -197,7 +197,10 @@ function chartContextBlock(chart?: ChartCtx): string {
       s.sessionsActive?.length ? `  Active sessions right now: ${s.sessionsActive.join(", ")}` : `  Active sessions right now: none (off-hours)`,
     );
   } else {
-    lines.push("", "Live chart data not yet loaded - answer generally and ask the trader to wait a moment for the feed.");
+    lines.push(
+      "",
+      "No live snapshot was attached to this request. Do NOT tell the trader you're 'waiting for a price feed' or ask them to wait — they can't force it. Give a complete plan using recent well-known price context for this instrument (your own knowledge of typical range) and clearly label numeric levels as APPROXIMATE / illustrative. Still produce bias, entry zone, invalidation, TP1, TP2 and R:R. Skip the chart-annotations block (numbers can't be pinned to live price), but you MAY still emit a chart-grade block using approximate numbers.",
+    );
   }
   return lines.filter(Boolean).join("\n");
 }
