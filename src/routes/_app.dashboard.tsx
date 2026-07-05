@@ -654,7 +654,7 @@ function Dashboard() {
     setAiGrade(null);
     const enabledLevels = ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none";
     const lens = findLens(lensId);
-    const prompt = `Scan ${symbolLabel(symbol)} on the ${intervalLabel} chart. Keep it brief (3-6 short lines total). Give me: Grade, Bias, Entry, Stop, TP1, TP2. Then two bullets: "Strength:" (one line, the strongest thing about this setup) and "Weakness:" (one line, what could kill it). No preamble, no long paragraphs. Refer to the instrument by its friendly name (e.g. "Gold"), not the raw ticker. Levels I'm watching: ${enabledLevels}.`;
+    const prompt = `Scan ${symbolLabel(symbol)} on the ${intervalLabel} chart now. Keep it brief (3-6 short lines total). Give me: Grade, Bias, Entry, Stop, TP1, TP2. Then two bullets: "Strength:" (one line, the strongest thing about this setup) and "Weakness:" (one line, what could kill it). No preamble, no long paragraphs. Do not say you are waiting for a live price feed; if exact live price is delayed, use approximate levels and label them approximate. Refer to the instrument by its friendly name (e.g. "Gold"), not the raw ticker. Levels I'm watching: ${enabledLevels}.`;
     assertScanPromptMatchesSymbol(prompt, symbol, "runScan");
     // Open the AI analysis panel; send scan to chat thread in background
     // without stealing focus from the analysis view.
