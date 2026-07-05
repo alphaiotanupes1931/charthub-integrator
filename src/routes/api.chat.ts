@@ -197,7 +197,10 @@ function chartContextBlock(chart?: ChartCtx): string {
       s.sessionsActive?.length ? `  Active sessions right now: ${s.sessionsActive.join(", ")}` : `  Active sessions right now: none (off-hours)`,
     );
   } else {
-    lines.push("", "Live chart data not yet loaded - answer generally and ask the trader to wait a moment for the feed.");
+    lines.push(
+      "",
+      "No live snapshot was attached to this request. Do NOT tell the trader you're 'waiting for a price feed' or ask them to wait — they can't force it. Give a complete plan using recent well-known price context for this instrument (your own knowledge of typical range) and clearly label numeric levels as APPROXIMATE / illustrative. Still produce bias, entry zone, invalidation, TP1, TP2 and R:R. Skip the chart-annotations block (numbers can't be pinned to live price), but you MAY still emit a chart-grade block using approximate numbers.",
+    );
   }
   return lines.filter(Boolean).join("\n");
 }
@@ -418,7 +421,34 @@ export const Route = createFileRoute("/api/chat")({
         }
 
         const journalCtx = buildJournalContext(journal ?? []);
-        const system = systemPrompt(coach, journalCtx, chartContextBlock(chart), strategyContextBlock(strategy), lensContextBlock(lens));
+
+        // If the client didn't attach a live snapshot but we know the ticker,
+        // best-effort fetch a spot price server-side so the coach can still
+        // ground numeric levels instead of stalling on "waiting for feed".
+        let enrichedChart = chart;
+        if (chart?.ticker && !chart.snapshot?.lastPrice) {
+          try {
+            const { getSpotPrice } = await import("@/lib/quote.server");
+            const rawTicker = (chart.ticker.match(/\(([^)]+)\)\s*$/)?.[1] ?? chart.ticker).trim();
+            const spot = await getSpotPrice(rawTicker);
+            if (spot != null) {
+              enrichedChart = {
+                ...chart,
+                snapshot: {
+                  ...(chart.snapshot ?? {}),
+                  lastPrice: spot,
+                  source: "spot",
+                  sourceLabel: "Spot quote (server)",
+                  fetchedAt: new Date().toISOString(),
+                },
+              };
+            }
+          } catch (e) {
+            console.warn(`[chat] req=${reqId} spot_enrich_failed`, (e as Error).message);
+          }
+        }
+
+        const system = systemPrompt(coach, journalCtx, chartContextBlock(enrichedChart), strategyContextBlock(strategy), lensContextBlock(lens));
 
         const gateway = createAiGatewayProvider(key);
         const result = streamText({
