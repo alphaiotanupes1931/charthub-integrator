@@ -180,7 +180,8 @@ function chartContextBlock(chart?: ChartCtx): string {
     `Levels currently on chart: ${chart.enabledLevels || "none"}`,
   ];
   const s = chart.snapshot;
-  if (s) {
+  const hasLivePrice = typeof s?.lastPrice === "number" && isFinite(s.lastPrice);
+  if (s && hasLivePrice) {
     const fmt = (n?: number, d = 2) => (typeof n === "number" && isFinite(n) ? n.toFixed(d) : "?");
     lines.push(
       "",
@@ -197,9 +198,20 @@ function chartContextBlock(chart?: ChartCtx): string {
       s.sessionsActive?.length ? `  Active sessions right now: ${s.sessionsActive.join(", ")}` : `  Active sessions right now: none (off-hours)`,
     );
   } else {
+    if (s) {
+      const fmt = (n?: number, d = 2) => (typeof n === "number" && isFinite(n) ? n.toFixed(d) : "?");
+      lines.push(
+        "",
+        `PARTIAL CHART DATA (snapshot attached, but no usable last price; source: ${s.sourceLabel ?? s.source ?? "?"}, fetched ${s.fetchedAt ?? "?"}):`,
+        `  20-bar range: ${fmt(s.low20, 4)} → ${fmt(s.high20, 4)}`,
+        `  50-bar range: ${fmt(s.low50, 4)} → ${fmt(s.high50, 4)}`,
+        s.sr?.length ? `  Swing S/R (recent): ${s.sr.map((p) => fmt(p, 4)).join(", ")}` : "",
+        s.cisd ? `  CISD: ${s.cisd.state} flip · level ${fmt(s.cisd.level, 4)} · trigger ${fmt(s.cisd.trigger, 4)} · proj 1x ${fmt(s.cisd.proj1, 4)} / 2x ${fmt(s.cisd.proj2, 4)} · HTF bias ${s.cisd.htfBias}` : `  CISD: no confirmed flip in the current window`,
+      );
+    }
     lines.push(
       "",
-      "No live snapshot was attached to this request. Do NOT tell the trader you're 'waiting for a price feed' or ask them to wait — they can't force it. Give a complete plan using recent well-known price context for this instrument (your own knowledge of typical range) and clearly label numeric levels as APPROXIMATE / illustrative. Still produce bias, entry zone, invalidation, TP1, TP2 and R:R. Skip the chart-annotations block (numbers can't be pinned to live price), but you MAY still emit a chart-grade block using approximate numbers.",
+      "Live last price is unavailable or delayed. Do NOT tell the trader you're waiting for a price feed, waiting for live data, or ask them to wait — they can't force it. Give the scan now using the attached structure plus recent well-known price context for this instrument. Clearly label any numeric levels as APPROXIMATE / illustrative. Still produce bias, entry zone, invalidation, TP1, TP2 and R:R. Skip the chart-annotations block because numbers can't be pinned to live price, but still emit a chart-grade block with approximate numeric fields when you produce a concrete plan.",
     );
   }
   return lines.filter(Boolean).join("\n");
