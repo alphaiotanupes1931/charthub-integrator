@@ -18,7 +18,12 @@ import {
   BarChart3,
   Sparkles,
   Brain,
+  Save as SaveIcon,
+  Filter as FilterIcon,
+  Bookmark,
+  DatabaseBackup,
 } from "lucide-react";
+
 import {
   putTradeImage,
   getTradeImage,
