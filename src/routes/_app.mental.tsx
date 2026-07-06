@@ -212,6 +212,43 @@ function MentalPage() {
         }
       />
 
+      <div className="rounded-2xl border border-border bg-card p-4 md:p-5">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2 text-sm">
+            {reminder.enabled ? <BellRing className="h-4 w-4 text-primary" /> : <BellOff className="h-4 w-4 text-muted-foreground" />}
+            <span className="font-semibold">Daily check-in reminder</span>
+            {loggedToday && <span className="text-[11px] rounded bg-emerald-500/15 text-emerald-500 px-1.5 py-0.5">logged today</span>}
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="time"
+              value={reminder.time}
+              onChange={(e) => { const n = { ...reminder, time: e.target.value }; setReminder(n); saveReminder(n); }}
+              className="rounded-md border border-border bg-background px-2 py-1 text-xs"
+            />
+            <button
+              onClick={() => {
+                const n = { ...reminder, enabled: !reminder.enabled };
+                setReminder(n); saveReminder(n);
+                if (n.enabled && notifPermission === "default") void requestNotif();
+              }}
+              className={`rounded-md px-3 py-1.5 text-xs font-medium border ${reminder.enabled ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}
+            >
+              {reminder.enabled ? "On" : "Off"}
+            </button>
+          </div>
+        </div>
+        {reminder.enabled && notifPermission !== "granted" && notifPermission !== "unsupported" && (
+          <button onClick={requestNotif} className="mt-2 text-[11px] text-primary underline">
+            Enable browser notifications
+          </button>
+        )}
+        {!loggedToday && reminder.enabled && (
+          <div className="mt-2 text-[11px] text-muted-foreground">You'll get a nudge at {reminder.time} local time while the app is open.</div>
+        )}
+      </div>
+
+
       <div className="rounded-2xl border border-border bg-card p-6">
         <div className="flex items-center gap-2 mb-3">
           <HeartPulse className="h-4 w-4 text-primary" />
