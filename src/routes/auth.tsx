@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, useSearch, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
