@@ -1112,6 +1112,9 @@ function TradeFormModal({
     stop: Number(stop) || 0,
     takeProfit: takeProfit === "" ? undefined : Number(takeProfit),
     size: Number(size) || 0,
+    fees: fees === "" ? undefined : Number(fees),
+    pointValue: pointValue === "" ? undefined : Number(pointValue),
+
     notes,
     setup: setup.trim() || undefined,
     ruleBroken: ruleBroken || undefined,
