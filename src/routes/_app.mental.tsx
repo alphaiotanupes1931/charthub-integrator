@@ -43,7 +43,7 @@ function save(entries: MentalEntry[]) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(entries)); } catch { /* ignore */ }
 }
 
-type Trade = { date: string; entry: number; exit: number; stop: number; size: number; side: "Long" | "Short" };
+type Trade = { date: string; entry: number; exit: number; stop: number; size: number; side: "Long" | "Short"; fees?: number; pointValue?: number };
 function loadTrades(): Trade[] {
   try {
     const raw = localStorage.getItem(TRADES_KEY);
@@ -53,8 +53,24 @@ function loadTrades(): Trade[] {
 }
 function tradePnl(t: Trade) {
   const dir = t.side === "Long" ? 1 : -1;
-  return (t.exit - t.entry) * dir * (t.size || 1);
+  const pv = t.pointValue && isFinite(t.pointValue) && t.pointValue > 0 ? t.pointValue : 1;
+  const fees = t.fees && isFinite(t.fees) ? t.fees : 0;
+  return (t.exit - t.entry) * dir * (t.size || 0) * pv - fees;
 }
+
+const REMINDER_KEY = "trademind.mental.reminder.v1";
+type Reminder = { enabled: boolean; time: string; lastFired?: string };
+function loadReminder(): Reminder {
+  try {
+    const raw = localStorage.getItem(REMINDER_KEY);
+    if (raw) return { enabled: false, time: "18:00", ...JSON.parse(raw) };
+  } catch { /* ignore */ }
+  return { enabled: false, time: "18:00" };
+}
+function saveReminder(r: Reminder) {
+  try { localStorage.setItem(REMINDER_KEY, JSON.stringify(r)); } catch { /* ignore */ }
+}
+
 
 const SCORE_META: Record<number, { label: string; color: string; hint: string }> = {
   1: { label: "Awful",   color: "text-destructive",   hint: "Rough day. Small size or step away." },
