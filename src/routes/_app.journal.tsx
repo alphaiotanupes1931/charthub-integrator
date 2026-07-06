@@ -140,13 +140,14 @@ function csvEscape(v: unknown): string {
 }
 
 function exportTradesCsv(trades: Trade[]) {
-  const headers = ["date","timeframe","symbol","side","entry","exit","stop","takeProfit","size","pnl","rr","plannedRR","ruleBroken","ruleBrokenNote","lossCategory","setup","notes"];
+  const headers = ["date","timeframe","symbol","side","entry","exit","stop","takeProfit","size","pointValue","fees","pnl","rr","plannedRR","ruleBroken","ruleBrokenNote","lossCategory","setup","notes"];
   const rows = trades.map((t) => {
     const rr = tradeRR(t);
     const prr = plannedRR(t);
     return [
       t.date, t.timeframe, t.symbol, t.side,
       t.entry, t.exit, t.stop, t.takeProfit ?? "", t.size,
+      t.pointValue ?? "", t.fees ?? "",
       tradePnl(t).toFixed(2),
       rr == null ? "" : rr.toFixed(3),
       prr == null ? "" : prr.toFixed(3),
@@ -168,6 +169,89 @@ function exportTradesCsv(trades: Trade[]) {
   a.remove();
   URL.revokeObjectURL(url);
 }
+
+// Full backup: trades + mental state entries in one JSON file (portable across devices).
+function exportBackupJson(trades: Trade[]) {
+  let mental: unknown = [];
+  try {
+    const raw = localStorage.getItem(MENTAL_KEY);
+    if (raw) mental = JSON.parse(raw);
+  } catch { /* ignore */ }
+  const payload = {
+    kind: "trademind.backup",
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    trades,
+    mental,
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `trademind-backup-${todayYmd()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function importBackupJson(file: File, currentTrades: Trade[]): Promise<Trade[]> {
+  const text = await file.text();
+  const data = JSON.parse(text);
+  if (!data || typeof data !== "object") throw new Error("Invalid backup file");
+  const incomingTrades = Array.isArray(data.trades) ? (data.trades as Trade[]) : [];
+  // Merge by id, incoming wins.
+  const byId = new Map<string, Trade>();
+  for (const t of currentTrades) byId.set(t.id, t);
+  for (const t of incomingTrades) if (t && t.id) byId.set(t.id, t);
+  const merged = Array.from(byId.values());
+  if (Array.isArray(data.mental)) {
+    try {
+      const raw = localStorage.getItem(MENTAL_KEY);
+      const existing = raw ? JSON.parse(raw) : [];
+      const mBy = new Map<string, unknown>();
+      if (Array.isArray(existing)) for (const e of existing) if (e && typeof e === "object" && "date" in e) mBy.set(String((e as { date: string }).date), e);
+      for (const e of data.mental) if (e && typeof e === "object" && "date" in e) mBy.set(String((e as { date: string }).date), e);
+      localStorage.setItem(MENTAL_KEY, JSON.stringify(Array.from(mBy.values())));
+    } catch { /* ignore */ }
+  }
+  return merged;
+}
+
+// Saved insights views
+export type InsightsFilter = {
+  from?: string;
+  to?: string;
+  symbols?: string[];
+  side?: "all" | "Long" | "Short";
+  setup?: string;
+  ruleBroken?: "all" | "yes" | "no";
+};
+type SavedView = { id: string; name: string; filter: InsightsFilter };
+function loadViews(): SavedView[] {
+  try {
+    const raw = localStorage.getItem(VIEWS_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch { return []; }
+}
+function saveViews(v: SavedView[]) {
+  try { localStorage.setItem(VIEWS_KEY, JSON.stringify(v)); } catch { /* ignore */ }
+}
+function applyFilter(trades: Trade[], f: InsightsFilter): Trade[] {
+  return trades.filter((t) => {
+    if (f.from && t.date < f.from) return false;
+    if (f.to && t.date > f.to) return false;
+    if (f.symbols && f.symbols.length && !f.symbols.includes(t.symbol)) return false;
+    if (f.side && f.side !== "all" && t.side !== f.side) return false;
+    if (f.setup && f.setup.trim() && !(t.setup ?? "").toLowerCase().includes(f.setup.trim().toLowerCase())) return false;
+    if (f.ruleBroken === "yes" && !t.ruleBroken) return false;
+    if (f.ruleBroken === "no" && t.ruleBroken) return false;
+    return true;
+  });
+}
+
 
 function JournalPage() {
   const [tab, setTab] = useState<"calendar" | "trades" | "review" | "insights">("calendar");
