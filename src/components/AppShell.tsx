@@ -12,6 +12,7 @@ import {
   BarChart3,
   Brain,
   Bell,
+  HeartPulse,
   
   Settings as SettingsIcon,
   UserCog,
@@ -42,6 +43,7 @@ const NAV: NavItem[] = [
   { to: "/dashboard",       label: "Dashboard",       icon: LayoutDashboard },
   { to: "/guide",           label: "Guide",           icon: BookOpen },
   { to: "/journal",         label: "Trade Journal",   icon: NotebookPen },
+  { to: "/mental",          label: "Mental State",    icon: HeartPulse },
   { to: "/strategies",      label: "Strategies",      icon: Library },
   { to: "/coaches",         label: "AI Coaches",      icon: Users },
   { to: "/analytics",       label: "Analytics",       icon: BarChart3 },

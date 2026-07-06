@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import {
@@ -14,6 +14,10 @@ import {
   ImageIcon,
   Upload,
   Download,
+  AlertTriangle,
+  BarChart3,
+  Sparkles,
+  Brain,
 } from "lucide-react";
 import {
   putTradeImage,
@@ -37,6 +41,21 @@ type Timeframe = typeof TIMEFRAMES[number];
 
 type Side = "Long" | "Short";
 
+const LOSS_CATEGORIES = [
+  "FOMO / chasing",
+  "Revenge trade",
+  "No stop / moved stop",
+  "Oversized position",
+  "Against trend",
+  "News / volatility",
+  "Bad entry timing",
+  "Held too long",
+  "Cut winner too early",
+  "Overtrading",
+  "Other",
+] as const;
+type LossCategory = typeof LOSS_CATEGORIES[number];
+
 type Trade = {
   id: string;
   date: string;       // local YYYY-MM-DD, never UTC-shifted
@@ -46,15 +65,19 @@ type Trade = {
   entry: number;
   exit: number;
   stop: number;
+  takeProfit?: number;   // planned TP level
   size: number;
   notes: string;
-  hasImage?: boolean; // screenshot stored locally in IndexedDB
+  hasImage?: boolean;
+  ruleBroken?: boolean;
+  ruleBrokenNote?: string;
+  lossCategory?: LossCategory;
+  setup?: string;         // free-text pattern tag e.g. "UTAD", "Breakout"
   createdAt: number;
 };
 
 const STORAGE_KEY = "trademind.journal.trades.v1";
 
-// --- Local-date helpers (NEVER use toISOString - it shifts to UTC) ---
 const pad = (n: number) => String(n).padStart(2, "0");
 const ymd = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const todayYmd = () => ymd(new Date());
@@ -67,7 +90,6 @@ function formatYmdHuman(s: string): string {
   return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" });
 }
 
-// --- P&L and R:R ---
 function tradePnl(t: Trade): number {
   const dir = t.side === "Long" ? 1 : -1;
   return (t.exit - t.entry) * dir * (t.size || 1);
@@ -78,6 +100,13 @@ function tradeRR(t: Trade): number | null {
   const dir = t.side === "Long" ? 1 : -1;
   const reward = (t.exit - t.entry) * dir;
   return reward / risk;
+}
+function plannedRR(t: Trade): number | null {
+  if (t.takeProfit == null || !isFinite(t.takeProfit)) return null;
+  const risk = Math.abs(t.entry - t.stop);
+  if (!risk) return null;
+  const dir = t.side === "Long" ? 1 : -1;
+  return ((t.takeProfit - t.entry) * dir) / risk;
 }
 
 function loadTrades(): Trade[] {
@@ -101,14 +130,20 @@ function csvEscape(v: unknown): string {
 }
 
 function exportTradesCsv(trades: Trade[]) {
-  const headers = ["date","timeframe","symbol","side","entry","exit","stop","size","pnl","rr","notes"];
+  const headers = ["date","timeframe","symbol","side","entry","exit","stop","takeProfit","size","pnl","rr","plannedRR","ruleBroken","ruleBrokenNote","lossCategory","setup","notes"];
   const rows = trades.map((t) => {
     const rr = tradeRR(t);
+    const prr = plannedRR(t);
     return [
       t.date, t.timeframe, t.symbol, t.side,
-      t.entry, t.exit, t.stop, t.size,
+      t.entry, t.exit, t.stop, t.takeProfit ?? "", t.size,
       tradePnl(t).toFixed(2),
       rr == null ? "" : rr.toFixed(3),
+      prr == null ? "" : prr.toFixed(3),
+      t.ruleBroken ? "yes" : "",
+      t.ruleBrokenNote ?? "",
+      t.lossCategory ?? "",
+      t.setup ?? "",
       t.notes ?? "",
     ].map(csvEscape).join(",");
   });
@@ -125,7 +160,7 @@ function exportTradesCsv(trades: Trade[]) {
 }
 
 function JournalPage() {
-  const [tab, setTab] = useState<"calendar" | "trades">("calendar");
+  const [tab, setTab] = useState<"calendar" | "trades" | "review" | "insights">("calendar");
   const [cursor, setCursor] = useState(() => {
     const d = new Date(); d.setDate(1); return d;
   });
@@ -137,7 +172,6 @@ function JournalPage() {
   useEffect(() => { setTrades(loadTrades()); }, []);
   useEffect(() => { saveTrades(trades); }, [trades]);
 
-  // Hand-off from Broker → Journal "Snapshot to Journal".
   const [prefill, setPrefill] = useState<{ symbol?: string; timeframe?: string; notes?: string } | null>(null);
   useEffect(() => {
     try {
@@ -162,7 +196,6 @@ function JournalPage() {
   ];
   while (cells.length % 7 !== 0) cells.push(null);
 
-  // Aggregate by day for the calendar
   const byDay = useMemo(() => {
     const map = new Map<string, { count: number; pnl: number }>();
     for (const t of trades) {
@@ -179,16 +212,11 @@ function JournalPage() {
     [trades],
   );
 
-  const openNew = (date: string) => {
-    setEditingId(null);
-    setFormDate(date);
-    setFormOpen(true);
-  };
-  const openEdit = (t: Trade) => {
-    setEditingId(t.id);
-    setFormDate(t.date);
-    setFormOpen(true);
-  };
+  const wins = useMemo(() => sortedTrades.filter((t) => tradePnl(t) > 0), [sortedTrades]);
+  const losses = useMemo(() => sortedTrades.filter((t) => tradePnl(t) < 0), [sortedTrades]);
+
+  const openNew = (date: string) => { setEditingId(null); setFormDate(date); setFormOpen(true); };
+  const openEdit = (t: Trade) => { setEditingId(t.id); setFormDate(t.date); setFormOpen(true); };
 
   const handleSave = (t: Trade) => {
     setTrades((prev) => {
@@ -205,30 +233,35 @@ function JournalPage() {
 
   const editing = editingId ? trades.find((t) => t.id === editingId) ?? null : null;
 
+  const TABS = [
+    { id: "calendar" as const, label: "Calendar", icon: CalIcon },
+    { id: "trades" as const, label: "Trades", icon: BookOpen },
+    { id: "review" as const, label: "Wins vs Losses", icon: BarChart3 },
+    { id: "insights" as const, label: "Insights", icon: Brain },
+  ];
+
   return (
     <div className="p-4 md:p-8 max-w-[1400px] mx-auto">
       <PageHeader
         title="Trade Journal"
         description={
           <>
-            Log every trade with its date, timeframe, and execution data. Entries save to the exact
-            day you pick - no second-guessing. R:R, P&amp;L, and grades are computed from your inputs.
+            Log every trade with entry, stop, take-profit and exit. Flag rule breaks and tag losing
+            trades by cause. The journal computes R:R and P&amp;L, splits wins from losses, and
+            surfaces patterns from your history.
           </>
         }
       />
 
       <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
-        <div className="flex gap-2">
-          {[
-            { id: "calendar", label: "Calendar", icon: CalIcon },
-            { id: "trades", label: "Trades", icon: BookOpen },
-          ].map((t) => {
+        <div className="flex gap-2 flex-wrap">
+          {TABS.map((t) => {
             const Icon = t.icon;
             const active = tab === t.id;
             return (
               <button
                 key={t.id}
-                onClick={() => setTab(t.id as typeof tab)}
+                onClick={() => setTab(t.id)}
                 className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition ${
                   active
                     ? "bg-primary/15 text-primary border border-primary/30"
@@ -315,75 +348,19 @@ function JournalPage() {
       )}
 
       {tab === "trades" && (
-        <div className="rounded-xl border border-border bg-card overflow-hidden">
-          {sortedTrades.length > 0 && (
-            <div className="flex items-center justify-between gap-2 p-3 border-b border-border/60 bg-card/60">
-              <div className="text-xs text-muted-foreground">
-                {sortedTrades.length} {sortedTrades.length === 1 ? "trade" : "trades"}
-              </div>
-              <button
-                onClick={() => exportTradesCsv(sortedTrades)}
-                className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-foreground/80 hover:bg-accent/40 transition"
-                title="Download all trades as CSV"
-              >
-                <Download className="h-3.5 w-3.5" /> Export CSV
-              </button>
-            </div>
-          )}
-          {sortedTrades.length === 0 ? (
-            <div className="p-12 text-center text-sm text-muted-foreground">
-              No trades logged yet. Hit <span className="text-foreground font-medium">Log trade</span> to add one.
-            </div>
-          ) : (
-            <div className="divide-y divide-border/60">
-              {sortedTrades.map((t) => {
-                const pnl = tradePnl(t);
-                const rr = tradeRR(t);
-                return (
-                  <div key={t.id} className="flex items-center gap-4 p-4 hover:bg-accent/20 transition">
-                    {t.hasImage && <TradeThumb tradeId={t.id} />}
-                    <button onClick={() => openEdit(t)} className="flex-1 min-w-0 text-left">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold">{t.symbol}</span>
-                        <span className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium ${
-                          t.side === "Long" ? "bg-emerald-500/15 text-emerald-400" : "bg-destructive/15 text-destructive"
-                        }`}>
-                          {t.side === "Long" ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                          {t.side}
-                        </span>
-                        <span className="text-[11px] uppercase tracking-wider text-muted-foreground border border-border rounded px-1.5 py-0.5">
-                          {t.timeframe}
-                        </span>
-                        <span className="text-xs text-muted-foreground">{formatYmdHuman(t.date)}</span>
-                        {t.hasImage && (
-                          <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground" title="Screenshot stored on this device only">
-                            <ImageIcon className="h-3 w-3" /> local
-                          </span>
-                        )}
-                      </div>
-                      {t.notes && <div className="mt-1 text-xs text-muted-foreground line-clamp-1">{t.notes}</div>}
-                    </button>
-                    <div className="text-right shrink-0">
-                      <div className={`font-semibold ${pnl > 0 ? "text-emerald-400" : pnl < 0 ? "text-destructive" : ""}`}>
-                        {pnl >= 0 ? "+" : ""}{pnl.toFixed(2)}
-                      </div>
-                      <div className="text-[11px] text-muted-foreground">
-                        R:R {rr == null ? "-" : `${rr.toFixed(2)}`}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleDelete(t.id)}
-                      className="h-8 w-8 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 flex items-center justify-center"
-                      aria-label="Delete trade"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+        <TradesList
+          trades={sortedTrades}
+          onEdit={openEdit}
+          onDelete={handleDelete}
+        />
+      )}
+
+      {tab === "review" && (
+        <WinsLossesReview wins={wins} losses={losses} onEdit={openEdit} />
+      )}
+
+      {tab === "insights" && (
+        <InsightsPanel trades={sortedTrades} />
       )}
 
       {formOpen && (
@@ -395,6 +372,365 @@ function JournalPage() {
           onSave={(t) => { handleSave(t); setPrefill(null); }}
         />
       )}
+    </div>
+  );
+}
+
+function TradesList({
+  trades, onEdit, onDelete,
+}: {
+  trades: Trade[];
+  onEdit: (t: Trade) => void;
+  onDelete: (id: string) => void;
+}) {
+  return (
+    <div className="rounded-xl border border-border bg-card overflow-hidden">
+      {trades.length > 0 && (
+        <div className="flex items-center justify-between gap-2 p-3 border-b border-border/60 bg-card/60">
+          <div className="text-xs text-muted-foreground">
+            {trades.length} {trades.length === 1 ? "trade" : "trades"}
+          </div>
+          <button
+            onClick={() => exportTradesCsv(trades)}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-foreground/80 hover:bg-accent/40 transition"
+          >
+            <Download className="h-3.5 w-3.5" /> Export CSV
+          </button>
+        </div>
+      )}
+      {trades.length === 0 ? (
+        <div className="p-12 text-center text-sm text-muted-foreground">
+          No trades logged yet. Hit <span className="text-foreground font-medium">Log trade</span> to add one.
+        </div>
+      ) : (
+        <div className="divide-y divide-border/60">
+          {trades.map((t) => (
+            <TradeRow key={t.id} t={t} onEdit={onEdit} onDelete={onDelete} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TradeRow({ t, onEdit, onDelete }: { t: Trade; onEdit: (t: Trade) => void; onDelete: (id: string) => void }) {
+  const pnl = tradePnl(t);
+  const rr = tradeRR(t);
+  return (
+    <div className="flex items-center gap-4 p-4 hover:bg-accent/20 transition">
+      {t.hasImage && <TradeThumb tradeId={t.id} />}
+      <button onClick={() => onEdit(t)} className="flex-1 min-w-0 text-left">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-semibold">{t.symbol}</span>
+          <span className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium ${
+            t.side === "Long" ? "bg-emerald-500/15 text-emerald-400" : "bg-destructive/15 text-destructive"
+          }`}>
+            {t.side === "Long" ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+            {t.side}
+          </span>
+          <span className="text-[11px] uppercase tracking-wider text-muted-foreground border border-border rounded px-1.5 py-0.5">
+            {t.timeframe}
+          </span>
+          <span className="text-xs text-muted-foreground">{formatYmdHuman(t.date)}</span>
+          {t.setup && (
+            <span className="text-[10px] rounded bg-primary/10 text-primary px-1.5 py-0.5">{t.setup}</span>
+          )}
+          {t.ruleBroken && (
+            <span className="inline-flex items-center gap-1 text-[10px] rounded bg-amber-500/15 text-amber-500 px-1.5 py-0.5">
+              <AlertTriangle className="h-3 w-3" /> rule break
+            </span>
+          )}
+          {t.lossCategory && (
+            <span className="text-[10px] rounded bg-destructive/10 text-destructive px-1.5 py-0.5">{t.lossCategory}</span>
+          )}
+        </div>
+        {t.notes && <div className="mt-1 text-xs text-muted-foreground line-clamp-1">{t.notes}</div>}
+      </button>
+      <div className="text-right shrink-0">
+        <div className={`font-semibold ${pnl > 0 ? "text-emerald-400" : pnl < 0 ? "text-destructive" : ""}`}>
+          {pnl >= 0 ? "+" : ""}{pnl.toFixed(2)}
+        </div>
+        <div className="text-[11px] text-muted-foreground">
+          R:R {rr == null ? "-" : `${rr.toFixed(2)}`}
+        </div>
+      </div>
+      <button
+        onClick={() => onDelete(t.id)}
+        className="h-8 w-8 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 flex items-center justify-center"
+        aria-label="Delete trade"
+      >
+        <Trash2 className="h-4 w-4" />
+      </button>
+    </div>
+  );
+}
+
+function WinsLossesReview({ wins, losses, onEdit }: { wins: Trade[]; losses: Trade[]; onEdit: (t: Trade) => void }) {
+  const winsPnl = wins.reduce((a, b) => a + tradePnl(b), 0);
+  const lossesPnl = losses.reduce((a, b) => a + tradePnl(b), 0);
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 overflow-hidden">
+        <div className="p-4 border-b border-emerald-500/20 flex items-center justify-between">
+          <div>
+            <div className="text-[10px] uppercase tracking-widest text-emerald-400/80">Winning trades</div>
+            <div className="text-2xl font-semibold text-emerald-400">+{winsPnl.toFixed(2)}</div>
+          </div>
+          <div className="text-xs text-muted-foreground">{wins.length}</div>
+        </div>
+        {wins.length === 0 ? (
+          <div className="p-6 text-center text-xs text-muted-foreground">No winners logged yet.</div>
+        ) : (
+          <div className="divide-y divide-emerald-500/10 max-h-[70vh] overflow-auto">
+            {wins.map((t) => <MiniTradeRow key={t.id} t={t} onEdit={onEdit} />)}
+          </div>
+        )}
+      </div>
+
+      <div className="rounded-xl border border-destructive/30 bg-destructive/5 overflow-hidden">
+        <div className="p-4 border-b border-destructive/20 flex items-center justify-between">
+          <div>
+            <div className="text-[10px] uppercase tracking-widest text-destructive/80">Losing trades</div>
+            <div className="text-2xl font-semibold text-destructive">{lossesPnl.toFixed(2)}</div>
+          </div>
+          <div className="text-xs text-muted-foreground">{losses.length}</div>
+        </div>
+        {losses.length === 0 ? (
+          <div className="p-6 text-center text-xs text-muted-foreground">No losses logged. Nice.</div>
+        ) : (
+          <div className="divide-y divide-destructive/10 max-h-[70vh] overflow-auto">
+            {losses.map((t) => <MiniTradeRow key={t.id} t={t} onEdit={onEdit} />)}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function MiniTradeRow({ t, onEdit }: { t: Trade; onEdit: (t: Trade) => void }) {
+  const pnl = tradePnl(t);
+  return (
+    <button onClick={() => onEdit(t)} className="w-full flex items-center gap-3 p-3 text-left hover:bg-background/40 transition">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-semibold text-sm">{t.symbol}</span>
+          <span className="text-[10px] text-muted-foreground">{t.side} · {t.timeframe}</span>
+          {t.setup && <span className="text-[10px] rounded bg-primary/10 text-primary px-1.5 py-0.5">{t.setup}</span>}
+          {t.ruleBroken && <span className="text-[10px] rounded bg-amber-500/15 text-amber-500 px-1.5 py-0.5">rule break</span>}
+        </div>
+        {t.lossCategory && <div className="mt-1 text-[11px] text-destructive/90">Cause: {t.lossCategory}</div>}
+        <div className="text-[10px] text-muted-foreground mt-0.5">{formatYmdHuman(t.date)}</div>
+      </div>
+      <div className={`text-sm font-semibold ${pnl >= 0 ? "text-emerald-400" : "text-destructive"}`}>
+        {pnl >= 0 ? "+" : ""}{pnl.toFixed(2)}
+      </div>
+    </button>
+  );
+}
+
+function InsightsPanel({ trades }: { trades: Trade[] }) {
+  const stats = useMemo(() => {
+    if (trades.length === 0) return null;
+    const wins = trades.filter((t) => tradePnl(t) > 0);
+    const losses = trades.filter((t) => tradePnl(t) < 0);
+    const netPnl = trades.reduce((a, b) => a + tradePnl(b), 0);
+    const ruleBrokenTrades = trades.filter((t) => t.ruleBroken);
+    const ruleBrokenPnl = ruleBrokenTrades.reduce((a, b) => a + tradePnl(b), 0);
+    const disciplinedTrades = trades.filter((t) => !t.ruleBroken);
+    const disciplinedPnl = disciplinedTrades.reduce((a, b) => a + tradePnl(b), 0);
+
+    // Loss category breakdown
+    const byCause = new Map<string, { count: number; pnl: number }>();
+    for (const t of losses) {
+      const key = t.lossCategory ?? "Uncategorized";
+      const cur = byCause.get(key) ?? { count: 0, pnl: 0 };
+      cur.count += 1;
+      cur.pnl += tradePnl(t);
+      byCause.set(key, cur);
+    }
+    const lossByCategory = Array.from(byCause.entries())
+      .map(([cause, v]) => ({ cause, ...v }))
+      .sort((a, b) => a.pnl - b.pnl);
+
+    // By symbol
+    const bySymbol = new Map<string, { count: number; wins: number; pnl: number }>();
+    for (const t of trades) {
+      const cur = bySymbol.get(t.symbol) ?? { count: 0, wins: 0, pnl: 0 };
+      cur.count += 1;
+      cur.pnl += tradePnl(t);
+      if (tradePnl(t) > 0) cur.wins += 1;
+      bySymbol.set(t.symbol, cur);
+    }
+    const perSymbol = Array.from(bySymbol.entries())
+      .map(([symbol, v]) => ({ symbol, ...v, winRate: (v.wins / v.count) * 100 }))
+      .sort((a, b) => b.pnl - a.pnl);
+
+    // By day-of-week
+    const byDow = new Map<number, { count: number; pnl: number; wins: number }>();
+    for (const t of trades) {
+      const dow = parseYmd(t.date).getDay();
+      const cur = byDow.get(dow) ?? { count: 0, pnl: 0, wins: 0 };
+      cur.count += 1; cur.pnl += tradePnl(t);
+      if (tradePnl(t) > 0) cur.wins += 1;
+      byDow.set(dow, cur);
+    }
+    const dowNames = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+    const perDow = Array.from(byDow.entries())
+      .map(([dow, v]) => ({ dow: dowNames[dow], ...v, winRate: (v.wins / v.count) * 100 }))
+      .sort((a, b) => b.pnl - a.pnl);
+
+    // By setup
+    const bySetup = new Map<string, { count: number; wins: number; pnl: number }>();
+    for (const t of trades) {
+      const key = (t.setup ?? "").trim();
+      if (!key) continue;
+      const cur = bySetup.get(key) ?? { count: 0, wins: 0, pnl: 0 };
+      cur.count += 1; cur.pnl += tradePnl(t);
+      if (tradePnl(t) > 0) cur.wins += 1;
+      bySetup.set(key, cur);
+    }
+    const perSetup = Array.from(bySetup.entries())
+      .map(([setup, v]) => ({ setup, ...v, winRate: (v.wins / v.count) * 100 }))
+      .sort((a, b) => b.pnl - a.pnl);
+
+    // Auto-detected patterns
+    const patterns: string[] = [];
+    const winRate = (wins.length / trades.length) * 100;
+    patterns.push(`Overall win rate ${winRate.toFixed(0)}% across ${trades.length} trades.`);
+    if (ruleBrokenTrades.length > 0) {
+      patterns.push(`Rule breaks cost you ${ruleBrokenPnl.toFixed(2)} across ${ruleBrokenTrades.length} trades. When you followed your rules you netted ${disciplinedPnl.toFixed(2)}.`);
+    }
+    if (lossByCategory.length > 0) {
+      const worst = lossByCategory[0];
+      patterns.push(`Biggest loss driver: "${worst.cause}" (${worst.pnl.toFixed(2)} across ${worst.count} trades).`);
+    }
+    if (perSymbol.length > 1) {
+      patterns.push(`Best instrument: ${perSymbol[0].symbol} (+${perSymbol[0].pnl.toFixed(2)}). Worst: ${perSymbol[perSymbol.length - 1].symbol} (${perSymbol[perSymbol.length - 1].pnl.toFixed(2)}).`);
+    }
+    if (perDow.length > 1) {
+      patterns.push(`Strongest day: ${perDow[0].dow} (+${perDow[0].pnl.toFixed(2)}). Weakest: ${perDow[perDow.length - 1].dow} (${perDow[perDow.length - 1].pnl.toFixed(2)}).`);
+    }
+    if (perSetup.length > 0) {
+      patterns.push(`Highest-edge setup: "${perSetup[0].setup}" (${perSetup[0].winRate.toFixed(0)}% win rate, ${perSetup[0].pnl.toFixed(2)} net).`);
+    }
+
+    return { netPnl, winRate, ruleBrokenPnl, ruleBrokenCount: ruleBrokenTrades.length,
+      disciplinedPnl, disciplinedCount: disciplinedTrades.length,
+      lossByCategory, perSymbol, perDow, perSetup, patterns };
+  }, [trades]);
+
+  if (!stats) {
+    return (
+      <div className="rounded-xl border border-border bg-card p-10 text-center text-sm text-muted-foreground">
+        Log a few trades to unlock pattern insights.
+      </div>
+    );
+  }
+
+  const aiPrompt = encodeURIComponent(
+    `Please review my trading journal and highlight my top 3 behavioral patterns, my biggest weaknesses, and 3 concrete actions I should take. Here is a compact summary:\n\n` +
+    stats.patterns.join("\n") + `\n\nLoss categories: ` +
+    stats.lossByCategory.map((c) => `${c.cause}: ${c.pnl.toFixed(2)} (${c.count})`).join("; ")
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <StatCard label="Net P&L" value={`${stats.netPnl >= 0 ? "+" : ""}${stats.netPnl.toFixed(2)}`} positive={stats.netPnl >= 0} />
+        <StatCard label="Win rate" value={`${stats.winRate.toFixed(0)}%`} positive={stats.winRate >= 50} />
+        <StatCard label="Rule-break P&L" value={`${stats.ruleBrokenPnl >= 0 ? "+" : ""}${stats.ruleBrokenPnl.toFixed(2)}`} positive={stats.ruleBrokenPnl >= 0} sub={`${stats.ruleBrokenCount} trades`} />
+        <StatCard label="Disciplined P&L" value={`${stats.disciplinedPnl >= 0 ? "+" : ""}${stats.disciplinedPnl.toFixed(2)}`} positive={stats.disciplinedPnl >= 0} sub={`${stats.disciplinedCount} trades`} />
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> Auto-detected patterns</h3>
+          <Link
+            to="/dashboard"
+            search={{ ask: decodeURIComponent(aiPrompt) } as never}
+            className="text-xs rounded-md border border-primary/30 bg-primary/10 text-primary px-2.5 py-1.5 hover:bg-primary/20"
+          >
+            Ask AI to analyze
+          </Link>
+        </div>
+        <ul className="space-y-2 text-sm">
+          {stats.patterns.map((p, i) => (
+            <li key={i} className="flex items-start gap-2">
+              <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+              <span>{p}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-4">
+        <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+          <AlertTriangle className="h-4 w-4 text-destructive" /> Losses by cause
+        </h3>
+        {stats.lossByCategory.length === 0 ? (
+          <div className="text-xs text-muted-foreground">No losing trades logged yet.</div>
+        ) : (
+          <div className="space-y-2">
+            {stats.lossByCategory.map((c) => {
+              const worst = stats.lossByCategory[0].pnl;
+              const pct = Math.min(100, (c.pnl / worst) * 100);
+              return (
+                <div key={c.cause} className="space-y-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-foreground/80">{c.cause}</span>
+                    <span className="text-destructive font-semibold">{c.pnl.toFixed(2)} <span className="text-muted-foreground font-normal">({c.count})</span></span>
+                  </div>
+                  <div className="h-1.5 bg-destructive/10 rounded overflow-hidden">
+                    <div className="h-full bg-destructive/70" style={{ width: `${pct}%` }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <BreakdownList title="By instrument" rows={stats.perSymbol.map((r) => ({ label: r.symbol, pnl: r.pnl, winRate: r.winRate, count: r.count }))} />
+        <BreakdownList title="By day of week" rows={stats.perDow.map((r) => ({ label: r.dow, pnl: r.pnl, winRate: r.winRate, count: r.count }))} />
+      </div>
+
+      {stats.perSetup.length > 0 && (
+        <BreakdownList title="By setup / pattern" rows={stats.perSetup.map((r) => ({ label: r.setup, pnl: r.pnl, winRate: r.winRate, count: r.count }))} />
+      )}
+    </div>
+  );
+}
+
+function StatCard({ label, value, positive, sub }: { label: string; value: string; positive: boolean; sub?: string }) {
+  return (
+    <div className="rounded-xl border border-border bg-card p-3">
+      <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
+      <div className={`text-lg font-semibold ${positive ? "text-emerald-400" : "text-destructive"}`}>{value}</div>
+      {sub && <div className="text-[10px] text-muted-foreground">{sub}</div>}
+    </div>
+  );
+}
+
+function BreakdownList({ title, rows }: { title: string; rows: { label: string; pnl: number; winRate: number; count: number }[] }) {
+  return (
+    <div className="rounded-xl border border-border bg-card p-4">
+      <h3 className="text-sm font-semibold mb-3">{title}</h3>
+      <div className="space-y-1.5">
+        {rows.map((r) => (
+          <div key={r.label} className="flex items-center justify-between text-xs rounded border border-border/40 px-2 py-1.5">
+            <span className="font-medium">{r.label}</span>
+            <div className="flex items-center gap-3 text-muted-foreground">
+              <span>{r.count}</span>
+              <span>{r.winRate.toFixed(0)}%</span>
+              <span className={`font-semibold ${r.pnl >= 0 ? "text-emerald-400" : "text-destructive"}`}>
+                {r.pnl >= 0 ? "+" : ""}{r.pnl.toFixed(2)}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -421,14 +757,18 @@ function TradeFormModal({
   const [entry, setEntry] = useState<string>(editing ? String(editing.entry) : "");
   const [exit, setExit] = useState<string>(editing ? String(editing.exit) : "");
   const [stop, setStop] = useState<string>(editing ? String(editing.stop) : "");
+  const [takeProfit, setTakeProfit] = useState<string>(editing?.takeProfit != null ? String(editing.takeProfit) : "");
   const [size, setSize] = useState<string>(editing ? String(editing.size) : "1");
   const [notes, setNotes] = useState(editing?.notes ?? prefill?.notes ?? "");
+  const [setup, setSetup] = useState(editing?.setup ?? "");
+  const [ruleBroken, setRuleBroken] = useState<boolean>(editing?.ruleBroken ?? false);
+  const [ruleBrokenNote, setRuleBrokenNote] = useState<string>(editing?.ruleBrokenNote ?? "");
+  const [lossCategory, setLossCategory] = useState<LossCategory | "">(editing?.lossCategory ?? "");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pendingImage, setPendingImage] = useState<Blob | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [removeImage, setRemoveImage] = useState(false);
 
-  // Load existing image preview when editing.
   useEffect(() => {
     let revokedUrl: string | null = null;
     if (editing?.hasImage) {
@@ -459,7 +799,6 @@ function TradeFormModal({
     setRemoveImage(true);
   };
 
-  // Paste-from-clipboard support (great for TradingView screenshots).
   useEffect(() => {
     const onPaste = (e: ClipboardEvent) => {
       const item = Array.from(e.clipboardData?.items ?? []).find((i) => i.type.startsWith("image/"));
@@ -483,13 +822,20 @@ function TradeFormModal({
     entry: Number(entry) || 0,
     exit: Number(exit) || 0,
     stop: Number(stop) || 0,
+    takeProfit: takeProfit === "" ? undefined : Number(takeProfit),
     size: Number(size) || 0,
     notes,
+    setup: setup.trim() || undefined,
+    ruleBroken: ruleBroken || undefined,
+    ruleBrokenNote: ruleBroken ? (ruleBrokenNote || undefined) : undefined,
+    lossCategory: lossCategory || undefined,
     hasImage,
     createdAt: editing?.createdAt ?? Date.now(),
   };
   const previewPnl = tradePnl(preview);
   const previewRR = tradeRR(preview);
+  const previewPlannedRR = plannedRR(preview);
+  const isLoss = previewPnl < 0;
 
   const canSave = symbol.trim() && entry !== "" && exit !== "" && stop !== "" && date;
 
@@ -502,7 +848,6 @@ function TradeFormModal({
       await deleteTradeImage(id);
     }
     onSave({ ...preview, id });
-
   };
 
   return (
@@ -578,21 +923,62 @@ function TradeFormModal({
             </Field>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <Field label="Entry">
               <input inputMode="decimal" value={entry} onChange={(e) => setEntry(e.target.value)} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
             </Field>
             <Field label="Stop">
               <input inputMode="decimal" value={stop} onChange={(e) => setStop(e.target.value)} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
             </Field>
-            <Field label="Exit">
+            <Field label="Take profit">
+              <input inputMode="decimal" value={takeProfit} onChange={(e) => setTakeProfit(e.target.value)} placeholder="planned" className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            </Field>
+            <Field label="Exit (actual)">
               <input inputMode="decimal" value={exit} onChange={(e) => setExit(e.target.value)} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
             </Field>
           </div>
 
-          <Field label="Size (units / contracts)">
-            <input inputMode="decimal" value={size} onChange={(e) => setSize(e.target.value)} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
-          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Size (units / contracts)">
+              <input inputMode="decimal" value={size} onChange={(e) => setSize(e.target.value)} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            </Field>
+            <Field label="Setup / pattern (optional)">
+              <input value={setup} onChange={(e) => setSetup(e.target.value)} placeholder="e.g. UTAD, Breakout" className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            </Field>
+          </div>
+
+          <div className="rounded-lg border border-border p-3 space-y-3">
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={ruleBroken}
+                onChange={(e) => setRuleBroken(e.target.checked)}
+                className="h-4 w-4 rounded border-border"
+              />
+              <span>I broke one of my trading rules on this trade</span>
+            </label>
+            {ruleBroken && (
+              <input
+                value={ruleBrokenNote}
+                onChange={(e) => setRuleBrokenNote(e.target.value)}
+                placeholder="Which rule? (e.g. traded outside plan hours)"
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
+            )}
+          </div>
+
+          {isLoss && (
+            <Field label="What caused this loss?">
+              <select
+                value={lossCategory}
+                onChange={(e) => setLossCategory(e.target.value as LossCategory | "")}
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              >
+                <option value="">Uncategorized</option>
+                {LOSS_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </Field>
+          )}
 
           <Field label="Notes">
             <textarea
@@ -640,12 +1026,12 @@ function TradeFormModal({
               >
                 <Upload className="h-4 w-4" />
                 <span>Upload screenshot or paste from clipboard</span>
-                <span className="text-[10px]">Stored only on your device - never uploaded to our servers</span>
+                <span className="text-[10px]">Stored only on your device</span>
               </button>
             )}
           </Field>
 
-          <div className="rounded-lg border border-border bg-background/50 p-3 grid grid-cols-2 gap-3 text-sm">
+          <div className="rounded-lg border border-border bg-background/50 p-3 grid grid-cols-3 gap-3 text-sm">
             <div>
               <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">P&amp;L</div>
               <div className={`font-semibold ${previewPnl > 0 ? "text-emerald-400" : previewPnl < 0 ? "text-destructive" : ""}`}>
@@ -653,8 +1039,12 @@ function TradeFormModal({
               </div>
             </div>
             <div>
-              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">R:R</div>
+              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">R:R (actual)</div>
               <div className="font-semibold">{previewRR == null ? "-" : previewRR.toFixed(2)}</div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">R:R (planned)</div>
+              <div className="font-semibold">{previewPlannedRR == null ? "-" : previewPlannedRR.toFixed(2)}</div>
             </div>
           </div>
         </div>
