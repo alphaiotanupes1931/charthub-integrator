@@ -271,12 +271,13 @@ function JournalPage() {
   useEffect(() => { setTrades(loadTrades()); }, []);
   useEffect(() => { saveTrades(trades); }, [trades]);
 
-  const [prefill, setPrefill] = useState<{ symbol?: string; timeframe?: string; notes?: string } | null>(null);
+  type Prefill = { symbol?: string; timeframe?: string; notes?: string; entry?: number; side?: Side; setup?: string };
+  const [prefill, setPrefill] = useState<Prefill | null>(null);
   useEffect(() => {
     try {
       const raw = localStorage.getItem("trademind.journal.prefill.v1");
       if (!raw) return;
-      const data = JSON.parse(raw);
+      const data = JSON.parse(raw) as Prefill;
       localStorage.removeItem("trademind.journal.prefill.v1");
       setPrefill(data);
       setFormDate(todayYmd());
@@ -284,6 +285,7 @@ function JournalPage() {
       setFormOpen(true);
     } catch { /* ignore */ }
   }, []);
+
 
   const year = cursor.getFullYear();
   const month = cursor.getMonth();
