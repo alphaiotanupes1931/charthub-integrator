@@ -67,6 +67,8 @@ type Trade = {
   stop: number;
   takeProfit?: number;   // planned TP level
   size: number;
+  fees?: number;          // total commissions + swap for the trade
+  pointValue?: number;    // $ per 1.0 price move per unit (contract multiplier / pip value)
   notes: string;
   hasImage?: boolean;
   ruleBroken?: boolean;
@@ -77,6 +79,8 @@ type Trade = {
 };
 
 const STORAGE_KEY = "trademind.journal.trades.v1";
+const MENTAL_KEY = "trademind.mental.v1";
+const VIEWS_KEY = "trademind.journal.views.v1";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 const ymd = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -90,9 +94,14 @@ function formatYmdHuman(s: string): string {
   return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" });
 }
 
+// Accurate P&L: gross move x direction x size x point value, minus fees.
+// point value defaults to 1 (matches raw price units for spot / crypto).
 function tradePnl(t: Trade): number {
   const dir = t.side === "Long" ? 1 : -1;
-  return (t.exit - t.entry) * dir * (t.size || 1);
+  const size = t.size || 0;
+  const pv = t.pointValue && isFinite(t.pointValue) && t.pointValue > 0 ? t.pointValue : 1;
+  const fees = t.fees && isFinite(t.fees) ? t.fees : 0;
+  return (t.exit - t.entry) * dir * size * pv - fees;
 }
 function tradeRR(t: Trade): number | null {
   const risk = Math.abs(t.entry - t.stop);
@@ -108,6 +117,7 @@ function plannedRR(t: Trade): number | null {
   const dir = t.side === "Long" ? 1 : -1;
   return ((t.takeProfit - t.entry) * dir) / risk;
 }
+
 
 function loadTrades(): Trade[] {
   try {
