@@ -107,6 +107,42 @@ function MentalPage() {
     }
   }, []);
 
+  // Daily check-in reminder (in-app + browser Notification when granted).
+  const [reminder, setReminder] = useState<Reminder>(() => loadReminder());
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">(
+    typeof window !== "undefined" && "Notification" in window ? Notification.permission : "unsupported",
+  );
+  const loggedToday = entries.some((e) => e.date === todayYmd());
+
+  useEffect(() => {
+    if (!reminder.enabled) return;
+    const id = window.setInterval(() => {
+      const now = new Date();
+      const [hh, mm] = reminder.time.split(":").map(Number);
+      if (isNaN(hh) || isNaN(mm)) return;
+      const today = todayYmd();
+      const already = load().some((e) => e.date === today);
+      if (already) return;
+      if (reminder.lastFired === today) return;
+      if (now.getHours() === hh && now.getMinutes() === mm) {
+        const next = { ...reminder, lastFired: today };
+        setReminder(next); saveReminder(next);
+        if ("Notification" in window && Notification.permission === "granted") {
+          try { new Notification("TradeMind check-in", { body: "Log your mental state score for today." }); } catch { /* ignore */ }
+        }
+      }
+    }, 30_000);
+    return () => window.clearInterval(id);
+  }, [reminder]);
+
+  const requestNotif = async () => {
+    if (!("Notification" in window)) return;
+    const p = await Notification.requestPermission();
+    setNotifPermission(p);
+  };
+
+
+
   const trades = useMemo(() => loadTrades(), []);
   const pnlByDay = useMemo(() => {
     const m = new Map<string, number>();
