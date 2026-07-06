@@ -10,7 +10,7 @@ type Props = {
 };
 
 function fmt(n?: number) {
-  if (typeof n !== "number" || !isFinite(n)) return "—";
+  if (typeof n !== "number" || !isFinite(n)) return "-";
   const abs = Math.abs(n);
   const d = abs >= 1000 ? 2 : abs >= 10 ? 3 : abs >= 1 ? 4 : 5;
   return n.toFixed(d);
@@ -24,7 +24,7 @@ function pct(from?: number, to?: number) {
 export function ChartSignalCards({ grade, lastPrice, onClear, scanning }: Props) {
   const [expanded, setExpanded] = useState(false);
 
-  // Empty state — render nothing when idle so the chart can fill the whole area.
+  // Empty state - render nothing when idle so the chart can fill the whole area.
   // While actively scanning, show a very thin one-line status so the user gets
   // feedback without eating chart height.
   if (!grade) {
@@ -54,7 +54,7 @@ export function ChartSignalCards({ grade, lastPrice, onClear, scanning }: Props)
 
   return (
     <div className="shrink-0 border-b border-border/60 bg-card/40">
-      {/* Header strip — always visible, kept as thin as possible */}
+      {/* Header strip - always visible, kept as thin as possible */}
       <div className="flex items-center gap-2 px-3 py-1 overflow-x-auto">
 
         <span className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 ${biasBg}`}>
@@ -125,7 +125,7 @@ export function ChartSignalCards({ grade, lastPrice, onClear, scanning }: Props)
               </div>
             );
           })}
-          {/* Strength/weakness prose lives in the Analysis sidebar — kept out
+          {/* Strength/weakness prose lives in the Analysis sidebar - kept out
               of the chart overlay so the chart isn't squeezed. */}
         </div>
       )}

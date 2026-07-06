@@ -154,7 +154,7 @@ function VoiceCoachPage() {
       <p className="text-muted-foreground mb-6 leading-relaxed">
         Talk to TradeMind out loud. Tap the mic to dictate a question, then hear the AI respond in your
         selected coach's voice. This is the audio side of the same coaching personality you picked under{" "}
-        <Link to="/coaches" className="text-primary font-semibold hover:underline">AI Coaches</Link> — it doesn't replace it.
+        <Link to="/coaches" className="text-primary font-semibold hover:underline">AI Coaches</Link> - it doesn't replace it.
       </p>
 
       {/* Active coach selector */}

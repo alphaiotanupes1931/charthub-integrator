@@ -192,7 +192,7 @@ function MentalPage() {
           <div className="mt-6 space-y-4">
             {lowScore && (
               <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-amber-500">
-                A low score today — let's dig in a little so patterns show up. What might be off?
+                A low score today - let's dig in a little so patterns show up. What might be off?
               </div>
             )}
 
@@ -292,7 +292,7 @@ function MentalPage() {
                   <div className={`text-lg font-bold ${SCORE_META[n].color}`}>{n}</div>
                   <div className="text-[10px] text-muted-foreground">{SCORE_META[n].label}</div>
                   <div className={`mt-2 text-sm font-semibold ${b.pnl >= 0 ? "text-emerald-400" : "text-destructive"}`}>
-                    {b.n === 0 ? "—" : `${b.pnl >= 0 ? "+" : ""}${b.pnl.toFixed(0)}`}
+                    {b.n === 0 ? "-" : `${b.pnl >= 0 ? "+" : ""}${b.pnl.toFixed(0)}`}
                   </div>
                   <div className="text-[10px] text-muted-foreground">{b.n} days · {b.n > 0 ? `${winRate.toFixed(0)}% win` : ""}</div>
                 </div>
@@ -322,7 +322,7 @@ function MentalPage() {
                   </div>
                 </div>
                 <div className={`text-sm font-semibold ${r.pnl > 0 ? "text-emerald-400" : r.pnl < 0 ? "text-destructive" : "text-muted-foreground"}`}>
-                  {pnlByDay.has(r.date) ? `${r.pnl >= 0 ? "+" : ""}${r.pnl.toFixed(2)}` : "—"}
+                  {pnlByDay.has(r.date) ? `${r.pnl >= 0 ? "+" : ""}${r.pnl.toFixed(2)}` : "-"}
                 </div>
                 <button
                   onClick={() => deleteEntry(r.date)}

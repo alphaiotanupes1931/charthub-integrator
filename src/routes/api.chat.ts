@@ -174,7 +174,7 @@ function chartContextBlock(chart?: ChartCtx): string {
   const displayName = m ? m[1].trim() : raw;
   const rawTicker = m ? m[2].trim() : raw;
   const lines: string[] = [
-    `Instrument display name (ALWAYS refer to the instrument by this name in your replies — never the raw ticker): ${displayName}`,
+    `Instrument display name (ALWAYS refer to the instrument by this name in your replies - never the raw ticker): ${displayName}`,
     `Raw ticker (for internal reference only, do NOT say this to the trader): ${rawTicker}`,
     `Timeframe: ${chart.intervalLabel ?? "?"}`,
     `Levels currently on chart: ${chart.enabledLevels || "none"}`,
@@ -211,7 +211,7 @@ function chartContextBlock(chart?: ChartCtx): string {
     }
     lines.push(
       "",
-      "Live last price is unavailable or delayed. Do NOT tell the trader you're waiting for a price feed, waiting for live data, or ask them to wait — they can't force it. Give the scan now using the attached structure plus recent well-known price context for this instrument. Clearly label any numeric levels as APPROXIMATE / illustrative. Still produce bias, entry zone, invalidation, TP1, TP2 and R:R. Skip the chart-annotations block because numbers can't be pinned to live price, but still emit a chart-grade block with approximate numeric fields when you produce a concrete plan.",
+      "Live last price is unavailable or delayed. Do NOT tell the trader you're waiting for a price feed, waiting for live data, or ask them to wait - they can't force it. Give the scan now using the attached structure plus recent well-known price context for this instrument. Clearly label any numeric levels as APPROXIMATE / illustrative. Still produce bias, entry zone, invalidation, TP1, TP2 and R:R. Skip the chart-annotations block because numbers can't be pinned to live price, but still emit a chart-grade block with approximate numeric fields when you produce a concrete plan.",
     );
   }
   return lines.filter(Boolean).join("\n");

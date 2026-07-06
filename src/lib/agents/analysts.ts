@@ -1,4 +1,4 @@
-// Layer 2 — analyst personas. Each returns an AnalystNote.
+// Layer 2 - analyst personas. Each returns an AnalystNote.
 // Technical / Sentiment / Macro use the AI gateway; Risk is pure code.
 
 import { generateText, Output, NoObjectGeneratedError } from "ai";
@@ -8,7 +8,7 @@ import type { AnalystNote, MarketSnapshot } from "./types";
 
 const MODEL = "google/gemini-3-flash-preview";
 
-// No .min/.max bounds — schema-level constraints cause NoObjectGeneratedError
+// No .min/.max bounds - schema-level constraints cause NoObjectGeneratedError
 // when the model exceeds them, collapsing every analyst to neutral/0 and
 // forcing the planner into NO ENTRY. Bounds are stated in the prompt and
 // clamped in code below.
@@ -94,8 +94,8 @@ function buildContext(snap: MarketSnapshot): string {
   return [
     `Symbol: ${snap.ticker} | Interval: ${snap.interval} | Source: ${snap.source}`,
     `Last: ${snap.lastPrice} | 24h change: ${snap.stats.changePct24h.toFixed(2)}%`,
-    `Range20: ${snap.stats.low20} – ${snap.stats.high20} (${snap.stats.range20Pct.toFixed(2)}%)`,
-    `Range50: ${snap.stats.low50} – ${snap.stats.high50}`,
+    `Range20: ${snap.stats.low20} - ${snap.stats.high20} (${snap.stats.range20Pct.toFixed(2)}%)`,
+    `Range50: ${snap.stats.low50} - ${snap.stats.high50}`,
     `ATR14: ${snap.stats.atr14.toFixed(4)}`,
     `CISD: state=${snap.cisd.state} htf=${snap.cisd.htfBias} level=${snap.cisd.level} trigger=${snap.cisd.trigger} proj1=${snap.cisd.proj1}`,
     `Sessions active: ${snap.sessionsActive.join(", ") || "off-hours"}`,
@@ -143,7 +143,7 @@ export async function macroAnalyst(apiKey: string, snap: MarketSnapshot): Promis
 }
 
 export async function sentimentAnalyst(apiKey: string, snap: MarketSnapshot): Promise<AnalystNote> {
-  // No live news feed yet — treat momentum + range compression as a proxy.
+  // No live news feed yet - treat momentum + range compression as a proxy.
   const note = await askAnalyst(
     apiKey,
     "You are a sentiment analyst. Since no live news feed is wired, infer positioning from price momentum, 24h change, and range compression. Say clearly if signal is weak.",
@@ -160,10 +160,10 @@ export function riskAnalyst(snap: MarketSnapshot): AnalystNote {
   const offHours = snap.sessionsActive.length === 0;
   let confidence = 65;
   const parts: string[] = [];
-  if (atrPct > 1.5) { parts.push(`ATR is ${atrPct.toFixed(2)}% of price — volatile, size down.`); confidence -= 10; }
-  else if (atrPct < 0.2) { parts.push(`ATR is only ${atrPct.toFixed(2)}% of price — thin range, stops can get spiked.`); confidence -= 5; }
-  else parts.push(`ATR is ${atrPct.toFixed(2)}% of price — normal volatility.`);
-  if (wideRange) parts.push(`20-bar range is ${snap.stats.range20Pct.toFixed(1)}% — expect follow-through swings.`);
+  if (atrPct > 1.5) { parts.push(`ATR is ${atrPct.toFixed(2)}% of price - volatile, size down.`); confidence -= 10; }
+  else if (atrPct < 0.2) { parts.push(`ATR is only ${atrPct.toFixed(2)}% of price - thin range, stops can get spiked.`); confidence -= 5; }
+  else parts.push(`ATR is ${atrPct.toFixed(2)}% of price - normal volatility.`);
+  if (wideRange) parts.push(`20-bar range is ${snap.stats.range20Pct.toFixed(1)}% - expect follow-through swings.`);
   if (offHours) { parts.push("Off-hours: liquidity is thin, spreads wider."); confidence -= 10; }
   const bias: AnalystNote["bias"] = atrPct > 2 ? "bearish" : "neutral"; // risk-only, not directional
   return {

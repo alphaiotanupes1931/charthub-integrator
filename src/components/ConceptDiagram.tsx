@@ -2,7 +2,7 @@ import type { ReactElement } from "react";
 import { X } from "lucide-react";
 import { CONCEPT_LABELS, type ConceptId, type ConceptRef } from "@/lib/chartAnnotations";
 
-// Small schematic SVG diagrams for trading concepts. Purely illustrative — not
+// Small schematic SVG diagrams for trading concepts. Purely illustrative - not
 // tied to live prices. Used when the AI emits a ```concept-diagram block or the
 // user opens the concept panel from the chart.
 

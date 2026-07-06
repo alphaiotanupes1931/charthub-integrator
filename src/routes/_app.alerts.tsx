@@ -198,7 +198,7 @@ function AlertItem({ row, onDelete, onToggle, muted }: { row: PriceAlertRow; onD
         </div>
         <div className="text-xs text-muted-foreground truncate">
           {row.triggered_at ? `Fired ${new Date(row.triggered_at).toLocaleString()}` : row.last_checked_price != null ? `Last check ${row.last_checked_price}` : "Awaiting first check"}
-          {row.note ? ` — ${row.note}` : ""}
+          {row.note ? ` - ${row.note}` : ""}
         </div>
       </div>
       <button
