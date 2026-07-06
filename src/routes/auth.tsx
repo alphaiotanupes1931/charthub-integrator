@@ -40,10 +40,6 @@ const searchSchema = z.object({
 export const Route = createFileRoute("/auth")({
   validateSearch: (s) => searchSchema.parse(s),
   ssr: false,
-  // AUTH TEMPORARILY DISABLED — send anyone hitting /auth straight to the dashboard.
-  beforeLoad: () => {
-    throw redirect({ to: "/dashboard" });
-  },
   head: () => ({
     meta: [
       { title: "Sign in, TradeMind" },
