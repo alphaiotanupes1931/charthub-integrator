@@ -1,18 +1,9 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
-import { getDashboardGateSnapshot } from "@/lib/access-gate.functions";
-import { syncMySubscriptionFromStripe } from "@/lib/billing.functions";
 import { logGate } from "@/lib/gateLog";
 
-const BILLING_ALLOWED_PATHS = ["/pricing", "/settings", "/onboarding"];
 const GATE_STEP_TIMEOUT_MS = 12_000;
-
-function isTimeoutError(error: unknown, label?: string) {
-  const message = error instanceof Error ? error.message : String(error ?? "");
-  const expected = label ? `${label} timed out` : "timed out";
-  return message.toLowerCase().includes(expected.toLowerCase());
-}
 
 function GatePending() {
   return (
