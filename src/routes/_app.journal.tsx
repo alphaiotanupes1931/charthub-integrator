@@ -1238,6 +1238,16 @@ function TradeFormModal({
             </Field>
           </div>
 
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Point value ($/unit, optional)">
+              <input inputMode="decimal" value={pointValue} onChange={(e) => setPointValue(e.target.value)} placeholder="1 = raw price" className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            </Field>
+            <Field label="Fees / commission ($)">
+              <input inputMode="decimal" value={fees} onChange={(e) => setFees(e.target.value)} placeholder="0" className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            </Field>
+          </div>
+
+
           <div className="rounded-lg border border-border p-3 space-y-3">
             <label className="flex items-center gap-2 text-sm">
               <input
