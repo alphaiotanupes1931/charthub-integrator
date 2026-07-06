@@ -1,11 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 
-import { Bell, Plus, Trash2, Power, PowerOff, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { Bell, Plus, Trash2, Power, PowerOff, ArrowUpRight, ArrowDownRight, BookOpen } from "lucide-react";
 import { toast } from "sonner";
+
 import {
   listMyPriceAlerts,
   createPriceAlert,
@@ -181,12 +182,26 @@ function AlertsPage() {
           </ul>
         </section>
       )}
+
     </div>
   );
 }
 
 function AlertItem({ row, onDelete, onToggle, muted }: { row: PriceAlertRow; onDelete: () => void; onToggle: () => void; muted?: boolean }) {
   const Icon = row.side === "above" ? ArrowUpRight : ArrowDownRight;
+  const navigate = useNavigate();
+  const fired = !!row.triggered_at;
+  const logAsTrade = () => {
+    const prefill = {
+      symbol: row.symbol,
+      entry: Number(row.price),
+      side: row.side === "above" ? "Long" : "Short",
+      setup: row.note ? row.note.slice(0, 40) : undefined,
+      notes: row.note ?? `Auto-created from alert: ${row.symbol} ${row.side === "above" ? "\u2265" : "\u2264"} ${row.price}`,
+    };
+    try { localStorage.setItem("trademind.journal.prefill.v1", JSON.stringify(prefill)); } catch { /* ignore */ }
+    navigate({ to: "/journal" });
+  };
   return (
     <li className={`flex items-center gap-3 rounded-xl border border-border bg-card p-3 ${muted ? "opacity-70" : ""}`}>
       <div className={`rounded-md p-2 ${row.side === "above" ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"}`}>
@@ -194,13 +209,22 @@ function AlertItem({ row, onDelete, onToggle, muted }: { row: PriceAlertRow; onD
       </div>
       <div className="flex-1 min-w-0">
         <div className="text-sm font-semibold truncate">
-          {row.symbol} {row.side === "above" ? "≥" : "≤"} {row.price}
+          {row.symbol} {row.side === "above" ? "\u2265" : "\u2264"} {row.price}
         </div>
         <div className="text-xs text-muted-foreground truncate">
-          {row.triggered_at ? `Fired ${new Date(row.triggered_at).toLocaleString()}` : row.last_checked_price != null ? `Last check ${row.last_checked_price}` : "Awaiting first check"}
-          {row.note ? ` — ${row.note}` : ""}
+          {fired ? `Fired ${new Date(row.triggered_at as string).toLocaleString()}` : row.last_checked_price != null ? `Last check ${row.last_checked_price}` : "Awaiting first check"}
+          {row.note ? ` - ${row.note}` : ""}
         </div>
       </div>
+      {fired && (
+        <button
+          onClick={logAsTrade}
+          title="Log as trade"
+          className="inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/10 text-primary px-2.5 py-1.5 text-xs font-medium hover:bg-primary/20"
+        >
+          <BookOpen className="h-3.5 w-3.5" /> Log trade
+        </button>
+      )}
       <button
         onClick={onToggle}
         title={row.active ? "Pause" : "Reactivate"}
@@ -218,3 +242,4 @@ function AlertItem({ row, onDelete, onToggle, muted }: { row: PriceAlertRow; onD
     </li>
   );
 }
+

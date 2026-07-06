@@ -1,4 +1,4 @@
-// AI Signal Engine — scans a watchlist through the 3-layer stack and returns
+// AI Signal Engine - scans a watchlist through the 3-layer stack and returns
 // a compact BUY/SELL/HOLD signal per ticker. Reuses market-data + research +
 // planner helpers directly (not through runResearchPlan) so it stays a single
 // server call for the whole watchlist.

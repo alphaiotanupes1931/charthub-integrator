@@ -552,7 +552,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
           const top = Math.min(yHi, yLo);
           const height = Math.abs(yLo - yHi);
 
-          // Cumulative VWAP (HLC/3 as volume proxy — no volume in feed)
+          // Cumulative VWAP (HLC/3 as volume proxy - no volume in feed)
           const vwapPts: Array<{ x: number; y: number }> = [];
           let cumNum = 0, cumDen = 0;
           let sumC = 0, sumCT = 0, n = 0;

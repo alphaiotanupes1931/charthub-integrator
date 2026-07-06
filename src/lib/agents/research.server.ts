@@ -1,4 +1,4 @@
-// Layer 2 orchestrator — runs analysts in parallel and merges into a ResearchMemo.
+// Layer 2 orchestrator - runs analysts in parallel and merges into a ResearchMemo.
 
 import type { MarketSnapshot, ResearchMemo, AnalystNote } from "./types";
 import { technicalAnalyst, macroAnalyst, sentimentAnalyst, riskAnalyst } from "./analysts";

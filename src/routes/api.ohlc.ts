@@ -199,7 +199,7 @@ async function fetchOandaHost(host: string, apiKey: string, instrument: string, 
 async function fetchOanda(instrument: string, interval: string): Promise<OhlcBar[]> {
   const apiKey = process.env.OANDA_API_KEY;
   if (!apiKey) throw new Error("OANDA_API_KEY not configured");
-  // OANDA_ENV usually not set — the same key type only works against one host,
+  // OANDA_ENV usually not set - the same key type only works against one host,
   // so try the configured host first, then fall back to the other on 401.
   const preferred = (process.env.OANDA_ENV ?? "live").toLowerCase() === "practice"
     ? ["api-fxpractice.oanda.com", "api-fxtrade.oanda.com"]
@@ -317,7 +317,7 @@ function yahooInterval(interval: string): { interval: string; range: string } {
 
 async function fetchYahooHost(host: string, symbol: string, interval: string): Promise<OhlcBar[]> {
   const iv = yahooInterval(interval);
-  // Yahoo symbols (e.g. "SI=F", "EURUSD=X") must keep their literal "=" and "^" —
+  // Yahoo symbols (e.g. "SI=F", "EURUSD=X") must keep their literal "=" and "^" -
   // encodeURIComponent would turn "SI=F" into "SI%3DF" which Yahoo rejects.
   const url = `https://${host}/v8/finance/chart/${symbol}?interval=${iv.interval}&range=${iv.range}&includePrePost=true`;
   const json = await fetchJsonWithTimeout<{

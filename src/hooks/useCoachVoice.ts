@@ -212,7 +212,7 @@ export function useCoachVoice() {
     markDone();
   }, [markDone]);
 
-  // Pause/resume audio without destroying it — used by the Mute toggle so
+  // Pause/resume audio without destroying it - used by the Mute toggle so
   // toggling off then on continues speech instead of cutting it dead.
   const pauseAudio = useCallback(() => {
     const ctx = audioContextRef.current;

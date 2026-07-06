@@ -1,4 +1,4 @@
-// Layer 3 — Planner. Paperclip-style plan → critique → refine loop (max 2 iterations)
+// Layer 3 - Planner. Paperclip-style plan → critique → refine loop (max 2 iterations)
 // that consumes a ResearchMemo + MarketSnapshot and produces a concrete TradePlan.
 
 import { generateText, Output, NoObjectGeneratedError } from "ai";
@@ -123,7 +123,7 @@ function memoBlock(memo: ResearchMemo, snap: MarketSnapshot, lensDesc?: string):
   const notes = memo.notes.map(n => `- ${n.role.toUpperCase()} (${n.bias}, ${n.confidence}%): ${n.summary}`).join("\n");
   return [
     `Ticker: ${snap.ticker} | Interval: ${snap.interval} | Last: ${snap.lastPrice} | ATR14: ${snap.stats.atr14.toFixed(4)}`,
-    `20-bar range: ${snap.stats.low20} – ${snap.stats.high20}`,
+    `20-bar range: ${snap.stats.low20} - ${snap.stats.high20}`,
     `Consensus: ${memo.consensus} @ ${memo.consensusConfidence}%`,
     lensDesc ? `Scan lens focus: ${lensDesc}` : "",
     "Analyst notes:",
@@ -144,7 +144,7 @@ export async function runPlanner(
 
   let plan: RawPlan;
   try {
-    // Step 1 — draft plan
+    // Step 1 - draft plan
     const draft = await generateText({
       model: provider(MODEL),
       output: Output.object({ schema: PlanSchema }),
@@ -160,7 +160,7 @@ export async function runPlanner(
     plan = salvaged ?? fallbackPlan(snap, memo);
   }
 
-  // Step 2 — critic (best-effort)
+  // Step 2 - critic (best-effort)
   try {
     const critique = await generateText({
       model: provider(MODEL),
@@ -169,7 +169,7 @@ export async function runPlanner(
       prompt: `${ctx}\n\nProposed plan: ${JSON.stringify(plan)}`,
     });
 
-    // Step 3 — refine once if needed
+    // Step 3 - refine once if needed
     if (critique.output.verdict === "revise") {
       try {
         const revised = await generateText({
@@ -219,11 +219,11 @@ export async function runPlanner(
     bias,
     confidence,
     notes: finalPlan.thesis,
-    entry: isNoEntry ? "—" : fmt(finalPlan.entry, dec),
-    stop:  isNoEntry ? "—" : fmt(finalPlan.stop,  dec),
-    tp1:   isNoEntry ? "—" : fmt(finalPlan.tp1,   dec),
-    tp2:   isNoEntry ? "—" : fmt(finalPlan.tp2,   dec),
-    rr:    isNoEntry ? "—" : rr,
+    entry: isNoEntry ? "-" : fmt(finalPlan.entry, dec),
+    stop:  isNoEntry ? "-" : fmt(finalPlan.stop,  dec),
+    tp1:   isNoEntry ? "-" : fmt(finalPlan.tp1,   dec),
+    tp2:   isNoEntry ? "-" : fmt(finalPlan.tp2,   dec),
+    rr:    isNoEntry ? "-" : rr,
     details,
     memo,
   };

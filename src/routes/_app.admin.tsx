@@ -69,7 +69,7 @@ function AdminPage() {
     );
   }
 
-  // Admin gate temporarily disabled — panel visible to all users for testing.
+  // Admin gate temporarily disabled - panel visible to all users for testing.
 
 
   const totalUsers = users?.length ?? 0;
