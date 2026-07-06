@@ -12,6 +12,7 @@ import {
   BarChart3,
   Brain,
   Bell,
+  HeartPulse,
   
   Settings as SettingsIcon,
   UserCog,
