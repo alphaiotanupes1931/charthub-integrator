@@ -478,30 +478,62 @@ function JournalPage() {
 }
 
 function TradesList({
-  trades, onEdit, onDelete,
+  trades, onEdit, onDelete, onImport,
 }: {
   trades: Trade[];
   onEdit: (t: Trade) => void;
   onDelete: (id: string) => void;
+  onImport: (merged: Trade[]) => void;
 }) {
+  const restoreInputRef = useRef<HTMLInputElement>(null);
+  const handleRestore = async (file: File | null | undefined) => {
+    if (!file) return;
+    try {
+      const merged = await importBackupJson(file, trades);
+      onImport(merged);
+      alert(`Backup restored. ${merged.length} trades in journal.`);
+    } catch (e) {
+      alert(`Restore failed: ${(e as Error).message}`);
+    }
+  };
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
-      {trades.length > 0 && (
-        <div className="flex items-center justify-between gap-2 p-3 border-b border-border/60 bg-card/60">
-          <div className="text-xs text-muted-foreground">
-            {trades.length} {trades.length === 1 ? "trade" : "trades"}
-          </div>
+      <div className="flex items-center justify-between gap-2 p-3 border-b border-border/60 bg-card/60">
+        <div className="text-xs text-muted-foreground">
+          {trades.length} {trades.length === 1 ? "trade" : "trades"}
+        </div>
+        <div className="flex items-center gap-1.5 flex-wrap">
           <button
             onClick={() => exportTradesCsv(trades)}
-            className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-foreground/80 hover:bg-accent/40 transition"
+            disabled={trades.length === 0}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-foreground/80 hover:bg-accent/40 transition disabled:opacity-40"
           >
             <Download className="h-3.5 w-3.5" /> Export CSV
           </button>
+          <button
+            onClick={() => exportBackupJson(trades)}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-foreground/80 hover:bg-accent/40 transition"
+          >
+            <DatabaseBackup className="h-3.5 w-3.5" /> Backup (JSON)
+          </button>
+          <button
+            onClick={() => restoreInputRef.current?.click()}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-foreground/80 hover:bg-accent/40 transition"
+          >
+            <Upload className="h-3.5 w-3.5" /> Restore
+          </button>
+          <input
+            ref={restoreInputRef}
+            type="file"
+            accept="application/json"
+            className="hidden"
+            onChange={(e) => { void handleRestore(e.target.files?.[0]); e.target.value = ""; }}
+          />
         </div>
-      )}
+      </div>
       {trades.length === 0 ? (
         <div className="p-12 text-center text-sm text-muted-foreground">
-          No trades logged yet. Hit <span className="text-foreground font-medium">Log trade</span> to add one.
+          No trades logged yet. Hit <span className="text-foreground font-medium">Log trade</span> to add one, or restore a JSON backup above.
         </div>
       ) : (
         <div className="divide-y divide-border/60">
@@ -513,6 +545,7 @@ function TradesList({
     </div>
   );
 }
+
 
 function TradeRow({ t, onEdit, onDelete }: { t: Trade; onEdit: (t: Trade) => void; onDelete: (id: string) => void }) {
   const pnl = tradePnl(t);
