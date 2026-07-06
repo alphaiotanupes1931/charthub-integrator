@@ -182,6 +182,7 @@ function AlertsPage() {
           </ul>
         </section>
       )}
+
     </div>
   );
 }
