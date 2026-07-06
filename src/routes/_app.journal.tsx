@@ -665,12 +665,20 @@ function MiniTradeRow({ t, onEdit }: { t: Trade; onEdit: (t: Trade) => void }) {
   );
 }
 
-function InsightsPanel({ trades }: { trades: Trade[] }) {
+function InsightsPanel({ trades: allTrades }: { trades: Trade[] }) {
+  const [filter, setFilter] = useState<InsightsFilter>({ side: "all", ruleBroken: "all" });
+  const [views, setViews] = useState<SavedView[]>([]);
+  const [viewName, setViewName] = useState("");
+  useEffect(() => { setViews(loadViews()); }, []);
+  const trades = useMemo(() => applyFilter(allTrades, filter), [allTrades, filter]);
+  const allSymbols = useMemo(() => Array.from(new Set(allTrades.map((t) => t.symbol))).sort(), [allTrades]);
+
   const stats = useMemo(() => {
     if (trades.length === 0) return null;
     const wins = trades.filter((t) => tradePnl(t) > 0);
     const losses = trades.filter((t) => tradePnl(t) < 0);
     const netPnl = trades.reduce((a, b) => a + tradePnl(b), 0);
+
     const ruleBrokenTrades = trades.filter((t) => t.ruleBroken);
     const ruleBrokenPnl = ruleBrokenTrades.reduce((a, b) => a + tradePnl(b), 0);
     const disciplinedTrades = trades.filter((t) => !t.ruleBroken);
