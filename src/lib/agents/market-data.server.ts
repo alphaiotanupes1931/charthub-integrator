@@ -1,4 +1,4 @@
-// Layer 1 — Data. Unified market snapshot for the research agents.
+// Layer 1 - Data. Unified market snapshot for the research agents.
 // Uses Yahoo Finance for FX/metals/indices and CoinGecko for crypto.
 // Deliberately independent from src/routes/api.ohlc.ts so this layer can be
 // swapped for OpenBB or another provider without touching the chart route.

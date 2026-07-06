@@ -28,8 +28,8 @@ export const runResearchPlan = createServerFn({ method: "POST" })
         bias: "Neutral",
         confidence: 0,
         notes: "The AI research service is temporarily unavailable. Please try again shortly.",
-        entry: "—", stop: "—", tp1: "—", tp2: "—", rr: "—",
-        details: "Our analysis engine is offline for maintenance. Your charts and data are unaffected — scans will resume automatically once the service is back.",
+        entry: "-", stop: "-", tp1: "-", tp2: "-", rr: "-",
+        details: "Our analysis engine is offline for maintenance. Your charts and data are unaffected - scans will resume automatically once the service is back.",
         memo: {
           ticker: data.ticker,
           interval: data.interval,
@@ -49,7 +49,7 @@ export const runResearchPlan = createServerFn({ method: "POST" })
         bias: "Neutral",
         confidence: 0,
         notes: "Market data unavailable for this instrument right now.",
-        entry: "—", stop: "—", tp1: "—", tp2: "—", rr: "—",
+        entry: "-", stop: "-", tp1: "-", tp2: "-", rr: "-",
         details: "The data layer could not fetch enough candles to run the research agents. Try again in a minute or switch to a different timeframe.",
         memo: {
           ticker: data.ticker,

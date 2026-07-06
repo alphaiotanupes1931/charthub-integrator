@@ -82,7 +82,7 @@ export const Route = createFileRoute("/api/public/hooks/price-alerts-tick")({
               userId: row.user_id,
               kind: "price",
               title: `${row.symbol} ${row.side === "above" ? "≥" : "≤"} ${row.price}`,
-              body: `Price hit ${p.toFixed(5)}${row.note ? ` — ${row.note}` : ""}`,
+              body: `Price hit ${p.toFixed(5)}${row.note ? ` - ${row.note}` : ""}`,
               url: "/alerts",
               meta: { symbol: row.symbol, price: p, target: row.price, side: row.side },
             });

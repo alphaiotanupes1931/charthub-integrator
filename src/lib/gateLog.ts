@@ -51,7 +51,7 @@ function write(entries: GateLogEntry[]) {
   if (typeof window === "undefined") return;
   try {
     sessionStorage.setItem(KEY, JSON.stringify(entries.slice(-MAX)));
-  } catch { /* quota – ignore */ }
+  } catch { /* quota - ignore */ }
 }
 
 export function logGate(event: GateEvent) {
