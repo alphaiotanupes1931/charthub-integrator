@@ -146,10 +146,10 @@ function gradeFor(symbol: Symbol, lastPrice?: number): ScanResult {
     C:   "Choppy structure. Liquidity above and below. Skip until one side resolves.",
     "NO ENTRY": "No edge. Range mid with conflicting HTF bias. Stand down.",
   };
-  // Build plan numbers — anchored to lastPrice when we have it; otherwise illustrative.
+  // Build plan numbers - anchored to lastPrice when we have it; otherwise illustrative.
   const px = typeof lastPrice === "number" && isFinite(lastPrice) ? lastPrice : 100;
   const dec = decimalsFor(px);
-  const stopPct = 0.004 + ((h >> 12) % 7) / 1000; // 0.4% – 1.1%
+  const stopPct = 0.004 + ((h >> 12) % 7) / 1000; // 0.4% - 1.1%
   const tp1R = 1.5;
   const tp2R = 3;
   let entry = px;
@@ -181,7 +181,7 @@ function gradeFor(symbol: Symbol, lastPrice?: number): ScanResult {
     tp1: fmtPrice(tp1, dec),
     tp2: fmtPrice(tp2, dec),
     rr: `1 : ${tp2R}`,
-    details: `Trigger: ${bias === "Neutral" ? "wait for a sweep + BOS in either direction" : `${bias.toLowerCase()} on a 5m close back through the retest`}. Invalidation: ${bias === "Long" ? "close below" : bias === "Short" ? "close above" : "structural break of"} ${fmtPrice(stop, dec)}. Manage to break-even at TP1 (${fmtPrice(tp1, dec)}), trail the runner toward TP2 (${fmtPrice(tp2, dec)}). Risk fixed at 0.5–1R of account.`,
+    details: `Trigger: ${bias === "Neutral" ? "wait for a sweep + BOS in either direction" : `${bias.toLowerCase()} on a 5m close back through the retest`}. Invalidation: ${bias === "Long" ? "close below" : bias === "Short" ? "close above" : "structural break of"} ${fmtPrice(stop, dec)}. Manage to break-even at TP1 (${fmtPrice(tp1, dec)}), trail the runner toward TP2 (${fmtPrice(tp2, dec)}). Risk fixed at 0.5-1R of account.`,
   };
 }
 
@@ -628,7 +628,7 @@ function Dashboard() {
 
   const applyPlanToSignalCards = (plan: ScanResult) => {
     const num = (s: string): number | undefined => {
-      if (!s || s === "—") return undefined;
+      if (!s || s === "-") return undefined;
       const n = parseFloat(String(s).replace(/[^0-9.\-]/g, ""));
       return isFinite(n) ? n : undefined;
     };
@@ -672,7 +672,7 @@ function Dashboard() {
         setResult({
           grade: "NO ENTRY", bias: "Neutral", confidence: 0,
           notes: "Research service is temporarily unavailable. Please try again in a moment.",
-          entry: "—", stop: "—", tp1: "—", tp2: "—", rr: "—",
+          entry: "-", stop: "-", tp1: "-", tp2: "-", rr: "-",
           details: "The analysis engine couldn't be reached. Your chart and levels are unaffected.",
         });
       })
@@ -1027,7 +1027,7 @@ function Dashboard() {
 
         <div className="flex-1 min-w-0 flex flex-col">
 
-          {/* Scan output preview — sits above the chart so it never overlaps candles */}
+          {/* Scan output preview - sits above the chart so it never overlaps candles */}
           {!isChartFullscreen && (
             <ChartSignalCards
               grade={aiGrade}
@@ -1079,7 +1079,7 @@ function Dashboard() {
 
 
 
-          {/* Broker strip — thin, single line so it doesn't eat chart height */}
+          {/* Broker strip - thin, single line so it doesn't eat chart height */}
           {!isChartFullscreen && (
             <div className="shrink-0 border-t border-border/60 px-3 py-0.5 flex items-center justify-between gap-2 text-[11px]">
 

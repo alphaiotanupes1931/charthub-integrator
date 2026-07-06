@@ -17,11 +17,11 @@ const SECTIONS: Section[] = [
     id: "getting-started",
     group: "Getting started",
     title: "Getting started",
-    blurb: "First trade in under 5 minutes — what to do, in order.",
+    blurb: "First trade in under 5 minutes - what to do, in order.",
     items: [
       { q: "1. Pick an instrument", a: "From the dashboard sidebar, choose what you want to trade. Gold (XAUUSD) is the most popular and the default. Once selected, the live chart and AI chat sync to that symbol." },
       { q: "2. Run a scan", a: "Click 'Scan' on the dashboard. The AI reviews structure, momentum, volume, and order flow on the higher timeframe and returns a graded signal (A+, A, B+, B, B-, C, or NO ENTRY)." },
-      { q: "3. Read the grade", a: "A+/A grades are high-conviction setups. B-grades require caution or smaller size. C and NO ENTRY mean wait — protecting capital is the trade." },
+      { q: "3. Read the grade", a: "A+/A grades are high-conviction setups. B-grades require caution or smaller size. C and NO ENTRY mean wait - protecting capital is the trade." },
       { q: "4. Execute (optional)", a: "If you connect a broker (Pro tier), you can execute directly from the signal card. Otherwise, copy the entry / stop / TP levels into your platform of choice." },
       { q: "5. Log it in the journal", a: "After the trade closes, log it in the Journal tab with your 3 trader inputs (entry matched plan? exit matched plan? P&L). The system auto-calculates execution score, behavior score, win rate, and R/R over time." },
     ],
@@ -32,12 +32,12 @@ const SECTIONS: Section[] = [
     title: "Signal grades",
     blurb: "What each grade means and how the AI assigns them.",
     items: [
-      { q: "A+ — Highest confidence", a: "Phase C confirmed + Phase D BOS + R:R above 3:1. All three phases of the Sweep → BOS → Retest sequence confirmed with volume spike and LTF BOS. The setup you wait all day for." },
-      { q: "A — Strong setup", a: "Phase D BOS + Retest confirmed + R:R above 2:1. Full Wyckoff sequence complete. High-probability entry with structurally valid stop loss." },
-      { q: "B+ — Good setup", a: "Phase C forming, awaiting reversal + R:R above 2:1. Sweep + BOS confirmed, retest pullback starting. Trade with proper risk management." },
-      { q: "B — Caution", a: "Partial phase confirmation + R:R above 2:1. Some sequence elements confirmed but not all three. Reduce size or wait for more confirmation." },
-      { q: "C — No trade", a: "R:R below 2:1 regardless of phase — flagged as invalid. The risk/reward does not justify the entry. Wait for better structure." },
-      { q: "NO ENTRY — Consolidation", a: "Sniper Filter active — price is in consolidation or no structural extreme detected. Wait for a Spring, Upthrust, or BOS to form." },
+      { q: "A+ - Highest confidence", a: "Phase C confirmed + Phase D BOS + R:R above 3:1. All three phases of the Sweep → BOS → Retest sequence confirmed with volume spike and LTF BOS. The setup you wait all day for." },
+      { q: "A - Strong setup", a: "Phase D BOS + Retest confirmed + R:R above 2:1. Full Wyckoff sequence complete. High-probability entry with structurally valid stop loss." },
+      { q: "B+ - Good setup", a: "Phase C forming, awaiting reversal + R:R above 2:1. Sweep + BOS confirmed, retest pullback starting. Trade with proper risk management." },
+      { q: "B - Caution", a: "Partial phase confirmation + R:R above 2:1. Some sequence elements confirmed but not all three. Reduce size or wait for more confirmation." },
+      { q: "C - No trade", a: "R:R below 2:1 regardless of phase - flagged as invalid. The risk/reward does not justify the entry. Wait for better structure." },
+      { q: "NO ENTRY - Consolidation", a: "Sniper Filter active - price is in consolidation or no structural extreme detected. Wait for a Spring, Upthrust, or BOS to form." },
     ],
   },
   {
@@ -59,8 +59,8 @@ const SECTIONS: Section[] = [
     title: "Chart tools",
     blurb: "What the overlay toggles and indicators do.",
     items: [
-      { q: "VWAP", a: "Volume Weighted Average Price — shows where the majority of volume traded. Price above VWAP = bullish, below = bearish." },
-      { q: "POC", a: "Point of Control — the price level with the most trading volume. Acts as a magnet for price." },
+      { q: "VWAP", a: "Volume Weighted Average Price - shows where the majority of volume traded. Price above VWAP = bullish, below = bearish." },
+      { q: "POC", a: "Point of Control - the price level with the most trading volume. Acts as a magnet for price." },
       { q: "Support / Resistance", a: "Key price levels where buying or selling pressure is concentrated." },
       { q: "Supply / Demand zones", a: "Areas where institutional orders are likely resting." },
       { q: "TP", a: "Take Profit projections based on technical analysis." },
@@ -85,7 +85,7 @@ const SECTIONS: Section[] = [
     blurb: "Server-monitored alerts with email + in-app notifications.",
     items: [
       { q: "Right-click to set", a: "On the setup chart (after a scan), right-click any price level. A small popover appears with Above / Below buttons. Picking either creates an alert at that exact price." },
-      { q: "Why server-side", a: "Alerts are checked every 30 seconds on the server, even when your browser is closed. Triggers send an email AND create an in-app notification — both reach you regardless of which device you're on." },
+      { q: "Why server-side", a: "Alerts are checked every 30 seconds on the server, even when your browser is closed. Triggers send an email AND create an in-app notification - both reach you regardless of which device you're on." },
       { q: "Direction logic", a: "Above: triggers when live price >= target. Below: triggers when live price <= target. Other directions fall back to a ±0.1% proximity check." },
       { q: "Manage alerts", a: "Active alerts show in the dashboard banner. Triggered alerts auto-dismiss. Delete one before trigger via the X on the banner." },
     ],
@@ -98,7 +98,7 @@ const SECTIONS: Section[] = [
     items: [
       { q: "The 3 trader inputs", a: "After a trade closes, log it with: (1) Did entry match your plan? Yes/No. (2) Did exit match your plan? Yes/No. (3) Result and P&L (win/loss + dollar amount)." },
       { q: "Execution score", a: "0-100%. Equals 100% on trades where BOTH entry and exit matched your plan; 0% otherwise. The pure measure of plan adherence." },
-      { q: "Behavior score", a: "0-100%. Counts each adherence input separately — gives partial credit. Rewards 'half-right' executions while still distinguishing them from clean ones." },
+      { q: "Behavior score", a: "0-100%. Counts each adherence input separately - gives partial credit. Rewards 'half-right' executions while still distinguishing them from clean ones." },
       { q: "Baseline & all-time progress", a: "Your baseline is your first 10 closed trades. The Journal tab shows baseline → current for execution / behavior / win rate / avg R/R, so you can see whether you're actually improving." },
       { q: "Weekly trends", a: "This week vs. last week comparison with up/down arrows. If your behavior score dropped, you'll see it before the P&L follows." },
     ],
@@ -143,7 +143,7 @@ const SECTIONS: Section[] = [
     blurb: "Theme, accessibility, mobile, and keyboard shortcuts.",
     items: [
       { q: "Dark / light theme", a: "Theme follows your device system preference and is saved to your account, syncing across devices." },
-      { q: "Mobile + PWA", a: "Fully responsive on phones. iOS: open in Safari, share menu, 'Add to Home Screen'. Android: Chrome shows an Install banner — tap it for a native-app feel." },
+      { q: "Mobile + PWA", a: "Fully responsive on phones. iOS: open in Safari, share menu, 'Add to Home Screen'. Android: Chrome shows an Install banner - tap it for a native-app feel." },
       { q: "Keyboard shortcuts", a: "Onboarding tour: ←/→ navigate, Enter advance, Esc skip. Forms: Enter submits when valid. Chat: Enter sends, Shift+Enter newline." },
       { q: "Keyboard focus", a: "Every interactive element has a 2px gold focus outline for keyboard navigation. Tab and Shift+Tab cycle through controls." },
     ],
@@ -179,10 +179,10 @@ const SECTIONS: Section[] = [
     blurb: "Common questions.",
     items: [
       { q: "Why did I get a B signal?", a: "A B grade means partial Wyckoff phase confirmation with R:R above 2:1, but not all three sequence phases are confirmed. Wait for more confirmation or trade with reduced size." },
-      { q: "What does NO ENTRY mean?", a: "NO ENTRY means the Sniper Entry Filter detected consolidation — no directional bias is forced. Protecting capital IS the trade." },
-      { q: "How often should I scan?", a: "Before every potential entry. The market changes fast — a B+ from an hour ago may be A+ or C now. Always re-scan before committing capital." },
+      { q: "What does NO ENTRY mean?", a: "NO ENTRY means the Sniper Entry Filter detected consolidation - no directional bias is forced. Protecting capital IS the trade." },
+      { q: "How often should I scan?", a: "Before every potential entry. The market changes fast - a B+ from an hour ago may be A+ or C now. Always re-scan before committing capital." },
       { q: "Can I use TradeMind on my phone?", a: "Yes. TradeMind is fully responsive and installable as a PWA from your phone's browser." },
-      { q: "How do I switch AI coaches?", a: "AI Coaches in the sidebar — pick the coaching personality that matches how you want to be coached." },
+      { q: "How do I switch AI coaches?", a: "AI Coaches in the sidebar - pick the coaching personality that matches how you want to be coached." },
       { q: "What timeframes does the chart support?", a: "1m, 5m, 15m, 1H, 4H, and 1D. The AI scan defaults to 1H but references multiple timeframes." },
     ],
   },
@@ -274,7 +274,7 @@ function GuidePage() {
         }
       />
 
-      {/* Search — sticky so it's always reachable */}
+      {/* Search - sticky so it's always reachable */}
       <div className="sticky top-0 z-20 -mx-4 md:-mx-8 px-4 md:px-8 py-3 bg-background/85 backdrop-blur border-b border-border/60 mb-4">
         <div className="relative max-w-[1136px] mx-auto">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -287,7 +287,7 @@ function GuidePage() {
         </div>
       </div>
 
-      {/* Group tabs — visible on all breakpoints; drives desktop content filter too */}
+      {/* Group tabs - visible on all breakpoints; drives desktop content filter too */}
       {!query.trim() && (
         <div className="flex flex-wrap gap-1.5 mb-6 pb-1">
           {allGroups.map((g) => (

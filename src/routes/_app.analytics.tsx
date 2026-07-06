@@ -105,7 +105,7 @@ function AnalyticsPage() {
   const kpis = [
     { label: "Net P&L", value: `${stats.netPnl >= 0 ? "+" : ""}${stats.netPnl.toFixed(2)}`, icon: stats.netPnl >= 0 ? TrendingUp : TrendingDown, positive: stats.netPnl >= 0 },
     { label: "Win Rate", value: `${stats.winRate.toFixed(1)}%`, icon: Target, positive: stats.winRate >= 50 },
-    { label: "Avg R:R", value: stats.avgRR ? stats.avgRR.toFixed(2) : "—", icon: Activity, positive: stats.avgRR >= 1 },
+    { label: "Avg R:R", value: stats.avgRR ? stats.avgRR.toFixed(2) : "-", icon: Activity, positive: stats.avgRR >= 1 },
     { label: "Profit Factor", value: isFinite(stats.profitFactor) ? stats.profitFactor.toFixed(2) : "∞", icon: BarChart3, positive: stats.profitFactor >= 1 },
     { label: "Total Trades", value: String(stats.total), icon: BarChart3, positive: true },
     { label: "W / L", value: `${stats.wins} / ${stats.losses}`, icon: Target, positive: stats.wins >= stats.losses },

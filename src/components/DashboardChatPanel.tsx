@@ -143,7 +143,7 @@ function GradeCard({ grade }: { grade: ChartGrade }) {
   const biasTone = grade.bias === "long" ? "text-emerald-300"
     : grade.bias === "short" ? "text-red-300"
     : "text-muted-foreground";
-  const fmt = (n?: number) => (typeof n === "number" && isFinite(n) ? n.toString() : "—");
+  const fmt = (n?: number) => (typeof n === "number" && isFinite(n) ? n.toString() : "-");
   return (
     <div className="rounded-lg border border-border bg-card/60 overflow-hidden">
       <div className={`flex items-center justify-between px-3 py-2 border-b border-border/60 ${tone.split(" ").filter((c) => c.startsWith("bg-")).join(" ")}`}>

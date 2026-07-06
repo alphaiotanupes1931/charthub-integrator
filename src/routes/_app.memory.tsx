@@ -30,7 +30,7 @@ function MemoryPage() {
       <PageHeader
         title="My Trading Memory"
         icon={<Brain className="h-9 w-9 text-primary" />}
-        description="Hermes — the learning layer — remembers your thumbs-up/down on every scan and distills a short lesson from each. Those lessons are injected into future scans so the AI adapts to how you actually trade."
+        description="Hermes - the learning layer - remembers your thumbs-up/down on every scan and distills a short lesson from each. Those lessons are injected into future scans so the AI adapts to how you actually trade."
       />
 
       <HermesMemoryPanel />
@@ -39,19 +39,19 @@ function MemoryPage() {
         <StatCard
           icon={<ThumbsUp className="h-4 w-4 text-emerald-400" />}
           label="Helpful scans"
-          value={stats ? String(stats.helpful) : "—"}
+          value={stats ? String(stats.helpful) : "-"}
           hint="Times you thumbed-up a scan"
         />
         <StatCard
           icon={<ThumbsDown className="h-4 w-4 text-destructive" />}
           label="Unhelpful scans"
-          value={stats ? String(stats.unhelpful) : "—"}
+          value={stats ? String(stats.unhelpful) : "-"}
           hint="Times you thumbed-down a scan"
         />
         <StatCard
           icon={<Sparkles className="h-4 w-4 text-primary" />}
           label="AI helpfulness"
-          value={stats?.accuracy != null ? `${stats.accuracy}%` : "—"}
+          value={stats?.accuracy != null ? `${stats.accuracy}%` : "-"}
           hint="Share of scans you marked helpful"
         />
       </div>
@@ -112,7 +112,7 @@ function HermesMemoryPanel() {
             <Brain className="h-4 w-4 text-primary" /> Hermes memory
           </h2>
           <p className="text-xs text-muted-foreground mt-1 max-w-2xl">
-            Lessons distilled from your feedback. Higher weight = applied more strongly. Prune anything that's outdated or wrong — it's dropped from every future scan immediately.
+            Lessons distilled from your feedback. Higher weight = applied more strongly. Prune anything that's outdated or wrong - it's dropped from every future scan immediately.
           </p>
         </div>
         <span className="shrink-0 rounded-md border border-border bg-background/60 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">

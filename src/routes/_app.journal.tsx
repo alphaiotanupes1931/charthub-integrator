@@ -18,7 +18,12 @@ import {
   BarChart3,
   Sparkles,
   Brain,
+  Save as SaveIcon,
+  Filter as FilterIcon,
+  Bookmark,
+  DatabaseBackup,
 } from "lucide-react";
+
 import {
   putTradeImage,
   getTradeImage,
@@ -67,6 +72,8 @@ type Trade = {
   stop: number;
   takeProfit?: number;   // planned TP level
   size: number;
+  fees?: number;          // total commissions + swap for the trade
+  pointValue?: number;    // $ per 1.0 price move per unit (contract multiplier / pip value)
   notes: string;
   hasImage?: boolean;
   ruleBroken?: boolean;
@@ -77,6 +84,8 @@ type Trade = {
 };
 
 const STORAGE_KEY = "trademind.journal.trades.v1";
+const MENTAL_KEY = "trademind.mental.v1";
+const VIEWS_KEY = "trademind.journal.views.v1";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 const ymd = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -90,9 +99,14 @@ function formatYmdHuman(s: string): string {
   return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" });
 }
 
+// Accurate P&L: gross move x direction x size x point value, minus fees.
+// point value defaults to 1 (matches raw price units for spot / crypto).
 function tradePnl(t: Trade): number {
   const dir = t.side === "Long" ? 1 : -1;
-  return (t.exit - t.entry) * dir * (t.size || 1);
+  const size = t.size || 0;
+  const pv = t.pointValue && isFinite(t.pointValue) && t.pointValue > 0 ? t.pointValue : 1;
+  const fees = t.fees && isFinite(t.fees) ? t.fees : 0;
+  return (t.exit - t.entry) * dir * size * pv - fees;
 }
 function tradeRR(t: Trade): number | null {
   const risk = Math.abs(t.entry - t.stop);
@@ -108,6 +122,7 @@ function plannedRR(t: Trade): number | null {
   const dir = t.side === "Long" ? 1 : -1;
   return ((t.takeProfit - t.entry) * dir) / risk;
 }
+
 
 function loadTrades(): Trade[] {
   try {
@@ -130,13 +145,14 @@ function csvEscape(v: unknown): string {
 }
 
 function exportTradesCsv(trades: Trade[]) {
-  const headers = ["date","timeframe","symbol","side","entry","exit","stop","takeProfit","size","pnl","rr","plannedRR","ruleBroken","ruleBrokenNote","lossCategory","setup","notes"];
+  const headers = ["date","timeframe","symbol","side","entry","exit","stop","takeProfit","size","pointValue","fees","pnl","rr","plannedRR","ruleBroken","ruleBrokenNote","lossCategory","setup","notes"];
   const rows = trades.map((t) => {
     const rr = tradeRR(t);
     const prr = plannedRR(t);
     return [
       t.date, t.timeframe, t.symbol, t.side,
       t.entry, t.exit, t.stop, t.takeProfit ?? "", t.size,
+      t.pointValue ?? "", t.fees ?? "",
       tradePnl(t).toFixed(2),
       rr == null ? "" : rr.toFixed(3),
       prr == null ? "" : prr.toFixed(3),
@@ -159,6 +175,89 @@ function exportTradesCsv(trades: Trade[]) {
   URL.revokeObjectURL(url);
 }
 
+// Full backup: trades + mental state entries in one JSON file (portable across devices).
+function exportBackupJson(trades: Trade[]) {
+  let mental: unknown = [];
+  try {
+    const raw = localStorage.getItem(MENTAL_KEY);
+    if (raw) mental = JSON.parse(raw);
+  } catch { /* ignore */ }
+  const payload = {
+    kind: "trademind.backup",
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    trades,
+    mental,
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `trademind-backup-${todayYmd()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function importBackupJson(file: File, currentTrades: Trade[]): Promise<Trade[]> {
+  const text = await file.text();
+  const data = JSON.parse(text);
+  if (!data || typeof data !== "object") throw new Error("Invalid backup file");
+  const incomingTrades = Array.isArray(data.trades) ? (data.trades as Trade[]) : [];
+  // Merge by id, incoming wins.
+  const byId = new Map<string, Trade>();
+  for (const t of currentTrades) byId.set(t.id, t);
+  for (const t of incomingTrades) if (t && t.id) byId.set(t.id, t);
+  const merged = Array.from(byId.values());
+  if (Array.isArray(data.mental)) {
+    try {
+      const raw = localStorage.getItem(MENTAL_KEY);
+      const existing = raw ? JSON.parse(raw) : [];
+      const mBy = new Map<string, unknown>();
+      if (Array.isArray(existing)) for (const e of existing) if (e && typeof e === "object" && "date" in e) mBy.set(String((e as { date: string }).date), e);
+      for (const e of data.mental) if (e && typeof e === "object" && "date" in e) mBy.set(String((e as { date: string }).date), e);
+      localStorage.setItem(MENTAL_KEY, JSON.stringify(Array.from(mBy.values())));
+    } catch { /* ignore */ }
+  }
+  return merged;
+}
+
+// Saved insights views
+export type InsightsFilter = {
+  from?: string;
+  to?: string;
+  symbols?: string[];
+  side?: "all" | "Long" | "Short";
+  setup?: string;
+  ruleBroken?: "all" | "yes" | "no";
+};
+type SavedView = { id: string; name: string; filter: InsightsFilter };
+function loadViews(): SavedView[] {
+  try {
+    const raw = localStorage.getItem(VIEWS_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch { return []; }
+}
+function saveViews(v: SavedView[]) {
+  try { localStorage.setItem(VIEWS_KEY, JSON.stringify(v)); } catch { /* ignore */ }
+}
+function applyFilter(trades: Trade[], f: InsightsFilter): Trade[] {
+  return trades.filter((t) => {
+    if (f.from && t.date < f.from) return false;
+    if (f.to && t.date > f.to) return false;
+    if (f.symbols && f.symbols.length && !f.symbols.includes(t.symbol)) return false;
+    if (f.side && f.side !== "all" && t.side !== f.side) return false;
+    if (f.setup && f.setup.trim() && !(t.setup ?? "").toLowerCase().includes(f.setup.trim().toLowerCase())) return false;
+    if (f.ruleBroken === "yes" && !t.ruleBroken) return false;
+    if (f.ruleBroken === "no" && t.ruleBroken) return false;
+    return true;
+  });
+}
+
+
 function JournalPage() {
   const [tab, setTab] = useState<"calendar" | "trades" | "review" | "insights">("calendar");
   const [cursor, setCursor] = useState(() => {
@@ -172,12 +271,13 @@ function JournalPage() {
   useEffect(() => { setTrades(loadTrades()); }, []);
   useEffect(() => { saveTrades(trades); }, [trades]);
 
-  const [prefill, setPrefill] = useState<{ symbol?: string; timeframe?: string; notes?: string } | null>(null);
+  type Prefill = { symbol?: string; timeframe?: string; notes?: string; entry?: number; side?: Side; setup?: string };
+  const [prefill, setPrefill] = useState<Prefill | null>(null);
   useEffect(() => {
     try {
       const raw = localStorage.getItem("trademind.journal.prefill.v1");
       if (!raw) return;
-      const data = JSON.parse(raw);
+      const data = JSON.parse(raw) as Prefill;
       localStorage.removeItem("trademind.journal.prefill.v1");
       setPrefill(data);
       setFormDate(todayYmd());
@@ -185,6 +285,7 @@ function JournalPage() {
       setFormOpen(true);
     } catch { /* ignore */ }
   }, []);
+
 
   const year = cursor.getFullYear();
   const month = cursor.getMonth();
@@ -352,7 +453,9 @@ function JournalPage() {
           trades={sortedTrades}
           onEdit={openEdit}
           onDelete={handleDelete}
+          onImport={(merged) => setTrades(merged)}
         />
+
       )}
 
       {tab === "review" && (
@@ -377,30 +480,62 @@ function JournalPage() {
 }
 
 function TradesList({
-  trades, onEdit, onDelete,
+  trades, onEdit, onDelete, onImport,
 }: {
   trades: Trade[];
   onEdit: (t: Trade) => void;
   onDelete: (id: string) => void;
+  onImport: (merged: Trade[]) => void;
 }) {
+  const restoreInputRef = useRef<HTMLInputElement>(null);
+  const handleRestore = async (file: File | null | undefined) => {
+    if (!file) return;
+    try {
+      const merged = await importBackupJson(file, trades);
+      onImport(merged);
+      alert(`Backup restored. ${merged.length} trades in journal.`);
+    } catch (e) {
+      alert(`Restore failed: ${(e as Error).message}`);
+    }
+  };
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
-      {trades.length > 0 && (
-        <div className="flex items-center justify-between gap-2 p-3 border-b border-border/60 bg-card/60">
-          <div className="text-xs text-muted-foreground">
-            {trades.length} {trades.length === 1 ? "trade" : "trades"}
-          </div>
+      <div className="flex items-center justify-between gap-2 p-3 border-b border-border/60 bg-card/60">
+        <div className="text-xs text-muted-foreground">
+          {trades.length} {trades.length === 1 ? "trade" : "trades"}
+        </div>
+        <div className="flex items-center gap-1.5 flex-wrap">
           <button
             onClick={() => exportTradesCsv(trades)}
-            className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-foreground/80 hover:bg-accent/40 transition"
+            disabled={trades.length === 0}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-foreground/80 hover:bg-accent/40 transition disabled:opacity-40"
           >
             <Download className="h-3.5 w-3.5" /> Export CSV
           </button>
+          <button
+            onClick={() => exportBackupJson(trades)}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-foreground/80 hover:bg-accent/40 transition"
+          >
+            <DatabaseBackup className="h-3.5 w-3.5" /> Backup (JSON)
+          </button>
+          <button
+            onClick={() => restoreInputRef.current?.click()}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-foreground/80 hover:bg-accent/40 transition"
+          >
+            <Upload className="h-3.5 w-3.5" /> Restore
+          </button>
+          <input
+            ref={restoreInputRef}
+            type="file"
+            accept="application/json"
+            className="hidden"
+            onChange={(e) => { void handleRestore(e.target.files?.[0]); e.target.value = ""; }}
+          />
         </div>
-      )}
+      </div>
       {trades.length === 0 ? (
         <div className="p-12 text-center text-sm text-muted-foreground">
-          No trades logged yet. Hit <span className="text-foreground font-medium">Log trade</span> to add one.
+          No trades logged yet. Hit <span className="text-foreground font-medium">Log trade</span> to add one, or restore a JSON backup above.
         </div>
       ) : (
         <div className="divide-y divide-border/60">
@@ -412,6 +547,7 @@ function TradesList({
     </div>
   );
 }
+
 
 function TradeRow({ t, onEdit, onDelete }: { t: Trade; onEdit: (t: Trade) => void; onDelete: (id: string) => void }) {
   const pnl = tradePnl(t);
@@ -529,12 +665,131 @@ function MiniTradeRow({ t, onEdit }: { t: Trade; onEdit: (t: Trade) => void }) {
   );
 }
 
-function InsightsPanel({ trades }: { trades: Trade[] }) {
+function FilterBar({
+  filter, onChange, allSymbols, views, viewName, onViewName,
+  onSaveView, onLoadView, onDeleteView, onClear, filtered, total,
+}: {
+  filter: InsightsFilter;
+  onChange: (f: InsightsFilter) => void;
+  allSymbols: string[];
+  views: SavedView[];
+  viewName: string;
+  onViewName: (s: string) => void;
+  onSaveView: () => void;
+  onLoadView: (v: SavedView) => void;
+  onDeleteView: (id: string) => void;
+  onClear: () => void;
+  filtered: number;
+  total: number;
+}) {
+  const toggleSymbol = (sym: string) => {
+    const cur = new Set(filter.symbols ?? []);
+    if (cur.has(sym)) cur.delete(sym); else cur.add(sym);
+    onChange({ ...filter, symbols: Array.from(cur) });
+  };
+  return (
+    <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-2 text-sm font-semibold"><FilterIcon className="h-4 w-4 text-primary" /> Filters</div>
+        <div className="text-xs text-muted-foreground">Showing {filtered} of {total} trades</div>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <label className="block">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">From</div>
+          <input type="date" value={filter.from ?? ""} onChange={(e) => onChange({ ...filter, from: e.target.value || undefined })}
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs" />
+        </label>
+        <label className="block">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">To</div>
+          <input type="date" value={filter.to ?? ""} onChange={(e) => onChange({ ...filter, to: e.target.value || undefined })}
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs" />
+        </label>
+        <label className="block">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Side</div>
+          <select value={filter.side ?? "all"} onChange={(e) => onChange({ ...filter, side: e.target.value as InsightsFilter["side"] })}
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs">
+            <option value="all">All</option>
+            <option value="Long">Long</option>
+            <option value="Short">Short</option>
+          </select>
+        </label>
+        <label className="block">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Rule break</div>
+          <select value={filter.ruleBroken ?? "all"} onChange={(e) => onChange({ ...filter, ruleBroken: e.target.value as InsightsFilter["ruleBroken"] })}
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs">
+            <option value="all">All</option>
+            <option value="yes">Only rule breaks</option>
+            <option value="no">Only disciplined</option>
+          </select>
+        </label>
+      </div>
+      <label className="block">
+        <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Setup contains</div>
+        <input value={filter.setup ?? ""} onChange={(e) => onChange({ ...filter, setup: e.target.value || undefined })}
+          placeholder="e.g. UTAD"
+          className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs" />
+      </label>
+      {allSymbols.length > 0 && (
+        <div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Symbols</div>
+          <div className="flex flex-wrap gap-1">
+            {allSymbols.map((s) => {
+              const active = (filter.symbols ?? []).includes(s);
+              return (
+                <button key={s} onClick={() => toggleSymbol(s)}
+                  className={`text-[11px] rounded px-2 py-1 border ${active ? "border-primary bg-primary/15 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}>
+                  {s}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+      <div className="flex items-center gap-2 pt-1 flex-wrap">
+        <input value={viewName} onChange={(e) => onViewName(e.target.value)} placeholder="Name this view"
+          className="flex-1 min-w-[140px] rounded-md border border-border bg-background px-2 py-1.5 text-xs" />
+        <button onClick={onSaveView} disabled={!viewName.trim()}
+          className="inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/10 text-primary px-2.5 py-1.5 text-xs disabled:opacity-40">
+          <SaveIcon className="h-3 w-3" /> Save view
+        </button>
+        <button onClick={onClear} className="rounded-md border border-border px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground">
+          Clear
+        </button>
+      </div>
+      {views.length > 0 && (
+        <div className="flex flex-wrap gap-1 pt-1">
+          {views.map((v) => (
+            <div key={v.id} className="inline-flex items-center rounded border border-border">
+              <button onClick={() => onLoadView(v)} className="inline-flex items-center gap-1 px-2 py-1 text-[11px] hover:bg-accent/40">
+                <Bookmark className="h-3 w-3" /> {v.name}
+              </button>
+              <button onClick={() => onDeleteView(v.id)} aria-label="Delete view"
+                className="px-1.5 py-1 text-muted-foreground hover:text-destructive">
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function InsightsPanel({ trades: allTrades }: { trades: Trade[] }) {
+
+  const [filter, setFilter] = useState<InsightsFilter>({ side: "all", ruleBroken: "all" });
+  const [views, setViews] = useState<SavedView[]>([]);
+  const [viewName, setViewName] = useState("");
+  useEffect(() => { setViews(loadViews()); }, []);
+  const trades = useMemo(() => applyFilter(allTrades, filter), [allTrades, filter]);
+  const allSymbols = useMemo(() => Array.from(new Set(allTrades.map((t) => t.symbol))).sort(), [allTrades]);
+
   const stats = useMemo(() => {
     if (trades.length === 0) return null;
     const wins = trades.filter((t) => tradePnl(t) > 0);
     const losses = trades.filter((t) => tradePnl(t) < 0);
     const netPnl = trades.reduce((a, b) => a + tradePnl(b), 0);
+
     const ruleBrokenTrades = trades.filter((t) => t.ruleBroken);
     const ruleBrokenPnl = ruleBrokenTrades.reduce((a, b) => a + tradePnl(b), 0);
     const disciplinedTrades = trades.filter((t) => !t.ruleBroken);
@@ -620,10 +875,38 @@ function InsightsPanel({ trades }: { trades: Trade[] }) {
       lossByCategory, perSymbol, perDow, perSetup, patterns };
   }, [trades]);
 
+  const filterBar = (
+    <FilterBar
+      filter={filter}
+      onChange={setFilter}
+      allSymbols={allSymbols}
+      views={views}
+      viewName={viewName}
+      onViewName={setViewName}
+      onSaveView={() => {
+        const name = viewName.trim();
+        if (!name) return;
+        const next: SavedView[] = [
+          ...views.filter((v) => v.name !== name),
+          { id: `v_${Date.now().toString(36)}`, name, filter },
+        ];
+        setViews(next); saveViews(next); setViewName("");
+      }}
+      onLoadView={(v) => setFilter(v.filter)}
+      onDeleteView={(id) => { const next = views.filter((v) => v.id !== id); setViews(next); saveViews(next); }}
+      onClear={() => setFilter({ side: "all", ruleBroken: "all" })}
+      filtered={trades.length}
+      total={allTrades.length}
+    />
+  );
+
   if (!stats) {
     return (
-      <div className="rounded-xl border border-border bg-card p-10 text-center text-sm text-muted-foreground">
-        Log a few trades to unlock pattern insights.
+      <div className="space-y-4">
+        {filterBar}
+        <div className="rounded-xl border border-border bg-card p-10 text-center text-sm text-muted-foreground">
+          {allTrades.length === 0 ? "Log a few trades to unlock pattern insights." : "No trades match this filter."}
+        </div>
       </div>
     );
   }
@@ -636,6 +919,8 @@ function InsightsPanel({ trades }: { trades: Trade[] }) {
 
   return (
     <div className="space-y-4">
+      {filterBar}
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard label="Net P&L" value={`${stats.netPnl >= 0 ? "+" : ""}${stats.netPnl.toFixed(2)}`} positive={stats.netPnl >= 0} />
         <StatCard label="Win rate" value={`${stats.winRate.toFixed(0)}%`} positive={stats.winRate >= 50} />
@@ -744,7 +1029,7 @@ function TradeFormModal({
 }: {
   initialDate: string;
   editing: Trade | null;
-  prefill?: { symbol?: string; timeframe?: string; notes?: string } | null;
+  prefill?: { symbol?: string; timeframe?: string; notes?: string; entry?: number; side?: Side; setup?: string } | null;
   onClose: () => void;
   onSave: (t: Trade) => void;
 }) {
@@ -753,17 +1038,20 @@ function TradeFormModal({
     editing?.timeframe ?? (TIMEFRAMES.includes((prefill?.timeframe ?? "") as Timeframe) ? (prefill!.timeframe as Timeframe) : "1H"),
   );
   const [symbol, setSymbol] = useState(editing?.symbol ?? prefill?.symbol ?? "XAU/USD");
-  const [side, setSide] = useState<Side>(editing?.side ?? "Long");
-  const [entry, setEntry] = useState<string>(editing ? String(editing.entry) : "");
+  const [side, setSide] = useState<Side>(editing?.side ?? prefill?.side ?? "Long");
+  const [entry, setEntry] = useState<string>(editing ? String(editing.entry) : prefill?.entry != null ? String(prefill.entry) : "");
   const [exit, setExit] = useState<string>(editing ? String(editing.exit) : "");
   const [stop, setStop] = useState<string>(editing ? String(editing.stop) : "");
   const [takeProfit, setTakeProfit] = useState<string>(editing?.takeProfit != null ? String(editing.takeProfit) : "");
   const [size, setSize] = useState<string>(editing ? String(editing.size) : "1");
+  const [fees, setFees] = useState<string>(editing?.fees != null ? String(editing.fees) : "");
+  const [pointValue, setPointValue] = useState<string>(editing?.pointValue != null ? String(editing.pointValue) : "");
   const [notes, setNotes] = useState(editing?.notes ?? prefill?.notes ?? "");
-  const [setup, setSetup] = useState(editing?.setup ?? "");
+  const [setup, setSetup] = useState(editing?.setup ?? prefill?.setup ?? "");
   const [ruleBroken, setRuleBroken] = useState<boolean>(editing?.ruleBroken ?? false);
   const [ruleBrokenNote, setRuleBrokenNote] = useState<string>(editing?.ruleBrokenNote ?? "");
   const [lossCategory, setLossCategory] = useState<LossCategory | "">(editing?.lossCategory ?? "");
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pendingImage, setPendingImage] = useState<Blob | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -824,6 +1112,9 @@ function TradeFormModal({
     stop: Number(stop) || 0,
     takeProfit: takeProfit === "" ? undefined : Number(takeProfit),
     size: Number(size) || 0,
+    fees: fees === "" ? undefined : Number(fees),
+    pointValue: pointValue === "" ? undefined : Number(pointValue),
+
     notes,
     setup: setup.trim() || undefined,
     ruleBroken: ruleBroken || undefined,
@@ -946,6 +1237,16 @@ function TradeFormModal({
               <input value={setup} onChange={(e) => setSetup(e.target.value)} placeholder="e.g. UTAD, Breakout" className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
             </Field>
           </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Point value ($/unit, optional)">
+              <input inputMode="decimal" value={pointValue} onChange={(e) => setPointValue(e.target.value)} placeholder="1 = raw price" className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            </Field>
+            <Field label="Fees / commission ($)">
+              <input inputMode="decimal" value={fees} onChange={(e) => setFees(e.target.value)} placeholder="0" className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            </Field>
+          </div>
+
 
           <div className="rounded-lg border border-border p-3 space-y-3">
             <label className="flex items-center gap-2 text-sm">

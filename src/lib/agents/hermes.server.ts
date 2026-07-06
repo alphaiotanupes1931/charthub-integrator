@@ -1,4 +1,4 @@
-// Hermes — the learning layer.
+// Hermes - the learning layer.
 //
 // Sits alongside the 3-layer research stack:
 //   L1 Data → L2 Research → L3 Planner
@@ -76,7 +76,7 @@ export function formatLessonsForPrompt(rows: HermesLessonRow[]): string {
   if (!rows.length) return "";
   const top = rows.slice(0, 8);
   return [
-    "Hermes memory — lessons from this trader's past feedback (apply them, do not restate):",
+    "Hermes memory - lessons from this trader's past feedback (apply them, do not restate):",
     ...top.map((r, i) => `${i + 1}. [${r.topic}] ${r.lesson}`),
   ].join("\n");
 }

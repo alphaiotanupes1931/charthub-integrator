@@ -102,8 +102,8 @@ function SubscribersPage() {
             )}
             {rows.map((r) => (
               <tr key={r.subscription_id} className="border-t border-border">
-                <td className="px-3 py-2">{r.email ?? "—"}</td>
-                <td className="px-3 py-2 capitalize">{r.tier ?? "—"}</td>
+                <td className="px-3 py-2">{r.email ?? "-"}</td>
+                <td className="px-3 py-2 capitalize">{r.tier ?? "-"}</td>
                 <td className="px-3 py-2">
                   <span
                     className={`inline-block rounded px-2 py-0.5 text-xs ${
@@ -124,7 +124,7 @@ function SubscribersPage() {
                 <td className="px-3 py-2 text-muted-foreground">
                   {r.current_period_end
                     ? new Date(r.current_period_end * 1000).toLocaleDateString()
-                    : "—"}
+                    : "-"}
                 </td>
               </tr>
             ))}

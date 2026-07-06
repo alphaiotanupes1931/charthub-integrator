@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
-import { HeartPulse, Save, Trash2 } from "lucide-react";
+import { HeartPulse, Save, Trash2, BellRing, BellOff } from "lucide-react";
+
 
 export const Route = createFileRoute("/_app/mental")({
   head: () => ({ meta: [{ title: "Mental State, TradeMind" }] }),
@@ -42,7 +43,7 @@ function save(entries: MentalEntry[]) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(entries)); } catch { /* ignore */ }
 }
 
-type Trade = { date: string; entry: number; exit: number; stop: number; size: number; side: "Long" | "Short" };
+type Trade = { date: string; entry: number; exit: number; stop: number; size: number; side: "Long" | "Short"; fees?: number; pointValue?: number };
 function loadTrades(): Trade[] {
   try {
     const raw = localStorage.getItem(TRADES_KEY);
@@ -52,8 +53,24 @@ function loadTrades(): Trade[] {
 }
 function tradePnl(t: Trade) {
   const dir = t.side === "Long" ? 1 : -1;
-  return (t.exit - t.entry) * dir * (t.size || 1);
+  const pv = t.pointValue && isFinite(t.pointValue) && t.pointValue > 0 ? t.pointValue : 1;
+  const fees = t.fees && isFinite(t.fees) ? t.fees : 0;
+  return (t.exit - t.entry) * dir * (t.size || 0) * pv - fees;
 }
+
+const REMINDER_KEY = "trademind.mental.reminder.v1";
+type Reminder = { enabled: boolean; time: string; lastFired?: string };
+function loadReminder(): Reminder {
+  try {
+    const raw = localStorage.getItem(REMINDER_KEY);
+    if (raw) return { enabled: false, time: "18:00", ...JSON.parse(raw) };
+  } catch { /* ignore */ }
+  return { enabled: false, time: "18:00" };
+}
+function saveReminder(r: Reminder) {
+  try { localStorage.setItem(REMINDER_KEY, JSON.stringify(r)); } catch { /* ignore */ }
+}
+
 
 const SCORE_META: Record<number, { label: string; color: string; hint: string }> = {
   1: { label: "Awful",   color: "text-destructive",   hint: "Rough day. Small size or step away." },
@@ -89,6 +106,42 @@ function MentalPage() {
       setNotes(today.notes ?? "");
     }
   }, []);
+
+  // Daily check-in reminder (in-app + browser Notification when granted).
+  const [reminder, setReminder] = useState<Reminder>(() => loadReminder());
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">(
+    typeof window !== "undefined" && "Notification" in window ? Notification.permission : "unsupported",
+  );
+  const loggedToday = entries.some((e) => e.date === todayYmd());
+
+  useEffect(() => {
+    if (!reminder.enabled) return;
+    const id = window.setInterval(() => {
+      const now = new Date();
+      const [hh, mm] = reminder.time.split(":").map(Number);
+      if (isNaN(hh) || isNaN(mm)) return;
+      const today = todayYmd();
+      const already = load().some((e) => e.date === today);
+      if (already) return;
+      if (reminder.lastFired === today) return;
+      if (now.getHours() === hh && now.getMinutes() === mm) {
+        const next = { ...reminder, lastFired: today };
+        setReminder(next); saveReminder(next);
+        if ("Notification" in window && Notification.permission === "granted") {
+          try { new Notification("TradeMind check-in", { body: "Log your mental state score for today." }); } catch { /* ignore */ }
+        }
+      }
+    }, 30_000);
+    return () => window.clearInterval(id);
+  }, [reminder]);
+
+  const requestNotif = async () => {
+    if (!("Notification" in window)) return;
+    const p = await Notification.requestPermission();
+    setNotifPermission(p);
+  };
+
+
 
   const trades = useMemo(() => loadTrades(), []);
   const pnlByDay = useMemo(() => {
@@ -159,6 +212,43 @@ function MentalPage() {
         }
       />
 
+      <div className="rounded-2xl border border-border bg-card p-4 md:p-5">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2 text-sm">
+            {reminder.enabled ? <BellRing className="h-4 w-4 text-primary" /> : <BellOff className="h-4 w-4 text-muted-foreground" />}
+            <span className="font-semibold">Daily check-in reminder</span>
+            {loggedToday && <span className="text-[11px] rounded bg-emerald-500/15 text-emerald-500 px-1.5 py-0.5">logged today</span>}
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="time"
+              value={reminder.time}
+              onChange={(e) => { const n = { ...reminder, time: e.target.value }; setReminder(n); saveReminder(n); }}
+              className="rounded-md border border-border bg-background px-2 py-1 text-xs"
+            />
+            <button
+              onClick={() => {
+                const n = { ...reminder, enabled: !reminder.enabled };
+                setReminder(n); saveReminder(n);
+                if (n.enabled && notifPermission === "default") void requestNotif();
+              }}
+              className={`rounded-md px-3 py-1.5 text-xs font-medium border ${reminder.enabled ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}
+            >
+              {reminder.enabled ? "On" : "Off"}
+            </button>
+          </div>
+        </div>
+        {reminder.enabled && notifPermission !== "granted" && notifPermission !== "unsupported" && (
+          <button onClick={requestNotif} className="mt-2 text-[11px] text-primary underline">
+            Enable browser notifications
+          </button>
+        )}
+        {!loggedToday && reminder.enabled && (
+          <div className="mt-2 text-[11px] text-muted-foreground">You'll get a nudge at {reminder.time} local time while the app is open.</div>
+        )}
+      </div>
+
+
       <div className="rounded-2xl border border-border bg-card p-6">
         <div className="flex items-center gap-2 mb-3">
           <HeartPulse className="h-4 w-4 text-primary" />
@@ -192,7 +282,7 @@ function MentalPage() {
           <div className="mt-6 space-y-4">
             {lowScore && (
               <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-amber-500">
-                A low score today — let's dig in a little so patterns show up. What might be off?
+                A low score today - let's dig in a little so patterns show up. What might be off?
               </div>
             )}
 
@@ -292,7 +382,7 @@ function MentalPage() {
                   <div className={`text-lg font-bold ${SCORE_META[n].color}`}>{n}</div>
                   <div className="text-[10px] text-muted-foreground">{SCORE_META[n].label}</div>
                   <div className={`mt-2 text-sm font-semibold ${b.pnl >= 0 ? "text-emerald-400" : "text-destructive"}`}>
-                    {b.n === 0 ? "—" : `${b.pnl >= 0 ? "+" : ""}${b.pnl.toFixed(0)}`}
+                    {b.n === 0 ? "-" : `${b.pnl >= 0 ? "+" : ""}${b.pnl.toFixed(0)}`}
                   </div>
                   <div className="text-[10px] text-muted-foreground">{b.n} days · {b.n > 0 ? `${winRate.toFixed(0)}% win` : ""}</div>
                 </div>
@@ -322,7 +412,7 @@ function MentalPage() {
                   </div>
                 </div>
                 <div className={`text-sm font-semibold ${r.pnl > 0 ? "text-emerald-400" : r.pnl < 0 ? "text-destructive" : "text-muted-foreground"}`}>
-                  {pnlByDay.has(r.date) ? `${r.pnl >= 0 ? "+" : ""}${r.pnl.toFixed(2)}` : "—"}
+                  {pnlByDay.has(r.date) ? `${r.pnl >= 0 ? "+" : ""}${r.pnl.toFixed(2)}` : "-"}
                 </div>
                 <button
                   onClick={() => deleteEntry(r.date)}
