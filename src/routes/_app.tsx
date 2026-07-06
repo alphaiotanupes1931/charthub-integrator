@@ -99,9 +99,12 @@ export const Route = createFileRoute("/_app")({
   pendingMinMs: 300,
   pendingComponent: GatePending,
   errorComponent: ({ error }) => <GateError error={error instanceof Error ? error : new Error("Dashboard access failed")} />,
-  beforeLoad: async () => {
-    // AUTH TEMPORARILY DISABLED — dashboard is open to everyone for testing.
-    return { user: null };
+  beforeLoad: async ({ location }) => {
+    const user = await getHydratedUser();
+    if (!user) {
+      throw redirect({ to: "/auth", search: { redirect: location.href, mode: "signin" } });
+    }
+    return { user };
   },
 
   component: () => (
