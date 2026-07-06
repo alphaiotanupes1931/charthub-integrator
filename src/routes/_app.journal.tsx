@@ -456,10 +456,6 @@ function JournalPage() {
           onImport={(merged) => setTrades(merged)}
         />
 
-          trades={sortedTrades}
-          onEdit={openEdit}
-          onDelete={handleDelete}
-        />
       )}
 
       {tab === "review" && (
