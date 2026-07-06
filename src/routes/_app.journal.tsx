@@ -764,10 +764,38 @@ function InsightsPanel({ trades: allTrades }: { trades: Trade[] }) {
       lossByCategory, perSymbol, perDow, perSetup, patterns };
   }, [trades]);
 
+  const filterBar = (
+    <FilterBar
+      filter={filter}
+      onChange={setFilter}
+      allSymbols={allSymbols}
+      views={views}
+      viewName={viewName}
+      onViewName={setViewName}
+      onSaveView={() => {
+        const name = viewName.trim();
+        if (!name) return;
+        const next: SavedView[] = [
+          ...views.filter((v) => v.name !== name),
+          { id: `v_${Date.now().toString(36)}`, name, filter },
+        ];
+        setViews(next); saveViews(next); setViewName("");
+      }}
+      onLoadView={(v) => setFilter(v.filter)}
+      onDeleteView={(id) => { const next = views.filter((v) => v.id !== id); setViews(next); saveViews(next); }}
+      onClear={() => setFilter({ side: "all", ruleBroken: "all" })}
+      filtered={trades.length}
+      total={allTrades.length}
+    />
+  );
+
   if (!stats) {
     return (
-      <div className="rounded-xl border border-border bg-card p-10 text-center text-sm text-muted-foreground">
-        Log a few trades to unlock pattern insights.
+      <div className="space-y-4">
+        {filterBar}
+        <div className="rounded-xl border border-border bg-card p-10 text-center text-sm text-muted-foreground">
+          {allTrades.length === 0 ? "Log a few trades to unlock pattern insights." : "No trades match this filter."}
+        </div>
       </div>
     );
   }
@@ -780,6 +808,8 @@ function InsightsPanel({ trades: allTrades }: { trades: Trade[] }) {
 
   return (
     <div className="space-y-4">
+      {filterBar}
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard label="Net P&L" value={`${stats.netPnl >= 0 ? "+" : ""}${stats.netPnl.toFixed(2)}`} positive={stats.netPnl >= 0} />
         <StatCard label="Win rate" value={`${stats.winRate.toFixed(0)}%`} positive={stats.winRate >= 50} />
