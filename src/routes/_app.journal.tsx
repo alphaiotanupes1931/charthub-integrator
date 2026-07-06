@@ -665,7 +665,118 @@ function MiniTradeRow({ t, onEdit }: { t: Trade; onEdit: (t: Trade) => void }) {
   );
 }
 
+function FilterBar({
+  filter, onChange, allSymbols, views, viewName, onViewName,
+  onSaveView, onLoadView, onDeleteView, onClear, filtered, total,
+}: {
+  filter: InsightsFilter;
+  onChange: (f: InsightsFilter) => void;
+  allSymbols: string[];
+  views: SavedView[];
+  viewName: string;
+  onViewName: (s: string) => void;
+  onSaveView: () => void;
+  onLoadView: (v: SavedView) => void;
+  onDeleteView: (id: string) => void;
+  onClear: () => void;
+  filtered: number;
+  total: number;
+}) {
+  const toggleSymbol = (sym: string) => {
+    const cur = new Set(filter.symbols ?? []);
+    if (cur.has(sym)) cur.delete(sym); else cur.add(sym);
+    onChange({ ...filter, symbols: Array.from(cur) });
+  };
+  return (
+    <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-2 text-sm font-semibold"><FilterIcon className="h-4 w-4 text-primary" /> Filters</div>
+        <div className="text-xs text-muted-foreground">Showing {filtered} of {total} trades</div>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <label className="block">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">From</div>
+          <input type="date" value={filter.from ?? ""} onChange={(e) => onChange({ ...filter, from: e.target.value || undefined })}
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs" />
+        </label>
+        <label className="block">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">To</div>
+          <input type="date" value={filter.to ?? ""} onChange={(e) => onChange({ ...filter, to: e.target.value || undefined })}
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs" />
+        </label>
+        <label className="block">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Side</div>
+          <select value={filter.side ?? "all"} onChange={(e) => onChange({ ...filter, side: e.target.value as InsightsFilter["side"] })}
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs">
+            <option value="all">All</option>
+            <option value="Long">Long</option>
+            <option value="Short">Short</option>
+          </select>
+        </label>
+        <label className="block">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Rule break</div>
+          <select value={filter.ruleBroken ?? "all"} onChange={(e) => onChange({ ...filter, ruleBroken: e.target.value as InsightsFilter["ruleBroken"] })}
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs">
+            <option value="all">All</option>
+            <option value="yes">Only rule breaks</option>
+            <option value="no">Only disciplined</option>
+          </select>
+        </label>
+      </div>
+      <label className="block">
+        <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Setup contains</div>
+        <input value={filter.setup ?? ""} onChange={(e) => onChange({ ...filter, setup: e.target.value || undefined })}
+          placeholder="e.g. UTAD"
+          className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs" />
+      </label>
+      {allSymbols.length > 0 && (
+        <div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Symbols</div>
+          <div className="flex flex-wrap gap-1">
+            {allSymbols.map((s) => {
+              const active = (filter.symbols ?? []).includes(s);
+              return (
+                <button key={s} onClick={() => toggleSymbol(s)}
+                  className={`text-[11px] rounded px-2 py-1 border ${active ? "border-primary bg-primary/15 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}>
+                  {s}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+      <div className="flex items-center gap-2 pt-1 flex-wrap">
+        <input value={viewName} onChange={(e) => onViewName(e.target.value)} placeholder="Name this view"
+          className="flex-1 min-w-[140px] rounded-md border border-border bg-background px-2 py-1.5 text-xs" />
+        <button onClick={onSaveView} disabled={!viewName.trim()}
+          className="inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/10 text-primary px-2.5 py-1.5 text-xs disabled:opacity-40">
+          <SaveIcon className="h-3 w-3" /> Save view
+        </button>
+        <button onClick={onClear} className="rounded-md border border-border px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground">
+          Clear
+        </button>
+      </div>
+      {views.length > 0 && (
+        <div className="flex flex-wrap gap-1 pt-1">
+          {views.map((v) => (
+            <div key={v.id} className="inline-flex items-center rounded border border-border">
+              <button onClick={() => onLoadView(v)} className="inline-flex items-center gap-1 px-2 py-1 text-[11px] hover:bg-accent/40">
+                <Bookmark className="h-3 w-3" /> {v.name}
+              </button>
+              <button onClick={() => onDeleteView(v.id)} aria-label="Delete view"
+                className="px-1.5 py-1 text-muted-foreground hover:text-destructive">
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function InsightsPanel({ trades: allTrades }: { trades: Trade[] }) {
+
   const [filter, setFilter] = useState<InsightsFilter>({ side: "all", ruleBroken: "all" });
   const [views, setViews] = useState<SavedView[]>([]);
   const [viewName, setViewName] = useState("");
