@@ -453,6 +453,12 @@ function JournalPage() {
           trades={sortedTrades}
           onEdit={openEdit}
           onDelete={handleDelete}
+          onImport={(merged) => setTrades(merged)}
+        />
+
+          trades={sortedTrades}
+          onEdit={openEdit}
+          onDelete={handleDelete}
         />
       )}
 
