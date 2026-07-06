@@ -1029,7 +1029,7 @@ function TradeFormModal({
 }: {
   initialDate: string;
   editing: Trade | null;
-  prefill?: { symbol?: string; timeframe?: string; notes?: string } | null;
+  prefill?: { symbol?: string; timeframe?: string; notes?: string; entry?: number; side?: Side; setup?: string } | null;
   onClose: () => void;
   onSave: (t: Trade) => void;
 }) {
@@ -1038,17 +1038,20 @@ function TradeFormModal({
     editing?.timeframe ?? (TIMEFRAMES.includes((prefill?.timeframe ?? "") as Timeframe) ? (prefill!.timeframe as Timeframe) : "1H"),
   );
   const [symbol, setSymbol] = useState(editing?.symbol ?? prefill?.symbol ?? "XAU/USD");
-  const [side, setSide] = useState<Side>(editing?.side ?? "Long");
-  const [entry, setEntry] = useState<string>(editing ? String(editing.entry) : "");
+  const [side, setSide] = useState<Side>(editing?.side ?? prefill?.side ?? "Long");
+  const [entry, setEntry] = useState<string>(editing ? String(editing.entry) : prefill?.entry != null ? String(prefill.entry) : "");
   const [exit, setExit] = useState<string>(editing ? String(editing.exit) : "");
   const [stop, setStop] = useState<string>(editing ? String(editing.stop) : "");
   const [takeProfit, setTakeProfit] = useState<string>(editing?.takeProfit != null ? String(editing.takeProfit) : "");
   const [size, setSize] = useState<string>(editing ? String(editing.size) : "1");
+  const [fees, setFees] = useState<string>(editing?.fees != null ? String(editing.fees) : "");
+  const [pointValue, setPointValue] = useState<string>(editing?.pointValue != null ? String(editing.pointValue) : "");
   const [notes, setNotes] = useState(editing?.notes ?? prefill?.notes ?? "");
-  const [setup, setSetup] = useState(editing?.setup ?? "");
+  const [setup, setSetup] = useState(editing?.setup ?? prefill?.setup ?? "");
   const [ruleBroken, setRuleBroken] = useState<boolean>(editing?.ruleBroken ?? false);
   const [ruleBrokenNote, setRuleBrokenNote] = useState<string>(editing?.ruleBrokenNote ?? "");
   const [lossCategory, setLossCategory] = useState<LossCategory | "">(editing?.lossCategory ?? "");
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pendingImage, setPendingImage] = useState<Blob | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
