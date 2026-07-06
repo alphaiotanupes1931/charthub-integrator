@@ -34,6 +34,7 @@ import { Route as AppSignalsRouteImport } from './routes/_app.signals'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppScanLensRouteImport } from './routes/_app.scan-lens'
 import { Route as AppMentorRouteImport } from './routes/_app.mentor'
+import { Route as AppMentalRouteImport } from './routes/_app.mental'
 import { Route as AppMemoryRouteImport } from './routes/_app.memory'
 import { Route as AppLevelsRouteImport } from './routes/_app.levels'
 import { Route as AppJournalRouteImport } from './routes/_app.journal'
@@ -178,6 +179,11 @@ const AppMentorRoute = AppMentorRouteImport.update({
   path: '/mentor',
   getParentRoute: () => AppRoute,
 } as any)
+const AppMentalRoute = AppMentalRouteImport.update({
+  id: '/mental',
+  path: '/mental',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppMemoryRoute = AppMemoryRouteImport.update({
   id: '/memory',
   path: '/memory',
@@ -299,6 +305,7 @@ export interface FileRoutesByFullPath {
   '/journal': typeof AppJournalRoute
   '/levels': typeof AppLevelsRoute
   '/memory': typeof AppMemoryRoute
+  '/mental': typeof AppMentalRoute
   '/mentor': typeof AppMentorRoute
   '/scan-lens': typeof AppScanLensRoute
   '/settings': typeof AppSettingsRoute
@@ -343,6 +350,7 @@ export interface FileRoutesByTo {
   '/journal': typeof AppJournalRoute
   '/levels': typeof AppLevelsRoute
   '/memory': typeof AppMemoryRoute
+  '/mental': typeof AppMentalRoute
   '/mentor': typeof AppMentorRoute
   '/scan-lens': typeof AppScanLensRoute
   '/settings': typeof AppSettingsRoute
@@ -390,6 +398,7 @@ export interface FileRoutesById {
   '/_app/journal': typeof AppJournalRoute
   '/_app/levels': typeof AppLevelsRoute
   '/_app/memory': typeof AppMemoryRoute
+  '/_app/mental': typeof AppMentalRoute
   '/_app/mentor': typeof AppMentorRoute
   '/_app/scan-lens': typeof AppScanLensRoute
   '/_app/settings': typeof AppSettingsRoute
@@ -437,6 +446,7 @@ export interface FileRouteTypes {
     | '/journal'
     | '/levels'
     | '/memory'
+    | '/mental'
     | '/mentor'
     | '/scan-lens'
     | '/settings'
@@ -481,6 +491,7 @@ export interface FileRouteTypes {
     | '/journal'
     | '/levels'
     | '/memory'
+    | '/mental'
     | '/mentor'
     | '/scan-lens'
     | '/settings'
@@ -527,6 +538,7 @@ export interface FileRouteTypes {
     | '/_app/journal'
     | '/_app/levels'
     | '/_app/memory'
+    | '/_app/mental'
     | '/_app/mentor'
     | '/_app/scan-lens'
     | '/_app/settings'
@@ -750,6 +762,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMentorRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/mental': {
+      id: '/_app/mental'
+      path: '/mental'
+      fullPath: '/mental'
+      preLoaderRoute: typeof AppMentalRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/memory': {
       id: '/_app/memory'
       path: '/memory'
@@ -936,6 +955,7 @@ interface AppRouteChildren {
   AppJournalRoute: typeof AppJournalRoute
   AppLevelsRoute: typeof AppLevelsRoute
   AppMemoryRoute: typeof AppMemoryRoute
+  AppMentalRoute: typeof AppMentalRoute
   AppMentorRoute: typeof AppMentorRoute
   AppScanLensRoute: typeof AppScanLensRoute
   AppSettingsRoute: typeof AppSettingsRoute
@@ -957,6 +977,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppJournalRoute: AppJournalRoute,
   AppLevelsRoute: AppLevelsRoute,
   AppMemoryRoute: AppMemoryRoute,
+  AppMentalRoute: AppMentalRoute,
   AppMentorRoute: AppMentorRoute,
   AppScanLensRoute: AppScanLensRoute,
   AppSettingsRoute: AppSettingsRoute,
@@ -1003,13 +1024,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
