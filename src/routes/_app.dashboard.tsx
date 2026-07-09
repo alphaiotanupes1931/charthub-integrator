@@ -627,8 +627,21 @@ function Dashboard() {
     if (!q || askedRef.current === q) return;
     askedRef.current = q;
     sendToChat(q);
-    navigate({ to: "/dashboard", search: {}, replace: true });
+    navigate({ to: "/dashboard", search: (prev) => ({ ...prev, ask: undefined }), replace: true });
   }, [search.ask, navigate]);
+
+  // Honor ?symbol= deep links (e.g. from AI Signals tab)
+  const symbolAppliedRef = useRef<string | null>(null);
+  useEffect(() => {
+    const t = search.symbol?.trim();
+    if (!t || symbolAppliedRef.current === t) return;
+    const match = SYMBOLS.find((s) => s.ticker.toLowerCase() === t.toLowerCase() || s.tv.toLowerCase() === t.toLowerCase());
+    if (match) {
+      setSymbol(match);
+      symbolAppliedRef.current = t;
+    }
+    navigate({ to: "/dashboard", search: (prev) => ({ ...prev, symbol: undefined }), replace: true });
+  }, [search.symbol, navigate]);
 
   const applyPlanToSignalCards = (plan: ScanResult) => {
     const num = (s: string): number | undefined => {
