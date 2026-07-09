@@ -268,16 +268,16 @@ function ScanTicket({
 
   return (
     <div className="space-y-5">
-      <div className="flex items-start justify-between gap-3 flex-wrap">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
         <div className="min-w-0">
-          <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-2">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-2 truncate">
             {symbol.ticker} · {result.bias}
           </div>
-          <div className={`font-display text-6xl leading-none tracking-tight ${gradeColor[result.grade]}`}>
+          <div className={`font-display text-4xl sm:text-6xl leading-none tracking-tight ${gradeColor[result.grade]}`}>
             {result.grade}
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-col items-end gap-1.5 shrink-0">
           {voiceSpeaking && (
             <button
               onClick={onStopVoice}
@@ -289,7 +289,7 @@ function ScanTicket({
           )}
           <button
             onClick={onRescan}
-            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90 transition"
+            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90 transition whitespace-nowrap"
             title="Run a new scan on the current chart"
           >
             <Crosshair className="h-3 w-3" /> New scan
