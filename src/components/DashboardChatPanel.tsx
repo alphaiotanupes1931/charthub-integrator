@@ -539,11 +539,50 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                       )}
                       {parsed.cleanText && (
                         g ? (
-                          <details className="group rounded-lg border border-border bg-card/40">
-                            <summary className="cursor-pointer select-none px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground flex items-center justify-between">
+                          <details
+                            className="group rounded-lg border border-border bg-card/40"
+                            onToggle={(e) => {
+                              const el = e.currentTarget as HTMLDetailsElement;
+                              if (el.open) {
+                                if (voiceMutedIds.has(m.id)) return;
+                                setSpeakingMsgId(m.id);
+                                void voice.speak(parsed.cleanText, voiceForCoach(readActiveCoach()));
+                              } else if (speakingMsgId === m.id) {
+                                voice.stop();
+                                setSpeakingMsgId(null);
+                              }
+                            }}
+                          >
+                            <summary className="cursor-pointer select-none px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground flex items-center justify-between gap-2">
                               <span>Details</span>
-                              <span className="text-[10px] opacity-60 group-open:hidden">Show</span>
-                              <span className="text-[10px] opacity-60 hidden group-open:inline">Hide</span>
+                              <span className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={(ev) => {
+                                    ev.preventDefault();
+                                    ev.stopPropagation();
+                                    const isMuted = voiceMutedIds.has(m.id);
+                                    if (isMuted) {
+                                      setVoiceMutedIds((prev) => { const n = new Set(prev); n.delete(m.id); return n; });
+                                      setSpeakingMsgId(m.id);
+                                      void voice.speak(parsed.cleanText, voiceForCoach(readActiveCoach()));
+                                    } else {
+                                      setVoiceMutedIds((prev) => { const n = new Set(prev); n.add(m.id); return n; });
+                                      voice.stop();
+                                      setSpeakingMsgId(null);
+                                    }
+                                  }}
+                                  className="inline-flex h-6 w-6 items-center justify-center rounded hover:bg-muted/60"
+                                  title={voiceMutedIds.has(m.id) ? "Unmute voice" : "Mute voice"}
+                                  aria-label={voiceMutedIds.has(m.id) ? "Unmute voice" : "Mute voice"}
+                                >
+                                  {voiceMutedIds.has(m.id)
+                                    ? <VolumeX className="h-3.5 w-3.5" />
+                                    : <Volume2 className="h-3.5 w-3.5 text-primary" />}
+                                </button>
+                                <span className="text-[10px] opacity-60 group-open:hidden">Show</span>
+                                <span className="text-[10px] opacity-60 hidden group-open:inline">Hide</span>
+                              </span>
                             </summary>
                             <div className="px-3 pb-3 pt-1 border-t border-border/60">
                               <MessageResponse>{parsed.cleanText}</MessageResponse>
