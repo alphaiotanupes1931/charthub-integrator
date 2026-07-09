@@ -90,6 +90,14 @@ export function ChartSignalCards({ grade, lastPrice, onClear, scanning }: Props)
             {Math.round(grade.confidence)}%
           </span>
         )}
+        {orderType && (
+          <span
+            className={`rounded border px-1.5 py-0.5 text-[10px] font-bold tracking-wider ${biasBg} ${biasText}`}
+            title={orderHelp}
+          >
+            {orderType}
+          </span>
+        )}
 
         {/* Inline preview of key numbers */}
         <div className="hidden sm:flex items-center gap-3 ml-1 text-[11px] font-mono">
