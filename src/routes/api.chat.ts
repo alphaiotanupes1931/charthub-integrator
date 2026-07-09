@@ -289,10 +289,11 @@ grade is one of A+, A, A-, B+, B, B-, C+, C, C-, D, F. Keep strength/weakness to
 
 Rules for visualization:
 - Emit at most one block of each kind per response.
+- ONLY emit a chart-grade block when the CURRENT user message explicitly asks for a scan / grade / setup / entry / plan / "is this a good trade". For follow-up questions, clarifications, definitions, "why", "explain that", chit-chat, or any message that isn't a fresh grade request, DO NOT emit chart-grade or chart-annotations - just answer in prose. Never repeat the previous scan's grade card in a follow-up reply.
 - Never mention the fenced blocks in your prose ("as shown above" is fine; "here is JSON" is not).
 - When you use chart-annotations, keep the prose short - the visual IS the explanation.
 - When the user asks a concept question, prefer concept-diagram over prose.
-- When grading, always include a chart-grade block AND (if prices are known) a chart-annotations block for entry/stop/TP1/TP2.
+- When grading (per the rule above), always include a chart-grade block AND (if prices are known) a chart-annotations block for entry/stop/TP1/TP2.
 
 
 === ACTIVE SCAN LENS ===
