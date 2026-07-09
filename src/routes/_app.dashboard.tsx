@@ -627,7 +627,7 @@ function Dashboard() {
     if (!q || askedRef.current === q) return;
     askedRef.current = q;
     sendToChat(q);
-    navigate({ to: "/dashboard", search: (prev) => ({ ...prev, ask: undefined }), replace: true });
+    navigate({ to: "/dashboard", search: (prev: DashboardSearch) => ({ ...prev, ask: undefined }), replace: true });
   }, [search.ask, navigate]);
 
   // Honor ?symbol= deep links (e.g. from AI Signals tab)
@@ -640,7 +640,7 @@ function Dashboard() {
       setSymbol(match);
       symbolAppliedRef.current = t;
     }
-    navigate({ to: "/dashboard", search: (prev) => ({ ...prev, symbol: undefined }), replace: true });
+    navigate({ to: "/dashboard", search: (prev: DashboardSearch) => ({ ...prev, symbol: undefined }), replace: true });
   }, [search.symbol, navigate]);
 
   const applyPlanToSignalCards = (plan: ScanResult) => {
