@@ -530,16 +530,38 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                 .join("");
               if (m.role === "assistant") {
                 const parsed = parseAiPayload(raw);
+                const g = parsed.grade;
+                const summary = g
+                  ? `${(g.bias || "neutral").toString().toUpperCase()} setup - Grade ${g.grade.toUpperCase()}${typeof g.entry === "number" ? ` · Entry ${g.entry}` : ""}${typeof g.stop === "number" ? ` · Stop ${g.stop}` : ""}`
+                  : null;
                 return (
                   <Message key={m.id} from={m.role}>
                     <div className="flex flex-col gap-2 max-w-full">
-                      {parsed.cleanText && <MessageResponse>{parsed.cleanText}</MessageResponse>}
-                      {parsed.grade && <GradeCard grade={parsed.grade} />}
+                      {g && <GradeCard grade={g} />}
+                      {summary && (
+                        <div className="text-sm text-foreground/90 leading-snug">{summary}</div>
+                      )}
                       {parsed.concept && <ConceptDiagram concept={parsed.concept} />}
                       {parsed.annotations.length > 0 && (
                         <div className="text-[10px] uppercase tracking-wider text-primary/80">
                           Drawn on chart · {parsed.annotations.length} marker{parsed.annotations.length === 1 ? "" : "s"}
                         </div>
+                      )}
+                      {parsed.cleanText && (
+                        g ? (
+                          <details className="group rounded-lg border border-border bg-card/40">
+                            <summary className="cursor-pointer select-none px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground flex items-center justify-between">
+                              <span>Details</span>
+                              <span className="text-[10px] opacity-60 group-open:hidden">Show</span>
+                              <span className="text-[10px] opacity-60 hidden group-open:inline">Hide</span>
+                            </summary>
+                            <div className="px-3 pb-3 pt-1 border-t border-border/60">
+                              <MessageResponse>{parsed.cleanText}</MessageResponse>
+                            </div>
+                          </details>
+                        ) : (
+                          <MessageResponse>{parsed.cleanText}</MessageResponse>
+                        )
                       )}
                     </div>
                   </Message>
