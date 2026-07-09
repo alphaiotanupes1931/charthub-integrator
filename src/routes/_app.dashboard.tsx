@@ -237,13 +237,34 @@ function ScanTicket({
   // Compact volume / order-flow read from the research memo. The written
   // narrative (strength/weakness, coach reasoning) lives in the chat panel;
   // this card stays purely numeric and glanceable.
-  const techNote = result.memo?.notes.find((n) => n.role === "technical");
-  const riskNote = result.memo?.notes.find((n) => n.role === "risk");
-  const flowBias = techNote?.bias ?? (result.bias === "Long" ? "bullish" : result.bias === "Short" ? "bearish" : "neutral");
-  const flowStrength = techNote?.confidence ?? result.confidence;
-  const volumeTag = flowStrength >= 70 ? "High" : flowStrength >= 45 ? "Medium" : "Light";
+  const notes = result.memo?.notes ?? [];
+  const techNote = notes.find((n) => n.role === "technical");
+  const macroNote = notes.find((n) => n.role === "macro");
+  const sentNote = notes.find((n) => n.role === "sentiment");
+  const riskNote = notes.find((n) => n.role === "risk");
+
+  // Trend strength: convert consensus bias + confidence to a bullish %.
+  const consensus = result.memo?.consensus ?? (result.bias === "Long" ? "bullish" : result.bias === "Short" ? "bearish" : "neutral");
+  const consensusConf = result.memo?.consensusConfidence ?? result.confidence;
+  const bullishPct = consensus === "bullish"
+    ? Math.round(50 + consensusConf / 2)
+    : consensus === "bearish"
+    ? Math.round(50 - consensusConf / 2)
+    : 50;
+  const bearishPct = 100 - bullishPct;
+  const trendLabel = bullishPct >= 65 ? "Strongly bullish" : bullishPct >= 55 ? "Leaning bullish" : bullishPct <= 35 ? "Strongly bearish" : bullishPct <= 45 ? "Leaning bearish" : "Balanced";
+
+  // Order flow: technical analyst read.
+  const flowBias = techNote?.bias ?? consensus;
+  const flowStrength = techNote?.confidence ?? consensusConf;
   const flowLabel = flowBias === "bullish" ? "Buyers in control" : flowBias === "bearish" ? "Sellers in control" : "Balanced";
-  const volatilityTag = riskNote ? (riskNote.confidence >= 65 ? "Elevated" : riskNote.confidence >= 40 ? "Normal" : "Quiet") : "Normal";
+
+  // Volume: use range20Pct and 24h change as a proxy for participation.
+  const volumeTag = flowStrength >= 70 ? "High" : flowStrength >= 45 ? "Medium" : "Light";
+
+  // Volatility from risk analyst.
+  const volatilityConf = riskNote?.confidence ?? 50;
+  const volatilityTag = volatilityConf >= 65 ? "Elevated" : volatilityConf >= 40 ? "Normal" : "Quiet";
 
   return (
     <div className="space-y-5">
@@ -295,16 +316,43 @@ function ScanTicket({
         </div>
       </div>
 
-      {/* Volume / order-flow / volatility snapshot - numeric only. */}
-      <div className="grid grid-cols-3 gap-2">
-        <TicketCell label="Volume" value={volumeTag} />
-        <TicketCell
-          label="Order flow"
-          value={flowLabel}
-          tone={flowBias === "bullish" ? "good" : flowBias === "bearish" ? "bad" : undefined}
-        />
-        <TicketCell label="Volatility" value={volatilityTag} />
+      {/* Trend meter - visual bullish vs bearish split */}
+      <div>
+        <div className="flex justify-between items-baseline text-[11px] mb-2">
+          <span className="text-muted-foreground uppercase tracking-wider text-[10px]">Trend</span>
+          <span className="font-semibold text-foreground">{trendLabel}</span>
+        </div>
+        <div className="flex h-2 rounded-full overflow-hidden bg-border/40">
+          <div className="bg-emerald-500 transition-[width] duration-500" style={{ width: `${bullishPct}%` }} />
+          <div className="bg-red-500 transition-[width] duration-500" style={{ width: `${bearishPct}%` }} />
+        </div>
+        <div className="flex justify-between text-[10px] mt-1 font-mono">
+          <span className="text-emerald-400">{bullishPct}% bullish</span>
+          <span className="text-red-400">{bearishPct}% bearish</span>
+        </div>
       </div>
+
+      {/* Volume snapshot */}
+      <MetricBlock title="Volume" tag={volumeTag} tone={flowStrength >= 45 ? "neutral" : "muted"}>
+        <MetricRow label="Participation" value={`${Math.round(flowStrength)}%`} />
+        <MetricRow label="Range (20-bar)" value={`${result.memo ? "" : "-"}${(result as ScanResult).details ? "" : ""}`.length ? "-" : "-"} hidden />
+        {sentNote && <MetricRow label="Sentiment" value={`${sentNote.bias} · ${Math.round(sentNote.confidence)}%`} />}
+      </MetricBlock>
+
+      {/* Order flow snapshot */}
+      <MetricBlock title="Order Flow" tag={flowLabel} tone={flowBias === "bullish" ? "good" : flowBias === "bearish" ? "bad" : "neutral"}>
+        <MetricRow label="Directional strength" value={`${Math.round(flowStrength)}%`} />
+        {techNote?.keyLevels && techNote.keyLevels.length > 0 && (
+          <MetricRow label="Key levels" value={techNote.keyLevels.slice(0, 3).map((n) => n.toLocaleString()).join(", ")} />
+        )}
+        {macroNote && <MetricRow label="Macro" value={`${macroNote.bias} · ${Math.round(macroNote.confidence)}%`} />}
+      </MetricBlock>
+
+      {/* Volatility */}
+      <MetricBlock title="Volatility" tag={volatilityTag} tone={volatilityConf >= 65 ? "bad" : "neutral"}>
+        <MetricRow label="Risk read" value={`${Math.round(volatilityConf)}%`} />
+        {riskNote?.summary && <MetricRow label="Note" value={riskNote.summary.slice(0, 80)} />}
+      </MetricBlock>
 
       <p className="text-[11px] text-muted-foreground text-center">
         Read the full breakdown in the Chat tab.
@@ -313,6 +361,32 @@ function ScanTicket({
       <div className="pt-1 flex justify-center">
         <ScreenshotAttach onPick={onAttach} />
       </div>
+    </div>
+  );
+}
+
+function MetricBlock({ title, tag, tone = "neutral", children }: { title: string; tag: string; tone?: "good" | "bad" | "neutral" | "muted"; children: React.ReactNode }) {
+  const tagColor = tone === "good" ? "text-emerald-400 border-emerald-500/40 bg-emerald-500/10"
+    : tone === "bad" ? "text-red-400 border-red-500/40 bg-red-500/10"
+    : tone === "muted" ? "text-muted-foreground border-border bg-muted/20"
+    : "text-primary border-primary/40 bg-primary/10";
+  return (
+    <div className="rounded-lg border border-border/60 bg-background/30 p-3 space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-semibold">{title}</span>
+        <span className={`text-[10px] font-semibold uppercase tracking-wider rounded border px-1.5 py-0.5 ${tagColor}`}>{tag}</span>
+      </div>
+      <div className="space-y-1">{children}</div>
+    </div>
+  );
+}
+
+function MetricRow({ label, value, hidden }: { label: string; value: string; hidden?: boolean }) {
+  if (hidden) return null;
+  return (
+    <div className="flex items-baseline justify-between gap-3 text-[11px]">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-mono text-foreground text-right truncate">{value}</span>
     </div>
   );
 }
