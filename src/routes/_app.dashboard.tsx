@@ -695,7 +695,7 @@ function Dashboard() {
         const r = plan as ScanResult;
         setResult(r);
         applyPlanToSignalCards(r);
-        const chatPrompt = `Save this completed ${symbolLabel(symbol)} ${intervalLabel} scan to chat history and explain it using these exact values. Do not rerun the scan, do not flip direction, and do not change the grade. Grade: ${r.grade}. Bias: ${r.bias}. Confidence: ${r.confidence}%. Entry: ${r.entry}. Stop: ${r.stop}. TP1: ${r.tp1}. TP2: ${r.tp2}. R:R: ${r.rr}. Strength: ${r.notes}. Weakness or invalidation: ${r.details}`;
+        const chatPrompt = `Save this completed ${symbolLabel(symbol)} ${intervalLabel} scan to chat history and explain it using these exact values. Do not rerun the scan, do not flip direction, and do not change the grade. Your reply must match this Analysis card exactly: Grade ${r.grade}, Bias ${r.bias}, Confidence ${r.confidence}%, Entry ${r.entry}, Stop ${r.stop}, TP1 ${r.tp1}, TP2 ${r.tp2}, R:R ${r.rr}. Strength: ${r.notes}. Weakness or invalidation: ${r.details}. Include a chart-grade block with the same grade, bias, confidence, entry, stop, tp1, and tp2.`;
         sendToChat(chatPrompt, { focusChat: false });
       })
       .catch(() => {
