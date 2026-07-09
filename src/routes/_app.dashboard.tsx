@@ -222,7 +222,7 @@ function ScreenshotAttach({ onPick }: { onPick: (file: File) => void }) {
 }
 
 function ScanTicket({
-  result, symbol, lensId, onRescan, onAttach, onStopVoice, voiceSpeaking,
+  result, symbol, onRescan, onAttach, onStopVoice, voiceSpeaking,
 }: {
   result: ScanResult;
   symbol: Symbol;
@@ -232,27 +232,19 @@ function ScanTicket({
   onStopVoice: () => void;
   voiceSpeaking: boolean;
 }) {
-  const [open, setOpen] = useState(false);
-  const [lensOpen, setLensOpen] = useState(false);
   const isNoEntry = result.grade === "NO ENTRY";
-  const lens = findLens(lensId);
-  const sendFeedback = useServerFn(recordHermesFeedback);
-  const [fbState, setFbState] = useState<null | 1 | -1>(null);
-  const [fbNote, setFbNote] = useState("");
-  const [fbNoteOpen, setFbNoteOpen] = useState(false);
-  const submitFeedback = (rating: 1 | -1, note?: string) => {
-    setFbState(rating);
-    sendFeedback({ data: {
-      kind: "scan",
-      ticker: symbol.ticker,
-      lens: lens.name,
-      rating,
-      note: note ?? null,
-      context: { bias: result.bias, grade: result.grade, confidence: result.confidence, entry: result.entry, stop: result.stop, tp1: result.tp1, tp2: result.tp2 },
-    } })
-      .then(() => toast.success("Hermes learned from that."))
-      .catch(() => toast.error("Couldn't save feedback."));
-  };
+
+  // Compact volume / order-flow read from the research memo. The written
+  // narrative (strength/weakness, coach reasoning) lives in the chat panel;
+  // this card stays purely numeric and glanceable.
+  const techNote = result.memo?.notes.find((n) => n.role === "technical");
+  const riskNote = result.memo?.notes.find((n) => n.role === "risk");
+  const flowBias = techNote?.bias ?? (result.bias === "Long" ? "bullish" : result.bias === "Short" ? "bearish" : "neutral");
+  const flowStrength = techNote?.confidence ?? result.confidence;
+  const volumeTag = flowStrength >= 70 ? "High" : flowStrength >= 45 ? "Medium" : "Light";
+  const flowLabel = flowBias === "bullish" ? "Buyers in control" : flowBias === "bearish" ? "Sellers in control" : "Balanced";
+  const volatilityTag = riskNote ? (riskNote.confidence >= 65 ? "Elevated" : riskNote.confidence >= 40 ? "Normal" : "Quiet") : "Normal";
+
   return (
     <div className="space-y-5">
       <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -284,27 +276,6 @@ function ScanTicket({
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-2 text-[11px]">
-        <div className="flex items-center gap-1.5 min-w-0">
-          <Crosshair className="h-3 w-3 text-primary shrink-0" />
-          <span className="text-muted-foreground truncate">Lens · <span className="text-foreground font-medium">{lens.name}</span></span>
-        </div>
-        <button
-          onClick={() => setLensOpen((o) => !o)}
-          className="text-muted-foreground hover:text-foreground underline-offset-2 hover:underline shrink-0"
-        >
-          {lensOpen ? "Hide" : "What's this?"}
-        </button>
-      </div>
-      {lensOpen && (
-        <div className="text-xs text-muted-foreground leading-relaxed">
-          <p className="mb-1">{lens.desc}</p>
-          <p className="italic">{lens.promptEmphasis}</p>
-        </div>
-      )}
-
-      <p className="text-sm leading-relaxed text-foreground/90">{result.notes}</p>
-
       {!isNoEntry && (
         <div className="grid grid-cols-2 gap-2">
           <TicketCell label="Entry" value={result.entry} />
@@ -324,77 +295,20 @@ function ScanTicket({
         </div>
       </div>
 
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="w-full inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background/60 px-3 py-2 text-xs font-medium hover:border-primary/40 transition"
-      >
-        {open ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-        {open ? "Hide details" : "Show details"}
-      </button>
-      {open && (
-        <div className="rounded-lg border border-border/60 bg-background/40 p-3 text-xs leading-relaxed text-foreground/90 space-y-3">
-          <div>{result.details}</div>
-          {result.memo && result.memo.notes.length > 0 && (
-            <div className="border-t border-border/50 pt-3 space-y-2">
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                Research memo · consensus {result.memo.consensus} @ {result.memo.consensusConfidence}%
-              </div>
-              {result.memo.notes.map((n) => (
-                <div key={n.role} className="rounded-md border border-border/50 bg-card/50 px-2.5 py-2">
-                  <div className="flex items-center justify-between mb-0.5">
-                    <span className="text-[10px] uppercase tracking-wider text-primary">{n.role}</span>
-                    <span className="text-[10px] text-muted-foreground">{n.bias} · {n.confidence}%</span>
-                  </div>
-                  <div className="text-xs text-foreground/85 leading-snug">{n.summary}</div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      <div className="rounded-md border border-border/60 bg-background/40 p-3 space-y-2">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <Brain className="h-3.5 w-3.5 text-primary" />
-            <span>Was this useful? Hermes will remember.</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => submitFeedback(1)}
-              className={`h-7 w-7 inline-flex items-center justify-center rounded-md border transition ${fbState === 1 ? "border-emerald-500/60 bg-emerald-500/15 text-emerald-400" : "border-border text-muted-foreground hover:text-foreground hover:border-primary/40"}`}
-              aria-label="Helpful"
-              title="Helpful"
-            >
-              <ThumbsUp className="h-3.5 w-3.5" />
-            </button>
-            <button
-              onClick={() => { setFbNoteOpen(true); }}
-              className={`h-7 w-7 inline-flex items-center justify-center rounded-md border transition ${fbState === -1 ? "border-destructive/60 bg-destructive/15 text-destructive" : "border-border text-muted-foreground hover:text-foreground hover:border-primary/40"}`}
-              aria-label="Not helpful"
-              title="Not helpful"
-            >
-              <ThumbsDown className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        </div>
-        {fbNoteOpen && fbState !== -1 && (
-          <div className="flex items-center gap-2">
-            <input
-              value={fbNote}
-              onChange={(e) => setFbNote(e.target.value)}
-              placeholder="What was off? (optional)"
-              className="flex-1 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs focus:outline-none focus:border-primary/50"
-            />
-            <button
-              onClick={() => { submitFeedback(-1, fbNote.trim() || undefined); setFbNoteOpen(false); }}
-              className="rounded-md bg-primary px-2.5 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
-            >
-              Send
-            </button>
-          </div>
-        )}
+      {/* Volume / order-flow / volatility snapshot - numeric only. */}
+      <div className="grid grid-cols-3 gap-2">
+        <TicketCell label="Volume" value={volumeTag} />
+        <TicketCell
+          label="Order flow"
+          value={flowLabel}
+          tone={flowBias === "bullish" ? "good" : flowBias === "bearish" ? "bad" : undefined}
+        />
+        <TicketCell label="Volatility" value={volatilityTag} />
       </div>
+
+      <p className="text-[11px] text-muted-foreground text-center">
+        Read the full breakdown in the Chat tab.
+      </p>
 
       <div className="pt-1 flex justify-center">
         <ScreenshotAttach onPick={onAttach} />
@@ -402,6 +316,7 @@ function ScanTicket({
     </div>
   );
 }
+
 
 function TicketCell({ label, value, tone }: { label: string; value: string; tone?: "good" | "bad" }) {
   const color = tone === "good" ? "text-emerald-400" : tone === "bad" ? "text-destructive" : "text-foreground";
@@ -692,7 +607,7 @@ function Dashboard() {
     }
   };
 
-  const runScan = () => {
+  const runScan = (from: "chat" | "analysis" = "analysis") => {
     setScanning(true);
     setResult(null);
     setAiGrade(null);
@@ -700,19 +615,26 @@ function Dashboard() {
     const lens = findLens(lensId);
     const prompt = `Scan ${symbolLabel(symbol)} on the ${intervalLabel} chart now. Keep it brief (3-6 short lines total). Give me: Grade, Bias, Entry, Stop, TP1, TP2. Then two bullets: "Strength:" (one line, the strongest thing about this setup) and "Weakness:" (one line, what could kill it). No preamble, no long paragraphs. Do not say you are waiting for a live price feed; if exact live price is delayed, use approximate levels and label them approximate. Refer to the instrument by its friendly name (e.g. "Gold"), not the raw ticker. Levels I'm watching: ${enabledLevels}.`;
     assertScanPromptMatchesSymbol(prompt, symbol, "runScan");
-    // Open the AI analysis panel; send scan to chat thread in background
-    // without stealing focus from the analysis view.
+    // Route the UI based on where the scan started:
+    //  - from chat: keep the chat open, the assistant reply lands in the thread.
+    //  - from analysis (top bar / analysis tab): show the numeric ticket in Analysis.
     setRightOpen(true);
-    setRightTab("analysis");
-    setChatPanelView("conversation");
-    setMobileView("scan");
+    if (from === "chat") {
+      setRightTab("chat");
+      setChatPanelView("conversation");
+      setMobileView("chat");
+    } else {
+      setRightTab("analysis");
+      setChatPanelView("conversation");
+      setMobileView("scan");
+    }
     runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
       .then((plan) => {
         const r = plan as ScanResult;
         setResult(r);
         applyPlanToSignalCards(r);
         const chatPrompt = `Save this completed ${symbolLabel(symbol)} ${intervalLabel} scan to chat history and explain it using these exact values. Do not rerun the scan, do not flip direction, and do not change the grade. Your reply must match this Analysis card exactly: Grade ${r.grade}, Bias ${r.bias}, Confidence ${r.confidence}%, Entry ${r.entry}, Stop ${r.stop}, TP1 ${r.tp1}, TP2 ${r.tp2}, R:R ${r.rr}. Strength: ${r.notes}. Weakness or invalidation: ${r.details}. Include a chart-grade block with the same grade, bias, confidence, entry, stop, tp1, and tp2.`;
-        sendToChat(chatPrompt, { focusChat: false });
+        sendToChat(chatPrompt, { focusChat: from === "chat" });
       })
       .catch(() => {
         setResult({
@@ -727,6 +649,7 @@ function Dashboard() {
         setLastUpdatedAt(Date.now());
       });
   };
+
 
 
 
@@ -1019,7 +942,7 @@ function Dashboard() {
         </div>
 
         <button
-          onClick={scanning ? () => { chatRef.current?.stop(); voice.stop(); setScanning(false); } : runScan}
+          onClick={scanning ? () => { chatRef.current?.stop(); voice.stop(); setScanning(false); } : () => runScan("analysis")}
           className={`hidden lg:inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-semibold transition ${
             scanning
               ? "border border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/15"
@@ -1204,7 +1127,8 @@ function Dashboard() {
                     symbol={symbol}
                     intervalLabel={intervalLabel}
                     lensId={lensId}
-                    runScan={runScan}
+                    runScan={() => runScan("analysis")}
+
                     onAttach={() => { /* handled in chat tab */ }}
                     onStopScan={() => { chatRef.current?.stop(); voice.stop(); setScanning(false); }}
                     onStopVoice={() => voice.stop()}
@@ -1234,7 +1158,8 @@ function Dashboard() {
                     <div className="flex-1 min-h-0">
                       <DashboardChatPanel
                         ref={chatRef}
-                        onRunScan={runScan}
+                        onRunScan={() => runScan("chat")}
+
                         onStopScan={() => { voice.stop(); setScanning(false); }}
                         scanning={scanning}
                         threadIdOverride={activeThreadId}
@@ -1314,7 +1239,7 @@ function Dashboard() {
               symbol={symbol}
               intervalLabel={intervalLabel}
               lensId={lensId}
-              runScan={runScan}
+              runScan={() => runScan("analysis")}
               onAttach={(file) => {
                 setRightTab("chat");
                 const attachPrompt = `Scan this chart screenshot for ${symbolLabel(symbol)} on ${intervalLabel}. Refer to the instrument by its friendly name (e.g. "Gold"), not the raw ticker. Give me grade, bias, entry, stop, TP1, TP2, R:R, and a 1-2 sentence rationale.`;
@@ -1355,7 +1280,7 @@ function Dashboard() {
               <div className="flex-1 min-h-0">
                 <DashboardChatPanel
                   ref={chatRef}
-                  onRunScan={runScan}
+                  onRunScan={() => runScan("chat")}
                   onStopScan={() => { voice.stop(); setScanning(false); }}
                   scanning={scanning}
                   threadIdOverride={activeThreadId}
