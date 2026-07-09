@@ -1365,7 +1365,7 @@ function Dashboard() {
               <div className="flex-1 min-h-0">
                 <DashboardChatPanel
                   ref={chatRef}
-                  onRunScan={runScan}
+                  onRunScan={() => runScan("chat")}
                   onStopScan={() => { voice.stop(); setScanning(false); }}
                   scanning={scanning}
                   threadIdOverride={activeThreadId}
