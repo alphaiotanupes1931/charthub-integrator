@@ -901,10 +901,10 @@ function Dashboard() {
           <button
             onClick={() => setViewMenuOpen((o) => !o)}
             className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/50 px-2 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground hover:border-primary/40 transition"
-            title="Chart view options"
+            title="Chart levels"
           >
             <Settings2 className="h-3 w-3" />
-            <span>View</span>
+            <span>Levels</span>
             {chartTab === "setup" && enabledCount > 0 && (
               <span className="text-primary">· {enabledCount}</span>
             )}
@@ -912,11 +912,9 @@ function Dashboard() {
           </button>
           {viewMenuOpen && (
             <div className="absolute right-0 mt-2 w-72 rounded-lg border border-border bg-card shadow-xl z-50 p-3 space-y-3">
-              {chartTab !== "setup" && (
-                <div className="text-[10px] text-muted-foreground italic border-b border-border/40 pb-2">
-                  Switch to Setup for candle style, sessions, and indicators.
-                </div>
-              )}
+              <div className="text-[10px] text-muted-foreground italic border-b border-border/40 pb-2">
+                Levels apply to Live where supported and fully on Setup.
+              </div>
 
               {/* Candle style */}
               <div className="flex items-center justify-between gap-2">
@@ -967,7 +965,7 @@ function Dashboard() {
                   <span className="text-[11px] font-medium text-foreground/80">Indicators</span>
                   <span className="text-[10px] text-muted-foreground">{enabledCount} / {ALL_LEVELS.length}</span>
                 </div>
-                <div className={`grid grid-cols-3 gap-1.5 ${chartTab !== "setup" ? "opacity-40 pointer-events-none" : ""}`}>
+                <div className="grid grid-cols-3 gap-1.5">
                   {ALL_LEVELS.map((k) => {
                     const on = levels[k];
                     const meta = LEVEL_META[k];
@@ -985,7 +983,7 @@ function Dashboard() {
                     );
                   })}
                 </div>
-                <div className={`mt-2 pt-2 border-t border-border/60 flex items-center justify-between text-[10px] ${chartTab !== "setup" ? "opacity-40 pointer-events-none" : ""}`}>
+                <div className="mt-2 pt-2 border-t border-border/60 flex items-center justify-between text-[10px]">
                   <button
                     onClick={() => setLevels(Object.fromEntries(ALL_LEVELS.map((k) => [k, true])) as Record<LevelKey, boolean>)}
                     className="text-muted-foreground hover:text-foreground"
@@ -1069,7 +1067,7 @@ function Dashboard() {
 
 
           <div className="flex-1 min-h-0 overflow-hidden relative">
-            {chartTab === "live" && aiAnnotations.length === 0 ? (
+            {chartTab === "live" ? (
               <TradingViewChart symbol={symbol.tv} interval={interval} enabled={levels} sessions={sessionsOn} />
             ) : (
               <NativeChart symbol={symbol.tv} ticker={symbol.ticker} interval={interval} enabled={levels} sessions={sessionsOn} onSnapshot={setSnapshot} annotations={aiAnnotations} candleType={candleType} />
@@ -1090,7 +1088,7 @@ function Dashboard() {
 
             {chartTab === "live" && aiAnnotations.length > 0 && (
               <div className="pointer-events-none absolute left-3 top-12 z-20 rounded-md border border-primary/40 bg-background/90 px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-primary backdrop-blur">
-                Native · Chat annotations
+                Entry markers available on Setup
               </div>
             )}
             {aiConcept && (
