@@ -8,9 +8,9 @@ import type { Candle, MarketSnapshot } from "./types";
 const YAHOO: Record<string, string> = {
   "XAU/USD": "GC=F",
   "XAG/USD": "SI=F",
-  "NAS100": "QQQ",
-  "SPX500": "SPY",
-  "US30": "DIA",
+  "NAS100": "^NDX",
+  "SPX500": "^GSPC",
+  "US30": "^DJI",
   "WTI Oil": "CL=F",
   "EUR/USD": "EURUSD=X",
   "GBP/USD": "GBPUSD=X",
