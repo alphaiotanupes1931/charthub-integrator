@@ -151,8 +151,11 @@ export function ChartSignalCards({ grade, lastPrice, onClear, scanning }: Props)
               </div>
             );
           })}
-          {/* Strength/weakness prose lives in the Analysis sidebar - kept out
-              of the chart overlay so the chart isn't squeezed. */}
+          {orderType && orderHelp && (
+            <div className="col-span-2 sm:col-span-4 text-[10px] text-muted-foreground">
+              <span className="font-semibold text-foreground">{orderType}:</span> {orderHelp}.
+            </div>
+          )}
         </div>
       )}
     </div>
