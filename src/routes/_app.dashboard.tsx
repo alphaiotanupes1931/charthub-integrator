@@ -335,7 +335,7 @@ function ScanTicket({
       {/* Volume snapshot */}
       <MetricBlock title="Volume" tag={volumeTag} tone={flowStrength >= 45 ? "neutral" : "muted"}>
         <MetricRow label="Participation" value={`${Math.round(flowStrength)}%`} />
-        <MetricRow label="Range (20-bar)" value={`${result.memo ? "" : "-"}${(result as ScanResult).details ? "" : ""}`.length ? "-" : "-"} hidden />
+        
         {sentNote && <MetricRow label="Sentiment" value={`${sentNote.bias} · ${Math.round(sentNote.confidence)}%`} />}
       </MetricBlock>
 
