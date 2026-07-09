@@ -238,10 +238,56 @@ export function useCoachVoice() {
   }, []);
 
 
-  const speak = useCallback(async (_text: string, _voiceId: string) => {
-    // AI voice output has been removed.
-    return;
-  }, []);
+  const speak = useCallback(async (text: string, voiceId?: string) => {
+    if (!text || !text.trim()) return;
+    if (typeof window === "undefined") return;
+
+    // Stop anything currently playing.
+    stop();
+    prime();
+
+    const gen = ++genRef.current;
+    const ctl = new AbortController();
+    abortRef.current = ctl;
+    speakingRef.current = true;
+    setSpeaking(true);
+
+    try {
+      const res = await fetch("/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: text.slice(0, 1200), voiceId }),
+        signal: ctl.signal,
+      });
+      if (gen !== genRef.current) return;
+
+      // 204 means fallback to browser speech synthesis.
+      if (res.status === 204 || !res.ok) {
+        if ("speechSynthesis" in window) {
+          const u = new SpeechSynthesisUtterance(text.slice(0, 1200));
+          u.rate = 1.0;
+          u.onend = () => { if (gen === genRef.current) markDone(); };
+          window.speechSynthesis.speak(u);
+        } else {
+          markDone();
+        }
+        return;
+      }
+
+      const blob = await res.blob();
+      if (gen !== genRef.current) return;
+      const url = URL.createObjectURL(blob);
+      lastBlobUrlRef.current = url;
+      const el = getAudio();
+      if (!el) { markDone(); return; }
+      el.src = url;
+      el.onended = () => { if (gen === genRef.current) markDone(); };
+      el.onerror = () => { if (gen === genRef.current) markDone(); };
+      await el.play().catch(() => { markDone(); });
+    } catch {
+      if (gen === genRef.current) markDone();
+    }
+  }, [stop, prime, getAudio, markDone]);
 
 
 
