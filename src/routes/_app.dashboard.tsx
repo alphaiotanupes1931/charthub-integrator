@@ -1027,7 +1027,7 @@ function Dashboard() {
         </div>
 
         <button
-          onClick={scanning ? () => { chatRef.current?.stop(); voice.stop(); setScanning(false); } : runScan}
+          onClick={scanning ? () => { chatRef.current?.stop(); voice.stop(); setScanning(false); } : () => runScan("analysis")}
           className={`hidden lg:inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-semibold transition ${
             scanning
               ? "border border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/15"
