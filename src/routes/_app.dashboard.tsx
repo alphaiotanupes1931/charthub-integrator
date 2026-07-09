@@ -604,6 +604,7 @@ function Dashboard() {
 
   const sendToChat = (prompt: string, opts?: { focusChat?: boolean }) => {
     setRightOpen(true);
+    setChatPanelView("conversation");
     if (opts?.focusChat !== false) {
       setRightTab("chat");
       setMobileView("chat");
@@ -689,6 +690,7 @@ function Dashboard() {
     // without stealing focus from the analysis view.
     setRightOpen(true);
     setRightTab("analysis");
+    setChatPanelView("conversation");
     setMobileView("scan");
     runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
       .then((plan) => {
