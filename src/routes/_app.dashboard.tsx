@@ -468,7 +468,8 @@ function Dashboard() {
     return () => clearInterval(id);
   }, [lastUpdatedAt]);
 
-  const [rightTab, setRightTab] = useState<"analysis" | "chat" | "history">("analysis");
+  const [rightTab, setRightTab] = useState<"analysis" | "chat">("analysis");
+  const [chatPanelView, setChatPanelView] = useState<"conversation" | "history">("conversation");
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [rightOpen, setRightOpen] = useState(false);
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
@@ -599,6 +600,7 @@ function Dashboard() {
   const intervalLabel = INTERVALS.find((i) => i.value === interval)?.label ?? interval;
 
   const runPlan = useServerFn(runResearchPlan);
+  const createChatThreadFn = useServerFn(createChatThread);
 
   const sendToChat = (prompt: string, opts?: { focusChat?: boolean }) => {
     setRightOpen(true);
@@ -635,17 +637,44 @@ function Dashboard() {
     const biasMap: Record<string, "long" | "short" | "neutral"> = {
       Long: "long", Short: "short", Neutral: "neutral",
     };
+    const entry = num(plan.entry);
+    const stop = num(plan.stop);
+    const tp1 = num(plan.tp1);
+    const tp2 = num(plan.tp2);
+    const bias = biasMap[plan.bias] ?? "neutral";
     setAiGrade({
       grade: plan.grade,
-      bias: biasMap[plan.bias] ?? "neutral",
+      bias,
       confidence: typeof plan.confidence === "number" ? plan.confidence : undefined,
-      entry: num(plan.entry),
-      stop: num(plan.stop),
-      tp1: num(plan.tp1),
-      tp2: num(plan.tp2),
+      entry,
+      stop,
+      tp1,
+      tp2,
       strength: plan.notes,
       weakness: plan.details,
     });
+    if (entry && stop && tp1 && tp2 && bias !== "neutral") {
+      setAiAnnotationsRaw([
+        { kind: "hline", price: entry, label: "Entry", color: bias === "long" ? "#22c55e" : "#ef4444" },
+        { kind: "hline", price: stop, label: "Stop", color: "#ef4444", dashed: true },
+        { kind: "hline", price: tp1, label: "TP1", color: "#34d399", dashed: true },
+        { kind: "hline", price: tp2, label: "TP2", color: "#34d399", dashed: true },
+      ]);
+    } else {
+      setAiAnnotationsRaw([]);
+    }
+  };
+
+  const startNewChat = async () => {
+    setRightTab("chat");
+    setChatPanelView("conversation");
+    try {
+      const t = await createChatThreadFn({ data: { title: "New conversation" } });
+      if (t?.id) setActiveThreadId(t.id);
+    } catch {
+      setActiveThreadId(null);
+      toast.error("Could not start a new chat");
+    }
   };
 
   const runScan = () => {
@@ -661,12 +690,13 @@ function Dashboard() {
     setRightOpen(true);
     setRightTab("analysis");
     setMobileView("scan");
-    sendToChat(prompt, { focusChat: false });
     runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
       .then((plan) => {
         const r = plan as ScanResult;
         setResult(r);
         applyPlanToSignalCards(r);
+        const chatPrompt = `Save this completed ${symbolLabel(symbol)} ${intervalLabel} scan to chat history and explain it using these exact values. Do not rerun the scan, do not flip direction, and do not change the grade. Grade: ${r.grade}. Bias: ${r.bias}. Confidence: ${r.confidence}%. Entry: ${r.entry}. Stop: ${r.stop}. TP1: ${r.tp1}. TP2: ${r.tp2}. R:R: ${r.rr}. Strength: ${r.notes}. Weakness or invalidation: ${r.details}`;
+        sendToChat(chatPrompt, { focusChat: false });
       })
       .catch(() => {
         setResult({

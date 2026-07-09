@@ -49,10 +49,37 @@ type Props = { chart?: ChartContext; onClose?: () => void; onMinimize?: () => vo
 const DASHBOARD_THREAD_FALLBACK_ID = "dashboard-scans";
 
 export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(function DashboardChatPanel({ chart, onClose, onMinimize, onRunScan, onStopScan, scanning, threadIdOverride, onAnnotations, onConcept, onGrade }, ref) {
-  const [threadId, setThreadId] = useState(threadIdOverride || DASHBOARD_THREAD_FALLBACK_ID);
-  const [initial, setInitial] = useState<UIMessage[]>([]);
+  const [threadId, setThreadId] = useState<string | null>(threadIdOverride ?? null);
+  const [initial, setInitial] = useState<UIMessage[] | null>(null);
+  const innerRef = useRef<DashboardChatHandle | null>(null);
+  const pendingRef = useRef<Array<{ type: "scan"; prompt: string } | { type: "attach"; file: File; prompt: string }>>([]);
   const getThread = useServerFn(getOrCreateDashboardThread);
   const getMsgs = useServerFn(getChatMessages);
+
+  const flushPending = useCallback(() => {
+    const inner = innerRef.current;
+    if (!inner || pendingRef.current.length === 0) return;
+    const pending = pendingRef.current.splice(0);
+    pending.forEach((item) => {
+      if (item.type === "scan") inner.scan(item.prompt);
+      else inner.attach(item.file, item.prompt);
+    });
+  }, []);
+
+  useImperativeHandle(ref, () => ({
+    scan: (prompt: string) => {
+      if (innerRef.current) innerRef.current.scan(prompt);
+      else pendingRef.current.push({ type: "scan", prompt });
+    },
+    attach: (file: File, prompt: string) => {
+      if (innerRef.current) innerRef.current.attach(file, prompt);
+      else pendingRef.current.push({ type: "attach", file, prompt });
+    },
+    stop: () => {
+      pendingRef.current = [];
+      innerRef.current?.stop();
+    },
+  }), []);
 
   // Wait for a real Supabase session before calling auth-protected server fns.
   // On mobile (slow cold start, app resumed from background) the token can take
@@ -84,11 +111,17 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
 
   useEffect(() => {
     let cancelled = false;
+    setInitial(null);
+    setThreadId(threadIdOverride ?? null);
 
     (async () => {
       const token = await waitForSession();
       if (cancelled) return;
-      if (!token) return;
+      if (!token) {
+        setThreadId(DASHBOARD_THREAD_FALLBACK_ID);
+        setInitial([]);
+        return;
+      }
 
       // If a specific thread was requested, just load its messages.
       if (threadIdOverride) {
@@ -129,7 +162,22 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getThread, getMsgs, waitForSession, threadIdOverride]);
 
-  return <ChatInner key={threadId} ref={ref} threadId={threadId} initial={initial} chart={chart} onClose={onClose} onMinimize={onMinimize} onRunScan={onRunScan} onStopScan={onStopScan} scanning={scanning} onAnnotations={onAnnotations} onConcept={onConcept} onGrade={onGrade} />;
+  useEffect(() => {
+    if (!threadId || initial === null) return;
+    const id = window.setTimeout(flushPending, 0);
+    return () => window.clearTimeout(id);
+  }, [threadId, initial, flushPending]);
+
+  if (!threadId || initial === null) {
+    return (
+      <div className="flex h-full min-h-0 flex-col items-center justify-center gap-2 bg-card text-xs text-muted-foreground sm:rounded-xl border-y sm:border border-border">
+        <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+        Loading chat history…
+      </div>
+    );
+  }
+
+  return <ChatInner key={threadId} ref={innerRef} threadId={threadId} initial={initial} chart={chart} onClose={onClose} onMinimize={onMinimize} onRunScan={onRunScan} onStopScan={onStopScan} scanning={scanning} onAnnotations={onAnnotations} onConcept={onConcept} onGrade={onGrade} />;
 });
 
 
