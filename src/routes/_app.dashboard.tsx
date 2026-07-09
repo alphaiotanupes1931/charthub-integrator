@@ -1161,20 +1161,12 @@ function Dashboard() {
                     <BarChart3 className="h-3.5 w-3.5" /> Analysis
                   </button>
                   <button
-                    onClick={() => setRightTab("chat")}
+                    onClick={() => { setRightTab("chat"); setChatPanelView("conversation"); }}
                     className={`shrink-0 inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
                       rightTab === "chat" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
                     }`}
                   >
                     <MessageSquare className="h-3.5 w-3.5" /> Chat
-                  </button>
-                  <button
-                    onClick={() => setRightTab("history")}
-                    className={`shrink-0 inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
-                      rightTab === "history" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-                    }`}
-                  >
-                    <Clock className="h-3.5 w-3.5" /> History
                   </button>
                 </div>
                 <button
@@ -1207,29 +1199,52 @@ function Dashboard() {
                 </div>
               </div>
               <div className={`absolute inset-0 ${rightTab === "chat" ? "" : "hidden"}`}>
-                <DashboardChatPanel
-                  ref={chatRef}
-                  onRunScan={runScan}
-                  onStopScan={() => { voice.stop(); setScanning(false); }}
-                  scanning={scanning}
-                  threadIdOverride={activeThreadId}
-                  onAnnotations={setAiAnnotationsRaw}
-                  onGrade={setAiGrade}
-                  onConcept={setAiConcept}
-                  chart={{
-                    ticker: symbolLabel(symbol),
-                    intervalLabel,
-                    enabledLevels: ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none",
-                    snapshot: snapshot ?? undefined,
-                  }}
-                />
-              </div>
-              <div className={`absolute inset-0 overflow-y-auto ${rightTab === "history" ? "" : "hidden"}`}>
-                <ChatHistoryList
-                  activeThreadId={activeThreadId}
-                  onPick={(id) => { setActiveThreadId(id); setRightTab("chat"); }}
-                  onNew={() => { setActiveThreadId(null); setRightTab("chat"); }}
-                />
+                <div className="flex h-full min-h-0 flex-col">
+                  <div className="shrink-0 flex items-center gap-1 border-b border-border/60 px-2 py-1.5">
+                    <button
+                      onClick={startNewChat}
+                      className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-medium hover:border-primary/50 transition"
+                    >
+                      New
+                    </button>
+                    <button
+                      onClick={() => setChatPanelView("history")}
+                      className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
+                        chatPanelView === "history" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                      }`}
+                    >
+                      <Clock className="h-3.5 w-3.5" /> History
+                    </button>
+                  </div>
+                  {chatPanelView === "conversation" ? (
+                    <div className="flex-1 min-h-0">
+                      <DashboardChatPanel
+                        ref={chatRef}
+                        onRunScan={runScan}
+                        onStopScan={() => { voice.stop(); setScanning(false); }}
+                        scanning={scanning}
+                        threadIdOverride={activeThreadId}
+                        onAnnotations={setAiAnnotationsRaw}
+                        onGrade={setAiGrade}
+                        onConcept={setAiConcept}
+                        chart={{
+                          ticker: symbolLabel(symbol),
+                          intervalLabel,
+                          enabledLevels: ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none",
+                          snapshot: snapshot ?? undefined,
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex-1 min-h-0 overflow-y-auto">
+                      <ChatHistoryList
+                        activeThreadId={activeThreadId}
+                        onPick={(id) => { setActiveThreadId(id); setChatPanelView("conversation"); }}
+                        onNew={(id) => { setActiveThreadId(id); setChatPanelView("conversation"); }}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
             {/* Panel width footer */}
@@ -1255,7 +1270,7 @@ function Dashboard() {
 
       </div>
 
-      {/* Mobile panel: Analysis / Chat / History. Only visible when the mobile view
+      {/* Mobile panel: Analysis / Chat. Only visible when the mobile view
           switcher is on Scan or Chat, and expands to fill the remaining height so it
           isn't squished under the chart. */}
       <div className={`lg:hidden ${mobileView === "chart" ? "hidden" : "flex-1 min-h-0 flex flex-col"} bg-card`} data-tour="scan">
@@ -1269,20 +1284,12 @@ function Dashboard() {
             <BarChart3 className="h-3.5 w-3.5" /> Analysis
           </button>
           <button
-            onClick={() => setRightTab("chat")}
+            onClick={() => { setRightTab("chat"); setChatPanelView("conversation"); }}
             className={`shrink-0 inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
               rightTab === "chat" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
             }`}
           >
             <MessageSquare className="h-3.5 w-3.5" /> Chat
-          </button>
-          <button
-            onClick={() => setRightTab("history")}
-            className={`shrink-0 inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
-              rightTab === "history" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-            }`}
-          >
-            <Clock className="h-3.5 w-3.5" /> History
           </button>
         </div>
         {rightTab === "analysis" && (
@@ -1312,35 +1319,54 @@ function Dashboard() {
             />
           </div>
         )}
-        {rightTab === "chat" && (
-          <div className="flex-1 min-h-0">
-            <DashboardChatPanel
-              ref={chatRef}
-              onRunScan={runScan}
-              onStopScan={() => { voice.stop(); setScanning(false); }}
-              scanning={scanning}
-              threadIdOverride={activeThreadId}
-              onAnnotations={setAiAnnotationsRaw}
-              onGrade={setAiGrade}
-              onConcept={setAiConcept}
-              chart={{
-                ticker: symbolLabel(symbol),
-                intervalLabel,
-                enabledLevels: ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none",
-                snapshot: snapshot ?? undefined,
-              }}
-            />
+        <div className={`flex-1 min-h-0 ${rightTab === "chat" ? "" : "hidden"}`}>
+          <div className="flex h-full min-h-0 flex-col">
+            <div className="shrink-0 flex items-center gap-1 border-b border-border/60 px-2 py-1.5">
+              <button
+                onClick={startNewChat}
+                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-medium hover:border-primary/50 transition"
+              >
+                New
+              </button>
+              <button
+                onClick={() => setChatPanelView("history")}
+                className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
+                  chatPanelView === "history" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                }`}
+              >
+                <Clock className="h-3.5 w-3.5" /> History
+              </button>
+            </div>
+            {chatPanelView === "conversation" ? (
+              <div className="flex-1 min-h-0">
+                <DashboardChatPanel
+                  ref={chatRef}
+                  onRunScan={runScan}
+                  onStopScan={() => { voice.stop(); setScanning(false); }}
+                  scanning={scanning}
+                  threadIdOverride={activeThreadId}
+                  onAnnotations={setAiAnnotationsRaw}
+                  onGrade={setAiGrade}
+                  onConcept={setAiConcept}
+                  chart={{
+                    ticker: symbolLabel(symbol),
+                    intervalLabel,
+                    enabledLevels: ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none",
+                    snapshot: snapshot ?? undefined,
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="flex-1 min-h-0 overflow-y-auto">
+                <ChatHistoryList
+                  activeThreadId={activeThreadId}
+                  onPick={(id) => { setActiveThreadId(id); setChatPanelView("conversation"); }}
+                  onNew={(id) => { setActiveThreadId(id); setChatPanelView("conversation"); }}
+                />
+              </div>
+            )}
           </div>
-        )}
-        {rightTab === "history" && (
-          <div className="flex-1 min-h-0 overflow-y-auto">
-            <ChatHistoryList
-              activeThreadId={activeThreadId}
-              onPick={(id) => { setActiveThreadId(id); setRightTab("chat"); }}
-              onNew={() => { setActiveThreadId(null); setRightTab("chat"); }}
-            />
-          </div>
-        )}
+        </div>
       </div>
 
 
