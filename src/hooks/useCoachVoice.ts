@@ -12,13 +12,8 @@ function readVoiceEnabled(): boolean {
   if (inMemoryVoiceEnabled !== null) return inMemoryVoiceEnabled;
   const v = window.localStorage.getItem(VOICE_KEY);
   if (v === "1") return true;
-  if (v === "0") return false;
-  // Default ON unless the welcome-back greeting has been muted.
-  try {
-    return window.localStorage.getItem("trademind.welcomeBack.muted.v1") !== "1";
-  } catch {
-    return true;
-  }
+  // Default OFF - voice only speaks when the user opens a Details toggle.
+  return false;
 }
 
 
