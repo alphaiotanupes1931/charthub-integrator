@@ -667,7 +667,6 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
   return (
     <div className={`relative h-full w-full ${className ?? ""}`}>
       <div ref={containerRef} className="absolute inset-0" />
-      <FallbackCandlestickLayer candles={displayCandles} />
       {/* Session bands overlay */}
       {sessions && bands.length > 0 && (
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -792,6 +791,22 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
               {s.label}
             </span>
           ))}
+        </div>
+      )}
+      {enabled.OF && candles.length > 0 && (
+        <div className="absolute left-2 bottom-2 sm:left-3 sm:bottom-3 z-10 max-w-[min(34rem,calc(100%-1rem))] rounded-md border border-border bg-background/80 backdrop-blur px-2 py-1.5 text-[10px] font-mono text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span className="font-semibold uppercase tracking-wider text-foreground/90">Order flow</span>
+            <span className={levels.delta >= 0 ? "text-emerald-300" : "text-red-300"}>
+              Delta {levels.delta >= 0 ? "+" : ""}{levels.delta.toFixed(1)}
+            </span>
+            {levels.of.slice(0, 3).map((o, i) => (
+              <span key={`${o.side}-${o.price}-${i}`} className={o.side === "buy" ? "text-emerald-300" : "text-red-300"}>
+                {o.side === "buy" ? "Buy" : "Sell"} {o.strength >= 0.72 ? "high" : "med"} @ {o.price.toFixed(o.price >= 1000 ? 2 : 4)}
+              </span>
+            ))}
+            <span>Volume proxy {Math.abs(levels.delta) >= 12 ? "high" : Math.abs(levels.delta) >= 6 ? "medium" : "light"}</span>
+          </div>
         </div>
       )}
     </div>

@@ -468,7 +468,8 @@ function Dashboard() {
     return () => clearInterval(id);
   }, [lastUpdatedAt]);
 
-  const [rightTab, setRightTab] = useState<"analysis" | "chat" | "history">("analysis");
+  const [rightTab, setRightTab] = useState<"analysis" | "chat">("analysis");
+  const [chatPanelView, setChatPanelView] = useState<"conversation" | "history">("conversation");
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [rightOpen, setRightOpen] = useState(false);
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
@@ -599,9 +600,11 @@ function Dashboard() {
   const intervalLabel = INTERVALS.find((i) => i.value === interval)?.label ?? interval;
 
   const runPlan = useServerFn(runResearchPlan);
+  const createChatThreadFn = useServerFn(createChatThread);
 
   const sendToChat = (prompt: string, opts?: { focusChat?: boolean }) => {
     setRightOpen(true);
+    setChatPanelView("conversation");
     if (opts?.focusChat !== false) {
       setRightTab("chat");
       setMobileView("chat");
@@ -635,17 +638,44 @@ function Dashboard() {
     const biasMap: Record<string, "long" | "short" | "neutral"> = {
       Long: "long", Short: "short", Neutral: "neutral",
     };
+    const entry = num(plan.entry);
+    const stop = num(plan.stop);
+    const tp1 = num(plan.tp1);
+    const tp2 = num(plan.tp2);
+    const bias = biasMap[plan.bias] ?? "neutral";
     setAiGrade({
       grade: plan.grade,
-      bias: biasMap[plan.bias] ?? "neutral",
+      bias,
       confidence: typeof plan.confidence === "number" ? plan.confidence : undefined,
-      entry: num(plan.entry),
-      stop: num(plan.stop),
-      tp1: num(plan.tp1),
-      tp2: num(plan.tp2),
+      entry,
+      stop,
+      tp1,
+      tp2,
       strength: plan.notes,
       weakness: plan.details,
     });
+    if (entry && stop && tp1 && tp2 && bias !== "neutral") {
+      setAiAnnotationsRaw([
+        { kind: "hline", price: entry, label: "Entry", color: bias === "long" ? "#22c55e" : "#ef4444" },
+        { kind: "hline", price: stop, label: "Stop", color: "#ef4444", dashed: true },
+        { kind: "hline", price: tp1, label: "TP1", color: "#34d399", dashed: true },
+        { kind: "hline", price: tp2, label: "TP2", color: "#34d399", dashed: true },
+      ]);
+    } else {
+      setAiAnnotationsRaw([]);
+    }
+  };
+
+  const startNewChat = async () => {
+    setRightTab("chat");
+    setChatPanelView("conversation");
+    try {
+      const t = await createChatThreadFn({ data: { title: "New conversation" } });
+      if (t?.id) setActiveThreadId(t.id);
+    } catch {
+      setActiveThreadId(null);
+      toast.error("Could not start a new chat");
+    }
   };
 
   const runScan = () => {
@@ -660,13 +690,15 @@ function Dashboard() {
     // without stealing focus from the analysis view.
     setRightOpen(true);
     setRightTab("analysis");
+    setChatPanelView("conversation");
     setMobileView("scan");
-    sendToChat(prompt, { focusChat: false });
     runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
       .then((plan) => {
         const r = plan as ScanResult;
         setResult(r);
         applyPlanToSignalCards(r);
+        const chatPrompt = `Save this completed ${symbolLabel(symbol)} ${intervalLabel} scan to chat history and explain it using these exact values. Do not rerun the scan, do not flip direction, and do not change the grade. Your reply must match this Analysis card exactly: Grade ${r.grade}, Bias ${r.bias}, Confidence ${r.confidence}%, Entry ${r.entry}, Stop ${r.stop}, TP1 ${r.tp1}, TP2 ${r.tp2}, R:R ${r.rr}. Strength: ${r.notes}. Weakness or invalidation: ${r.details}. Include a chart-grade block with the same grade, bias, confidence, entry, stop, tp1, and tp2.`;
+        sendToChat(chatPrompt, { focusChat: false });
       })
       .catch(() => {
         setResult({
@@ -871,10 +903,10 @@ function Dashboard() {
           <button
             onClick={() => setViewMenuOpen((o) => !o)}
             className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/50 px-2 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground hover:border-primary/40 transition"
-            title="Chart view options"
+            title="Chart levels"
           >
             <Settings2 className="h-3 w-3" />
-            <span>View</span>
+            <span>Levels</span>
             {chartTab === "setup" && enabledCount > 0 && (
               <span className="text-primary">· {enabledCount}</span>
             )}
@@ -882,11 +914,9 @@ function Dashboard() {
           </button>
           {viewMenuOpen && (
             <div className="absolute right-0 mt-2 w-72 rounded-lg border border-border bg-card shadow-xl z-50 p-3 space-y-3">
-              {chartTab !== "setup" && (
-                <div className="text-[10px] text-muted-foreground italic border-b border-border/40 pb-2">
-                  Switch to Setup for candle style, sessions, and indicators.
-                </div>
-              )}
+              <div className="text-[10px] text-muted-foreground italic border-b border-border/40 pb-2">
+                Levels apply to Live where supported and fully on Setup.
+              </div>
 
               {/* Candle style */}
               <div className="flex items-center justify-between gap-2">
@@ -937,7 +967,7 @@ function Dashboard() {
                   <span className="text-[11px] font-medium text-foreground/80">Indicators</span>
                   <span className="text-[10px] text-muted-foreground">{enabledCount} / {ALL_LEVELS.length}</span>
                 </div>
-                <div className={`grid grid-cols-3 gap-1.5 ${chartTab !== "setup" ? "opacity-40 pointer-events-none" : ""}`}>
+                <div className="grid grid-cols-3 gap-1.5">
                   {ALL_LEVELS.map((k) => {
                     const on = levels[k];
                     const meta = LEVEL_META[k];
@@ -955,7 +985,7 @@ function Dashboard() {
                     );
                   })}
                 </div>
-                <div className={`mt-2 pt-2 border-t border-border/60 flex items-center justify-between text-[10px] ${chartTab !== "setup" ? "opacity-40 pointer-events-none" : ""}`}>
+                <div className="mt-2 pt-2 border-t border-border/60 flex items-center justify-between text-[10px]">
                   <button
                     onClick={() => setLevels(Object.fromEntries(ALL_LEVELS.map((k) => [k, true])) as Record<LevelKey, boolean>)}
                     className="text-muted-foreground hover:text-foreground"
@@ -1039,7 +1069,7 @@ function Dashboard() {
 
 
           <div className="flex-1 min-h-0 overflow-hidden relative">
-            {chartTab === "live" && aiAnnotations.length === 0 ? (
+            {chartTab === "live" ? (
               <TradingViewChart symbol={symbol.tv} interval={interval} enabled={levels} sessions={sessionsOn} />
             ) : (
               <NativeChart symbol={symbol.tv} ticker={symbol.ticker} interval={interval} enabled={levels} sessions={sessionsOn} onSnapshot={setSnapshot} annotations={aiAnnotations} candleType={candleType} />
@@ -1060,7 +1090,7 @@ function Dashboard() {
 
             {chartTab === "live" && aiAnnotations.length > 0 && (
               <div className="pointer-events-none absolute left-3 top-12 z-20 rounded-md border border-primary/40 bg-background/90 px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-primary backdrop-blur">
-                Native · Chat annotations
+                Entry markers available on Setup
               </div>
             )}
             {aiConcept && (
@@ -1131,20 +1161,12 @@ function Dashboard() {
                     <BarChart3 className="h-3.5 w-3.5" /> Analysis
                   </button>
                   <button
-                    onClick={() => setRightTab("chat")}
+                    onClick={() => { setRightTab("chat"); setChatPanelView("conversation"); }}
                     className={`shrink-0 inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
                       rightTab === "chat" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
                     }`}
                   >
                     <MessageSquare className="h-3.5 w-3.5" /> Chat
-                  </button>
-                  <button
-                    onClick={() => setRightTab("history")}
-                    className={`shrink-0 inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
-                      rightTab === "history" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-                    }`}
-                  >
-                    <Clock className="h-3.5 w-3.5" /> History
                   </button>
                 </div>
                 <button
@@ -1177,29 +1199,52 @@ function Dashboard() {
                 </div>
               </div>
               <div className={`absolute inset-0 ${rightTab === "chat" ? "" : "hidden"}`}>
-                <DashboardChatPanel
-                  ref={chatRef}
-                  onRunScan={runScan}
-                  onStopScan={() => { voice.stop(); setScanning(false); }}
-                  scanning={scanning}
-                  threadIdOverride={activeThreadId}
-                  onAnnotations={setAiAnnotationsRaw}
-                  onGrade={setAiGrade}
-                  onConcept={setAiConcept}
-                  chart={{
-                    ticker: symbolLabel(symbol),
-                    intervalLabel,
-                    enabledLevels: ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none",
-                    snapshot: snapshot ?? undefined,
-                  }}
-                />
-              </div>
-              <div className={`absolute inset-0 overflow-y-auto ${rightTab === "history" ? "" : "hidden"}`}>
-                <ChatHistoryList
-                  activeThreadId={activeThreadId}
-                  onPick={(id) => { setActiveThreadId(id); setRightTab("chat"); }}
-                  onNew={() => { setActiveThreadId(null); setRightTab("chat"); }}
-                />
+                <div className="flex h-full min-h-0 flex-col">
+                  <div className="shrink-0 flex items-center gap-1 border-b border-border/60 px-2 py-1.5">
+                    <button
+                      onClick={startNewChat}
+                      className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-medium hover:border-primary/50 transition"
+                    >
+                      New
+                    </button>
+                    <button
+                      onClick={() => setChatPanelView("history")}
+                      className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
+                        chatPanelView === "history" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                      }`}
+                    >
+                      <Clock className="h-3.5 w-3.5" /> History
+                    </button>
+                  </div>
+                  {chatPanelView === "conversation" ? (
+                    <div className="flex-1 min-h-0">
+                      <DashboardChatPanel
+                        ref={chatRef}
+                        onRunScan={runScan}
+                        onStopScan={() => { voice.stop(); setScanning(false); }}
+                        scanning={scanning}
+                        threadIdOverride={activeThreadId}
+                        onAnnotations={setAiAnnotationsRaw}
+                        onGrade={setAiGrade}
+                        onConcept={setAiConcept}
+                        chart={{
+                          ticker: symbolLabel(symbol),
+                          intervalLabel,
+                          enabledLevels: ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none",
+                          snapshot: snapshot ?? undefined,
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex-1 min-h-0 overflow-y-auto">
+                      <ChatHistoryList
+                        activeThreadId={activeThreadId}
+                        onPick={(id) => { setActiveThreadId(id); setChatPanelView("conversation"); }}
+                        onNew={(id) => { setActiveThreadId(id); setChatPanelView("conversation"); }}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
             {/* Panel width footer */}
@@ -1225,7 +1270,7 @@ function Dashboard() {
 
       </div>
 
-      {/* Mobile panel: Analysis / Chat / History. Only visible when the mobile view
+      {/* Mobile panel: Analysis / Chat. Only visible when the mobile view
           switcher is on Scan or Chat, and expands to fill the remaining height so it
           isn't squished under the chart. */}
       <div className={`lg:hidden ${mobileView === "chart" ? "hidden" : "flex-1 min-h-0 flex flex-col"} bg-card`} data-tour="scan">
@@ -1239,20 +1284,12 @@ function Dashboard() {
             <BarChart3 className="h-3.5 w-3.5" /> Analysis
           </button>
           <button
-            onClick={() => setRightTab("chat")}
+            onClick={() => { setRightTab("chat"); setChatPanelView("conversation"); }}
             className={`shrink-0 inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
               rightTab === "chat" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
             }`}
           >
             <MessageSquare className="h-3.5 w-3.5" /> Chat
-          </button>
-          <button
-            onClick={() => setRightTab("history")}
-            className={`shrink-0 inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
-              rightTab === "history" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-            }`}
-          >
-            <Clock className="h-3.5 w-3.5" /> History
           </button>
         </div>
         {rightTab === "analysis" && (
@@ -1282,35 +1319,54 @@ function Dashboard() {
             />
           </div>
         )}
-        {rightTab === "chat" && (
-          <div className="flex-1 min-h-0">
-            <DashboardChatPanel
-              ref={chatRef}
-              onRunScan={runScan}
-              onStopScan={() => { voice.stop(); setScanning(false); }}
-              scanning={scanning}
-              threadIdOverride={activeThreadId}
-              onAnnotations={setAiAnnotationsRaw}
-              onGrade={setAiGrade}
-              onConcept={setAiConcept}
-              chart={{
-                ticker: symbolLabel(symbol),
-                intervalLabel,
-                enabledLevels: ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none",
-                snapshot: snapshot ?? undefined,
-              }}
-            />
+        <div className={`flex-1 min-h-0 ${rightTab === "chat" ? "" : "hidden"}`}>
+          <div className="flex h-full min-h-0 flex-col">
+            <div className="shrink-0 flex items-center gap-1 border-b border-border/60 px-2 py-1.5">
+              <button
+                onClick={startNewChat}
+                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-medium hover:border-primary/50 transition"
+              >
+                New
+              </button>
+              <button
+                onClick={() => setChatPanelView("history")}
+                className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
+                  chatPanelView === "history" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                }`}
+              >
+                <Clock className="h-3.5 w-3.5" /> History
+              </button>
+            </div>
+            {chatPanelView === "conversation" ? (
+              <div className="flex-1 min-h-0">
+                <DashboardChatPanel
+                  ref={chatRef}
+                  onRunScan={runScan}
+                  onStopScan={() => { voice.stop(); setScanning(false); }}
+                  scanning={scanning}
+                  threadIdOverride={activeThreadId}
+                  onAnnotations={setAiAnnotationsRaw}
+                  onGrade={setAiGrade}
+                  onConcept={setAiConcept}
+                  chart={{
+                    ticker: symbolLabel(symbol),
+                    intervalLabel,
+                    enabledLevels: ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none",
+                    snapshot: snapshot ?? undefined,
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="flex-1 min-h-0 overflow-y-auto">
+                <ChatHistoryList
+                  activeThreadId={activeThreadId}
+                  onPick={(id) => { setActiveThreadId(id); setChatPanelView("conversation"); }}
+                  onNew={(id) => { setActiveThreadId(id); setChatPanelView("conversation"); }}
+                />
+              </div>
+            )}
           </div>
-        )}
-        {rightTab === "history" && (
-          <div className="flex-1 min-h-0 overflow-y-auto">
-            <ChatHistoryList
-              activeThreadId={activeThreadId}
-              onPick={(id) => { setActiveThreadId(id); setRightTab("chat"); }}
-              onNew={() => { setActiveThreadId(null); setRightTab("chat"); }}
-            />
-          </div>
-        )}
+        </div>
       </div>
 
 
