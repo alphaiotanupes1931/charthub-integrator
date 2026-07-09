@@ -43,6 +43,24 @@ export function ChartSignalCards({ grade, lastPrice, onClear, scanning }: Props)
   const biasText = isLong ? "text-emerald-300" : isShort ? "text-red-300" : "text-muted-foreground";
   const biasBg = isLong ? "bg-emerald-500/10 border-emerald-500/40" : isShort ? "bg-red-500/10 border-red-500/40" : "bg-muted/20 border-border";
   const BiasIcon = isLong ? ArrowUpRight : isShort ? ArrowDownRight : Minus;
+
+  // Determine order type from entry vs current price.
+  // Long: entry above price = Buy Stop (breakout), entry below price = Buy Limit (pullback)
+  // Short: entry below price = Sell Stop (breakdown), entry above price = Sell Limit (pullback)
+  let orderType: string | null = null;
+  let orderHelp = "";
+  if (typeof grade.entry === "number" && typeof lastPrice === "number" && isFinite(grade.entry) && isFinite(lastPrice)) {
+    const tol = Math.max(lastPrice * 0.0005, 0);
+    if (isLong) {
+      if (grade.entry > lastPrice + tol) { orderType = "BUY STOP"; orderHelp = "Entry is above current price - triggers on breakout"; }
+      else if (grade.entry < lastPrice - tol) { orderType = "BUY LIMIT"; orderHelp = "Entry is below current price - waits for pullback"; }
+      else { orderType = "BUY MARKET"; orderHelp = "Entry is at current price"; }
+    } else if (isShort) {
+      if (grade.entry < lastPrice - tol) { orderType = "SELL STOP"; orderHelp = "Entry is below current price - triggers on breakdown"; }
+      else if (grade.entry > lastPrice + tol) { orderType = "SELL LIMIT"; orderHelp = "Entry is above current price - waits for pullback"; }
+      else { orderType = "SELL MARKET"; orderHelp = "Entry is at current price"; }
+    }
+  }
   const actionLabel = isLong ? "BUY" : isShort ? "SELL" : "WAIT";
 
   const rows: Array<{ key: string; label: string; value?: number; tone: string; icon: React.ComponentType<{ className?: string }>; from?: number }> = [
