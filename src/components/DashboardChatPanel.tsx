@@ -322,21 +322,10 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
       onStopScan?.();
     };
 
-    // Speak the last assistant message after streaming completes
-    useEffect(() => {
-      if (!voice.enabled) return;
-      if (status !== "ready") return;
-      const last = messages[messages.length - 1];
-      if (!last || last.role !== "assistant") return;
-      if (lastSpokenIdRef.current === last.id) return;
-      const text = last.parts
-        .map((p) => (p.type === "text" ? (p as { text: string }).text : ""))
-        .join("");
-      const spoken = parseAiPayload(text).cleanText.trim();
-      if (!spoken) return;
-      lastSpokenIdRef.current = last.id;
-      void voice.speak(spoken, voiceForCoach(readActiveCoach()));
-    }, [messages, status, voice]);
+    // Voice no longer auto-plays on reply completion. It now only plays when
+    // the user expands the "Details" toggle on a specific message.
+    // See the onToggle handler on the <details> element below.
+
 
     // Parse latest assistant message for chart annotations / concept / grade
     // and push to parent (dashboard) so the native chart can render them.
