@@ -22,7 +22,7 @@ import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 
 
-type DashboardSearch = { ask?: string };
+type DashboardSearch = { ask?: string; symbol?: string };
 
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({
@@ -33,6 +33,7 @@ export const Route = createFileRoute("/_app/dashboard")({
   }),
   validateSearch: (s: Record<string, unknown>): DashboardSearch => ({
     ask: typeof s.ask === "string" ? s.ask : undefined,
+    symbol: typeof s.symbol === "string" ? s.symbol : undefined,
   }),
   component: Dashboard,
 });
