@@ -1212,7 +1212,8 @@ function Dashboard() {
                     symbol={symbol}
                     intervalLabel={intervalLabel}
                     lensId={lensId}
-                    runScan={runScan}
+                    runScan={() => runScan("analysis")}
+
                     onAttach={() => { /* handled in chat tab */ }}
                     onStopScan={() => { chatRef.current?.stop(); voice.stop(); setScanning(false); }}
                     onStopVoice={() => voice.stop()}
