@@ -615,14 +615,13 @@ function Dashboard() {
     const lens = findLens(lensId);
     const prompt = `Scan ${symbolLabel(symbol)} on the ${intervalLabel} chart now. Keep it brief (3-6 short lines total). Give me: Grade, Bias, Entry, Stop, TP1, TP2. Then two bullets: "Strength:" (one line, the strongest thing about this setup) and "Weakness:" (one line, what could kill it). No preamble, no long paragraphs. Do not say you are waiting for a live price feed; if exact live price is delayed, use approximate levels and label them approximate. Refer to the instrument by its friendly name (e.g. "Gold"), not the raw ticker. Levels I'm watching: ${enabledLevels}.`;
     assertScanPromptMatchesSymbol(prompt, symbol, "runScan");
-    // Route the UI based on where the scan started:
-    //  - from chat: keep the chat open, the assistant reply lands in the thread.
-    //  - from analysis (top bar / analysis tab): show the numeric ticket in Analysis.
     setRightOpen(true);
     if (from === "chat") {
       setRightTab("chat");
       setChatPanelView("conversation");
       setMobileView("chat");
+      // Immediately post to chat so the user sees activity right away.
+      sendToChat(prompt, { focusChat: true });
     } else {
       setRightTab("analysis");
       setChatPanelView("conversation");
@@ -633,8 +632,10 @@ function Dashboard() {
         const r = plan as ScanResult;
         setResult(r);
         applyPlanToSignalCards(r);
-        const chatPrompt = `Save this completed ${symbolLabel(symbol)} ${intervalLabel} scan to chat history and explain it using these exact values. Do not rerun the scan, do not flip direction, and do not change the grade. Your reply must match this Analysis card exactly: Grade ${r.grade}, Bias ${r.bias}, Confidence ${r.confidence}%, Entry ${r.entry}, Stop ${r.stop}, TP1 ${r.tp1}, TP2 ${r.tp2}, R:R ${r.rr}. Strength: ${r.notes}. Weakness or invalidation: ${r.details}. Include a chart-grade block with the same grade, bias, confidence, entry, stop, tp1, and tp2.`;
-        sendToChat(chatPrompt, { focusChat: from === "chat" });
+        if (from !== "chat") {
+          const chatPrompt = `Save this completed ${symbolLabel(symbol)} ${intervalLabel} scan to chat history and explain it using these exact values. Do not rerun the scan, do not flip direction, and do not change the grade. Your reply must match this Analysis card exactly: Grade ${r.grade}, Bias ${r.bias}, Confidence ${r.confidence}%, Entry ${r.entry}, Stop ${r.stop}, TP1 ${r.tp1}, TP2 ${r.tp2}, R:R ${r.rr}. Strength: ${r.notes}. Weakness or invalidation: ${r.details}. Include a chart-grade block with the same grade, bias, confidence, entry, stop, tp1, and tp2.`;
+          sendToChat(chatPrompt, { focusChat: false });
+        }
       })
       .catch(() => {
         setResult({
@@ -649,6 +650,7 @@ function Dashboard() {
         setLastUpdatedAt(Date.now());
       });
   };
+
 
 
 
