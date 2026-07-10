@@ -1205,7 +1205,19 @@ function Dashboard() {
                     lensId={lensId}
                     runScan={() => runScan("analysis")}
 
-                    onAttach={() => { /* handled in chat tab */ }}
+                    onAttach={(file) => {
+                      setRightTab("chat");
+                      setChatPanelView("conversation");
+                      const attachPrompt = `Scan this chart screenshot for ${symbolLabel(symbol)} on ${intervalLabel}. Refer to the instrument by its friendly name (e.g. "Gold"), not the raw ticker. Give me grade, bias, entry, stop, TP1, TP2, R:R, and a 1-2 sentence rationale.`;
+                      // Defer so the chat panel mounts (chatRef becomes valid) before we attach.
+                      setTimeout(() => { chatRef.current?.attach(file, attachPrompt); }, 0);
+                      setScanning(true);
+                      const lens = findLens(lensId);
+                      runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
+                        .then((plan) => { const r = plan as ScanResult; setResult(r); applyPlanToSignalCards(r); })
+                        .catch(() => { /* coach chat still runs the vision analysis */ })
+                        .finally(() => setScanning(false));
+                    }}
                     onStopScan={() => { chatRef.current?.stop(); voice.stop(); setScanning(false); }}
                     onStopVoice={() => voice.stop()}
                     voiceSpeaking={voice.speaking}
