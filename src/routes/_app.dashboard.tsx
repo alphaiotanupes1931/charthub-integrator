@@ -535,6 +535,7 @@ function Dashboard() {
   const levelsRef = useRef<HTMLDivElement>(null);
   const lensRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<DashboardChatHandle>(null);
+  const [isDesktop, setIsDesktop] = useState(false);
   const [lensId, setLensId] = useState<ScanLensId>("wyckoff");
   const [lensOpen, setLensOpen] = useState(false);
   const [broker, setBroker] = useState<{ email: string; server: string; accountType: "demo" | "live" } | null>(null);
@@ -562,6 +563,14 @@ function Dashboard() {
     } catch { /* ignore */ }
   }, []);
   const activeLens = SCAN_LENSES.find((l) => l.id === lensId) ?? SCAN_LENSES[0];
+
+  useEffect(() => {
+    const query = window.matchMedia("(min-width: 1024px)");
+    const update = () => setIsDesktop(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
 
   const openTradingFloor = () => {
     const url = `https://www.tradingview.com/chart/?symbol=${encodeURIComponent(symbol.tv)}`;
@@ -1303,7 +1312,7 @@ function Dashboard() {
                   {chatPanelView === "conversation" ? (
                     <div className="flex-1 min-h-0">
                       <DashboardChatPanel
-                        ref={chatRef}
+                        ref={isDesktop ? chatRef : null}
                         onRunScan={() => runScan("chat")}
 
                         onStopScan={() => { voice.stop(); setScanning(false); }}
@@ -1426,7 +1435,7 @@ function Dashboard() {
             {chatPanelView === "conversation" ? (
               <div className="flex-1 min-h-0">
                 <DashboardChatPanel
-                  ref={chatRef}
+                  ref={!isDesktop ? chatRef : null}
                   onRunScan={() => runScan("chat")}
                   onStopScan={() => { voice.stop(); setScanning(false); }}
                   scanning={scanning}
