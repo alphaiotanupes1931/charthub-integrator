@@ -692,6 +692,44 @@ function Dashboard() {
     }
   };
 
+  const scanResultToChatText = (plan: ScanResult, scanSymbol: Symbol) => {
+    const num = (s: string): number | undefined => {
+      if (!s || s === "-") return undefined;
+      const n = parseFloat(String(s).replace(/[^0-9.\-]/g, ""));
+      return isFinite(n) ? n : undefined;
+    };
+    const bias = plan.bias.toLowerCase() as "long" | "short" | "neutral";
+    const gradePayload = {
+      grade: plan.grade,
+      bias,
+      confidence: plan.confidence,
+      entry: num(plan.entry),
+      stop: num(plan.stop),
+      tp1: num(plan.tp1),
+      tp2: num(plan.tp2),
+      strength: plan.notes,
+      weakness: plan.details,
+    };
+    const levelLines = plan.grade === "NO ENTRY"
+      ? ["No entry - stand down until the setup improves."]
+      : [
+          `Entry: ${plan.entry}`,
+          `Stop: ${plan.stop}`,
+          `TP1: ${plan.tp1}`,
+          `TP2: ${plan.tp2}`,
+          `R:R: ${plan.rr}`,
+        ];
+    return [
+      `${scanSymbol.name} scan: ${plan.grade} ${plan.bias}. Confidence ${plan.confidence}%.`,
+      ...levelLines,
+      `Strength: ${plan.notes}`,
+      `Weakness: ${plan.details}`,
+      "```chart-grade",
+      JSON.stringify(gradePayload),
+      "```",
+    ].join("\n");
+  };
+
   const startNewChat = async () => {
     setRightTab("chat");
     setChatPanelView("conversation");
@@ -729,6 +767,7 @@ function Dashboard() {
         const r = plan as ScanResult;
         setResult(r);
         applyPlanToSignalCards(r);
+        chatRef.current?.ensureScanReply(scanResultToChatText(r, symbol));
       })
       .catch(() => {
         setResult({
