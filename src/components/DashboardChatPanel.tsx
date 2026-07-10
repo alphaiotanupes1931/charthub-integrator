@@ -440,30 +440,10 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
             </span>
             <div className="flex flex-col min-w-0">
               <span className="text-[10px] uppercase tracking-wider text-muted-foreground leading-none">Chat</span>
-              <div className="flex items-center gap-1 -ml-1">
-                <div className="relative">
-                  <select
-                    value={activeCoach}
-                    onChange={(e) => {
-                      const name = e.target.value;
-                      if (name === activeCoach) return;
-                      if (voice.enabled) voice.stop();
-                      writeActiveCoach(name);
-                      setActiveCoach(name);
-                      toast.success(`${name} is now your coach`);
-                    }}
-                    className="appearance-none bg-transparent pl-1 pr-5 text-sm font-semibold text-foreground focus:outline-none cursor-pointer max-w-full truncate"
-                    aria-label="Change coach"
-                  >
-                    {Object.keys(COACH_VOICES).map((key) => (
-                      <option key={key} value={key}>{key}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="pointer-events-none absolute right-0.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                </div>
-              </div>
+              <span className="text-sm font-semibold text-foreground truncate">{activeCoach}</span>
             </div>
           </div>
+
           <div className="flex items-center gap-0.5 shrink-0">
             <button
               onClick={() => {
