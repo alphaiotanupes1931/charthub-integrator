@@ -717,22 +717,18 @@ function Dashboard() {
       setRightTab("chat");
       setChatPanelView("conversation");
       setMobileView("chat");
-      // Immediately post to chat so the user sees activity right away.
-      sendToChat(prompt, { focusChat: true });
     } else {
       setRightTab("analysis");
       setChatPanelView("conversation");
       setMobileView("scan");
     }
+    // Always post the scan prompt to chat so the user sees activity immediately.
+    sendToChat(prompt, { focusChat: from === "chat" });
     runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
       .then((plan) => {
         const r = plan as ScanResult;
         setResult(r);
         applyPlanToSignalCards(r);
-        if (from !== "chat") {
-          const chatPrompt = `Save this completed ${symbolLabel(symbol)} ${intervalLabel} scan to chat history and explain it using these exact values. Do not rerun the scan, do not flip direction, and do not change the grade. Your reply must match this Analysis card exactly: Grade ${r.grade}, Bias ${r.bias}, Confidence ${r.confidence}%, Entry ${r.entry}, Stop ${r.stop}, TP1 ${r.tp1}, TP2 ${r.tp2}, R:R ${r.rr}. Strength: ${r.notes}. Weakness or invalidation: ${r.details}. Include a chart-grade block with the same grade, bias, confidence, entry, stop, tp1, and tp2.`;
-          sendToChat(chatPrompt, { focusChat: false });
-        }
       })
       .catch(() => {
         setResult({
