@@ -241,7 +241,8 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
     useEffect(() => { chartRef.current = chart; }, [chart]);
     const voice = useCoachVoice();
     const { isAdmin } = useProfile();
-    const [voiceMutedIds, setVoiceMutedIds] = useState<Set<string>>(() => new Set());
+    // Voice defaults to muted per-message; the user must tap the speaker to unmute.
+    const [voiceUnmutedIds, setVoiceUnmutedIds] = useState<Set<string>>(() => new Set());
     const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
 
     const checkAndReserveQuota = useCallback((): boolean => {
