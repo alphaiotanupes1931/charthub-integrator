@@ -264,10 +264,7 @@ export function useCoachVoice() {
       // 204 means fallback to browser speech synthesis.
       if (res.status === 204 || !res.ok) {
         if ("speechSynthesis" in window) {
-          const u = new SpeechSynthesisUtterance(text.slice(0, 1200));
-          u.rate = 1.0;
-          u.onend = () => { if (gen === genRef.current) markDone(); };
-          window.speechSynthesis.speak(u);
+          speakWithBrowser(text.slice(0, 1200), gen, genRef, markDone);
         } else {
           markDone();
         }
