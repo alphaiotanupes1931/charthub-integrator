@@ -430,7 +430,14 @@ function Dashboard() {
   const [symbol, setSymbol] = useState<Symbol>(SYMBOLS[0]);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [scanning, setScanning] = useState(false);
-  const [result, setResult] = useState<ScanResult | null>(null);
+  const [result, setResult] = useState<ScanResult | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const raw = window.sessionStorage.getItem(`trademind.scanResult.${SYMBOLS[0].ticker}`);
+      return raw ? (JSON.parse(raw) as ScanResult) : null;
+    } catch { return null; }
+  });
+
   const [levelsOpen, setLevelsOpen] = useState(false);
 
   
