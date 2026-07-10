@@ -776,7 +776,9 @@ function Dashboard() {
         const r = plan as ScanResult;
         setResult(r);
         applyPlanToSignalCards(r);
-        chatRef.current?.ensureScanReply(scanResultToChatText(r, symbol));
+        const replyText = scanResultToChatText(r, symbol);
+        if (from === "chat") chatRef.current?.appendScanReply(replyText);
+        else chatRef.current?.ensureScanReply(replyText);
       })
       .catch(() => {
         setResult({
