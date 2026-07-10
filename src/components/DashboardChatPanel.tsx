@@ -446,18 +446,6 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
 
           <div className="flex items-center gap-0.5 shrink-0">
             <button
-              onClick={() => {
-                const next = !voice.enabled;
-                voice.setEnabled(next);
-                if (next) voice.resumeAudio(); else voice.pauseAudio();
-              }}
-              className={`h-9 w-9 inline-flex items-center justify-center rounded-md transition ${voice.enabled ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-muted/60"}`}
-              title={voice.enabled ? "Mute coach voice" : "Unmute coach voice"}
-              aria-label={voice.enabled ? "Mute voice" : "Unmute voice"}
-            >
-              {voice.enabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-            </button>
-            <button
               onClick={clearChat}
               className="h-9 w-9 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60"
               title="Clear conversation"
