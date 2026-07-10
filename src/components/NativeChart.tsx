@@ -366,6 +366,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
 
   // Live clock for the on-chart overlay
   const { format: timeFormat } = useTimeFormat();
+  const { resolvedTimezone } = useTimezone();
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const id = window.setInterval(() => setNow(new Date()), 1000);
