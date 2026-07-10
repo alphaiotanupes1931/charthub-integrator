@@ -346,7 +346,8 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
 
     useImperativeHandle(ref, () => ({
       scan: (prompt: string) => {
-        if (chatBusy) return;
+        // If a prior stream is still running, stop it so the new scan goes through.
+        if (chatBusy) { try { stop(); } catch { /* ignore */ } }
         if (voice.enabled) voice.prime();
         void sendMessage({ text: prompt });
       },
