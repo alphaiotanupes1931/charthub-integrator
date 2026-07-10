@@ -32,6 +32,65 @@ function broadcastVoiceEnabled() {
 const SILENT_WAV =
   "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
 
+// Pick the most human-sounding voice available in the browser.
+// Prefers modern neural/natural voices (Google, Microsoft Neural, Apple Siri/Enhanced).
+let cachedVoice: SpeechSynthesisVoice | null | undefined = undefined;
+function pickBestVoice(): SpeechSynthesisVoice | null {
+  if (cachedVoice !== undefined) return cachedVoice;
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+    cachedVoice = null;
+    return null;
+  }
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices.length) return null; // not loaded yet - don't cache
+  const en = voices.filter((v) => v.lang && v.lang.toLowerCase().startsWith("en"));
+  const pool = en.length ? en : voices;
+  const score = (v: SpeechSynthesisVoice): number => {
+    const n = (v.name || "").toLowerCase();
+    let s = 0;
+    if (n.includes("natural")) s += 100;
+    if (n.includes("neural")) s += 90;
+    if (n.includes("online")) s += 40;
+    if (n.includes("enhanced") || n.includes("premium")) s += 60;
+    if (n.includes("siri")) s += 70;
+    if (n.includes("google")) s += 50;
+    // Well-known pleasant voices
+    if (/(ava|jenny|aria|guy|samantha|karen|serena|allison|zira|nova)/.test(n)) s += 30;
+    if (n.includes("novelty") || n.includes("whisper") || n.includes("bells")) s -= 100;
+    if (v.localService) s -= 5; // cloud voices usually sound better
+    if (v.lang && v.lang.toLowerCase() === "en-us") s += 5;
+    return s;
+  };
+  pool.sort((a, b) => score(b) - score(a));
+  cachedVoice = pool[0] ?? null;
+  return cachedVoice;
+}
+if (typeof window !== "undefined" && "speechSynthesis" in window) {
+  try {
+    window.speechSynthesis.onvoiceschanged = () => { cachedVoice = undefined; pickBestVoice(); };
+    pickBestVoice();
+  } catch { /* ignore */ }
+}
+
+function speakWithBrowser(
+  text: string,
+  gen: number,
+  genRef: { current: number },
+  markDone: () => void,
+) {
+  const synth = window.speechSynthesis;
+  const u = new SpeechSynthesisUtterance(text);
+  const v = pickBestVoice();
+  if (v) u.voice = v;
+  u.lang = v?.lang || "en-US";
+  u.rate = 0.95;
+  u.pitch = 1.0;
+  u.volume = 1.0;
+  u.onend = () => { if (gen === genRef.current) markDone(); };
+  u.onerror = () => { if (gen === genRef.current) markDone(); };
+  synth.speak(u);
+}
+
 export function useCoachVoice() {
   const [enabled, setEnabledState] = useState<boolean>(() => readVoiceEnabled());
   const [speaking, setSpeaking] = useState(false);
@@ -264,10 +323,7 @@ export function useCoachVoice() {
       // 204 means fallback to browser speech synthesis.
       if (res.status === 204 || !res.ok) {
         if ("speechSynthesis" in window) {
-          const u = new SpeechSynthesisUtterance(text.slice(0, 1200));
-          u.rate = 1.0;
-          u.onend = () => { if (gen === genRef.current) markDone(); };
-          window.speechSynthesis.speak(u);
+          speakWithBrowser(text.slice(0, 1200), gen, genRef, markDone);
         } else {
           markDone();
         }
