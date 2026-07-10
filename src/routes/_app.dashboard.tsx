@@ -535,6 +535,7 @@ function Dashboard() {
   const levelsRef = useRef<HTMLDivElement>(null);
   const lensRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<DashboardChatHandle>(null);
+  const [isDesktop, setIsDesktop] = useState(false);
   const [lensId, setLensId] = useState<ScanLensId>("wyckoff");
   const [lensOpen, setLensOpen] = useState(false);
   const [broker, setBroker] = useState<{ email: string; server: string; accountType: "demo" | "live" } | null>(null);
@@ -562,6 +563,14 @@ function Dashboard() {
     } catch { /* ignore */ }
   }, []);
   const activeLens = SCAN_LENSES.find((l) => l.id === lensId) ?? SCAN_LENSES[0];
+
+  useEffect(() => {
+    const query = window.matchMedia("(min-width: 1024px)");
+    const update = () => setIsDesktop(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
 
   const openTradingFloor = () => {
     const url = `https://www.tradingview.com/chart/?symbol=${encodeURIComponent(symbol.tv)}`;
@@ -692,6 +701,44 @@ function Dashboard() {
     }
   };
 
+  const scanResultToChatText = (plan: ScanResult, scanSymbol: Symbol) => {
+    const num = (s: string): number | undefined => {
+      if (!s || s === "-") return undefined;
+      const n = parseFloat(String(s).replace(/[^0-9.\-]/g, ""));
+      return isFinite(n) ? n : undefined;
+    };
+    const bias = plan.bias.toLowerCase() as "long" | "short" | "neutral";
+    const gradePayload = {
+      grade: plan.grade,
+      bias,
+      confidence: plan.confidence,
+      entry: num(plan.entry),
+      stop: num(plan.stop),
+      tp1: num(plan.tp1),
+      tp2: num(plan.tp2),
+      strength: plan.notes,
+      weakness: plan.details,
+    };
+    const levelLines = plan.grade === "NO ENTRY"
+      ? ["No entry - stand down until the setup improves."]
+      : [
+          `Entry: ${plan.entry}`,
+          `Stop: ${plan.stop}`,
+          `TP1: ${plan.tp1}`,
+          `TP2: ${plan.tp2}`,
+          `R:R: ${plan.rr}`,
+        ];
+    return [
+      `${scanSymbol.name} scan: ${plan.grade} ${plan.bias}. Confidence ${plan.confidence}%.`,
+      ...levelLines,
+      `Strength: ${plan.notes}`,
+      `Weakness: ${plan.details}`,
+      "```chart-grade",
+      JSON.stringify(gradePayload),
+      "```",
+    ].join("\n");
+  };
+
   const startNewChat = async () => {
     setRightTab("chat");
     setChatPanelView("conversation");
@@ -729,6 +776,9 @@ function Dashboard() {
         const r = plan as ScanResult;
         setResult(r);
         applyPlanToSignalCards(r);
+        const replyText = scanResultToChatText(r, symbol);
+        if (from === "chat") chatRef.current?.appendScanReply(replyText);
+        else chatRef.current?.ensureScanReply(replyText);
       })
       .catch(() => {
         setResult({
@@ -1264,7 +1314,7 @@ function Dashboard() {
                   {chatPanelView === "conversation" ? (
                     <div className="flex-1 min-h-0">
                       <DashboardChatPanel
-                        ref={chatRef}
+                        ref={isDesktop ? chatRef : null}
                         onRunScan={() => runScan("chat")}
 
                         onStopScan={() => { voice.stop(); setScanning(false); }}
@@ -1387,7 +1437,7 @@ function Dashboard() {
             {chatPanelView === "conversation" ? (
               <div className="flex-1 min-h-0">
                 <DashboardChatPanel
-                  ref={chatRef}
+                  ref={!isDesktop ? chatRef : null}
                   onRunScan={() => runScan("chat")}
                   onStopScan={() => { voice.stop(); setScanning(false); }}
                   scanning={scanning}
