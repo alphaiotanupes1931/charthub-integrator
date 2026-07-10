@@ -124,6 +124,8 @@ function SettingsPage() {
   const [name, setName] = useState("");
   const [savingName, setSavingName] = useState(false);
   const { format: timeFormat, setFormat: setTimeFormat } = useTimeFormat();
+  const { timezone, resolvedTimezone, setTimezone } = useTimezone();
+  const detectedTz = typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : "UTC";
   const [clockNow, setClockNow] = useState(() => new Date());
   const [welcomeMuted, setWelcomeMutedState] = useState(false);
   useEffect(() => { setWelcomeMutedState(isWelcomeBackMuted()); }, []);
