@@ -12,6 +12,7 @@ import {
 } from "lightweight-charts";
 import type { OhlcResponse } from "@/routes/api.ohlc";
 import { useTimeFormat, formatTime } from "@/hooks/useTimeFormat";
+import { useTimezone } from "@/hooks/useTimezone";
 
 export type LevelKey = "VWAP" | "POC" | "SR" | "ZONES" | "FVG" | "FIB" | "LIQ" | "OF" | "CISD";
 
@@ -365,6 +366,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
 
   // Live clock for the on-chart overlay
   const { format: timeFormat } = useTimeFormat();
+  const { resolvedTimezone } = useTimezone();
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const id = window.setInterval(() => setNow(new Date()), 1000);
@@ -407,9 +409,22 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [candles, levels, ticker, interval, liveOhlc?.source, sourceLabel, activeSessionsNow]);
 
-  // Init / teardown chart
+  // Init / teardown chart. Re-init when timezone changes so axis + crosshair labels re-render in the new zone.
   useEffect(() => {
     if (!containerRef.current) return;
+    const hour12 = timeFormat === "12h";
+    const tz = resolvedTimezone; // undefined => browser local
+    const fmtTime = (t: number) => {
+      const d = new Date(t * 1000);
+      return d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", hour12, timeZone: tz });
+    };
+    const fmtDateTime = (t: number) => {
+      const d = new Date(t * 1000);
+      return d.toLocaleString(undefined, {
+        month: "short", day: "2-digit",
+        hour: "2-digit", minute: "2-digit", hour12, timeZone: tz,
+      });
+    };
     const chart = createChart(containerRef.current, {
       autoSize: true,
       layout: { background: { color: "transparent" }, textColor: "#94a3b8", fontFamily: "ui-sans-serif, system-ui, sans-serif", attributionLogo: false },
@@ -420,7 +435,15 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
         horzLine: { color: "rgba(251, 191, 36, 0.5)", width: 1, style: LineStyle.Solid, labelBackgroundColor: "#fbbf24" },
       },
       rightPriceScale: { borderColor: "rgba(148, 163, 184, 0.15)" },
-      timeScale: { borderColor: "rgba(148, 163, 184, 0.15)", timeVisible: true, secondsVisible: false },
+      timeScale: {
+        borderColor: "rgba(148, 163, 184, 0.15)",
+        timeVisible: true,
+        secondsVisible: false,
+        tickMarkFormatter: (time: number) => fmtTime(time),
+      },
+      localization: {
+        timeFormatter: (time: number) => fmtDateTime(time),
+      },
     });
     const series = chart.addSeries(CandlestickSeries, {
       upColor: "#34d399", downColor: "#f87171",
@@ -437,7 +460,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       seriesRef.current = null;
       setReady(false);
     };
-  }, []);
+  }, [resolvedTimezone, timeFormat]);
 
   // Convert to Heikin-Ashi when requested
   const displayCandles = useMemo<Candle[]>(() => {
@@ -773,7 +796,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       )}
       {/* Live clock: local + UTC, honours 12h/24h preference */}
       <div className="absolute right-2 top-2 sm:right-3 sm:top-3 z-10 max-w-[42%] rounded-md border border-border bg-background/70 backdrop-blur px-1.5 py-1 sm:px-2 text-[9px] sm:text-[10px] font-mono text-muted-foreground flex flex-wrap items-center justify-end gap-x-1.5 gap-y-0.5">
-        <span className="text-foreground/90">{formatTime(now, timeFormat, { seconds: true })}</span>
+        <span className="text-foreground/90">{now.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: timeFormat === "12h", timeZone: resolvedTimezone })}</span>
         <span className="hidden sm:inline opacity-60">·</span>
         <span className="hidden sm:inline">{formatTime(now, timeFormat, { seconds: false, utc: true })} UTC</span>
         {activeSessionsNow.length > 0 && (

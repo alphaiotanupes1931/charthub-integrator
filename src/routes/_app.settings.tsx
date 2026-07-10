@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
 import { useTimeFormat, formatTime } from "@/hooks/useTimeFormat";
+import { useTimezone, TIMEZONE_OPTIONS, AUTO_TZ } from "@/hooks/useTimezone";
 import { recordBrokerConnection } from "@/lib/broker.functions";
 import { exportMyData, deleteMyAccount } from "@/lib/privacy.functions";
 import { createPortalSession, getMySubscription } from "@/lib/billing.functions";
@@ -123,6 +124,8 @@ function SettingsPage() {
   const [name, setName] = useState("");
   const [savingName, setSavingName] = useState(false);
   const { format: timeFormat, setFormat: setTimeFormat } = useTimeFormat();
+  const { timezone, resolvedTimezone, setTimezone } = useTimezone();
+  const detectedTz = typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : "UTC";
   const [clockNow, setClockNow] = useState(() => new Date());
   const [welcomeMuted, setWelcomeMutedState] = useState(false);
   useEffect(() => { setWelcomeMutedState(isWelcomeBackMuted()); }, []);
@@ -391,6 +394,35 @@ function SettingsPage() {
           Preview: <span className="text-foreground">{formatTime(clockNow, timeFormat, { seconds: true })}</span>
           {" · "}
           {formatTime(clockNow, timeFormat, { utc: true })} UTC
+        </p>
+      </Card>
+
+      <Card className="mt-4">
+        <h2 className="flex items-center gap-2 text-lg font-semibold mb-2">
+          <Monitor className="size-5 text-primary" />
+          Timezone
+        </h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          Chart times, the on-chart clock, and session badges all use this timezone. Pick the one that matches how you trade so candles line up with your day.
+        </p>
+        <div className="max-w-sm mb-3">
+          <Select value={timezone} onChange={(e) => setTimezone(e.target.value)}>
+            {TIMEZONE_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </Select>
+        </div>
+        <p className="text-xs text-muted-foreground font-mono">
+          Current: <span className="text-foreground">{
+            new Date().toLocaleString(undefined, {
+              hour: "2-digit", minute: "2-digit", hour12: timeFormat === "12h",
+              timeZoneName: "short",
+              timeZone: resolvedTimezone,
+            })
+          }</span>
+          {timezone === AUTO_TZ && (
+            <> {" · "} detected <span className="text-foreground">{detectedTz}</span></>
+          )}
         </p>
       </Card>
 
