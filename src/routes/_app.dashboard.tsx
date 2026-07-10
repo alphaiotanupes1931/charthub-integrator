@@ -430,7 +430,14 @@ function Dashboard() {
   const [symbol, setSymbol] = useState<Symbol>(SYMBOLS[0]);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [scanning, setScanning] = useState(false);
-  const [result, setResult] = useState<ScanResult | null>(null);
+  const [result, setResult] = useState<ScanResult | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const raw = window.sessionStorage.getItem(`trademind.scanResult.${SYMBOLS[0].ticker}`);
+      return raw ? (JSON.parse(raw) as ScanResult) : null;
+    } catch { return null; }
+  });
+
   const [levelsOpen, setLevelsOpen] = useState(false);
 
   
@@ -443,6 +450,22 @@ function Dashboard() {
   const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(Date.now());
 
   const [lastUpdatedText, setLastUpdatedText] = useState<string>("");
+
+  // Persist scan result per symbol so switching tabs/symbols keeps the last analysis visible.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.sessionStorage.getItem(`trademind.scanResult.${symbol.ticker}`);
+      setResult(raw ? (JSON.parse(raw) as ScanResult) : null);
+    } catch { setResult(null); }
+  }, [symbol.ticker]);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      if (result) window.sessionStorage.setItem(`trademind.scanResult.${symbol.ticker}`, JSON.stringify(result));
+    } catch { /* ignore */ }
+  }, [result, symbol.ticker]);
+
 
   useEffect(() => {
     if (!lastUpdatedAt) {
@@ -683,7 +706,7 @@ function Dashboard() {
 
   const runScan = (from: "chat" | "analysis" = "analysis") => {
     setScanning(true);
-    setResult(null);
+
     setAiGrade(null);
     const enabledLevels = ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none";
     const lens = findLens(lensId);
