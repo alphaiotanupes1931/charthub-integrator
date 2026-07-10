@@ -757,7 +757,7 @@ function Dashboard() {
     setAiGrade(null);
     const enabledLevels = ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none";
     const lens = findLens(lensId);
-    const prompt = `Scan ${symbolLabel(symbol)} on the ${intervalLabel} chart now. Keep it brief (3-6 short lines total). Give me: Grade, Bias, Entry, Stop, TP1, TP2. Then two bullets: "Strength:" (one line, the strongest thing about this setup) and "Weakness:" (one line, what could kill it). No preamble, no long paragraphs. Do not say you are waiting for a live price feed; if exact live price is delayed, use approximate levels and label them approximate. Refer to the instrument by its friendly name (e.g. "Gold"), not the raw ticker. Levels I'm watching: ${enabledLevels}.`;
+    const prompt = `I just ran a scan on ${symbolLabel(symbol)} (${intervalLabel}). The formal grade, entry, stop, and targets are being computed by the analysis engine and will appear in a moment - do NOT produce your own grade, entry, stop, or numeric levels, and do NOT emit a chart-grade block. Instead, give me 2-3 short sentences of coaching context: what to watch for on this instrument right now, what would confirm or invalidate the setup, and any risk note. Refer to the instrument by its friendly name (e.g. "Gold"), not the raw ticker. Levels I'm watching: ${enabledLevels}.`;
     assertScanPromptMatchesSymbol(prompt, symbol, "runScan");
     setRightOpen(true);
     if (from === "chat") {
@@ -776,12 +776,10 @@ function Dashboard() {
         const r = plan as ScanResult;
         setResult(r);
         applyPlanToSignalCards(r);
-        // Only fall back to appending the analysis-engine grade when the scan
-        // was triggered from Analysis (chat already streams its own grade card).
-        if (from !== "chat") {
-          const replyText = scanResultToChatText(r, symbol);
-          chatRef.current?.ensureScanReply(replyText);
-        }
+        // Single source of truth: the Analysis engine's grade card is always
+        // appended to the chat thread so Chat and Analysis never disagree.
+        const replyText = scanResultToChatText(r, symbol);
+        chatRef.current?.appendScanReply(replyText);
       })
       .catch(() => {
         setResult({
