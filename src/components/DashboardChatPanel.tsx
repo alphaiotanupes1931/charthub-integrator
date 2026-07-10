@@ -35,6 +35,7 @@ export type DashboardChatHandle = {
   scan: (prompt: string) => void;
   attach: (file: File, prompt: string) => void;
   ensureScanReply: (text: string) => void;
+  appendScanReply: (text: string) => void;
   stop: () => void;
 };
 
@@ -53,7 +54,7 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
   const [threadId, setThreadId] = useState<string | null>(threadIdOverride ?? null);
   const [initial, setInitial] = useState<UIMessage[] | null>(null);
   const innerRef = useRef<DashboardChatHandle | null>(null);
-  const pendingRef = useRef<Array<{ type: "scan"; prompt: string } | { type: "attach"; file: File; prompt: string } | { type: "ensureScanReply"; text: string }>>([]);
+  const pendingRef = useRef<Array<{ type: "scan"; prompt: string } | { type: "attach"; file: File; prompt: string } | { type: "ensureScanReply"; text: string } | { type: "appendScanReply"; text: string }>>([]);
   const getThread = useServerFn(getOrCreateDashboardThread);
   const getMsgs = useServerFn(getChatMessages);
 
@@ -64,7 +65,8 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
     pending.forEach((item) => {
       if (item.type === "scan") inner.scan(item.prompt);
       else if (item.type === "attach") inner.attach(item.file, item.prompt);
-      else inner.ensureScanReply(item.text);
+      else if (item.type === "ensureScanReply") inner.ensureScanReply(item.text);
+      else inner.appendScanReply(item.text);
     });
   }, []);
 
@@ -80,6 +82,10 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
     ensureScanReply: (text: string) => {
       if (innerRef.current) innerRef.current.ensureScanReply(text);
       else pendingRef.current.push({ type: "ensureScanReply", text });
+    },
+    appendScanReply: (text: string) => {
+      if (innerRef.current) innerRef.current.appendScanReply(text);
+      else pendingRef.current.push({ type: "appendScanReply", text });
     },
     stop: () => {
       pendingRef.current = [];
@@ -418,6 +424,9 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
           appendAssistantMessage(text);
         };
         window.setTimeout(addIfStillMissing, 500);
+      },
+      appendScanReply: (text: string) => {
+        appendAssistantMessage(text);
       },
     }), [sendMessage, chatBusy, voice, stop, checkAndReserveQuota, isAdmin, assistantCount, hasVisibleAssistantReplySince, appendAssistantMessage]);
 
