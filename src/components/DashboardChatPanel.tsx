@@ -34,6 +34,7 @@ import { ConceptDiagram } from "@/components/ConceptDiagram";
 export type DashboardChatHandle = {
   scan: (prompt: string) => void;
   attach: (file: File, prompt: string) => void;
+  ensureScanReply: (text: string) => void;
   stop: () => void;
 };
 
@@ -52,7 +53,7 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
   const [threadId, setThreadId] = useState<string | null>(threadIdOverride ?? null);
   const [initial, setInitial] = useState<UIMessage[] | null>(null);
   const innerRef = useRef<DashboardChatHandle | null>(null);
-  const pendingRef = useRef<Array<{ type: "scan"; prompt: string } | { type: "attach"; file: File; prompt: string }>>([]);
+  const pendingRef = useRef<Array<{ type: "scan"; prompt: string } | { type: "attach"; file: File; prompt: string } | { type: "ensureScanReply"; text: string }>>([]);
   const getThread = useServerFn(getOrCreateDashboardThread);
   const getMsgs = useServerFn(getChatMessages);
 
@@ -62,7 +63,8 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
     const pending = pendingRef.current.splice(0);
     pending.forEach((item) => {
       if (item.type === "scan") inner.scan(item.prompt);
-      else inner.attach(item.file, item.prompt);
+      else if (item.type === "attach") inner.attach(item.file, item.prompt);
+      else inner.ensureScanReply(item.text);
     });
   }, []);
 
@@ -74,6 +76,10 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
     attach: (file: File, prompt: string) => {
       if (innerRef.current) innerRef.current.attach(file, prompt);
       else pendingRef.current.push({ type: "attach", file, prompt });
+    },
+    ensureScanReply: (text: string) => {
+      if (innerRef.current) innerRef.current.ensureScanReply(text);
+      else pendingRef.current.push({ type: "ensureScanReply", text });
     },
     stop: () => {
       pendingRef.current = [];
@@ -316,6 +322,36 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
       },
     });
 
+    const messagesRef = useRef(messages);
+    const statusRef = useRef(status);
+    const lastScanAssistantCountRef = useRef<number | null>(null);
+    useEffect(() => { messagesRef.current = messages; }, [messages]);
+    useEffect(() => { statusRef.current = status; }, [status]);
+
+    const assistantCount = useCallback(() => messagesRef.current.filter((m) => m.role === "assistant").length, []);
+
+    const hasVisibleAssistantReplySince = useCallback((before: number) => {
+      const assistantMessages = messagesRef.current.filter((m) => m.role === "assistant").slice(before);
+      return assistantMessages.some((m) => {
+        const raw = m.parts
+          .map((p) => (p.type === "text" ? (p as { text: string }).text : ""))
+          .join("");
+        const parsed = parseAiPayload(raw);
+        return !!parsed.cleanText || !!parsed.grade || !!parsed.concept || parsed.annotations.length > 0;
+      });
+    }, []);
+
+    const appendAssistantMessage = useCallback((text: string) => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          parts: [{ type: "text", text }],
+        } as UIMessage,
+      ]);
+    }, [setMessages]);
+
     const chatBusy = status === "submitted" || status === "streaming";
     const loading = scanning || chatBusy;
     const stopScan = () => {
@@ -348,6 +384,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
       scan: (prompt: string) => {
         // If a prior stream is still running, stop it so the new scan goes through.
         if (chatBusy) { try { stop(); } catch { /* ignore */ } }
+        lastScanAssistantCountRef.current = assistantCount();
         if (voice.enabled) voice.prime();
         void sendMessage({ text: prompt });
       },
@@ -372,7 +409,22 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
       stop: () => {
         try { stop(); } catch { /* ignore */ }
       },
-    }), [sendMessage, chatBusy, voice, stop, checkAndReserveQuota, isAdmin]);
+      ensureScanReply: (text: string) => {
+        const before = lastScanAssistantCountRef.current;
+        if (before === null || hasVisibleAssistantReplySince(before)) return;
+        const startedAt = Date.now();
+        const addIfStillMissing = () => {
+          if (before !== lastScanAssistantCountRef.current) return;
+          if (hasVisibleAssistantReplySince(before)) return;
+          if ((statusRef.current === "submitted" || statusRef.current === "streaming") && Date.now() - startedAt < 20_000) {
+            window.setTimeout(addIfStillMissing, 1000);
+            return;
+          }
+          if (!hasVisibleAssistantReplySince(before)) appendAssistantMessage(text);
+        };
+        window.setTimeout(addIfStillMissing, 500);
+      },
+    }), [sendMessage, chatBusy, voice, stop, checkAndReserveQuota, isAdmin, assistantCount, hasVisibleAssistantReplySince, appendAssistantMessage]);
 
     const handleSubmit = () => {
       const text = input.trim();
