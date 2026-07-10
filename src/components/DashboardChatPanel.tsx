@@ -442,7 +442,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
       if (img) {
         if (!isAdmin) bumpScreenshotQuota();
         void sendMessage({
-          text: text || "Scan THIS SCREENSHOT I just attached (not the current chart). Read the price action visible in the image and give me bias, entry, stop, TP1 and TP2 with a brief rationale.",
+          text: text || "Scan THIS SCREENSHOT I just attached (ignore the live chart context above - analyze only what is in the image). IMPORTANT: The horizontal line at the current price cursor is NOT the entry - it is just where price is right now. Determine entry from actual structure visible in the image: order blocks, FVGs, swing highs/lows, liquidity pools, trendline touches, or a labeled level the user drew. If the user drew entry/SL/TP lines on the chart, read those literally. Otherwise propose entry at a structural level (not at current price unless it is also a valid structural level), place stop beyond the invalidation structure (swing high/low or opposite side of the zone), and set TP1/TP2 at the next liquidity or structural targets visible. State bias, entry, stop, TP1, TP2, R:R, and a 1-2 sentence rationale that references the specific structure you saw.",
           files: [{ type: "file", mediaType: img.mediaType, url: img.url, filename: img.name }],
         });
       } else {

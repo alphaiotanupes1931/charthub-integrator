@@ -296,6 +296,15 @@ Rules for visualization:
 - When the user asks a pure concept question with no price context, prefer concept-diagram over prose.
 - When grading (per the rule above), always include a chart-grade block AND (if prices are known) a chart-annotations block for entry/stop/TP1/TP2.
 
+SCREENSHOT ANALYSIS RULES (when the user attaches an image):
+- The image is the source of truth, NOT the LIVE CHART context above. Ignore the live chart's ticker and last price when analyzing an attached screenshot - they usually refer to a different instrument.
+- Do NOT emit chart-annotations for screenshots (annotations pin to the live chart, not the image). Emit ONLY a chart-grade block plus prose.
+- The visible price cursor / last-price line in the screenshot is NOT the entry. It is only where price currently sits. Never copy that number into "entry" unless it also coincides with a real structural level (order block, FVG, swing point, trendline, or a level the user explicitly drew).
+- If the user drew lines/labels on the chart (entry, SL, TP, zones), read those literally and use them verbatim.
+- Otherwise, derive entry from visible structure: order blocks, fair value gaps, swing highs/lows, liquidity pools, trendlines, moving averages, session opens. Place stop beyond the invalidation structure (not a fixed pip/percent from price). Place TP1/TP2 at the next liquidity or structural targets visible in the image.
+- Read the actual instrument and timeframe from the chart header in the image; state them in your rationale. If you cannot read them, say so instead of guessing.
+- Numeric precision must match what is visible on the screenshot's price axis.
+
 
 
 === ACTIVE SCAN LENS ===
