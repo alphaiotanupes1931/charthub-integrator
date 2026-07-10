@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { Link } from "@tanstack/react-router";
-import { MessageSquare, ExternalLink, Trash2, X, Minus, Volume2, VolumeX, ChevronDown, Crosshair, Square, Paperclip, ImageIcon } from "lucide-react";
+import { MessageSquare, ExternalLink, Trash2, X, Minus, Volume2, VolumeX, Crosshair, Square, Paperclip, ImageIcon } from "lucide-react";
 import { COACH_ICON_META, DEFAULT_COACH_ICON } from "@/lib/coachMeta";
 import {
   Conversation,
@@ -24,7 +24,7 @@ import { readJournal, readActiveCoach, writeActiveCoach, readActiveStrategy } fr
 import { findStrategyByName } from "@/lib/customStrategies";
 import { readActiveLensId, findLens } from "@/lib/scanLens";
 import { useCoachVoice } from "@/hooks/useCoachVoice";
-import { voiceForCoach, COACH_VOICES } from "@/lib/coachVoices";
+import { voiceForCoach } from "@/lib/coachVoices";
 import { useProfile } from "@/hooks/useProfile";
 import { compressImage, getScreenshotQuota, bumpScreenshotQuota } from "@/lib/imageCompress";
 import { toast } from "sonner";
