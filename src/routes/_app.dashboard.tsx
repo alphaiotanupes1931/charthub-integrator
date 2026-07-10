@@ -451,6 +451,22 @@ function Dashboard() {
 
   const [lastUpdatedText, setLastUpdatedText] = useState<string>("");
 
+  // Persist scan result per symbol so switching tabs/symbols keeps the last analysis visible.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.sessionStorage.getItem(`trademind.scanResult.${symbol.ticker}`);
+      setResult(raw ? (JSON.parse(raw) as ScanResult) : null);
+    } catch { setResult(null); }
+  }, [symbol.ticker]);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      if (result) window.sessionStorage.setItem(`trademind.scanResult.${symbol.ticker}`, JSON.stringify(result));
+    } catch { /* ignore */ }
+  }, [result, symbol.ticker]);
+
+
   useEffect(() => {
     if (!lastUpdatedAt) {
       setLastUpdatedText("");
