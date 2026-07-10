@@ -796,7 +796,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       )}
       {/* Live clock: local + UTC, honours 12h/24h preference */}
       <div className="absolute right-2 top-2 sm:right-3 sm:top-3 z-10 max-w-[42%] rounded-md border border-border bg-background/70 backdrop-blur px-1.5 py-1 sm:px-2 text-[9px] sm:text-[10px] font-mono text-muted-foreground flex flex-wrap items-center justify-end gap-x-1.5 gap-y-0.5">
-        <span className="text-foreground/90">{formatTime(now, timeFormat, { seconds: true })}</span>
+        <span className="text-foreground/90">{now.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: timeFormat === "12h", timeZone: resolvedTimezone })}</span>
         <span className="hidden sm:inline opacity-60">·</span>
         <span className="hidden sm:inline">{formatTime(now, timeFormat, { seconds: false, utc: true })} UTC</span>
         {activeSessionsNow.length > 0 && (
