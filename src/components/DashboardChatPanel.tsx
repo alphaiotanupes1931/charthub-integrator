@@ -426,6 +426,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
         window.setTimeout(addIfStillMissing, 500);
       },
       appendScanReply: (text: string) => {
+        try { stop(); } catch { /* ignore */ }
         appendAssistantMessage(text);
       },
     }), [sendMessage, chatBusy, voice, stop, checkAndReserveQuota, isAdmin, assistantCount, hasVisibleAssistantReplySince, appendAssistantMessage]);
