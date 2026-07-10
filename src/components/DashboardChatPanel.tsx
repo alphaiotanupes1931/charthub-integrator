@@ -515,7 +515,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                             onToggle={(e) => {
                               const el = e.currentTarget as HTMLDetailsElement;
                               if (el.open) {
-                                if (voiceMutedIds.has(m.id)) return;
+                                if (!voiceUnmutedIds.has(m.id)) return;
                                 setSpeakingMsgId(m.id);
                                 void voice.speak(parsed.cleanText, voiceForCoach(readActiveCoach()));
                               } else if (speakingMsgId === m.id) {
@@ -532,24 +532,25 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                                   onClick={(ev) => {
                                     ev.preventDefault();
                                     ev.stopPropagation();
-                                    const isMuted = voiceMutedIds.has(m.id);
-                                    if (isMuted) {
-                                      setVoiceMutedIds((prev) => { const n = new Set(prev); n.delete(m.id); return n; });
+                                    const isUnmuted = voiceUnmutedIds.has(m.id);
+                                    if (!isUnmuted) {
+                                      setVoiceUnmutedIds((prev: Set<string>) => { const n = new Set(prev); n.add(m.id); return n; });
+                                      voice.prime();
                                       setSpeakingMsgId(m.id);
                                       void voice.speak(parsed.cleanText, voiceForCoach(readActiveCoach()));
                                     } else {
-                                      setVoiceMutedIds((prev) => { const n = new Set(prev); n.add(m.id); return n; });
+                                      setVoiceUnmutedIds((prev: Set<string>) => { const n = new Set(prev); n.delete(m.id); return n; });
                                       voice.stop();
                                       setSpeakingMsgId(null);
                                     }
                                   }}
-                                  className="inline-flex h-6 w-6 items-center justify-center rounded hover:bg-muted/60"
-                                  title={voiceMutedIds.has(m.id) ? "Unmute voice" : "Mute voice"}
-                                  aria-label={voiceMutedIds.has(m.id) ? "Unmute voice" : "Mute voice"}
+                                  className={`inline-flex h-7 w-7 items-center justify-center rounded border ${voiceUnmutedIds.has(m.id) ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-muted/60 text-muted-foreground animate-pulse"}`}
+                                  title={voiceUnmutedIds.has(m.id) ? "Mute voice" : "Muted - tap to hear"}
+                                  aria-label={voiceUnmutedIds.has(m.id) ? "Mute voice" : "Muted - tap to hear"}
                                 >
-                                  {voiceMutedIds.has(m.id)
-                                    ? <VolumeX className="h-3.5 w-3.5" />
-                                    : <Volume2 className="h-3.5 w-3.5 text-primary" />}
+                                  {voiceUnmutedIds.has(m.id)
+                                    ? <Volume2 className="h-3.5 w-3.5" />
+                                    : <VolumeX className="h-3.5 w-3.5" />}
                                 </button>
                                 <span className="text-[10px] opacity-60 group-open:hidden">Show</span>
                                 <span className="text-[10px] opacity-60 hidden group-open:inline">Hide</span>
