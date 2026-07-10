@@ -350,8 +350,9 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
         void sendMessage({ text: prompt });
       },
       attach: async (file: File, prompt: string) => {
-        if (chatBusy) return;
         if (!checkAndReserveQuota()) return;
+        // If a prior scan is still streaming, stop it so the new screenshot goes through.
+        if (chatBusy) { try { stop(); } catch { /* ignore */ } }
         if (voice.enabled) voice.prime();
         try {
           const { dataUrl, name, mediaType } = await compressImage(file);
@@ -360,6 +361,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
             text: prompt,
             files: [{ type: "file", mediaType, url: dataUrl, filename: name }],
           });
+          toast.success("Screenshot sent for scan");
         } catch (e) {
           console.error(e);
           toast.error("Could not attach that screenshot");
