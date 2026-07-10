@@ -412,15 +412,10 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
       ensureScanReply: (text: string) => {
         const before = lastScanAssistantCountRef.current;
         if (before === null || hasVisibleAssistantReplySince(before)) return;
-        const startedAt = Date.now();
         const addIfStillMissing = () => {
           if (before !== lastScanAssistantCountRef.current) return;
           if (hasVisibleAssistantReplySince(before)) return;
-          if ((statusRef.current === "submitted" || statusRef.current === "streaming") && Date.now() - startedAt < 20_000) {
-            window.setTimeout(addIfStillMissing, 1000);
-            return;
-          }
-          if (!hasVisibleAssistantReplySince(before)) appendAssistantMessage(text);
+          appendAssistantMessage(text);
         };
         window.setTimeout(addIfStillMissing, 500);
       },
