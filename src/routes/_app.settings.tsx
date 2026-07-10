@@ -398,6 +398,35 @@ function SettingsPage() {
       </Card>
 
       <Card className="mt-4">
+        <h2 className="flex items-center gap-2 text-lg font-semibold mb-2">
+          <Monitor className="size-5 text-primary" />
+          Timezone
+        </h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          Chart times, the on-chart clock, and session badges all use this timezone. Pick the one that matches how you trade so candles line up with your day.
+        </p>
+        <div className="max-w-sm mb-3">
+          <Select value={timezone} onChange={(e) => setTimezone(e.target.value)}>
+            {TIMEZONE_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </Select>
+        </div>
+        <p className="text-xs text-muted-foreground font-mono">
+          Current: <span className="text-foreground">{
+            new Date().toLocaleString(undefined, {
+              hour: "2-digit", minute: "2-digit", hour12: timeFormat === "12h",
+              timeZoneName: "short",
+              timeZone: resolvedTimezone,
+            })
+          }</span>
+          {timezone === AUTO_TZ && (
+            <> {" · "} detected <span className="text-foreground">{detectedTz}</span></>
+          )}
+        </p>
+      </Card>
+
+      <Card className="mt-4">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="flex items-center gap-2 text-lg font-semibold mb-2">
