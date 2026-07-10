@@ -706,7 +706,7 @@ function Dashboard() {
 
   const runScan = (from: "chat" | "analysis" = "analysis") => {
     setScanning(true);
-    setResult(null);
+
     setAiGrade(null);
     const enabledLevels = ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none";
     const lens = findLens(lensId);
