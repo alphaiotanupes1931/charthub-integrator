@@ -75,54 +75,12 @@ export const Route = createFileRoute("/api/tts")({
           return new Response("Invalid JSON", { status: 400, headers: cors });
         }
         const text = (body.text ?? "").toString().trim();
-        const voiceId = (body.voiceId ?? DEFAULT_VOICE).toString();
         if (!text) return new Response("text required", { status: 400, headers: cors });
 
-        const clipped = text.length > 1200 ? text.slice(0, 1200) + "…" : text;
+        // Always use browser SpeechSynthesis (free, no API cost).
+        // Client hook falls back to window.speechSynthesis on 204.
+        return emptyAudio(cors);
 
-        // Try AI Gateway TTS first (reliable, billed via Lovable credits).
-        const gatewayAudio = await speakWithAiGateway(clipped);
-        if (gatewayAudio) {
-          const h = new Headers(gatewayAudio.headers);
-          for (const [k, v] of Object.entries(cors)) h.set(k, v);
-          return new Response(gatewayAudio.body, { headers: h });
-        }
-
-        // Fallback to ElevenLabs if a key is configured.
-        const apiKey = process.env.ELEVENLABS_API_KEY_OVERRIDE || process.env.ELEVENLABS_API_KEY;
-        if (!apiKey) return emptyAudio(cors);
-
-        const upstream = await fetch(
-          `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=mp3_44100_128`,
-          {
-            method: "POST",
-            headers: {
-              "xi-api-key": apiKey,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              text: clipped,
-              model_id: "eleven_turbo_v2_5",
-              voice_settings: {
-                stability: 0.45,
-                similarity_boost: 0.8,
-                style: 0.35,
-                use_speaker_boost: true,
-                speed: 1.0,
-              },
-            }),
-          },
-        );
-
-        if (!upstream.ok || !upstream.body) {
-          const err = await upstream.text().catch(() => "");
-          console.error("[tts] elevenlabs error", upstream.status, err);
-          return emptyAudio(cors);
-        }
-
-        return new Response(upstream.body, {
-          headers: { "Content-Type": "audio/mpeg", ...cors },
-        });
 
       },
     },
