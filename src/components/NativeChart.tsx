@@ -409,9 +409,22 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [candles, levels, ticker, interval, liveOhlc?.source, sourceLabel, activeSessionsNow]);
 
-  // Init / teardown chart
+  // Init / teardown chart. Re-init when timezone changes so axis + crosshair labels re-render in the new zone.
   useEffect(() => {
     if (!containerRef.current) return;
+    const hour12 = timeFormat === "12h";
+    const tz = resolvedTimezone; // undefined => browser local
+    const fmtTime = (t: number) => {
+      const d = new Date(t * 1000);
+      return d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", hour12, timeZone: tz });
+    };
+    const fmtDateTime = (t: number) => {
+      const d = new Date(t * 1000);
+      return d.toLocaleString(undefined, {
+        month: "short", day: "2-digit",
+        hour: "2-digit", minute: "2-digit", hour12, timeZone: tz,
+      });
+    };
     const chart = createChart(containerRef.current, {
       autoSize: true,
       layout: { background: { color: "transparent" }, textColor: "#94a3b8", fontFamily: "ui-sans-serif, system-ui, sans-serif", attributionLogo: false },
@@ -422,7 +435,15 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
         horzLine: { color: "rgba(251, 191, 36, 0.5)", width: 1, style: LineStyle.Solid, labelBackgroundColor: "#fbbf24" },
       },
       rightPriceScale: { borderColor: "rgba(148, 163, 184, 0.15)" },
-      timeScale: { borderColor: "rgba(148, 163, 184, 0.15)", timeVisible: true, secondsVisible: false },
+      timeScale: {
+        borderColor: "rgba(148, 163, 184, 0.15)",
+        timeVisible: true,
+        secondsVisible: false,
+        tickMarkFormatter: (time: number) => fmtTime(time),
+      },
+      localization: {
+        timeFormatter: (time: number) => fmtDateTime(time),
+      },
     });
     const series = chart.addSeries(CandlestickSeries, {
       upColor: "#34d399", downColor: "#f87171",
@@ -439,7 +460,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       seriesRef.current = null;
       setReady(false);
     };
-  }, []);
+  }, [resolvedTimezone, timeFormat]);
 
   // Convert to Heikin-Ashi when requested
   const displayCandles = useMemo<Candle[]>(() => {
