@@ -1156,6 +1156,16 @@ function TradeFormModal({
     } else if (removeImage && editing?.hasImage) {
       await deleteTradeImage(id);
     }
+    if (mentalScore != null) {
+      const existing = loadMental().find((e) => e.date === date);
+      const entryToSave: MentalEntry = {
+        ...(existing ?? { date, createdAt: Date.now(), score: mentalScore }),
+        date,
+        score: mentalScore,
+        mood: mentalMood.trim() || existing?.mood,
+      };
+      upsertMentalEntry(entryToSave);
+    }
     onSave({ ...preview, id });
   };
 
