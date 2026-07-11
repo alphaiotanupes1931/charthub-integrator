@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { MessageSquare, Plus, Trash2 } from "lucide-react";
+import { MessageSquare, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { listChatThreads, createChatThread, deleteChatThread } from "@/lib/chat.functions";
 
@@ -90,8 +90,9 @@ function ChatLayout() {
                   onClick={(e) => handleDelete(t.id, e)}
                   className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive p-1"
                   aria-label="Delete conversation"
+                  title="Delete conversation"
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <X className="h-3.5 w-3.5" />
                 </button>
               </div>
             );
