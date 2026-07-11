@@ -25,6 +25,7 @@ import {
   HeartPulse,
 } from "lucide-react";
 import { MentalStatePanel, upsertMentalEntry, SCORE_META, loadMental, type MentalEntry } from "@/components/MentalStatePanel";
+import { exportMyData } from "@/lib/privacy.functions";
 
 import {
   putTradeImage,
