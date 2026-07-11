@@ -632,6 +632,31 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                           <MessageResponse>{parsed.cleanText}</MessageResponse>
                         )
                       )}
+                      {(parsed.cleanText || g) && (
+                        <div className="flex items-center gap-1.5 pt-1 opacity-90">
+                          <span className="text-[10px] uppercase tracking-wider text-muted-foreground mr-1">Was this helpful?</span>
+                          <button
+                            type="button"
+                            disabled={!!feedbackByMsg[m.id]}
+                            onClick={() => void sendFeedback(m.id, 1, g ?? null)}
+                            className={`inline-flex h-7 w-7 items-center justify-center rounded border transition ${feedbackByMsg[m.id] === 1 ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-300" : "border-border bg-muted/50 text-muted-foreground hover:text-emerald-300 hover:border-emerald-500/40"}`}
+                            title="Helpful - teach Hermes"
+                            aria-label="Helpful"
+                          >
+                            <ThumbsUp className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={!!feedbackByMsg[m.id]}
+                            onClick={() => void sendFeedback(m.id, -1, g ?? null)}
+                            className={`inline-flex h-7 w-7 items-center justify-center rounded border transition ${feedbackByMsg[m.id] === -1 ? "border-red-500/50 bg-red-500/15 text-red-300" : "border-border bg-muted/50 text-muted-foreground hover:text-red-300 hover:border-red-500/40"}`}
+                            title="Not helpful - teach Hermes"
+                            aria-label="Not helpful"
+                          >
+                            <ThumbsDown className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </Message>
                 );
