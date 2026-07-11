@@ -825,6 +825,16 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
           </>
         )}
       </div>
+      <button
+        type="button"
+        onClick={handleScreenshot}
+        title="Save chart screenshot"
+        aria-label="Save chart screenshot"
+        className="absolute right-2 bottom-2 sm:right-3 sm:bottom-3 z-20 inline-flex items-center gap-1.5 rounded-md border border-border bg-background/80 hover:bg-background backdrop-blur px-2 py-1.5 text-[10px] font-mono uppercase tracking-wider text-foreground/90 hover:text-foreground transition-colors"
+      >
+        <Camera className="h-3.5 w-3.5" />
+        <span className="hidden sm:inline">Save</span>
+      </button>
       {sessions && (
         <div className="absolute right-2 top-11 sm:right-3 sm:top-12 z-10 max-w-[60%] rounded-md border border-border bg-background/70 backdrop-blur px-1.5 py-1 sm:px-2 text-[9px] sm:text-[10px] font-mono text-muted-foreground flex flex-wrap items-center justify-end gap-x-1.5 gap-y-0.5">
           {SESSIONS.map((s) => (
