@@ -25,6 +25,7 @@ import {
   HeartPulse,
 } from "lucide-react";
 import { MentalStatePanel, upsertMentalEntry, SCORE_META, loadMental, type MentalEntry } from "@/components/MentalStatePanel";
+import { exportMyData } from "@/lib/privacy.functions";
 
 import {
   putTradeImage,
@@ -177,19 +178,39 @@ function exportTradesCsv(trades: Trade[]) {
   URL.revokeObjectURL(url);
 }
 
-// Full backup: trades + mental state entries in one JSON file (portable across devices).
-function exportBackupJson(trades: Trade[]) {
+// Full backup: local trades + mental state + everything the server holds for this user
+// (profile, chats, hermes memory, alerts, notifications, invites, connections, subscriptions).
+async function exportBackupJson(trades: Trade[]) {
   let mental: unknown = [];
   try {
     const raw = localStorage.getItem(MENTAL_KEY);
     if (raw) mental = JSON.parse(raw);
   } catch { /* ignore */ }
+
+  // Compute wins/losses summary from local trades for a quick human-readable header.
+  const pnls = trades.map((t) => tradePnl(t)).filter((n) => Number.isFinite(n));
+  const wins = pnls.filter((n) => n > 0).length;
+  const losses = pnls.filter((n) => n < 0).length;
+  const breakeven = pnls.filter((n) => n === 0).length;
+  const netPnl = pnls.reduce((s, n) => s + n, 0);
+
+  let serverData: unknown = null;
+  let serverError: string | null = null;
+  try {
+    serverData = await exportMyData();
+  } catch (e) {
+    serverError = (e as Error).message ?? "Could not reach server for account data.";
+  }
+
   const payload = {
     kind: "trademind.backup",
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
+    summary: { total: trades.length, wins, losses, breakeven, netPnl },
     trades,
     mental,
+    account: serverData,
+    accountError: serverError,
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
