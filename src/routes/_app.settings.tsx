@@ -193,11 +193,33 @@ function SettingsPage() {
     if (!newCode || !profile?.email) return;
     setEmailingCode(true);
     try {
-      const subject = encodeURIComponent("Your TradeMind recovery code");
-      const body = encodeURIComponent(
-        `Keep this somewhere safe. You can use it to reset your TradeMind password if you ever lose access.\n\nRecovery code: ${newCode}\n\nDo not share this with anyone.`,
-      );
-      window.location.href = `mailto:${profile.email}?subject=${subject}&body=${body}`;
+      const subjectRaw = "Your TradeMind recovery code";
+      const bodyRaw = `Keep this somewhere safe. You can use it to reset your TradeMind password if you ever lose access.\n\nRecovery code: ${newCode}\n\nDo not share this with anyone.`;
+      const subject = encodeURIComponent(subjectRaw);
+      const body = encodeURIComponent(bodyRaw);
+      const mailto = `mailto:${profile.email}?subject=${subject}&body=${body}`;
+      const gmail = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(profile.email)}&su=${subject}&body=${body}`;
+
+      // Try to open the OS default mail client via an anchor click (more reliable than
+      // window.location.href, which silently no-ops when no handler is registered).
+      const a = document.createElement("a");
+      a.href = mailto;
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      // Fallback for users without a desktop mail handler: open Gmail's compose window
+      // and copy the code so they can paste it into whichever mail app they use.
+      window.open(gmail, "_blank", "noopener,noreferrer");
+      try {
+        await navigator.clipboard.writeText(
+          `To: ${profile.email}\nSubject: ${subjectRaw}\n\n${bodyRaw}`,
+        );
+        toast.success("Draft opened. Code copied to clipboard as a backup.");
+      } catch {
+        toast.success("Draft opened in a new tab.");
+      }
     } finally {
       setEmailingCode(false);
     }
