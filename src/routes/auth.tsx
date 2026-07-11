@@ -191,7 +191,11 @@ function AuthPage() {
       toast.success("Verified. Opening password reset...");
       window.location.href = actionLink;
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Couldn't verify your recovery code";
+      const raw = err instanceof Error ? err.message : "";
+      const isMismatch = /invalid|not\s*match|no\s*recovery|not\s*found|unauthor|forbidden|401|403|404/i.test(raw);
+      const msg = isMismatch
+        ? "That email or recovery code don't match. Double-check both."
+        : raw || "Couldn't verify your recovery code";
       setErrorMsg(msg);
       toast.error(msg);
     } finally {
