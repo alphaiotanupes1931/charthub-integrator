@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Camera } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import {
   createChart,
@@ -687,6 +688,24 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
 
 
 
+  const handleScreenshot = useCallback(() => {
+    const chart = chartRef.current;
+    if (!chart) return;
+    try {
+      const canvas = chart.takeScreenshot();
+      const url = canvas.toDataURL("image/png");
+      const a = document.createElement("a");
+      const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+      a.href = url;
+      a.download = `${ticker.replace(/[^\w]+/g, "_")}_${interval}_${stamp}.png`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch (e) {
+      console.error("screenshot failed", e);
+    }
+  }, [ticker, interval]);
+
   return (
     <div className={`relative h-full w-full ${className ?? ""}`}>
       <div ref={containerRef} className="absolute inset-0" />
@@ -806,6 +825,16 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
           </>
         )}
       </div>
+      <button
+        type="button"
+        onClick={handleScreenshot}
+        title="Save chart screenshot"
+        aria-label="Save chart screenshot"
+        className="absolute right-2 bottom-2 sm:right-3 sm:bottom-3 z-20 inline-flex items-center gap-1.5 rounded-md border border-border bg-background/80 hover:bg-background backdrop-blur px-2 py-1.5 text-[10px] font-mono uppercase tracking-wider text-foreground/90 hover:text-foreground transition-colors"
+      >
+        <Camera className="h-3.5 w-3.5" />
+        <span className="hidden sm:inline">Save</span>
+      </button>
       {sessions && (
         <div className="absolute right-2 top-11 sm:right-3 sm:top-12 z-10 max-w-[60%] rounded-md border border-border bg-background/70 backdrop-blur px-1.5 py-1 sm:px-2 text-[9px] sm:text-[10px] font-mono text-muted-foreground flex flex-wrap items-center justify-end gap-x-1.5 gap-y-0.5">
           {SESSIONS.map((s) => (
