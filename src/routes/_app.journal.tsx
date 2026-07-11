@@ -178,19 +178,39 @@ function exportTradesCsv(trades: Trade[]) {
   URL.revokeObjectURL(url);
 }
 
-// Full backup: trades + mental state entries in one JSON file (portable across devices).
-function exportBackupJson(trades: Trade[]) {
+// Full backup: local trades + mental state + everything the server holds for this user
+// (profile, chats, hermes memory, alerts, notifications, invites, connections, subscriptions).
+async function exportBackupJson(trades: Trade[]) {
   let mental: unknown = [];
   try {
     const raw = localStorage.getItem(MENTAL_KEY);
     if (raw) mental = JSON.parse(raw);
   } catch { /* ignore */ }
+
+  // Compute wins/losses summary from local trades for a quick human-readable header.
+  const closed = trades.filter((t) => typeof t.pnl === "number");
+  const wins = closed.filter((t) => (t.pnl ?? 0) > 0).length;
+  const losses = closed.filter((t) => (t.pnl ?? 0) < 0).length;
+  const breakeven = closed.filter((t) => (t.pnl ?? 0) === 0).length;
+  const netPnl = closed.reduce((s, t) => s + (t.pnl ?? 0), 0);
+
+  let serverData: unknown = null;
+  let serverError: string | null = null;
+  try {
+    serverData = await exportMyData();
+  } catch (e) {
+    serverError = (e as Error).message ?? "Could not reach server for account data.";
+  }
+
   const payload = {
     kind: "trademind.backup",
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
+    summary: { total: trades.length, wins, losses, breakeven, netPnl },
     trades,
     mental,
+    account: serverData,
+    accountError: serverError,
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
