@@ -450,11 +450,6 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
       }
     };
 
-    function clearChat() {
-      if (!confirm("Clear this conversation? (it's just the dashboard scratchpad)")) return;
-      setMessages([]);
-    }
-
     return (
       <div
         className="flex flex-col h-full min-h-0 bg-card overflow-hidden sm:rounded-xl border-y sm:border border-border shadow-2xl sm:shadow-xl relative"
