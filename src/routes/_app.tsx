@@ -91,6 +91,23 @@ export const Route = createFileRoute("/_app")({
   pendingComponent: GatePending,
   errorComponent: ({ error }) => <GateError error={error instanceof Error ? error : new Error("Dashboard access failed")} />,
   beforeLoad: async ({ location }) => {
+    // Admin testing bypass — set from the auth page's "Admin testing" button.
+    if (typeof window !== "undefined") {
+      try {
+        if (sessionStorage.getItem("trademind.adminTesting") === "1") {
+          return {
+            user: {
+              id: "00000000-0000-0000-0000-000000000000",
+              email: "admin-test@trademind.local",
+              user_metadata: { display_name: "Admin Tester" },
+              app_metadata: {},
+              aud: "authenticated",
+              created_at: new Date().toISOString(),
+            } as unknown as Awaited<ReturnType<typeof getHydratedUser>>,
+          };
+        }
+      } catch { /* ignore */ }
+    }
     const user = await getHydratedUser();
     if (!user) {
       throw redirect({ to: "/auth", search: { redirect: location.href, mode: "signin" } });
