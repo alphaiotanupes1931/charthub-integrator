@@ -188,11 +188,11 @@ async function exportBackupJson(trades: Trade[]) {
   } catch { /* ignore */ }
 
   // Compute wins/losses summary from local trades for a quick human-readable header.
-  const closed = trades.filter((t) => typeof t.pnl === "number");
-  const wins = closed.filter((t) => (t.pnl ?? 0) > 0).length;
-  const losses = closed.filter((t) => (t.pnl ?? 0) < 0).length;
-  const breakeven = closed.filter((t) => (t.pnl ?? 0) === 0).length;
-  const netPnl = closed.reduce((s, t) => s + (t.pnl ?? 0), 0);
+  const pnls = trades.map((t) => tradePnl(t)).filter((n) => Number.isFinite(n));
+  const wins = pnls.filter((n) => n > 0).length;
+  const losses = pnls.filter((n) => n < 0).length;
+  const breakeven = pnls.filter((n) => n === 0).length;
+  const netPnl = pnls.reduce((s, n) => s + n, 0);
 
   let serverData: unknown = null;
   let serverError: string | null = null;
