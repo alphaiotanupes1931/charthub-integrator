@@ -1059,6 +1059,17 @@ function TradeFormModal({
   const [ruleBrokenNote, setRuleBrokenNote] = useState<string>(editing?.ruleBrokenNote ?? "");
   const [lossCategory, setLossCategory] = useState<LossCategory | "">(editing?.lossCategory ?? "");
 
+  // Mental state for this trade's date — two birds, one stone.
+  const [mentalScore, setMentalScore] = useState<1 | 2 | 3 | 4 | 5 | null>(null);
+  const [mentalMood, setMentalMood] = useState("");
+  useEffect(() => {
+    try {
+      const existing = loadMental().find((e) => e.date === date);
+      setMentalScore(existing?.score ?? null);
+      setMentalMood(existing?.mood ?? "");
+    } catch { /* ignore */ }
+  }, [date]);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pendingImage, setPendingImage] = useState<Blob | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
