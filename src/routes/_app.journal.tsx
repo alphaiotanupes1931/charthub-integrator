@@ -22,7 +22,9 @@ import {
   Filter as FilterIcon,
   Bookmark,
   DatabaseBackup,
+  HeartPulse,
 } from "lucide-react";
+import { MentalStatePanel, upsertMentalEntry, SCORE_META, loadMental, type MentalEntry } from "@/components/MentalStatePanel";
 
 import {
   putTradeImage,
