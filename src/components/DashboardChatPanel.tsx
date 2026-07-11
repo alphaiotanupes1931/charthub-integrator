@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { Link } from "@tanstack/react-router";
-import { MessageSquare, ExternalLink, Trash2, X, Minus, Volume2, VolumeX, Crosshair, Square, Paperclip, ImageIcon } from "lucide-react";
+import { MessageSquare, ExternalLink, X, Minus, Volume2, VolumeX, Crosshair, Square, Paperclip, ImageIcon } from "lucide-react";
 import { COACH_ICON_META, DEFAULT_COACH_ICON } from "@/lib/coachMeta";
 import {
   Conversation,
@@ -504,14 +504,6 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
           </div>
 
           <div className="flex items-center gap-0.5 shrink-0">
-            <button
-              onClick={clearChat}
-              className="h-9 w-9 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60"
-              title="Clear conversation"
-              aria-label="Clear conversation"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
             <Link
               to="/chat"
               className="hidden sm:inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60"
