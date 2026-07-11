@@ -3,7 +3,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { Link } from "@tanstack/react-router";
-import { MessageSquare, ExternalLink, X, Minus, Volume2, VolumeX, Crosshair, Square, Paperclip, ImageIcon } from "lucide-react";
+import { MessageSquare, ExternalLink, X, Minus, Volume2, VolumeX, Crosshair, Square, Paperclip, ImageIcon, ThumbsUp, ThumbsDown } from "lucide-react";
+import { recordHermesFeedback } from "@/lib/agents/hermes.functions";
 import { COACH_ICON_META, DEFAULT_COACH_ICON } from "@/lib/coachMeta";
 import {
   Conversation,
@@ -256,6 +257,28 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
     // Voice defaults to muted per-message; the user must tap the speaker to unmute.
     const [voiceUnmutedIds, setVoiceUnmutedIds] = useState<Set<string>>(() => new Set());
     const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
+    const [feedbackByMsg, setFeedbackByMsg] = useState<Record<string, 1 | -1>>({});
+    const submitFeedback = useServerFn(recordHermesFeedback);
+    const sendFeedback = useCallback(async (msgId: string, rating: 1 | -1, grade: ChartGrade | null) => {
+      if (feedbackByMsg[msgId]) return;
+      setFeedbackByMsg((prev) => ({ ...prev, [msgId]: rating }));
+      try {
+        await submitFeedback({ data: {
+          kind: "scan",
+          ticker: chartRef.current?.ticker ?? null,
+          interval: chartRef.current?.intervalLabel ?? null,
+          lens: readActiveLensId(),
+          coach: readActiveCoach(),
+          rating,
+          note: null,
+          context: grade ? { grade: grade.grade, bias: grade.bias, entry: grade.entry, stop: grade.stop } : {},
+        } });
+        toast.success(rating === 1 ? "Thanks - Hermes will remember this" : "Noted - Hermes will down-weight this");
+      } catch (e) {
+        setFeedbackByMsg((prev) => { const n = { ...prev }; delete n[msgId]; return n; });
+        toast.error(e instanceof Error ? e.message : "Could not save feedback");
+      }
+    }, [feedbackByMsg, submitFeedback]);
 
     const checkAndReserveQuota = useCallback((): boolean => {
       if (isAdmin) return true;
@@ -608,6 +631,31 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                         ) : (
                           <MessageResponse>{parsed.cleanText}</MessageResponse>
                         )
+                      )}
+                      {(parsed.cleanText || g) && (
+                        <div className="flex items-center gap-1.5 pt-1 opacity-90">
+                          <span className="text-[10px] uppercase tracking-wider text-muted-foreground mr-1">Was this helpful?</span>
+                          <button
+                            type="button"
+                            disabled={!!feedbackByMsg[m.id]}
+                            onClick={() => void sendFeedback(m.id, 1, g ?? null)}
+                            className={`inline-flex h-7 w-7 items-center justify-center rounded border transition ${feedbackByMsg[m.id] === 1 ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-300" : "border-border bg-muted/50 text-muted-foreground hover:text-emerald-300 hover:border-emerald-500/40"}`}
+                            title="Helpful - teach Hermes"
+                            aria-label="Helpful"
+                          >
+                            <ThumbsUp className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={!!feedbackByMsg[m.id]}
+                            onClick={() => void sendFeedback(m.id, -1, g ?? null)}
+                            className={`inline-flex h-7 w-7 items-center justify-center rounded border transition ${feedbackByMsg[m.id] === -1 ? "border-red-500/50 bg-red-500/15 text-red-300" : "border-border bg-muted/50 text-muted-foreground hover:text-red-300 hover:border-red-500/40"}`}
+                            title="Not helpful - teach Hermes"
+                            aria-label="Not helpful"
+                          >
+                            <ThumbsDown className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       )}
                     </div>
                   </Message>
