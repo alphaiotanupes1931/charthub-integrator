@@ -363,7 +363,8 @@ export function NotificationBell() {
               )}
             </div>
           </aside>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );
