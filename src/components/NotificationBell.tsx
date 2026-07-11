@@ -194,7 +194,7 @@ export function NotificationBell() {
 
       {open && (
         <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="Notifications">
-          <div className="absolute inset-0 bg-background/95" onClick={() => setOpen(false)} />
+          <div className="absolute inset-0 bg-background" onClick={() => setOpen(false)} />
           <aside className="absolute right-0 top-0 h-full w-full sm:w-[440px] bg-card border-l border-border shadow-2xl flex flex-col animate-in slide-in-from-right duration-200">
             {/* Header */}
             <div className="relative shrink-0 px-5 pt-5 pb-4 border-b border-border/60 bg-gradient-to-b from-primary/[0.06] to-transparent">
