@@ -117,6 +117,18 @@ const SECTIONS: Section[] = [
     ],
   },
   {
+    id: "show-me",
+    group: "AI & voice",
+    title: "'Show me' on the chart",
+    blurb: "Ask the AI to draw its answer directly on the chart you're viewing.",
+    items: [
+      { q: "How to use it", a: "In the chat, start your question with 'show me'. Examples: 'show me the FVG', 'show me where to enter', 'show me the liquidity above', 'show me support and resistance'. The AI marks the levels and zones on your live chart." },
+      { q: "What it can draw", a: "Support and resistance, fair value gaps (FVG), order blocks, liquidity pools, swing highs and lows, proposed entry / stop / take-profit areas, and trendlines." },
+      { q: "Clearing the drawings", a: "Switch symbols, run a new scan, or ask a follow-up that doesn't need drawings and the chart resets. You can also toggle overlays off from the chart controls." },
+      { q: "Tips", a: "Be specific about the timeframe or level you want. 'Show me the 1H FVG below price' works better than 'show me stuff'." },
+    ],
+  },
+  {
     id: "voice",
     group: "AI & voice",
     title: "Voice",
