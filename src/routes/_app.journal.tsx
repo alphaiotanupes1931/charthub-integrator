@@ -261,7 +261,7 @@ function applyFilter(trades: Trade[], f: InsightsFilter): Trade[] {
 
 
 function JournalPage() {
-  const [tab, setTab] = useState<"calendar" | "trades" | "review" | "insights">("calendar");
+  const [tab, setTab] = useState<"calendar" | "trades" | "review" | "insights" | "mental">("calendar");
   const [cursor, setCursor] = useState(() => {
     const d = new Date(); d.setDate(1); return d;
   });
@@ -341,6 +341,7 @@ function JournalPage() {
     { id: "trades" as const, label: "Trades", icon: BookOpen },
     { id: "review" as const, label: "Wins vs Losses", icon: BarChart3 },
     { id: "insights" as const, label: "Insights", icon: Brain },
+    { id: "mental" as const, label: "Mental State", icon: HeartPulse },
   ];
 
   return (
@@ -466,6 +467,10 @@ function JournalPage() {
 
       {tab === "insights" && (
         <InsightsPanel trades={sortedTrades} />
+      )}
+
+      {tab === "mental" && (
+        <MentalStatePanel />
       )}
 
       {formOpen && (
