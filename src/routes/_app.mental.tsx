@@ -2,7 +2,8 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_app/mental")({
   beforeLoad: () => {
-    throw redirect({ to: "/journal", search: { tab: "mental" } as never });
+    throw redirect({ to: "/journal" });
   },
   component: () => null,
 });
+
