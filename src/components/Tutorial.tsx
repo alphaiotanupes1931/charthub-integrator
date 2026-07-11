@@ -63,6 +63,13 @@ const STEPS: Step[] = [
     route: "/dashboard",
   },
   {
+    icon: Lightbulb,
+    title: "'Show me' on the chart",
+    body: "In chat, start any question with 'show me' - like 'show me the FVG' or 'show me where to enter'. The AI draws it directly on the chart you're viewing.",
+    target: '[data-tour="coach-bubble"]',
+    route: "/dashboard",
+  },
+  {
     icon: NotebookPen,
     title: "Journal every trade",
     body: "Log entries, exits, P&L, and notes. The AI uses your journal to weight every recommendation.",
