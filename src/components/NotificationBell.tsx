@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
@@ -192,8 +193,8 @@ export function NotificationBell() {
         )}
       </button>
 
-      {open && (
-        <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="Notifications">
+      {open && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[100]" role="dialog" aria-modal="true" aria-label="Notifications">
           <div className="absolute inset-0 bg-background" onClick={() => setOpen(false)} />
           <aside className="absolute right-0 top-0 h-full w-full sm:w-[440px] bg-card border-l border-border shadow-2xl flex flex-col animate-in slide-in-from-right duration-200">
             {/* Header */}
@@ -362,7 +363,8 @@ export function NotificationBell() {
               )}
             </div>
           </aside>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );
