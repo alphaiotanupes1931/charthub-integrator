@@ -1360,6 +1360,40 @@ function TradeFormModal({
             )}
           </Field>
 
+          <div className="rounded-lg border border-border bg-card/60 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <HeartPulse className="h-4 w-4 text-primary" />
+              <div className="text-sm font-semibold">Mental state for this day</div>
+              <div className="text-[10px] text-muted-foreground ml-auto">optional, saves to your daily log</div>
+            </div>
+            <div className="grid grid-cols-5 gap-2">
+              {([1, 2, 3, 4, 5] as const).map((n) => {
+                const meta = SCORE_META[n];
+                const active = mentalScore === n;
+                return (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setMentalScore(active ? null : n)}
+                    className={`rounded-lg border p-2 text-center transition ${active ? "border-primary bg-primary/10" : "border-border hover:border-primary/40"}`}
+                  >
+                    <div className={`text-lg font-bold ${meta.color}`}>{n}</div>
+                    <div className="text-[10px] text-muted-foreground">{meta.label}</div>
+                  </button>
+                );
+              })}
+            </div>
+            {mentalScore != null && (
+              <input
+                value={mentalMood}
+                onChange={(e) => setMentalMood(e.target.value)}
+                placeholder="Mood in a word (focused, tired, anxious...)"
+                className="mt-3 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
+            )}
+          </div>
+
+
           <div className="rounded-lg border border-border bg-background/50 p-3 grid grid-cols-3 gap-3 text-sm">
             <div>
               <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">P&amp;L</div>
