@@ -257,6 +257,28 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
     // Voice defaults to muted per-message; the user must tap the speaker to unmute.
     const [voiceUnmutedIds, setVoiceUnmutedIds] = useState<Set<string>>(() => new Set());
     const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
+    const [feedbackByMsg, setFeedbackByMsg] = useState<Record<string, 1 | -1>>({});
+    const submitFeedback = useServerFn(recordHermesFeedback);
+    const sendFeedback = useCallback(async (msgId: string, rating: 1 | -1, grade: ChartGrade | null) => {
+      if (feedbackByMsg[msgId]) return;
+      setFeedbackByMsg((prev) => ({ ...prev, [msgId]: rating }));
+      try {
+        await submitFeedback({ data: {
+          kind: "scan",
+          ticker: chartRef.current?.ticker ?? null,
+          interval: chartRef.current?.intervalLabel ?? null,
+          lens: readActiveLensId(),
+          coach: readActiveCoach(),
+          rating,
+          note: null,
+          context: grade ? { grade: grade.grade, bias: grade.bias, entry: grade.entry, stop: grade.stop } : {},
+        } });
+        toast.success(rating === 1 ? "Thanks - Hermes will remember this" : "Noted - Hermes will down-weight this");
+      } catch (e) {
+        setFeedbackByMsg((prev) => { const n = { ...prev }; delete n[msgId]; return n; });
+        toast.error(e instanceof Error ? e.message : "Could not save feedback");
+      }
+    }, [feedbackByMsg, submitFeedback]);
 
     const checkAndReserveQuota = useCallback((): boolean => {
       if (isAdmin) return true;
