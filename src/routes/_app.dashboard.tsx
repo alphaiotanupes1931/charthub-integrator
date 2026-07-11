@@ -459,6 +459,14 @@ function Dashboard() {
       setResult(raw ? (JSON.parse(raw) as ScanResult) : null);
     } catch { setResult(null); }
   }, [symbol.ticker]);
+
+  // Clear any stale AI signal/annotations when the user switches symbols so
+  // the previous ticker's grade card doesn't hang over the new chart.
+  useEffect(() => {
+    setAiGrade(null);
+    setAiAnnotationsRaw([]);
+    setAiConcept(null);
+  }, [symbol.ticker]);
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
