@@ -10,7 +10,7 @@ export const exportMyData = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
 
-    const [profile, threads, messages, invites, connections, aiUsage, roles] = await Promise.all([
+    const [profile, threads, messages, invites, connections, aiUsage, roles, hermesFeedback, hermesLessons, notifications, priceAlerts, subscriptions] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
       supabase.from("chat_threads").select("*").eq("user_id", userId),
       supabase.from("chat_messages").select("*").eq("user_id", userId),
@@ -18,6 +18,11 @@ export const exportMyData = createServerFn({ method: "POST" })
       supabase.from("trader_connections").select("*").or(`user_a.eq.${userId},user_b.eq.${userId}`),
       supabase.from("ai_usage").select("*").eq("user_id", userId),
       supabase.from("user_roles").select("*").eq("user_id", userId),
+      supabase.from("hermes_feedback").select("*").eq("user_id", userId),
+      supabase.from("hermes_lessons").select("*").eq("user_id", userId),
+      supabase.from("notifications").select("*").eq("user_id", userId),
+      supabase.from("price_alerts").select("*").eq("user_id", userId),
+      supabase.from("subscriptions").select("*").eq("user_id", userId),
     ]);
 
     return {
@@ -30,7 +35,13 @@ export const exportMyData = createServerFn({ method: "POST" })
       traderConnections: connections.data ?? [],
       aiUsage: aiUsage.data ?? [],
       roles: roles.data ?? [],
-      note: "Trade journal entries are stored locally in your browser and are not included in this export.",
+      hermesMemory: {
+        feedback: hermesFeedback.data ?? [],
+        lessons: hermesLessons.data ?? [],
+      },
+      notifications: notifications.data ?? [],
+      priceAlerts: priceAlerts.data ?? [],
+      subscriptions: subscriptions.data ?? [],
     };
   });
 
