@@ -22,7 +22,9 @@ import {
   Filter as FilterIcon,
   Bookmark,
   DatabaseBackup,
+  HeartPulse,
 } from "lucide-react";
+import { MentalStatePanel, upsertMentalEntry, SCORE_META, loadMental, type MentalEntry } from "@/components/MentalStatePanel";
 
 import {
   putTradeImage,
@@ -259,7 +261,7 @@ function applyFilter(trades: Trade[], f: InsightsFilter): Trade[] {
 
 
 function JournalPage() {
-  const [tab, setTab] = useState<"calendar" | "trades" | "review" | "insights">("calendar");
+  const [tab, setTab] = useState<"calendar" | "trades" | "review" | "insights" | "mental">("calendar");
   const [cursor, setCursor] = useState(() => {
     const d = new Date(); d.setDate(1); return d;
   });
@@ -339,6 +341,7 @@ function JournalPage() {
     { id: "trades" as const, label: "Trades", icon: BookOpen },
     { id: "review" as const, label: "Wins vs Losses", icon: BarChart3 },
     { id: "insights" as const, label: "Insights", icon: Brain },
+    { id: "mental" as const, label: "Mental State", icon: HeartPulse },
   ];
 
   return (
@@ -464,6 +467,10 @@ function JournalPage() {
 
       {tab === "insights" && (
         <InsightsPanel trades={sortedTrades} />
+      )}
+
+      {tab === "mental" && (
+        <MentalStatePanel />
       )}
 
       {formOpen && (
@@ -1052,6 +1059,17 @@ function TradeFormModal({
   const [ruleBrokenNote, setRuleBrokenNote] = useState<string>(editing?.ruleBrokenNote ?? "");
   const [lossCategory, setLossCategory] = useState<LossCategory | "">(editing?.lossCategory ?? "");
 
+  // Mental state for this trade's date — two birds, one stone.
+  const [mentalScore, setMentalScore] = useState<1 | 2 | 3 | 4 | 5 | null>(null);
+  const [mentalMood, setMentalMood] = useState("");
+  useEffect(() => {
+    try {
+      const existing = loadMental().find((e) => e.date === date);
+      setMentalScore(existing?.score ?? null);
+      setMentalMood(existing?.mood ?? "");
+    } catch { /* ignore */ }
+  }, [date]);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pendingImage, setPendingImage] = useState<Blob | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -1137,6 +1155,16 @@ function TradeFormModal({
       await putTradeImage(id, pendingImage);
     } else if (removeImage && editing?.hasImage) {
       await deleteTradeImage(id);
+    }
+    if (mentalScore != null) {
+      const existing = loadMental().find((e) => e.date === date);
+      const entryToSave: MentalEntry = {
+        ...(existing ?? { date, createdAt: Date.now(), score: mentalScore }),
+        date,
+        score: mentalScore,
+        mood: mentalMood.trim() || existing?.mood,
+      };
+      upsertMentalEntry(entryToSave);
     }
     onSave({ ...preview, id });
   };
@@ -1331,6 +1359,40 @@ function TradeFormModal({
               </button>
             )}
           </Field>
+
+          <div className="rounded-lg border border-border bg-card/60 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <HeartPulse className="h-4 w-4 text-primary" />
+              <div className="text-sm font-semibold">Mental state for this day</div>
+              <div className="text-[10px] text-muted-foreground ml-auto">optional, saves to your daily log</div>
+            </div>
+            <div className="grid grid-cols-5 gap-2">
+              {([1, 2, 3, 4, 5] as const).map((n) => {
+                const meta = SCORE_META[n];
+                const active = mentalScore === n;
+                return (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setMentalScore(active ? null : n)}
+                    className={`rounded-lg border p-2 text-center transition ${active ? "border-primary bg-primary/10" : "border-border hover:border-primary/40"}`}
+                  >
+                    <div className={`text-lg font-bold ${meta.color}`}>{n}</div>
+                    <div className="text-[10px] text-muted-foreground">{meta.label}</div>
+                  </button>
+                );
+              })}
+            </div>
+            {mentalScore != null && (
+              <input
+                value={mentalMood}
+                onChange={(e) => setMentalMood(e.target.value)}
+                placeholder="Mood in a word (focused, tired, anxious...)"
+                className="mt-3 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
+            )}
+          </div>
+
 
           <div className="rounded-lg border border-border bg-background/50 p-3 grid grid-cols-3 gap-3 text-sm">
             <div>
