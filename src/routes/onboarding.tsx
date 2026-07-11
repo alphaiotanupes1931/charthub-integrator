@@ -92,13 +92,33 @@ function OnboardingPage() {
     }
   }
 
-  function emailToSelf() {
+  async function emailToSelf() {
     if (!email) return;
-    const subject = encodeURIComponent("Your TradeMind recovery code");
-    const body = encodeURIComponent(
-      `Keep this safe. You'll use it to recover your TradeMind account if you forget your password.\n\nRecovery code: ${recoveryCode}\n\nDon't share this with anyone.`,
-    );
-    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+    const subjectRaw = "Your TradeMind recovery code";
+    const bodyRaw = `Keep this safe. You'll use it to recover your TradeMind account if you forget your password.\n\nRecovery code: ${recoveryCode}\n\nDon't share this with anyone.`;
+    const subject = encodeURIComponent(subjectRaw);
+    const body = encodeURIComponent(bodyRaw);
+    const mailto = `mailto:${email}?subject=${subject}&body=${body}`;
+    const gmail = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${subject}&body=${body}`;
+
+    // Try the OS default mail client first (anchor click is more reliable than location.href).
+    const a = document.createElement("a");
+    a.href = mailto;
+    a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    // Fallback: open Gmail compose in a new tab and copy the code so any mail app works.
+    window.open(gmail, "_blank", "noopener,noreferrer");
+    try {
+      await navigator.clipboard.writeText(
+        `To: ${email}\nSubject: ${subjectRaw}\n\n${bodyRaw}`,
+      );
+      toast.success("Draft opened. Code copied to clipboard as a backup.");
+    } catch {
+      toast.success("Draft opened in a new tab.");
+    }
   }
 
   async function finishOnboarding() {
