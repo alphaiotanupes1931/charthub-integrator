@@ -688,6 +688,24 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
 
 
 
+  const handleScreenshot = useCallback(() => {
+    const chart = chartRef.current;
+    if (!chart) return;
+    try {
+      const canvas = chart.takeScreenshot();
+      const url = canvas.toDataURL("image/png");
+      const a = document.createElement("a");
+      const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+      a.href = url;
+      a.download = `${ticker.replace(/[^\w]+/g, "_")}_${interval}_${stamp}.png`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch (e) {
+      console.error("screenshot failed", e);
+    }
+  }, [ticker, interval]);
+
   return (
     <div className={`relative h-full w-full ${className ?? ""}`}>
       <div ref={containerRef} className="absolute inset-0" />
