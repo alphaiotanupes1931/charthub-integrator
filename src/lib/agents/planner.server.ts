@@ -147,6 +147,9 @@ function sanitizePlan(plan: RawPlan, snap: MarketSnapshot, memo: ResearchMemo): 
   }
 
   return { ...plan, entry, stop, tp1, tp2 };
+}
+
+
 
 function decimalsFor(px: number): number {
   if (px >= 1000) return 2;
