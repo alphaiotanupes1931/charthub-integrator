@@ -111,6 +111,43 @@ function shouldReplaceNoEntry(plan: RawPlan, snap: MarketSnapshot, memo: Researc
   return hasDirectionalConsensus || (hasDirectionalStructure && modelWantedDirection);
 }
 
+// Sanity-check the model's plan against price/ATR so we don't ship absurd
+// entries. Fixes the "always BUY STOP" bug where the model biased every long
+// setup as a breakout order far above current price.
+function sanitizePlan(plan: RawPlan, snap: MarketSnapshot, memo: ResearchMemo): RawPlan {
+  const last = snap.lastPrice;
+  const atr = Math.max(snap.stats.atr14 || Math.abs(last) * 0.002, Math.abs(last) * 0.0005);
+  const bias = normalizeBias(plan.bias);
+  if (bias === "Neutral" || !isFinite(last) || last <= 0) return plan;
+
+  let { entry, stop, tp1, tp2 } = plan;
+  if (![entry, stop, tp1, tp2].every((n) => Number.isFinite(n) && n > 0)) {
+    return systematicPlan(snap, memo, "Model returned invalid numbers; using systematic plan.");
+  }
+
+  // 1. Clamp runaway entry: no entry more than 2x ATR away from price.
+  const maxDist = atr * 2;
+  if (Math.abs(entry - last) > maxDist) {
+    // Snap toward price — keep the model's direction bias but don't chase.
+    entry = bias === "Long"
+      ? (entry > last ? last + atr * 0.25 : last - atr * 0.5)
+      : (entry < last ? last - atr * 0.25 : last + atr * 0.5);
+  }
+
+  // 2. Enforce stop/TP on correct sides of entry.
+  const stopDist = Math.max(Math.abs(entry - stop), atr * 0.75);
+  if (bias === "Long") {
+    stop = entry - stopDist;
+    if (tp1 <= entry) tp1 = entry + stopDist * 1.5;
+    if (tp2 <= tp1)   tp2 = entry + stopDist * 3;
+  } else {
+    stop = entry + stopDist;
+    if (tp1 >= entry) tp1 = entry - stopDist * 1.5;
+    if (tp2 >= tp1)   tp2 = entry - stopDist * 3;
+  }
+
+  return { ...plan, entry, stop, tp1, tp2 };
+
 function decimalsFor(px: number): number {
   if (px >= 1000) return 2;
   if (px >= 10) return 3;
