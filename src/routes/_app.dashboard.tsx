@@ -651,6 +651,33 @@ function Dashboard() {
     window.setTimeout(trySend, 0);
   };
 
+  const sanitizeVisibleGrade = (grade: import("@/lib/chartAnnotations").ChartGrade | null) => {
+    if (!grade) return grade;
+    const last = snapshot?.lastPrice;
+    const bias = grade.bias ?? "neutral";
+    if (!last || !isFinite(last) || last <= 0 || typeof grade.entry !== "number" || typeof grade.stop !== "number") return grade;
+    if (!isFinite(grade.entry) || !isFinite(grade.stop)) return grade;
+    const riskBase = Math.max(Math.abs(grade.entry - grade.stop), last * 0.001);
+    const tol = Math.max(last * 0.0001, riskBase * 0.05);
+    let entry = grade.entry;
+    let stop = grade.stop;
+    let tp1 = grade.tp1;
+    let tp2 = grade.tp2;
+    if (bias === "long" && entry > last + tol) entry = last;
+    if (bias === "short" && entry < last - tol) entry = last;
+    const risk = Math.max(Math.abs(entry - stop), last * 0.001);
+    if (bias === "long") {
+      stop = entry - risk;
+      tp1 = typeof tp1 === "number" && isFinite(tp1) ? Math.max(tp1, entry + risk * 1.5) : entry + risk * 1.5;
+      tp2 = typeof tp2 === "number" && isFinite(tp2) ? Math.max(tp2, tp1 + risk * 1.5, entry + risk * 3) : entry + risk * 3;
+    } else if (bias === "short") {
+      stop = entry + risk;
+      tp1 = typeof tp1 === "number" && isFinite(tp1) ? Math.min(tp1, entry - risk * 1.5) : entry - risk * 1.5;
+      tp2 = typeof tp2 === "number" && isFinite(tp2) ? Math.min(tp2, tp1 - risk * 1.5, entry - risk * 3) : entry - risk * 3;
+    }
+    return { ...grade, entry, stop, tp1, tp2 };
+  };
+
   useEffect(() => {
     const q = search.ask?.trim();
     if (!q || askedRef.current === q) return;
@@ -1371,7 +1398,7 @@ function Dashboard() {
                         scanning={scanning}
                         threadIdOverride={activeThreadId}
                         onAnnotations={setAiAnnotationsRaw}
-                        onGrade={setAiGrade}
+                        onGrade={(g) => setAiGrade(sanitizeVisibleGrade(g))}
                         onConcept={setAiConcept}
                         chart={{
                           ticker: symbolLabel(symbol),
@@ -1493,7 +1520,7 @@ function Dashboard() {
                   scanning={scanning}
                   threadIdOverride={activeThreadId}
                   onAnnotations={setAiAnnotationsRaw}
-                  onGrade={setAiGrade}
+                  onGrade={(g) => setAiGrade(sanitizeVisibleGrade(g))}
                   onConcept={setAiConcept}
                   chart={{
                     ticker: symbolLabel(symbol),
