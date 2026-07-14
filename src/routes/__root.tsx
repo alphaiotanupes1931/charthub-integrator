@@ -135,8 +135,29 @@ function RootComponent() {
   const router = useRouter();
 
   useEffect(() => {
+    // Auto-recover from stale deploy: when a lazy-loaded route chunk 404s
+    // (old index.html referencing hashed JS that no longer exists), reload once
+    // to pull the fresh index.html + new chunk hashes.
+    const RELOAD_KEY = "trademind.chunkReload";
+    const isChunkError = (msg: string) =>
+      /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|ChunkLoadError/i.test(msg);
+    const tryReload = (msg: string) => {
+      if (!isChunkError(msg)) return;
+      try {
+        const last = Number(sessionStorage.getItem(RELOAD_KEY) || "0");
+        if (Date.now() - last < 10_000) return; // avoid loops
+        sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
+      } catch { /* ignore */ }
+      window.location.reload();
+    };
+    const onPreload = (e: Event) => tryReload(String((e as CustomEvent).detail?.message ?? e.type));
+    const onError = (e: ErrorEvent) => tryReload(String(e.message ?? ""));
+    const onRejection = (e: PromiseRejectionEvent) => tryReload(String((e.reason as { message?: string })?.message ?? e.reason ?? ""));
+    window.addEventListener("vite:preloadError", onPreload);
+    window.addEventListener("error", onError);
+    window.addEventListener("unhandledrejection", onRejection);
+
     // Single global auth state listener: invalidate router/cache on identity changes.
-    // We import the client lazily to avoid pulling it into SSR.
     let unsub: (() => void) | undefined;
     import("@/integrations/supabase/client").then(({ supabase }) => {
       const { data } = supabase.auth.onAuthStateChange((event) => {
@@ -146,7 +167,12 @@ function RootComponent() {
       });
       unsub = () => data.subscription.unsubscribe();
     });
-    return () => unsub?.();
+    return () => {
+      window.removeEventListener("vite:preloadError", onPreload);
+      window.removeEventListener("error", onError);
+      window.removeEventListener("unhandledrejection", onRejection);
+      unsub?.();
+    };
   }, [router, queryClient]);
 
   return (
