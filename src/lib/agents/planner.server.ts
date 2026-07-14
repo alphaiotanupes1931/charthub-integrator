@@ -126,12 +126,15 @@ function sanitizePlan(plan: RawPlan, snap: MarketSnapshot, memo: ResearchMemo): 
   }
 
   // 1. Clamp runaway entry: no entry more than 2x ATR away from price.
+  // When we snap entry back toward price, the model's stop/TPs are usually
+  // nonsense (still anchored to the old entry), so rebuild them from ATR.
   const maxDist = atr * 2;
+  let entryWasClamped = false;
   if (Math.abs(entry - last) > maxDist) {
-    // Snap toward price, keep the model's direction bias but don't chase.
     entry = bias === "Long"
       ? (entry > last ? last : last - atr * 0.5)
       : (entry < last ? last : last + atr * 0.5);
+    entryWasClamped = true;
   }
 
   // 2. Force pullback entries. Longs enter BELOW live price (BUY LIMIT),
@@ -146,17 +149,25 @@ function sanitizePlan(plan: RawPlan, snap: MarketSnapshot, memo: ResearchMemo): 
     entry = last + buffer;
   }
 
-  // 3. Enforce stop/TP on correct sides of entry.
-  const stopDist = Math.max(Math.abs(entry - stop), atr * 0.75);
+  // 3. Enforce stop/TP on correct sides of entry, and cap stop distance so
+  // the model can't ship a 100x-ATR stop.
+  const rawStopDist = entryWasClamped ? atr * 1.25 : Math.abs(entry - stop);
+  const stopDist = Math.min(Math.max(rawStopDist, atr * 0.75), atr * 3);
   if (bias === "Long") {
     stop = entry - stopDist;
-    tp1 = Math.max(tp1, entry + stopDist * 1.5);
-    tp2 = Math.max(tp2, tp1 + stopDist * 1.5, entry + stopDist * 3);
+    tp1 = entryWasClamped ? entry + stopDist * 1.5 : Math.max(tp1, entry + stopDist * 1.5);
+    tp2 = entryWasClamped ? entry + stopDist * 3 : Math.max(tp2, tp1 + stopDist * 1.5, entry + stopDist * 3);
+    // TPs must be above entry
+    if (tp1 <= entry) tp1 = entry + stopDist * 1.5;
+    if (tp2 <= tp1) tp2 = entry + stopDist * 3;
   } else {
     stop = entry + stopDist;
-    tp1 = Math.min(tp1, entry - stopDist * 1.5);
-    tp2 = Math.min(tp2, tp1 - stopDist * 1.5, entry - stopDist * 3);
+    tp1 = entryWasClamped ? entry - stopDist * 1.5 : Math.min(tp1, entry - stopDist * 1.5);
+    tp2 = entryWasClamped ? entry - stopDist * 3 : Math.min(tp2, tp1 - stopDist * 1.5, entry - stopDist * 3);
+    if (tp1 >= entry) tp1 = entry - stopDist * 1.5;
+    if (tp2 >= tp1) tp2 = entry - stopDist * 3;
   }
+
 
   return { ...plan, entry, stop, tp1, tp2 };
 }
