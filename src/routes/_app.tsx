@@ -18,17 +18,40 @@ function GatePending() {
 }
 
 function GateError({ error }: { error: Error }) {
+  const msg = error?.message ?? "";
+  const isChunkError = /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|ChunkLoadError/i.test(msg);
+
+  // Stale-deploy self-heal: the browser is holding an old index.html pointing at
+  // a JS chunk hash that no longer exists on the server. One hard reload pulls
+  // the fresh index.html and its new chunk map.
+  if (typeof window !== "undefined" && isChunkError) {
+    const RELOAD_KEY = "trademind.chunkReload";
+    try {
+      const last = Number(sessionStorage.getItem(RELOAD_KEY) || "0");
+      if (Date.now() - last > 10_000) {
+        sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
+        window.location.reload();
+      }
+    } catch { /* ignore */ }
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-4">
       <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 text-center shadow-sm">
-        <h1 className="text-lg font-semibold">Dashboard access did not load</h1>
+        <h1 className="text-lg font-semibold">
+          {isChunkError ? "Updating to the latest version…" : "Dashboard access did not load"}
+        </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          {error.message || "Your session could not be checked. Please sign in again."}
+          {isChunkError
+            ? "A new version just shipped. Reloading now to pick it up."
+            : (msg || "Your session could not be checked. Please sign in again.")}
         </p>
         <div className="mt-5 flex flex-col gap-2">
-          <a className="inline-flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" href="/auth?mode=signin&redirect=%2Fdashboard">
-            Sign in again
-          </a>
+          {!isChunkError && (
+            <a className="inline-flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" href="/auth?mode=signin&redirect=%2Fdashboard">
+              Sign in again
+            </a>
+          )}
           <button className="inline-flex h-10 items-center justify-center rounded-lg border border-border px-4 text-sm font-medium" onClick={() => window.location.reload()}>
             Refresh
           </button>
