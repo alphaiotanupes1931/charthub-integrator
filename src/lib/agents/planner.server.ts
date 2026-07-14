@@ -188,7 +188,7 @@ export async function runPlanner(
     const draft = await generateText({
       model: provider(MODEL),
       output: Output.object({ schema: PlanSchema }),
-      system: "You are the head trader. Return exactly one flat JSON object, not an array. Produce a concrete plan (entry/stop/tp1/tp2 as raw numbers) grounded in the analyst notes. Grade MUST be one of: A+, A, B, C, NO ENTRY. Bias MUST be Long, Short, or Neutral. Use ATR to size the stop (~1-1.5x ATR). TP1 near 1.5R, TP2 near 3R. Keep thesis under 400 chars and invalidation under 200 chars. Confidence is 0-100. Use grade C for weak but directional setups; use NO ENTRY only when there is no directional trigger, no consensus, and no tradable risk box." + memoryLine,
+      system: "You are the head trader. Return exactly one flat JSON object, not an array. Produce a concrete plan (entry/stop/tp1/tp2 as raw numbers) grounded in the analyst notes. Grade MUST be one of: A+, A, B, C, NO ENTRY. Bias MUST be Long, Short, or Neutral. Use ATR to size the stop (~1-1.5x ATR). TP1 near 1.5R, TP2 near 3R. ENTRY RULES: default to entering near current price (within 0.5x ATR). Only place entry beyond current price (breakout/stop order) when analyst notes explicitly cite a breakout trigger level; otherwise prefer entry AT or on the pullback side of price (limit order). Never place entry more than 2x ATR from current price. Keep thesis under 400 chars and invalidation under 200 chars. Confidence is 0-100. Use grade C for weak but directional setups; use NO ENTRY only when there is no directional trigger, no consensus, and no tradable risk box." + memoryLine,
       prompt: ctx,
     });
     plan = draft.output;
