@@ -651,6 +651,33 @@ function Dashboard() {
     window.setTimeout(trySend, 0);
   };
 
+  const sanitizeVisibleGrade = (grade: import("@/lib/chartAnnotations").ChartGrade | null) => {
+    if (!grade) return grade;
+    const last = snapshot?.lastPrice;
+    const bias = grade.bias ?? "neutral";
+    if (!last || !isFinite(last) || last <= 0 || typeof grade.entry !== "number" || typeof grade.stop !== "number") return grade;
+    if (!isFinite(grade.entry) || !isFinite(grade.stop)) return grade;
+    const riskBase = Math.max(Math.abs(grade.entry - grade.stop), last * 0.001);
+    const tol = Math.max(last * 0.0001, riskBase * 0.05);
+    let entry = grade.entry;
+    let stop = grade.stop;
+    let tp1 = grade.tp1;
+    let tp2 = grade.tp2;
+    if (bias === "long" && entry > last + tol) entry = last;
+    if (bias === "short" && entry < last - tol) entry = last;
+    const risk = Math.max(Math.abs(entry - stop), last * 0.001);
+    if (bias === "long") {
+      stop = entry - risk;
+      tp1 = typeof tp1 === "number" && isFinite(tp1) ? Math.max(tp1, entry + risk * 1.5) : entry + risk * 1.5;
+      tp2 = typeof tp2 === "number" && isFinite(tp2) ? Math.max(tp2, tp1 + risk * 1.5, entry + risk * 3) : entry + risk * 3;
+    } else if (bias === "short") {
+      stop = entry + risk;
+      tp1 = typeof tp1 === "number" && isFinite(tp1) ? Math.min(tp1, entry - risk * 1.5) : entry - risk * 1.5;
+      tp2 = typeof tp2 === "number" && isFinite(tp2) ? Math.min(tp2, tp1 - risk * 1.5, entry - risk * 3) : entry - risk * 3;
+    }
+    return { ...grade, entry, stop, tp1, tp2 };
+  };
+
   useEffect(() => {
     const q = search.ask?.trim();
     if (!q || askedRef.current === q) return;
@@ -681,11 +708,27 @@ function Dashboard() {
     const biasMap: Record<string, "long" | "short" | "neutral"> = {
       Long: "long", Short: "short", Neutral: "neutral",
     };
-    const entry = num(plan.entry);
-    const stop = num(plan.stop);
-    const tp1 = num(plan.tp1);
-    const tp2 = num(plan.tp2);
+    const last = snapshot?.lastPrice;
+    let entry = num(plan.entry);
+    let stop = num(plan.stop);
+    let tp1 = num(plan.tp1);
+    let tp2 = num(plan.tp2);
     const bias = biasMap[plan.bias] ?? "neutral";
+    if (entry && stop && tp1 && tp2 && last && isFinite(last) && last > 0) {
+      const tol = Math.max(last * 0.0001, Math.abs(entry - stop) * 0.05);
+      if (bias === "long" && entry > last + tol) entry = last;
+      if (bias === "short" && entry < last - tol) entry = last;
+      const risk = Math.max(Math.abs(entry - stop), last * 0.001);
+      if (bias === "long") {
+        stop = entry - risk;
+        tp1 = Math.max(tp1, entry + risk * 1.5);
+        tp2 = Math.max(tp2, tp1 + risk * 1.5, entry + risk * 3);
+      } else if (bias === "short") {
+        stop = entry + risk;
+        tp1 = Math.min(tp1, entry - risk * 1.5);
+        tp2 = Math.min(tp2, tp1 - risk * 1.5, entry - risk * 3);
+      }
+    }
     setAiGrade({
       grade: plan.grade,
       bias,
@@ -716,24 +759,49 @@ function Dashboard() {
       return isFinite(n) ? n : undefined;
     };
     const bias = plan.bias.toLowerCase() as "long" | "short" | "neutral";
+    const last = snapshot?.lastPrice;
+    let entry = num(plan.entry);
+    let stop = num(plan.stop);
+    let tp1 = num(plan.tp1);
+    let tp2 = num(plan.tp2);
+    if (entry && stop && tp1 && tp2 && last && isFinite(last) && last > 0) {
+      const tol = Math.max(last * 0.0001, Math.abs(entry - stop) * 0.05);
+      if (bias === "long" && entry > last + tol) entry = last;
+      if (bias === "short" && entry < last - tol) entry = last;
+      const risk = Math.max(Math.abs(entry - stop), last * 0.001);
+      if (bias === "long") {
+        stop = entry - risk;
+        tp1 = Math.max(tp1, entry + risk * 1.5);
+        tp2 = Math.max(tp2, tp1 + risk * 1.5, entry + risk * 3);
+      } else if (bias === "short") {
+        stop = entry + risk;
+        tp1 = Math.min(tp1, entry - risk * 1.5);
+        tp2 = Math.min(tp2, tp1 - risk * 1.5, entry - risk * 3);
+      }
+    }
+    const dec = decimalsFor(last || entry || 1);
+    const safeEntry = entry === undefined ? plan.entry : fmtPrice(entry, dec);
+    const safeStop = stop === undefined ? plan.stop : fmtPrice(stop, dec);
+    const safeTp1 = tp1 === undefined ? plan.tp1 : fmtPrice(tp1, dec);
+    const safeTp2 = tp2 === undefined ? plan.tp2 : fmtPrice(tp2, dec);
     const gradePayload = {
       grade: plan.grade,
       bias,
       confidence: plan.confidence,
-      entry: num(plan.entry),
-      stop: num(plan.stop),
-      tp1: num(plan.tp1),
-      tp2: num(plan.tp2),
+      entry,
+      stop,
+      tp1,
+      tp2,
       strength: plan.notes,
       weakness: plan.details,
     };
     const levelLines = plan.grade === "NO ENTRY"
       ? ["No entry - stand down until the setup improves."]
       : [
-          `Entry: ${plan.entry}`,
-          `Stop: ${plan.stop}`,
-          `TP1: ${plan.tp1}`,
-          `TP2: ${plan.tp2}`,
+          `Entry: ${safeEntry}`,
+          `Stop: ${safeStop}`,
+          `TP1: ${safeTp1}`,
+          `TP2: ${safeTp2}`,
           `R:R: ${plan.rr}`,
         ];
     return [
@@ -1330,7 +1398,7 @@ function Dashboard() {
                         scanning={scanning}
                         threadIdOverride={activeThreadId}
                         onAnnotations={setAiAnnotationsRaw}
-                        onGrade={setAiGrade}
+                        onGrade={(g) => setAiGrade(sanitizeVisibleGrade(g))}
                         onConcept={setAiConcept}
                         chart={{
                           ticker: symbolLabel(symbol),
@@ -1452,7 +1520,7 @@ function Dashboard() {
                   scanning={scanning}
                   threadIdOverride={activeThreadId}
                   onAnnotations={setAiAnnotationsRaw}
-                  onGrade={setAiGrade}
+                  onGrade={(g) => setAiGrade(sanitizeVisibleGrade(g))}
                   onConcept={setAiConcept}
                   chart={{
                     ticker: symbolLabel(symbol),

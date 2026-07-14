@@ -111,9 +111,9 @@ function shouldReplaceNoEntry(plan: RawPlan, snap: MarketSnapshot, memo: Researc
   return hasDirectionalConsensus || (hasDirectionalStructure && modelWantedDirection);
 }
 
-// Sanity-check the model's plan against price/ATR so we don't ship absurd
-// entries. Fixes the "always BUY STOP" bug where the model biased every long
-// setup as a breakout order far above current price.
+// Sanity-check the model's plan against price/ATR so we don't ship bad pending
+// orders. The default scan experience should not hand older traders a breakout
+// stop order when price has not actually reached the setup yet.
 function sanitizePlan(plan: RawPlan, snap: MarketSnapshot, memo: ResearchMemo): RawPlan {
   const last = snap.lastPrice;
   const atr = Math.max(snap.stats.atr14 || Math.abs(last) * 0.002, Math.abs(last) * 0.0005);
@@ -128,22 +128,34 @@ function sanitizePlan(plan: RawPlan, snap: MarketSnapshot, memo: ResearchMemo): 
   // 1. Clamp runaway entry: no entry more than 2x ATR away from price.
   const maxDist = atr * 2;
   if (Math.abs(entry - last) > maxDist) {
-    // Snap toward price — keep the model's direction bias but don't chase.
+    // Snap toward price, keep the model's direction bias but don't chase.
     entry = bias === "Long"
-      ? (entry > last ? last + atr * 0.25 : last - atr * 0.5)
-      : (entry < last ? last - atr * 0.25 : last + atr * 0.5);
+      ? (entry > last ? last : last - atr * 0.5)
+      : (entry < last ? last : last + atr * 0.5);
   }
 
-  // 2. Enforce stop/TP on correct sides of entry.
+  // 2. Default to market or pullback entries, not stop entries. A Long entry
+  // above live price is a BUY STOP; a Short entry below live price is a SELL
+  // STOP. Those are only acceptable when a breakout trigger is explicitly
+  // requested, and the current scanner does not pass such a flag. Convert them
+  // to a market entry so the recommendation matches the price on screen.
+  const samePriceTolerance = Math.max(last * 0.0001, atr * 0.05);
+  if (bias === "Long" && entry > last + samePriceTolerance) {
+    entry = last;
+  } else if (bias === "Short" && entry < last - samePriceTolerance) {
+    entry = last;
+  }
+
+  // 3. Enforce stop/TP on correct sides of entry.
   const stopDist = Math.max(Math.abs(entry - stop), atr * 0.75);
   if (bias === "Long") {
     stop = entry - stopDist;
-    if (tp1 <= entry) tp1 = entry + stopDist * 1.5;
-    if (tp2 <= tp1)   tp2 = entry + stopDist * 3;
+    tp1 = Math.max(tp1, entry + stopDist * 1.5);
+    tp2 = Math.max(tp2, tp1 + stopDist * 1.5, entry + stopDist * 3);
   } else {
     stop = entry + stopDist;
-    if (tp1 >= entry) tp1 = entry - stopDist * 1.5;
-    if (tp2 >= tp1)   tp2 = entry - stopDist * 3;
+    tp1 = Math.min(tp1, entry - stopDist * 1.5);
+    tp2 = Math.min(tp2, tp1 - stopDist * 1.5, entry - stopDist * 3);
   }
 
   return { ...plan, entry, stop, tp1, tp2 };
@@ -188,7 +200,7 @@ export async function runPlanner(
     const draft = await generateText({
       model: provider(MODEL),
       output: Output.object({ schema: PlanSchema }),
-      system: "You are the head trader. Return exactly one flat JSON object, not an array. Produce a concrete plan (entry/stop/tp1/tp2 as raw numbers) grounded in the analyst notes. Grade MUST be one of: A+, A, B, C, NO ENTRY. Bias MUST be Long, Short, or Neutral. Use ATR to size the stop (~1-1.5x ATR). TP1 near 1.5R, TP2 near 3R. ENTRY RULES: default to entering near current price (within 0.5x ATR). Only place entry beyond current price (breakout/stop order) when analyst notes explicitly cite a breakout trigger level; otherwise prefer entry AT or on the pullback side of price (limit order). Never place entry more than 2x ATR from current price. Keep thesis under 400 chars and invalidation under 200 chars. Confidence is 0-100. Use grade C for weak but directional setups; use NO ENTRY only when there is no directional trigger, no consensus, and no tradable risk box." + memoryLine,
+      system: "You are the head trader. Return exactly one flat JSON object, not an array. Produce a concrete plan (entry/stop/tp1/tp2 as raw numbers) grounded in the analyst notes. Grade MUST be one of: A+, A, B, C, NO ENTRY. Bias MUST be Long, Short, or Neutral. Use ATR to size the stop (~1-1.5x ATR). TP1 near 1.5R, TP2 near 3R. ENTRY RULES: default to entering at current price or on the pullback side of price. For a Long setup, entry must be at or below Last unless the prompt explicitly asks for a breakout stop order. For a Short setup, entry must be at or above Last unless the prompt explicitly asks for a breakdown stop order. Do not default to BUY STOP or SELL STOP. Never place entry more than 2x ATR from current price. Keep thesis under 400 chars and invalidation under 200 chars. Confidence is 0-100. Use grade C for weak but directional setups; use NO ENTRY only when there is no directional trigger, no consensus, and no tradable risk box." + memoryLine,
       prompt: ctx,
     });
     plan = draft.output;
@@ -215,7 +227,7 @@ export async function runPlanner(
         const revised = await generateText({
           model: provider(MODEL),
           output: Output.object({ schema: PlanSchema }),
-          system: "You are the head trader. Return exactly one flat JSON object, not an array. Revise the previous plan per the risk manager's note. Grade MUST be one of: A+, A, B, C, NO ENTRY. Bias MUST be Long, Short, or Neutral. Keep bias unless the critique explicitly demands a flip. Keep thesis under 400 chars and invalidation under 200 chars.",
+          system: "You are the head trader. Return exactly one flat JSON object, not an array. Revise the previous plan per the risk manager's note. Grade MUST be one of: A+, A, B, C, NO ENTRY. Bias MUST be Long, Short, or Neutral. Keep bias unless the critique explicitly demands a flip. Keep thesis under 400 chars and invalidation under 200 chars. For Long, entry must be at or below current price by default. For Short, entry must be at or above current price by default. Do not revise into a stop-entry unless the prompt explicitly asks for a breakout order.",
           prompt: `${ctx}\n\nPrevious plan: ${JSON.stringify(plan)}\nRisk manager: ${critique.output.reason}`,
         });
         plan = revised.output;

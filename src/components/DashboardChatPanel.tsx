@@ -194,7 +194,48 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
 });
 
 
-function GradeCard({ grade }: { grade: ChartGrade }) {
+function sanitizeGradeForPrice(grade: ChartGrade, lastPrice?: number): ChartGrade {
+  const bias = grade.bias ?? "neutral";
+  if (!lastPrice || !isFinite(lastPrice) || lastPrice <= 0 || typeof grade.entry !== "number" || typeof grade.stop !== "number") return grade;
+  if (!isFinite(grade.entry) || !isFinite(grade.stop)) return grade;
+  const riskBase = Math.max(Math.abs(grade.entry - grade.stop), lastPrice * 0.001);
+  const tol = Math.max(lastPrice * 0.0001, riskBase * 0.05);
+  let entry = grade.entry;
+  let stop = grade.stop;
+  let tp1 = grade.tp1;
+  let tp2 = grade.tp2;
+  if (bias === "long" && entry > lastPrice + tol) entry = lastPrice;
+  if (bias === "short" && entry < lastPrice - tol) entry = lastPrice;
+  const risk = Math.max(Math.abs(entry - stop), lastPrice * 0.001);
+  if (bias === "long") {
+    stop = entry - risk;
+    tp1 = typeof tp1 === "number" && isFinite(tp1) ? Math.max(tp1, entry + risk * 1.5) : entry + risk * 1.5;
+    tp2 = typeof tp2 === "number" && isFinite(tp2) ? Math.max(tp2, tp1 + risk * 1.5, entry + risk * 3) : entry + risk * 3;
+  } else if (bias === "short") {
+    stop = entry + risk;
+    tp1 = typeof tp1 === "number" && isFinite(tp1) ? Math.min(tp1, entry - risk * 1.5) : entry - risk * 1.5;
+    tp2 = typeof tp2 === "number" && isFinite(tp2) ? Math.min(tp2, tp1 - risk * 1.5, entry - risk * 3) : entry - risk * 3;
+  }
+  return { ...grade, entry, stop, tp1, tp2 };
+}
+
+function orderTypeFor(grade: ChartGrade, lastPrice?: number): string | null {
+  if (!lastPrice || typeof grade.entry !== "number" || !isFinite(lastPrice) || !isFinite(grade.entry)) return null;
+  const tol = Math.max(lastPrice * 0.0005, 0);
+  if (grade.bias === "long") {
+    if (grade.entry > lastPrice + tol) return "BUY STOP";
+    if (grade.entry < lastPrice - tol) return "BUY LIMIT";
+    return "BUY MARKET";
+  }
+  if (grade.bias === "short") {
+    if (grade.entry < lastPrice - tol) return "SELL STOP";
+    if (grade.entry > lastPrice + tol) return "SELL LIMIT";
+    return "SELL MARKET";
+  }
+  return null;
+}
+
+function GradeCard({ grade, lastPrice }: { grade: ChartGrade; lastPrice?: number }) {
   const g = grade.grade.toUpperCase();
   const tone = g.startsWith("A") ? "text-emerald-300 border-emerald-500/40 bg-emerald-500/10"
     : g.startsWith("B") ? "text-lime-300 border-lime-500/40 bg-lime-500/10"
@@ -205,6 +246,7 @@ function GradeCard({ grade }: { grade: ChartGrade }) {
     : grade.bias === "short" ? "text-red-300"
     : "text-muted-foreground";
   const fmt = (n?: number) => (typeof n === "number" && isFinite(n) ? n.toString() : "-");
+  const orderType = orderTypeFor(grade, lastPrice);
   return (
     <div className="rounded-lg border border-border bg-card/60 overflow-hidden">
       <div className={`flex items-center justify-between px-3 py-2 border-b border-border/60 ${tone.split(" ").filter((c) => c.startsWith("bg-")).join(" ")}`}>
@@ -216,6 +258,11 @@ function GradeCard({ grade }: { grade: ChartGrade }) {
           <span className={`text-xs font-semibold uppercase ${biasTone}`}>{grade.bias}</span>
         )}
       </div>
+      {orderType && (
+        <div className="border-b border-border/60 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Order type: <span className={biasTone}>{orderType}</span>
+        </div>
+      )}
       <div className="grid grid-cols-4 divide-x divide-border/60 text-center">
         {(["entry","stop","tp1","tp2"] as const).map((k) => (
           <div key={k} className="p-2">
@@ -403,8 +450,8 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
       const parsed = parseAiPayload(text);
       if (onAnnotations) onAnnotations(parsed.annotations);
       if (onConcept) onConcept(parsed.concept ?? null);
-      if (onGrade && parsed.grade) onGrade(parsed.grade);
-    }, [messages, onAnnotations, onConcept, onGrade]);
+      if (onGrade && parsed.grade) onGrade(sanitizeGradeForPrice(parsed.grade, chart?.snapshot?.lastPrice));
+    }, [messages, onAnnotations, onConcept, onGrade, chart?.snapshot?.lastPrice]);
 
 
 
@@ -559,14 +606,14 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                 .join("");
               if (m.role === "assistant") {
                 const parsed = parseAiPayload(raw);
-                const g = parsed.grade;
+                const g = parsed.grade ? sanitizeGradeForPrice(parsed.grade, chart?.snapshot?.lastPrice) : undefined;
                 const summary = g
                   ? `${(g.bias || "neutral").toString().toUpperCase()} setup - Grade ${g.grade.toUpperCase()}${typeof g.entry === "number" ? ` · Entry ${g.entry}` : ""}${typeof g.stop === "number" ? ` · Stop ${g.stop}` : ""}`
                   : null;
                 return (
                   <Message key={m.id} from={m.role}>
                     <div className="flex flex-col gap-2 max-w-full">
-                      {g && <GradeCard grade={g} />}
+                      {g && <GradeCard grade={g} lastPrice={chart?.snapshot?.lastPrice} />}
                       {summary && (
                         <div className="text-sm text-foreground/90 leading-snug">{summary}</div>
                       )}
