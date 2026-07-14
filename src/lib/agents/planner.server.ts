@@ -191,7 +191,8 @@ export async function runPlanner(
     // skip critique step
   }
 
-  const finalPlan = shouldReplaceNoEntry(plan, snap, memo) ? systematicPlan(snap, memo, "AI marked no entry despite directional evidence;") : plan;
+  let finalPlan = shouldReplaceNoEntry(plan, snap, memo) ? systematicPlan(snap, memo, "AI marked no entry despite directional evidence;") : plan;
+  finalPlan = sanitizePlan(finalPlan, snap, memo);
   const grade = normalizeGrade(finalPlan.grade);
   const bias = normalizeBias(finalPlan.bias);
   const dec = decimalsFor(snap.lastPrice || finalPlan.entry || 1);
