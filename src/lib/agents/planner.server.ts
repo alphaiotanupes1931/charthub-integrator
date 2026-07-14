@@ -134,16 +134,16 @@ function sanitizePlan(plan: RawPlan, snap: MarketSnapshot, memo: ResearchMemo): 
       : (entry < last ? last : last + atr * 0.5);
   }
 
-  // 2. Default to market or pullback entries, not stop entries. A Long entry
-  // above live price is a BUY STOP; a Short entry below live price is a SELL
-  // STOP. Those are only acceptable when a breakout trigger is explicitly
-  // requested, and the current scanner does not pass such a flag. Convert them
-  // to a market entry so the recommendation matches the price on screen.
-  const samePriceTolerance = Math.max(last * 0.0001, atr * 0.05);
-  if (bias === "Long" && entry > last + samePriceTolerance) {
-    entry = last;
-  } else if (bias === "Short" && entry < last - samePriceTolerance) {
-    entry = last;
+  // 2. Force pullback entries. Longs enter BELOW live price (BUY LIMIT),
+  // Shorts enter ABOVE live price (SELL LIMIT). The buffer also absorbs
+  // normal live-price drift after the scan so the order-type label doesn't
+  // flip to a stop-entry (BUY STOP / SELL STOP). Breakout stop orders are
+  // not part of the default scanner output.
+  const buffer = Math.max(atr * 0.15, last * 0.0005);
+  if (bias === "Long" && entry > last - buffer) {
+    entry = last - buffer;
+  } else if (bias === "Short" && entry < last + buffer) {
+    entry = last + buffer;
   }
 
   // 3. Enforce stop/TP on correct sides of entry.
