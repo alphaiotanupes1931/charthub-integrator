@@ -77,18 +77,30 @@ function fallbackPlan(snap: MarketSnapshot, memo: ResearchMemo): z.infer<typeof 
 function systematicPlan(snap: MarketSnapshot, memo: ResearchMemo, thesisPrefix?: string): RawPlan {
   const last = snap.lastPrice || 1;
   const atr = Math.max(snap.stats.atr14 || Math.abs(last) * 0.002, Math.abs(last) * 0.0005);
-  const directional = memo.consensus !== "neutral" ? memo.consensus : snap.cisd.state !== "none" ? snap.cisd.state : snap.cisd.htfBias;
+  const mtf = snap.mtf;
+  const mtfDir = mtf?.alignment === "aligned-long" ? "bullish"
+    : mtf?.alignment === "aligned-short" ? "bearish"
+    : mtf?.h4.direction ?? "neutral";
+  const directional = mtfDir !== "neutral" ? mtfDir
+    : memo.consensus !== "neutral" ? memo.consensus
+    : snap.cisd.state !== "none" ? snap.cisd.state
+    : snap.cisd.htfBias;
   const bias: RawPlan["bias"] = directional === "bullish" ? "Long" : directional === "bearish" ? "Short" : "Neutral";
-  const aligned = snap.cisd.state !== "none" && snap.cisd.state === snap.cisd.htfBias;
+  const aligned = mtf?.alignment === "aligned-long" || mtf?.alignment === "aligned-short";
+  const partialAligned = mtf?.alignment === "mixed" && (snap.cisd.state !== "none" || memo.consensus !== "neutral");
   const hasTrigger = snap.cisd.state !== "none";
-  const confBase = Math.max(memo.consensusConfidence || 0, aligned ? 68 : hasTrigger ? 58 : 42);
-  const grade = bias === "Neutral" ? "NO ENTRY" : aligned || (memo.consensus !== "neutral" && hasTrigger) ? "B" : "C";
+  const confBase = Math.max(memo.consensusConfidence || 0, aligned ? 80 : partialAligned ? 65 : hasTrigger ? 58 : 42);
+  const grade = bias === "Neutral" ? "NO ENTRY"
+    : aligned ? "A"
+    : partialAligned || (memo.consensus !== "neutral" && hasTrigger) ? "B"
+    : "C";
   const entry = last;
-  const stopDist = atr * (grade === "B" ? 1.25 : 1.5);
+  const stopDist = atr * (grade === "A" ? 1.1 : grade === "B" ? 1.25 : 1.5);
   const stop = bias === "Short" ? entry + stopDist : entry - stopDist;
   const tp1 = bias === "Short" ? entry - stopDist * 1.5 : entry + stopDist * 1.5;
   const tp2 = bias === "Short" ? entry - stopDist * 3 : entry + stopDist * 3;
-  const setup = snap.cisd.state === "none" ? "range structure" : `${snap.cisd.state} CISD`;
+  const setup = mtf ? `MTF ${mtf.alignment} (4H ${mtf.h4.direction}/${mtf.h4.trend}, 1H ${mtf.h1.structureBreak}, 15m ${mtf.m15.confirmation})`
+    : snap.cisd.state === "none" ? "range structure" : `${snap.cisd.state} CISD`;
   return {
     grade,
     bias,
@@ -182,12 +194,37 @@ function decimalsFor(px: number): number {
 }
 const fmt = (n: number, d: number) => n.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
 
+function fmtRange(r: [number, number]): string { return `[${r[0].toFixed(4)}-${r[1].toFixed(4)}]`; }
+
+function mtfBlock(snap: MarketSnapshot): string {
+  const m = snap.mtf;
+  if (!m) return "MTF: unavailable";
+  const kl = m.h4.keyLevels;
+  const sd = m.h4.supplyDemand;
+  const ob = m.h1.orderBlocks;
+  const fvg = m.h1.fvg;
+  const liq = m.h1.liquidity;
+  return [
+    `MTF cascade (4H → 1H → 15m):`,
+    `  4H direction=${m.h4.direction} trend=${m.h4.trend}`,
+    `  4H key levels: support=[${kl.support.map((n) => n.toFixed(4)).join(", ")}] resistance=[${kl.resistance.map((n) => n.toFixed(4)).join(", ")}]`,
+    `  4H S/D: supply=${sd.supply.map(fmtRange).join(", ") || "none"} demand=${sd.demand.map(fmtRange).join(", ") || "none"}`,
+    `  1H structureBreak=${m.h1.structureBreak} reversal=${m.h1.reversal}`,
+    `  1H OB: bull=${ob.bull.map(fmtRange).join(", ") || "none"} bear=${ob.bear.map(fmtRange).join(", ") || "none"}`,
+    `  1H FVG: bull=${fvg.bull.map(fmtRange).join(", ") || "none"} bear=${fvg.bear.map(fmtRange).join(", ") || "none"}`,
+    `  1H liquidity: buyside=[${liq.buyside.map((n) => n.toFixed(4)).join(", ")}] sellside=[${liq.sellside.map((n) => n.toFixed(4)).join(", ")}]`,
+    `  15m confirmation=${m.m15.confirmation} (${m.m15.reason})`,
+    `  Alignment: ${m.alignment}`,
+  ].join("\n");
+}
+
 function memoBlock(memo: ResearchMemo, snap: MarketSnapshot, lensDesc?: string): string {
   const notes = memo.notes.map(n => `- ${n.role.toUpperCase()} (${n.bias}, ${n.confidence}%): ${n.summary}`).join("\n");
   return [
     `Ticker: ${snap.ticker} | Interval: ${snap.interval} | Last: ${snap.lastPrice} | ATR14: ${snap.stats.atr14.toFixed(4)}`,
     `20-bar range: ${snap.stats.low20} - ${snap.stats.high20}`,
     `Consensus: ${memo.consensus} @ ${memo.consensusConfidence}%`,
+    mtfBlock(snap),
     lensDesc ? `Scan lens focus: ${lensDesc}` : "",
     "Analyst notes:",
     notes,
@@ -211,7 +248,7 @@ export async function runPlanner(
     const draft = await generateText({
       model: provider(MODEL),
       output: Output.object({ schema: PlanSchema }),
-      system: "You are the head trader. Return exactly one flat JSON object, not an array. Produce a concrete plan (entry/stop/tp1/tp2 as raw numbers) grounded in the analyst notes. Grade MUST be one of: A+, A, B, C, NO ENTRY. Bias MUST be Long, Short, or Neutral. Use ATR to size the stop (~1-1.5x ATR). TP1 near 1.5R, TP2 near 3R. ENTRY RULES: default to entering at current price or on the pullback side of price. For a Long setup, entry must be at or below Last unless the prompt explicitly asks for a breakout stop order. For a Short setup, entry must be at or above Last unless the prompt explicitly asks for a breakdown stop order. Do not default to BUY STOP or SELL STOP. Never place entry more than 2x ATR from current price. Keep thesis under 400 chars and invalidation under 200 chars. Confidence is 0-100. Use grade C for weak but directional setups; use NO ENTRY only when there is no directional trigger, no consensus, and no tradable risk box." + memoryLine,
+      system: "You are the head trader. Follow the 'How to Analysis' cascade in the memo: 4H sets DIRECTION + TREND + key levels + supply/demand; 1H reads STRUCTURE (breaks, reversal, OB, FVG, liquidity); 15m gives CONFIRMATION. Grade A+ only when MTF alignment is aligned-long/aligned-short AND 15m confirmation matches. Grade A when alignment is aligned-* with weaker 15m. Grade B when 1H structure and 4H direction agree but 15m is neutral. Grade C when there is a 1H trigger but 4H is against or neutral. NO ENTRY when direction, structure, and confirmation all conflict. Return exactly one flat JSON object, not an array. Grade MUST be one of: A+, A, B, C, NO ENTRY. Bias MUST be Long, Short, or Neutral. Use ATR to size the stop (~1-1.5x ATR). TP1 near 1.5R, TP2 near 3R. ENTRY RULES: default to entering at current price or on the pullback side of price. For a Long setup, entry must be at or below Last unless the prompt explicitly asks for a breakout stop order. For a Short setup, entry must be at or above Last. Prefer entries at 1H order blocks, FVGs, or 4H demand/supply that align with bias. Do not default to BUY STOP or SELL STOP. Never place entry more than 2x ATR from current price. Keep thesis under 400 chars and invalidation under 200 chars. Confidence is 0-100." + memoryLine,
       prompt: ctx,
     });
     plan = draft.output;
