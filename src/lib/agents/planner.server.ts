@@ -77,18 +77,30 @@ function fallbackPlan(snap: MarketSnapshot, memo: ResearchMemo): z.infer<typeof 
 function systematicPlan(snap: MarketSnapshot, memo: ResearchMemo, thesisPrefix?: string): RawPlan {
   const last = snap.lastPrice || 1;
   const atr = Math.max(snap.stats.atr14 || Math.abs(last) * 0.002, Math.abs(last) * 0.0005);
-  const directional = memo.consensus !== "neutral" ? memo.consensus : snap.cisd.state !== "none" ? snap.cisd.state : snap.cisd.htfBias;
+  const mtf = snap.mtf;
+  const mtfDir = mtf?.alignment === "aligned-long" ? "bullish"
+    : mtf?.alignment === "aligned-short" ? "bearish"
+    : mtf?.h4.direction ?? "neutral";
+  const directional = mtfDir !== "neutral" ? mtfDir
+    : memo.consensus !== "neutral" ? memo.consensus
+    : snap.cisd.state !== "none" ? snap.cisd.state
+    : snap.cisd.htfBias;
   const bias: RawPlan["bias"] = directional === "bullish" ? "Long" : directional === "bearish" ? "Short" : "Neutral";
-  const aligned = snap.cisd.state !== "none" && snap.cisd.state === snap.cisd.htfBias;
+  const aligned = mtf?.alignment === "aligned-long" || mtf?.alignment === "aligned-short";
+  const partialAligned = mtf?.alignment === "mixed" && (snap.cisd.state !== "none" || memo.consensus !== "neutral");
   const hasTrigger = snap.cisd.state !== "none";
-  const confBase = Math.max(memo.consensusConfidence || 0, aligned ? 68 : hasTrigger ? 58 : 42);
-  const grade = bias === "Neutral" ? "NO ENTRY" : aligned || (memo.consensus !== "neutral" && hasTrigger) ? "B" : "C";
+  const confBase = Math.max(memo.consensusConfidence || 0, aligned ? 80 : partialAligned ? 65 : hasTrigger ? 58 : 42);
+  const grade = bias === "Neutral" ? "NO ENTRY"
+    : aligned ? "A"
+    : partialAligned || (memo.consensus !== "neutral" && hasTrigger) ? "B"
+    : "C";
   const entry = last;
-  const stopDist = atr * (grade === "B" ? 1.25 : 1.5);
+  const stopDist = atr * (grade === "A" ? 1.1 : grade === "B" ? 1.25 : 1.5);
   const stop = bias === "Short" ? entry + stopDist : entry - stopDist;
   const tp1 = bias === "Short" ? entry - stopDist * 1.5 : entry + stopDist * 1.5;
   const tp2 = bias === "Short" ? entry - stopDist * 3 : entry + stopDist * 3;
-  const setup = snap.cisd.state === "none" ? "range structure" : `${snap.cisd.state} CISD`;
+  const setup = mtf ? `MTF ${mtf.alignment} (4H ${mtf.h4.direction}/${mtf.h4.trend}, 1H ${mtf.h1.structureBreak}, 15m ${mtf.m15.confirmation})`
+    : snap.cisd.state === "none" ? "range structure" : `${snap.cisd.state} CISD`;
   return {
     grade,
     bias,
