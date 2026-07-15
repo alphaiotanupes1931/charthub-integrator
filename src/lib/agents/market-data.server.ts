@@ -484,6 +484,8 @@ export async function getSnapshot(ticker: string, interval: string): Promise<Mar
   const htfBias = detectHtfBias(candles);
   const cisd = { ...cisdRaw, htfBias };
 
+  const mtf = source === "unavailable" ? undefined : await buildMtf(ticker, interval, candles).catch(() => undefined);
+
   return {
     ticker,
     interval,
@@ -500,5 +502,6 @@ export async function getSnapshot(ticker: string, interval: string): Promise<Mar
     cisd,
     sessionsActive: activeSessions(new Date().getUTCHours()),
     fetchedAt: new Date().toISOString(),
+    mtf,
   };
 }
