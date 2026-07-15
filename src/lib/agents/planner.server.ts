@@ -182,12 +182,37 @@ function decimalsFor(px: number): number {
 }
 const fmt = (n: number, d: number) => n.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
 
+function fmtRange(r: [number, number]): string { return `[${r[0].toFixed(4)}-${r[1].toFixed(4)}]`; }
+
+function mtfBlock(snap: MarketSnapshot): string {
+  const m = snap.mtf;
+  if (!m) return "MTF: unavailable";
+  const kl = m.h4.keyLevels;
+  const sd = m.h4.supplyDemand;
+  const ob = m.h1.orderBlocks;
+  const fvg = m.h1.fvg;
+  const liq = m.h1.liquidity;
+  return [
+    `MTF cascade (4H → 1H → 15m):`,
+    `  4H direction=${m.h4.direction} trend=${m.h4.trend}`,
+    `  4H key levels: support=[${kl.support.map((n) => n.toFixed(4)).join(", ")}] resistance=[${kl.resistance.map((n) => n.toFixed(4)).join(", ")}]`,
+    `  4H S/D: supply=${sd.supply.map(fmtRange).join(", ") || "none"} demand=${sd.demand.map(fmtRange).join(", ") || "none"}`,
+    `  1H structureBreak=${m.h1.structureBreak} reversal=${m.h1.reversal}`,
+    `  1H OB: bull=${ob.bull.map(fmtRange).join(", ") || "none"} bear=${ob.bear.map(fmtRange).join(", ") || "none"}`,
+    `  1H FVG: bull=${fvg.bull.map(fmtRange).join(", ") || "none"} bear=${fvg.bear.map(fmtRange).join(", ") || "none"}`,
+    `  1H liquidity: buyside=[${liq.buyside.map((n) => n.toFixed(4)).join(", ")}] sellside=[${liq.sellside.map((n) => n.toFixed(4)).join(", ")}]`,
+    `  15m confirmation=${m.m15.confirmation} (${m.m15.reason})`,
+    `  Alignment: ${m.alignment}`,
+  ].join("\n");
+}
+
 function memoBlock(memo: ResearchMemo, snap: MarketSnapshot, lensDesc?: string): string {
   const notes = memo.notes.map(n => `- ${n.role.toUpperCase()} (${n.bias}, ${n.confidence}%): ${n.summary}`).join("\n");
   return [
     `Ticker: ${snap.ticker} | Interval: ${snap.interval} | Last: ${snap.lastPrice} | ATR14: ${snap.stats.atr14.toFixed(4)}`,
     `20-bar range: ${snap.stats.low20} - ${snap.stats.high20}`,
     `Consensus: ${memo.consensus} @ ${memo.consensusConfidence}%`,
+    mtfBlock(snap),
     lensDesc ? `Scan lens focus: ${lensDesc}` : "",
     "Analyst notes:",
     notes,
