@@ -30,6 +30,31 @@ export type MarketSnapshot = {
   };
   sessionsActive: string[];
   fetchedAt: string;
+  mtf?: MtfContext;
+};
+
+// Multi-timeframe context (4H → 1H → 15m cascade).
+// 4H sets direction/trend/key levels/S&D. 1H reads structure (breaks, reversal,
+// OB, FVG, liquidity). 15m confirms entry.
+export type MtfContext = {
+  h4: {
+    direction: "bullish" | "bearish" | "neutral";
+    trend: "up" | "down" | "range";
+    keyLevels: { support: number[]; resistance: number[] };
+    supplyDemand: { supply: [number, number][]; demand: [number, number][] };
+  };
+  h1: {
+    structureBreak: "bullish" | "bearish" | "none";
+    reversal: "bullish" | "bearish" | "none";
+    orderBlocks: { bull: [number, number][]; bear: [number, number][] };
+    fvg: { bull: [number, number][]; bear: [number, number][] };
+    liquidity: { buyside: number[]; sellside: number[] };
+  };
+  m15: {
+    confirmation: "bullish" | "bearish" | "none";
+    reason: string;
+  };
+  alignment: "aligned-long" | "aligned-short" | "mixed" | "none";
 };
 
 export type AnalystRole = "technical" | "macro" | "sentiment" | "risk";
