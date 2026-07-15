@@ -281,6 +281,181 @@ function activeSessions(nowUtcH: number): string[] {
   return out;
 }
 
+// ---------------- Multi-timeframe (MTF) helpers ----------------
+// Implements the "How to Analysis" cascade: 4H direction/trend/key levels/S&D
+// → 1H structure (breaks, reversal, OB, FVG, liquidity) → 15m confirmation.
+
+function slope(closes: number[]): number {
+  if (closes.length < 2) return 0;
+  const n = closes.length;
+  const xMean = (n - 1) / 2;
+  const yMean = closes.reduce((a, b) => a + b, 0) / n;
+  let num = 0, den = 0;
+  for (let i = 0; i < n; i++) {
+    num += (i - xMean) * (closes[i] - yMean);
+    den += (i - xMean) ** 2;
+  }
+  return den === 0 ? 0 : num / den;
+}
+
+function h4Analysis(candles: Candle[]): MtfContext["h4"] {
+  const closes = candles.map((c) => c.close);
+  const last = closes.at(-1) ?? 0;
+  const recent = closes.slice(-40);
+  const sl = slope(recent);
+  const magnitude = Math.abs(sl) / Math.max(last, 1e-9);
+  const trend: "up" | "down" | "range" = magnitude < 0.0002 ? "range" : sl > 0 ? "up" : "down";
+  const cisd = detectCisd(candles);
+  const bias = detectHtfBias(candles);
+  const direction = bias !== "neutral" ? bias : cisd.state !== "none" ? cisd.state : "neutral";
+
+  // Key swing levels: last few swing highs/lows via 3-bar fractal.
+  const supports: number[] = [];
+  const resistances: number[] = [];
+  for (let i = candles.length - 3; i >= 2; i--) {
+    const c = candles[i];
+    if (c.low < candles[i - 1].low && c.low < candles[i - 2].low && c.low < candles[i + 1].low && (candles[i + 2] ? c.low < candles[i + 2].low : true)) {
+      if (c.low < last) supports.push(c.low);
+    }
+    if (c.high > candles[i - 1].high && c.high > candles[i - 2].high && c.high > candles[i + 1].high && (candles[i + 2] ? c.high > candles[i + 2].high : true)) {
+      if (c.high > last) resistances.push(c.high);
+    }
+    if (supports.length >= 3 && resistances.length >= 3) break;
+  }
+
+  // Supply/demand: base (2-3 tight candles) then impulse away.
+  const supply: [number, number][] = [];
+  const demand: [number, number][] = [];
+  for (let i = 3; i < candles.length - 1; i++) {
+    const base = candles.slice(i - 2, i + 1);
+    const baseHi = Math.max(...base.map((c) => c.high));
+    const baseLo = Math.min(...base.map((c) => c.low));
+    const baseRange = baseHi - baseLo;
+    const impulse = candles[i + 1];
+    const impRange = impulse.high - impulse.low;
+    if (impRange < baseRange * 1.6) continue;
+    if (impulse.close > impulse.open && impulse.close > baseHi) demand.push([baseLo, baseHi]);
+    else if (impulse.close < impulse.open && impulse.close < baseLo) supply.push([baseLo, baseHi]);
+  }
+
+  return {
+    direction,
+    trend,
+    keyLevels: { support: supports.slice(0, 3), resistance: resistances.slice(0, 3) },
+    supplyDemand: { supply: supply.slice(-2), demand: demand.slice(-2) },
+  };
+}
+
+function h1Analysis(candles: Candle[]): MtfContext["h1"] {
+  const cisd = detectCisd(candles);
+  const structureBreak = cisd.state;
+
+  // Reversal proxy: last 3 candles flip direction vs prior 5.
+  let reversal: "bullish" | "bearish" | "none" = "none";
+  if (candles.length >= 8) {
+    const prior = candles.slice(-8, -3);
+    const last3 = candles.slice(-3);
+    const priorDir = prior[prior.length - 1].close - prior[0].close;
+    const lastDir = last3[last3.length - 1].close - last3[0].close;
+    if (priorDir < 0 && lastDir > 0 && Math.abs(lastDir) > Math.abs(priorDir) * 0.4) reversal = "bullish";
+    else if (priorDir > 0 && lastDir < 0 && Math.abs(lastDir) > Math.abs(priorDir) * 0.4) reversal = "bearish";
+  }
+
+  // Order blocks: last opposing candle before an impulse that breaks structure.
+  const bullOB: [number, number][] = [];
+  const bearOB: [number, number][] = [];
+  for (let i = 2; i < candles.length - 1; i++) {
+    const c = candles[i];
+    const next = candles[i + 1];
+    const isDown = c.close < c.open;
+    const isUp = c.close > c.open;
+    const impUp = next.close > next.open && next.close > c.high;
+    const impDn = next.close < next.open && next.close < c.low;
+    if (isDown && impUp) bullOB.push([c.low, c.high]);
+    if (isUp && impDn) bearOB.push([c.low, c.high]);
+  }
+
+  // FVG: 3-candle imbalance.
+  const bullFvg: [number, number][] = [];
+  const bearFvg: [number, number][] = [];
+  for (let i = 2; i < candles.length; i++) {
+    const a = candles[i - 2], c = candles[i];
+    if (a.high < c.low) bullFvg.push([a.high, c.low]);
+    if (a.low > c.high) bearFvg.push([c.high, a.low]);
+  }
+
+  // Liquidity: equal highs/lows within 0.1% tolerance.
+  const highs = candles.map((c) => c.high);
+  const lows = candles.map((c) => c.low);
+  const buyside: number[] = [];
+  const sellside: number[] = [];
+  const tol = (candles.at(-1)?.close ?? 1) * 0.001;
+  for (let i = 0; i < highs.length; i++) {
+    for (let j = i + 3; j < highs.length; j++) {
+      if (Math.abs(highs[i] - highs[j]) <= tol) { buyside.push((highs[i] + highs[j]) / 2); break; }
+    }
+    for (let j = i + 3; j < lows.length; j++) {
+      if (Math.abs(lows[i] - lows[j]) <= tol) { sellside.push((lows[i] + lows[j]) / 2); break; }
+    }
+  }
+
+  return {
+    structureBreak,
+    reversal,
+    orderBlocks: { bull: bullOB.slice(-2), bear: bearOB.slice(-2) },
+    fvg: { bull: bullFvg.slice(-2), bear: bearFvg.slice(-2) },
+    liquidity: { buyside: buyside.slice(-3), sellside: sellside.slice(-3) },
+  };
+}
+
+function m15Confirmation(candles: Candle[]): MtfContext["m15"] {
+  const cisd = detectCisd(candles);
+  if (cisd.state !== "none") {
+    return { confirmation: cisd.state, reason: `15m CISD flip (${cisd.state}) at ${cisd.trigger.toFixed(4)}` };
+  }
+  if (candles.length >= 4) {
+    const last = candles.slice(-3);
+    const up = last.every((c) => c.close > c.open);
+    const dn = last.every((c) => c.close < c.open);
+    if (up) return { confirmation: "bullish", reason: "3 consecutive 15m bull closes" };
+    if (dn) return { confirmation: "bearish", reason: "3 consecutive 15m bear closes" };
+  }
+  return { confirmation: "none", reason: "No 15m confirmation yet - wait for CISD or momentum flip" };
+}
+
+function computeAlignment(mtf: Omit<MtfContext, "alignment">): MtfContext["alignment"] {
+  const dir = mtf.h4.direction;
+  const struct = mtf.h1.structureBreak !== "none" ? mtf.h1.structureBreak : mtf.h1.reversal;
+  const conf = mtf.m15.confirmation;
+  if (dir === "bullish" && (struct === "bullish" || struct === "none") && (conf === "bullish" || conf === "none")) {
+    return struct === "bullish" && conf === "bullish" ? "aligned-long" : "mixed";
+  }
+  if (dir === "bearish" && (struct === "bearish" || struct === "none") && (conf === "bearish" || conf === "none")) {
+    return struct === "bearish" && conf === "bearish" ? "aligned-short" : "mixed";
+  }
+  if (dir === "neutral" && struct === "none" && conf === "none") return "none";
+  return "mixed";
+}
+
+async function loadCandlesSafe(ticker: string, interval: string): Promise<Candle[]> {
+  try {
+    if (COINGECKO_ID[ticker]) return await fromCoinGecko(ticker, interval);
+    return await fromYahoo(ticker, interval);
+  } catch {
+    try { return await fromBackup(ticker, interval); } catch { return []; }
+  }
+}
+
+async function buildMtf(ticker: string, primaryInterval: string, primaryCandles: Candle[]): Promise<MtfContext | undefined> {
+  const useH4 = primaryInterval === "240" ? primaryCandles : await loadCandlesSafe(ticker, "240");
+  const useH1 = primaryInterval === "60"  ? primaryCandles : await loadCandlesSafe(ticker, "60");
+  const use15 = primaryInterval === "15"  ? primaryCandles : await loadCandlesSafe(ticker, "15");
+  if (useH4.length < 20 || useH1.length < 20 || use15.length < 10) return undefined;
+  const base = { h4: h4Analysis(useH4), h1: h1Analysis(useH1), m15: m15Confirmation(use15) };
+  return { ...base, alignment: computeAlignment(base) };
+}
+
+
 export async function getSnapshot(ticker: string, interval: string): Promise<MarketSnapshot> {
   let candles: Candle[] = [];
   let source: MarketSnapshot["source"] = "unavailable";
