@@ -91,7 +91,7 @@ function salvageNoteFromText(text: string | undefined): RawNote | null {
 }
 
 function buildContext(snap: MarketSnapshot): string {
-  return [
+  const lines = [
     `Symbol: ${snap.ticker} | Interval: ${snap.interval} | Source: ${snap.source}`,
     `Last: ${snap.lastPrice} | 24h change: ${snap.stats.changePct24h.toFixed(2)}%`,
     `Range20: ${snap.stats.low20} - ${snap.stats.high20} (${snap.stats.range20Pct.toFixed(2)}%)`,
@@ -100,7 +100,14 @@ function buildContext(snap: MarketSnapshot): string {
     `CISD: state=${snap.cisd.state} htf=${snap.cisd.htfBias} level=${snap.cisd.level} trigger=${snap.cisd.trigger} proj1=${snap.cisd.proj1}`,
     `Sessions active: ${snap.sessionsActive.join(", ") || "off-hours"}`,
     `Fetched: ${snap.fetchedAt}`,
-  ].join("\n");
+  ];
+  if (snap.mtf) {
+    const m = snap.mtf;
+    lines.push(
+      `MTF cascade — 4H direction=${m.h4.direction} trend=${m.h4.trend}; 1H structureBreak=${m.h1.structureBreak} reversal=${m.h1.reversal}; 15m confirmation=${m.m15.confirmation} (${m.m15.reason}); alignment=${m.alignment}`,
+    );
+  }
+  return lines.join("\n");
 }
 
 async function askAnalyst(apiKey: string, system: string, snap: MarketSnapshot): Promise<Omit<AnalystNote, "role">> {
