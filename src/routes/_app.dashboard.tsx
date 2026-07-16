@@ -1772,16 +1772,38 @@ function ChatHistoryList({
       <div className="space-y-1">
         {threads.map((t) => {
           const active = activeThreadId === t.id;
+          const when = (() => {
+            try {
+              const d = new Date(t.updated_at);
+              const now = new Date();
+              const sameDay = d.toDateString() === now.toDateString();
+              return sameDay
+                ? d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+                : d.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+            } catch { return ""; }
+          })();
           return (
             <div
               key={t.id}
               onClick={() => onPick(t.id)}
-              className={`group flex items-center gap-2 rounded-md px-2 py-2 text-sm cursor-pointer transition ${
+              className={`group flex items-start gap-2 rounded-md px-2 py-2 text-sm cursor-pointer transition ${
                 active ? "bg-primary/15 text-primary" : "hover:bg-accent/40 text-foreground/85"
               }`}
             >
-              <MessageSquare className="h-3.5 w-3.5 shrink-0 opacity-70" />
-              <span className="flex-1 min-w-0 truncate">{t.title}</span>
+              <MessageSquare className="h-3.5 w-3.5 shrink-0 opacity-70 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  {t.symbol && (
+                    <span className="rounded bg-primary/15 text-primary px-1.5 py-0.5 text-[10px] font-semibold tracking-wide">
+                      {t.symbol}
+                    </span>
+                  )}
+                  <span className="text-[10px] text-muted-foreground shrink-0">{when}</span>
+                </div>
+                <div className="truncate text-[12px] text-foreground/80 mt-0.5">
+                  {t.preview || t.title}
+                </div>
+              </div>
               <button
                 onClick={(e) => handleDelete(t.id, e)}
                 className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive p-1"
