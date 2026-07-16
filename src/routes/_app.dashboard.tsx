@@ -492,10 +492,10 @@ function Dashboard() {
   const [rightTab, setRightTab] = useState<"analysis" | "chat">("analysis");
   const [chatPanelView, setChatPanelView] = useState<"conversation" | "history">("conversation");
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
-  const [rightOpen, setRightOpen] = useState(false);
+  const [rightOpen, setRightOpen] = useState(true);
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
   const viewMenuRef = useRef<HTMLDivElement>(null);
-  const [panelWidth, setPanelWidth] = useState<"narrow" | "default" | "wide">("narrow");
+  const [panelWidth, setPanelWidth] = useState<"narrow" | "default" | "wide">("default");
 
   const [chartTab, setChartTab] = useState<"live" | "setup">("live");
   // Mobile-only: which pane is visible full-height (chart / scan / chat). On >=lg
