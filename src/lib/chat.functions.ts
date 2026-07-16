@@ -29,13 +29,40 @@ export const listChatThreads = createServerFn({ method: "POST" })
     const userId = userData.user?.id;
     if (!userId) return [];
 
-    const { data, error } = await supabase
+    const { data: threads, error } = await supabase
       .from("chat_threads")
       .select("id,title,updated_at,created_at")
       .eq("user_id", userId)
       .order("updated_at", { ascending: false });
     if (error) throw new Error(error.message);
-    return data ?? [];
+    const rows = threads ?? [];
+    if (rows.length === 0) return [];
+
+    const ids = rows.map((r) => r.id as string);
+    const { data: msgs } = await supabase
+      .from("chat_messages")
+      .select("thread_id,role,parts,created_at")
+      .in("thread_id", ids)
+      .order("created_at", { ascending: false })
+      .limit(400);
+
+    const SYMBOL_RE = /\b(XAU\/?USD|XAG\/?USD|BTC(?:\/?USD)?|ETH(?:\/?USD)?|EUR\/?USD|GBP\/?USD|USD\/?JPY|AUD\/?USD|NZD\/?USD|USD\/?CAD|USD\/?CHF|NAS100|US30|SPX500|SPY|QQQ|DIA|NDX|GSPC|DJI|[A-Z]{2,5}\/[A-Z]{3,5})\b/i;
+    const previews: Record<string, { text: string; symbol: string | null }> = {};
+    for (const m of (msgs ?? []) as Array<{ thread_id: string; role: string; parts: unknown }>) {
+      const tid = m.thread_id;
+      if (previews[tid]) continue;
+      const parts = Array.isArray(m.parts) ? (m.parts as Array<{ type?: string; text?: string }>) : [];
+      const text = parts.map((p) => (p?.type === "text" ? p.text ?? "" : "")).join(" ").replace(/\s+/g, " ").trim();
+      if (!text) continue;
+      const sym = text.match(SYMBOL_RE)?.[0]?.toUpperCase() ?? null;
+      previews[tid] = { text: text.slice(0, 80), symbol: sym };
+    }
+
+    return rows.map((r) => ({
+      ...r,
+      preview: previews[r.id as string]?.text ?? "",
+      symbol: previews[r.id as string]?.symbol ?? null,
+    }));
   });
 
 export const getOrCreateDashboardThread = createServerFn({ method: "POST" })
