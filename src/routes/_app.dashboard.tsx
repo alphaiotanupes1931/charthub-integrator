@@ -404,10 +404,10 @@ function TicketCell({ label, value, tone }: { label: string; value: string; tone
 
 const ALL_LEVELS: LevelKey[] = ["VWAP","POC","SR","ZONES","FVG","FIB","LIQ","OF","CISD"];
 
-const STORAGE_KEY = "trademind.levels.enabled.v2";
+const STORAGE_KEY = "trademind.levels.enabled.v3";
 const SESSIONS_STORAGE_KEY = "trademind.sessions.enabled.v1";
 
-const DEFAULT_LEVELS: Record<LevelKey, boolean> = { VWAP: true, POC: true, SR: true, ZONES: true, FVG: true, FIB: false, LIQ: true, OF: true, CISD: true };
+const DEFAULT_LEVELS: Record<LevelKey, boolean> = { VWAP: false, POC: false, SR: false, ZONES: false, FVG: false, FIB: false, LIQ: false, OF: false, CISD: false };
 
 function loadLevels(): Record<LevelKey, boolean> {
   try {
