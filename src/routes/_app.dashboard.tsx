@@ -830,7 +830,7 @@ function Dashboard() {
     }
   };
 
-  const runScan = (from: "chat" | "analysis" = "analysis") => {
+  const runScan = async (from: "chat" | "analysis" = "analysis") => {
     setScanning(true);
 
     setAiGrade(null);
@@ -848,8 +848,18 @@ function Dashboard() {
       setChatPanelView("conversation");
       setMobileView("scan");
     }
+    // Always start a fresh chat thread per scan so each scan gets its own
+    // history entry tagged with the scanned instrument - matches behavior
+    // when running a scan from within a new chat.
+    try {
+      const t = await createChatThreadFn({ data: { title: `${symbolLabel(symbol)} Scan` } });
+      if (t?.id) setActiveThreadId(t.id);
+    } catch {
+      // non-fatal - fall through with existing thread
+    }
     // Always post the scan prompt to chat so the user sees activity immediately.
     sendToChat(prompt, { focusChat: from === "chat" });
+
     runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
       .then((plan) => {
         const r = plan as ScanResult;
