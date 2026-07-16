@@ -546,6 +546,8 @@ function Dashboard() {
   const [isDesktop, setIsDesktop] = useState(false);
   const [lensId, setLensId] = useState<ScanLensId>("wyckoff");
   const [lensOpen, setLensOpen] = useState(false);
+  const coachRef = useRef<HTMLDivElement>(null);
+  const [coachOpen, setCoachOpen] = useState(false);
   const [broker, setBroker] = useState<{ email: string; server: string; accountType: "demo" | "live" } | null>(null);
   const [activeCoach, setActiveCoach] = useState<string>(() =>
     typeof window === "undefined" ? "The Analyst" : readActiveCoach(),
@@ -605,6 +607,7 @@ function Dashboard() {
       if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) setPickerOpen(false);
       if (levelsRef.current && !levelsRef.current.contains(e.target as Node)) setLevelsOpen(false);
       if (lensRef.current && !lensRef.current.contains(e.target as Node)) setLensOpen(false);
+      if (coachRef.current && !coachRef.current.contains(e.target as Node)) setCoachOpen(false);
       if (viewMenuRef.current && !viewMenuRef.current.contains(e.target as Node)) setViewMenuOpen(false);
     };
     document.addEventListener("mousedown", onDown);
@@ -994,31 +997,57 @@ function Dashboard() {
             const Icon = meta.icon;
             const coachNames = Object.keys(COACH_ICON_META);
             return (
-              <div
-                className="relative inline-flex items-center gap-1.5 rounded-md border border-border bg-background/50 px-2.5 py-1.5 text-xs font-medium hover:border-primary/50 transition"
-                title="Change active AI coach"
-              >
-                <span className={`inline-flex h-5 w-5 items-center justify-center rounded-md ${meta.iconBg} ${meta.iconText} shrink-0`}>
-                  <Icon className="h-3 w-3" />
-                </span>
-                <span className="pr-4">{activeCoach}</span>
-                <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
-                <select
-                  value={activeCoach}
-                  onChange={(e) => {
-                    const name = e.target.value;
-                    if (name === activeCoach) return;
-                    writeActiveCoach(name);
-                    setActiveCoach(name);
-                    toast.success(`${name} is now your coach`);
-                  }}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  aria-label="Change active AI coach"
+              <div className="relative" ref={coachRef}>
+                <button
+                  onClick={() => setCoachOpen((o) => !o)}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/50 px-2.5 py-1.5 text-xs font-medium hover:border-primary/50 transition"
+                  title="Change active AI coach"
                 >
-                  {coachNames.map((name) => (
-                    <option key={name} value={name}>{name}</option>
-                  ))}
-                </select>
+                  <span className={`inline-flex h-5 w-5 items-center justify-center rounded-md ${meta.iconBg} ${meta.iconText} shrink-0`}>
+                    <Icon className="h-3 w-3" />
+                  </span>
+                  <span>{activeCoach}</span>
+                  <ChevronDown className={`h-3 w-3 transition-transform ${coachOpen ? "rotate-180" : ""}`} />
+                </button>
+                {coachOpen && (
+                  <div role="listbox" className="absolute right-0 mt-2 w-72 max-h-96 overflow-y-auto rounded-lg border border-border bg-card shadow-xl z-50">
+                    {coachNames.map((name) => {
+                      const m = COACH_ICON_META[name] ?? DEFAULT_COACH_ICON;
+                      const CIcon = m.icon;
+                      const isActive = name === activeCoach;
+                      return (
+                        <button
+                          key={name}
+                          role="option"
+                          aria-selected={isActive}
+                          onClick={() => {
+                            writeActiveCoach(name);
+                            setActiveCoach(name);
+                            setCoachOpen(false);
+                            if (name !== activeCoach) toast.success(`${name} is now your coach`);
+                          }}
+                          className={`w-full text-left px-3 py-2.5 text-sm border-b border-border/40 last:border-0 hover:bg-accent/40 transition ${
+                            isActive ? "bg-primary/10 text-primary" : ""
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className={`inline-flex h-5 w-5 items-center justify-center rounded-md ${m.iconBg} ${m.iconText} shrink-0`}>
+                                <CIcon className="h-3 w-3" />
+                              </span>
+                              <span className="font-medium truncate">{name}</span>
+                            </div>
+                            {isActive && <Check className="h-3.5 w-3.5 shrink-0" />}
+                          </div>
+                          <div className="text-[11px] text-muted-foreground mt-0.5 leading-snug pl-7">{m.tagline}</div>
+                        </button>
+                      );
+                    })}
+                    <Link to="/coaches" className="block px-3 py-2 text-[11px] text-muted-foreground hover:text-foreground border-t border-border/60">
+                      Manage all coaches →
+                    </Link>
+                  </div>
+                )}
               </div>
             );
           })()}
