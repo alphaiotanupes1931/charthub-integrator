@@ -1783,12 +1783,12 @@ function ChatHistoryList({
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!confirm("Delete this conversation?")) return;
+    if (!confirm("Delete this TradeMind conversation?")) return;
     try {
       await delFn({ data: { threadId: id } });
       setThreads((prev) => prev.filter((t) => t.id !== id));
       if (activeThreadId === id) onNew(null);
-    } catch { toast.error("Could not delete"); }
+    } catch { toast.error("Could not delete conversation"); }
   };
 
   return (
