@@ -546,6 +546,8 @@ function Dashboard() {
   const [isDesktop, setIsDesktop] = useState(false);
   const [lensId, setLensId] = useState<ScanLensId>("wyckoff");
   const [lensOpen, setLensOpen] = useState(false);
+  const coachRef = useRef<HTMLDivElement>(null);
+  const [coachOpen, setCoachOpen] = useState(false);
   const [broker, setBroker] = useState<{ email: string; server: string; accountType: "demo" | "live" } | null>(null);
   const [activeCoach, setActiveCoach] = useState<string>(() =>
     typeof window === "undefined" ? "The Analyst" : readActiveCoach(),
