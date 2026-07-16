@@ -79,7 +79,7 @@ export const listChatThreads = createServerFn({ method: "POST" })
       const nice = a.symbol ? (NICE[a.symbol] ?? a.symbol) : null;
       return {
         ...r,
-        preview: a.first ?? "",
+        preview: nice || a.first || "",
         symbol: nice,
       };
     });
