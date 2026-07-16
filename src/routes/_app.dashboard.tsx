@@ -1721,13 +1721,14 @@ function ChatHistoryList({
   const listFn = useServerFn(listChatThreads);
   const createFn = useServerFn(createChatThread);
   const delFn = useServerFn(deleteChatThread);
-  const [threads, setThreads] = useState<Array<{ id: string; title: string; updated_at: string }>>([]);
+  type ThreadRow = { id: string; title: string; updated_at: string; preview?: string; symbol?: string | null };
+  const [threads, setThreads] = useState<Array<ThreadRow>>([]);
   const [loading, setLoading] = useState(true);
 
   const load = () => {
     setLoading(true);
     listFn()
-      .then((rows: unknown) => setThreads(rows as Array<{ id: string; title: string; updated_at: string }>))
+      .then((rows: unknown) => setThreads(rows as Array<ThreadRow>))
       .catch(() => { /* ignore */ })
       .finally(() => setLoading(false));
   };
@@ -1739,6 +1740,9 @@ function ChatHistoryList({
       if (t) {
         setThreads((prev) => [{ id: t.id, title: t.title, updated_at: t.updated_at }, ...prev]);
         onNew(t.id);
+      }
+    } catch { toast.error("Could not start a new conversation"); }
+  };
       }
     } catch { toast.error("Could not start a new conversation"); }
   };
