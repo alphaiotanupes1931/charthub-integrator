@@ -1743,9 +1743,6 @@ function ChatHistoryList({
       }
     } catch { toast.error("Could not start a new conversation"); }
   };
-      }
-    } catch { toast.error("Could not start a new conversation"); }
-  };
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
