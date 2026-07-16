@@ -240,6 +240,28 @@ function lensContextBlock(lens?: LensCtx | null): string {
   return `ACTIVE LENS: ${lens.name}\nEmphasis: ${lens.promptEmphasis}`;
 }
 
+function historyTitleFromChart(chart?: ChartCtx): string | null {
+  const raw = chart?.ticker?.trim();
+  if (!raw) return null;
+  const match = raw.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
+  const displayName = match ? match[1].trim() : raw;
+  const ticker = (match ? match[2].trim() : raw).toUpperCase().replace("/", "");
+  const nice: Record<string, string> = {
+    XAUUSD: "XAU Gold",
+    XAGUSD: "XAG Silver",
+    BTCUSD: "BTC",
+    ETHUSD: "ETH",
+    XRPUSD: "XRP",
+    NAS100: "NAS100",
+    US30: "US30",
+    SPX500: "SPX500",
+    "WTI OIL": "WTI Oil",
+  };
+  if (nice[ticker]) return nice[ticker];
+  if (/^[A-Z]{6}$/.test(ticker)) return ticker;
+  return displayName.slice(0, 60) || null;
+}
+
 function systemPrompt(coach: string | undefined, journalContext: string, chartCtx: string, strategyCtx: string, lensCtx: string) {
   return `${coachPersona(coach)}
 
@@ -507,7 +529,18 @@ export const Route = createFileRoute("/api/chat")({
                 const { error } = await sb.from("chat_messages").insert(toInsert);
                 if (error) console.error("[chat] persist error", error.message);
               }
-              // Auto-title from first user message
+              // Keep history titled by the instrument on the chart, not by the
+              // first casual message like "yo".
+              const chartTitle = historyTitleFromChart(enrichedChart ?? chart);
+              if (chartTitle && !thread.title.toLowerCase().includes(chartTitle.toLowerCase())) {
+                await sb
+                  .from("chat_threads")
+                  .update({ title: chartTitle.slice(0, 60) })
+                  .eq("id", threadId);
+                return;
+              }
+
+              // Fallback only when there is no chart context available.
               const firstUser = finalMessages.find((m) => m.role === "user");
               if (firstUser && thread.title === "New conversation") {
                 const text = (firstUser.parts as Array<{ type: string; text?: string }>)
