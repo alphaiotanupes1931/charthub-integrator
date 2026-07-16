@@ -48,10 +48,14 @@ function ChatLayout() {
   const handleDelete = useCallback(async (id: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!confirm("Delete this conversation?")) return;
-    await delFn({ data: { threadId: id } });
-    setThreads((prev) => prev.filter((t) => t.id !== id));
-    if (params.threadId === id) navigate({ to: "/chat" });
+    if (!confirm("Delete this TradeMind conversation?")) return;
+    try {
+      await delFn({ data: { threadId: id } });
+      setThreads((prev) => prev.filter((t) => t.id !== id));
+      if (params.threadId === id) navigate({ to: "/chat" });
+    } catch {
+      toast.error("Could not delete conversation");
+    }
   }, [delFn, navigate, params.threadId]);
 
   return (
