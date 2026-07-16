@@ -117,7 +117,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 function RootShell({ children }: { children: ReactNode }) {
   const themeScript = `(function(){try{localStorage.removeItem('trademind.theme');}catch(e){}document.documentElement.classList.remove('light');document.documentElement.classList.add('dark');})();`;
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <head>
         <HeadContent />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
