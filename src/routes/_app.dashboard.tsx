@@ -822,13 +822,16 @@ function Dashboard() {
     setRightTab("chat");
     setChatPanelView("conversation");
     try {
-      const t = await createChatThreadFn({ data: { title: "New conversation" } });
+      // Title new chats with the currently-viewed instrument so history entries
+      // stay identifiable even before any scan or symbol is mentioned in-thread.
+      const t = await createChatThreadFn({ data: { title: symbolLabel(symbol) } });
       if (t?.id) setActiveThreadId(t.id);
     } catch {
       setActiveThreadId(null);
       toast.error("Could not start a new chat");
     }
   };
+
 
   const runScan = async (from: "chat" | "analysis" = "analysis") => {
     setScanning(true);
