@@ -1793,15 +1793,8 @@ function ChatHistoryList({
               <MessageSquare className="h-3.5 w-3.5 shrink-0 opacity-70 mt-0.5" />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
-                  {t.symbol && (
-                    <span className="rounded bg-primary/15 text-primary px-1.5 py-0.5 text-[10px] font-semibold tracking-wide">
-                      {t.symbol}
-                    </span>
-                  )}
+                  <span className="truncate text-[12px] font-medium text-foreground/90">{t.preview || t.title}</span>
                   <span className="text-[10px] text-muted-foreground shrink-0">{when}</span>
-                </div>
-                <div className="truncate text-[12px] text-foreground/80 mt-0.5">
-                  {t.preview || t.title}
                 </div>
               </div>
               <button
