@@ -57,6 +57,22 @@ function symbolLabel(s: Symbol) {
   return s.name ? `${s.name} (${s.ticker})` : s.ticker;
 }
 
+function historyInstrumentTitle(s: Symbol) {
+  const key = s.ticker.toUpperCase().replace("/", "");
+  const nice: Record<string, string> = {
+    XAUUSD: "XAU Gold",
+    XAGUSD: "XAG Silver",
+    BTCUSD: "BTC",
+    ETHUSD: "ETH",
+    XRPUSD: "XRP",
+    NAS100: "NAS100",
+    US30: "US30",
+    SPX500: "SPX500",
+    "WTI OIL": "WTI Oil",
+  };
+  return nice[key] ?? key;
+}
+
 // Guard: any scan prompt must reference the symbol currently shown on the chart.
 // If the prompt is missing the friendly name or the ticker, we warn loudly so the
 // mismatch can never silently ship (e.g. "analyzing XAU/USD" while viewing Gold,
@@ -635,7 +651,7 @@ function Dashboard() {
   const runPlan = useServerFn(runResearchPlan);
   const createChatThreadFn = useServerFn(createChatThread);
 
-  const sendToChat = (prompt: string, opts?: { focusChat?: boolean }) => {
+  const sendToChat = (prompt: string, opts?: { focusChat?: boolean; targetThreadId?: string | null }) => {
     setRightOpen(true);
     setChatPanelView("conversation");
     if (opts?.focusChat !== false) {
@@ -646,7 +662,7 @@ function Dashboard() {
     const trySend = () => {
       attempts += 1;
       if (chatRef.current) {
-        chatRef.current.scan(prompt);
+        chatRef.current.scan(prompt, opts?.targetThreadId);
         return;
       }
       if (attempts < 20) window.setTimeout(trySend, 100);
@@ -824,7 +840,7 @@ function Dashboard() {
     try {
       // Title new chats with the currently-viewed instrument so history entries
       // stay identifiable even before any scan or symbol is mentioned in-thread.
-      const t = await createChatThreadFn({ data: { title: symbolLabel(symbol) } });
+      const t = await createChatThreadFn({ data: { title: historyInstrumentTitle(symbol) } });
       if (t?.id) setActiveThreadId(t.id);
     } catch {
       setActiveThreadId(null);
@@ -854,14 +870,18 @@ function Dashboard() {
     // Always start a fresh chat thread per scan so each scan gets its own
     // history entry tagged with the scanned instrument - matches behavior
     // when running a scan from within a new chat.
+    let scanThreadId: string | null = null;
     try {
-      const t = await createChatThreadFn({ data: { title: `${symbolLabel(symbol)} Scan` } });
-      if (t?.id) setActiveThreadId(t.id);
+      const t = await createChatThreadFn({ data: { title: `${historyInstrumentTitle(symbol)} Scan` } });
+      if (t?.id) {
+        scanThreadId = t.id;
+        setActiveThreadId(t.id);
+      }
     } catch {
       // non-fatal - fall through with existing thread
     }
     // Always post the scan prompt to chat so the user sees activity immediately.
-    sendToChat(prompt, { focusChat: from === "chat" });
+    sendToChat(prompt, { focusChat: from === "chat", targetThreadId: scanThreadId });
 
     runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
       .then((plan) => {
@@ -871,7 +891,7 @@ function Dashboard() {
         // Single source of truth: the Analysis engine's grade card is always
         // appended to the chat thread so Chat and Analysis never disagree.
         const replyText = scanResultToChatText(r, symbol);
-        chatRef.current?.appendScanReply(replyText);
+        chatRef.current?.appendScanReply(replyText, scanThreadId);
       })
       .catch(() => {
         setResult({
@@ -1454,6 +1474,7 @@ function Dashboard() {
                     <div className="flex-1 min-h-0 overflow-y-auto">
                       <ChatHistoryList
                         activeThreadId={activeThreadId}
+                        currentTitle={historyInstrumentTitle(symbol)}
                         onPick={(id) => { setActiveThreadId(id); setChatPanelView("conversation"); }}
                         onNew={(id) => { setActiveThreadId(id); setChatPanelView("conversation"); }}
                       />
@@ -1576,6 +1597,7 @@ function Dashboard() {
               <div className="flex-1 min-h-0 overflow-y-auto">
                 <ChatHistoryList
                   activeThreadId={activeThreadId}
+                  currentTitle={historyInstrumentTitle(symbol)}
                   onPick={(id) => { setActiveThreadId(id); setChatPanelView("conversation"); }}
                   onNew={(id) => { setActiveThreadId(id); setChatPanelView("conversation"); }}
                 />
@@ -1724,10 +1746,12 @@ function FloatingCoach({
 
 function ChatHistoryList({
   activeThreadId,
+  currentTitle,
   onPick,
   onNew,
 }: {
   activeThreadId: string | null;
+  currentTitle: string;
   onPick: (id: string) => void;
   onNew: (id: string | null) => void;
 }) {
@@ -1749,9 +1773,9 @@ function ChatHistoryList({
 
   const handleNew = async () => {
     try {
-      const t = await createFn({ data: {} });
+      const t = await createFn({ data: { title: currentTitle } });
       if (t) {
-        setThreads((prev) => [{ id: t.id, title: t.title, updated_at: t.updated_at }, ...prev]);
+        setThreads((prev) => [{ id: t.id, title: t.title, updated_at: t.updated_at, preview: currentTitle }, ...prev]);
         onNew(t.id);
       }
     } catch { toast.error("Could not start a new conversation"); }

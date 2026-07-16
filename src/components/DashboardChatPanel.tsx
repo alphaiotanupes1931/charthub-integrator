@@ -33,10 +33,10 @@ import { parseAiPayload, type ChartAnnotation, type ChartGrade, type ConceptRef 
 import { ConceptDiagram } from "@/components/ConceptDiagram";
 
 export type DashboardChatHandle = {
-  scan: (prompt: string) => void;
-  attach: (file: File, prompt: string) => void;
-  ensureScanReply: (text: string) => void;
-  appendScanReply: (text: string) => void;
+  scan: (prompt: string, targetThreadId?: string | null) => void;
+  attach: (file: File, prompt: string, targetThreadId?: string | null) => void;
+  ensureScanReply: (text: string, targetThreadId?: string | null) => void;
+  appendScanReply: (text: string, targetThreadId?: string | null) => void;
   stop: () => void;
 };
 
@@ -58,6 +58,12 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
   const pendingRef = useRef<Array<{ type: "scan"; prompt: string } | { type: "attach"; file: File; prompt: string } | { type: "ensureScanReply"; text: string } | { type: "appendScanReply"; text: string }>>([]);
   const getThread = useServerFn(getOrCreateDashboardThread);
   const getMsgs = useServerFn(getChatMessages);
+  const activeThreadRef = useRef<string | null>(threadId);
+  useEffect(() => { activeThreadRef.current = threadId; }, [threadId]);
+
+  const shouldQueueForThread = useCallback((targetThreadId?: string | null) => {
+    return !!targetThreadId && activeThreadRef.current !== targetThreadId;
+  }, []);
 
   const flushPending = useCallback(() => {
     const inner = innerRef.current;
@@ -72,19 +78,35 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
   }, []);
 
   useImperativeHandle(ref, () => ({
-    scan: (prompt: string) => {
+    scan: (prompt: string, targetThreadId?: string | null) => {
+      if (shouldQueueForThread(targetThreadId)) {
+        pendingRef.current.push({ type: "scan", prompt });
+        return;
+      }
       if (innerRef.current) innerRef.current.scan(prompt);
       else pendingRef.current.push({ type: "scan", prompt });
     },
-    attach: (file: File, prompt: string) => {
+    attach: (file: File, prompt: string, targetThreadId?: string | null) => {
+      if (shouldQueueForThread(targetThreadId)) {
+        pendingRef.current.push({ type: "attach", file, prompt });
+        return;
+      }
       if (innerRef.current) innerRef.current.attach(file, prompt);
       else pendingRef.current.push({ type: "attach", file, prompt });
     },
-    ensureScanReply: (text: string) => {
+    ensureScanReply: (text: string, targetThreadId?: string | null) => {
+      if (shouldQueueForThread(targetThreadId)) {
+        pendingRef.current.push({ type: "ensureScanReply", text });
+        return;
+      }
       if (innerRef.current) innerRef.current.ensureScanReply(text);
       else pendingRef.current.push({ type: "ensureScanReply", text });
     },
-    appendScanReply: (text: string) => {
+    appendScanReply: (text: string, targetThreadId?: string | null) => {
+      if (shouldQueueForThread(targetThreadId)) {
+        pendingRef.current.push({ type: "appendScanReply", text });
+        return;
+      }
       if (innerRef.current) innerRef.current.appendScanReply(text);
       else pendingRef.current.push({ type: "appendScanReply", text });
     },
@@ -92,7 +114,7 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
       pendingRef.current = [];
       innerRef.current?.stop();
     },
-  }), []);
+  }), [shouldQueueForThread]);
 
   // Wait for a real Supabase session before calling auth-protected server fns.
   // On mobile (slow cold start, app resumed from background) the token can take
@@ -124,6 +146,7 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
 
   useEffect(() => {
     let cancelled = false;
+    innerRef.current = null;
     setInitial(null);
     setThreadId(threadIdOverride ?? null);
 
