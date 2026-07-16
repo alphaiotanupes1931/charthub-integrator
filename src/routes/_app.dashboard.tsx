@@ -651,7 +651,7 @@ function Dashboard() {
   const runPlan = useServerFn(runResearchPlan);
   const createChatThreadFn = useServerFn(createChatThread);
 
-  const sendToChat = (prompt: string, opts?: { focusChat?: boolean }) => {
+  const sendToChat = (prompt: string, opts?: { focusChat?: boolean; targetThreadId?: string | null }) => {
     setRightOpen(true);
     setChatPanelView("conversation");
     if (opts?.focusChat !== false) {
@@ -662,7 +662,7 @@ function Dashboard() {
     const trySend = () => {
       attempts += 1;
       if (chatRef.current) {
-        chatRef.current.scan(prompt);
+        chatRef.current.scan(prompt, opts?.targetThreadId);
         return;
       }
       if (attempts < 20) window.setTimeout(trySend, 100);
@@ -870,14 +870,18 @@ function Dashboard() {
     // Always start a fresh chat thread per scan so each scan gets its own
     // history entry tagged with the scanned instrument - matches behavior
     // when running a scan from within a new chat.
+    let scanThreadId: string | null = null;
     try {
       const t = await createChatThreadFn({ data: { title: `${historyInstrumentTitle(symbol)} Scan` } });
-      if (t?.id) setActiveThreadId(t.id);
+      if (t?.id) {
+        scanThreadId = t.id;
+        setActiveThreadId(t.id);
+      }
     } catch {
       // non-fatal - fall through with existing thread
     }
     // Always post the scan prompt to chat so the user sees activity immediately.
-    sendToChat(prompt, { focusChat: from === "chat" });
+    sendToChat(prompt, { focusChat: from === "chat", targetThreadId: scanThreadId });
 
     runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
       .then((plan) => {
@@ -887,7 +891,7 @@ function Dashboard() {
         // Single source of truth: the Analysis engine's grade card is always
         // appended to the chat thread so Chat and Analysis never disagree.
         const replyText = scanResultToChatText(r, symbol);
-        chatRef.current?.appendScanReply(replyText);
+        chatRef.current?.appendScanReply(replyText, scanThreadId);
       })
       .catch(() => {
         setResult({
