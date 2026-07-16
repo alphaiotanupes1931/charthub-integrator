@@ -77,12 +77,9 @@ export const listChatThreads = createServerFn({ method: "POST" })
     return rows.map((r) => {
       const a = acc[r.id as string] ?? {};
       const nice = a.symbol ? (NICE[a.symbol] ?? a.symbol) : null;
-      const topic = a.scanned && nice
-        ? `${nice} Scan${a.grade ? ` ${a.grade}` : ""}`
-        : (a.first ?? "");
       return {
         ...r,
-        preview: topic,
+        preview: a.first ?? "",
         symbol: nice,
       };
     });
