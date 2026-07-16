@@ -44,25 +44,48 @@ export const listChatThreads = createServerFn({ method: "POST" })
       .select("thread_id,role,parts,created_at")
       .in("thread_id", ids)
       .order("created_at", { ascending: false })
-      .limit(400);
+      .limit(2000);
 
     const SYMBOL_RE = /\b(XAU\/?USD|XAG\/?USD|BTC(?:\/?USD)?|ETH(?:\/?USD)?|EUR\/?USD|GBP\/?USD|USD\/?JPY|AUD\/?USD|NZD\/?USD|USD\/?CAD|USD\/?CHF|NAS100|US30|SPX500|SPY|QQQ|DIA|NDX|GSPC|DJI|[A-Z]{2,5}\/[A-Z]{3,5})\b/i;
-    const previews: Record<string, { text: string; symbol: string | null }> = {};
-    for (const m of (msgs ?? []) as Array<{ thread_id: string; role: string; parts: unknown }>) {
+    const GRADE_RE = /\bGrade[:\s]*([A-DF][+-]?)\b|\b([A-DF][+-])\b/;
+    const NICE: Record<string, string> = {
+      XAUUSD: "XAU Gold", "XAU/USD": "XAU Gold",
+      XAGUSD: "XAG Silver", "XAG/USD": "XAG Silver",
+      BTC: "BTC", BTCUSD: "BTC", "BTC/USD": "BTC",
+      ETH: "ETH", ETHUSD: "ETH", "ETH/USD": "ETH",
+      NAS100: "NAS100", NDX: "NAS100", QQQ: "NAS100",
+      US30: "US30", DJI: "US30", DIA: "US30",
+      SPX500: "SPX500", GSPC: "SPX500", SPY: "SPX500",
+    };
+    const acc: Record<string, { first?: string; symbol?: string; grade?: string; scanned?: boolean }> = {};
+    // Iterate oldest→newest so "first" user text is captured, latest symbol/grade wins.
+    const ordered = (msgs ?? []).slice().reverse() as Array<{ thread_id: string; role: string; parts: unknown }>;
+    for (const m of ordered) {
       const tid = m.thread_id;
-      if (previews[tid]) continue;
       const parts = Array.isArray(m.parts) ? (m.parts as Array<{ type?: string; text?: string }>) : [];
       const text = parts.map((p) => (p?.type === "text" ? p.text ?? "" : "")).join(" ").replace(/\s+/g, " ").trim();
       if (!text) continue;
-      const sym = text.match(SYMBOL_RE)?.[0]?.toUpperCase() ?? null;
-      previews[tid] = { text: text.slice(0, 80), symbol: sym };
+      const entry = acc[tid] ?? (acc[tid] = {});
+      if (!entry.first && m.role === "user") entry.first = text.slice(0, 80);
+      const sym = text.match(SYMBOL_RE)?.[0];
+      if (sym) entry.symbol = sym.toUpperCase().replace("/", "");
+      const g = text.match(GRADE_RE);
+      if (g) entry.grade = (g[1] ?? g[2] ?? "").toUpperCase();
+      if (/\bscan\b|\bReading:\s/i.test(text)) entry.scanned = true;
     }
 
-    return rows.map((r) => ({
-      ...r,
-      preview: previews[r.id as string]?.text ?? "",
-      symbol: previews[r.id as string]?.symbol ?? null,
-    }));
+    return rows.map((r) => {
+      const a = acc[r.id as string] ?? {};
+      const nice = a.symbol ? (NICE[a.symbol] ?? a.symbol) : null;
+      const topic = a.scanned && nice
+        ? `${nice} Scan${a.grade ? ` ${a.grade}` : ""}`
+        : (a.first ?? "");
+      return {
+        ...r,
+        preview: topic,
+        symbol: nice,
+      };
+    });
   });
 
 export const getOrCreateDashboardThread = createServerFn({ method: "POST" })
