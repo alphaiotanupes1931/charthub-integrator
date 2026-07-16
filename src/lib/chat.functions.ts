@@ -76,14 +76,24 @@ export const listChatThreads = createServerFn({ method: "POST" })
 
     return rows.map((r) => {
       const a = acc[r.id as string] ?? {};
-      const nice = a.symbol ? (NICE[a.symbol] ?? a.symbol) : null;
+      const title = (r.title as string) ?? "";
+      // Also scan the thread's own title so instrument-titled chats (created
+      // from the dashboard before any message is sent) are recognized.
+      const titleSym = title.match(SYMBOL_RE)?.[0];
+      const symKey = a.symbol ?? (titleSym ? titleSym.toUpperCase().replace("/", "") : null);
+      const nice = symKey ? (NICE[symKey] ?? symKey) : null;
+      // Prefer, in order: friendly symbol name, a non-generic thread title,
+      // then the first user message. Never fall back to bare chatter like "yo".
+      const isGenericTitle = !title || /^(new conversation|dashboard scans)$/i.test(title);
+      const preview = nice || (!isGenericTitle ? title : "") || a.first || "";
       return {
         ...r,
-        preview: nice || a.first || "",
+        preview,
         symbol: nice,
       };
     });
   });
+
 
 export const getOrCreateDashboardThread = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
