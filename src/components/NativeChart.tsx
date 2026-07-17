@@ -466,6 +466,16 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     };
   }, [resolvedTimezone, timeFormat]);
 
+  // Apply live candle-color updates without recreating the chart
+  useEffect(() => {
+    if (!ready || !seriesRef.current) return;
+    seriesRef.current.applyOptions({
+      upColor: candleColors.up, downColor: candleColors.down,
+      borderUpColor: candleColors.borderUp, borderDownColor: candleColors.borderDown,
+      wickUpColor: candleColors.wickUp, wickDownColor: candleColors.wickDown,
+    });
+  }, [ready, candleColors]);
+
   // Convert to Heikin-Ashi when requested
   const displayCandles = useMemo<Candle[]>(() => {
     if (candleType !== "ha" || candles.length === 0) return candles;
