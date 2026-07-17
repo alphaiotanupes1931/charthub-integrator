@@ -450,9 +450,9 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       },
     });
     const series = chart.addSeries(CandlestickSeries, {
-      upColor: "#34d399", downColor: "#f87171",
-      borderUpColor: "#34d399", borderDownColor: "#f87171",
-      wickUpColor: "#34d399", wickDownColor: "#f87171",
+      upColor: candleColors.up, downColor: candleColors.down,
+      borderUpColor: candleColors.borderUp, borderDownColor: candleColors.borderDown,
+      wickUpColor: candleColors.wickUp, wickDownColor: candleColors.wickDown,
     });
     chartRef.current = chart;
     seriesRef.current = series;
