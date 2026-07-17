@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Camera } from "lucide-react";
+import { Camera, Palette, RotateCcw, X } from "lucide-react";
+import { useCandleColors, type CandleColors } from "@/hooks/useCandleColors";
 import { useQuery } from "@tanstack/react-query";
 import {
   createChart,
