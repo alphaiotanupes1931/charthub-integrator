@@ -5,9 +5,9 @@ const GATEWAY_KEY_HEADER = ["Lovable", "API", "Key"].join("-");
 
 export function createAiGatewayProvider(apiKey: string) {
   return createOpenAICompatible({
-    name: "ai-gateway",
+    name: "lovable",
     baseURL: GATEWAY_BASE_URL,
-    headers: { [GATEWAY_KEY_HEADER]: apiKey },
+    headers: { [GATEWAY_KEY_HEADER]: apiKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
   });
 }
 

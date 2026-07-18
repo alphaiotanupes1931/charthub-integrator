@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { convertToModelMessages, streamText, type UIMessage } from "ai";
+import { convertToModelMessages, streamText, type StreamTextTransform, type ToolSet, type UIMessage } from "ai";
 import { createClient } from "@supabase/supabase-js";
 import { createAiGatewayProvider } from "@/lib/ai-gateway.server";
 import {
@@ -13,6 +13,63 @@ import {
 import type { Database, Json } from "@/integrations/supabase/types";
 
 const DAILY_AI_CAP = 100; // requests per user per UTC day
+
+const stripReasoningTransform: StreamTextTransform<ToolSet> = () =>
+  new TransformStream({
+    transform(chunk, controller) {
+      if (chunk.type === "reasoning-start" || chunk.type === "reasoning-delta" || chunk.type === "reasoning-end") {
+        return;
+      }
+      controller.enqueue(chunk);
+    },
+  });
+
+const stripReasoningStreamEvents = (response: Response) => {
+  if (!response.body) return response;
+
+  const decoder = new TextDecoder();
+  const encoder = new TextEncoder();
+  let buffer = "";
+
+  const filtered = response.body.pipeThrough(
+    new TransformStream<Uint8Array, Uint8Array>({
+      transform(chunk, controller) {
+        buffer += decoder.decode(chunk, { stream: true }).replace(/\r\n/g, "\n");
+        const events = buffer.split("\n\n");
+        buffer = events.pop() ?? "";
+
+        for (const event of events) {
+          const dataLine = event
+            .split("\n")
+            .find((line) => line.startsWith("data: "));
+          if (dataLine) {
+            const data = dataLine.slice(6).trim();
+            if (data !== "[DONE]") {
+              try {
+                const parsed = JSON.parse(data) as { type?: string };
+                if (parsed.type === "reasoning-start" || parsed.type === "reasoning-delta" || parsed.type === "reasoning-end") {
+                  continue;
+                }
+              } catch {
+                // Keep non-JSON stream chunks intact.
+              }
+            }
+          }
+          controller.enqueue(encoder.encode(`${event}\n\n`));
+        }
+      },
+      flush(controller) {
+        if (buffer) controller.enqueue(encoder.encode(buffer.replace(/\r\n/g, "\n")));
+      },
+    }),
+  );
+
+  return new Response(filtered, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers,
+  });
+};
 
 type Trade = {
   id: string;
@@ -534,13 +591,18 @@ export const Route = createFileRoute("/api/chat")({
 
         const gateway = createAiGatewayProvider(key);
         const result = streamText({
-          model: gateway("google/gemini-2.5-pro"),
+          model: gateway("openai/gpt-5.4-mini"),
           system,
           messages: await convertToModelMessages(messages),
-          maxOutputTokens: 2048,
+          providerOptions: {
+            lovable: {
+              service_tier: "priority",
+            },
+          },
+          experimental_transform: stripReasoningTransform,
         });
 
-        return result.toUIMessageStreamResponse({
+        const response = result.toUIMessageStreamResponse({
           headers: { "X-Request-Id": reqId },
           originalMessages: messages,
           onFinish: async ({ messages: finalMessages }) => {
@@ -596,6 +658,8 @@ export const Route = createFileRoute("/api/chat")({
             }
           },
         });
+
+        return stripReasoningStreamEvents(response);
       },
     },
   },
