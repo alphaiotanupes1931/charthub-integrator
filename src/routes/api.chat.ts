@@ -34,7 +34,7 @@ const stripReasoningStreamEvents = (response: Response) => {
   const filtered = response.body.pipeThrough(
     new TransformStream<Uint8Array, Uint8Array>({
       transform(chunk, controller) {
-        buffer += decoder.decode(chunk, { stream: true });
+        buffer += decoder.decode(chunk, { stream: true }).replace(/\r\n/g, "\n");
         const events = buffer.split("\n\n");
         buffer = events.pop() ?? "";
 
@@ -59,7 +59,7 @@ const stripReasoningStreamEvents = (response: Response) => {
         }
       },
       flush(controller) {
-        if (buffer) controller.enqueue(encoder.encode(buffer));
+        if (buffer) controller.enqueue(encoder.encode(buffer.replace(/\r\n/g, "\n")));
       },
     }),
   );
