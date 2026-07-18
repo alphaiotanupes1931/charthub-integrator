@@ -538,6 +538,11 @@ export const Route = createFileRoute("/api/chat")({
           system,
           messages: await convertToModelMessages(messages),
           maxOutputTokens: 4096,
+          providerOptions: {
+            "ai-gateway": {
+              reasoning: { enabled: false },
+            },
+          },
         });
 
         return result.toUIMessageStreamResponse({
