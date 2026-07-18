@@ -519,8 +519,14 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
         window.setTimeout(addIfStillMissing, 500);
       },
       appendScanReply: (text: string) => {
-        try { stop(); } catch { /* ignore */ }
-        appendAssistantMessage(text);
+        const appendWhenCoachIsDone = () => {
+          if (statusRef.current === "submitted" || statusRef.current === "streaming") {
+            window.setTimeout(appendWhenCoachIsDone, 350);
+            return;
+          }
+          appendAssistantMessage(text);
+        };
+        appendWhenCoachIsDone();
       },
     }), [sendMessage, chatBusy, voice, stop, checkAndReserveQuota, isAdmin, assistantCount, hasVisibleAssistantReplySince, appendAssistantMessage]);
 

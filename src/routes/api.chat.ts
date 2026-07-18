@@ -537,7 +537,7 @@ export const Route = createFileRoute("/api/chat")({
           model: gateway("google/gemini-2.5-pro"),
           system,
           messages: await convertToModelMessages(messages),
-          maxOutputTokens: 2048,
+          maxOutputTokens: 4096,
         });
 
         return result.toUIMessageStreamResponse({
