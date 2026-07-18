@@ -534,7 +534,7 @@ export const Route = createFileRoute("/api/chat")({
 
         const gateway = createAiGatewayProvider(key);
         const result = streamText({
-          model: gateway("openai/gpt-5.5"),
+          model: gateway("google/gemini-3.5-flash"),
           system,
           messages: await convertToModelMessages(messages),
           maxOutputTokens: 4096,
