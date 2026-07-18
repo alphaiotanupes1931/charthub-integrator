@@ -534,9 +534,10 @@ export const Route = createFileRoute("/api/chat")({
 
         const gateway = createAiGatewayProvider(key);
         const result = streamText({
-          model: gateway("google/gemini-3-flash-preview"),
+          model: gateway("google/gemini-2.5-pro"),
           system,
           messages: await convertToModelMessages(messages),
+          maxOutputTokens: 2048,
         });
 
         return result.toUIMessageStreamResponse({
