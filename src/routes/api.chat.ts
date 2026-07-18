@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { convertToModelMessages, streamText, type UIMessage } from "ai";
+import { convertToModelMessages, streamText, type StreamTextTransform, type ToolSet, type UIMessage } from "ai";
 import { createClient } from "@supabase/supabase-js";
 import { createAiGatewayProvider } from "@/lib/ai-gateway.server";
 import {
@@ -13,6 +13,16 @@ import {
 import type { Database, Json } from "@/integrations/supabase/types";
 
 const DAILY_AI_CAP = 100; // requests per user per UTC day
+
+const stripReasoningTransform: StreamTextTransform<ToolSet> = () =>
+  new TransformStream({
+    transform(chunk, controller) {
+      if (chunk.type === "reasoning-start" || chunk.type === "reasoning-delta" || chunk.type === "reasoning-end") {
+        return;
+      }
+      controller.enqueue(chunk);
+    },
+  });
 
 type Trade = {
   id: string;
@@ -543,6 +553,7 @@ export const Route = createFileRoute("/api/chat")({
               reasoningEffort: "none",
             },
           },
+          experimental_transform: stripReasoningTransform,
         });
 
         return result.toUIMessageStreamResponse({
