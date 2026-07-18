@@ -594,7 +594,6 @@ export const Route = createFileRoute("/api/chat")({
           model: gateway("openai/gpt-5.4-mini"),
           system,
           messages: await convertToModelMessages(messages),
-          maxOutputTokens: 4096,
           providerOptions: {
             lovable: {
               service_tier: "priority",
