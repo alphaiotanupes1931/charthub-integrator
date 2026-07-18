@@ -24,6 +24,53 @@ const stripReasoningTransform: StreamTextTransform<ToolSet> = () =>
     },
   });
 
+const stripReasoningStreamEvents = (response: Response) => {
+  if (!response.body) return response;
+
+  const decoder = new TextDecoder();
+  const encoder = new TextEncoder();
+  let buffer = "";
+
+  const filtered = response.body.pipeThrough(
+    new TransformStream<Uint8Array, Uint8Array>({
+      transform(chunk, controller) {
+        buffer += decoder.decode(chunk, { stream: true });
+        const events = buffer.split("\n\n");
+        buffer = events.pop() ?? "";
+
+        for (const event of events) {
+          const dataLine = event
+            .split("\n")
+            .find((line) => line.startsWith("data: "));
+          if (dataLine) {
+            const data = dataLine.slice(6).trim();
+            if (data !== "[DONE]") {
+              try {
+                const parsed = JSON.parse(data) as { type?: string };
+                if (parsed.type === "reasoning-start" || parsed.type === "reasoning-delta" || parsed.type === "reasoning-end") {
+                  continue;
+                }
+              } catch {
+                // Keep non-JSON stream chunks intact.
+              }
+            }
+          }
+          controller.enqueue(encoder.encode(`${event}\n\n`));
+        }
+      },
+      flush(controller) {
+        if (buffer) controller.enqueue(encoder.encode(buffer));
+      },
+    }),
+  );
+
+  return new Response(filtered, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers,
+  });
+};
+
 type Trade = {
   id: string;
   date: string;
@@ -544,19 +591,19 @@ export const Route = createFileRoute("/api/chat")({
 
         const gateway = createAiGatewayProvider(key);
         const result = streamText({
-          model: gateway("openai/gpt-5.6-terra"),
+          model: gateway("openai/gpt-5.4-mini"),
           system,
           messages: await convertToModelMessages(messages),
           maxOutputTokens: 4096,
           providerOptions: {
             lovable: {
-              reasoningEffort: "none",
+              service_tier: "priority",
             },
           },
           experimental_transform: stripReasoningTransform,
         });
 
-        return result.toUIMessageStreamResponse({
+        const response = result.toUIMessageStreamResponse({
           headers: { "X-Request-Id": reqId },
           originalMessages: messages,
           onFinish: async ({ messages: finalMessages }) => {
@@ -612,6 +659,8 @@ export const Route = createFileRoute("/api/chat")({
             }
           },
         });
+
+        return stripReasoningStreamEvents(response);
       },
     },
   },
