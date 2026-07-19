@@ -9,13 +9,15 @@ export type CandleColors = {
   borderDown: string;
 };
 
+// TradingView-style defaults (teal/red) so the setup view matches the live
+// trading view look out of the box. Users can still override in Settings.
 export const DEFAULT_CANDLE_COLORS: CandleColors = {
-  up: "#34d399",
-  down: "#f87171",
-  wickUp: "#34d399",
-  wickDown: "#f87171",
-  borderUp: "#34d399",
-  borderDown: "#f87171",
+  up: "#26a69a",
+  down: "#ef5350",
+  wickUp: "#26a69a",
+  wickDown: "#ef5350",
+  borderUp: "#26a69a",
+  borderDown: "#ef5350",
 };
 
 const STORAGE_KEY = "trademind.candleColors.v1";
