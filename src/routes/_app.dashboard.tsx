@@ -1262,6 +1262,16 @@ function Dashboard() {
         </button>
 
 
+
+        <button
+          onClick={() => restartTutorial()}
+          className="hidden lg:inline-flex items-center gap-1.5 rounded-md border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary hover:bg-primary/15 transition"
+          title="Show me a tour of the features"
+        >
+          <HelpCircle className="h-3 w-3" />
+          <span>Show Me</span>
+        </button>
+
         <button
           onClick={() => setRightOpen((v) => !v)}
           className="hidden lg:inline-flex items-center gap-1.5 rounded-md border border-border bg-background/50 px-3 py-1 text-xs font-semibold text-foreground hover:border-primary/40 transition"
