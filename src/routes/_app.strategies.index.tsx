@@ -18,6 +18,7 @@ import {
 export const Route = createFileRoute("/_app/strategies/")({
   head: () => ({ meta: [{ title: "Strategies, TradeMind" }] }),
   component: StrategiesPage,
+  validateSearch: (s: Record<string, unknown>) => ({ edit: typeof s.edit === "string" ? s.edit : undefined }),
 });
 
 const levelColor: Record<Level, string> = {
