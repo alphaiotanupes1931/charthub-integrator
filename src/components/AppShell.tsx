@@ -291,6 +291,40 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 }
 
+function ComplianceGate() {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    try {
+      if (typeof window === "undefined") return;
+      const seen = localStorage.getItem("trademind.compliance.ack.v1");
+      if (!seen) setOpen(true);
+    } catch { /* ignore */ }
+  }, []);
+  if (!open) return null;
+  const accept = () => {
+    try { localStorage.setItem("trademind.compliance.ack.v1", new Date().toISOString()); } catch { /* ignore */ }
+    setOpen(false);
+  };
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl">
+        <div className="text-lg font-semibold mb-2">Welcome to TradeMind</div>
+        <p className="text-sm text-muted-foreground mb-4">
+          TradeMind provides educational analysis and coaching tools only. Nothing here is financial,
+          investment, or trading advice. Trading involves risk of loss. You are solely responsible for
+          your decisions.
+        </p>
+        <button
+          onClick={accept}
+          className="w-full h-10 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90"
+        >
+          I understand
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function SidebarSearch({ nav }: { nav: NavItem[] }) {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
