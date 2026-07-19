@@ -24,6 +24,8 @@ import {
   Menu,
   X,
   Radar,
+  FlaskConical,
+  Send,
 } from "lucide-react";
 import { LogoLink } from "@/components/LogoLink";
 import { Tutorial } from "@/components/Tutorial";
@@ -49,7 +51,8 @@ const NAV: NavItem[] = [
   { to: "/signals",         label: "AI Signals",      icon: Radar },
   { to: "/memory",          label: "Trading Memory",  icon: Brain },
   { to: "/alerts",          label: "Price Alerts",    icon: Bell },
-  
+  { to: "/testing",         label: "Testing",         icon: FlaskConical },
+  { to: "/briefings",       label: "Briefings",       icon: Send },
   { to: "/settings",        label: "Settings",        icon: SettingsIcon },
   
   { to: "/admin",           label: "Admin",           icon: ShieldCheck, accent: true },
