@@ -77,12 +77,27 @@ interface Props {
 // FX session windows in UTC (approximate, ignores DST).
 // Rendered as translucent full-range boxes framing each session's high/low,
 // mirroring TradingView's "Sessions" indicator seen in the reference chart.
-const SESSIONS = [
-  { key: "Sydney",   startH: 22, endH: 7,  color: "rgba(56, 189, 248, 0.10)",  label: "Sydney"   }, // sky
-  { key: "Tokyo",    startH: 0,  endH: 9,  color: "rgba(244, 114, 182, 0.10)", label: "Tokyo"    }, // pink
-  { key: "London",   startH: 8,  endH: 17, color: "rgba(251, 191, 36, 0.10)",  label: "London"   }, // amber
-  { key: "New York", startH: 13, endH: 22, color: "rgba(64, 160, 160, 0.10)",  label: "New York" }, // emerald
+const FX_SESSIONS = [
+  { key: "Sydney",   startH: 22, endH: 7,  color: "rgba(56, 189, 248, 0.10)",  label: "Sydney"   },
+  { key: "Tokyo",    startH: 0,  endH: 9,  color: "rgba(244, 114, 182, 0.10)", label: "Tokyo"    },
+  { key: "London",   startH: 8,  endH: 17, color: "rgba(251, 191, 36, 0.10)",  label: "London"   },
+  { key: "New York", startH: 13, endH: 22, color: "rgba(64, 160, 160, 0.10)",  label: "New York" },
 ];
+// CME equity-index sessions in UTC (approximate).
+// RTH cash: 09:30-16:00 ET => ~14:30-21:00 UTC. Globex: 18:00-09:30 ET prev day.
+const INDEX_SESSIONS = [
+  { key: "Globex",    startH: 23, endH: 14, color: "rgba(148, 163, 184, 0.08)", label: "Globex" },
+  { key: "NY Open",   startH: 14, endH: 16, color: "rgba(251, 191, 36, 0.12)",  label: "NY Open" },
+  { key: "RTH",       startH: 16, endH: 20, color: "rgba(64, 160, 160, 0.10)",  label: "RTH" },
+  { key: "NY Close",  startH: 20, endH: 21, color: "rgba(244, 114, 182, 0.12)", label: "NY Close" },
+];
+function isIndexTicker(t?: string) {
+  if (!t) return false;
+  const s = t.toUpperCase();
+  return /(\^N|\^G|\^D|NDX|NAS100|GSPC|SPX|SPX500|DJI|US30|^ES|^NQ|^YM)/.test(s);
+}
+const SESSIONS = FX_SESSIONS;
+const getSessions = (ticker?: string) => (isIndexTicker(ticker) ? INDEX_SESSIONS : FX_SESSIONS);
 
 
 type Candle = { time: Time; open: number; high: number; low: number; close: number };
