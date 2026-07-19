@@ -37,8 +37,8 @@ function StrategiesPage() {
   const [builderOpen, setBuilderOpen] = useState(false);
   const [editing, setEditing] = useState<CustomStrategy | null>(null);
   const [customs, setCustoms] = useState<CustomStrategy[]>([]);
-  const navigate = useNavigate({ from: "/_app/strategies" });
-  const search = useSearch({ from: "/_app/strategies" }) as { edit?: string };
+  const navigate = useNavigate({ from: "/strategies" });
+  const search = useSearch({ from: "/_app/strategies/" }) as { edit?: string };
 
   useEffect(() => {
     try { setActive(localStorage.getItem(STRAT_KEY)); } catch { /* ignore */ }
