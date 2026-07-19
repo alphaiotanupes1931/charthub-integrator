@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { convertToModelMessages, streamText, type StreamTextTransform, type ToolSet, type UIMessage } from "ai";
 import { createClient } from "@supabase/supabase-js";
+import { createAnthropic } from "@ai-sdk/anthropic";
 import { createAiGatewayProvider } from "@/lib/ai-gateway.server";
 import {
   corsHeadersFor,
