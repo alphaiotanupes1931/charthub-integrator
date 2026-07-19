@@ -23,7 +23,7 @@ export const LEVEL_META: Record<LevelKey, { label: string; color: string; tone: 
   POC:   { label: "POC",   color: "#c084fc", tone: "bg-purple-500/10 text-purple-300 border-purple-500/30" },
   SR:    { label: "S/R",   color: "#38bdf8", tone: "bg-sky-500/10 text-sky-300 border-sky-500/30" },
   ZONES: { label: "Zones", color: "#60a5fa", tone: "bg-blue-500/10 text-blue-300 border-blue-500/30" },
-  FVG:   { label: "FVG",   color: "#34d399", tone: "bg-emerald-500/10 text-emerald-300 border-emerald-500/30" },
+  FVG:   { label: "FVG",   color: "var(--bull)", tone: "bg-bull/10 text-bull border-bull/30" },
   FIB:   { label: "Fib",   color: "#f472b6", tone: "bg-pink-500/10 text-pink-300 border-pink-500/30" },
   LIQ:   { label: "Liq",   color: "#f87171", tone: "bg-red-500/10 text-red-300 border-red-500/30" },
   OF:    { label: "Order Flow", color: "#22d3ee", tone: "bg-cyan-500/10 text-cyan-300 border-cyan-500/30" },
@@ -77,12 +77,27 @@ interface Props {
 // FX session windows in UTC (approximate, ignores DST).
 // Rendered as translucent full-range boxes framing each session's high/low,
 // mirroring TradingView's "Sessions" indicator seen in the reference chart.
-const SESSIONS = [
-  { key: "Sydney",   startH: 22, endH: 7,  color: "rgba(56, 189, 248, 0.10)",  label: "Sydney"   }, // sky
-  { key: "Tokyo",    startH: 0,  endH: 9,  color: "rgba(244, 114, 182, 0.10)", label: "Tokyo"    }, // pink
-  { key: "London",   startH: 8,  endH: 17, color: "rgba(251, 191, 36, 0.10)",  label: "London"   }, // amber
-  { key: "New York", startH: 13, endH: 22, color: "rgba(52, 211, 153, 0.10)",  label: "New York" }, // emerald
+const FX_SESSIONS = [
+  { key: "Sydney",   startH: 22, endH: 7,  color: "rgba(56, 189, 248, 0.10)",  label: "Sydney"   },
+  { key: "Tokyo",    startH: 0,  endH: 9,  color: "rgba(244, 114, 182, 0.10)", label: "Tokyo"    },
+  { key: "London",   startH: 8,  endH: 17, color: "rgba(251, 191, 36, 0.10)",  label: "London"   },
+  { key: "New York", startH: 13, endH: 22, color: "rgba(64, 160, 160, 0.10)",  label: "New York" },
 ];
+// CME equity-index sessions in UTC (approximate).
+// RTH cash: 09:30-16:00 ET => ~14:30-21:00 UTC. Globex: 18:00-09:30 ET prev day.
+const INDEX_SESSIONS = [
+  { key: "Globex",    startH: 23, endH: 14, color: "rgba(148, 163, 184, 0.08)", label: "Globex" },
+  { key: "NY Open",   startH: 14, endH: 16, color: "rgba(251, 191, 36, 0.12)",  label: "NY Open" },
+  { key: "RTH",       startH: 16, endH: 20, color: "rgba(64, 160, 160, 0.10)",  label: "RTH" },
+  { key: "NY Close",  startH: 20, endH: 21, color: "rgba(244, 114, 182, 0.12)", label: "NY Close" },
+];
+function isIndexTicker(t?: string) {
+  if (!t) return false;
+  const s = t.toUpperCase();
+  return /(\^N|\^G|\^D|NDX|NAS100|GSPC|SPX|SPX500|DJI|US30|^ES|^NQ|^YM)/.test(s);
+}
+const SESSIONS = FX_SESSIONS;
+const getSessions = (ticker?: string) => (isIndexTicker(ticker) ? INDEX_SESSIONS : FX_SESSIONS);
 
 
 type Candle = { time: Time; open: number; high: number; low: number; close: number };
@@ -129,7 +144,7 @@ function FallbackCandlestickLayer({ candles }: { candles: Candle[] }) {
         const highY = y(c.high);
         const lowY = y(c.low);
         const up = c.close >= c.open;
-        const color = up ? "#34d399" : "#f87171";
+        const color = up ? "var(--bull)" : "#f87171";
         return (
           <g key={`${Number(c.time)}-${i}`}>
             <line x1={cx} x2={cx} y1={highY} y2={lowY} stroke={color} strokeWidth="1.5" vectorEffect="non-scaling-stroke" opacity="0.9" />
@@ -378,7 +393,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
   }, []);
   const activeSessionsNow = useMemo(() => {
     const h = now.getUTCHours();
-    return SESSIONS.filter((s) => (s.startH < s.endH ? h >= s.startH && h < s.endH : h >= s.startH || h < s.endH)).map((s) => s.label);
+    return getSessions(ticker).filter((s) => (s.startH < s.endH ? h >= s.startH && h < s.endH : h >= s.startH || h < s.endH)).map((s) => s.label);
   }, [now]);
 
   // Publish a snapshot to parent for AI context whenever the data changes
@@ -557,7 +572,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       const out: Array<{ key: string; color: string; label: string; left: number; width: number; top: number; height: number; high: number; low: number; idx: number; vwap: Array<{ x: number; y: number }>; meanY: number | null; regX1: number; regY1: number; regX2: number; regY2: number }> = [];
       const firstDay = Math.floor(from / DAY) * DAY - DAY;
       for (let d = firstDay; d <= to; d += DAY) {
-        SESSIONS.forEach((sess, idx) => {
+        getSessions(ticker).forEach((sess, idx) => {
           const startMs = d + sess.startH * 3600 * 1000;
           const endMs = sess.startH < sess.endH
             ? d + sess.endH * 3600 * 1000
@@ -666,7 +681,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       } else if (a.kind === "label") {
         push(a.price, a.color || "#c084fc", a.text, true);
       } else if (a.kind === "zone") {
-        const color = a.color || "#34d399";
+        const color = a.color || "var(--bull)";
         push(a.top, color, `${a.label || "Zone"} ↑`, true);
         push(a.bottom, color, `${a.label || "Zone"} ↓`, true);
       }
@@ -684,7 +699,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
         if (yTop == null || yBot == null) return;
         const top = Math.min(yTop, yBot);
         const height = Math.max(2, Math.abs(yBot - yTop));
-        out.push({ key: `ann-${i}`, top, height, color: a.color || "#34d399", label: a.label });
+        out.push({ key: `ann-${i}`, top, height, color: a.color || "var(--bull)", label: a.label });
       });
       setAnnZones(out);
     };
@@ -794,13 +809,13 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       <div className="absolute left-2 top-2 sm:left-3 sm:top-3 z-10 max-w-[55%] rounded-md border border-border bg-background/70 backdrop-blur px-1.5 py-1 sm:px-2 text-[9px] sm:text-[10px] font-mono text-muted-foreground uppercase tracking-wider flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
         <span className="truncate">{isLive ? "Live" : showLoader ? "Loading" : noLiveSource ? "Unavailable" : "Native"} · {ticker} · {interval}</span>
         {isLive && (
-          <span className="inline-flex items-center gap-1 text-emerald-400 normal-case">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="inline-flex items-center gap-1 text-bull normal-case">
+            <span className="h-1.5 w-1.5 rounded-full bg-bull animate-pulse" />
             <span className="hidden sm:inline">{sourceLabel}</span>
           </span>
         )}
         {enabled.OF && candles.length > 0 && (
-          <span className={`inline-flex items-center gap-1 normal-case ${levels.delta >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+          <span className={`inline-flex items-center gap-1 normal-case ${levels.delta >= 0 ? "text-bull" : "text-red-400"}`}>
             Δ {levels.delta >= 0 ? "+" : ""}{levels.delta.toFixed(1)}
           </span>
         )}
@@ -878,7 +893,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
               <X className="h-3.5 w-3.5" />
             </button>
           </div>
-          <p className="text-[10px] text-muted-foreground mb-3">Pick a color or paste a hex code (e.g. #34d399). Saved on this device and applied to every chart.</p>
+          <p className="text-[10px] text-muted-foreground mb-3">Pick a color or paste a hex code (e.g. var(--bull)). Saved on this device and applied to every chart.</p>
           <div className="space-y-2">
             {([
               { key: "up", label: "Bullish body" },
@@ -925,7 +940,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       )}
       {sessions && (
         <div className="absolute right-2 top-11 sm:right-3 sm:top-12 z-10 max-w-[60%] rounded-md border border-border bg-background/70 backdrop-blur px-1.5 py-1 sm:px-2 text-[9px] sm:text-[10px] font-mono text-muted-foreground flex flex-wrap items-center justify-end gap-x-1.5 gap-y-0.5">
-          {SESSIONS.map((s) => (
+          {getSessions(ticker).map((s) => (
             <span key={s.key} className="inline-flex items-center gap-1">
               <span className="h-2 w-2 rounded-sm shrink-0" style={{ background: s.color.replace("0.10", "0.7") }} />
               {s.label}
@@ -937,11 +952,11 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
         <div className="absolute left-2 bottom-2 sm:left-3 sm:bottom-3 z-10 max-w-[min(34rem,calc(100%-1rem))] rounded-md border border-border bg-background/80 backdrop-blur px-2 py-1.5 text-[10px] font-mono text-muted-foreground">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <span className="font-semibold uppercase tracking-wider text-foreground/90">Order flow</span>
-            <span className={levels.delta >= 0 ? "text-emerald-300" : "text-red-300"}>
+            <span className={levels.delta >= 0 ? "text-bull" : "text-red-300"}>
               Delta {levels.delta >= 0 ? "+" : ""}{levels.delta.toFixed(1)}
             </span>
             {levels.of.slice(0, 3).map((o, i) => (
-              <span key={`${o.side}-${o.price}-${i}`} className={o.side === "buy" ? "text-emerald-300" : "text-red-300"}>
+              <span key={`${o.side}-${o.price}-${i}`} className={o.side === "buy" ? "text-bull" : "text-red-300"}>
                 {o.side === "buy" ? "Buy" : "Sell"} {o.strength >= 0.72 ? "high" : "med"} @ {o.price.toFixed(o.price >= 1000 ? 2 : 4)}
               </span>
             ))}
