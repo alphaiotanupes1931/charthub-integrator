@@ -40,8 +40,8 @@ export function ChartSignalCards({ grade, lastPrice, onClear, scanning }: Props)
   const bias = grade.bias ?? "neutral";
   const isLong = bias === "long";
   const isShort = bias === "short";
-  const biasText = isLong ? "text-emerald-300" : isShort ? "text-red-300" : "text-muted-foreground";
-  const biasBg = isLong ? "bg-emerald-500/10 border-emerald-500/40" : isShort ? "bg-red-500/10 border-red-500/40" : "bg-muted/20 border-border";
+  const biasText = isLong ? "text-bull" : isShort ? "text-red-300" : "text-muted-foreground";
+  const biasBg = isLong ? "bg-bull/10 border-bull/40" : isShort ? "bg-red-500/10 border-red-500/40" : "bg-muted/20 border-border";
   const BiasIcon = isLong ? ArrowUpRight : isShort ? ArrowDownRight : Minus;
 
   // Determine order type from entry vs current price.
@@ -66,8 +66,8 @@ export function ChartSignalCards({ grade, lastPrice, onClear, scanning }: Props)
   const rows: Array<{ key: string; label: string; value?: number; tone: string; icon: React.ComponentType<{ className?: string }>; from?: number }> = [
     { key: "entry", label: "Entry", value: grade.entry, tone: "text-foreground", icon: Target, from: lastPrice },
     { key: "stop", label: "Stop", value: grade.stop, tone: "text-red-300", icon: Shield, from: grade.entry },
-    { key: "tp1", label: "TP1", value: grade.tp1, tone: "text-emerald-300", icon: Flag, from: grade.entry },
-    { key: "tp2", label: "TP2", value: grade.tp2, tone: "text-emerald-200", icon: Flag, from: grade.entry },
+    { key: "tp1", label: "TP1", value: grade.tp1, tone: "text-bull", icon: Flag, from: grade.entry },
+    { key: "tp2", label: "TP2", value: grade.tp2, tone: "text-bull", icon: Flag, from: grade.entry },
   ];
 
   return (

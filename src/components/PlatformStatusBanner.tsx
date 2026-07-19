@@ -12,10 +12,10 @@ const STYLES = {
   operational: {
     icon: CheckCircle2,
     label: "All systems operational",
-    ring: "border-emerald-500/30",
-    bg: "bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent",
-    dot: "bg-emerald-500 shadow-[0_0_12px_2px_rgba(16,185,129,0.55)]",
-    text: "text-emerald-400",
+    ring: "border-bull/30",
+    bg: "bg-gradient-to-r from-bull/10 via-bull/5 to-transparent",
+    dot: "bg-bull shadow-[0_0_12px_2px_rgba(16,185,129,0.55)]",
+    text: "text-bull",
   },
   degraded: {
     icon: AlertTriangle,
