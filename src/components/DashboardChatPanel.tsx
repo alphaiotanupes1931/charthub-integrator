@@ -325,6 +325,15 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
     useEffect(() => { chartRef.current = chart; }, [chart]);
     const voice = useCoachVoice();
     const { isAdmin } = useProfile();
+    const { resolvedTimezone } = useTimezone();
+    const [now, setNow] = useState<Date>(() => new Date());
+    useEffect(() => {
+      const t = setInterval(() => setNow(new Date()), 30_000);
+      return () => clearInterval(t);
+    }, []);
+    const headerDate = formatInTimezone(now, resolvedTimezone, { month: "short", day: "numeric" });
+    const headerTime = formatInTimezone(now, resolvedTimezone, { hour: "2-digit", minute: "2-digit", timeZoneName: "short" });
+    const headerInstrument = chart?.ticker || "No instrument";
     // Voice defaults to muted per-message; the user must tap the speaker to unmute.
     const [voiceUnmutedIds, setVoiceUnmutedIds] = useState<Set<string>>(() => new Set());
     const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
