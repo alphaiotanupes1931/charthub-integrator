@@ -719,8 +719,18 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     const chart = chartRef.current;
     if (!chart) return;
     try {
-      const canvas = chart.takeScreenshot();
-      const url = canvas.toDataURL("image/png");
+      const chartCanvas = chart.takeScreenshot();
+      const out = document.createElement("canvas");
+      out.width = chartCanvas.width;
+      out.height = chartCanvas.height;
+      const ctx = out.getContext("2d");
+      if (!ctx) return;
+      ctx.drawImage(chartCanvas, 0, 0);
+      const draw = drawCanvasRef.current;
+      if (draw && draw.width > 0 && draw.height > 0) {
+        ctx.drawImage(draw, 0, 0, out.width, out.height);
+      }
+      const url = out.toDataURL("image/png");
       const a = document.createElement("a");
       const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
       a.href = url;
