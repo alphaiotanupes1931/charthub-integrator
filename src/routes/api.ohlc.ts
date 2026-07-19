@@ -287,7 +287,7 @@ function tickerToYahoo(ticker: string): string | null {
   if (t === "US30")   return "^DJI";      // Real Dow Jones index
   if (t === "EUR/USD") return "EURUSD=X";
   if (t === "GBP/USD") return "GBPUSD=X";
-  if (t === "USD/JPY") return "JPY=X";
+  if (t === "USD/JPY") return "USDJPY=X";
   return null;
 }
 

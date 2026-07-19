@@ -14,7 +14,7 @@ const YAHOO: Record<string, string> = {
   "WTI Oil": "CL=F",
   "EUR/USD": "EURUSD=X",
   "GBP/USD": "GBPUSD=X",
-  "USD/JPY": "JPY=X",
+  "USD/JPY": "USDJPY=X",
   "BTC/USD": "BTC-USD",
   "ETH/USD": "ETH-USD",
   "XRP/USD": "XRP-USD",
