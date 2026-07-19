@@ -744,7 +744,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
   }, [ticker, interval]);
 
   // ---- Freehand markup overlay (pen / line / rect / arrow) ----
-  type DrawTool = "pen" | "line" | "rect" | "arrow";
+  type DrawTool = "pen" | "line" | "rect" | "arrow" | "eraser";
   type Stroke = {
     tool: DrawTool;
     color: string;
