@@ -132,6 +132,7 @@ function SettingsPage() {
   const [clockNow, setClockNow] = useState(() => new Date());
   const [welcomeMuted, setWelcomeMutedState] = useState(false);
   useEffect(() => { setWelcomeMutedState(isWelcomeBackMuted()); }, []);
+  const { colors: candleColors, update: updateCandleColors, reset: resetCandleColors, isHex } = useCandleColors();
 
   // TradeLocker integration state
   const [tlEmail, setTlEmail] = useState("");
