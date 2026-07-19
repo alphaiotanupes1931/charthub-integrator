@@ -552,13 +552,14 @@ async function fetchBestAvailable(ticker: string, interval: string): Promise<Cac
   if (yahooSymbol) {
     attempts.push(async () => ({ at: Date.now(), bars: await fetchYahoo(yahooSymbol, interval), source: "yahoo" }));
   }
-  if (stooqSymbol) {
-    // Daily-only, but ensures a chart always renders when live intraday feeds fail.
+  // Stooq is daily-only, so only use it for daily+ requests. Never fake intraday from it.
+  const isDailyPlus = interval === "D" || interval === "W" || interval === "M";
+  if (stooqSymbol && isDailyPlus) {
     attempts.push(async () => ({ at: Date.now(), bars: await fetchStooq(stooqSymbol), source: "stooq" }));
   }
-  if (backupSymbol) {
-    attempts.push(async () => ({ at: Date.now(), bars: await fetchBackup(backupSymbol, interval), source: "backup" }));
-  }
+  // Backup source fabricates synthetic candles around a live snapshot. Do not use it -
+  // if real data is unavailable, the chart should show an "unavailable" message instead.
+  void backupSymbol;
 
   let lastError: unknown;
   for (const attempt of attempts) {
