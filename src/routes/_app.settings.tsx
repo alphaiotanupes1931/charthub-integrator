@@ -30,8 +30,11 @@ import {
   KeyRound,
   Copy,
   Mail,
+  Palette,
+  RotateCcw,
 } from "lucide-react";
 import { isWelcomeBackMuted, setWelcomeBackMuted } from "@/lib/welcomeBack";
+import { useCandleColors, type CandleColors } from "@/hooks/useCandleColors";
 
 export const Route = createFileRoute("/_app/settings")({
   head: () => ({ meta: [{ title: "Settings, TradeMind" }] }),
