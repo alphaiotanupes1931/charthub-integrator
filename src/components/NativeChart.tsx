@@ -969,7 +969,78 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
           </>
         )}
       </div>
-      <div className="absolute right-2 bottom-2 sm:right-3 sm:bottom-3 z-20 flex items-center gap-2">
+      {/* Drawing overlay canvas (top of stack, only captures input when drawMode is on) */}
+      <canvas
+        ref={drawCanvasRef}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+        className="absolute inset-0 z-30"
+        style={{
+          pointerEvents: drawMode ? "auto" : "none",
+          cursor: drawMode ? "crosshair" : "default",
+          touchAction: drawMode ? "none" : "auto",
+        }}
+      />
+
+      {/* Draw toolbar (visible when drawMode is on) */}
+      {drawMode && (
+        <div className="absolute right-2 bottom-11 sm:right-3 sm:bottom-12 z-40 flex flex-wrap items-center gap-1 rounded-md border border-border bg-background/90 backdrop-blur px-1.5 py-1 shadow-lg">
+          {([
+            { k: "pen", Icon: Pencil, label: "Pen" },
+            { k: "line", Icon: LineIcon, label: "Line" },
+            { k: "rect", Icon: RectIcon, label: "Rect" },
+            { k: "arrow", Icon: ArrowUpRight, label: "Arrow" },
+          ] as { k: DrawTool; Icon: typeof Pencil; label: string }[]).map(({ k, Icon, label }) => (
+            <button
+              key={k}
+              type="button"
+              onClick={() => setDrawTool(k)}
+              title={label}
+              aria-label={label}
+              className={`inline-flex items-center justify-center rounded p-1.5 transition ${drawTool === k ? "bg-primary/20 text-primary" : "text-foreground/80 hover:bg-muted"}`}
+            >
+              <Icon className="h-3.5 w-3.5" />
+            </button>
+          ))}
+          <span className="mx-1 h-4 w-px bg-border" />
+          {["#fbbf24", "#22d3ee", "#f87171", "#a3e635", "#f472b6", "#ffffff"].map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => setDrawColor(c)}
+              title={c}
+              aria-label={`Color ${c}`}
+              className={`h-4 w-4 rounded-sm border ${drawColor === c ? "border-foreground scale-110" : "border-border/60"} transition`}
+              style={{ background: c }}
+            />
+          ))}
+          <span className="mx-1 h-4 w-px bg-border" />
+          <button type="button" onClick={undoStroke} title="Undo" aria-label="Undo" className="p-1.5 rounded text-foreground/80 hover:bg-muted">
+            <Undo2 className="h-3.5 w-3.5" />
+          </button>
+          <button type="button" onClick={clearStrokes} title="Clear all" aria-label="Clear all" className="p-1.5 rounded text-foreground/80 hover:bg-muted">
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
+
+      <div className="absolute right-2 bottom-2 sm:right-3 sm:bottom-3 z-40 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setDrawMode((v) => !v)}
+          title={drawMode ? "Exit draw mode" : "Draw on chart"}
+          aria-label={drawMode ? "Exit draw mode" : "Draw on chart"}
+          className={`inline-flex items-center gap-1.5 rounded-md border backdrop-blur px-2 py-1.5 text-[10px] font-mono uppercase tracking-wider transition-colors ${
+            drawMode
+              ? "border-primary/50 bg-primary/15 text-primary hover:bg-primary/20"
+              : "border-border bg-background/80 hover:bg-background text-foreground/90 hover:text-foreground"
+          }`}
+        >
+          {drawMode ? <CloseIcon className="h-3.5 w-3.5" /> : <Pencil className="h-3.5 w-3.5" />}
+          <span className="hidden sm:inline">{drawMode ? "Done" : "Draw"}</span>
+        </button>
         <button
           type="button"
           onClick={handleScreenshot}
