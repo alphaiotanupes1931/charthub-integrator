@@ -294,7 +294,7 @@ function JournalPage() {
   useEffect(() => { setTrades(loadTrades()); }, []);
   useEffect(() => { saveTrades(trades); }, [trades]);
 
-  type Prefill = { symbol?: string; timeframe?: string; notes?: string; entry?: number; side?: Side; setup?: string };
+  type Prefill = { symbol?: string; timeframe?: string; notes?: string; entry?: number; stop?: number; tp1?: number; tp2?: number; side?: Side; setup?: string };
   const [prefill, setPrefill] = useState<Prefill | null>(null);
   useEffect(() => {
     try {
