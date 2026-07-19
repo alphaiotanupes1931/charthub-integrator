@@ -850,6 +850,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                   aria-label="Learn about Show Me"
                 >
                   <HelpCircle className="h-3 w-3" /> Show Me
+                </button>
               </div>
               <PromptInputSubmit status={status} onStop={stopScan} disabled={!input.trim() && !pendingImage && !loading} />
             </PromptInputFooter>
