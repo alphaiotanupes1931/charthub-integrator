@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_app/strategies/$strategyId")({
 });
 
 const levelColor = {
-  Beginner: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+  Beginner: "bg-bull/15 text-bull border-bull/30",
   Intermediate: "bg-amber-500/15 text-amber-400 border-amber-500/30",
   Advanced: "bg-rose-500/15 text-rose-400 border-rose-500/30",
 } as const;
@@ -186,7 +186,7 @@ function StrategyDetailPage() {
         <aside className="space-y-4">
           <div className="rounded-xl border border-border bg-card p-5">
             <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Win Rate</div>
-            <div className="font-mono text-3xl font-semibold text-emerald-400">{strategy.winRate}%</div>
+            <div className="font-mono text-3xl font-semibold text-bull">{strategy.winRate}%</div>
           </div>
           <div className="rounded-xl border border-border bg-card p-5">
             <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Average R:R</div>

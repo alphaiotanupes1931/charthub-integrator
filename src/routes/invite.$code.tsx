@@ -65,7 +65,7 @@ function AcceptInvitePage() {
         ) : state === "ok" ? (
           <>
             <h1 className="font-display text-2xl font-semibold mb-2 flex items-center justify-center gap-2">
-              <Check className="h-5 w-5 text-emerald-400" /> Connected
+              <Check className="h-5 w-5 text-bull" /> Connected
             </h1>
             <p className="text-sm text-muted-foreground">Taking you to your roster…</p>
           </>

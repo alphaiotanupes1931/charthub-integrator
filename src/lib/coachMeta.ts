@@ -24,9 +24,9 @@ export const COACH_ICON_META: Record<string, { icon: LucideIcon; iconBg: string;
   },
   "The Minimalist": {
     icon: Minus,
-    iconBg: "bg-emerald-500/20",
-    iconText: "text-emerald-300",
-    dot: "bg-emerald-400",
+    iconBg: "bg-bull/20",
+    iconText: "text-bull",
+    dot: "bg-bull",
     tagline: "Fewer trades. Bigger edge.",
   },
   "The Psychologist": {
