@@ -650,7 +650,32 @@ function SettingsPage() {
 
       {/* STRATEGY moved to its own tab - see /scan-lens */}
 
-      {/* PRIVACY & DATA (GDPR) */}
+      {/* TESTING MODE + BRIEFINGS */}
+      <SectionLabel>Testing &amp; Briefings</SectionLabel>
+      <Card>
+        <h2 className="text-lg font-semibold mb-2">Testing mode (paper trading)</h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          Give TradeMind a $10,000 paper account and let the AI trade its A/A+ setups against live prices.
+          Your equity, positions, and closed trades live on the Testing page. A 10% drawdown from peak
+          closes every position and pauses new trades until you review.
+        </p>
+        <a href="/testing" className="inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/90">
+          Open Testing dashboard
+        </a>
+      </Card>
+      <Card className="mt-4">
+        <h2 className="text-lg font-semibold mb-2">Daily briefings</h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          A morning briefing before the session and an evening report after the close, delivered in-app
+          and to Telegram if you link your chat. Configure hours, timezone, watchlist, and Telegram from
+          the Briefings page.
+        </p>
+        <a href="/briefings" className="inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/90">
+          Open Briefings
+        </a>
+      </Card>
+
+
       <SectionLabel>Privacy &amp; Data</SectionLabel>
       <Card>
         <h2 className="flex items-center gap-2 text-lg font-semibold mb-2">

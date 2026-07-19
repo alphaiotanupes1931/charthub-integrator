@@ -35,6 +35,84 @@ export type Database = {
         }
         Relationships: []
       }
+      briefing_prefs: {
+        Row: {
+          created_at: string
+          evening_enabled: boolean
+          evening_hour: number
+          last_evening_at: string | null
+          last_morning_at: string | null
+          morning_enabled: boolean
+          morning_hour: number
+          telegram_chat_id: number | null
+          telegram_link_code: string | null
+          timezone: string
+          updated_at: string
+          user_id: string
+          watchlist: string[]
+        }
+        Insert: {
+          created_at?: string
+          evening_enabled?: boolean
+          evening_hour?: number
+          last_evening_at?: string | null
+          last_morning_at?: string | null
+          morning_enabled?: boolean
+          morning_hour?: number
+          telegram_chat_id?: number | null
+          telegram_link_code?: string | null
+          timezone?: string
+          updated_at?: string
+          user_id: string
+          watchlist?: string[]
+        }
+        Update: {
+          created_at?: string
+          evening_enabled?: boolean
+          evening_hour?: number
+          last_evening_at?: string | null
+          last_morning_at?: string | null
+          morning_enabled?: boolean
+          morning_hour?: number
+          telegram_chat_id?: number | null
+          telegram_link_code?: string | null
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+          watchlist?: string[]
+        }
+        Relationships: []
+      }
+      briefings: {
+        Row: {
+          body: string
+          delivered_telegram: boolean
+          id: string
+          kind: string
+          sent_at: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          delivered_telegram?: boolean
+          id?: string
+          kind: string
+          sent_at?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          delivered_telegram?: boolean
+          id?: string
+          kind?: string
+          sent_at?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           client_id: string
@@ -218,6 +296,156 @@ export type Database = {
           read_at?: string | null
           title?: string
           url?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      paper_accounts: {
+        Row: {
+          balance: number
+          created_at: string
+          paused_reason: string | null
+          peak_equity: number
+          starting_balance: number
+          status: string
+          testing_mode: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          paused_reason?: string | null
+          peak_equity?: number
+          starting_balance?: number
+          status?: string
+          testing_mode?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          paused_reason?: string | null
+          peak_equity?: number
+          starting_balance?: number
+          status?: string
+          testing_mode?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      paper_equity_snapshots: {
+        Row: {
+          equity: number
+          id: number
+          taken_at: string
+          user_id: string
+        }
+        Insert: {
+          equity: number
+          id?: number
+          taken_at?: string
+          user_id: string
+        }
+        Update: {
+          equity?: number
+          id?: number
+          taken_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      paper_positions: {
+        Row: {
+          entry: number
+          grade: string | null
+          id: string
+          meta: Json | null
+          opened_at: string
+          side: string
+          size: number
+          stop: number
+          symbol: string
+          take_profit: number | null
+          user_id: string
+        }
+        Insert: {
+          entry: number
+          grade?: string | null
+          id?: string
+          meta?: Json | null
+          opened_at?: string
+          side: string
+          size: number
+          stop: number
+          symbol: string
+          take_profit?: number | null
+          user_id: string
+        }
+        Update: {
+          entry?: number
+          grade?: string | null
+          id?: string
+          meta?: Json | null
+          opened_at?: string
+          side?: string
+          size?: number
+          stop?: number
+          symbol?: string
+          take_profit?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      paper_trades: {
+        Row: {
+          closed_at: string
+          entry: number
+          exit: number
+          grade: string | null
+          id: string
+          opened_at: string
+          pnl: number
+          reason: string
+          side: string
+          size: number
+          stop: number | null
+          symbol: string
+          take_profit: number | null
+          user_id: string
+        }
+        Insert: {
+          closed_at?: string
+          entry: number
+          exit: number
+          grade?: string | null
+          id?: string
+          opened_at: string
+          pnl: number
+          reason: string
+          side: string
+          size: number
+          stop?: number | null
+          symbol: string
+          take_profit?: number | null
+          user_id: string
+        }
+        Update: {
+          closed_at?: string
+          entry?: number
+          exit?: number
+          grade?: string | null
+          id?: string
+          opened_at?: string
+          pnl?: number
+          reason?: string
+          side?: string
+          size?: number
+          stop?: number | null
+          symbol?: string
+          take_profit?: number | null
           user_id?: string
         }
         Relationships: []
