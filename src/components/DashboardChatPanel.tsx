@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { Link } from "@tanstack/react-router";
-import { MessageSquare, ExternalLink, X, Minus, Volume2, VolumeX, Crosshair, Square, Paperclip, ImageIcon, ThumbsUp, ThumbsDown } from "lucide-react";
+import { MessageSquare, ExternalLink, X, Minus, Volume2, VolumeX, Crosshair, Square, Paperclip, ImageIcon, ThumbsUp, ThumbsDown, HelpCircle } from "lucide-react";
 import { recordHermesFeedback } from "@/lib/agents/hermes.functions";
 import { COACH_ICON_META, DEFAULT_COACH_ICON } from "@/lib/coachMeta";
 import {
@@ -836,6 +836,20 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                     <Crosshair className="h-3 w-3" /> Run scan
                   </button>
                 )}
+                <button
+                  type="button"
+                  onClick={() =>
+                    toast.info("Show Me", {
+                      description:
+                        'Type "show me" before your question in the chat (e.g. "show me a good entry on XAU/USD") and the coach will draw the setup right on your chart — entry, stop, and targets.',
+                      duration: 8000,
+                    })
+                  }
+                  className="inline-flex items-center gap-1.5 rounded-md border border-primary/30 bg-primary/10 px-2.5 py-1.5 text-xs font-medium text-primary hover:bg-primary/15 transition"
+                  title='Type "show me" in chat to have the coach mark up the chart'
+                  aria-label="Learn about Show Me"
+                >
+                  <HelpCircle className="h-3 w-3" /> Show Me
               </div>
               <PromptInputSubmit status={status} onStop={stopScan} disabled={!input.trim() && !pendingImage && !loading} />
             </PromptInputFooter>
