@@ -841,7 +841,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                   onClick={() =>
                     toast.info("Show Me", {
                       description:
-                        'Type "show me" before your question in the chat (e.g. "show me a good entry on XAU/USD") and the coach will draw the setup right on your chart — entry, stop, and targets.',
+                        'Type "show me" before your question in the chat (e.g. "show me a good entry on XAU/USD") and the coach will draw the setup right on your chart: entry, stop, and targets.',
                       duration: 8000,
                     })
                   }
