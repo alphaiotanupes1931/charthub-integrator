@@ -1260,14 +1260,6 @@ function Dashboard() {
           <span>{scanning ? "Stop Scan" : "Run Scan"}</span>
         </button>
 
-        <button
-          onClick={() => restartTutorial()}
-          className="hidden lg:inline-flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary hover:bg-primary/15 transition"
-          title="Guided tour of the platform"
-        >
-          <HelpCircle className="h-3 w-3" />
-          <span>Show Me</span>
-        </button>
 
         <button
           onClick={() => setRightOpen((v) => !v)}
