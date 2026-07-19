@@ -235,12 +235,20 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         </header>
 
-        <main className={`flex-1 min-w-0 ${isDashboard ? "h-full overflow-hidden pb-16 md:pb-0" : "overflow-x-hidden pb-16 md:pb-0"}`}>{children}</main>
+        <main className={`flex-1 min-w-0 ${isDashboard ? "h-full overflow-hidden pb-24 md:pb-0" : "overflow-x-hidden pb-24 md:pb-0"}`}>{children}</main>
 
         <footer className="hidden md:block border-t border-border/60 px-4 md:px-6 py-3 text-center text-[11px] md:text-xs text-muted-foreground">
           Educational analysis only, not financial advice.
         </footer>
+        {/* Mobile compliance footer - sits above the tab bar */}
+        <div
+          className="md:hidden fixed bottom-16 inset-x-0 z-30 border-t border-border/60 bg-background/95 backdrop-blur-xl px-3 py-1.5 text-center text-[10px] text-muted-foreground"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 4px)" }}
+        >
+          Educational analysis only, not financial advice.
+        </div>
       </div>
+      <ComplianceGate />
 
       {/* Mobile bottom tab bar (Robinhood-style). Fixed to the viewport, safe-area aware. */}
       <nav
