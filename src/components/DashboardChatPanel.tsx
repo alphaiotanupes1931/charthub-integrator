@@ -20,6 +20,7 @@ import {
 } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { supabase } from "@/integrations/supabase/client";
+import { useTimezone, formatInTimezone } from "@/hooks/useTimezone";
 import { getOrCreateDashboardThread, getChatMessages } from "@/lib/chat.functions";
 import { readJournal, readActiveCoach, writeActiveCoach, readActiveStrategy } from "@/lib/chat-client";
 import { findStrategyByName } from "@/lib/customStrategies";
