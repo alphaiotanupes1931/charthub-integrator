@@ -47,6 +47,7 @@ import { Route as AppChatRouteImport } from './routes/_app.chat'
 import { Route as AppAnalyticsRouteImport } from './routes/_app.analytics'
 import { Route as AppAlertsRouteImport } from './routes/_app.alerts'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
+import { Route as AppStrategiesIndexRouteImport } from './routes/_app.strategies.index'
 import { Route as AppChatIndexRouteImport } from './routes/_app.chat.index'
 import { Route as ApiTradelockerImportRouteImport } from './routes/api.tradelocker.import'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api.public.stripe-webhook'
@@ -244,6 +245,11 @@ const AppAdminRoute = AppAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AppRoute,
 } as any)
+const AppStrategiesIndexRoute = AppStrategiesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppStrategiesRoute,
+} as any)
 const AppChatIndexRoute = AppChatIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -325,6 +331,7 @@ export interface FileRoutesByFullPath {
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/chat/': typeof AppChatIndexRoute
+  '/strategies/': typeof AppStrategiesIndexRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
 }
 export interface FileRoutesByTo {
@@ -355,7 +362,6 @@ export interface FileRoutesByTo {
   '/scan-lens': typeof AppScanLensRoute
   '/settings': typeof AppSettingsRoute
   '/signals': typeof AppSignalsRoute
-  '/strategies': typeof AppStrategiesRouteWithChildren
   '/voice-coach': typeof AppVoiceCoachRoute
   '/api/chat': typeof ApiChatRoute
   '/api/health': typeof ApiHealthRoute
@@ -370,6 +376,7 @@ export interface FileRoutesByTo {
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/chat': typeof AppChatIndexRoute
+  '/strategies': typeof AppStrategiesIndexRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
 }
 export interface FileRoutesById {
@@ -418,6 +425,7 @@ export interface FileRoutesById {
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/_app/chat/': typeof AppChatIndexRoute
+  '/_app/strategies/': typeof AppStrategiesIndexRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
 }
 export interface FileRouteTypes {
@@ -466,6 +474,7 @@ export interface FileRouteTypes {
     | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
     | '/chat/'
+    | '/strategies/'
     | '/api/public/hooks/price-alerts-tick'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -496,7 +505,6 @@ export interface FileRouteTypes {
     | '/scan-lens'
     | '/settings'
     | '/signals'
-    | '/strategies'
     | '/voice-coach'
     | '/api/chat'
     | '/api/health'
@@ -511,6 +519,7 @@ export interface FileRouteTypes {
     | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
     | '/chat'
+    | '/strategies'
     | '/api/public/hooks/price-alerts-tick'
   id:
     | '__root__'
@@ -558,6 +567,7 @@ export interface FileRouteTypes {
     | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
     | '/_app/chat/'
+    | '/_app/strategies/'
     | '/api/public/hooks/price-alerts-tick'
   fileRoutesById: FileRoutesById
 }
@@ -853,6 +863,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/strategies/': {
+      id: '/_app/strategies/'
+      path: '/'
+      fullPath: '/strategies/'
+      preLoaderRoute: typeof AppStrategiesIndexRouteImport
+      parentRoute: typeof AppStrategiesRoute
+    }
     '/_app/chat/': {
       id: '/_app/chat/'
       path: '/'
@@ -932,10 +949,12 @@ const AppChatRouteWithChildren =
 
 interface AppStrategiesRouteChildren {
   AppStrategiesStrategyIdRoute: typeof AppStrategiesStrategyIdRoute
+  AppStrategiesIndexRoute: typeof AppStrategiesIndexRoute
 }
 
 const AppStrategiesRouteChildren: AppStrategiesRouteChildren = {
   AppStrategiesStrategyIdRoute: AppStrategiesStrategyIdRoute,
+  AppStrategiesIndexRoute: AppStrategiesIndexRoute,
 }
 
 const AppStrategiesRouteWithChildren = AppStrategiesRoute._addFileChildren(
