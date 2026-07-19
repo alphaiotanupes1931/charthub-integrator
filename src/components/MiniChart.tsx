@@ -89,7 +89,7 @@ export function SymbolOverview({ symbol, height = 320 }: SymbolOverviewProps) {
           <div className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">{label}</div>
           <div className="font-display text-2xl mt-1">{last.toFixed(2)}</div>
         </div>
-        <div className={`font-mono text-sm ${up ? "text-emerald-400" : "text-destructive"}`}>
+        <div className={`font-mono text-sm ${up ? "text-bull" : "text-destructive"}`}>
           {up ? "+" : ""}
           {changePct.toFixed(2)}%
         </div>

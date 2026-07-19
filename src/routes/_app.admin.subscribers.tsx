@@ -108,7 +108,7 @@ function SubscribersPage() {
                   <span
                     className={`inline-block rounded px-2 py-0.5 text-xs ${
                       r.status === "active"
-                        ? "bg-green-500/15 text-green-500"
+                        ? "bg-bull/15 text-bull"
                         : r.status === "trialing"
                         ? "bg-blue-500/15 text-blue-400"
                         : "bg-red-500/15 text-red-500"

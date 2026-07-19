@@ -86,9 +86,9 @@ const COACHES = [
     name: "The Minimalist",
     subtitle: "Direct, No-Fluff Signal Caller",
     icon: Minus,
-    iconBg: "bg-emerald-500/20 text-emerald-300",
-    nameText: "text-emerald-300",
-    nameBg: "bg-emerald-500/10 border border-emerald-500/20",
+    iconBg: "bg-bull/20 text-bull",
+    nameText: "text-bull",
+    nameBg: "bg-bull/10 border border-bull/20",
     description:
       "Cuts every response to the essentials. Entry, stop, target, or a flat 'no setup'. No filler, no hedging, no lectures. Built for traders who just want the call.",
     tone: "Terse & Decisive",

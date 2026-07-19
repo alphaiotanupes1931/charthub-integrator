@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_app/strategies")({
 });
 
 const levelColor: Record<Level, string> = {
-  Beginner: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+  Beginner: "bg-bull/15 text-bull border-bull/30",
   Intermediate: "bg-amber-500/15 text-amber-400 border-amber-500/30",
   Advanced: "bg-rose-500/15 text-rose-400 border-rose-500/30",
 };
@@ -167,8 +167,8 @@ function StrategiesPage() {
               <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4">{s.description}</p>
               <div className="flex items-center gap-5 text-xs pt-2 border-t border-border/50">
                 <div className="flex items-center gap-1.5">
-                  <BarChart2 className="h-3.5 w-3.5 text-emerald-400" />
-                  <span className="font-mono font-semibold text-emerald-400">{s.winRate}%</span>
+                  <BarChart2 className="h-3.5 w-3.5 text-bull" />
+                  <span className="font-mono font-semibold text-bull">{s.winRate}%</span>
                   <span className="text-muted-foreground">Win Rate</span>
                 </div>
                 <div className="flex items-center gap-1.5">

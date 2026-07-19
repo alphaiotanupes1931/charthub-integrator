@@ -53,7 +53,7 @@ type KindStyle = {
 function kindStyle(kind: string): KindStyle {
   switch (kind) {
     case "signal":
-      return { Icon: TrendingUp, ring: "ring-emerald-500/30", bg: "bg-emerald-500/10", fg: "text-emerald-500", label: "Signal" };
+      return { Icon: TrendingUp, ring: "ring-bull/30", bg: "bg-bull/10", fg: "text-bull", label: "Signal" };
     case "scanner":
       return { Icon: Radar, ring: "ring-sky-500/30", bg: "bg-sky-500/10", fg: "text-sky-500", label: "Scanner" };
     case "alert":

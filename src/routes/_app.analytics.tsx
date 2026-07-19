@@ -123,7 +123,7 @@ function AnalyticsPage() {
               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
                 <Icon className="h-3.5 w-3.5" /> {k.label}
               </div>
-              <div className={`text-xl font-semibold ${k.positive ? "text-emerald-500" : "text-red-500"}`}>{k.value}</div>
+              <div className={`text-xl font-semibold ${k.positive ? "text-bull" : "text-red-500"}`}>{k.value}</div>
             </div>
           );
         })}
@@ -179,7 +179,7 @@ function AnalyticsPage() {
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
                   <span>{s.n} trades</span>
                   <span>{s.winRate.toFixed(0)}% win</span>
-                  <span className={s.pnl >= 0 ? "text-emerald-500 font-semibold" : "text-red-500 font-semibold"}>
+                  <span className={s.pnl >= 0 ? "text-bull font-semibold" : "text-red-500 font-semibold"}>
                     {s.pnl >= 0 ? "+" : ""}{s.pnl.toFixed(2)}
                   </span>
                 </div>

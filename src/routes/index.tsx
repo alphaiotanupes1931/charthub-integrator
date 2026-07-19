@@ -287,7 +287,7 @@ function Landing() {
             </p>
             <div className="grid grid-cols-4 gap-2 sm:gap-3 mt-8 sm:mt-10 max-w-md">
               <GradeChip grade="A+" color="text-primary" border="border-primary/50" label="Take it" />
-              <GradeChip grade="A" color="text-emerald-400" border="border-emerald-500/40" label="Strong" />
+              <GradeChip grade="A" color="text-bull" border="border-bull/40" label="Strong" />
               <GradeChip grade="B" color="text-foreground/80" border="border-border" label="Optional" />
               <GradeChip grade="C" color="text-destructive" border="border-destructive/40" label="Skip" />
             </div>
@@ -377,7 +377,7 @@ function Landing() {
                 <ul className="mt-6 sm:mt-8 space-y-3 pt-5 sm:pt-6 border-t border-border/60">
                   {p.features.map((f) => (
                     <li key={f} className="flex items-center gap-2.5 text-sm">
-                      <Check className="size-4 text-emerald-400 shrink-0" />
+                      <Check className="size-4 text-bull shrink-0" />
                       {f}
                     </li>
                   ))}
@@ -621,7 +621,7 @@ function SectionEyebrow({ children, align = "center" }: { children: React.ReactN
 function Bullet({ children }: { children: React.ReactNode }) {
   return (
     <span className="inline-flex items-center gap-1.5">
-      <Check className="size-3.5 text-emerald-400" />
+      <Check className="size-3.5 text-bull" />
       {children}
     </span>
   );

@@ -40,7 +40,7 @@ export function TodaysRecommendation() {
               {rec.stats.map((s) => (
                 <div key={s.label} className="flex items-center gap-1.5 text-muted-foreground">
                   {s.tone === "good" ? (
-                    <TrendingUp className="h-3.5 w-3.5 text-emerald-400" />
+                    <TrendingUp className="h-3.5 w-3.5 text-bull" />
                   ) : (
                     <AlertTriangle className="h-3.5 w-3.5 text-amber-400" />
                   )}

@@ -30,7 +30,7 @@ export function TickerTape({ symbols }: Props) {
           <div key={`${it.proName}-${i}`} className="flex items-center gap-2 font-mono text-xs">
             <span className="text-muted-foreground">{it.title}</span>
             <span className="text-foreground">{it.price}</span>
-            <span className={it.up ? "text-emerald-400" : "text-destructive"}>{it.change}</span>
+            <span className={it.up ? "text-bull" : "text-destructive"}>{it.change}</span>
           </div>
         ))}
       </div>

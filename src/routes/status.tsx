@@ -164,9 +164,9 @@ function StatusPage() {
 function OverallBanner({ state }: { state: Check["state"] }) {
   const cfg = {
     operational: {
-      icon: <CheckCircle2 className="size-5 text-emerald-500" />,
+      icon: <CheckCircle2 className="size-5 text-bull" />,
       label: "All systems operational",
-      bg: "bg-emerald-500/10 border-emerald-500/30",
+      bg: "bg-bull/10 border-bull/30",
     },
     degraded: {
       icon: <AlertTriangle className="size-5 text-amber-500" />,
@@ -194,7 +194,7 @@ function OverallBanner({ state }: { state: Check["state"] }) {
 
 function StateBadge({ state, detail }: { state: Check["state"]; detail?: string }) {
   const map = {
-    operational: { label: "Operational", cls: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" },
+    operational: { label: "Operational", cls: "text-bull bg-bull/10 border-bull/20" },
     degraded: { label: "Degraded", cls: "text-amber-500 bg-amber-500/10 border-amber-500/20" },
     down: { label: "Down", cls: "text-red-500 bg-red-500/10 border-red-500/20" },
     checking: { label: "Checking…", cls: "text-muted-foreground bg-card border-border" },
