@@ -602,8 +602,12 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               <CoachIcon className="h-3.5 w-3.5" />
             </span>
             <div className="flex flex-col min-w-0">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground leading-none">Chat</span>
-              <span className="text-sm font-semibold text-foreground truncate">{activeCoach}</span>
+              <span className="text-sm font-semibold text-foreground truncate leading-tight">{activeCoach}</span>
+              <span className="text-[10px] text-muted-foreground leading-tight truncate">
+                <span className="font-medium text-foreground/80">{headerInstrument}</span>
+                <span className="mx-1 opacity-50">·</span>{headerDate}
+                <span className="mx-1 opacity-50">·</span>{headerTime}
+              </span>
             </div>
           </div>
 
