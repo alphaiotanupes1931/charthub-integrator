@@ -37,7 +37,7 @@ function MemoryPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <StatCard
-          icon={<ThumbsUp className="h-4 w-4 text-emerald-400" />}
+          icon={<ThumbsUp className="h-4 w-4 text-bull" />}
           label="Helpful scans"
           value={stats ? String(stats.helpful) : "-"}
           hint="Times you thumbed-up a scan"

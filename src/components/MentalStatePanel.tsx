@@ -72,8 +72,8 @@ export const SCORE_META: Record<number, { label: string; color: string; hint: st
   1: { label: "Awful",   color: "text-destructive",   hint: "Rough day. Small size or step away." },
   2: { label: "Rough",   color: "text-amber-500",     hint: "Below your baseline. Trade lighter." },
   3: { label: "Neutral", color: "text-muted-foreground", hint: "Normal day. Trade your plan." },
-  4: { label: "Sharp",   color: "text-emerald-500",   hint: "Focused. Trust your setups." },
-  5: { label: "Peak",    color: "text-emerald-400",   hint: "Everything clicks. Don't overtrade." },
+  4: { label: "Sharp",   color: "text-bull",   hint: "Focused. Trust your setups." },
+  5: { label: "Peak",    color: "text-bull",   hint: "Everything clicks. Don't overtrade." },
 };
 
 export function MentalStatePanel() {
@@ -200,7 +200,7 @@ export function MentalStatePanel() {
           <div className="flex items-center gap-2 text-sm">
             {reminder.enabled ? <BellRing className="h-4 w-4 text-primary" /> : <BellOff className="h-4 w-4 text-muted-foreground" />}
             <span className="font-semibold">Daily check-in reminder</span>
-            {loggedToday && <span className="text-[11px] rounded bg-emerald-500/15 text-emerald-500 px-1.5 py-0.5">logged today</span>}
+            {loggedToday && <span className="text-[11px] rounded bg-bull/15 text-bull px-1.5 py-0.5">logged today</span>}
           </div>
           <div className="flex items-center gap-2">
             <input
@@ -363,7 +363,7 @@ export function MentalStatePanel() {
                 <div key={n} className="rounded-lg border border-border p-3 text-center">
                   <div className={`text-lg font-bold ${SCORE_META[n].color}`}>{n}</div>
                   <div className="text-[10px] text-muted-foreground">{SCORE_META[n].label}</div>
-                  <div className={`mt-2 text-sm font-semibold ${b.pnl >= 0 ? "text-emerald-400" : "text-destructive"}`}>
+                  <div className={`mt-2 text-sm font-semibold ${b.pnl >= 0 ? "text-bull" : "text-destructive"}`}>
                     {b.n === 0 ? "-" : `${b.pnl >= 0 ? "+" : ""}${b.pnl.toFixed(0)}`}
                   </div>
                   <div className="text-[10px] text-muted-foreground">{b.n} days, {b.n > 0 ? `${winRate.toFixed(0)}% win` : ""}</div>
@@ -393,7 +393,7 @@ export function MentalStatePanel() {
                     {r.notes}
                   </div>
                 </div>
-                <div className={`text-sm font-semibold ${r.pnl > 0 ? "text-emerald-400" : r.pnl < 0 ? "text-destructive" : "text-muted-foreground"}`}>
+                <div className={`text-sm font-semibold ${r.pnl > 0 ? "text-bull" : r.pnl < 0 ? "text-destructive" : "text-muted-foreground"}`}>
                   {pnlByDay.has(r.date) ? `${r.pnl >= 0 ? "+" : ""}${r.pnl.toFixed(2)}` : "-"}
                 </div>
                 <button

@@ -456,7 +456,7 @@ function JournalPage() {
                   </div>
                   {day && (
                     <div className="mt-1 space-y-0.5">
-                      <div className={`text-[10px] sm:text-xs font-semibold ${positive ? "text-emerald-400" : negative ? "text-destructive" : "text-muted-foreground"}`}>
+                      <div className={`text-[10px] sm:text-xs font-semibold ${positive ? "text-bull" : negative ? "text-destructive" : "text-muted-foreground"}`}>
                         {day.pnl >= 0 ? "+" : ""}{day.pnl.toFixed(2)}
                       </div>
                       <div className="text-[9px] sm:text-[10px] text-muted-foreground">
@@ -587,7 +587,7 @@ function TradeRow({ t, onEdit, onDelete }: { t: Trade; onEdit: (t: Trade) => voi
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-semibold">{t.symbol}</span>
           <span className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium ${
-            t.side === "Long" ? "bg-emerald-500/15 text-emerald-400" : "bg-destructive/15 text-destructive"
+            t.side === "Long" ? "bg-bull/15 text-bull" : "bg-destructive/15 text-destructive"
           }`}>
             {t.side === "Long" ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
             {t.side}
@@ -611,7 +611,7 @@ function TradeRow({ t, onEdit, onDelete }: { t: Trade; onEdit: (t: Trade) => voi
         {t.notes && <div className="mt-1 text-xs text-muted-foreground line-clamp-1">{t.notes}</div>}
       </button>
       <div className="text-right shrink-0">
-        <div className={`font-semibold ${pnl > 0 ? "text-emerald-400" : pnl < 0 ? "text-destructive" : ""}`}>
+        <div className={`font-semibold ${pnl > 0 ? "text-bull" : pnl < 0 ? "text-destructive" : ""}`}>
           {pnl >= 0 ? "+" : ""}{pnl.toFixed(2)}
         </div>
         <div className="text-[11px] text-muted-foreground">
@@ -635,18 +635,18 @@ function WinsLossesReview({ wins, losses, onEdit }: { wins: Trade[]; losses: Tra
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 overflow-hidden">
-        <div className="p-4 border-b border-emerald-500/20 flex items-center justify-between">
+      <div className="rounded-xl border border-bull/30 bg-bull/5 overflow-hidden">
+        <div className="p-4 border-b border-bull/20 flex items-center justify-between">
           <div>
-            <div className="text-[10px] uppercase tracking-widest text-emerald-400/80">Winning trades</div>
-            <div className="text-2xl font-semibold text-emerald-400">+{winsPnl.toFixed(2)}</div>
+            <div className="text-[10px] uppercase tracking-widest text-bull/80">Winning trades</div>
+            <div className="text-2xl font-semibold text-bull">+{winsPnl.toFixed(2)}</div>
           </div>
           <div className="text-xs text-muted-foreground">{wins.length}</div>
         </div>
         {wins.length === 0 ? (
           <div className="p-6 text-center text-xs text-muted-foreground">No winners logged yet.</div>
         ) : (
-          <div className="divide-y divide-emerald-500/10 max-h-[70vh] overflow-auto">
+          <div className="divide-y divide-bull/10 max-h-[70vh] overflow-auto">
             {wins.map((t) => <MiniTradeRow key={t.id} t={t} onEdit={onEdit} />)}
           </div>
         )}
@@ -686,7 +686,7 @@ function MiniTradeRow({ t, onEdit }: { t: Trade; onEdit: (t: Trade) => void }) {
         {t.lossCategory && <div className="mt-1 text-[11px] text-destructive/90">Cause: {t.lossCategory}</div>}
         <div className="text-[10px] text-muted-foreground mt-0.5">{formatYmdHuman(t.date)}</div>
       </div>
-      <div className={`text-sm font-semibold ${pnl >= 0 ? "text-emerald-400" : "text-destructive"}`}>
+      <div className={`text-sm font-semibold ${pnl >= 0 ? "text-bull" : "text-destructive"}`}>
         {pnl >= 0 ? "+" : ""}{pnl.toFixed(2)}
       </div>
     </button>
@@ -1020,7 +1020,7 @@ function StatCard({ label, value, positive, sub }: { label: string; value: strin
   return (
     <div className="rounded-xl border border-border bg-card p-3">
       <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
-      <div className={`text-lg font-semibold ${positive ? "text-emerald-400" : "text-destructive"}`}>{value}</div>
+      <div className={`text-lg font-semibold ${positive ? "text-bull" : "text-destructive"}`}>{value}</div>
       {sub && <div className="text-[10px] text-muted-foreground">{sub}</div>}
     </div>
   );
@@ -1037,7 +1037,7 @@ function BreakdownList({ title, rows }: { title: string; rows: { label: string; 
             <div className="flex items-center gap-3 text-muted-foreground">
               <span>{r.count}</span>
               <span>{r.winRate.toFixed(0)}%</span>
-              <span className={`font-semibold ${r.pnl >= 0 ? "text-emerald-400" : "text-destructive"}`}>
+              <span className={`font-semibold ${r.pnl >= 0 ? "text-bull" : "text-destructive"}`}>
                 {r.pnl >= 0 ? "+" : ""}{r.pnl.toFixed(2)}
               </span>
             </div>
@@ -1252,7 +1252,7 @@ function TradeFormModal({
                     onClick={() => setSide(s)}
                     className={`rounded px-2 py-1.5 text-xs font-medium transition ${
                       side === s
-                        ? s === "Long" ? "bg-emerald-500/15 text-emerald-400" : "bg-destructive/15 text-destructive"
+                        ? s === "Long" ? "bg-bull/15 text-bull" : "bg-destructive/15 text-destructive"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
@@ -1418,7 +1418,7 @@ function TradeFormModal({
           <div className="rounded-lg border border-border bg-background/50 p-3 grid grid-cols-3 gap-3 text-sm">
             <div>
               <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">P&amp;L</div>
-              <div className={`font-semibold ${previewPnl > 0 ? "text-emerald-400" : previewPnl < 0 ? "text-destructive" : ""}`}>
+              <div className={`font-semibold ${previewPnl > 0 ? "text-bull" : previewPnl < 0 ? "text-destructive" : ""}`}>
                 {previewPnl >= 0 ? "+" : ""}{previewPnl.toFixed(2)}
               </div>
             </div>

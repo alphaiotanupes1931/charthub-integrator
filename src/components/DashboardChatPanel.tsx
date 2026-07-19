@@ -261,12 +261,12 @@ function orderTypeFor(grade: ChartGrade, lastPrice?: number): string | null {
 
 function GradeCard({ grade, lastPrice }: { grade: ChartGrade; lastPrice?: number }) {
   const g = grade.grade.toUpperCase();
-  const tone = g.startsWith("A") ? "text-emerald-300 border-emerald-500/40 bg-emerald-500/10"
+  const tone = g.startsWith("A") ? "text-bull border-bull/40 bg-bull/10"
     : g.startsWith("B") ? "text-lime-300 border-lime-500/40 bg-lime-500/10"
     : g.startsWith("C") ? "text-amber-300 border-amber-500/40 bg-amber-500/10"
     : g.startsWith("D") ? "text-orange-300 border-orange-500/40 bg-orange-500/10"
     : "text-red-300 border-red-500/40 bg-red-500/10";
-  const biasTone = grade.bias === "long" ? "text-emerald-300"
+  const biasTone = grade.bias === "long" ? "text-bull"
     : grade.bias === "short" ? "text-red-300"
     : "text-muted-foreground";
   const fmt = (n?: number) => (typeof n === "number" && isFinite(n) ? n.toString() : "-");
@@ -298,7 +298,7 @@ function GradeCard({ grade, lastPrice }: { grade: ChartGrade; lastPrice?: number
       {(grade.strength || grade.weakness) && (
         <div className="p-2 space-y-1 text-xs border-t border-border/60">
           {grade.strength && (
-            <div><span className="text-emerald-400 font-semibold">Strength: </span><span className="text-foreground/90">{grade.strength}</span></div>
+            <div><span className="text-bull font-semibold">Strength: </span><span className="text-foreground/90">{grade.strength}</span></div>
           )}
           {grade.weakness && (
             <div><span className="text-red-400 font-semibold">Weakness: </span><span className="text-foreground/90">{grade.weakness}</span></div>
@@ -729,7 +729,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                             type="button"
                             disabled={!!feedbackByMsg[m.id]}
                             onClick={() => void sendFeedback(m.id, 1, g ?? null)}
-                            className={`inline-flex h-7 w-7 items-center justify-center rounded border transition ${feedbackByMsg[m.id] === 1 ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-300" : "border-border bg-muted/50 text-muted-foreground hover:text-emerald-300 hover:border-emerald-500/40"}`}
+                            className={`inline-flex h-7 w-7 items-center justify-center rounded border transition ${feedbackByMsg[m.id] === 1 ? "border-bull/50 bg-bull/15 text-bull" : "border-border bg-muted/50 text-muted-foreground hover:text-bull hover:border-bull/40"}`}
                             title="Helpful - teach Hermes"
                             aria-label="Helpful"
                           >

@@ -204,7 +204,7 @@ function AlertItem({ row, onDelete, onToggle, muted }: { row: PriceAlertRow; onD
   };
   return (
     <li className={`flex items-center gap-3 rounded-xl border border-border bg-card p-3 ${muted ? "opacity-70" : ""}`}>
-      <div className={`rounded-md p-2 ${row.side === "above" ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"}`}>
+      <div className={`rounded-md p-2 ${row.side === "above" ? "bg-bull/10 text-bull" : "bg-amber-500/10 text-amber-500"}`}>
         <Icon className="h-4 w-4" />
       </div>
       <div className="flex-1 min-w-0">
