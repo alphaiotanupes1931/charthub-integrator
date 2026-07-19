@@ -393,7 +393,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
   }, []);
   const activeSessionsNow = useMemo(() => {
     const h = now.getUTCHours();
-    return SESSIONS.filter((s) => (s.startH < s.endH ? h >= s.startH && h < s.endH : h >= s.startH || h < s.endH)).map((s) => s.label);
+    return getSessions(ticker).filter((s) => (s.startH < s.endH ? h >= s.startH && h < s.endH : h >= s.startH || h < s.endH)).map((s) => s.label);
   }, [now]);
 
   // Publish a snapshot to parent for AI context whenever the data changes
@@ -572,7 +572,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       const out: Array<{ key: string; color: string; label: string; left: number; width: number; top: number; height: number; high: number; low: number; idx: number; vwap: Array<{ x: number; y: number }>; meanY: number | null; regX1: number; regY1: number; regX2: number; regY2: number }> = [];
       const firstDay = Math.floor(from / DAY) * DAY - DAY;
       for (let d = firstDay; d <= to; d += DAY) {
-        SESSIONS.forEach((sess, idx) => {
+        getSessions(ticker).forEach((sess, idx) => {
           const startMs = d + sess.startH * 3600 * 1000;
           const endMs = sess.startH < sess.endH
             ? d + sess.endH * 3600 * 1000
@@ -940,7 +940,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       )}
       {sessions && (
         <div className="absolute right-2 top-11 sm:right-3 sm:top-12 z-10 max-w-[60%] rounded-md border border-border bg-background/70 backdrop-blur px-1.5 py-1 sm:px-2 text-[9px] sm:text-[10px] font-mono text-muted-foreground flex flex-wrap items-center justify-end gap-x-1.5 gap-y-0.5">
-          {SESSIONS.map((s) => (
+          {getSessions(ticker).map((s) => (
             <span key={s.key} className="inline-flex items-center gap-1">
               <span className="h-2 w-2 rounded-sm shrink-0" style={{ background: s.color.replace("0.10", "0.7") }} />
               {s.label}
