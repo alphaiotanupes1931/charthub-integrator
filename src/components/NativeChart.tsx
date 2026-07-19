@@ -81,7 +81,7 @@ const SESSIONS = [
   { key: "Sydney",   startH: 22, endH: 7,  color: "rgba(56, 189, 248, 0.10)",  label: "Sydney"   }, // sky
   { key: "Tokyo",    startH: 0,  endH: 9,  color: "rgba(244, 114, 182, 0.10)", label: "Tokyo"    }, // pink
   { key: "London",   startH: 8,  endH: 17, color: "rgba(251, 191, 36, 0.10)",  label: "London"   }, // amber
-  { key: "New York", startH: 13, endH: 22, color: "rgba(52, 211, 153, 0.10)",  label: "New York" }, // emerald
+  { key: "New York", startH: 13, endH: 22, color: "rgba(64, 160, 160, 0.10)",  label: "New York" }, // emerald
 ];
 
 
