@@ -1775,7 +1775,7 @@ function ChatHistoryList({
 }: {
   activeThreadId: string | null;
   currentTitle: string;
-  onPick: (id: string) => void;
+  onPick: (id: string, symbol?: string | null) => void;
   onNew: (id: string | null) => void;
 }) {
   const listFn = useServerFn(listChatThreads);
