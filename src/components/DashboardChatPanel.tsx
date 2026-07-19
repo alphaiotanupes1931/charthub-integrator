@@ -20,6 +20,7 @@ import {
 } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { supabase } from "@/integrations/supabase/client";
+import { useTimezone, formatInTimezone } from "@/hooks/useTimezone";
 import { getOrCreateDashboardThread, getChatMessages } from "@/lib/chat.functions";
 import { readJournal, readActiveCoach, writeActiveCoach, readActiveStrategy } from "@/lib/chat-client";
 import { findStrategyByName } from "@/lib/customStrategies";
@@ -324,6 +325,15 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
     useEffect(() => { chartRef.current = chart; }, [chart]);
     const voice = useCoachVoice();
     const { isAdmin } = useProfile();
+    const { resolvedTimezone } = useTimezone();
+    const [now, setNow] = useState<Date>(() => new Date());
+    useEffect(() => {
+      const t = setInterval(() => setNow(new Date()), 30_000);
+      return () => clearInterval(t);
+    }, []);
+    const headerDate = formatInTimezone(now, resolvedTimezone, { month: "short", day: "numeric" });
+    const headerTime = formatInTimezone(now, resolvedTimezone, { hour: "2-digit", minute: "2-digit", timeZoneName: "short" });
+    const headerInstrument = chart?.ticker || "No instrument";
     // Voice defaults to muted per-message; the user must tap the speaker to unmute.
     const [voiceUnmutedIds, setVoiceUnmutedIds] = useState<Set<string>>(() => new Set());
     const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
@@ -592,8 +602,12 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               <CoachIcon className="h-3.5 w-3.5" />
             </span>
             <div className="flex flex-col min-w-0">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground leading-none">Chat</span>
-              <span className="text-sm font-semibold text-foreground truncate">{activeCoach}</span>
+              <span className="text-sm font-semibold text-foreground truncate leading-tight">{activeCoach}</span>
+              <span className="text-[10px] text-muted-foreground leading-tight truncate">
+                <span className="font-medium text-foreground/80">{headerInstrument}</span>
+                <span className="mx-1 opacity-50">·</span>{headerDate}
+                <span className="mx-1 opacity-50">·</span>{headerTime}
+              </span>
             </div>
           </div>
 
