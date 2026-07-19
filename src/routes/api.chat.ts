@@ -592,16 +592,22 @@ export const Route = createFileRoute("/api/chat")({
         const system = systemPrompt(coach, journalCtx, chartContextBlock(enrichedChart), strategyContextBlock(strategy), lensContextBlock(lens));
 
         const useClaude = !!anthropicKey;
-        const model = useClaude
+        const claudeModel = useClaude
           ? (createAnthropic({ apiKey: anthropicKey! })("claude-sonnet-4-5") as unknown as Parameters<typeof streamText>[0]["model"])
-          : createAiGatewayProvider(key!)("openai/gpt-5.4-mini");
+          : null;
+        const gatewayModel = key ? createAiGatewayProvider(key)("openai/gpt-5.4-mini") : null;
+        const primaryModel = claudeModel ?? gatewayModel!;
         const result = streamText({
-          model,
+          model: primaryModel,
           system,
           messages: await convertToModelMessages(messages),
           maxOutputTokens: 4096,
           ...(useClaude ? {} : { providerOptions: { lovable: { service_tier: "priority" } } }),
           experimental_transform: stripReasoningTransform,
+          onError: async ({ error }) => {
+            const msg = (error as Error)?.message ?? String(error);
+            console.error(`[chat] req=${reqId} stream_error`, msg);
+          },
         });
 
         const response = result.toUIMessageStreamResponse({
