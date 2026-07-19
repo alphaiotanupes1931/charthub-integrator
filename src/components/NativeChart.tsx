@@ -1046,6 +1046,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
             { k: "line", Icon: LineIcon, label: "Line" },
             { k: "rect", Icon: RectIcon, label: "Rect" },
             { k: "arrow", Icon: ArrowUpRight, label: "Arrow" },
+            { k: "eraser", Icon: EraserIcon, label: "Eraser" },
           ] as { k: DrawTool; Icon: typeof Pencil; label: string }[]).map(({ k, Icon, label }) => (
             <button
               key={k}
