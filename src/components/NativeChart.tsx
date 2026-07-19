@@ -733,6 +733,123 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     }
   }, [ticker, interval]);
 
+  // ---- Freehand markup overlay (pen / line / rect / arrow) ----
+  type DrawTool = "pen" | "line" | "rect" | "arrow";
+  type Stroke = {
+    tool: DrawTool;
+    color: string;
+    width: number;
+    points: { x: number; y: number }[]; // pen: many; others: [start, end]
+  };
+  const drawCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [drawMode, setDrawMode] = useState(false);
+  const [drawTool, setDrawTool] = useState<DrawTool>("pen");
+  const [drawColor, setDrawColor] = useState<string>("#fbbf24");
+  const [strokes, setStrokes] = useState<Stroke[]>([]);
+  const currentStrokeRef = useRef<Stroke | null>(null);
+  const drawingRef = useRef(false);
+
+  const redraw = useCallback(() => {
+    const cvs = drawCanvasRef.current;
+    if (!cvs) return;
+    const ctx = cvs.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, cvs.width, cvs.height);
+    const dpr = window.devicePixelRatio || 1;
+    ctx.save();
+    ctx.scale(dpr, dpr);
+    const all = currentStrokeRef.current ? [...strokes, currentStrokeRef.current] : strokes;
+    for (const s of all) {
+      if (s.points.length === 0) continue;
+      ctx.strokeStyle = s.color;
+      ctx.fillStyle = s.color;
+      ctx.lineWidth = s.width;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      if (s.tool === "pen") {
+        ctx.beginPath();
+        ctx.moveTo(s.points[0].x, s.points[0].y);
+        for (let i = 1; i < s.points.length; i++) ctx.lineTo(s.points[i].x, s.points[i].y);
+        ctx.stroke();
+      } else if (s.points.length >= 2) {
+        const a = s.points[0], b = s.points[s.points.length - 1];
+        if (s.tool === "line") {
+          ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+        } else if (s.tool === "rect") {
+          ctx.strokeRect(a.x, a.y, b.x - a.x, b.y - a.y);
+        } else if (s.tool === "arrow") {
+          ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+          const angle = Math.atan2(b.y - a.y, b.x - a.x);
+          const head = 10 + s.width * 2;
+          ctx.beginPath();
+          ctx.moveTo(b.x, b.y);
+          ctx.lineTo(b.x - head * Math.cos(angle - Math.PI / 7), b.y - head * Math.sin(angle - Math.PI / 7));
+          ctx.lineTo(b.x - head * Math.cos(angle + Math.PI / 7), b.y - head * Math.sin(angle + Math.PI / 7));
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+    }
+    ctx.restore();
+  }, [strokes]);
+
+  // Size canvas to container and repaint on resize
+  useEffect(() => {
+    const cvs = drawCanvasRef.current;
+    const host = containerRef.current;
+    if (!cvs || !host) return;
+    const resize = () => {
+      const rect = host.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      cvs.width = Math.max(1, Math.floor(rect.width * dpr));
+      cvs.height = Math.max(1, Math.floor(rect.height * dpr));
+      cvs.style.width = `${rect.width}px`;
+      cvs.style.height = `${rect.height}px`;
+      redraw();
+    };
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(host);
+    return () => ro.disconnect();
+  }, [redraw]);
+
+  useEffect(() => { redraw(); }, [strokes, redraw]);
+
+  const getPoint = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const cvs = drawCanvasRef.current!;
+    const rect = cvs.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  };
+
+  const onPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!drawMode) return;
+    e.preventDefault();
+    (e.target as Element).setPointerCapture(e.pointerId);
+    drawingRef.current = true;
+    const p = getPoint(e);
+    currentStrokeRef.current = { tool: drawTool, color: drawColor, width: 2, points: [p] };
+    redraw();
+  };
+  const onPointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!drawMode || !drawingRef.current || !currentStrokeRef.current) return;
+    const p = getPoint(e);
+    const s = currentStrokeRef.current;
+    if (s.tool === "pen") s.points.push(p);
+    else s.points = [s.points[0], p];
+    redraw();
+  };
+  const onPointerUp = () => {
+    if (!drawingRef.current) return;
+    drawingRef.current = false;
+    const s = currentStrokeRef.current;
+    currentStrokeRef.current = null;
+    if (s && s.points.length > 0) setStrokes((prev) => [...prev, s]);
+    else redraw();
+  };
+
+  const undoStroke = () => setStrokes((prev) => prev.slice(0, -1));
+  const clearStrokes = () => setStrokes([]);
+
   return (
     <div className={`relative h-full w-full ${className ?? ""}`}>
       <div ref={containerRef} className="absolute inset-0" />
