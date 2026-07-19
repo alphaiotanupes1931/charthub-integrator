@@ -603,6 +603,7 @@ export const Route = createFileRoute("/api/chat")({
           system,
           messages: await convertToModelMessages(messages),
           maxOutputTokens: 4096,
+          abortSignal: request.signal,
           ...(useClaude ? {} : { providerOptions: { lovable: { service_tier: "priority" } } }),
           experimental_transform: stripReasoningTransform,
           onError: async ({ error }) => {
