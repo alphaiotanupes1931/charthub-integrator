@@ -499,8 +499,9 @@ export const Route = createFileRoute("/api/chat")({
           userId = claims.claims.sub;
         }
 
+        const anthropicKey = process.env.ANTHROPIC_API_KEY;
         const key = process.env.LOVABLE_API_KEY;
-        if (!key) return new Response("The AI coach is temporarily unavailable. Please try again shortly.", { status: 503, headers: cors });
+        if (!anthropicKey && !key) return new Response("The AI coach is temporarily unavailable. Please try again shortly.", { status: 503, headers: cors });
 
 
         // --- Verify thread ownership when this is a persisted chat thread. ---
