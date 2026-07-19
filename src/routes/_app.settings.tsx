@@ -30,8 +30,11 @@ import {
   KeyRound,
   Copy,
   Mail,
+  Palette,
+  RotateCcw,
 } from "lucide-react";
 import { isWelcomeBackMuted, setWelcomeBackMuted } from "@/lib/welcomeBack";
+import { useCandleColors, type CandleColors } from "@/hooks/useCandleColors";
 
 export const Route = createFileRoute("/_app/settings")({
   head: () => ({ meta: [{ title: "Settings, TradeMind" }] }),
@@ -129,6 +132,7 @@ function SettingsPage() {
   const [clockNow, setClockNow] = useState(() => new Date());
   const [welcomeMuted, setWelcomeMutedState] = useState(false);
   useEffect(() => { setWelcomeMutedState(isWelcomeBackMuted()); }, []);
+  const { colors: candleColors, update: updateCandleColors, reset: resetCandleColors, isHex } = useCandleColors();
 
   // TradeLocker integration state
   const [tlEmail, setTlEmail] = useState("");
@@ -481,6 +485,61 @@ function SettingsPage() {
           </button>
         </div>
       </Card>
+
+      <Card className="mt-4">
+        <h2 className="flex items-center gap-2 text-lg font-semibold mb-2">
+          <Palette className="size-5 text-primary" />
+          Chart Colors
+        </h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          Customize how candles look on every chart. Pick a color or paste a hex code. Saved on this device.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {([
+            { key: "up", label: "Bullish body" },
+            { key: "down", label: "Bearish body" },
+            { key: "wickUp", label: "Bullish wick" },
+            { key: "wickDown", label: "Bearish wick" },
+            { key: "borderUp", label: "Bullish border" },
+            { key: "borderDown", label: "Bearish border" },
+          ] as Array<{ key: keyof CandleColors; label: string }>).map(({ key, label }) => (
+            <div key={key} className="flex items-center gap-2 rounded-md border border-border bg-background/40 px-3 py-2">
+              <label className="flex-1 text-sm text-foreground/80">{label}</label>
+              <input
+                type="color"
+                value={candleColors[key]}
+                onChange={(e) => updateCandleColors({ [key]: e.target.value } as Partial<CandleColors>)}
+                className="h-8 w-9 cursor-pointer rounded border border-border bg-transparent p-0"
+                aria-label={`${label} color picker`}
+              />
+              <input
+                type="text"
+                value={candleColors[key]}
+                onChange={(e) => {
+                  const v = e.target.value.trim();
+                  if (isHex(v)) updateCandleColors({ [key]: v } as Partial<CandleColors>);
+                }}
+                spellCheck={false}
+                className="w-24 rounded border border-border bg-background px-2 py-1 font-mono text-xs uppercase text-foreground/90 focus:outline-none focus:ring-1 focus:ring-primary"
+                aria-label={`${label} hex code`}
+              />
+            </div>
+          ))}
+        </div>
+        <div className="mt-4 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={resetCandleColors}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background hover:bg-muted px-3 py-1.5 text-xs font-medium text-foreground/80"
+          >
+            <RotateCcw className="h-3.5 w-3.5" /> Reset to defaults
+          </button>
+          <span className="text-xs text-muted-foreground">Changes save instantly</span>
+        </div>
+      </Card>
+
+
+
 
 
 

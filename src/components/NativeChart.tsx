@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Camera, Palette, RotateCcw, X } from "lucide-react";
-import { useCandleColors, type CandleColors } from "@/hooks/useCandleColors";
+import { Camera } from "lucide-react";
+import { useCandleColors } from "@/hooks/useCandleColors";
 import { useQuery } from "@tanstack/react-query";
 import {
   createChart,
@@ -332,8 +332,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
   const [bands, setBands] = useState<Array<{ key: string; color: string; label: string; left: number; width: number; top: number; height: number; high: number; low: number; idx: number; vwap: Array<{ x: number; y: number }>; meanY: number | null; regX1: number; regY1: number; regX2: number; regY2: number }>>([]);
   // AI annotation zones projected into pixel coords for a shaded overlay
   const [annZones, setAnnZones] = useState<Array<{ key: string; top: number; height: number; color: string; label?: string }>>([]);
-  const { colors: candleColors, update: updateCandleColors, reset: resetCandleColors, isHex } = useCandleColors();
-  const [colorPanelOpen, setColorPanelOpen] = useState(false);
+  const { colors: candleColors } = useCandleColors();
 
   const { data: liveOhlc, isLoading, isError } = useQuery<OhlcResponse>({
     queryKey: ["ohlc", ticker, interval],
@@ -856,21 +855,6 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       <div className="absolute right-2 bottom-2 sm:right-3 sm:bottom-3 z-20 flex items-center gap-2">
         <button
           type="button"
-          onClick={() => setColorPanelOpen((v) => !v)}
-          title="Customize candle colors"
-          aria-label="Customize candle colors"
-          aria-expanded={colorPanelOpen}
-          className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/80 hover:bg-background backdrop-blur px-2 py-1.5 text-[10px] font-mono uppercase tracking-wider text-foreground/90 hover:text-foreground transition-colors"
-        >
-          <Palette className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">Colors</span>
-          <span className="inline-flex items-center gap-0.5 ml-1">
-            <span className="h-2.5 w-2.5 rounded-sm border border-border" style={{ background: candleColors.up }} />
-            <span className="h-2.5 w-2.5 rounded-sm border border-border" style={{ background: candleColors.down }} />
-          </span>
-        </button>
-        <button
-          type="button"
           onClick={handleScreenshot}
           title="Save chart screenshot"
           aria-label="Save chart screenshot"
@@ -880,64 +864,6 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
           <span className="hidden sm:inline">Save</span>
         </button>
       </div>
-      {colorPanelOpen && (
-        <div className="absolute right-2 bottom-14 sm:right-3 sm:bottom-16 z-30 w-[19rem] max-w-[calc(100%-1rem)] rounded-lg border border-border bg-popover/95 backdrop-blur shadow-lg p-3 text-xs">
-          <div className="flex items-center justify-between mb-2">
-            <div className="font-semibold uppercase tracking-wider text-foreground/90 text-[11px]">Candle colors</div>
-            <button
-              type="button"
-              onClick={() => setColorPanelOpen(false)}
-              className="rounded p-1 hover:bg-muted text-muted-foreground hover:text-foreground"
-              aria-label="Close color panel"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </div>
-          <p className="text-[10px] text-muted-foreground mb-3">Pick a color or paste a hex code (e.g. var(--bull)). Saved on this device and applied to every chart.</p>
-          <div className="space-y-2">
-            {([
-              { key: "up", label: "Bullish body" },
-              { key: "down", label: "Bearish body" },
-              { key: "wickUp", label: "Bullish wick" },
-              { key: "wickDown", label: "Bearish wick" },
-              { key: "borderUp", label: "Bullish border" },
-              { key: "borderDown", label: "Bearish border" },
-            ] as Array<{ key: keyof CandleColors; label: string }>).map(({ key, label }) => (
-              <div key={key} className="flex items-center gap-2">
-                <label className="flex-1 text-[11px] text-foreground/80">{label}</label>
-                <input
-                  type="color"
-                  value={candleColors[key]}
-                  onChange={(e) => updateCandleColors({ [key]: e.target.value } as Partial<CandleColors>)}
-                  className="h-7 w-8 cursor-pointer rounded border border-border bg-transparent p-0"
-                  aria-label={`${label} color picker`}
-                />
-                <input
-                  type="text"
-                  value={candleColors[key]}
-                  onChange={(e) => {
-                    const v = e.target.value.trim();
-                    if (isHex(v)) updateCandleColors({ [key]: v } as Partial<CandleColors>);
-                  }}
-                  spellCheck={false}
-                  className="w-20 rounded border border-border bg-background px-1.5 py-1 font-mono text-[10px] uppercase text-foreground/90 focus:outline-none focus:ring-1 focus:ring-primary"
-                  aria-label={`${label} hex code`}
-                />
-              </div>
-            ))}
-          </div>
-          <div className="mt-3 flex items-center justify-between">
-            <button
-              type="button"
-              onClick={resetCandleColors}
-              className="inline-flex items-center gap-1 rounded-md border border-border bg-background hover:bg-muted px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-foreground/80"
-            >
-              <RotateCcw className="h-3 w-3" /> Reset
-            </button>
-            <span className="text-[10px] text-muted-foreground">Changes save instantly</span>
-          </div>
-        </div>
-      )}
       {sessions && (
         <div className="absolute right-2 top-11 sm:right-3 sm:top-12 z-10 max-w-[60%] rounded-md border border-border bg-background/70 backdrop-blur px-1.5 py-1 sm:px-2 text-[9px] sm:text-[10px] font-mono text-muted-foreground flex flex-wrap items-center justify-end gap-x-1.5 gap-y-0.5">
           {getSessions(ticker).map((s) => (

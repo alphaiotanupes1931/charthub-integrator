@@ -596,7 +596,7 @@ export const Route = createFileRoute("/api/chat")({
         const claudeModel = useClaude
           ? (createAnthropic({ apiKey: anthropicKey! })("claude-sonnet-4-5") as unknown as Parameters<typeof streamText>[0]["model"])
           : null;
-        const gatewayModel = key ? createAiGatewayProvider(key)("openai/gpt-5.4-mini") : null;
+        const gatewayModel = key ? createAiGatewayProvider(key)("google/gemini-2.5-flash") : null;
         const primaryModel = claudeModel ?? gatewayModel!;
         const result = streamText({
           model: primaryModel,
