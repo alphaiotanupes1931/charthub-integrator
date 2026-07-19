@@ -51,7 +51,7 @@ const NAV: NavItem[] = [
   { to: "/alerts",          label: "Price Alerts",    icon: Bell },
   
   { to: "/settings",        label: "Settings",        icon: SettingsIcon },
-  { to: "/coach-dashboard", label: "Coach Dashboard", icon: UserCog },
+  
   { to: "/admin",           label: "Admin",           icon: ShieldCheck, accent: true },
 ];
 
