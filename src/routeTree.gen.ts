@@ -29,7 +29,6 @@ import { Route as ApiOhlcRouteImport } from './routes/api.ohlc'
 import { Route as ApiHealthRouteImport } from './routes/api.health'
 import { Route as ApiChatRouteImport } from './routes/api.chat'
 import { Route as AppVoiceCoachRouteImport } from './routes/_app.voice-coach'
-import { Route as AppStrategiesRouteImport } from './routes/_app.strategies'
 import { Route as AppSignalsRouteImport } from './routes/_app.signals'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppScanLensRouteImport } from './routes/_app.scan-lens'
@@ -47,6 +46,7 @@ import { Route as AppChatRouteImport } from './routes/_app.chat'
 import { Route as AppAnalyticsRouteImport } from './routes/_app.analytics'
 import { Route as AppAlertsRouteImport } from './routes/_app.alerts'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
+import { Route as AppStrategiesIndexRouteImport } from './routes/_app.strategies.index'
 import { Route as AppChatIndexRouteImport } from './routes/_app.chat.index'
 import { Route as ApiTradelockerImportRouteImport } from './routes/api.tradelocker.import'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api.public.stripe-webhook'
@@ -154,11 +154,6 @@ const AppVoiceCoachRoute = AppVoiceCoachRouteImport.update({
   path: '/voice-coach',
   getParentRoute: () => AppRoute,
 } as any)
-const AppStrategiesRoute = AppStrategiesRouteImport.update({
-  id: '/strategies',
-  path: '/strategies',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppSignalsRoute = AppSignalsRouteImport.update({
   id: '/signals',
   path: '/signals',
@@ -244,6 +239,11 @@ const AppAdminRoute = AppAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AppRoute,
 } as any)
+const AppStrategiesIndexRoute = AppStrategiesIndexRouteImport.update({
+  id: '/strategies/',
+  path: '/strategies/',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppChatIndexRoute = AppChatIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -260,9 +260,9 @@ const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppStrategiesStrategyIdRoute = AppStrategiesStrategyIdRouteImport.update({
-  id: '/$strategyId',
-  path: '/$strategyId',
-  getParentRoute: () => AppStrategiesRoute,
+  id: '/strategies/$strategyId',
+  path: '/strategies/$strategyId',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppChatThreadIdRoute = AppChatThreadIdRouteImport.update({
   id: '/$threadId',
@@ -310,7 +310,6 @@ export interface FileRoutesByFullPath {
   '/scan-lens': typeof AppScanLensRoute
   '/settings': typeof AppSettingsRoute
   '/signals': typeof AppSignalsRoute
-  '/strategies': typeof AppStrategiesRouteWithChildren
   '/voice-coach': typeof AppVoiceCoachRoute
   '/api/chat': typeof ApiChatRoute
   '/api/health': typeof ApiHealthRoute
@@ -325,6 +324,7 @@ export interface FileRoutesByFullPath {
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/chat/': typeof AppChatIndexRoute
+  '/strategies/': typeof AppStrategiesIndexRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
 }
 export interface FileRoutesByTo {
@@ -355,7 +355,6 @@ export interface FileRoutesByTo {
   '/scan-lens': typeof AppScanLensRoute
   '/settings': typeof AppSettingsRoute
   '/signals': typeof AppSignalsRoute
-  '/strategies': typeof AppStrategiesRouteWithChildren
   '/voice-coach': typeof AppVoiceCoachRoute
   '/api/chat': typeof ApiChatRoute
   '/api/health': typeof ApiHealthRoute
@@ -370,6 +369,7 @@ export interface FileRoutesByTo {
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/chat': typeof AppChatIndexRoute
+  '/strategies': typeof AppStrategiesIndexRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
 }
 export interface FileRoutesById {
@@ -403,7 +403,6 @@ export interface FileRoutesById {
   '/_app/scan-lens': typeof AppScanLensRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/signals': typeof AppSignalsRoute
-  '/_app/strategies': typeof AppStrategiesRouteWithChildren
   '/_app/voice-coach': typeof AppVoiceCoachRoute
   '/api/chat': typeof ApiChatRoute
   '/api/health': typeof ApiHealthRoute
@@ -418,6 +417,7 @@ export interface FileRoutesById {
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/_app/chat/': typeof AppChatIndexRoute
+  '/_app/strategies/': typeof AppStrategiesIndexRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
 }
 export interface FileRouteTypes {
@@ -451,7 +451,6 @@ export interface FileRouteTypes {
     | '/scan-lens'
     | '/settings'
     | '/signals'
-    | '/strategies'
     | '/voice-coach'
     | '/api/chat'
     | '/api/health'
@@ -466,6 +465,7 @@ export interface FileRouteTypes {
     | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
     | '/chat/'
+    | '/strategies/'
     | '/api/public/hooks/price-alerts-tick'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -496,7 +496,6 @@ export interface FileRouteTypes {
     | '/scan-lens'
     | '/settings'
     | '/signals'
-    | '/strategies'
     | '/voice-coach'
     | '/api/chat'
     | '/api/health'
@@ -511,6 +510,7 @@ export interface FileRouteTypes {
     | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
     | '/chat'
+    | '/strategies'
     | '/api/public/hooks/price-alerts-tick'
   id:
     | '__root__'
@@ -543,7 +543,6 @@ export interface FileRouteTypes {
     | '/_app/scan-lens'
     | '/_app/settings'
     | '/_app/signals'
-    | '/_app/strategies'
     | '/_app/voice-coach'
     | '/api/chat'
     | '/api/health'
@@ -558,6 +557,7 @@ export interface FileRouteTypes {
     | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
     | '/_app/chat/'
+    | '/_app/strategies/'
     | '/api/public/hooks/price-alerts-tick'
   fileRoutesById: FileRoutesById
 }
@@ -727,13 +727,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppVoiceCoachRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/strategies': {
-      id: '/_app/strategies'
-      path: '/strategies'
-      fullPath: '/strategies'
-      preLoaderRoute: typeof AppStrategiesRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/signals': {
       id: '/_app/signals'
       path: '/signals'
@@ -853,6 +846,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/strategies/': {
+      id: '/_app/strategies/'
+      path: '/strategies'
+      fullPath: '/strategies/'
+      preLoaderRoute: typeof AppStrategiesIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/chat/': {
       id: '/_app/chat/'
       path: '/'
@@ -876,10 +876,10 @@ declare module '@tanstack/react-router' {
     }
     '/_app/strategies/$strategyId': {
       id: '/_app/strategies/$strategyId'
-      path: '/$strategyId'
+      path: '/strategies/$strategyId'
       fullPath: '/strategies/$strategyId'
       preLoaderRoute: typeof AppStrategiesStrategyIdRouteImport
-      parentRoute: typeof AppStrategiesRoute
+      parentRoute: typeof AppRoute
     }
     '/_app/chat/$threadId': {
       id: '/_app/chat/$threadId'
@@ -930,18 +930,6 @@ const AppChatRouteChildren: AppChatRouteChildren = {
 const AppChatRouteWithChildren =
   AppChatRoute._addFileChildren(AppChatRouteChildren)
 
-interface AppStrategiesRouteChildren {
-  AppStrategiesStrategyIdRoute: typeof AppStrategiesStrategyIdRoute
-}
-
-const AppStrategiesRouteChildren: AppStrategiesRouteChildren = {
-  AppStrategiesStrategyIdRoute: AppStrategiesStrategyIdRoute,
-}
-
-const AppStrategiesRouteWithChildren = AppStrategiesRoute._addFileChildren(
-  AppStrategiesRouteChildren,
-)
-
 interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRouteWithChildren
   AppAlertsRoute: typeof AppAlertsRoute
@@ -960,8 +948,9 @@ interface AppRouteChildren {
   AppScanLensRoute: typeof AppScanLensRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppSignalsRoute: typeof AppSignalsRoute
-  AppStrategiesRoute: typeof AppStrategiesRouteWithChildren
   AppVoiceCoachRoute: typeof AppVoiceCoachRoute
+  AppStrategiesStrategyIdRoute: typeof AppStrategiesStrategyIdRoute
+  AppStrategiesIndexRoute: typeof AppStrategiesIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -982,8 +971,9 @@ const AppRouteChildren: AppRouteChildren = {
   AppScanLensRoute: AppScanLensRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppSignalsRoute: AppSignalsRoute,
-  AppStrategiesRoute: AppStrategiesRouteWithChildren,
   AppVoiceCoachRoute: AppVoiceCoachRoute,
+  AppStrategiesStrategyIdRoute: AppStrategiesStrategyIdRoute,
+  AppStrategiesIndexRoute: AppStrategiesIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

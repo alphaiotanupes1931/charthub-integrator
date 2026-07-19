@@ -15,7 +15,7 @@ import {
   MARKETS,
 } from "@/lib/customStrategies";
 
-export const Route = createFileRoute("/_app/strategies")({
+export const Route = createFileRoute("/_app/strategies/")({
   head: () => ({ meta: [{ title: "Strategies, TradeMind" }] }),
   component: StrategiesPage,
 });
