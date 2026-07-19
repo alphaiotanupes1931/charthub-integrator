@@ -54,6 +54,9 @@ import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api.public.
 import { Route as AppStrategiesStrategyIdRouteImport } from './routes/_app.strategies.$strategyId'
 import { Route as AppChatThreadIdRouteImport } from './routes/_app.chat.$threadId'
 import { Route as AppAdminSubscribersRouteImport } from './routes/_app.admin.subscribers'
+import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api.public.telegram.webhook'
+import { Route as ApiPublicHooksSendBriefingsRouteImport } from './routes/api.public.hooks.send-briefings'
+import { Route as ApiPublicHooksReconcilePaperRouteImport } from './routes/api.public.hooks.reconcile-paper'
 import { Route as ApiPublicHooksPriceAlertsTickRouteImport } from './routes/api.public.hooks.price-alerts-tick'
 
 const TermsRoute = TermsRouteImport.update({
@@ -280,6 +283,24 @@ const AppAdminSubscribersRoute = AppAdminSubscribersRouteImport.update({
   path: '/subscribers',
   getParentRoute: () => AppAdminRoute,
 } as any)
+const ApiPublicTelegramWebhookRoute =
+  ApiPublicTelegramWebhookRouteImport.update({
+    id: '/api/public/telegram/webhook',
+    path: '/api/public/telegram/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksSendBriefingsRoute =
+  ApiPublicHooksSendBriefingsRouteImport.update({
+    id: '/api/public/hooks/send-briefings',
+    path: '/api/public/hooks/send-briefings',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksReconcilePaperRoute =
+  ApiPublicHooksReconcilePaperRouteImport.update({
+    id: '/api/public/hooks/reconcile-paper',
+    path: '/api/public/hooks/reconcile-paper',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksPriceAlertsTickRoute =
   ApiPublicHooksPriceAlertsTickRouteImport.update({
     id: '/api/public/hooks/price-alerts-tick',
@@ -333,6 +354,9 @@ export interface FileRoutesByFullPath {
   '/chat/': typeof AppChatIndexRoute
   '/strategies/': typeof AppStrategiesIndexRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
+  '/api/public/hooks/reconcile-paper': typeof ApiPublicHooksReconcilePaperRoute
+  '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
+  '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -378,6 +402,9 @@ export interface FileRoutesByTo {
   '/chat': typeof AppChatIndexRoute
   '/strategies': typeof AppStrategiesIndexRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
+  '/api/public/hooks/reconcile-paper': typeof ApiPublicHooksReconcilePaperRoute
+  '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
+  '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -427,6 +454,9 @@ export interface FileRoutesById {
   '/_app/chat/': typeof AppChatIndexRoute
   '/_app/strategies/': typeof AppStrategiesIndexRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
+  '/api/public/hooks/reconcile-paper': typeof ApiPublicHooksReconcilePaperRoute
+  '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
+  '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -476,6 +506,9 @@ export interface FileRouteTypes {
     | '/chat/'
     | '/strategies/'
     | '/api/public/hooks/price-alerts-tick'
+    | '/api/public/hooks/reconcile-paper'
+    | '/api/public/hooks/send-briefings'
+    | '/api/public/telegram/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -521,6 +554,9 @@ export interface FileRouteTypes {
     | '/chat'
     | '/strategies'
     | '/api/public/hooks/price-alerts-tick'
+    | '/api/public/hooks/reconcile-paper'
+    | '/api/public/hooks/send-briefings'
+    | '/api/public/telegram/webhook'
   id:
     | '__root__'
     | '/'
@@ -569,6 +605,9 @@ export interface FileRouteTypes {
     | '/_app/chat/'
     | '/_app/strategies/'
     | '/api/public/hooks/price-alerts-tick'
+    | '/api/public/hooks/reconcile-paper'
+    | '/api/public/hooks/send-briefings'
+    | '/api/public/telegram/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -593,6 +632,9 @@ export interface RootRouteChildren {
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
   ApiTradelockerImportRoute: typeof ApiTradelockerImportRoute
   ApiPublicHooksPriceAlertsTickRoute: typeof ApiPublicHooksPriceAlertsTickRoute
+  ApiPublicHooksReconcilePaperRoute: typeof ApiPublicHooksReconcilePaperRoute
+  ApiPublicHooksSendBriefingsRoute: typeof ApiPublicHooksSendBriefingsRoute
+  ApiPublicTelegramWebhookRoute: typeof ApiPublicTelegramWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -912,6 +954,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminSubscribersRouteImport
       parentRoute: typeof AppAdminRoute
     }
+    '/api/public/telegram/webhook': {
+      id: '/api/public/telegram/webhook'
+      path: '/api/public/telegram/webhook'
+      fullPath: '/api/public/telegram/webhook'
+      preLoaderRoute: typeof ApiPublicTelegramWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/send-briefings': {
+      id: '/api/public/hooks/send-briefings'
+      path: '/api/public/hooks/send-briefings'
+      fullPath: '/api/public/hooks/send-briefings'
+      preLoaderRoute: typeof ApiPublicHooksSendBriefingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/reconcile-paper': {
+      id: '/api/public/hooks/reconcile-paper'
+      path: '/api/public/hooks/reconcile-paper'
+      fullPath: '/api/public/hooks/reconcile-paper'
+      preLoaderRoute: typeof ApiPublicHooksReconcilePaperRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/price-alerts-tick': {
       id: '/api/public/hooks/price-alerts-tick'
       path: '/api/public/hooks/price-alerts-tick'
@@ -1039,6 +1102,9 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
   ApiTradelockerImportRoute: ApiTradelockerImportRoute,
   ApiPublicHooksPriceAlertsTickRoute: ApiPublicHooksPriceAlertsTickRoute,
+  ApiPublicHooksReconcilePaperRoute: ApiPublicHooksReconcilePaperRoute,
+  ApiPublicHooksSendBriefingsRoute: ApiPublicHooksSendBriefingsRoute,
+  ApiPublicTelegramWebhookRoute: ApiPublicTelegramWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
