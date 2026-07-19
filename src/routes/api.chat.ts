@@ -591,16 +591,16 @@ export const Route = createFileRoute("/api/chat")({
 
         const system = systemPrompt(coach, journalCtx, chartContextBlock(enrichedChart), strategyContextBlock(strategy), lensContextBlock(lens));
 
-        const gateway = createAiGatewayProvider(key);
+        const useClaude = !!anthropicKey;
+        const model = useClaude
+          ? createAnthropic({ apiKey: anthropicKey! })("claude-sonnet-4-5")
+          : createAiGatewayProvider(key!)("openai/gpt-5.4-mini");
         const result = streamText({
-          model: gateway("openai/gpt-5.4-mini"),
+          model,
           system,
           messages: await convertToModelMessages(messages),
-          providerOptions: {
-            lovable: {
-              service_tier: "priority",
-            },
-          },
+          maxOutputTokens: 4096,
+          ...(useClaude ? {} : { providerOptions: { lovable: { service_tier: "priority" } } }),
           experimental_transform: stripReasoningTransform,
         });
 
