@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TradingViewChart } from "@/components/TradingViewChart";
 import { NativeChart, LEVEL_META, type LevelKey, type ChartSnapshot } from "@/components/NativeChart";
-import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Clock, MessageSquare, X, Plug, Maximize2, Square, Paperclip, ChevronUp, PanelRightClose, PanelRightOpen, BarChart3, ThumbsUp, ThumbsDown, Brain, LineChart, Settings2, Maximize, Minimize, HelpCircle } from "lucide-react";
+import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Clock, MessageSquare, X, Plug, Maximize2, Square, Paperclip, ChevronUp, PanelRightClose, PanelRightOpen, BarChart3, ThumbsUp, ThumbsDown, Brain, LineChart, Settings2, Maximize, Minimize, HelpCircle, BookOpen } from "lucide-react";
 import { restartTutorial } from "@/components/Tutorial";
 
 import { useCoachVoice } from "@/hooks/useCoachVoice";
@@ -311,7 +311,34 @@ function ScanTicket({
           >
             <Crosshair className="h-3 w-3" /> New scan
           </button>
+          {!isNoEntry && (
+            <button
+              onClick={() => {
+                const parseNum = (v: string) => {
+                  const n = parseFloat(String(v).replace(/[^0-9.\-]/g, ""));
+                  return Number.isFinite(n) ? n : undefined;
+                };
+                const prefill = {
+                  symbol: symbol.ticker,
+                  side: result.bias === "Short" ? "Short" : "Long",
+                  entry: parseNum(result.entry),
+                  stop: parseNum(result.stop),
+                  tp1: parseNum(result.tp1),
+                  tp2: parseNum(result.tp2),
+                  setup: `Scan ${result.grade}`,
+                  notes: `Auto-logged from TradeMind scan. Grade ${result.grade}, ${result.bias}, confidence ${result.confidence}%, R:R ${result.rr}.`,
+                };
+                try { localStorage.setItem("trademind.journal.prefill.v1", JSON.stringify(prefill)); } catch { /* ignore */ }
+                window.location.assign("/journal");
+              }}
+              className="inline-flex items-center gap-1.5 rounded-md border border-primary/30 bg-primary/10 px-2.5 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 whitespace-nowrap"
+              title="Log this setup to your trade journal"
+            >
+              <BookOpen className="h-3 w-3" /> Log to Journal
+            </button>
+          )}
         </div>
+
       </div>
 
       {!isNoEntry && (

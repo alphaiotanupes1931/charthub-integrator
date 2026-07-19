@@ -603,6 +603,7 @@ export const Route = createFileRoute("/api/chat")({
           system,
           messages: await convertToModelMessages(messages),
           maxOutputTokens: 4096,
+          abortSignal: request.signal,
           ...(useClaude ? {} : { providerOptions: { lovable: { service_tier: "priority" } } }),
           experimental_transform: stripReasoningTransform,
           onError: async ({ error }) => {
@@ -614,7 +615,8 @@ export const Route = createFileRoute("/api/chat")({
         const response = result.toUIMessageStreamResponse({
           headers: { "X-Request-Id": reqId },
           originalMessages: messages,
-          onFinish: async ({ messages: finalMessages }) => {
+          onFinish: async ({ messages: finalMessages, isAborted }) => {
+            if (isAborted) return;
             if (!shouldPersist || !thread) return;
             try {
               if (!sb || !userId) return;
