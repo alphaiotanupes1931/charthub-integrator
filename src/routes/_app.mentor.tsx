@@ -136,7 +136,7 @@ function MentorPage() {
               <div key={inv.id} className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-background/40 px-3 py-2">
                 <code className="flex-1 min-w-0 text-xs font-mono truncate text-foreground/90">{inviteUrl(inv.code)}</code>
                 {inv.accepted_by ? (
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-bull bg-bull/10 px-2 py-0.5 rounded">
                     Accepted
                   </span>
                 ) : (
@@ -145,7 +145,7 @@ function MentorPage() {
                   </span>
                 )}
                 <button onClick={() => copy(inv)} className="p-1.5 rounded-md text-muted-foreground hover:text-foreground" title="Copy link">
-                  {copiedId === inv.id ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
+                  {copiedId === inv.id ? <Check className="h-4 w-4 text-bull" /> : <Copy className="h-4 w-4" />}
                 </button>
                 <button onClick={() => remove(inv.id)} className="p-1.5 rounded-md text-muted-foreground hover:text-destructive" title="Revoke">
                   <Trash2 className="h-4 w-4" />
@@ -175,7 +175,7 @@ function MentorPage() {
                 <div className="text-xs text-muted-foreground truncate mb-3">{m.email}</div>
                 <div className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-3">
-                    <span className="text-emerald-400 font-medium">{m.wins ?? 0}W</span>
+                    <span className="text-bull font-medium">{m.wins ?? 0}W</span>
                     <span className="text-destructive font-medium">{m.losses ?? 0}L</span>
                   </div>
                   <span className="font-display text-lg text-primary">{m.winRate}%</span>

@@ -97,7 +97,7 @@ function SignalsPage() {
 
 function SignalColumn({ title, tone, signals, onClick }: { title: string; tone: "buy" | "sell" | "hold"; signals: Signal[]; onClick: (ticker: string) => void }) {
   const Icon = tone === "buy" ? TrendingUp : tone === "sell" ? TrendingDown : Minus;
-  const color = tone === "buy" ? "text-emerald-500" : tone === "sell" ? "text-red-500" : "text-muted-foreground";
+  const color = tone === "buy" ? "text-bull" : tone === "sell" ? "text-red-500" : "text-muted-foreground";
   return (
     <div className="rounded-xl border border-border bg-card p-4">
       <div className={`flex items-center gap-2 text-sm font-semibold mb-3 ${color}`}>
