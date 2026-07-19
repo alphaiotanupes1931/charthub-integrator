@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { convertToModelMessages, streamText, type StreamTextTransform, type ToolSet, type UIMessage } from "ai";
 import { createClient } from "@supabase/supabase-js";
+import { createAnthropic } from "@ai-sdk/anthropic";
 import { createAiGatewayProvider } from "@/lib/ai-gateway.server";
 import {
   corsHeadersFor,
@@ -498,8 +499,9 @@ export const Route = createFileRoute("/api/chat")({
           userId = claims.claims.sub;
         }
 
+        const anthropicKey = process.env.ANTHROPIC_API_KEY;
         const key = process.env.LOVABLE_API_KEY;
-        if (!key) return new Response("The AI coach is temporarily unavailable. Please try again shortly.", { status: 503, headers: cors });
+        if (!anthropicKey && !key) return new Response("The AI coach is temporarily unavailable. Please try again shortly.", { status: 503, headers: cors });
 
 
         // --- Verify thread ownership when this is a persisted chat thread. ---
@@ -589,16 +591,16 @@ export const Route = createFileRoute("/api/chat")({
 
         const system = systemPrompt(coach, journalCtx, chartContextBlock(enrichedChart), strategyContextBlock(strategy), lensContextBlock(lens));
 
-        const gateway = createAiGatewayProvider(key);
+        const useClaude = !!anthropicKey;
+        const model = useClaude
+          ? (createAnthropic({ apiKey: anthropicKey! })("claude-sonnet-4-5") as unknown as Parameters<typeof streamText>[0]["model"])
+          : createAiGatewayProvider(key!)("openai/gpt-5.4-mini");
         const result = streamText({
-          model: gateway("openai/gpt-5.4-mini"),
+          model,
           system,
           messages: await convertToModelMessages(messages),
-          providerOptions: {
-            lovable: {
-              service_tier: "priority",
-            },
-          },
+          maxOutputTokens: 4096,
+          ...(useClaude ? {} : { providerOptions: { lovable: { service_tier: "priority" } } }),
           experimental_transform: stripReasoningTransform,
         });
 
