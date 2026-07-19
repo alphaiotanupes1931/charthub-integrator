@@ -204,7 +204,7 @@ function gradeFor(symbol: Symbol, lastPrice?: number): ScanResult {
 
 const gradeColor: Record<ScanResult["grade"], string> = {
   "A+": "text-primary",
-  A:   "text-emerald-400",
+  A:   "text-bull",
   B:   "text-foreground/80",
   C:   "text-destructive",
   "NO ENTRY": "text-destructive",
@@ -339,11 +339,11 @@ function ScanTicket({
           <span className="font-semibold text-foreground">{trendLabel}</span>
         </div>
         <div className="flex h-2 rounded-full overflow-hidden bg-border/40">
-          <div className="bg-emerald-500 transition-[width] duration-500" style={{ width: `${bullishPct}%` }} />
+          <div className="bg-bull transition-[width] duration-500" style={{ width: `${bullishPct}%` }} />
           <div className="bg-red-500 transition-[width] duration-500" style={{ width: `${bearishPct}%` }} />
         </div>
         <div className="flex justify-between text-[10px] mt-1 font-mono">
-          <span className="text-emerald-400">{bullishPct}% bullish</span>
+          <span className="text-bull">{bullishPct}% bullish</span>
           <span className="text-red-400">{bearishPct}% bearish</span>
         </div>
       </div>
@@ -382,7 +382,7 @@ function ScanTicket({
 }
 
 function MetricBlock({ title, tag, tone = "neutral", children }: { title: string; tag: string; tone?: "good" | "bad" | "neutral" | "muted"; children: React.ReactNode }) {
-  const tagColor = tone === "good" ? "text-emerald-400 border-emerald-500/40 bg-emerald-500/10"
+  const tagColor = tone === "good" ? "text-bull border-bull/40 bg-bull/10"
     : tone === "bad" ? "text-red-400 border-red-500/40 bg-red-500/10"
     : tone === "muted" ? "text-muted-foreground border-border bg-muted/20"
     : "text-primary border-primary/40 bg-primary/10";
@@ -409,7 +409,7 @@ function MetricRow({ label, value, hidden }: { label: string; value: string; hid
 
 
 function TicketCell({ label, value, tone }: { label: string; value: string; tone?: "good" | "bad" }) {
-  const color = tone === "good" ? "text-emerald-400" : tone === "bad" ? "text-destructive" : "text-foreground";
+  const color = tone === "good" ? "text-bull" : tone === "bad" ? "text-destructive" : "text-foreground";
   return (
     <div className="rounded-lg border border-border/60 bg-background/30 px-3 py-2.5">
       <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">{label}</div>
@@ -761,10 +761,10 @@ function Dashboard() {
     });
     if (entry && stop && tp1 && tp2 && bias !== "neutral") {
       setAiAnnotationsRaw([
-        { kind: "hline", price: entry, label: "Entry", color: bias === "long" ? "#22c55e" : "#ef4444" },
+        { kind: "hline", price: entry, label: "Entry", color: bias === "long" ? "var(--bull)" : "#ef4444" },
         { kind: "hline", price: stop, label: "Stop", color: "#ef4444", dashed: true },
-        { kind: "hline", price: tp1, label: "TP1", color: "#34d399", dashed: true },
-        { kind: "hline", price: tp2, label: "TP2", color: "#34d399", dashed: true },
+        { kind: "hline", price: tp1, label: "TP1", color: "var(--bull)", dashed: true },
+        { kind: "hline", price: tp2, label: "TP2", color: "var(--bull)", dashed: true },
       ]);
     } else {
       setAiAnnotationsRaw([]);
@@ -1174,7 +1174,7 @@ function Dashboard() {
                   onClick={() => setSessionsOn((v) => !v)}
                   className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-medium transition disabled:opacity-40 ${
                     sessionsOn && chartTab === "setup"
-                      ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
+                      ? "border-bull/40 bg-bull/10 text-bull"
                       : "border-border bg-background/50 text-muted-foreground hover:text-foreground"
                   }`}
                 >
@@ -1338,8 +1338,8 @@ function Dashboard() {
               {broker ? (
                 <div className="flex items-center gap-2 min-w-0 text-muted-foreground">
                   <span className="relative flex h-2 w-2 shrink-0">
-                    <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+                    <span className="absolute inline-flex h-full w-full rounded-full bg-bull opacity-75 animate-ping" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-bull" />
                   </span>
                   <span className="truncate">
                     <span className="text-foreground font-medium">Broker connected</span>
