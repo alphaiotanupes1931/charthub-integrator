@@ -1845,7 +1845,7 @@ function ChatHistoryList({
           return (
             <div
               key={t.id}
-              onClick={() => onPick(t.id)}
+              onClick={() => onPick(t.id, t.symbol ?? null)}
               className={`group flex items-start gap-2 rounded-md px-2 py-2 text-sm cursor-pointer transition ${
                 active ? "bg-primary/15 text-primary" : "hover:bg-accent/40 text-foreground/85"
               }`}
