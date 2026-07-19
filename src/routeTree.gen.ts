@@ -29,6 +29,7 @@ import { Route as ApiOhlcRouteImport } from './routes/api.ohlc'
 import { Route as ApiHealthRouteImport } from './routes/api.health'
 import { Route as ApiChatRouteImport } from './routes/api.chat'
 import { Route as AppVoiceCoachRouteImport } from './routes/_app.voice-coach'
+import { Route as AppTestingRouteImport } from './routes/_app.testing'
 import { Route as AppStrategiesRouteImport } from './routes/_app.strategies'
 import { Route as AppSignalsRouteImport } from './routes/_app.signals'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
@@ -44,6 +45,7 @@ import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppCoachesRouteImport } from './routes/_app.coaches'
 import { Route as AppCoachDashboardRouteImport } from './routes/_app.coach-dashboard'
 import { Route as AppChatRouteImport } from './routes/_app.chat'
+import { Route as AppBriefingsRouteImport } from './routes/_app.briefings'
 import { Route as AppAnalyticsRouteImport } from './routes/_app.analytics'
 import { Route as AppAlertsRouteImport } from './routes/_app.alerts'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
@@ -158,6 +160,11 @@ const AppVoiceCoachRoute = AppVoiceCoachRouteImport.update({
   path: '/voice-coach',
   getParentRoute: () => AppRoute,
 } as any)
+const AppTestingRoute = AppTestingRouteImport.update({
+  id: '/testing',
+  path: '/testing',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppStrategiesRoute = AppStrategiesRouteImport.update({
   id: '/strategies',
   path: '/strategies',
@@ -231,6 +238,11 @@ const AppCoachDashboardRoute = AppCoachDashboardRouteImport.update({
 const AppChatRoute = AppChatRouteImport.update({
   id: '/chat',
   path: '/chat',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppBriefingsRoute = AppBriefingsRouteImport.update({
+  id: '/briefings',
+  path: '/briefings',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAnalyticsRoute = AppAnalyticsRouteImport.update({
@@ -323,6 +335,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AppAdminRouteWithChildren
   '/alerts': typeof AppAlertsRoute
   '/analytics': typeof AppAnalyticsRoute
+  '/briefings': typeof AppBriefingsRoute
   '/chat': typeof AppChatRouteWithChildren
   '/coach-dashboard': typeof AppCoachDashboardRoute
   '/coaches': typeof AppCoachesRoute
@@ -338,6 +351,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AppSettingsRoute
   '/signals': typeof AppSignalsRoute
   '/strategies': typeof AppStrategiesRouteWithChildren
+  '/testing': typeof AppTestingRoute
   '/voice-coach': typeof AppVoiceCoachRoute
   '/api/chat': typeof ApiChatRoute
   '/api/health': typeof ApiHealthRoute
@@ -373,6 +387,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AppAdminRouteWithChildren
   '/alerts': typeof AppAlertsRoute
   '/analytics': typeof AppAnalyticsRoute
+  '/briefings': typeof AppBriefingsRoute
   '/coach-dashboard': typeof AppCoachDashboardRoute
   '/coaches': typeof AppCoachesRoute
   '/dashboard': typeof AppDashboardRoute
@@ -386,6 +401,7 @@ export interface FileRoutesByTo {
   '/scan-lens': typeof AppScanLensRoute
   '/settings': typeof AppSettingsRoute
   '/signals': typeof AppSignalsRoute
+  '/testing': typeof AppTestingRoute
   '/voice-coach': typeof AppVoiceCoachRoute
   '/api/chat': typeof ApiChatRoute
   '/api/health': typeof ApiHealthRoute
@@ -423,6 +439,7 @@ export interface FileRoutesById {
   '/_app/admin': typeof AppAdminRouteWithChildren
   '/_app/alerts': typeof AppAlertsRoute
   '/_app/analytics': typeof AppAnalyticsRoute
+  '/_app/briefings': typeof AppBriefingsRoute
   '/_app/chat': typeof AppChatRouteWithChildren
   '/_app/coach-dashboard': typeof AppCoachDashboardRoute
   '/_app/coaches': typeof AppCoachesRoute
@@ -438,6 +455,7 @@ export interface FileRoutesById {
   '/_app/settings': typeof AppSettingsRoute
   '/_app/signals': typeof AppSignalsRoute
   '/_app/strategies': typeof AppStrategiesRouteWithChildren
+  '/_app/testing': typeof AppTestingRoute
   '/_app/voice-coach': typeof AppVoiceCoachRoute
   '/api/chat': typeof ApiChatRoute
   '/api/health': typeof ApiHealthRoute
@@ -475,6 +493,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/alerts'
     | '/analytics'
+    | '/briefings'
     | '/chat'
     | '/coach-dashboard'
     | '/coaches'
@@ -490,6 +509,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signals'
     | '/strategies'
+    | '/testing'
     | '/voice-coach'
     | '/api/chat'
     | '/api/health'
@@ -525,6 +545,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/alerts'
     | '/analytics'
+    | '/briefings'
     | '/coach-dashboard'
     | '/coaches'
     | '/dashboard'
@@ -538,6 +559,7 @@ export interface FileRouteTypes {
     | '/scan-lens'
     | '/settings'
     | '/signals'
+    | '/testing'
     | '/voice-coach'
     | '/api/chat'
     | '/api/health'
@@ -574,6 +596,7 @@ export interface FileRouteTypes {
     | '/_app/admin'
     | '/_app/alerts'
     | '/_app/analytics'
+    | '/_app/briefings'
     | '/_app/chat'
     | '/_app/coach-dashboard'
     | '/_app/coaches'
@@ -589,6 +612,7 @@ export interface FileRouteTypes {
     | '/_app/settings'
     | '/_app/signals'
     | '/_app/strategies'
+    | '/_app/testing'
     | '/_app/voice-coach'
     | '/api/chat'
     | '/api/health'
@@ -779,6 +803,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppVoiceCoachRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/testing': {
+      id: '/_app/testing'
+      path: '/testing'
+      fullPath: '/testing'
+      preLoaderRoute: typeof AppTestingRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/strategies': {
       id: '/_app/strategies'
       path: '/strategies'
@@ -882,6 +913,13 @@ declare module '@tanstack/react-router' {
       path: '/chat'
       fullPath: '/chat'
       preLoaderRoute: typeof AppChatRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/briefings': {
+      id: '/_app/briefings'
+      path: '/briefings'
+      fullPath: '/briefings'
+      preLoaderRoute: typeof AppBriefingsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/analytics': {
@@ -1028,6 +1066,7 @@ interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRouteWithChildren
   AppAlertsRoute: typeof AppAlertsRoute
   AppAnalyticsRoute: typeof AppAnalyticsRoute
+  AppBriefingsRoute: typeof AppBriefingsRoute
   AppChatRoute: typeof AppChatRouteWithChildren
   AppCoachDashboardRoute: typeof AppCoachDashboardRoute
   AppCoachesRoute: typeof AppCoachesRoute
@@ -1043,6 +1082,7 @@ interface AppRouteChildren {
   AppSettingsRoute: typeof AppSettingsRoute
   AppSignalsRoute: typeof AppSignalsRoute
   AppStrategiesRoute: typeof AppStrategiesRouteWithChildren
+  AppTestingRoute: typeof AppTestingRoute
   AppVoiceCoachRoute: typeof AppVoiceCoachRoute
 }
 
@@ -1050,6 +1090,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAdminRoute: AppAdminRouteWithChildren,
   AppAlertsRoute: AppAlertsRoute,
   AppAnalyticsRoute: AppAnalyticsRoute,
+  AppBriefingsRoute: AppBriefingsRoute,
   AppChatRoute: AppChatRouteWithChildren,
   AppCoachDashboardRoute: AppCoachDashboardRoute,
   AppCoachesRoute: AppCoachesRoute,
@@ -1065,6 +1106,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppSettingsRoute: AppSettingsRoute,
   AppSignalsRoute: AppSignalsRoute,
   AppStrategiesRoute: AppStrategiesRouteWithChildren,
+  AppTestingRoute: AppTestingRoute,
   AppVoiceCoachRoute: AppVoiceCoachRoute,
 }
 
