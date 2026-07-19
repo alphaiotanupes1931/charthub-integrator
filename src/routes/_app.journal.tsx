@@ -294,7 +294,7 @@ function JournalPage() {
   useEffect(() => { setTrades(loadTrades()); }, []);
   useEffect(() => { saveTrades(trades); }, [trades]);
 
-  type Prefill = { symbol?: string; timeframe?: string; notes?: string; entry?: number; side?: Side; setup?: string };
+  type Prefill = { symbol?: string; timeframe?: string; notes?: string; entry?: number; stop?: number; tp1?: number; tp2?: number; side?: Side; setup?: string };
   const [prefill, setPrefill] = useState<Prefill | null>(null);
   useEffect(() => {
     try {
@@ -1057,7 +1057,7 @@ function TradeFormModal({
 }: {
   initialDate: string;
   editing: Trade | null;
-  prefill?: { symbol?: string; timeframe?: string; notes?: string; entry?: number; side?: Side; setup?: string } | null;
+  prefill?: { symbol?: string; timeframe?: string; notes?: string; entry?: number; stop?: number; tp1?: number; tp2?: number; side?: Side; setup?: string } | null;
   onClose: () => void;
   onSave: (t: Trade) => void;
 }) {
@@ -1069,8 +1069,8 @@ function TradeFormModal({
   const [side, setSide] = useState<Side>(editing?.side ?? prefill?.side ?? "Long");
   const [entry, setEntry] = useState<string>(editing ? String(editing.entry) : prefill?.entry != null ? String(prefill.entry) : "");
   const [exit, setExit] = useState<string>(editing ? String(editing.exit) : "");
-  const [stop, setStop] = useState<string>(editing ? String(editing.stop) : "");
-  const [takeProfit, setTakeProfit] = useState<string>(editing?.takeProfit != null ? String(editing.takeProfit) : "");
+  const [stop, setStop] = useState<string>(editing ? String(editing.stop) : prefill?.stop != null ? String(prefill.stop) : "");
+  const [takeProfit, setTakeProfit] = useState<string>(editing?.takeProfit != null ? String(editing.takeProfit) : prefill?.tp1 != null ? String(prefill.tp1) : "");
   const [size, setSize] = useState<string>(editing ? String(editing.size) : "1");
   const [fees, setFees] = useState<string>(editing?.fees != null ? String(editing.fees) : "");
   const [pointValue, setPointValue] = useState<string>(editing?.pointValue != null ? String(editing.pointValue) : "");

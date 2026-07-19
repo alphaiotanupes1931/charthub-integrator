@@ -235,12 +235,20 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         </header>
 
-        <main className={`flex-1 min-w-0 ${isDashboard ? "h-full overflow-hidden pb-16 md:pb-0" : "overflow-x-hidden pb-16 md:pb-0"}`}>{children}</main>
+        <main className={`flex-1 min-w-0 ${isDashboard ? "h-full overflow-hidden pb-24 md:pb-0" : "overflow-x-hidden pb-24 md:pb-0"}`}>{children}</main>
 
         <footer className="hidden md:block border-t border-border/60 px-4 md:px-6 py-3 text-center text-[11px] md:text-xs text-muted-foreground">
           Educational analysis only, not financial advice.
         </footer>
+        {/* Mobile compliance footer - sits above the tab bar */}
+        <div
+          className="md:hidden fixed bottom-16 inset-x-0 z-30 border-t border-border/60 bg-background/95 backdrop-blur-xl px-3 py-1.5 text-center text-[10px] text-muted-foreground"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 4px)" }}
+        >
+          Educational analysis only, not financial advice.
+        </div>
       </div>
+      <ComplianceGate />
 
       {/* Mobile bottom tab bar (Robinhood-style). Fixed to the viewport, safe-area aware. */}
       <nav
@@ -280,6 +288,40 @@ export function AppShell({ children }: { children: ReactNode }) {
       <WelcomeBackGreeter />
     </div>
     </WelcomeBackProvider>
+  );
+}
+
+function ComplianceGate() {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    try {
+      if (typeof window === "undefined") return;
+      const seen = localStorage.getItem("trademind.compliance.ack.v1");
+      if (!seen) setOpen(true);
+    } catch { /* ignore */ }
+  }, []);
+  if (!open) return null;
+  const accept = () => {
+    try { localStorage.setItem("trademind.compliance.ack.v1", new Date().toISOString()); } catch { /* ignore */ }
+    setOpen(false);
+  };
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl">
+        <div className="text-lg font-semibold mb-2">Welcome to TradeMind</div>
+        <p className="text-sm text-muted-foreground mb-4">
+          TradeMind provides educational analysis and coaching tools only. Nothing here is financial,
+          investment, or trading advice. Trading involves risk of loss. You are solely responsible for
+          your decisions.
+        </p>
+        <button
+          onClick={accept}
+          className="w-full h-10 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90"
+        >
+          I understand
+        </button>
+      </div>
+    </div>
   );
 }
 
