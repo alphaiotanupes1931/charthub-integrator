@@ -165,7 +165,7 @@ function AdminPage() {
                     <td className="px-4 py-2.5 text-muted-foreground">{u.referral_source ?? <span className="opacity-60">-</span>}</td>
                     <td className="px-4 py-2.5">
                       {u.broker_connected ? (
-                        <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${u.broker_account_type === "live" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-amber-500/10 text-amber-400 border border-amber-500/20"}`}>
+                        <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${u.broker_account_type === "live" ? "bg-bull/10 text-bull border border-bull/20" : "bg-amber-500/10 text-amber-400 border border-amber-500/20"}`}>
                           {u.broker_account_type === "live" ? <CircleDot className="h-3 w-3" /> : <CircleDashed className="h-3 w-3" />}
                           {u.broker_account_type === "live" ? "Live" : u.broker_account_type === "demo" ? "Demo" : u.broker_name ?? "Connected"}
                         </span>
@@ -181,7 +181,7 @@ function AdminPage() {
                           <Ban className="h-3 w-3" /> Banned
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        <span className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium bg-bull/10 text-bull border border-bull/20">
                           <ShieldCheck className="h-3 w-3" /> Active
                         </span>
                       )}
@@ -191,7 +191,7 @@ function AdminPage() {
                       <button
                         onClick={() => toggleBan(u)}
                         disabled={busyId === u.id}
-                        className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors disabled:opacity-50 ${u.banned ? "border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10" : "border-destructive/30 text-destructive hover:bg-destructive/10"}`}
+                        className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors disabled:opacity-50 ${u.banned ? "border-bull/30 text-bull hover:bg-bull/10" : "border-destructive/30 text-destructive hover:bg-destructive/10"}`}
                       >
                         {busyId === u.id ? <Loader2 className="h-3 w-3 animate-spin" /> : u.banned ? <ShieldCheck className="h-3 w-3" /> : <Ban className="h-3 w-3" />}
                         {u.banned ? "Unban" : "Ban"}
@@ -211,7 +211,7 @@ function AdminPage() {
 type StatusLevel = "operational" | "degraded" | "down";
 
 const LEVEL_OPTIONS: { value: StatusLevel; label: string; cls: string }[] = [
-  { value: "operational", label: "Operational", cls: "border-emerald-500/40 text-emerald-400 bg-emerald-500/10" },
+  { value: "operational", label: "Operational", cls: "border-bull/40 text-bull bg-bull/10" },
   { value: "degraded",    label: "Degraded",    cls: "border-amber-500/40 text-amber-400 bg-amber-500/10" },
   { value: "down",        label: "Down",        cls: "border-red-500/40 text-red-400 bg-red-500/10" },
 ];
