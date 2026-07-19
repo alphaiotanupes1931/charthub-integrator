@@ -615,7 +615,8 @@ export const Route = createFileRoute("/api/chat")({
         const response = result.toUIMessageStreamResponse({
           headers: { "X-Request-Id": reqId },
           originalMessages: messages,
-          onFinish: async ({ messages: finalMessages }) => {
+          onFinish: async ({ messages: finalMessages, isAborted }) => {
+            if (isAborted) return;
             if (!shouldPersist || !thread) return;
             try {
               if (!sb || !userId) return;
