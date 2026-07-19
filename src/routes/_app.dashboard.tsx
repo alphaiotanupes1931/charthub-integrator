@@ -125,6 +125,28 @@ const SYMBOLS: Symbol[] = [
   { tv: "BINANCE:XRPUSDT",   ticker: "XRP/USD", name: "Ripple",           venue: "Binance"   },
 ];
 
+// Resolve a chat-history "symbol" tag (e.g. "XAU Gold", "SPX500", "BTC")
+// back to a SYMBOLS entry so clicking a past chat can switch the chart.
+function findSymbolFromTag(tag?: string | null): Symbol | null {
+  if (!tag) return null;
+  const norm = tag.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const map: Record<string, string> = {
+    XAUGOLD: "XAU/USD", XAU: "XAU/USD", GOLD: "XAU/USD", XAUUSD: "XAU/USD",
+    XAGSILVER: "XAG/USD", XAG: "XAG/USD", SILVER: "XAG/USD", XAGUSD: "XAG/USD",
+    BTC: "BTC/USD", BTCUSD: "BTC/USD",
+    ETH: "ETH/USD", ETHUSD: "ETH/USD",
+    XRP: "XRP/USD", XRPUSD: "XRP/USD",
+    NAS100: "NAS100", NDX: "NAS100", QQQ: "NAS100",
+    US30: "US30", DJI: "US30", DIA: "US30",
+    SPX500: "SPX500", SPX: "SPX500", GSPC: "SPX500", SPY: "SPX500",
+    WTIOIL: "WTI Oil", WTI: "WTI Oil", OIL: "WTI Oil",
+    EURUSD: "EUR/USD", GBPUSD: "GBP/USD", USDJPY: "USD/JPY",
+  };
+  const ticker = map[norm];
+  if (!ticker) return null;
+  return SYMBOLS.find((s) => s.ticker === ticker) ?? null;
+}
+
 type ScanResult = {
   grade: "A+" | "A" | "B" | "C" | "NO ENTRY";
   bias: "Long" | "Short" | "Neutral";
@@ -1498,7 +1520,7 @@ function Dashboard() {
                       <ChatHistoryList
                         activeThreadId={activeThreadId}
                         currentTitle={historyInstrumentTitle(symbol)}
-                        onPick={(id) => { setActiveThreadId(id); setChatPanelView("conversation"); }}
+                        onPick={(id, sym) => { const s = findSymbolFromTag(sym); if (s) setSymbol(s); setActiveThreadId(id); setChatPanelView("conversation"); }}
                         onNew={(id) => { setActiveThreadId(id); setChatPanelView("conversation"); }}
                       />
                     </div>
@@ -1621,7 +1643,7 @@ function Dashboard() {
                 <ChatHistoryList
                   activeThreadId={activeThreadId}
                   currentTitle={historyInstrumentTitle(symbol)}
-                  onPick={(id) => { setActiveThreadId(id); setChatPanelView("conversation"); }}
+                  onPick={(id, sym) => { const s = findSymbolFromTag(sym); if (s) setSymbol(s); setActiveThreadId(id); setChatPanelView("conversation"); }}
                   onNew={(id) => { setActiveThreadId(id); setChatPanelView("conversation"); }}
                 />
               </div>
@@ -1775,7 +1797,7 @@ function ChatHistoryList({
 }: {
   activeThreadId: string | null;
   currentTitle: string;
-  onPick: (id: string) => void;
+  onPick: (id: string, symbol?: string | null) => void;
   onNew: (id: string | null) => void;
 }) {
   const listFn = useServerFn(listChatThreads);
@@ -1845,7 +1867,7 @@ function ChatHistoryList({
           return (
             <div
               key={t.id}
-              onClick={() => onPick(t.id)}
+              onClick={() => onPick(t.id, t.symbol ?? null)}
               className={`group flex items-start gap-2 rounded-md px-2 py-2 text-sm cursor-pointer transition ${
                 active ? "bg-primary/15 text-primary" : "hover:bg-accent/40 text-foreground/85"
               }`}
