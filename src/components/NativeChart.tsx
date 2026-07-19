@@ -831,18 +831,62 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     return { x: e.clientX - rect.left, y: e.clientY - rect.top };
   };
 
+  // Distance from point p to segment ab (in canvas CSS px).
+  const distToSegment = (p: {x:number;y:number}, a: {x:number;y:number}, b: {x:number;y:number}) => {
+    const dx = b.x - a.x, dy = b.y - a.y;
+    const len2 = dx*dx + dy*dy;
+    if (len2 === 0) return Math.hypot(p.x - a.x, p.y - a.y);
+    let t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2;
+    t = Math.max(0, Math.min(1, t));
+    return Math.hypot(p.x - (a.x + t*dx), p.y - (a.y + t*dy));
+  };
+  const strokeHitTest = (s: Stroke, p: {x:number;y:number}, tol: number) => {
+    if (s.points.length === 0) return false;
+    if (s.tool === "pen") {
+      for (let i = 1; i < s.points.length; i++) {
+        if (distToSegment(p, s.points[i-1], s.points[i]) <= tol) return true;
+      }
+      return false;
+    }
+    if (s.points.length < 2) return false;
+    const a = s.points[0], b = s.points[s.points.length - 1];
+    if (s.tool === "line" || s.tool === "arrow") return distToSegment(p, a, b) <= tol;
+    if (s.tool === "rect") {
+      const x1 = Math.min(a.x, b.x), x2 = Math.max(a.x, b.x);
+      const y1 = Math.min(a.y, b.y), y2 = Math.max(a.y, b.y);
+      const edges: Array<[{x:number;y:number},{x:number;y:number}]> = [
+        [{x:x1,y:y1},{x:x2,y:y1}], [{x:x2,y:y1},{x:x2,y:y2}],
+        [{x:x2,y:y2},{x:x1,y:y2}], [{x:x1,y:y2},{x:x1,y:y1}],
+      ];
+      return edges.some(([e1, e2]) => distToSegment(p, e1, e2) <= tol);
+    }
+    return false;
+  };
+  const eraseAt = (p: {x:number;y:number}) => {
+    setStrokes((prev) => prev.filter((s) => !strokeHitTest(s, p, 10)));
+  };
+
   const onPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     if (!drawMode) return;
     e.preventDefault();
     (e.target as Element).setPointerCapture(e.pointerId);
     drawingRef.current = true;
     const p = getPoint(e);
+    if (drawTool === "eraser") {
+      eraseAt(p);
+      return;
+    }
     currentStrokeRef.current = { tool: drawTool, color: drawColor, width: 2, points: [p] };
     redraw();
   };
   const onPointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!drawMode || !drawingRef.current || !currentStrokeRef.current) return;
+    if (!drawMode || !drawingRef.current) return;
     const p = getPoint(e);
+    if (drawTool === "eraser") {
+      eraseAt(p);
+      return;
+    }
+    if (!currentStrokeRef.current) return;
     const s = currentStrokeRef.current;
     if (s.tool === "pen") s.points.push(p);
     else s.points = [s.points[0], p];
