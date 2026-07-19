@@ -1,65 +1,83 @@
-# TradeMind Fix Plan — Phased Rollout
+# Paper Trading + Daily Briefings + Kill Switch
 
-Each phase ends with a QA pass (build check + targeted browser test) before moving on. I'll pause after each phase so you can eyeball it in the preview before I move to the next.
+Three connected features. All three can share the same paper-trading engine and the same Telegram delivery pipe.
 
-## Phase 1 — AI Coach / Chat (highest priority)
-1. Restore the long-form Replit prompts for the coach (pre-trade, mid-trade, post-trade personas) so replies feel conversational and distinct per persona.
-2. Restore the "what do you think you should do?" Socratic opener before the coach answers.
-3. Restore trade-management branch: if a scan is requested while an open trade exists for that symbol, respond with manage-the-trade guidance instead of a fresh entry.
-4. Fix mid-sentence truncation (raise max output tokens, ensure we stream to completion, don't cap the UI text).
-5. Hide system/agent scaffolding from the user (no "entry/stop are being computed by an analysis agent" leaking into chat).
+## 1. Testing Mode (Paper Trading)
 
-**Claude API note:** I'll wire the coach path so it can call Claude once Marcus's Anthropic key is added via the secret form. I'll set up the switch and env var; the key itself needs to be pasted in by you/Marcus when Sahr sends instructions.
+A toggle in Settings: "Testing Mode". When on, the app shows a persistent "TESTING" banner at the top and unlocks a paper account.
 
-**QA:** send a message with each persona, run a scan, confirm no truncation, confirm no leaked system text.
+- Starting balance: $10,000 (configurable per user, default 10k).
+- The AI (existing scanner + planner) auto-executes its A / A+ signals on the paper account: fills at the entry price, respects the stop and TP, closes at TP/SL touch.
+- Fills are simulated against live OHLC (same feed the chart uses), so results reflect real market moves — no synthetic data.
+- Position sizing uses the user's configured risk % per trade (already in Settings).
+- Every fill, close, and equity change writes a row so the user can review history.
+- A "Testing" page shows: current equity, open positions, closed trades, win rate, P&L curve, max drawdown, and a Reset button that wipes and restarts at $10k.
 
-## Phase 2 — Chat History
-1. History rows show `INSTRUMENT BIAS — DATE TIME` (e.g. `SPX500 Long — Nov 12, 2:14pm`) instead of raw scan text.
-2. Clicking a past scan re-hydrates that thread, switches the dashboard chart to the matched instrument, and re-runs the scan.
-3. Add a visible **New** button pinned to the top of the history list.
-4. Newest conversations sort to the top.
+## 2. Kill Switch (10% drawdown from peak)
 
-**QA:** create 3 scans on different symbols, reload, click each — chart should switch and rescan.
+Runs inside the paper engine and — later, when live broker execution ships — the live engine too.
 
-## Phase 3 — Charts
-1. Fix index pricing/timezone drift on SPX500 / NAS100 / US30 (verify feed symbols + session offset).
-2. Add a Sessions on/off toggle in the chart toolbar (persist per user).
-3. Default the chart panel width to "default" on open (not narrow).
-4. Recolor candles/markers to TradingView-style deeper hues (replace neon green / pink-red defaults; keep user overrides from the Colors popover).
-5. Make sure Show-Me draws on the **live** chart, not the setup view.
-6. QA sweep of majors: XAU, XAG, EURUSD, GBPUSD, USDJPY, BTC, ETH, SPX500, NAS100, US30.
+- Track the running peak equity per account.
+- If equity drops ≥10% from peak: close every open position at market, block new AI trades, flip account status to `paused_for_review`.
+- User gets an in-app alert + Telegram push explaining what happened and the drawdown number.
+- Nothing resumes until the user hits "Resume trading" in the Testing page and acknowledges.
 
-**QA:** compare each symbol's last price to TradingView; toggle sessions; run Show-Me on live chart.
+## 3. Morning + Evening Briefings via Telegram
 
-## Phase 4 — UX cleanup
-1. Fix coach dropdown contrast (white-on-white) — force `bg-popover text-popover-foreground` and hover styles.
-2. Strategy detail pages: restore educational content per strategy (Wyckoff, SMC, etc.) from the old version.
-3. Simplify user-facing scan prompt copy to just "Scan SPX500" style.
+Two scheduled jobs.
 
-**QA:** open dropdown in light + dark, open 3 strategies, run a scan and confirm clean copy.
+- **Morning (07:00 user local time):** overnight moves on their watchlist, any A/A+ setups the scanner found pre-market, upcoming high-impact news, and — if Testing Mode is on — paper account status.
+- **Evening (21:00 user local time):** what actually happened today on the watchlist, closed paper trades with P&L, running week performance, mental-state prompt link.
+- Delivery: Telegram DM to the user's chat via the existing Telegram connector.
+- Setup flow in Settings → Notifications: user clicks "Connect Telegram", we show a link to `t.me/<bot>?start=<one-time-code>`, they message the bot, we store their `chat_id` against their profile.
+- Also viewable in-app under a "Briefings" page so users who skip Telegram still get value.
 
-## Phase 5 — Compliance
-1. Append the "Educational only, not financial advice" disclaimer to every signal card and every scan chat reply (not just landing).
-2. Verify placement on mobile.
+## Technical notes
 
-**QA:** run scans from Analysis, Chat, and Signals tabs — disclaimer visible on all.
+**Data model (new tables, all RLS-scoped to `auth.uid()`):**
 
-## Phase 6 — Show-Me finish
-1. Parse "show me liquidity pools / order blocks / FVGs / session highs" etc. into level toggles.
-2. Auto-clear prior drawn levels before drawing the new set.
-3. Draw onto the live chart canvas (shared with Phase 3 #5).
+```text
+paper_accounts        one row per user; balance, peak_equity, status, starting_balance
+paper_positions       open positions: symbol, side, entry, stop, tp, size, opened_at
+paper_trades          closed trades: entry/exit/pnl/reason (tp|sl|kill_switch|manual)
+paper_equity_snapshots  timestamped equity for the P&L curve
+briefing_prefs        user_id, telegram_chat_id, morning_enabled, evening_enabled, timezone
+briefings             sent briefings (kind, sent_at, body) so we can show in-app history
+```
 
-**QA:** type 4 show-me commands in sequence, confirm previous drawings clear each time.
+**Engine (server functions, not edge functions):**
 
----
+- `src/lib/paper-engine.functions.ts` — `openPosition`, `closePosition`, `reconcileOpenPositions` (runs on a cron every 1m; checks live price vs stop/TP, updates equity, triggers kill switch).
+- Reuses existing `runPlan` output as the trade source when a scan produces an A or A+ grade in Testing Mode.
 
-**Technical notes**
-- Coach prompts live in `src/lib/agents/*` and the chat route `src/routes/api.chat.ts`. Restoring the Replit-era prompts means expanding the system prompts and persona instructions there, and raising `maxOutputTokens` on the stream.
-- Claude wiring: add an `ANTHROPIC_API_KEY` secret + a provider switch in the chat route. If the key is present and coach mode = conversational, route to Claude; otherwise fall back to the current gateway model. I'll request the secret via the secure form when you're ready.
-- Chat history titles: update `src/lib/chat.functions.ts` to compose `${symbol} ${bias} — ${dateTime}` from parsed scan metadata; store bias/timestamp on thread create.
-- Re-scan on click: dashboard's thread-switch handler will read the thread's symbol/bias and call `runScan` after navigation.
-- Index price drift: check `market-data.server.ts` symbol mapping and the session overlay offset in `NativeChart.tsx` (likely UTC vs exchange local).
-- Candle recolor: update `useCandleColors.ts` defaults + the marker palette in `NativeChart.tsx`.
-- Disclaimer: single `<Disclaimer />` component appended in `ChartSignalCards.tsx` and the chat scan response formatter.
+**Scheduled jobs (pg_cron → TanStack public routes):**
 
-Reply "go" and I'll start Phase 1. If you want a different order (e.g. Claude key first so Phase 1 tests against Claude directly), tell me and I'll re-sequence.
+- `/api/public/hooks/reconcile-paper` — every 1 minute during market hours.
+- `/api/public/hooks/send-briefings` — every 15 minutes; picks users whose local 07:00 or 21:00 window matches now (uses `briefing_prefs.timezone`).
+- Auth via `apikey` header (Supabase anon key), per project convention.
+
+**Telegram:**
+
+- Uses the existing Telegram connector via `standard_connectors--call_gateway_connection`.
+- Bot receives `/start <code>` in a webhook route at `/api/public/telegram/webhook`, links `chat_id` to the user who generated the code.
+- If the user hasn't linked Telegram yet, briefings still write to the DB and appear in-app; no send is attempted.
+
+**UI:**
+
+- `src/routes/_authenticated/testing.tsx` — paper account dashboard, reset, resume-after-kill.
+- `src/routes/_authenticated/briefings.tsx` — history + on-demand "send me now" button.
+- Settings additions: Testing Mode toggle, starting balance input, Telegram link flow, briefing time overrides.
+- Dashboard banner component when `testing_mode = on`.
+
+## Rollout order
+
+1. DB schema + RLS + grants.
+2. Paper engine + Testing UI + Settings toggle (no Telegram yet).
+3. Kill switch inside the engine + resume flow.
+4. Telegram connector wiring + link flow.
+5. Briefing generator + pg_cron schedules.
+6. QA: run testing mode against a couple of scanned setups, force a 10% drawdown to confirm the kill switch fires and pauses cleanly.
+
+## Open question before I start
+
+The Telegram connector needs to be linked to the project (one click on your side). Want me to kick that off after step 3, or set it up first so briefings are ready the moment the engine is done?
