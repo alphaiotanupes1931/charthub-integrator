@@ -593,7 +593,7 @@ export const Route = createFileRoute("/api/chat")({
 
         const useClaude = !!anthropicKey;
         const model = useClaude
-          ? createAnthropic({ apiKey: anthropicKey! })("claude-sonnet-4-5")
+          ? (createAnthropic({ apiKey: anthropicKey! })("claude-sonnet-4-5") as unknown as Parameters<typeof streamText>[0]["model"])
           : createAiGatewayProvider(key!)("openai/gpt-5.4-mini");
         const result = streamText({
           model,
