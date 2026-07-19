@@ -51,10 +51,13 @@ export const updateBriefingPrefs = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     await ensurePrefs(supabase, userId);
     const patch: Record<string, unknown> = {};
-    for (const k of Object.keys(data) as (keyof typeof data)[]) {
-      if (data[k] !== undefined) patch[k] = data[k];
-    }
-    const { error } = await supabase.from("briefing_prefs").update(patch).eq("user_id", userId);
+    if (data.timezone !== undefined) patch.timezone = data.timezone;
+    if (data.morning_enabled !== undefined) patch.morning_enabled = data.morning_enabled;
+    if (data.evening_enabled !== undefined) patch.evening_enabled = data.evening_enabled;
+    if (data.morning_hour !== undefined) patch.morning_hour = data.morning_hour;
+    if (data.evening_hour !== undefined) patch.evening_hour = data.evening_hour;
+    if (data.watchlist !== undefined) patch.watchlist = data.watchlist;
+    const { error } = await (supabase.from("briefing_prefs") as any).update(patch).eq("user_id", userId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
