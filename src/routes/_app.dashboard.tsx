@@ -905,8 +905,10 @@ function Dashboard() {
     setAiGrade(null);
     const enabledLevels = ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none";
     const lens = findLens(lensId);
-    const prompt = `Scan ${symbolLabel(symbol)} on ${intervalLabel}. Give me 2-3 short sentences of coaching context: what to watch for right now, what would confirm or invalidate, and any risk note. Refer to the instrument by its friendly name (e.g. "Gold"), not the raw ticker. Levels I'm watching: ${enabledLevels}. Do not produce your own grade card or numeric entry/stop/targets - the grade card comes separately.`;
-    assertScanPromptMatchesSymbol(prompt, symbol, "runScan");
+    const displayText = `Scanning ${symbolLabel(symbol)} (${intervalLabel})…`;
+    const modelPrompt = `Scan ${symbolLabel(symbol)} on ${intervalLabel}. Give me 2-3 short sentences of coaching context: what to watch for right now, what would confirm or invalidate, and any risk note. Refer to the instrument by its friendly name (e.g. "Gold"), not the raw ticker. Levels I'm watching: ${enabledLevels}. Do not produce your own grade card or numeric entry/stop/targets - the grade card comes separately.`;
+    const prompt = `<<<SCAN_DISPLAY:${displayText}>>>\n${modelPrompt}`;
+    assertScanPromptMatchesSymbol(modelPrompt, symbol, "runScan");
     setRightOpen(true);
     if (from === "chat") {
       setRightTab("chat");

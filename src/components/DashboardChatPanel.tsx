@@ -751,9 +751,11 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                   </Message>
                 );
               }
+              const displayMatch = raw.match(/^<<<SCAN_DISPLAY:([^>]*)>>>/);
+              const userText = displayMatch ? displayMatch[1] : raw;
               return (
                 <Message key={m.id} from={m.role}>
-                  <MessageContent>{raw}</MessageContent>
+                  <MessageContent>{userText}</MessageContent>
                 </Message>
               );
             })}
