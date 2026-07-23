@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Camera, Pencil, Minus as LineIcon, Square as RectIcon, ArrowUpRight, Undo2, Trash2, Eraser as EraserIcon, X as CloseIcon } from "lucide-react";
 import { useCandleColors } from "@/hooks/useCandleColors";
+import { useChartBackground } from "@/hooks/useChartBackground";
 import { useQuery } from "@tanstack/react-query";
 import {
   createChart,
