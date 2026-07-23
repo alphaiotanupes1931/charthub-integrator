@@ -9,6 +9,8 @@ import {
   generateTelegramLinkCode,
   unlinkTelegram,
   sendBriefingNow,
+  setDiscordWebhook,
+  unlinkDiscord,
 } from "@/lib/briefings.functions";
 import { Copy, Send, Trash2 } from "lucide-react";
 
@@ -46,7 +48,18 @@ function BriefingsPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const saveDiscord = useMutation({
+    mutationFn: useServerFn(setDiscordWebhook),
+    onSuccess: () => { toast.success("Discord linked. Check your channel for the test message."); qc.invalidateQueries({ queryKey: ["briefingState"] }); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const unlinkDisc = useMutation({
+    mutationFn: useServerFn(unlinkDiscord),
+    onSuccess: () => { toast.success("Discord unlinked"); qc.invalidateQueries({ queryKey: ["briefingState"] }); },
+  });
+
   const [watchInput, setWatchInput] = useState("");
+  const [discordInput, setDiscordInput] = useState("");
 
   if (state.isLoading) return <div className="p-6 text-sm text-muted-foreground">Loading briefings…</div>;
   const s = state.data;
@@ -139,6 +152,43 @@ function BriefingsPage() {
           <div>
             <button onClick={() => genLink.mutate({})} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">
               Generate link code
+            </button>
+          </div>
+        )}
+      </section>
+
+      <section className="rounded-lg border border-border bg-card/40 p-4 space-y-3">
+        <h2 className="font-semibold">Discord</h2>
+        <p className="text-xs text-muted-foreground">
+          Get briefings, A/A+ signals, and kill-switch alerts posted to a Discord channel. In your Discord server go to
+          <span className="mx-1 font-medium text-foreground">Server Settings → Integrations → Webhooks → New Webhook</span>,
+          pick a channel, then paste the webhook URL below.
+        </p>
+        {(prefs as any).discord_webhook_url ? (
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-sm truncate">
+              Linked · <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{String((prefs as any).discord_webhook_url).replace(/(\/webhooks\/\d+\/).+/, "$1•••")}</code>
+            </div>
+            <button onClick={() => unlinkDisc.mutate({})} className="rounded-md border border-border px-3 py-1.5 text-sm">Unlink</button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <input
+              value={discordInput}
+              onChange={(e) => setDiscordInput(e.target.value)}
+              placeholder="https://discord.com/api/webhooks/…"
+              className="flex-1 rounded border border-border bg-background px-2 py-1.5 text-sm font-mono"
+            />
+            <button
+              onClick={() => {
+                const v = discordInput.trim();
+                if (!v) return;
+                saveDiscord.mutate({ data: { webhook_url: v } });
+              }}
+              disabled={saveDiscord.isPending}
+              className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
+            >
+              {saveDiscord.isPending ? "Linking…" : "Link Discord"}
             </button>
           </div>
         )}

@@ -13,7 +13,7 @@ export const Route = createFileRoute("/api/public/hooks/send-briefings")({
         }
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { buildBriefingBody, sendTelegramMessage, currentHourInTZ } = await import("@/lib/briefings.server");
+        const { buildBriefingBody, sendTelegramMessage, sendDiscordWebhook, sendDiscordShared, currentHourInTZ } = await import("@/lib/briefings.server");
 
         const { data: prefs } = await supabaseAdmin.from("briefing_prefs").select("*");
         if (!prefs?.length) return Response.json({ ok: true, sent: 0 });
@@ -22,7 +22,7 @@ export const Route = createFileRoute("/api/public/hooks/send-briefings")({
         const today = now.toISOString().slice(0, 10);
         let sent = 0;
 
-        for (const p of prefs) {
+        for (const p of prefs as any[]) {
           const hour = currentHourInTZ(p.timezone || "UTC");
           const wantsMorning = p.morning_enabled && hour === p.morning_hour;
           const wantsEvening = p.evening_enabled && hour === p.evening_hour;
@@ -41,22 +41,34 @@ export const Route = createFileRoute("/api/public/hooks/send-briefings")({
             ? `Balance $${Number(acct.balance).toFixed(2)} · Peak $${Number(acct.peak_equity).toFixed(2)} · Status ${acct.status}`
             : null;
           const { title, body } = await buildBriefingBody(kind, p.watchlist ?? [], paperSummary);
-          let delivered = false;
+          const msg = `${title}\n\n${body}`;
+          let delivered_telegram = false;
+          let delivered_discord = false;
           if (p.telegram_chat_id) {
-            const r = await sendTelegramMessage(p.telegram_chat_id, `${title}\n\n${body}`);
-            delivered = r.ok;
+            const r = await sendTelegramMessage(p.telegram_chat_id, msg);
+            delivered_telegram = r.ok;
           }
-          await supabaseAdmin.from("briefings").insert({
+          if (p.discord_webhook_url) {
+            const r = await sendDiscordWebhook(p.discord_webhook_url, `**${title}**\n${body}`);
+            delivered_discord = r.ok;
+          }
+          await (supabaseAdmin.from("briefings") as any).insert({
             user_id: p.user_id,
             kind,
             title,
             body,
-            delivered_telegram: delivered,
+            delivered_telegram,
+            delivered_discord,
           });
           await supabaseAdmin.from("briefing_prefs").update({
             ...(kind === "morning" ? { last_morning_at: now.toISOString() } : { last_evening_at: now.toISOString() }),
           }).eq("user_id", p.user_id);
           sent += 1;
+        }
+
+        // One shared community fan-out per run (best-effort, deduped by run).
+        if (sent > 0) {
+          await sendDiscordShared(`Briefings dispatched for ${sent} trader${sent === 1 ? "" : "s"} at ${now.toISOString()}.`).catch(() => undefined);
         }
 
         return Response.json({ ok: true, sent });

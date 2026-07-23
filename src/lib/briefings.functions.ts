@@ -2,7 +2,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { buildBriefingBody, sendTelegramMessage } from "@/lib/briefings.server";
+import { buildBriefingBody, sendTelegramMessage, sendDiscordWebhook, sendDiscordShared } from "@/lib/briefings.server";
 
 function randCode() {
   return Math.random().toString(36).slice(2, 8).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
@@ -28,7 +28,7 @@ export const getBriefingState = createServerFn({ method: "GET" })
     const prefs = await ensurePrefs(supabase, userId);
     const { data: history } = await supabase
       .from("briefings")
-      .select("id,kind,title,body,delivered_telegram,sent_at")
+      .select("id,kind,title,body,delivered_telegram,delivered_discord,sent_at")
       .eq("user_id", userId)
       .order("sent_at", { ascending: false })
       .limit(30);
@@ -88,6 +88,39 @@ export const unlinkTelegram = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const setDiscordWebhook = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw) =>
+    z.object({
+      webhook_url: z.string().url().max(500).regex(/^https:\/\/(discord\.com|discordapp\.com)\/api\/webhooks\//, "Must be a Discord webhook URL"),
+    }).parse(raw),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    await ensurePrefs(supabase, userId);
+    // Send a test ping so user sees it worked immediately.
+    const test = await sendDiscordWebhook(data.webhook_url, "TradeMind Discord notifications are now linked to this channel.");
+    if (!test.ok) throw new Error(`Discord test failed: ${test.error}`);
+    const { error } = await supabase
+      .from("briefing_prefs")
+      .update({ discord_webhook_url: data.webhook_url })
+      .eq("user_id", userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const unlinkDiscord = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { error } = await supabase
+      .from("briefing_prefs")
+      .update({ discord_webhook_url: null })
+      .eq("user_id", userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 export const sendBriefingNow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((raw) => z.object({ kind: z.enum(["morning", "evening", "ad_hoc"]).default("ad_hoc") }).parse(raw))
@@ -100,18 +133,29 @@ export const sendBriefingNow = createServerFn({ method: "POST" })
       paperSummary = `Balance $${Number(acct.balance).toFixed(2)} · Peak $${Number(acct.peak_equity).toFixed(2)} · Status ${acct.status}`;
     }
     const { title, body } = await buildBriefingBody(data.kind, prefs.watchlist ?? [], paperSummary);
-    let delivered = false;
+    const msg = `${title}\n\n${body}`;
+    let delivered_telegram = false;
+    let delivered_discord = false;
     if (prefs.telegram_chat_id) {
-      const r = await sendTelegramMessage(prefs.telegram_chat_id, `${title}\n\n${body}`);
-      delivered = r.ok;
+      const r = await sendTelegramMessage(prefs.telegram_chat_id, msg);
+      delivered_telegram = r.ok;
     }
-    const { data: row, error } = await supabase.from("briefings").insert({
+    if ((prefs as any).discord_webhook_url) {
+      const r = await sendDiscordWebhook((prefs as any).discord_webhook_url, `**${title}**\n${body}`);
+      delivered_discord = r.ok;
+    }
+    // Also fan out morning/evening briefings to the shared community feed (if configured).
+    if (data.kind !== "ad_hoc") {
+      await sendDiscordShared(`**${title}**\n${body}`).catch(() => undefined);
+    }
+    const { data: row, error } = await (supabase.from("briefings") as any).insert({
       user_id: userId,
       kind: data.kind,
       title,
       body,
-      delivered_telegram: delivered,
+      delivered_telegram,
+      delivered_discord,
     }).select("*").single();
     if (error) throw new Error(error.message);
-    return { briefing: row, delivered };
+    return { briefing: row, delivered: delivered_telegram || delivered_discord, delivered_telegram, delivered_discord };
   });

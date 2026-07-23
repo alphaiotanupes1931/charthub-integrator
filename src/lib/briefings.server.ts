@@ -86,6 +86,41 @@ export async function sendTelegramMessage(chatId: number | string, text: string)
   }
 }
 
+// Discord delivery via webhook URL. Works with any incoming webhook URL
+// generated in Discord (Server Settings → Integrations → Webhooks).
+export async function sendDiscordWebhook(
+  webhookUrl: string,
+  content: string,
+  username = "TradeMind",
+): Promise<{ ok: boolean; error?: string }> {
+  if (!webhookUrl || !/^https:\/\/(discord\.com|discordapp\.com)\/api\/webhooks\//.test(webhookUrl)) {
+    return { ok: false, error: "invalid_webhook_url" };
+  }
+  try {
+    // Discord max content = 2000 chars
+    const trimmed = content.length > 1900 ? content.slice(0, 1900) + "…" : content;
+    const res = await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content: trimmed, username, allowed_mentions: { parse: [] } }),
+    });
+    if (!res.ok) {
+      const t = await res.text().catch(() => "");
+      return { ok: false, error: `${res.status} ${t.slice(0, 200)}` };
+    }
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "network_error" };
+  }
+}
+
+// Shared community feed (single webhook set at project level).
+export async function sendDiscordShared(content: string): Promise<{ ok: boolean; error?: string }> {
+  const url = process.env.DISCORD_WEBHOOK_URL;
+  if (!url) return { ok: false, error: "discord_shared_not_configured" };
+  return sendDiscordWebhook(url, content);
+}
+
 // Local-time hour for a user's timezone.
 export function currentHourInTZ(tz: string): number {
   try {
