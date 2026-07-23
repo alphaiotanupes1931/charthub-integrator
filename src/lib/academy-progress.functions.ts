@@ -40,12 +40,14 @@ export const saveAcademyProgress = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: Partial<AcademyProgressPayload>) => data)
   .handler(async ({ data, context }) => {
-    const row: Record<string, unknown> = { user_id: context.userId };
-    if (data.completed !== undefined) row.completed = data.completed;
-    if (data.last_module !== undefined) row.last_module = data.last_module;
-    if (data.last_lesson !== undefined) row.last_lesson = data.last_lesson;
-    if (data.quiz_scores !== undefined) row.quiz_scores = data.quiz_scores;
-    if (data.tour_done !== undefined) row.tour_done = data.tour_done;
+    const row = {
+      user_id: context.userId,
+      ...(data.completed !== undefined ? { completed: data.completed } : {}),
+      ...(data.last_module !== undefined ? { last_module: data.last_module } : {}),
+      ...(data.last_lesson !== undefined ? { last_lesson: data.last_lesson } : {}),
+      ...(data.quiz_scores !== undefined ? { quiz_scores: data.quiz_scores } : {}),
+      ...(data.tour_done !== undefined ? { tour_done: data.tour_done } : {}),
+    };
     const { error } = await context.supabase
       .from("academy_progress")
       .upsert(row, { onConflict: "user_id" });
