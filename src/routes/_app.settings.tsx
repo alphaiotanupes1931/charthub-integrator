@@ -666,9 +666,9 @@ function SettingsPage() {
       <Card className="mt-4">
         <h2 className="text-lg font-semibold mb-2">Daily briefings</h2>
         <p className="text-sm text-muted-foreground mb-4">
-          A morning briefing before the session and an evening report after the close, delivered in-app
-          and to Telegram if you link your chat. Configure hours, timezone, watchlist, and Telegram from
-          the Briefings page.
+          A morning briefing before the session and an evening report after the close, delivered in-app,
+          to Telegram, and to Discord. Configure hours, timezone, watchlist, Telegram, and Discord webhooks
+          from the Briefings page.
         </p>
         <a href="/briefings" className="inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/90">
           Open Briefings
