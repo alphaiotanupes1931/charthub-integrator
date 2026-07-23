@@ -334,6 +334,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
   // AI annotation zones projected into pixel coords for a shaded overlay
   const [annZones, setAnnZones] = useState<Array<{ key: string; top: number; height: number; color: string; label?: string }>>([]);
   const { colors: candleColors } = useCandleColors();
+  const { colors: chartBg } = useChartBackground();
 
   const { data: liveOhlc, isLoading, isError } = useQuery<OhlcResponse>({
     queryKey: ["ohlc", ticker, interval],
