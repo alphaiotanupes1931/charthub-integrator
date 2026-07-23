@@ -1,4 +1,5 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { findLesson, type LessonBlock, type CalloutTone } from "@/lib/academy-content";
 import { useAcademyProgress } from "@/hooks/useAcademyProgress";
 import { LessonChart } from "@/components/academy/LessonChart";
@@ -39,9 +40,13 @@ const TONE_STYLES: Record<CalloutTone, { border: string; bg: string; text: strin
 
 function LessonView() {
   const { mod, lesson, index, prev, next } = Route.useLoaderData();
-  const { isDone, markDone, clear } = useAcademyProgress();
+  const { isDone, markDone, clear, setLastViewed } = useAcademyProgress();
   const navigate = useNavigate();
   const done = isDone(lesson.id);
+
+  useEffect(() => {
+    setLastViewed(mod.id, lesson.id);
+  }, [mod.id, lesson.id, setLastViewed]);
 
   function completeAndAdvance() {
     markDone(lesson.id);
