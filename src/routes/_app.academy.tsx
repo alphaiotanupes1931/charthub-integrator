@@ -43,18 +43,6 @@ function AcademyIndex() {
         </div>
       </div>
 
-      {/* Module chips */}
-      <div className="flex flex-wrap gap-1.5 mb-6">
-        {ACADEMY.map((m) => (
-          <a
-            key={m.id}
-            href={`#module-${m.id}`}
-            className="px-2.5 py-1 rounded-md text-xs font-semibold border border-border bg-card text-muted-foreground hover:text-foreground hover:border-primary/40"
-          >
-            M{m.id}
-          </a>
-        ))}
-      </div>
 
       {/* Module grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
