@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { isWelcomeBackMuted, setWelcomeBackMuted } from "@/lib/welcomeBack";
 import { useCandleColors, type CandleColors } from "@/hooks/useCandleColors";
+import { useChartBackground, CHART_BG_PRESETS, type ChartBackground } from "@/hooks/useChartBackground";
 
 export const Route = createFileRoute("/_app/settings")({
   head: () => ({ meta: [{ title: "Settings, TradeMind" }] }),
