@@ -366,7 +366,7 @@ export type Database = {
           opened_at: string
           side: string
           size: number
-          stop: number
+          stop: number | null
           symbol: string
           take_profit: number | null
           user_id: string
@@ -379,7 +379,7 @@ export type Database = {
           opened_at?: string
           side: string
           size: number
-          stop: number
+          stop?: number | null
           symbol: string
           take_profit?: number | null
           user_id: string
@@ -392,7 +392,7 @@ export type Database = {
           opened_at?: string
           side?: string
           size?: number
-          stop?: number
+          stop?: number | null
           symbol?: string
           take_profit?: number | null
           user_id?: string
