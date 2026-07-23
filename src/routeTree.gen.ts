@@ -63,6 +63,7 @@ import { Route as AppAdminSubscribersRouteImport } from './routes/_app.admin.sub
 import { Route as AppAcademyModuleIdRouteImport } from './routes/_app.academy.$moduleId'
 import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api.public.telegram.webhook'
 import { Route as ApiPublicHooksSendBriefingsRouteImport } from './routes/api.public.hooks.send-briefings'
+import { Route as ApiPublicHooksScanSignalsRouteImport } from './routes/api.public.hooks.scan-signals'
 import { Route as ApiPublicHooksReconcilePaperRouteImport } from './routes/api.public.hooks.reconcile-paper'
 import { Route as ApiPublicHooksPriceAlertsTickRouteImport } from './routes/api.public.hooks.price-alerts-tick'
 import { Route as AppAcademyModuleIdLessonIdRouteImport } from './routes/_app.academy.$moduleId.$lessonId'
@@ -338,6 +339,12 @@ const ApiPublicHooksSendBriefingsRoute =
     path: '/api/public/hooks/send-briefings',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksScanSignalsRoute =
+  ApiPublicHooksScanSignalsRouteImport.update({
+    id: '/api/public/hooks/scan-signals',
+    path: '/api/public/hooks/scan-signals',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksReconcilePaperRoute =
   ApiPublicHooksReconcilePaperRouteImport.update({
     id: '/api/public/hooks/reconcile-paper',
@@ -412,6 +419,7 @@ export interface FileRoutesByFullPath {
   '/academy/$moduleId/$lessonId': typeof AppAcademyModuleIdLessonIdRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
   '/api/public/hooks/reconcile-paper': typeof ApiPublicHooksReconcilePaperRoute
+  '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
@@ -468,6 +476,7 @@ export interface FileRoutesByTo {
   '/academy/$moduleId/$lessonId': typeof AppAcademyModuleIdLessonIdRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
   '/api/public/hooks/reconcile-paper': typeof ApiPublicHooksReconcilePaperRoute
+  '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
@@ -528,6 +537,7 @@ export interface FileRoutesById {
   '/_app/academy/$moduleId/$lessonId': typeof AppAcademyModuleIdLessonIdRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
   '/api/public/hooks/reconcile-paper': typeof ApiPublicHooksReconcilePaperRoute
+  '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
@@ -588,6 +598,7 @@ export interface FileRouteTypes {
     | '/academy/$moduleId/$lessonId'
     | '/api/public/hooks/price-alerts-tick'
     | '/api/public/hooks/reconcile-paper'
+    | '/api/public/hooks/scan-signals'
     | '/api/public/hooks/send-briefings'
     | '/api/public/telegram/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -644,6 +655,7 @@ export interface FileRouteTypes {
     | '/academy/$moduleId/$lessonId'
     | '/api/public/hooks/price-alerts-tick'
     | '/api/public/hooks/reconcile-paper'
+    | '/api/public/hooks/scan-signals'
     | '/api/public/hooks/send-briefings'
     | '/api/public/telegram/webhook'
   id:
@@ -703,6 +715,7 @@ export interface FileRouteTypes {
     | '/_app/academy/$moduleId/$lessonId'
     | '/api/public/hooks/price-alerts-tick'
     | '/api/public/hooks/reconcile-paper'
+    | '/api/public/hooks/scan-signals'
     | '/api/public/hooks/send-briefings'
     | '/api/public/telegram/webhook'
   fileRoutesById: FileRoutesById
@@ -730,6 +743,7 @@ export interface RootRouteChildren {
   ApiTradelockerImportRoute: typeof ApiTradelockerImportRoute
   ApiPublicHooksPriceAlertsTickRoute: typeof ApiPublicHooksPriceAlertsTickRoute
   ApiPublicHooksReconcilePaperRoute: typeof ApiPublicHooksReconcilePaperRoute
+  ApiPublicHooksScanSignalsRoute: typeof ApiPublicHooksScanSignalsRoute
   ApiPublicHooksSendBriefingsRoute: typeof ApiPublicHooksSendBriefingsRoute
   ApiPublicTelegramWebhookRoute: typeof ApiPublicTelegramWebhookRoute
 }
@@ -1114,6 +1128,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksSendBriefingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/scan-signals': {
+      id: '/api/public/hooks/scan-signals'
+      path: '/api/public/hooks/scan-signals'
+      fullPath: '/api/public/hooks/scan-signals'
+      preLoaderRoute: typeof ApiPublicHooksScanSignalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/reconcile-paper': {
       id: '/api/public/hooks/reconcile-paper'
       path: '/api/public/hooks/reconcile-paper'
@@ -1291,6 +1312,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiTradelockerImportRoute: ApiTradelockerImportRoute,
   ApiPublicHooksPriceAlertsTickRoute: ApiPublicHooksPriceAlertsTickRoute,
   ApiPublicHooksReconcilePaperRoute: ApiPublicHooksReconcilePaperRoute,
+  ApiPublicHooksScanSignalsRoute: ApiPublicHooksScanSignalsRoute,
   ApiPublicHooksSendBriefingsRoute: ApiPublicHooksSendBriefingsRoute,
   ApiPublicTelegramWebhookRoute: ApiPublicTelegramWebhookRoute,
 }
