@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHeader } from "@/components/PageHeader";
-import { ACADEMY } from "@/lib/academy-content";
+import { ACADEMY, findLesson } from "@/lib/academy-content";
 import { useAcademyProgress } from "@/hooks/useAcademyProgress";
-import { GraduationCap, CheckCircle2, ArrowRight } from "lucide-react";
+import { GraduationCap, CheckCircle2, ArrowRight, PlayCircle } from "lucide-react";
 
 export const Route = createFileRoute("/_app/academy")({
   head: () => ({
@@ -15,11 +15,13 @@ export const Route = createFileRoute("/_app/academy")({
 });
 
 function AcademyIndex() {
-  const { moduleCompletion } = useAcademyProgress();
+  const { moduleCompletion, lastModule, lastLesson } = useAcademyProgress();
 
   const totalLessons = ACADEMY.reduce((n, m) => n + m.lessons.length, 0);
   const totalDone = ACADEMY.reduce((n, m) => n + moduleCompletion(m.lessons.map((l) => l.id)).done, 0);
   const pct = Math.round((totalDone / totalLessons) * 100);
+
+  const resume = lastModule && lastLesson ? findLesson(lastModule, lastLesson) : null;
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -44,8 +46,30 @@ function AcademyIndex() {
       </div>
 
 
+      {/* Resume where you left off */}
+      {resume && (
+        <Link
+          to="/academy/$moduleId/$lessonId"
+          params={{ moduleId: String(resume.mod.id), lessonId: resume.lesson.id }}
+          className="mb-6 group flex items-center gap-4 rounded-xl border border-primary/40 bg-primary/5 hover:bg-primary/10 hover:border-primary/60 transition p-4"
+        >
+          <div className="h-10 w-10 rounded-lg bg-primary/15 text-primary flex items-center justify-center shrink-0">
+            <PlayCircle className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[10px] uppercase tracking-wider font-semibold text-primary">Resume where you left off</div>
+            <div className="font-semibold text-sm truncate">
+              M{resume.mod.id}, Lesson {resume.index + 1}, {resume.lesson.title}
+            </div>
+            <div className="text-xs text-muted-foreground truncate">{resume.lesson.summary}</div>
+          </div>
+          <ArrowRight className="h-4 w-4 text-primary group-hover:translate-x-0.5 transition-transform" />
+        </Link>
+      )}
+
       {/* Module grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
         {ACADEMY.map((m) => {
           const { done, total } = moduleCompletion(m.lessons.map((l) => l.id));
           const pct = Math.round((done / total) * 100);

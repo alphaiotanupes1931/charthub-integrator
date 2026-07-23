@@ -33,6 +33,7 @@ import { Tutorial } from "@/components/Tutorial";
 import { WelcomeBackGreeter, WelcomeBackProvider } from "@/components/WelcomeBackGreeter";
 import { useProfile } from "@/hooks/useProfile";
 import { NotificationBell } from "@/components/NotificationBell";
+import { OnboardingTour } from "@/components/OnboardingTour";
 
 
 type NavItem = {
@@ -258,6 +259,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </div>
       <ComplianceGate />
+      <OnboardingTour />
+
 
       {/* Mobile bottom tab bar (Robinhood-style). Fixed to the viewport, safe-area aware. */}
       <nav

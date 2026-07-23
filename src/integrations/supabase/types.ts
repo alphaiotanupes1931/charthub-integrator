@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      academy_progress: {
+        Row: {
+          completed: Json
+          last_lesson: string | null
+          last_module: number | null
+          quiz_scores: Json
+          tour_done: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed?: Json
+          last_lesson?: string | null
+          last_module?: number | null
+          quiz_scores?: Json
+          tour_done?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed?: Json
+          last_lesson?: string | null
+          last_module?: number | null
+          quiz_scores?: Json
+          tour_done?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ai_usage: {
         Row: {
           count: number
