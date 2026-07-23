@@ -508,6 +508,20 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     });
   }, [ready, candleColors]);
 
+  // Apply live chart-background updates without recreating the chart
+  useEffect(() => {
+    if (!ready || !chartRef.current) return;
+    chartRef.current.applyOptions({
+      layout: { background: { color: chartBg.bg }, textColor: chartBg.text },
+      grid: {
+        vertLines: { color: chartBg.grid },
+        horzLines: { color: chartBg.grid },
+      },
+      rightPriceScale: { borderColor: chartBg.border },
+      timeScale: { borderColor: chartBg.border },
+    });
+  }, [ready, chartBg]);
+
   // Convert to Heikin-Ashi when requested
   const displayCandles = useMemo<Candle[]>(() => {
     if (candleType !== "ha" || candles.length === 0) return candles;
