@@ -237,6 +237,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
           </button>
           <div className="flex-1" />
+          <TestingBanner />
           <NotificationBell />
           {/* Mobile logo */}
           <LogoLink to="/dashboard" size="md" showText={false} className="md:hidden shrink-0" />
@@ -424,5 +425,45 @@ function SidebarSearch({ nav }: { nav: NavItem[] }) {
         </div>
       )}
     </div>
+  );
+}
+
+function TestingBanner() {
+  const [active, setActive] = useState(false);
+  const [equity, setEquity] = useState<number | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (!data.session) { if (!cancelled) setActive(false); return; }
+        const { getPaperState } = await import("@/lib/paper-engine.functions");
+        const s: any = await getPaperState();
+        if (cancelled) return;
+        setActive(Boolean(s?.account?.testing_mode));
+        setEquity(s?.account?.balance != null ? Number(s.account.balance) : null);
+      } catch {
+        if (!cancelled) setActive(false);
+      }
+    }
+    load();
+    const id = setInterval(load, 30_000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, []);
+  if (!active) return null;
+  return (
+    <Link
+      to="/testing"
+      className="hidden sm:inline-flex items-center gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-amber-500 hover:bg-amber-500/20"
+      title="You are in paper trading mode. Click to manage the test account."
+    >
+      <FlaskConical className="h-3.5 w-3.5" />
+      Testing mode
+      {equity != null && (
+        <span className="text-amber-400/80 normal-case tracking-normal">
+          · ${equity.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+        </span>
+      )}
+    </Link>
   );
 }

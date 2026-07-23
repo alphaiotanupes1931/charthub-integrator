@@ -109,8 +109,8 @@ const openInput = z.object({
   symbol: z.string().min(1).max(30),
   side: z.enum(["long", "short"]),
   size: z.number().positive().max(1_000_000),
-  entry: z.number().positive(),
-  stop: z.number().positive(),
+  entry: z.number().positive().optional(),
+  stop: z.number().positive().optional(),
   takeProfit: z.number().positive().optional(),
   grade: z.string().max(10).optional(),
 });
@@ -122,6 +122,13 @@ export const openPaperPosition = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const account = await ensureAccountRow(supabase, userId);
     if (account.status !== "active") throw new Error(`Account is ${account.status}. Resume it before opening trades.`);
+    // Auto-fill entry with current market price when not provided (market order).
+    let entry = data.entry;
+    if (!entry || !Number.isFinite(entry)) {
+      const mkt = await getLastPrice(data.symbol).catch(() => null);
+      if (!mkt) throw new Error(`Could not fetch market price for ${data.symbol}. Enter a price manually.`);
+      entry = mkt;
+    }
     const { data: pos, error } = await supabase
       .from("paper_positions")
       .insert({
@@ -129,8 +136,8 @@ export const openPaperPosition = createServerFn({ method: "POST" })
         symbol: data.symbol,
         side: data.side,
         size: data.size,
-        entry: data.entry,
-        stop: data.stop,
+        entry,
+        stop: data.stop ?? null,
         take_profit: data.takeProfit ?? null,
         grade: data.grade ?? null,
       })

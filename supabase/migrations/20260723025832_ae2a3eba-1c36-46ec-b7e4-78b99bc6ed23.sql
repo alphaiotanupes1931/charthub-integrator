@@ -1,0 +1,1 @@
+ALTER TABLE public.paper_positions ALTER COLUMN stop DROP NOT NULL;
