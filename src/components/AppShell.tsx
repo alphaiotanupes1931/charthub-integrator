@@ -27,6 +27,7 @@ import {
   FlaskConical,
   Send,
   Calculator,
+  GraduationCap,
 } from "lucide-react";
 import { LogoLink } from "@/components/LogoLink";
 import { Tutorial } from "@/components/Tutorial";
@@ -45,6 +46,7 @@ type NavItem = {
 const NAV: NavItem[] = [
   { to: "/dashboard",       label: "Dashboard",       icon: LayoutDashboard },
   { to: "/guide",           label: "Guide",           icon: BookOpen },
+  { to: "/academy",         label: "Academy",         icon: GraduationCap },
   { to: "/flashcards",      label: "Flashcards",      icon: BookOpen },
   { to: "/journal",         label: "Trade Journal",   icon: NotebookPen },
   { to: "/strategies",      label: "Strategies",      icon: Library },
