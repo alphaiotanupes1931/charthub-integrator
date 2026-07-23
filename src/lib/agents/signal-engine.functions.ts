@@ -65,5 +65,19 @@ export const runSignalScan = createServerFn({ method: "POST" })
         };
       } catch { return null; }
     }));
-    return results.filter((s): s is Signal => s !== null);
+    const signals = results.filter((s): s is Signal => s !== null);
+
+    // Fire-and-forget: post A/A+ actionable signals to the shared Discord feed.
+    const topSignals = signals.filter((s) => (s.grade === "A" || s.grade === "A+") && s.action !== "HOLD");
+    if (topSignals.length > 0) {
+      try {
+        const { sendDiscordShared } = await import("@/lib/briefings.server");
+        const lines = topSignals.map((s) =>
+          `**${s.grade}** ${s.action} ${s.ticker} · Entry ${s.entry} · Stop ${s.stop} · TP1 ${s.tp1} · R:R ${s.rr} · ${s.confidence}%`,
+        );
+        await sendDiscordShared(`**High-conviction signals**\n${lines.join("\n")}`).catch(() => undefined);
+      } catch { /* non-fatal */ }
+    }
+
+    return signals;
   });
