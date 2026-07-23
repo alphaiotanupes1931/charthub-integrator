@@ -800,6 +800,19 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               e.target.value = "";
             }}
           />
+          <QuickPrompts
+            ticker={chart?.ticker}
+            intervalLabel={chart?.intervalLabel}
+            hasImage={!!pendingImage}
+            lastAssistant={[...messages].reverse().find((m) => m.role === "assistant") ?? null}
+            disabled={chatBusy}
+            onPick={(text) => {
+              if (chatBusy) return;
+              if (voice.enabled) voice.prime();
+              setInput("");
+              void sendMessage({ text });
+            }}
+          />
           <PromptInput onSubmit={handleSubmit}>
             <PromptInputTextarea
               ref={textareaRef}
@@ -869,3 +882,70 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
 
   },
 );
+
+function QuickPrompts({
+  ticker,
+  intervalLabel,
+  hasImage,
+  lastAssistant,
+  disabled,
+  onPick,
+}: {
+  ticker?: string;
+  intervalLabel?: string;
+  hasImage: boolean;
+  lastAssistant: UIMessage | null;
+  disabled?: boolean;
+  onPick: (text: string) => void;
+}) {
+  const sym = ticker || "this instrument";
+  const tf = intervalLabel || "current timeframe";
+  const lastText = lastAssistant
+    ? lastAssistant.parts
+        .map((p) => (p.type === "text" ? p.text : ""))
+        .join(" ")
+        .toLowerCase()
+    : "";
+  const mentionsGrade = /grade|entry|stop|tp1|tp2|bias|setup/.test(lastText);
+
+  const prompts: { icon: string; label: string; text: string }[] = hasImage
+    ? [
+        { icon: "◈", label: "Grade this setup", text: "Grade the setup in the screenshot I just attached. Give bias, entry, stop, TP1, TP2, and R:R." },
+        { icon: "⌖", label: "What timeframe is this?", text: "What symbol and timeframe is this chart? Confirm what you see before analyzing." },
+        { icon: "⚠", label: "Where's invalidation?", text: "In the attached screenshot, where does this idea get invalidated and why?" },
+      ]
+    : mentionsGrade
+    ? [
+        { icon: "⚠", label: "What invalidates this?", text: `What would invalidate the current ${sym} idea and where should I move the stop if it partially runs?` },
+        { icon: "⌖", label: "Where do I take profit?", text: `Walk me through the best places to scale out on this ${sym} trade and why.` },
+        { icon: "◈", label: "Simpler explanation", text: "Explain that last analysis in simpler language, like I am new to trading." },
+        { icon: "✎", label: "Show me on chart", text: `Show me the key levels for this ${sym} setup drawn on the chart.` },
+      ]
+    : [
+        { icon: "◈", label: `Scan ${sym}`, text: `Give me a full multi-timeframe scan of ${sym} on the ${tf}. Grade it A+ to D with entry, stop, TP1, TP2, and rationale.` },
+        { icon: "◆", label: `Trend on ${tf}`, text: `What is the current trend and structure on ${sym} ${tf}? Are we trending, ranging, or reversing?` },
+        { icon: "◇", label: "Where is liquidity?", text: `Where are the nearest buy-side and sell-side liquidity pools on ${sym} right now?` },
+        { icon: "✎", label: "Best strategy here", text: `Which of my strategies fits ${sym} on the ${tf} best right now, and why?` },
+      ];
+
+  return (
+    <div className="mb-2 -mx-0.5 flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+      <span className="shrink-0 self-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground pr-1">
+        Ask
+      </span>
+      {prompts.map((p) => (
+        <button
+          key={p.label}
+          type="button"
+          disabled={disabled}
+          onClick={() => onPick(p.text)}
+          className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-border bg-background/60 text-xs text-foreground/90 hover:border-primary/40 hover:text-primary hover:bg-primary/5 transition disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <span className="text-primary/80 text-[11px] leading-none">{p.icon}</span>
+          {p.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
