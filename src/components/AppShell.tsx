@@ -451,7 +451,13 @@ function TestingBanner() {
     }
     load();
     const id = setInterval(load, 30_000);
-    return () => { cancelled = true; clearInterval(id); };
+    const onChange = () => load();
+    window.addEventListener("trademind:testing-mode-changed", onChange);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+      window.removeEventListener("trademind:testing-mode-changed", onChange);
+    };
   }, []);
   if (!active) return null;
   return (
