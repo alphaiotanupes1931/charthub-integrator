@@ -800,6 +800,19 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               e.target.value = "";
             }}
           />
+          <QuickPrompts
+            ticker={chart?.ticker}
+            intervalLabel={chart?.intervalLabel}
+            hasImage={!!pendingImage}
+            lastAssistant={[...messages].reverse().find((m) => m.role === "assistant") ?? null}
+            disabled={chatBusy}
+            onPick={(text) => {
+              if (chatBusy) return;
+              if (voice.enabled) voice.prime();
+              setInput("");
+              void sendMessage({ text });
+            }}
+          />
           <PromptInput onSubmit={handleSubmit}>
             <PromptInputTextarea
               ref={textareaRef}
