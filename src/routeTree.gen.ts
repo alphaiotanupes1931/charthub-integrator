@@ -41,6 +41,7 @@ import { Route as AppLevelsRouteImport } from './routes/_app.levels'
 import { Route as AppJournalRouteImport } from './routes/_app.journal'
 import { Route as AppGuideRouteImport } from './routes/_app.guide'
 import { Route as AppFriendsRouteImport } from './routes/_app.friends'
+import { Route as AppFlashcardsRouteImport } from './routes/_app.flashcards'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppCoachesRouteImport } from './routes/_app.coaches'
 import { Route as AppCoachDashboardRouteImport } from './routes/_app.coach-dashboard'
@@ -220,6 +221,11 @@ const AppFriendsRoute = AppFriendsRouteImport.update({
   path: '/friends',
   getParentRoute: () => AppRoute,
 } as any)
+const AppFlashcardsRoute = AppFlashcardsRouteImport.update({
+  id: '/flashcards',
+  path: '/flashcards',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -340,6 +346,7 @@ export interface FileRoutesByFullPath {
   '/coach-dashboard': typeof AppCoachDashboardRoute
   '/coaches': typeof AppCoachesRoute
   '/dashboard': typeof AppDashboardRoute
+  '/flashcards': typeof AppFlashcardsRoute
   '/friends': typeof AppFriendsRoute
   '/guide': typeof AppGuideRoute
   '/journal': typeof AppJournalRoute
@@ -391,6 +398,7 @@ export interface FileRoutesByTo {
   '/coach-dashboard': typeof AppCoachDashboardRoute
   '/coaches': typeof AppCoachesRoute
   '/dashboard': typeof AppDashboardRoute
+  '/flashcards': typeof AppFlashcardsRoute
   '/friends': typeof AppFriendsRoute
   '/guide': typeof AppGuideRoute
   '/journal': typeof AppJournalRoute
@@ -444,6 +452,7 @@ export interface FileRoutesById {
   '/_app/coach-dashboard': typeof AppCoachDashboardRoute
   '/_app/coaches': typeof AppCoachesRoute
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/flashcards': typeof AppFlashcardsRoute
   '/_app/friends': typeof AppFriendsRoute
   '/_app/guide': typeof AppGuideRoute
   '/_app/journal': typeof AppJournalRoute
@@ -498,6 +507,7 @@ export interface FileRouteTypes {
     | '/coach-dashboard'
     | '/coaches'
     | '/dashboard'
+    | '/flashcards'
     | '/friends'
     | '/guide'
     | '/journal'
@@ -549,6 +559,7 @@ export interface FileRouteTypes {
     | '/coach-dashboard'
     | '/coaches'
     | '/dashboard'
+    | '/flashcards'
     | '/friends'
     | '/guide'
     | '/journal'
@@ -601,6 +612,7 @@ export interface FileRouteTypes {
     | '/_app/coach-dashboard'
     | '/_app/coaches'
     | '/_app/dashboard'
+    | '/_app/flashcards'
     | '/_app/friends'
     | '/_app/guide'
     | '/_app/journal'
@@ -887,6 +899,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppFriendsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/flashcards': {
+      id: '/_app/flashcards'
+      path: '/flashcards'
+      fullPath: '/flashcards'
+      preLoaderRoute: typeof AppFlashcardsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/dashboard': {
       id: '/_app/dashboard'
       path: '/dashboard'
@@ -1071,6 +1090,7 @@ interface AppRouteChildren {
   AppCoachDashboardRoute: typeof AppCoachDashboardRoute
   AppCoachesRoute: typeof AppCoachesRoute
   AppDashboardRoute: typeof AppDashboardRoute
+  AppFlashcardsRoute: typeof AppFlashcardsRoute
   AppFriendsRoute: typeof AppFriendsRoute
   AppGuideRoute: typeof AppGuideRoute
   AppJournalRoute: typeof AppJournalRoute
@@ -1095,6 +1115,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppCoachDashboardRoute: AppCoachDashboardRoute,
   AppCoachesRoute: AppCoachesRoute,
   AppDashboardRoute: AppDashboardRoute,
+  AppFlashcardsRoute: AppFlashcardsRoute,
   AppFriendsRoute: AppFriendsRoute,
   AppGuideRoute: AppGuideRoute,
   AppJournalRoute: AppJournalRoute,
