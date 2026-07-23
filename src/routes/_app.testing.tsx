@@ -172,7 +172,7 @@ function TestingPage() {
                     <td className="p-2 capitalize">{p.side}</td>
                     <td className="p-2 text-right">{p.size}</td>
                     <td className="p-2 text-right">{p.entry}</td>
-                    <td className="p-2 text-right">{p.stop}</td>
+                    <td className="p-2 text-right">{p.stop ?? "—"}</td>
                     <td className="p-2 text-right">{p.take_profit ?? "—"}</td>
                     <td className="p-2">{p.grade ?? "—"}</td>
                     <td className="p-2 text-right">
