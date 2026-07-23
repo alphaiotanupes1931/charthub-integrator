@@ -38,6 +38,7 @@ export type Database = {
       briefing_prefs: {
         Row: {
           created_at: string
+          discord_webhook_url: string | null
           evening_enabled: boolean
           evening_hour: number
           last_evening_at: string | null
@@ -53,6 +54,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          discord_webhook_url?: string | null
           evening_enabled?: boolean
           evening_hour?: number
           last_evening_at?: string | null
@@ -68,6 +70,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          discord_webhook_url?: string | null
           evening_enabled?: boolean
           evening_hour?: number
           last_evening_at?: string | null
@@ -86,6 +89,7 @@ export type Database = {
       briefings: {
         Row: {
           body: string
+          delivered_discord: boolean
           delivered_telegram: boolean
           id: string
           kind: string
@@ -95,6 +99,7 @@ export type Database = {
         }
         Insert: {
           body: string
+          delivered_discord?: boolean
           delivered_telegram?: boolean
           id?: string
           kind: string
@@ -104,6 +109,7 @@ export type Database = {
         }
         Update: {
           body?: string
+          delivered_discord?: boolean
           delivered_telegram?: boolean
           id?: string
           kind?: string
