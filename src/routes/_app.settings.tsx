@@ -540,6 +540,74 @@ function SettingsPage() {
         </div>
       </Card>
 
+      <Card className="mt-4">
+        <h2 className="flex items-center gap-2 text-lg font-semibold mb-2">
+          <Palette className="size-5 text-primary" />
+          Chart Background
+        </h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          Choose a background style for the setup view (native chart). Pick a preset or fine-tune each color. Saved on this device.
+        </p>
+        <div className="flex flex-wrap gap-2 mb-4">
+          {Object.entries(CHART_BG_PRESETS).map(([name, preset]) => {
+            const active = chartBg.bg.toLowerCase() === preset.bg.toLowerCase();
+            return (
+              <button
+                key={name}
+                type="button"
+                onClick={() => setChartBgPreset(name)}
+                className={`inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${active ? "border-primary bg-primary/10 text-primary" : "border-border bg-background hover:bg-muted text-foreground/80"}`}
+              >
+                <span className="inline-block h-4 w-4 rounded border border-border" style={{ background: preset.bg }} />
+                {name}
+              </button>
+            );
+          })}
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {([
+            { key: "bg", label: "Background" },
+            { key: "grid", label: "Grid lines" },
+            { key: "text", label: "Axis text" },
+            { key: "border", label: "Border" },
+          ] as Array<{ key: keyof ChartBackground; label: string }>).map(({ key, label }) => (
+            <div key={key} className="flex items-center gap-2 rounded-md border border-border bg-background/40 px-3 py-2">
+              <label className="flex-1 text-sm text-foreground/80">{label}</label>
+              <input
+                type="color"
+                value={chartBg[key]}
+                onChange={(e) => updateChartBg({ [key]: e.target.value } as Partial<ChartBackground>)}
+                className="h-8 w-9 cursor-pointer rounded border border-border bg-transparent p-0"
+                aria-label={`${label} color picker`}
+              />
+              <input
+                type="text"
+                value={chartBg[key]}
+                onChange={(e) => {
+                  const v = e.target.value.trim();
+                  if (isHex(v)) updateChartBg({ [key]: v } as Partial<ChartBackground>);
+                }}
+                spellCheck={false}
+                className="w-24 rounded border border-border bg-background px-2 py-1 font-mono text-xs uppercase text-foreground/90 focus:outline-none focus:ring-1 focus:ring-primary"
+                aria-label={`${label} hex code`}
+              />
+            </div>
+          ))}
+        </div>
+        <div className="mt-4 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={resetChartBg}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background hover:bg-muted px-3 py-1.5 text-xs font-medium text-foreground/80"
+          >
+            <RotateCcw className="h-3.5 w-3.5" /> Reset to defaults
+          </button>
+          <span className="text-xs text-muted-foreground">Changes save instantly</span>
+        </div>
+      </Card>
+
+
+
 
 
 
