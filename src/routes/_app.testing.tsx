@@ -116,6 +116,9 @@ function TestingPage() {
 
       {showNew && (
         <div className="rounded-lg border border-border bg-card/40 p-4 space-y-3">
+          <p className="text-xs text-muted-foreground">
+            Leave <span className="font-medium text-foreground">Entry</span> blank to open at the current market price. Stop and Take Profit are optional.
+          </p>
           <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
             <input className="rounded border border-border bg-background px-2 py-1.5 text-sm" placeholder="Symbol" value={form.symbol} onChange={(e) => setForm({ ...form, symbol: e.target.value })} />
             <select className="rounded border border-border bg-background px-2 py-1.5 text-sm" value={form.side} onChange={(e) => setForm({ ...form, side: e.target.value as "long" | "short" })}>
@@ -123,23 +126,27 @@ function TestingPage() {
               <option value="short">Short</option>
             </select>
             <input className="rounded border border-border bg-background px-2 py-1.5 text-sm" placeholder="Size" value={form.size} onChange={(e) => setForm({ ...form, size: e.target.value })} />
-            <input className="rounded border border-border bg-background px-2 py-1.5 text-sm" placeholder="Entry" value={form.entry} onChange={(e) => setForm({ ...form, entry: e.target.value })} />
-            <input className="rounded border border-border bg-background px-2 py-1.5 text-sm" placeholder="Stop" value={form.stop} onChange={(e) => setForm({ ...form, stop: e.target.value })} />
-            <input className="rounded border border-border bg-background px-2 py-1.5 text-sm" placeholder="Take Profit" value={form.takeProfit} onChange={(e) => setForm({ ...form, takeProfit: e.target.value })} />
+            <input className="rounded border border-border bg-background px-2 py-1.5 text-sm" placeholder="Entry (market)" value={form.entry} onChange={(e) => setForm({ ...form, entry: e.target.value })} />
+            <input className="rounded border border-border bg-background px-2 py-1.5 text-sm" placeholder="Stop (optional)" value={form.stop} onChange={(e) => setForm({ ...form, stop: e.target.value })} />
+            <input className="rounded border border-border bg-background px-2 py-1.5 text-sm" placeholder="Take Profit (optional)" value={form.takeProfit} onChange={(e) => setForm({ ...form, takeProfit: e.target.value })} />
           </div>
           <button
-            onClick={() => openPos.mutate({ data: {
-              symbol: form.symbol,
-              side: form.side,
-              size: Number(form.size),
-              entry: Number(form.entry),
-              stop: Number(form.stop),
-              takeProfit: form.takeProfit ? Number(form.takeProfit) : undefined,
-            }})}
+            onClick={() => {
+              const size = Number(form.size);
+              if (!form.symbol.trim()) { toast.error("Enter a symbol"); return; }
+              if (!Number.isFinite(size) || size <= 0) { toast.error("Size must be greater than 0"); return; }
+              const entry = form.entry.trim() ? Number(form.entry) : undefined;
+              const stop = form.stop.trim() ? Number(form.stop) : undefined;
+              const takeProfit = form.takeProfit.trim() ? Number(form.takeProfit) : undefined;
+              if (entry !== undefined && !(entry > 0)) { toast.error("Entry must be greater than 0 (or leave blank for market)"); return; }
+              if (stop !== undefined && !(stop > 0)) { toast.error("Stop must be greater than 0 (or leave blank)"); return; }
+              if (takeProfit !== undefined && !(takeProfit > 0)) { toast.error("Take Profit must be greater than 0 (or leave blank)"); return; }
+              openPos.mutate({ data: { symbol: form.symbol.trim(), side: form.side, size, entry, stop, takeProfit } });
+            }}
             disabled={openPos.isPending}
-            className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white"
+            className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
           >
-            {openPos.isPending ? "Opening…" : "Open position"}
+            {openPos.isPending ? "Opening…" : form.entry.trim() ? "Open position" : "Open at market"}
           </button>
         </div>
       )}
