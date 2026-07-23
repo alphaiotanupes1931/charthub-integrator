@@ -445,18 +445,34 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     };
     const chart = createChart(containerRef.current, {
       autoSize: true,
-      layout: { background: { color: "transparent" }, textColor: "#94a3b8", fontFamily: "ui-sans-serif, system-ui, sans-serif", attributionLogo: false },
-      grid: { vertLines: { color: "rgba(148, 163, 184, 0.06)" }, horzLines: { color: "rgba(148, 163, 184, 0.06)" } },
+      layout: {
+        background: { color: "#131722" },
+        textColor: "#b2b5be",
+        fontFamily: "'Trebuchet MS', Roboto, Ubuntu, sans-serif",
+        fontSize: 12,
+        attributionLogo: false,
+      },
+      grid: {
+        vertLines: { color: "#1e222d", style: LineStyle.Solid },
+        horzLines: { color: "#1e222d", style: LineStyle.Solid },
+      },
       crosshair: {
         mode: CrosshairMode.Normal,
-        vertLine: { color: "rgba(251, 191, 36, 0.5)", width: 1, style: LineStyle.Solid, labelBackgroundColor: "#fbbf24" },
-        horzLine: { color: "rgba(251, 191, 36, 0.5)", width: 1, style: LineStyle.Solid, labelBackgroundColor: "#fbbf24" },
+        vertLine: { color: "#758696", width: 1, style: LineStyle.Dashed, labelBackgroundColor: "#2962ff" },
+        horzLine: { color: "#758696", width: 1, style: LineStyle.Dashed, labelBackgroundColor: "#2962ff" },
       },
-      rightPriceScale: { borderColor: "rgba(148, 163, 184, 0.15)" },
+      rightPriceScale: {
+        borderColor: "#2a2e39",
+        borderVisible: true,
+        scaleMargins: { top: 0.1, bottom: 0.1 },
+      },
       timeScale: {
-        borderColor: "rgba(148, 163, 184, 0.15)",
+        borderColor: "#2a2e39",
+        borderVisible: true,
         timeVisible: true,
         secondsVisible: false,
+        rightOffset: 12,
+        barSpacing: 6,
         tickMarkFormatter: (time: number) => fmtTime(time),
       },
       localization: {
