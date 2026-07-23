@@ -258,6 +258,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </div>
       <ComplianceGate />
+      <OnboardingTour />
+
 
       {/* Mobile bottom tab bar (Robinhood-style). Fixed to the viewport, safe-area aware. */}
       <nav
