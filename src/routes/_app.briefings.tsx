@@ -9,6 +9,8 @@ import {
   generateTelegramLinkCode,
   unlinkTelegram,
   sendBriefingNow,
+  setDiscordWebhook,
+  unlinkDiscord,
 } from "@/lib/briefings.functions";
 import { Copy, Send, Trash2 } from "lucide-react";
 
@@ -46,7 +48,18 @@ function BriefingsPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const saveDiscord = useMutation({
+    mutationFn: useServerFn(setDiscordWebhook),
+    onSuccess: () => { toast.success("Discord linked. Check your channel for the test message."); qc.invalidateQueries({ queryKey: ["briefingState"] }); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const unlinkDisc = useMutation({
+    mutationFn: useServerFn(unlinkDiscord),
+    onSuccess: () => { toast.success("Discord unlinked"); qc.invalidateQueries({ queryKey: ["briefingState"] }); },
+  });
+
   const [watchInput, setWatchInput] = useState("");
+  const [discordInput, setDiscordInput] = useState("");
 
   if (state.isLoading) return <div className="p-6 text-sm text-muted-foreground">Loading briefings…</div>;
   const s = state.data;
