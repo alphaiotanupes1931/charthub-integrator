@@ -237,6 +237,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
           </button>
           <div className="flex-1" />
+          <TestingBanner />
           <NotificationBell />
           {/* Mobile logo */}
           <LogoLink to="/dashboard" size="md" showText={false} className="md:hidden shrink-0" />
