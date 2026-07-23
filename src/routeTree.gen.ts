@@ -51,6 +51,7 @@ import { Route as AppBriefingsRouteImport } from './routes/_app.briefings'
 import { Route as AppAnalyticsRouteImport } from './routes/_app.analytics'
 import { Route as AppAlertsRouteImport } from './routes/_app.alerts'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
+import { Route as AppAcademyRouteImport } from './routes/_app.academy'
 import { Route as AppStrategiesIndexRouteImport } from './routes/_app.strategies.index'
 import { Route as AppChatIndexRouteImport } from './routes/_app.chat.index'
 import { Route as ApiTradelockerImportRouteImport } from './routes/api.tradelocker.import'
@@ -58,10 +59,12 @@ import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api.public.
 import { Route as AppStrategiesStrategyIdRouteImport } from './routes/_app.strategies.$strategyId'
 import { Route as AppChatThreadIdRouteImport } from './routes/_app.chat.$threadId'
 import { Route as AppAdminSubscribersRouteImport } from './routes/_app.admin.subscribers'
+import { Route as AppAcademyModuleIdRouteImport } from './routes/_app.academy.$moduleId'
 import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api.public.telegram.webhook'
 import { Route as ApiPublicHooksSendBriefingsRouteImport } from './routes/api.public.hooks.send-briefings'
 import { Route as ApiPublicHooksReconcilePaperRouteImport } from './routes/api.public.hooks.reconcile-paper'
 import { Route as ApiPublicHooksPriceAlertsTickRouteImport } from './routes/api.public.hooks.price-alerts-tick'
+import { Route as AppAcademyModuleIdLessonIdRouteImport } from './routes/_app.academy.$moduleId.$lessonId'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -272,6 +275,11 @@ const AppAdminRoute = AppAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAcademyRoute = AppAcademyRouteImport.update({
+  id: '/academy',
+  path: '/academy',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppStrategiesIndexRoute = AppStrategiesIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -307,6 +315,11 @@ const AppAdminSubscribersRoute = AppAdminSubscribersRouteImport.update({
   path: '/subscribers',
   getParentRoute: () => AppAdminRoute,
 } as any)
+const AppAcademyModuleIdRoute = AppAcademyModuleIdRouteImport.update({
+  id: '/$moduleId',
+  path: '/$moduleId',
+  getParentRoute: () => AppAcademyRoute,
+} as any)
 const ApiPublicTelegramWebhookRoute =
   ApiPublicTelegramWebhookRouteImport.update({
     id: '/api/public/telegram/webhook',
@@ -331,6 +344,12 @@ const ApiPublicHooksPriceAlertsTickRoute =
     path: '/api/public/hooks/price-alerts-tick',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AppAcademyModuleIdLessonIdRoute =
+  AppAcademyModuleIdLessonIdRouteImport.update({
+    id: '/$lessonId',
+    path: '/$lessonId',
+    getParentRoute: () => AppAcademyModuleIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -344,6 +363,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
+  '/academy': typeof AppAcademyRouteWithChildren
   '/admin': typeof AppAdminRouteWithChildren
   '/alerts': typeof AppAlertsRoute
   '/analytics': typeof AppAnalyticsRoute
@@ -374,6 +394,7 @@ export interface FileRoutesByFullPath {
   '/api/version': typeof ApiVersionRoute
   '/help/$slug': typeof HelpSlugRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/academy/$moduleId': typeof AppAcademyModuleIdRouteWithChildren
   '/admin/subscribers': typeof AppAdminSubscribersRoute
   '/chat/$threadId': typeof AppChatThreadIdRoute
   '/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
@@ -381,6 +402,7 @@ export interface FileRoutesByFullPath {
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/chat/': typeof AppChatIndexRoute
   '/strategies/': typeof AppStrategiesIndexRoute
+  '/academy/$moduleId/$lessonId': typeof AppAcademyModuleIdLessonIdRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
   '/api/public/hooks/reconcile-paper': typeof ApiPublicHooksReconcilePaperRoute
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
@@ -398,6 +420,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
+  '/academy': typeof AppAcademyRouteWithChildren
   '/admin': typeof AppAdminRouteWithChildren
   '/alerts': typeof AppAlertsRoute
   '/analytics': typeof AppAnalyticsRoute
@@ -426,6 +449,7 @@ export interface FileRoutesByTo {
   '/api/version': typeof ApiVersionRoute
   '/help/$slug': typeof HelpSlugRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/academy/$moduleId': typeof AppAcademyModuleIdRouteWithChildren
   '/admin/subscribers': typeof AppAdminSubscribersRoute
   '/chat/$threadId': typeof AppChatThreadIdRoute
   '/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
@@ -433,6 +457,7 @@ export interface FileRoutesByTo {
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/chat': typeof AppChatIndexRoute
   '/strategies': typeof AppStrategiesIndexRoute
+  '/academy/$moduleId/$lessonId': typeof AppAcademyModuleIdLessonIdRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
   '/api/public/hooks/reconcile-paper': typeof ApiPublicHooksReconcilePaperRoute
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
@@ -452,6 +477,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
+  '/_app/academy': typeof AppAcademyRouteWithChildren
   '/_app/admin': typeof AppAdminRouteWithChildren
   '/_app/alerts': typeof AppAlertsRoute
   '/_app/analytics': typeof AppAnalyticsRoute
@@ -482,6 +508,7 @@ export interface FileRoutesById {
   '/api/version': typeof ApiVersionRoute
   '/help/$slug': typeof HelpSlugRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/_app/academy/$moduleId': typeof AppAcademyModuleIdRouteWithChildren
   '/_app/admin/subscribers': typeof AppAdminSubscribersRoute
   '/_app/chat/$threadId': typeof AppChatThreadIdRoute
   '/_app/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
@@ -489,6 +516,7 @@ export interface FileRoutesById {
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/_app/chat/': typeof AppChatIndexRoute
   '/_app/strategies/': typeof AppStrategiesIndexRoute
+  '/_app/academy/$moduleId/$lessonId': typeof AppAcademyModuleIdLessonIdRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
   '/api/public/hooks/reconcile-paper': typeof ApiPublicHooksReconcilePaperRoute
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
@@ -508,6 +536,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/status'
     | '/terms'
+    | '/academy'
     | '/admin'
     | '/alerts'
     | '/analytics'
@@ -538,6 +567,7 @@ export interface FileRouteTypes {
     | '/api/version'
     | '/help/$slug'
     | '/invite/$code'
+    | '/academy/$moduleId'
     | '/admin/subscribers'
     | '/chat/$threadId'
     | '/strategies/$strategyId'
@@ -545,6 +575,7 @@ export interface FileRouteTypes {
     | '/api/tradelocker/import'
     | '/chat/'
     | '/strategies/'
+    | '/academy/$moduleId/$lessonId'
     | '/api/public/hooks/price-alerts-tick'
     | '/api/public/hooks/reconcile-paper'
     | '/api/public/hooks/send-briefings'
@@ -562,6 +593,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/status'
     | '/terms'
+    | '/academy'
     | '/admin'
     | '/alerts'
     | '/analytics'
@@ -590,6 +622,7 @@ export interface FileRouteTypes {
     | '/api/version'
     | '/help/$slug'
     | '/invite/$code'
+    | '/academy/$moduleId'
     | '/admin/subscribers'
     | '/chat/$threadId'
     | '/strategies/$strategyId'
@@ -597,6 +630,7 @@ export interface FileRouteTypes {
     | '/api/tradelocker/import'
     | '/chat'
     | '/strategies'
+    | '/academy/$moduleId/$lessonId'
     | '/api/public/hooks/price-alerts-tick'
     | '/api/public/hooks/reconcile-paper'
     | '/api/public/hooks/send-briefings'
@@ -615,6 +649,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/status'
     | '/terms'
+    | '/_app/academy'
     | '/_app/admin'
     | '/_app/alerts'
     | '/_app/analytics'
@@ -645,6 +680,7 @@ export interface FileRouteTypes {
     | '/api/version'
     | '/help/$slug'
     | '/invite/$code'
+    | '/_app/academy/$moduleId'
     | '/_app/admin/subscribers'
     | '/_app/chat/$threadId'
     | '/_app/strategies/$strategyId'
@@ -652,6 +688,7 @@ export interface FileRouteTypes {
     | '/api/tradelocker/import'
     | '/_app/chat/'
     | '/_app/strategies/'
+    | '/_app/academy/$moduleId/$lessonId'
     | '/api/public/hooks/price-alerts-tick'
     | '/api/public/hooks/reconcile-paper'
     | '/api/public/hooks/send-briefings'
@@ -981,6 +1018,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/academy': {
+      id: '/_app/academy'
+      path: '/academy'
+      fullPath: '/academy'
+      preLoaderRoute: typeof AppAcademyRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/strategies/': {
       id: '/_app/strategies/'
       path: '/'
@@ -1030,6 +1074,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminSubscribersRouteImport
       parentRoute: typeof AppAdminRoute
     }
+    '/_app/academy/$moduleId': {
+      id: '/_app/academy/$moduleId'
+      path: '/$moduleId'
+      fullPath: '/academy/$moduleId'
+      preLoaderRoute: typeof AppAcademyModuleIdRouteImport
+      parentRoute: typeof AppAcademyRoute
+    }
     '/api/public/telegram/webhook': {
       id: '/api/public/telegram/webhook'
       path: '/api/public/telegram/webhook'
@@ -1058,8 +1109,38 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksPriceAlertsTickRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/academy/$moduleId/$lessonId': {
+      id: '/_app/academy/$moduleId/$lessonId'
+      path: '/$lessonId'
+      fullPath: '/academy/$moduleId/$lessonId'
+      preLoaderRoute: typeof AppAcademyModuleIdLessonIdRouteImport
+      parentRoute: typeof AppAcademyModuleIdRoute
+    }
   }
 }
+
+interface AppAcademyModuleIdRouteChildren {
+  AppAcademyModuleIdLessonIdRoute: typeof AppAcademyModuleIdLessonIdRoute
+}
+
+const AppAcademyModuleIdRouteChildren: AppAcademyModuleIdRouteChildren = {
+  AppAcademyModuleIdLessonIdRoute: AppAcademyModuleIdLessonIdRoute,
+}
+
+const AppAcademyModuleIdRouteWithChildren =
+  AppAcademyModuleIdRoute._addFileChildren(AppAcademyModuleIdRouteChildren)
+
+interface AppAcademyRouteChildren {
+  AppAcademyModuleIdRoute: typeof AppAcademyModuleIdRouteWithChildren
+}
+
+const AppAcademyRouteChildren: AppAcademyRouteChildren = {
+  AppAcademyModuleIdRoute: AppAcademyModuleIdRouteWithChildren,
+}
+
+const AppAcademyRouteWithChildren = AppAcademyRoute._addFileChildren(
+  AppAcademyRouteChildren,
+)
 
 interface AppAdminRouteChildren {
   AppAdminSubscribersRoute: typeof AppAdminSubscribersRoute
@@ -1101,6 +1182,7 @@ const AppStrategiesRouteWithChildren = AppStrategiesRoute._addFileChildren(
 )
 
 interface AppRouteChildren {
+  AppAcademyRoute: typeof AppAcademyRouteWithChildren
   AppAdminRoute: typeof AppAdminRouteWithChildren
   AppAlertsRoute: typeof AppAlertsRoute
   AppAnalyticsRoute: typeof AppAnalyticsRoute
@@ -1127,6 +1209,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAcademyRoute: AppAcademyRouteWithChildren,
   AppAdminRoute: AppAdminRouteWithChildren,
   AppAlertsRoute: AppAlertsRoute,
   AppAnalyticsRoute: AppAnalyticsRoute,
