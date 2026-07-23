@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Camera, Pencil, Minus as LineIcon, Square as RectIcon, ArrowUpRight, Undo2, Trash2, Eraser as EraserIcon, X as CloseIcon } from "lucide-react";
 import { useCandleColors } from "@/hooks/useCandleColors";
+import { useChartBackground } from "@/hooks/useChartBackground";
 import { useQuery } from "@tanstack/react-query";
 import {
   createChart,
@@ -333,6 +334,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
   // AI annotation zones projected into pixel coords for a shaded overlay
   const [annZones, setAnnZones] = useState<Array<{ key: string; top: number; height: number; color: string; label?: string }>>([]);
   const { colors: candleColors } = useCandleColors();
+  const { colors: chartBg } = useChartBackground();
 
   const { data: liveOhlc, isLoading, isError } = useQuery<OhlcResponse>({
     queryKey: ["ohlc", ticker, interval],
@@ -446,15 +448,15 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     const chart = createChart(containerRef.current, {
       autoSize: true,
       layout: {
-        background: { color: "#131722" },
-        textColor: "#b2b5be",
+        background: { color: chartBg.bg },
+        textColor: chartBg.text,
         fontFamily: "'Trebuchet MS', Roboto, Ubuntu, sans-serif",
         fontSize: 12,
         attributionLogo: false,
       },
       grid: {
-        vertLines: { color: "#1e222d", style: LineStyle.Solid },
-        horzLines: { color: "#1e222d", style: LineStyle.Solid },
+        vertLines: { color: chartBg.grid, style: LineStyle.Solid },
+        horzLines: { color: chartBg.grid, style: LineStyle.Solid },
       },
       crosshair: {
         mode: CrosshairMode.Normal,
@@ -462,12 +464,12 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
         horzLine: { color: "#758696", width: 1, style: LineStyle.Dashed, labelBackgroundColor: "#2962ff" },
       },
       rightPriceScale: {
-        borderColor: "#2a2e39",
+        borderColor: chartBg.border,
         borderVisible: true,
         scaleMargins: { top: 0.1, bottom: 0.1 },
       },
       timeScale: {
-        borderColor: "#2a2e39",
+        borderColor: chartBg.border,
         borderVisible: true,
         timeVisible: true,
         secondsVisible: false,
@@ -505,6 +507,20 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       wickUpColor: candleColors.wickUp, wickDownColor: candleColors.wickDown,
     });
   }, [ready, candleColors]);
+
+  // Apply live chart-background updates without recreating the chart
+  useEffect(() => {
+    if (!ready || !chartRef.current) return;
+    chartRef.current.applyOptions({
+      layout: { background: { color: chartBg.bg }, textColor: chartBg.text },
+      grid: {
+        vertLines: { color: chartBg.grid },
+        horzLines: { color: chartBg.grid },
+      },
+      rightPriceScale: { borderColor: chartBg.border },
+      timeScale: { borderColor: chartBg.border },
+    });
+  }, [ready, chartBg]);
 
   // Convert to Heikin-Ashi when requested
   const displayCandles = useMemo<Candle[]>(() => {
