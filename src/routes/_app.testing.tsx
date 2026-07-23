@@ -30,7 +30,10 @@ function TestingPage() {
 
   const toggle = useMutation({
     mutationFn: useServerFn(setTestingMode),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["paperState"] }); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["paperState"] });
+      if (typeof window !== "undefined") window.dispatchEvent(new Event("trademind:testing-mode-changed"));
+    },
   });
   const reset = useMutation({
     mutationFn: useServerFn(resetPaperAccount),
