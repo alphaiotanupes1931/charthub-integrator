@@ -1,10 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
-import { BarChart3, Bot, MessageSquare, TrendingUp, TrendingDown, Target, Activity } from "lucide-react";
+import { BarChart3, Bot, MessageSquare, TrendingUp, TrendingDown, Target, Activity, HeartPulse, Calendar, Flame } from "lucide-react";
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
-  BarChart, Bar, Cell,
+  BarChart, Bar, Cell, ScatterChart, Scatter, ZAxis,
 } from "recharts";
 
 export const Route = createFileRoute("/_app/analytics")({
@@ -17,12 +17,22 @@ type Trade = {
   id: string; date: string; timeframe: string; symbol: string; side: Side;
   entry: number; exit: number; stop: number; size: number; notes: string; createdAt: number;
 };
+type Mental = { date: string; score: 1|2|3|4|5; mood?: string; createdAt: number };
 
 const STORAGE_KEY = "trademind.journal.trades.v1";
+const MENTAL_KEY = "trademind.mental.v1";
 
 function loadTrades(): Trade[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch { return []; }
+}
+function loadMental(): Mental[] {
+  try {
+    const raw = localStorage.getItem(MENTAL_KEY);
     if (!raw) return [];
     const arr = JSON.parse(raw);
     return Array.isArray(arr) ? arr : [];
@@ -36,17 +46,22 @@ function rr(t: Trade): number | null {
   return ((t.exit - t.entry) * dir) / risk;
 }
 
+const DOW_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
 const QUESTIONS = [
   "What's my biggest weakness?",
   "Which instrument am I most profitable on?",
   "How can I improve my win rate?",
   "What's my best trading pattern?",
+  "Do I trade better when my mental score is high?",
+  "Which day of the week do I perform worst?",
 ];
 
 function AnalyticsPage() {
   const navigate = useNavigate();
   const [trades, setTrades] = useState<Trade[]>([]);
-  useEffect(() => { setTrades(loadTrades()); }, []);
+  const [mental, setMental] = useState<Mental[]>([]);
+  useEffect(() => { setTrades(loadTrades()); setMental(loadMental()); }, []);
 
   const stats = useMemo(() => {
     if (trades.length === 0) return null;
@@ -57,6 +72,8 @@ function AnalyticsPage() {
     const wins = pnls.filter((p) => p > 0);
     const losses = pnls.filter((p) => p < 0);
     const rrs = sorted.map(rr).filter((v): v is number => v !== null && isFinite(v));
+
+    // Per-symbol
     const bySymbol = new Map<string, { n: number; pnl: number; wins: number }>();
     for (const t of sorted) {
       const s = bySymbol.get(t.symbol) ?? { n: 0, pnl: 0, wins: 0 };
@@ -67,22 +84,84 @@ function AnalyticsPage() {
       .map(([symbol, v]) => ({ symbol, pnl: Number(v.pnl.toFixed(2)), n: v.n, winRate: (v.wins / v.n) * 100 }))
       .sort((a, b) => b.pnl - a.pnl);
 
+    // Streaks
+    let maxWinStreak = 0, maxLossStreak = 0, curW = 0, curL = 0;
+    for (const p of pnls) {
+      if (p > 0) { curW++; curL = 0; maxWinStreak = Math.max(maxWinStreak, curW); }
+      else if (p < 0) { curL++; curW = 0; maxLossStreak = Math.max(maxLossStreak, curL); }
+      else { curW = 0; curL = 0; }
+    }
+
+    // Day of week
+    const byDow = new Map<number, { n: number; pnl: number; wins: number }>();
+    for (const t of sorted) {
+      const d = new Date(t.date + "T12:00:00Z").getUTCDay();
+      const s = byDow.get(d) ?? { n: 0, pnl: 0, wins: 0 };
+      s.n++; s.pnl += pnl(t); if (pnl(t) > 0) s.wins++;
+      byDow.set(d, s);
+    }
+    const perDow = Array.from({ length: 7 }, (_, i) => {
+      const v = byDow.get(i);
+      return { day: DOW_LABELS[i], pnl: Number((v?.pnl ?? 0).toFixed(2)), n: v?.n ?? 0, winRate: v && v.n ? (v.wins / v.n) * 100 : 0 };
+    });
+    const dayWithTrades = perDow.filter((d) => d.n > 0);
+    const bestDay = dayWithTrades.slice().sort((a, b) => b.pnl - a.pnl)[0];
+    const worstDay = dayWithTrades.slice().sort((a, b) => a.pnl - b.pnl)[0];
+
+    // Mental correlation
+    const mentalMap = new Map(mental.map((m) => [m.date, m.score]));
+    const mentalScatter: Array<{ score: number; pnl: number; symbol: string }> = [];
+    const byScore = new Map<number, { n: number; pnl: number; wins: number }>();
+    for (const t of sorted) {
+      const score = mentalMap.get(t.date);
+      if (!score) continue;
+      const p = pnl(t);
+      mentalScatter.push({ score, pnl: Number(p.toFixed(2)), symbol: t.symbol });
+      const s = byScore.get(score) ?? { n: 0, pnl: 0, wins: 0 };
+      s.n++; s.pnl += p; if (p > 0) s.wins++;
+      byScore.set(score, s);
+    }
+    const perMentalScore = Array.from({ length: 5 }, (_, i) => {
+      const v = byScore.get(i + 1);
+      return { score: i + 1, avgPnl: v && v.n ? Number((v.pnl / v.n).toFixed(2)) : 0, n: v?.n ?? 0, winRate: v && v.n ? (v.wins / v.n) * 100 : 0 };
+    });
+
+    const winSum = wins.reduce((a, b) => a + b, 0);
+    const lossSum = losses.reduce((a, b) => a + b, 0);
+    const winRate = wins.length / sorted.length;
+    const avgWin = wins.length ? winSum / wins.length : 0;
+    const avgLoss = losses.length ? lossSum / losses.length : 0;
+    // Expectancy per trade
+    const expectancy = winRate * avgWin + (1 - winRate) * avgLoss;
+
+    // Peak / drawdown
+    let peak = -Infinity, maxDD = 0;
+    for (const p of curve) {
+      if (p.equity > peak) peak = p.equity;
+      const dd = peak - p.equity;
+      if (dd > maxDD) maxDD = dd;
+    }
+
     return {
       total: sorted.length,
       wins: wins.length,
       losses: losses.length,
-      winRate: (wins.length / sorted.length) * 100,
+      winRate: winRate * 100,
       netPnl: pnls.reduce((a, b) => a + b, 0),
-      avgWin: wins.length ? wins.reduce((a, b) => a + b, 0) / wins.length : 0,
-      avgLoss: losses.length ? losses.reduce((a, b) => a + b, 0) / losses.length : 0,
+      avgWin, avgLoss,
       avgRR: rrs.length ? rrs.reduce((a, b) => a + b, 0) / rrs.length : 0,
       profitFactor: losses.length
-        ? Math.abs(wins.reduce((a, b) => a + b, 0) / losses.reduce((a, b) => a + b, 0))
+        ? Math.abs(winSum / lossSum)
         : wins.length ? Infinity : 0,
+      expectancy,
+      maxDD,
+      maxWinStreak, maxLossStreak,
       curve,
       perSymbol,
+      perDow, bestDay, worstDay,
+      mentalScatter, perMentalScore,
     };
-  }, [trades]);
+  }, [trades, mental]);
 
   const ask = (q: string) => navigate({ to: "/dashboard", search: { ask: q } as never });
 
@@ -106,7 +185,11 @@ function AnalyticsPage() {
     { label: "Net P&L", value: `${stats.netPnl >= 0 ? "+" : ""}${stats.netPnl.toFixed(2)}`, icon: stats.netPnl >= 0 ? TrendingUp : TrendingDown, positive: stats.netPnl >= 0 },
     { label: "Win Rate", value: `${stats.winRate.toFixed(1)}%`, icon: Target, positive: stats.winRate >= 50 },
     { label: "Avg R:R", value: stats.avgRR ? stats.avgRR.toFixed(2) : "-", icon: Activity, positive: stats.avgRR >= 1 },
-    { label: "Profit Factor", value: isFinite(stats.profitFactor) ? stats.profitFactor.toFixed(2) : "∞", icon: BarChart3, positive: stats.profitFactor >= 1 },
+    { label: "Profit Factor", value: isFinite(stats.profitFactor) ? stats.profitFactor.toFixed(2) : "inf", icon: BarChart3, positive: stats.profitFactor >= 1 },
+    { label: "Expectancy", value: `${stats.expectancy >= 0 ? "+" : ""}${stats.expectancy.toFixed(2)}`, icon: Activity, positive: stats.expectancy >= 0 },
+    { label: "Max Drawdown", value: `-${stats.maxDD.toFixed(2)}`, icon: TrendingDown, positive: false },
+    { label: "Win Streak", value: String(stats.maxWinStreak), icon: Flame, positive: true },
+    { label: "Loss Streak", value: String(stats.maxLossStreak), icon: Flame, positive: false },
     { label: "Total Trades", value: String(stats.total), icon: BarChart3, positive: true },
     { label: "W / L", value: `${stats.wins} / ${stats.losses}`, icon: Target, positive: stats.wins >= stats.losses },
   ];
@@ -115,7 +198,7 @@ function AnalyticsPage() {
     <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-6">
       <PageHeader title="Analytics" description="Your trading performance at a glance" />
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
         {kpis.map((k) => {
           const Icon = k.icon;
           return (
@@ -171,21 +254,85 @@ function AnalyticsPage() {
         </div>
 
         <div className="rounded-xl border border-border bg-card p-6">
-          <h2 className="text-sm font-semibold mb-4">Instrument Breakdown</h2>
-          <div className="space-y-2 max-h-64 overflow-auto">
-            {stats.perSymbol.map((s) => (
-              <div key={s.symbol} className="flex items-center justify-between rounded-md border border-border/60 px-3 py-2 text-sm">
-                <div className="font-medium">{s.symbol}</div>
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <span>{s.n} trades</span>
-                  <span>{s.winRate.toFixed(0)}% win</span>
-                  <span className={s.pnl >= 0 ? "text-bull font-semibold" : "text-red-500 font-semibold"}>
-                    {s.pnl >= 0 ? "+" : ""}{s.pnl.toFixed(2)}
-                  </span>
-                </div>
-              </div>
-            ))}
+          <h2 className="flex items-center gap-2 text-sm font-semibold mb-4"><Calendar className="h-4 w-4" /> P&L by Day of Week</h2>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={stats.perDow}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
+                <Bar dataKey="pnl">
+                  {stats.perDow.map((d, i) => (
+                    <Cell key={i} fill={d.pnl >= 0 ? "hsl(142 71% 45%)" : "hsl(0 72% 51%)"} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </div>
+          {stats.bestDay && stats.worstDay && (
+            <div className="mt-3 flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Best: <span className="text-bull font-semibold">{stats.bestDay.day}</span> ({stats.bestDay.pnl >= 0 ? "+" : ""}{stats.bestDay.pnl})</span>
+              <span className="text-muted-foreground">Worst: <span className="text-red-500 font-semibold">{stats.worstDay.day}</span> ({stats.worstDay.pnl >= 0 ? "+" : ""}{stats.worstDay.pnl})</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {stats.mentalScatter.length > 0 && (
+        <div className="rounded-xl border border-border bg-card p-6">
+          <h2 className="flex items-center gap-2 text-sm font-semibold mb-1"><HeartPulse className="h-4 w-4" /> Mental State vs P&L</h2>
+          <p className="text-xs text-muted-foreground mb-4">Each dot is a trade. X = your mental score that day (1 low, 5 great). Y = trade P&L.</p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="h-56">
+              <ResponsiveContainer width="100%" height="100%">
+                <ScatterChart>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis type="number" dataKey="score" domain={[0.5, 5.5]} ticks={[1, 2, 3, 4, 5]} stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                  <YAxis type="number" dataKey="pnl" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                  <ZAxis range={[60, 60]} />
+                  <Tooltip cursor={{ strokeDasharray: "3 3" }} contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
+                  <Scatter data={stats.mentalScatter}>
+                    {stats.mentalScatter.map((p, i) => (
+                      <Cell key={i} fill={p.pnl >= 0 ? "hsl(142 71% 45%)" : "hsl(0 72% 51%)"} />
+                    ))}
+                  </Scatter>
+                </ScatterChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="space-y-1">
+              {stats.perMentalScore.map((m) => (
+                <div key={m.score} className="flex items-center justify-between rounded-md border border-border/60 px-3 py-2 text-sm">
+                  <div className="font-medium">Score {m.score}</div>
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <span>{m.n} trades</span>
+                    <span>{m.n ? `${m.winRate.toFixed(0)}% win` : "-"}</span>
+                    <span className={m.avgPnl >= 0 ? "text-bull font-semibold" : "text-red-500 font-semibold"}>
+                      {m.n ? `avg ${m.avgPnl >= 0 ? "+" : ""}${m.avgPnl}` : "no data"}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="rounded-xl border border-border bg-card p-6">
+        <h2 className="text-sm font-semibold mb-4">Instrument Breakdown</h2>
+        <div className="space-y-2 max-h-64 overflow-auto">
+          {stats.perSymbol.map((s) => (
+            <div key={s.symbol} className="flex items-center justify-between rounded-md border border-border/60 px-3 py-2 text-sm">
+              <div className="font-medium">{s.symbol}</div>
+              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                <span>{s.n} trades</span>
+                <span>{s.winRate.toFixed(0)}% win</span>
+                <span className={s.pnl >= 0 ? "text-bull font-semibold" : "text-red-500 font-semibold"}>
+                  {s.pnl >= 0 ? "+" : ""}{s.pnl.toFixed(2)}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
