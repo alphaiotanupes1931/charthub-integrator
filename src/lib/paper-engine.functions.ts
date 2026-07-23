@@ -285,6 +285,23 @@ export async function reconcileAllPaperAccounts(): Promise<{ users: number; clos
         title: "Kill switch triggered",
         body: paused_reason,
       });
+      // Fan out to Discord (user's personal webhook + shared community feed).
+      try {
+        const { sendDiscordWebhook, sendDiscordShared, sendTelegramMessage } = await import("@/lib/briefings.server");
+        const { data: notifPrefs } = await supabaseAdmin
+          .from("briefing_prefs")
+          .select("discord_webhook_url,telegram_chat_id")
+          .eq("user_id", acc.user_id)
+          .maybeSingle();
+        const alert = `⚠ Kill switch triggered\n${paused_reason}`;
+        if ((notifPrefs as any)?.discord_webhook_url) {
+          await sendDiscordWebhook((notifPrefs as any).discord_webhook_url, alert).catch(() => undefined);
+        }
+        if ((notifPrefs as any)?.telegram_chat_id) {
+          await sendTelegramMessage((notifPrefs as any).telegram_chat_id, alert).catch(() => undefined);
+        }
+        await sendDiscordShared(`Kill switch triggered for a paper account (${(drawdown * 100).toFixed(1)}% drawdown). All positions flat.`).catch(() => undefined);
+      } catch { /* best effort */ }
       killed += 1;
     }
 
