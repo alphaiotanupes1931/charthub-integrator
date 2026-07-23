@@ -3,6 +3,7 @@ import type { Lesson } from "@/lib/academy-content";
 import { PageHeader } from "@/components/PageHeader";
 import { findModule } from "@/lib/academy-content";
 import { useAcademyProgress } from "@/hooks/useAcademyProgress";
+import { ModuleQuiz } from "@/components/academy/ModuleQuiz";
 import { ArrowLeft, CheckCircle2, Circle, Clock } from "lucide-react";
 
 export const Route = createFileRoute("/_app/academy/$moduleId")({
@@ -93,6 +94,8 @@ function ModuleDetail() {
           );
         })}
       </div>
+
+      <ModuleQuiz moduleId={mod.id} accent={mod.accent} />
     </div>
   );
 }
