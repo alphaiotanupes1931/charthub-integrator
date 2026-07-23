@@ -134,6 +134,7 @@ function SettingsPage() {
   const [welcomeMuted, setWelcomeMutedState] = useState(false);
   useEffect(() => { setWelcomeMutedState(isWelcomeBackMuted()); }, []);
   const { colors: candleColors, update: updateCandleColors, reset: resetCandleColors, isHex } = useCandleColors();
+  const { colors: chartBg, update: updateChartBg, setPreset: setChartBgPreset, reset: resetChartBg } = useChartBackground();
 
   // TradeLocker integration state
   const [tlEmail, setTlEmail] = useState("");
