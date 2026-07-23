@@ -44,6 +44,7 @@ type NavItem = {
 const NAV: NavItem[] = [
   { to: "/dashboard",       label: "Dashboard",       icon: LayoutDashboard },
   { to: "/guide",           label: "Guide",           icon: BookOpen },
+  { to: "/flashcards",      label: "Flashcards",      icon: BookOpen },
   { to: "/journal",         label: "Trade Journal",   icon: NotebookPen },
   { to: "/strategies",      label: "Strategies",      icon: Library },
   { to: "/coaches",         label: "AI Coaches",      icon: Users },
