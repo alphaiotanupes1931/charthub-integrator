@@ -42,6 +42,7 @@ import { Route as AppJournalRouteImport } from './routes/_app.journal'
 import { Route as AppGuideRouteImport } from './routes/_app.guide'
 import { Route as AppFriendsRouteImport } from './routes/_app.friends'
 import { Route as AppFlashcardsRouteImport } from './routes/_app.flashcards'
+import { Route as AppDiscordRouteImport } from './routes/_app.discord'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppCoachesRouteImport } from './routes/_app.coaches'
 import { Route as AppCoachDashboardRouteImport } from './routes/_app.coach-dashboard'
@@ -230,6 +231,11 @@ const AppFlashcardsRoute = AppFlashcardsRouteImport.update({
   path: '/flashcards',
   getParentRoute: () => AppRoute,
 } as any)
+const AppDiscordRoute = AppDiscordRouteImport.update({
+  id: '/discord',
+  path: '/discord',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -373,6 +379,7 @@ export interface FileRoutesByFullPath {
   '/coach-dashboard': typeof AppCoachDashboardRoute
   '/coaches': typeof AppCoachesRoute
   '/dashboard': typeof AppDashboardRoute
+  '/discord': typeof AppDiscordRoute
   '/flashcards': typeof AppFlashcardsRoute
   '/friends': typeof AppFriendsRoute
   '/guide': typeof AppGuideRoute
@@ -429,6 +436,7 @@ export interface FileRoutesByTo {
   '/coach-dashboard': typeof AppCoachDashboardRoute
   '/coaches': typeof AppCoachesRoute
   '/dashboard': typeof AppDashboardRoute
+  '/discord': typeof AppDiscordRoute
   '/flashcards': typeof AppFlashcardsRoute
   '/friends': typeof AppFriendsRoute
   '/guide': typeof AppGuideRoute
@@ -487,6 +495,7 @@ export interface FileRoutesById {
   '/_app/coach-dashboard': typeof AppCoachDashboardRoute
   '/_app/coaches': typeof AppCoachesRoute
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/discord': typeof AppDiscordRoute
   '/_app/flashcards': typeof AppFlashcardsRoute
   '/_app/friends': typeof AppFriendsRoute
   '/_app/guide': typeof AppGuideRoute
@@ -546,6 +555,7 @@ export interface FileRouteTypes {
     | '/coach-dashboard'
     | '/coaches'
     | '/dashboard'
+    | '/discord'
     | '/flashcards'
     | '/friends'
     | '/guide'
@@ -602,6 +612,7 @@ export interface FileRouteTypes {
     | '/coach-dashboard'
     | '/coaches'
     | '/dashboard'
+    | '/discord'
     | '/flashcards'
     | '/friends'
     | '/guide'
@@ -659,6 +670,7 @@ export interface FileRouteTypes {
     | '/_app/coach-dashboard'
     | '/_app/coaches'
     | '/_app/dashboard'
+    | '/_app/discord'
     | '/_app/flashcards'
     | '/_app/friends'
     | '/_app/guide'
@@ -955,6 +967,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppFlashcardsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/discord': {
+      id: '/_app/discord'
+      path: '/discord'
+      fullPath: '/discord'
+      preLoaderRoute: typeof AppDiscordRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/dashboard': {
       id: '/_app/dashboard'
       path: '/dashboard'
@@ -1192,6 +1211,7 @@ interface AppRouteChildren {
   AppCoachDashboardRoute: typeof AppCoachDashboardRoute
   AppCoachesRoute: typeof AppCoachesRoute
   AppDashboardRoute: typeof AppDashboardRoute
+  AppDiscordRoute: typeof AppDiscordRoute
   AppFlashcardsRoute: typeof AppFlashcardsRoute
   AppFriendsRoute: typeof AppFriendsRoute
   AppGuideRoute: typeof AppGuideRoute
@@ -1219,6 +1239,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppCoachDashboardRoute: AppCoachDashboardRoute,
   AppCoachesRoute: AppCoachesRoute,
   AppDashboardRoute: AppDashboardRoute,
+  AppDiscordRoute: AppDiscordRoute,
   AppFlashcardsRoute: AppFlashcardsRoute,
   AppFriendsRoute: AppFriendsRoute,
   AppGuideRoute: AppGuideRoute,
@@ -1276,13 +1297,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

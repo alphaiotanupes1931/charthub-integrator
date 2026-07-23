@@ -12,8 +12,7 @@ import {
   BarChart3,
   Brain,
   Bell,
-  
-  
+  MessageSquare,
   Settings as SettingsIcon,
   UserCog,
   ShieldCheck,
@@ -58,6 +57,7 @@ const NAV: NavItem[] = [
   { to: "/calculator",      label: "Risk Calculator", icon: Calculator },
   { to: "/testing",         label: "Testing",         icon: FlaskConical },
   { to: "/briefings",       label: "Briefings",       icon: Send },
+  { to: "/discord",         label: "Discord",         icon: MessageSquare },
   { to: "/settings",        label: "Settings",        icon: SettingsIcon },
   
   { to: "/admin",           label: "Admin",           icon: ShieldCheck, accent: true },
