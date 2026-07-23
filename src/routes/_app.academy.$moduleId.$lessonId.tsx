@@ -78,7 +78,7 @@ function LessonView() {
 
       {/* Blocks */}
       <div className="space-y-5">
-        {lesson.blocks.map((block, i) => <BlockRenderer key={i} block={block} />)}
+        {lesson.blocks.map((block: LessonBlock, i: number) => <BlockRenderer key={i} block={block} />)}
       </div>
 
       {/* Completion + navigation */}

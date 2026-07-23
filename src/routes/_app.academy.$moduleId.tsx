@@ -1,4 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import type { Lesson } from "@/lib/academy-content";
 import { PageHeader } from "@/components/PageHeader";
 import { findModule } from "@/lib/academy-content";
 import { useAcademyProgress } from "@/hooks/useAcademyProgress";
@@ -28,7 +29,7 @@ export const Route = createFileRoute("/_app/academy/$moduleId")({
 function ModuleDetail() {
   const { mod } = Route.useLoaderData();
   const { isDone, moduleCompletion } = useAcademyProgress();
-  const { done, total } = moduleCompletion(mod.lessons.map((l) => l.id));
+  const { done, total } = moduleCompletion(mod.lessons.map((l: Lesson) => l.id));
   const pct = Math.round((done / total) * 100);
 
   return (
@@ -62,7 +63,7 @@ function ModuleDetail() {
       </div>
 
       <div className="space-y-2">
-        {mod.lessons.map((lesson, i) => {
+        {mod.lessons.map((lesson: Lesson, i: number) => {
           const done = isDone(lesson.id);
           return (
             <Link
