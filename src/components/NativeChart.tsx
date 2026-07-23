@@ -448,15 +448,15 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     const chart = createChart(containerRef.current, {
       autoSize: true,
       layout: {
-        background: { color: "#131722" },
-        textColor: "#b2b5be",
+        background: { color: chartBg.bg },
+        textColor: chartBg.text,
         fontFamily: "'Trebuchet MS', Roboto, Ubuntu, sans-serif",
         fontSize: 12,
         attributionLogo: false,
       },
       grid: {
-        vertLines: { color: "#1e222d", style: LineStyle.Solid },
-        horzLines: { color: "#1e222d", style: LineStyle.Solid },
+        vertLines: { color: chartBg.grid, style: LineStyle.Solid },
+        horzLines: { color: chartBg.grid, style: LineStyle.Solid },
       },
       crosshair: {
         mode: CrosshairMode.Normal,
@@ -464,12 +464,12 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
         horzLine: { color: "#758696", width: 1, style: LineStyle.Dashed, labelBackgroundColor: "#2962ff" },
       },
       rightPriceScale: {
-        borderColor: "#2a2e39",
+        borderColor: chartBg.border,
         borderVisible: true,
         scaleMargins: { top: 0.1, bottom: 0.1 },
       },
       timeScale: {
-        borderColor: "#2a2e39",
+        borderColor: chartBg.border,
         borderVisible: true,
         timeVisible: true,
         secondsVisible: false,
