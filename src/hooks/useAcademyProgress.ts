@@ -236,6 +236,17 @@ export function useAcademyProgress() {
     setState(next);
   }, []);
 
+  const recordFinalExam = useCallback((score: number, total: number) => {
+    const cur = read();
+    const prior = cur.finalExam;
+    const next: QuizScore = { score, total, at: new Date().toISOString() };
+    // Keep best attempt
+    const keep = !prior || score / total >= prior.score / prior.total ? next : prior;
+    const merged = { ...cur, finalExam: keep };
+    write(merged);
+    setState(merged);
+  }, []);
+
   const streaks = useMemo(() => computeStreaks(state.studyDays), [state.studyDays]);
   const studiedToday = useMemo(() => state.studyDays.includes(todayISO()), [state.studyDays]);
 
