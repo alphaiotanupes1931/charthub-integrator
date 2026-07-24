@@ -51,10 +51,7 @@ function FirstWeekPage() {
                 Begin the guided onboarding to track your progress and finish with a master certificate.
               </p>
               <button
-                onClick={() => {
-                  emitFirstWeekEvent("tour-done");
-                  window.dispatchEvent(new CustomEvent("trademind:open-tour"));
-                }}
+                onClick={handleStartTour}
                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90"
               >
                 Start tour <ArrowRight className="h-3.5 w-3.5" />
