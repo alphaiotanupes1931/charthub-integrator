@@ -28,6 +28,7 @@ import {
   Calculator,
   GraduationCap,
   Footprints,
+  Building2,
 } from "lucide-react";
 import { LogoLink } from "@/components/LogoLink";
 import { Tutorial } from "@/components/Tutorial";
@@ -59,6 +60,7 @@ const NAV: NavItem[] = [
   { to: "/alerts",          label: "Price Alerts",    icon: Bell },
   { to: "/calculator",      label: "Risk Calculator", icon: Calculator },
   { to: "/testing",         label: "Testing",         icon: FlaskConical },
+  { to: "/broker",          label: "Broker (OANDA)",  icon: Building2 },
   { to: "/briefings",       label: "Briefings",       icon: Send },
   { to: "/discord",         label: "Discord",         icon: MessageSquare },
   { to: "/settings",        label: "Settings",        icon: SettingsIcon },
