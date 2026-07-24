@@ -31,7 +31,7 @@ function CertificatePage() {
   const { moduleCompletion, quizScores } = useAcademyProgress();
   const { profile } = useProfile();
 
-  const { done, total } = moduleCompletion(mod.lessons.map((l) => l.id));
+  const { done, total } = moduleCompletion(mod.lessons.map((l: Lesson) => l.id));
   const complete = done === total;
   const quiz = quizScores[String(mod.id)];
   const passed = quiz && quiz.score / quiz.total >= 2 / 3;
