@@ -145,7 +145,6 @@ export const placeBrokerOrder = createServerFn({ method: "POST" })
       instrument,
       units: signedUnits,
       fillPrice: fill.price ? Number(fill.price) : null,
-      raw: resp,
     };
   });
 
