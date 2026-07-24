@@ -24,6 +24,7 @@ function AcademyIndex() {
     currentStreak,
     longestStreak,
     studiedToday,
+    finalExam,
   } = useAcademyProgress();
 
   const totalLessons = ACADEMY.reduce((n, m) => n + m.lessons.length, 0);
@@ -32,6 +33,8 @@ function AcademyIndex() {
 
   const resume = lastModule && lastLesson ? findLesson(lastModule, lastLesson) : null;
   const reviewCount = wrongBank.length;
+  const allComplete = totalDone === totalLessons;
+  const finalPassed = finalExam && finalExam.score / finalExam.total >= 0.8;
 
   return (
     <div className="max-w-6xl mx-auto">
