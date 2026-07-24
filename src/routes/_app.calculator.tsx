@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { Calculator, RotateCcw, TrendingUp, DollarSign, Percent, Target } from "lucide-react";
+import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
 
 export const Route = createFileRoute("/_app/calculator")({
   head: () => ({
@@ -132,6 +133,14 @@ function CalculatorPage() {
 
     return { dollarRisk, size, stopDist, rr, profit, valid: true };
   }, [balance, riskPct, entry, stop, tp, instrument, leverage]);
+
+  const [hasEmittedCalc, setHasEmittedCalc] = useState(false);
+  useEffect(() => {
+    if (result.valid && !hasEmittedCalc) {
+      setHasEmittedCalc(true);
+      emitFirstWeekEvent("calculator-used");
+    }
+  }, [result.valid, hasEmittedCalc]);
 
   const dollarRisk = (parseFloat(balance) || 0) * ((parseFloat(riskPct) || 0) / 100);
 

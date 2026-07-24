@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { ChevronLeft, ChevronRight, Shuffle, RotateCcw, Check, X, Search } from "lucide-react";
+import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
 
 export const Route = createFileRoute("/_app/flashcards")({
   head: () => ({
@@ -271,7 +272,11 @@ function DeckPlayer({
     const review = new Set(progress.review);
     if (status === "known") { known.add(cardKey); review.delete(cardKey); }
     else { review.add(cardKey); known.delete(cardKey); }
-    onProgress({ known: [...known], review: [...review] });
+    const nextProgress = { known: [...known], review: [...review] };
+    onProgress(nextProgress);
+    if (nextProgress.known.length + nextProgress.review.length >= 5) {
+      emitFirstWeekEvent("flashcards-5", nextProgress.known.length + nextProgress.review.length);
+    }
     if (idx < order.length - 1) next();
   }
 

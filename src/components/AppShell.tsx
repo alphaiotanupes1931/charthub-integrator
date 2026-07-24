@@ -27,6 +27,7 @@ import {
   Send,
   Calculator,
   GraduationCap,
+  Footprints,
 } from "lucide-react";
 import { LogoLink } from "@/components/LogoLink";
 import { Tutorial } from "@/components/Tutorial";
@@ -45,6 +46,7 @@ type NavItem = {
 
 const NAV: NavItem[] = [
   { to: "/dashboard",       label: "Dashboard",       icon: LayoutDashboard },
+  { to: "/first-week",      label: "First Week",      icon: Footprints },
   { to: "/guide",           label: "Guide",           icon: BookOpen },
   { to: "/academy",         label: "Academy",         icon: GraduationCap },
   { to: "/flashcards",      label: "Flashcards",      icon: BookOpen },

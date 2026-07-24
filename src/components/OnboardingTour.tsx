@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { X, MessageCircle, LineChart, BookOpen, FlaskConical, Send, ArrowRight, ArrowLeft } from "lucide-react";
+import { startFirstWeek, emitFirstWeekEvent } from "@/hooks/useFirstWeek";
 
 const KEY = "trademind.tour.v1.done";
 
@@ -52,7 +53,10 @@ export function OnboardingTour() {
     if (typeof window === "undefined") return;
     try {
       const done = localStorage.getItem(KEY);
-      if (!done && window.location.pathname === "/dashboard") setOpen(true);
+      if (!done && window.location.pathname === "/dashboard") {
+        startFirstWeek();
+        setOpen(true);
+      }
     } catch { /* noop */ }
     const openHandler = () => { setStep(0); setOpen(true); };
     window.addEventListener("trademind:open-tour", openHandler);
@@ -62,6 +66,8 @@ export function OnboardingTour() {
   function close() {
     setOpen(false);
     try { localStorage.setItem(KEY, "1"); } catch { /* noop */ }
+    startFirstWeek();
+    emitFirstWeekEvent("tour-done");
   }
 
   if (!open) return null;

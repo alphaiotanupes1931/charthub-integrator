@@ -6,6 +6,7 @@ import { Link } from "@tanstack/react-router";
 import { MessageSquare, ExternalLink, X, Minus, Volume2, VolumeX, Crosshair, Square, Paperclip, ImageIcon, ThumbsUp, ThumbsDown, HelpCircle } from "lucide-react";
 import { recordHermesFeedback } from "@/lib/agents/hermes.functions";
 import { COACH_ICON_META, DEFAULT_COACH_ICON } from "@/lib/coachMeta";
+import { useFirstWeek } from "@/hooks/useFirstWeek";
 import {
   Conversation,
   ConversationContent,
@@ -907,6 +908,27 @@ function QuickPrompts({
         .toLowerCase()
     : "";
   const mentionsGrade = /grade|entry|stop|tp1|tp2|bias|setup/.test(lastText);
+  const { active, completedCount, total, nextTask } = useFirstWeek();
+  const onboardingPrompts: { icon: string; label: string; text: string }[] = [];
+
+  if (active) {
+    if (!nextTask || completedCount >= total) {
+      onboardingPrompts.push({ icon: "◈", label: "What should I focus on next?", text: "I have completed my first week checklist. What should I focus on next to improve my trading?" });
+    } else {
+      const id = nextTask.id;
+      if (id === "academy") onboardingPrompts.push({ icon: "◆", label: "What should I learn first?", text: "I am new to TradeMind. What is the first trading concept I should learn, and why?" });
+      if (id === "flashcards") onboardingPrompts.push({ icon: "◆", label: "Quiz me on basics", text: "Quiz me on the most important trading basics I need to know before placing a trade." });
+      if (id === "discord") onboardingPrompts.push({ icon: "◆", label: "How do I join the community?", text: "What happens in the TradeMind Community Discord and how do I get the most out of it?" });
+      if (id === "testing") onboardingPrompts.push({ icon: "◆", label: "How does paper trading work?", text: "Explain how Testing mode works on TradeMind, including the $10,000 account and kill switch." });
+      if (id === "journal") onboardingPrompts.push({ icon: "◆", label: "Why journal every trade?", text: "Why should I log every trade in the TradeMind journal, and what should I write down?" });
+      if (id === "quiz") onboardingPrompts.push({ icon: "◆", label: "How do module quizzes work?", text: "How do TradeMind Academy quizzes and certificates work? What score do I need?" });
+      if (id === "risk-calculator") onboardingPrompts.push({ icon: "◆", label: "How do I size a trade?", text: "Walk me through how to use the TradeMind risk calculator to size a position correctly." });
+      if (id === "briefings") onboardingPrompts.push({ icon: "◆", label: "Set up daily briefings", text: "What are the TradeMind morning and evening briefings, and how do I set them up?" });
+      if (id === "review") onboardingPrompts.push({ icon: "◆", label: "How does spaced review work?", text: "Explain how the wrong-answer review bank helps me learn and how to clear it." });
+      if (id === "final-exam") onboardingPrompts.push({ icon: "◆", label: "What is the final exam?", text: "What is the TradeMind master certificate final exam, and how should I prepare?" });
+      if (id === "scan" || id === "tour" || id === "timezone") onboardingPrompts.push({ icon: "◆", label: "What is my next step?", text: "What should I do next to get the most out of TradeMind?" });
+    }
+  }
 
   const prompts: { icon: string; label: string; text: string }[] = hasImage
     ? [
@@ -928,12 +950,14 @@ function QuickPrompts({
         { icon: "✎", label: "Best strategy here", text: `Which of my strategies fits ${sym} on the ${tf} best right now, and why?` },
       ];
 
+  const all = [...onboardingPrompts, ...prompts];
+
   return (
     <div className="mb-2 -mx-0.5 flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
       <span className="shrink-0 self-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground pr-1">
         Ask
       </span>
-      {prompts.map((p) => (
+      {all.map((p) => (
         <button
           key={p.label}
           type="button"
