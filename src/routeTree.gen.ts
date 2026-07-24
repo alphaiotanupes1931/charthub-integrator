@@ -49,6 +49,7 @@ import { Route as AppCoachesRouteImport } from './routes/_app.coaches'
 import { Route as AppCoachDashboardRouteImport } from './routes/_app.coach-dashboard'
 import { Route as AppChatRouteImport } from './routes/_app.chat'
 import { Route as AppCalculatorRouteImport } from './routes/_app.calculator'
+import { Route as AppBrokerRouteImport } from './routes/_app.broker'
 import { Route as AppBriefingsRouteImport } from './routes/_app.briefings'
 import { Route as AppAnalyticsRouteImport } from './routes/_app.analytics'
 import { Route as AppAlertsRouteImport } from './routes/_app.alerts'
@@ -274,6 +275,11 @@ const AppCalculatorRoute = AppCalculatorRouteImport.update({
   path: '/calculator',
   getParentRoute: () => AppRoute,
 } as any)
+const AppBrokerRoute = AppBrokerRouteImport.update({
+  id: '/broker',
+  path: '/broker',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppBriefingsRoute = AppBriefingsRouteImport.update({
   id: '/briefings',
   path: '/briefings',
@@ -425,6 +431,7 @@ export interface FileRoutesByFullPath {
   '/alerts': typeof AppAlertsRoute
   '/analytics': typeof AppAnalyticsRoute
   '/briefings': typeof AppBriefingsRoute
+  '/broker': typeof AppBrokerRoute
   '/calculator': typeof AppCalculatorRoute
   '/chat': typeof AppChatRouteWithChildren
   '/coach-dashboard': typeof AppCoachDashboardRoute
@@ -490,6 +497,7 @@ export interface FileRoutesByTo {
   '/alerts': typeof AppAlertsRoute
   '/analytics': typeof AppAnalyticsRoute
   '/briefings': typeof AppBriefingsRoute
+  '/broker': typeof AppBrokerRoute
   '/calculator': typeof AppCalculatorRoute
   '/coach-dashboard': typeof AppCoachDashboardRoute
   '/coaches': typeof AppCoachesRoute
@@ -555,6 +563,7 @@ export interface FileRoutesById {
   '/_app/alerts': typeof AppAlertsRoute
   '/_app/analytics': typeof AppAnalyticsRoute
   '/_app/briefings': typeof AppBriefingsRoute
+  '/_app/broker': typeof AppBrokerRoute
   '/_app/calculator': typeof AppCalculatorRoute
   '/_app/chat': typeof AppChatRouteWithChildren
   '/_app/coach-dashboard': typeof AppCoachDashboardRoute
@@ -623,6 +632,7 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/analytics'
     | '/briefings'
+    | '/broker'
     | '/calculator'
     | '/chat'
     | '/coach-dashboard'
@@ -688,6 +698,7 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/analytics'
     | '/briefings'
+    | '/broker'
     | '/calculator'
     | '/coach-dashboard'
     | '/coaches'
@@ -752,6 +763,7 @@ export interface FileRouteTypes {
     | '/_app/alerts'
     | '/_app/analytics'
     | '/_app/briefings'
+    | '/_app/broker'
     | '/_app/calculator'
     | '/_app/chat'
     | '/_app/coach-dashboard'
@@ -1112,6 +1124,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCalculatorRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/broker': {
+      id: '/_app/broker'
+      path: '/broker'
+      fullPath: '/broker'
+      preLoaderRoute: typeof AppBrokerRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/briefings': {
       id: '/_app/briefings'
       path: '/briefings'
@@ -1370,6 +1389,7 @@ interface AppRouteChildren {
   AppAlertsRoute: typeof AppAlertsRoute
   AppAnalyticsRoute: typeof AppAnalyticsRoute
   AppBriefingsRoute: typeof AppBriefingsRoute
+  AppBrokerRoute: typeof AppBrokerRoute
   AppCalculatorRoute: typeof AppCalculatorRoute
   AppChatRoute: typeof AppChatRouteWithChildren
   AppCoachDashboardRoute: typeof AppCoachDashboardRoute
@@ -1399,6 +1419,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAlertsRoute: AppAlertsRoute,
   AppAnalyticsRoute: AppAnalyticsRoute,
   AppBriefingsRoute: AppBriefingsRoute,
+  AppBrokerRoute: AppBrokerRoute,
   AppCalculatorRoute: AppCalculatorRoute,
   AppChatRoute: AppChatRouteWithChildren,
   AppCoachDashboardRoute: AppCoachDashboardRoute,
