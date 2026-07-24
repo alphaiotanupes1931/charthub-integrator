@@ -1,5 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { findModule } from "@/lib/academy-content";
+import { findModule, type Lesson } from "@/lib/academy-content";
 import { useAcademyProgress } from "@/hooks/useAcademyProgress";
 import { useProfile } from "@/hooks/useProfile";
 import { ArrowLeft, Printer, Award } from "lucide-react";
