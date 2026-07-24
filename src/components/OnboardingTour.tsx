@@ -52,7 +52,7 @@ export function OnboardingTour() {
     if (typeof window === "undefined") return;
     try {
       const done = localStorage.getItem(KEY);
-      if (!done) setOpen(true);
+      if (!done && window.location.pathname === "/dashboard") setOpen(true);
     } catch { /* noop */ }
     const openHandler = () => { setStep(0); setOpen(true); };
     window.addEventListener("trademind:open-tour", openHandler);
