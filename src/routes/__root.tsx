@@ -4,9 +4,11 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { AnimatePresence, motion } from "motion/react";
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
@@ -15,6 +17,7 @@ import logoAsset from "../assets/logo.png.asset.json";
 import { CookieBanner } from "../components/CookieBanner";
 import { Toaster } from "../components/ui/sonner";
 import { VersionWatcher } from "../components/VersionWatcher";
+
 
 
 
