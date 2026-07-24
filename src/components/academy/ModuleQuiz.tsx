@@ -2,6 +2,7 @@ import { useState } from "react";
 import { getQuiz, type QuizQuestion } from "@/lib/academy-quizzes";
 import { useAcademyProgress } from "@/hooks/useAcademyProgress";
 import { CheckCircle2, XCircle, HelpCircle, RotateCcw } from "lucide-react";
+import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
 
 export function ModuleQuiz({ moduleId, accent }: { moduleId: number; accent: string }) {
   const questions = getQuiz(moduleId);
@@ -21,6 +22,7 @@ export function ModuleQuiz({ moduleId, accent }: { moduleId: number; accent: str
     });
     setSubmitted(true);
     recordQuiz(moduleId, score, questions!.length);
+    if (score / questions!.length >= 2 / 3) emitFirstWeekEvent("quiz-pass");
   }
 
 

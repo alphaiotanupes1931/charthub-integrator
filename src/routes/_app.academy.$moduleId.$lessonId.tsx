@@ -2,6 +2,7 @@ import { createFileRoute, Link, notFound, useNavigate, useRouter } from "@tansta
 import { useEffect } from "react";
 import { findLesson, type Lesson, type LessonBlock, type CalloutTone } from "@/lib/academy-content";
 import { useAcademyProgress } from "@/hooks/useAcademyProgress";
+import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
 import { LessonChart } from "@/components/academy/LessonChart";
 import {
   ArrowLeft, ArrowRight, CheckCircle2, Circle,
@@ -83,6 +84,7 @@ function LessonView() {
 
   function completeAndAdvance() {
     markDone(lesson.id);
+    emitFirstWeekEvent("academy-lesson", mod.id);
     if (next) {
       navigate({ to: "/academy/$moduleId/$lessonId", params: { moduleId: String(mod.id), lessonId: next.id } });
     } else {
