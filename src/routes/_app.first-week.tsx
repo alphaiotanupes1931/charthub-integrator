@@ -83,9 +83,9 @@ function FirstWeekPage() {
 
       <div className="grid gap-3">
         {FIRST_WEEK_TASKS.map((task) => {
-          const done = completedCount >= task.id as unknown as number; // placeholder check
+          const done = Boolean(completed[task.id]);
           return (
-            <div key={task.id} className="rounded-md border border-border bg-card p-4 flex items-start gap-4">
+            <div key={task.id} className={`rounded-md border border-border bg-card p-4 flex items-start gap-4 ${done ? "opacity-70" : ""}`}>
               <div className="mt-0.5 shrink-0">
                 {done ? <CheckCircle2 className="h-5 w-5 text-emerald-500" /> : <Circle className="h-5 w-5 text-muted-foreground" />}
               </div>
