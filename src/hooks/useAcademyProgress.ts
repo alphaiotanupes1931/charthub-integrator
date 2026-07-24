@@ -121,6 +121,7 @@ export function useAcademyProgress() {
           tourDone: remote.tour_done || local.tourDone,
           studyDays: local.studyDays,
           wrongBank: local.wrongBank,
+          finalExam: local.finalExam,
         };
         setState(merged);
         write(merged);
