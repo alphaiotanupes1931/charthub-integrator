@@ -14,6 +14,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/s
 import { supabase } from "@/integrations/supabase/client";
 import logoAsset from "@/assets/logo.png.asset.json";
 import dashboardPreview from "@/assets/dashboard-preview.png.asset.json";
+import gradeCard from "@/assets/grade-card.png.asset.json";
 
 
 export const Route = createFileRoute("/")({
