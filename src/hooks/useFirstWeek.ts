@@ -311,8 +311,8 @@ export function useFirstWeek() {
 
   const upcoming = useMemo(() => {
     const done = new Set(Object.keys(state.completed));
-    return FIRST_WEEK_TASKS.filter((t) => !done.has(t.id) && t.day <= currentDay + 1).slice(0, 3);
-  }, [state.completed, currentDay]);
+    return FIRST_WEEK_TASKS.filter((t) => t.id !== nextTask?.id && !done.has(t.id) && t.day <= currentDay + 1).slice(0, 3);
+  }, [state.completed, currentDay, nextTask]);
 
   return {
     active,
