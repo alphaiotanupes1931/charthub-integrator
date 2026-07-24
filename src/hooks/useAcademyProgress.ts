@@ -146,8 +146,11 @@ export function useAcademyProgress() {
             },
           }).catch(() => { /* offline ok */ });
         }
-      })
-      .catch(() => { hydrated.current = true; });
+        })
+        .catch(() => { hydrated.current = true; });
+    })();
+
+
 
     const onChange = () => setState(read());
     window.addEventListener("academy-progress", onChange);
