@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { X, CheckCircle2, Circle, ArrowRight, Calendar } from "lucide-react";
 
 export function FirstWeekPanel() {
-  const { active, currentDay, progressPct, nextTask, upcoming, dismissed, dismiss } = useFirstWeek();
+  const { active, currentDay, completedCount, progressPct, nextTask, upcoming, dismissed, dismiss } = useFirstWeek();
 
   if (!active || dismissed) return null;
 
@@ -34,7 +34,7 @@ export function FirstWeekPanel() {
         <div className="flex items-center justify-between text-xs mb-1.5">
           <span className="text-muted-foreground">{progressPct}% complete</span>
           <span className="text-primary font-semibold">
-            {FIRST_WEEK_TASKS.length - upcoming.length - (upcoming.length === 0 && nextTask ? 1 : 0)} / {FIRST_WEEK_TASKS.length}
+            {completedCount} / {FIRST_WEEK_TASKS.length}
           </span>
         </div>
         <div className="h-1.5 rounded-md bg-background overflow-hidden">
