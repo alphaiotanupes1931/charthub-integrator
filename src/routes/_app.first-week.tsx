@@ -1,6 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useFirstWeek, FIRST_WEEK_TASKS, emitFirstWeekEvent } from "@/hooks/useFirstWeek";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useFirstWeek, FIRST_WEEK_TASKS, emitFirstWeekEvent, startFirstWeek } from "@/hooks/useFirstWeek";
 import { CheckCircle2, Circle, ArrowRight, Calendar, RotateCcw, Sparkles } from "lucide-react";
+import { restartTutorial } from "@/components/Tutorial";
 
 export const Route = createFileRoute("/_app/first-week")({
   head: () => ({
@@ -16,6 +17,18 @@ export const Route = createFileRoute("/_app/first-week")({
 
 function FirstWeekPage() {
   const { active, currentDay, completedCount, completed, progressPct, startedAt, dismiss } = useFirstWeek();
+  const navigate = useNavigate();
+
+  function handleStartTour() {
+    try { localStorage.removeItem("trademind.tour.v1.done"); } catch { /* noop */ }
+    startFirstWeek();
+    navigate({ to: "/dashboard" }).then(() => {
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent("trademind:open-tour"));
+        restartTutorial();
+      }, 250);
+    });
+  }
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -38,10 +51,7 @@ function FirstWeekPage() {
                 Begin the guided onboarding to track your progress and finish with a master certificate.
               </p>
               <button
-                onClick={() => {
-                  emitFirstWeekEvent("tour-done");
-                  window.dispatchEvent(new CustomEvent("trademind:open-tour"));
-                }}
+                onClick={handleStartTour}
                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90"
               >
                 Start tour <ArrowRight className="h-3.5 w-3.5" />
