@@ -60,12 +60,14 @@ import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api.public.
 import { Route as AppStrategiesStrategyIdRouteImport } from './routes/_app.strategies.$strategyId'
 import { Route as AppChatThreadIdRouteImport } from './routes/_app.chat.$threadId'
 import { Route as AppAdminSubscribersRouteImport } from './routes/_app.admin.subscribers'
+import { Route as AppAcademyReviewRouteImport } from './routes/_app.academy.review'
 import { Route as AppAcademyModuleIdRouteImport } from './routes/_app.academy.$moduleId'
 import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api.public.telegram.webhook'
 import { Route as ApiPublicHooksSendBriefingsRouteImport } from './routes/api.public.hooks.send-briefings'
 import { Route as ApiPublicHooksScanSignalsRouteImport } from './routes/api.public.hooks.scan-signals'
 import { Route as ApiPublicHooksReconcilePaperRouteImport } from './routes/api.public.hooks.reconcile-paper'
 import { Route as ApiPublicHooksPriceAlertsTickRouteImport } from './routes/api.public.hooks.price-alerts-tick'
+import { Route as AppAcademyCertificateModuleIdRouteImport } from './routes/_app.academy.certificate.$moduleId'
 import { Route as AppAcademyModuleIdLessonIdRouteImport } from './routes/_app.academy.$moduleId.$lessonId'
 
 const TermsRoute = TermsRouteImport.update({
@@ -322,6 +324,11 @@ const AppAdminSubscribersRoute = AppAdminSubscribersRouteImport.update({
   path: '/subscribers',
   getParentRoute: () => AppAdminRoute,
 } as any)
+const AppAcademyReviewRoute = AppAcademyReviewRouteImport.update({
+  id: '/review',
+  path: '/review',
+  getParentRoute: () => AppAcademyRoute,
+} as any)
 const AppAcademyModuleIdRoute = AppAcademyModuleIdRouteImport.update({
   id: '/$moduleId',
   path: '/$moduleId',
@@ -356,6 +363,12 @@ const ApiPublicHooksPriceAlertsTickRoute =
     id: '/api/public/hooks/price-alerts-tick',
     path: '/api/public/hooks/price-alerts-tick',
     getParentRoute: () => rootRouteImport,
+  } as any)
+const AppAcademyCertificateModuleIdRoute =
+  AppAcademyCertificateModuleIdRouteImport.update({
+    id: '/certificate/$moduleId',
+    path: '/certificate/$moduleId',
+    getParentRoute: () => AppAcademyRoute,
   } as any)
 const AppAcademyModuleIdLessonIdRoute =
   AppAcademyModuleIdLessonIdRouteImport.update({
@@ -409,6 +422,7 @@ export interface FileRoutesByFullPath {
   '/help/$slug': typeof HelpSlugRoute
   '/invite/$code': typeof InviteCodeRoute
   '/academy/$moduleId': typeof AppAcademyModuleIdRouteWithChildren
+  '/academy/review': typeof AppAcademyReviewRoute
   '/admin/subscribers': typeof AppAdminSubscribersRoute
   '/chat/$threadId': typeof AppChatThreadIdRoute
   '/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
@@ -417,6 +431,7 @@ export interface FileRoutesByFullPath {
   '/chat/': typeof AppChatIndexRoute
   '/strategies/': typeof AppStrategiesIndexRoute
   '/academy/$moduleId/$lessonId': typeof AppAcademyModuleIdLessonIdRoute
+  '/academy/certificate/$moduleId': typeof AppAcademyCertificateModuleIdRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
   '/api/public/hooks/reconcile-paper': typeof ApiPublicHooksReconcilePaperRoute
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
@@ -466,6 +481,7 @@ export interface FileRoutesByTo {
   '/help/$slug': typeof HelpSlugRoute
   '/invite/$code': typeof InviteCodeRoute
   '/academy/$moduleId': typeof AppAcademyModuleIdRouteWithChildren
+  '/academy/review': typeof AppAcademyReviewRoute
   '/admin/subscribers': typeof AppAdminSubscribersRoute
   '/chat/$threadId': typeof AppChatThreadIdRoute
   '/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
@@ -474,6 +490,7 @@ export interface FileRoutesByTo {
   '/chat': typeof AppChatIndexRoute
   '/strategies': typeof AppStrategiesIndexRoute
   '/academy/$moduleId/$lessonId': typeof AppAcademyModuleIdLessonIdRoute
+  '/academy/certificate/$moduleId': typeof AppAcademyCertificateModuleIdRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
   '/api/public/hooks/reconcile-paper': typeof ApiPublicHooksReconcilePaperRoute
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
@@ -527,6 +544,7 @@ export interface FileRoutesById {
   '/help/$slug': typeof HelpSlugRoute
   '/invite/$code': typeof InviteCodeRoute
   '/_app/academy/$moduleId': typeof AppAcademyModuleIdRouteWithChildren
+  '/_app/academy/review': typeof AppAcademyReviewRoute
   '/_app/admin/subscribers': typeof AppAdminSubscribersRoute
   '/_app/chat/$threadId': typeof AppChatThreadIdRoute
   '/_app/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
@@ -535,6 +553,7 @@ export interface FileRoutesById {
   '/_app/chat/': typeof AppChatIndexRoute
   '/_app/strategies/': typeof AppStrategiesIndexRoute
   '/_app/academy/$moduleId/$lessonId': typeof AppAcademyModuleIdLessonIdRoute
+  '/_app/academy/certificate/$moduleId': typeof AppAcademyCertificateModuleIdRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
   '/api/public/hooks/reconcile-paper': typeof ApiPublicHooksReconcilePaperRoute
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
@@ -588,6 +607,7 @@ export interface FileRouteTypes {
     | '/help/$slug'
     | '/invite/$code'
     | '/academy/$moduleId'
+    | '/academy/review'
     | '/admin/subscribers'
     | '/chat/$threadId'
     | '/strategies/$strategyId'
@@ -596,6 +616,7 @@ export interface FileRouteTypes {
     | '/chat/'
     | '/strategies/'
     | '/academy/$moduleId/$lessonId'
+    | '/academy/certificate/$moduleId'
     | '/api/public/hooks/price-alerts-tick'
     | '/api/public/hooks/reconcile-paper'
     | '/api/public/hooks/scan-signals'
@@ -645,6 +666,7 @@ export interface FileRouteTypes {
     | '/help/$slug'
     | '/invite/$code'
     | '/academy/$moduleId'
+    | '/academy/review'
     | '/admin/subscribers'
     | '/chat/$threadId'
     | '/strategies/$strategyId'
@@ -653,6 +675,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/strategies'
     | '/academy/$moduleId/$lessonId'
+    | '/academy/certificate/$moduleId'
     | '/api/public/hooks/price-alerts-tick'
     | '/api/public/hooks/reconcile-paper'
     | '/api/public/hooks/scan-signals'
@@ -705,6 +728,7 @@ export interface FileRouteTypes {
     | '/help/$slug'
     | '/invite/$code'
     | '/_app/academy/$moduleId'
+    | '/_app/academy/review'
     | '/_app/admin/subscribers'
     | '/_app/chat/$threadId'
     | '/_app/strategies/$strategyId'
@@ -713,6 +737,7 @@ export interface FileRouteTypes {
     | '/_app/chat/'
     | '/_app/strategies/'
     | '/_app/academy/$moduleId/$lessonId'
+    | '/_app/academy/certificate/$moduleId'
     | '/api/public/hooks/price-alerts-tick'
     | '/api/public/hooks/reconcile-paper'
     | '/api/public/hooks/scan-signals'
@@ -1107,6 +1132,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminSubscribersRouteImport
       parentRoute: typeof AppAdminRoute
     }
+    '/_app/academy/review': {
+      id: '/_app/academy/review'
+      path: '/review'
+      fullPath: '/academy/review'
+      preLoaderRoute: typeof AppAcademyReviewRouteImport
+      parentRoute: typeof AppAcademyRoute
+    }
     '/_app/academy/$moduleId': {
       id: '/_app/academy/$moduleId'
       path: '/$moduleId'
@@ -1149,6 +1181,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksPriceAlertsTickRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/academy/certificate/$moduleId': {
+      id: '/_app/academy/certificate/$moduleId'
+      path: '/certificate/$moduleId'
+      fullPath: '/academy/certificate/$moduleId'
+      preLoaderRoute: typeof AppAcademyCertificateModuleIdRouteImport
+      parentRoute: typeof AppAcademyRoute
+    }
     '/_app/academy/$moduleId/$lessonId': {
       id: '/_app/academy/$moduleId/$lessonId'
       path: '/$lessonId'
@@ -1172,10 +1211,14 @@ const AppAcademyModuleIdRouteWithChildren =
 
 interface AppAcademyRouteChildren {
   AppAcademyModuleIdRoute: typeof AppAcademyModuleIdRouteWithChildren
+  AppAcademyReviewRoute: typeof AppAcademyReviewRoute
+  AppAcademyCertificateModuleIdRoute: typeof AppAcademyCertificateModuleIdRoute
 }
 
 const AppAcademyRouteChildren: AppAcademyRouteChildren = {
   AppAcademyModuleIdRoute: AppAcademyModuleIdRouteWithChildren,
+  AppAcademyReviewRoute: AppAcademyReviewRoute,
+  AppAcademyCertificateModuleIdRoute: AppAcademyCertificateModuleIdRoute,
 }
 
 const AppAcademyRouteWithChildren = AppAcademyRoute._addFileChildren(
