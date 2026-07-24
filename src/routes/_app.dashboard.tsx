@@ -3,6 +3,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TradingViewChart } from "@/components/TradingViewChart";
 import { NativeChart, LEVEL_META, type LevelKey, type ChartSnapshot } from "@/components/NativeChart";
+import { FirstWeekPanel } from "@/components/FirstWeekPanel";
+import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
 import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Clock, MessageSquare, X, Plug, Maximize2, Square, Paperclip, ChevronUp, PanelRightClose, PanelRightOpen, BarChart3, ThumbsUp, ThumbsDown, Brain, LineChart, Settings2, Maximize, Minimize, BookOpen } from "lucide-react";
 
 
@@ -901,6 +903,7 @@ function Dashboard() {
 
   const runScan = async (from: "chat" | "analysis" = "analysis") => {
     setScanning(true);
+    emitFirstWeekEvent("scan-run");
 
     setAiGrade(null);
     const enabledLevels = ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none";
@@ -1450,35 +1453,36 @@ function Dashboard() {
 
 
             <div className="flex-1 min-h-0 overflow-hidden relative">
-              <div className={`absolute inset-0 overflow-y-auto ${rightTab === "analysis" ? "" : "hidden"}`}>
-                <div className="p-5">
-                  <ScanBody
-                    result={result}
-                    scanning={scanning}
-                    symbol={symbol}
-                    intervalLabel={intervalLabel}
-                    lensId={lensId}
-                    runScan={() => runScan("analysis")}
+            <div className={`absolute inset-0 overflow-y-auto ${rightTab === "analysis" ? "" : "hidden"}`}>
+              <div className="p-5">
+                <FirstWeekPanel />
+                <ScanBody
+                  result={result}
+                  scanning={scanning}
+                  symbol={symbol}
+                  intervalLabel={intervalLabel}
+                  lensId={lensId}
+                  runScan={() => runScan("analysis")}
 
-                    onAttach={(file) => {
-                      setRightTab("chat");
-                      setChatPanelView("conversation");
-                      const attachPrompt = `Scan this chart screenshot for ${symbolLabel(symbol)} on ${intervalLabel}. Refer to the instrument by its friendly name (e.g. "Gold"), not the raw ticker. Give me grade, bias, entry, stop, TP1, TP2, R:R, and a 1-2 sentence rationale.`;
-                      // Defer so the chat panel mounts (chatRef becomes valid) before we attach.
-                      setTimeout(() => { chatRef.current?.attach(file, attachPrompt); }, 0);
-                      setScanning(true);
-                      const lens = findLens(lensId);
-                      runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
-                        .then((plan) => { const r = plan as ScanResult; setResult(r); applyPlanToSignalCards(r); })
-                        .catch(() => { /* coach chat still runs the vision analysis */ })
-                        .finally(() => setScanning(false));
-                    }}
-                    onStopScan={() => { chatRef.current?.stop(); voice.stop(); setScanning(false); }}
-                    onStopVoice={() => voice.stop()}
-                    voiceSpeaking={voice.speaking}
-                  />
-                </div>
+                  onAttach={(file) => {
+                    setRightTab("chat");
+                    setChatPanelView("conversation");
+                    const attachPrompt = `Scan this chart screenshot for ${symbolLabel(symbol)} on ${intervalLabel}. Refer to the instrument by its friendly name (e.g. "Gold"), not the raw ticker. Give me grade, bias, entry, stop, TP1, TP2, R:R, and a 1-2 sentence rationale.`;
+                    // Defer so the chat panel mounts (chatRef becomes valid) before we attach.
+                    setTimeout(() => { chatRef.current?.attach(file, attachPrompt); }, 0);
+                    setScanning(true);
+                    const lens = findLens(lensId);
+                    runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
+                      .then((plan) => { const r = plan as ScanResult; setResult(r); applyPlanToSignalCards(r); })
+                      .catch(() => { /* coach chat still runs the vision analysis */ })
+                      .finally(() => setScanning(false));
+                  }}
+                  onStopScan={() => { chatRef.current?.stop(); voice.stop(); setScanning(false); }}
+                  onStopVoice={() => voice.stop()}
+                  voiceSpeaking={voice.speaking}
+                />
               </div>
+            </div>
               <div className={`absolute inset-0 ${rightTab === "chat" ? "" : "hidden"}`}>
                 <div className="flex h-full min-h-0 flex-col">
                   <div className="shrink-0 flex items-center gap-1 border-b border-border/60 px-2 py-1.5">

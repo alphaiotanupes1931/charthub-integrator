@@ -5,6 +5,7 @@ import { useAcademyProgress } from "@/hooks/useAcademyProgress";
 import { getQuiz } from "@/lib/academy-quizzes";
 import { findModule } from "@/lib/academy-content";
 import { ArrowLeft, ArrowRight, CheckCircle2, RotateCcw, Target, XCircle } from "lucide-react";
+import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
 
 export const Route = createFileRoute("/_app/academy/review")({
   head: () => ({
@@ -70,6 +71,7 @@ function ReviewPage() {
     markStudiedToday();
     if (correct) {
       removeWrong(current.entry.moduleId, current.entry.qIndex);
+      emitFirstWeekEvent("review-cleared");
     }
   }
 

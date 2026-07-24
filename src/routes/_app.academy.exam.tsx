@@ -5,6 +5,7 @@ import { QUIZZES, type QuizQuestion } from "@/lib/academy-quizzes";
 import { ACADEMY, type Lesson } from "@/lib/academy-content";
 import { useAcademyProgress } from "@/hooks/useAcademyProgress";
 import { ArrowLeft, Award, CheckCircle2, RotateCcw, Sparkles, XCircle } from "lucide-react";
+import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
 
 type ExamItem = { moduleId: number; qIndex: number; q: QuizQuestion };
 
@@ -50,6 +51,7 @@ function FinalExamPage() {
     setSubmitted(true);
     recordFinalExam(score, exam.length);
     markStudiedToday();
+    if (score / exam.length >= 0.8) emitFirstWeekEvent("final-exam");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 

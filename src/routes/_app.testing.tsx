@@ -12,6 +12,7 @@ import {
   closePaperPosition,
 } from "@/lib/paper-engine.functions";
 import { AlertTriangle, Play, Square, RotateCcw, X } from "lucide-react";
+import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
 
 export const Route = createFileRoute("/_app/testing")({
   head: () => ({ meta: [{ title: "Testing, TradeMind" }] }),
@@ -49,7 +50,7 @@ function TestingPage() {
   });
   const openPos = useMutation({
     mutationFn: useServerFn(openPaperPosition),
-    onSuccess: () => { toast.success("Position opened"); qc.invalidateQueries({ queryKey: ["paperState"] }); setShowNew(false); },
+    onSuccess: () => { toast.success("Position opened"); qc.invalidateQueries({ queryKey: ["paperState"] }); setShowNew(false); emitFirstWeekEvent("paper-trade"); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -76,7 +77,11 @@ function TestingPage() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => toggle.mutate({ data: { enabled: !s.account.testing_mode } })}
+            onClick={() => {
+              const willEnable = !s.account.testing_mode;
+              toggle.mutate({ data: { enabled: willEnable } });
+              if (willEnable) emitFirstWeekEvent("testing-enabled");
+            }}
             className={`inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium ${s.account.testing_mode ? "bg-emerald-600 text-white" : "bg-muted text-foreground"}`}
           >
             {s.account.testing_mode ? <><Play className="size-4" /> Testing ON</> : <><Square className="size-4" /> Testing OFF</>}

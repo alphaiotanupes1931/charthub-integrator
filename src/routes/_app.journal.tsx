@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { MentalStatePanel, upsertMentalEntry, SCORE_META, loadMental, type MentalEntry } from "@/components/MentalStatePanel";
 import { exportMyData } from "@/lib/privacy.functions";
+import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
 
 import {
   putTradeImage,
@@ -349,6 +350,7 @@ function JournalPage() {
     });
     setFormOpen(false);
     setEditingId(null);
+    emitFirstWeekEvent("journal-log");
   };
   const handleDelete = (id: string) => {
     setTrades((prev) => prev.filter((p) => p.id !== id));
