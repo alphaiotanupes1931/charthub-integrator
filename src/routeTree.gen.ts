@@ -52,6 +52,7 @@ import { Route as AppBriefingsRouteImport } from './routes/_app.briefings'
 import { Route as AppAnalyticsRouteImport } from './routes/_app.analytics'
 import { Route as AppAlertsRouteImport } from './routes/_app.alerts'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
+import { Route as AppAcademyRouteImport } from './routes/_app.academy'
 import { Route as AppStrategiesIndexRouteImport } from './routes/_app.strategies.index'
 import { Route as AppChatIndexRouteImport } from './routes/_app.chat.index'
 import { Route as ApiTradelockerImportRouteImport } from './routes/api.tradelocker.import'
@@ -285,6 +286,11 @@ const AppAdminRoute = AppAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAcademyRoute = AppAcademyRouteImport.update({
+  id: '/academy',
+  path: '/academy',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppStrategiesIndexRoute = AppStrategiesIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -321,25 +327,25 @@ const AppAdminSubscribersRoute = AppAdminSubscribersRouteImport.update({
   getParentRoute: () => AppAdminRoute,
 } as any)
 const AppAcademyReviewRoute = AppAcademyReviewRouteImport.update({
-  id: '/academy/review',
-  path: '/academy/review',
-  getParentRoute: () => AppRoute,
+  id: '/review',
+  path: '/review',
+  getParentRoute: () => AppAcademyRoute,
 } as any)
 const AppAcademyMasterCertificateRoute =
   AppAcademyMasterCertificateRouteImport.update({
-    id: '/academy/master-certificate',
-    path: '/academy/master-certificate',
-    getParentRoute: () => AppRoute,
+    id: '/master-certificate',
+    path: '/master-certificate',
+    getParentRoute: () => AppAcademyRoute,
   } as any)
 const AppAcademyExamRoute = AppAcademyExamRouteImport.update({
-  id: '/academy/exam',
-  path: '/academy/exam',
-  getParentRoute: () => AppRoute,
+  id: '/exam',
+  path: '/exam',
+  getParentRoute: () => AppAcademyRoute,
 } as any)
 const AppAcademyModuleIdRoute = AppAcademyModuleIdRouteImport.update({
-  id: '/academy/$moduleId',
-  path: '/academy/$moduleId',
-  getParentRoute: () => AppRoute,
+  id: '/$moduleId',
+  path: '/$moduleId',
+  getParentRoute: () => AppAcademyRoute,
 } as any)
 const ApiPublicTelegramWebhookRoute =
   ApiPublicTelegramWebhookRouteImport.update({
@@ -373,9 +379,9 @@ const ApiPublicHooksPriceAlertsTickRoute =
   } as any)
 const AppAcademyCertificateModuleIdRoute =
   AppAcademyCertificateModuleIdRouteImport.update({
-    id: '/academy/certificate/$moduleId',
-    path: '/academy/certificate/$moduleId',
-    getParentRoute: () => AppRoute,
+    id: '/certificate/$moduleId',
+    path: '/certificate/$moduleId',
+    getParentRoute: () => AppAcademyRoute,
   } as any)
 const AppAcademyModuleIdLessonIdRoute =
   AppAcademyModuleIdLessonIdRouteImport.update({
@@ -396,6 +402,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
+  '/academy': typeof AppAcademyRouteWithChildren
   '/admin': typeof AppAdminRouteWithChildren
   '/alerts': typeof AppAlertsRoute
   '/analytics': typeof AppAnalyticsRoute
@@ -458,6 +465,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
+  '/academy': typeof AppAcademyRouteWithChildren
   '/admin': typeof AppAdminRouteWithChildren
   '/alerts': typeof AppAlertsRoute
   '/analytics': typeof AppAnalyticsRoute
@@ -520,6 +528,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
+  '/_app/academy': typeof AppAcademyRouteWithChildren
   '/_app/admin': typeof AppAdminRouteWithChildren
   '/_app/alerts': typeof AppAlertsRoute
   '/_app/analytics': typeof AppAnalyticsRoute
@@ -584,6 +593,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/status'
     | '/terms'
+    | '/academy'
     | '/admin'
     | '/alerts'
     | '/analytics'
@@ -646,6 +656,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/status'
     | '/terms'
+    | '/academy'
     | '/admin'
     | '/alerts'
     | '/analytics'
@@ -707,6 +718,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/status'
     | '/terms'
+    | '/_app/academy'
     | '/_app/admin'
     | '/_app/alerts'
     | '/_app/analytics'
@@ -1089,6 +1101,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/academy': {
+      id: '/_app/academy'
+      path: '/academy'
+      fullPath: '/academy'
+      preLoaderRoute: typeof AppAcademyRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/strategies/': {
       id: '/_app/strategies/'
       path: '/'
@@ -1140,31 +1159,31 @@ declare module '@tanstack/react-router' {
     }
     '/_app/academy/review': {
       id: '/_app/academy/review'
-      path: '/academy/review'
+      path: '/review'
       fullPath: '/academy/review'
       preLoaderRoute: typeof AppAcademyReviewRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAcademyRoute
     }
     '/_app/academy/master-certificate': {
       id: '/_app/academy/master-certificate'
-      path: '/academy/master-certificate'
+      path: '/master-certificate'
       fullPath: '/academy/master-certificate'
       preLoaderRoute: typeof AppAcademyMasterCertificateRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAcademyRoute
     }
     '/_app/academy/exam': {
       id: '/_app/academy/exam'
-      path: '/academy/exam'
+      path: '/exam'
       fullPath: '/academy/exam'
       preLoaderRoute: typeof AppAcademyExamRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAcademyRoute
     }
     '/_app/academy/$moduleId': {
       id: '/_app/academy/$moduleId'
-      path: '/academy/$moduleId'
+      path: '/$moduleId'
       fullPath: '/academy/$moduleId'
       preLoaderRoute: typeof AppAcademyModuleIdRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAcademyRoute
     }
     '/api/public/telegram/webhook': {
       id: '/api/public/telegram/webhook'
@@ -1203,10 +1222,10 @@ declare module '@tanstack/react-router' {
     }
     '/_app/academy/certificate/$moduleId': {
       id: '/_app/academy/certificate/$moduleId'
-      path: '/academy/certificate/$moduleId'
+      path: '/certificate/$moduleId'
       fullPath: '/academy/certificate/$moduleId'
       preLoaderRoute: typeof AppAcademyCertificateModuleIdRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppAcademyRoute
     }
     '/_app/academy/$moduleId/$lessonId': {
       id: '/_app/academy/$moduleId/$lessonId'
@@ -1217,6 +1236,37 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AppAcademyModuleIdRouteChildren {
+  AppAcademyModuleIdLessonIdRoute: typeof AppAcademyModuleIdLessonIdRoute
+}
+
+const AppAcademyModuleIdRouteChildren: AppAcademyModuleIdRouteChildren = {
+  AppAcademyModuleIdLessonIdRoute: AppAcademyModuleIdLessonIdRoute,
+}
+
+const AppAcademyModuleIdRouteWithChildren =
+  AppAcademyModuleIdRoute._addFileChildren(AppAcademyModuleIdRouteChildren)
+
+interface AppAcademyRouteChildren {
+  AppAcademyModuleIdRoute: typeof AppAcademyModuleIdRouteWithChildren
+  AppAcademyExamRoute: typeof AppAcademyExamRoute
+  AppAcademyMasterCertificateRoute: typeof AppAcademyMasterCertificateRoute
+  AppAcademyReviewRoute: typeof AppAcademyReviewRoute
+  AppAcademyCertificateModuleIdRoute: typeof AppAcademyCertificateModuleIdRoute
+}
+
+const AppAcademyRouteChildren: AppAcademyRouteChildren = {
+  AppAcademyModuleIdRoute: AppAcademyModuleIdRouteWithChildren,
+  AppAcademyExamRoute: AppAcademyExamRoute,
+  AppAcademyMasterCertificateRoute: AppAcademyMasterCertificateRoute,
+  AppAcademyReviewRoute: AppAcademyReviewRoute,
+  AppAcademyCertificateModuleIdRoute: AppAcademyCertificateModuleIdRoute,
+}
+
+const AppAcademyRouteWithChildren = AppAcademyRoute._addFileChildren(
+  AppAcademyRouteChildren,
+)
 
 interface AppAdminRouteChildren {
   AppAdminSubscribersRoute: typeof AppAdminSubscribersRoute
@@ -1257,18 +1307,8 @@ const AppStrategiesRouteWithChildren = AppStrategiesRoute._addFileChildren(
   AppStrategiesRouteChildren,
 )
 
-interface AppAcademyModuleIdRouteChildren {
-  AppAcademyModuleIdLessonIdRoute: typeof AppAcademyModuleIdLessonIdRoute
-}
-
-const AppAcademyModuleIdRouteChildren: AppAcademyModuleIdRouteChildren = {
-  AppAcademyModuleIdLessonIdRoute: AppAcademyModuleIdLessonIdRoute,
-}
-
-const AppAcademyModuleIdRouteWithChildren =
-  AppAcademyModuleIdRoute._addFileChildren(AppAcademyModuleIdRouteChildren)
-
 interface AppRouteChildren {
+  AppAcademyRoute: typeof AppAcademyRouteWithChildren
   AppAdminRoute: typeof AppAdminRouteWithChildren
   AppAlertsRoute: typeof AppAlertsRoute
   AppAnalyticsRoute: typeof AppAnalyticsRoute
@@ -1293,14 +1333,10 @@ interface AppRouteChildren {
   AppStrategiesRoute: typeof AppStrategiesRouteWithChildren
   AppTestingRoute: typeof AppTestingRoute
   AppVoiceCoachRoute: typeof AppVoiceCoachRoute
-  AppAcademyModuleIdRoute: typeof AppAcademyModuleIdRouteWithChildren
-  AppAcademyExamRoute: typeof AppAcademyExamRoute
-  AppAcademyMasterCertificateRoute: typeof AppAcademyMasterCertificateRoute
-  AppAcademyReviewRoute: typeof AppAcademyReviewRoute
-  AppAcademyCertificateModuleIdRoute: typeof AppAcademyCertificateModuleIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAcademyRoute: AppAcademyRouteWithChildren,
   AppAdminRoute: AppAdminRouteWithChildren,
   AppAlertsRoute: AppAlertsRoute,
   AppAnalyticsRoute: AppAnalyticsRoute,
@@ -1325,11 +1361,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppStrategiesRoute: AppStrategiesRouteWithChildren,
   AppTestingRoute: AppTestingRoute,
   AppVoiceCoachRoute: AppVoiceCoachRoute,
-  AppAcademyModuleIdRoute: AppAcademyModuleIdRouteWithChildren,
-  AppAcademyExamRoute: AppAcademyExamRoute,
-  AppAcademyMasterCertificateRoute: AppAcademyMasterCertificateRoute,
-  AppAcademyReviewRoute: AppAcademyReviewRoute,
-  AppAcademyCertificateModuleIdRoute: AppAcademyCertificateModuleIdRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
