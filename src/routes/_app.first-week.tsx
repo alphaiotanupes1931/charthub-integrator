@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_app/first-week")({
 });
 
 function FirstWeekPage() {
-  const { active, currentDay, completedCount, progressPct, remaining, startedAt, dismiss } = useFirstWeek();
+  const { active, currentDay, completedCount, completed, progressPct, startedAt, dismiss } = useFirstWeek();
 
   return (
     <div className="max-w-4xl mx-auto">
