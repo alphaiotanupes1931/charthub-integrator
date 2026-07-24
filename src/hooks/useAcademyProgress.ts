@@ -110,9 +110,14 @@ export function useAcademyProgress() {
     const local = read();
     setState(local);
 
-    loadAcademyProgress()
-      .then((remote) => {
-        if (!remote) return;
+    (async () => {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) return;
+      loadAcademyProgress()
+        .then((remote) => {
+          if (!remote) return;
+
         const merged: State = {
           completed: { ...local.completed, ...remote.completed },
           lastModule: remote.last_module ?? local.lastModule,
@@ -141,8 +146,11 @@ export function useAcademyProgress() {
             },
           }).catch(() => { /* offline ok */ });
         }
-      })
-      .catch(() => { hydrated.current = true; });
+        })
+        .catch(() => { hydrated.current = true; });
+    })();
+
+
 
     const onChange = () => setState(read());
     window.addEventListener("academy-progress", onChange);
