@@ -28,6 +28,7 @@ import {
   Calculator,
   GraduationCap,
   Footprints,
+  Building2,
 } from "lucide-react";
 import { LogoLink } from "@/components/LogoLink";
 import { Tutorial } from "@/components/Tutorial";
