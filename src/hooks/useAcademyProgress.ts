@@ -270,5 +270,7 @@ export function useAcademyProgress() {
     longestStreak: streaks.longest,
     studiedToday,
     markStudiedToday,
+    finalExam: state.finalExam,
+    recordFinalExam,
   };
 }
