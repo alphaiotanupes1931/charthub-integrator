@@ -15,6 +15,7 @@ type State = {
   tourDone: boolean;
   studyDays: string[]; // ISO YYYY-MM-DD in local time, ascending, unique
   wrongBank: WrongEntry[]; // deduped queue of missed quiz questions
+  finalExam: QuizScore | null;
 };
 
 const EMPTY: State = {
@@ -25,6 +26,7 @@ const EMPTY: State = {
   tourDone: false,
   studyDays: [],
   wrongBank: [],
+  finalExam: null,
 };
 
 function todayISO(): string {
