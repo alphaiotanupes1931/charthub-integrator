@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "motion/react";
-import { ArrowRight, Check, HelpCircle, Menu } from "lucide-react";
+import { ArrowRight, Check, Menu } from "lucide-react";
 import { TickerTape } from "@/components/TickerTape";
 import { MiniChart, SymbolOverview } from "@/components/MiniChart";
 import {
@@ -12,22 +12,21 @@ import {
 } from "@/components/ui/accordion";
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
-// 3D candlestick scene removed for a more legitimate platform aesthetic
 import logoAsset from "@/assets/logo.png.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "TradeMind, AI Trading Coach" },
+      { title: "TradeMind — Setup grading for active traders" },
       {
         name: "description",
         content:
-          "TradeMind is the first AI trading coach that grades every setup before you risk a dollar, so you only take the trades that deserve to win.",
+          "TradeMind grades every trade setup on structure, risk, and confluence. Take the ones that meet your rules. Skip the rest.",
       },
-      { property: "og:title", content: "TradeMind, AI Trading Coach" },
+      { property: "og:title", content: "TradeMind — Setup grading for active traders" },
       {
         property: "og:description",
-        content: "Grade every setup A+ to NO ENTRY. Built for serious day traders, prop traders, and swing traders.",
+        content: "Grade every setup A+ to No Entry. Journal, review, improve.",
       },
     ],
   }),
@@ -43,26 +42,23 @@ const TICKER = [
   { proName: "FX:EURUSD", title: "EUR/USD" },
 ];
 
-
-
-
 const PRICING = [
   {
     name: "Basic",
     price: 49,
-    features: ["1 instrument", "Generic AI coach", "Trade journal", "Web access"],
+    features: ["1 instrument", "Setup grading", "Trade journal", "Web access"],
     popular: false,
   },
   {
     name: "Pro",
     price: 97,
-    features: ["5 instruments", "All 5 AI coaches", "Pattern detection", "Voice coach", "Broker integration", "Mobile app"],
+    features: ["5 instruments", "Pattern detection", "Voice coach", "Broker import", "Mobile app"],
     popular: true,
   },
   {
     name: "Elite",
     price: 197,
-    features: ["Unlimited instruments", "Custom strategies", "Priority scans", "1:1 onboarding", "Direct support"],
+    features: ["Unlimited instruments", "Custom strategies", "Priority scans", "Direct support"],
     popular: false,
   },
 ];
@@ -70,21 +66,31 @@ const PRICING = [
 const FAQS = [
   {
     q: "What is TradeMind?",
-    a: "An AI trading coach that grades every setup before you risk capital, so you only take the trades that deserve to win.",
+    a: "A trade review tool. It grades your setup on structure, risk, and confluence before you take it, and logs the trade for review afterward.",
   },
   {
     q: "Is TradeMind a broker?",
-    a: "No. We do not hold funds or execute trades. You can connect supported brokers to import history, but execution stays with your broker.",
+    a: "No. TradeMind does not hold funds or place orders. You can connect a supported broker to import history. Execution stays with your broker.",
   },
   {
-    q: "Can I change my AI coach?",
-    a: "Yes. Pick from five personalities in the Coaches tab and switch anytime from the dashboard.",
+    q: "How does the grading work?",
+    a: "Every setup is scored A+ through No Entry across six dimensions: structure, momentum, risk, confluence, session, and your own track record.",
   },
   {
-    q: "Is my trade data secure?",
-    a: "Yes. Encrypted connections, row-level security, and no sharing of raw trade history with third parties.",
+    q: "Is my data secure?",
+    a: "Encrypted connections, row-level access controls, and no sharing of raw trade history with third parties.",
   },
 ];
+
+// Hero uses a single staggered entrance. Nothing else on the page animates on load.
+const heroContainer = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } },
+};
+const heroItem = {
+  hidden: { opacity: 0, y: 12 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.2, 0.8, 0.2, 1] as const } },
+};
 
 function Landing() {
   const [isAuthed, setIsAuthed] = useState(false);
@@ -107,73 +113,52 @@ function Landing() {
     <div className="min-h-screen w-full text-foreground">
       <Nav isAuthed={isAuthed} />
 
-      {/* HERO */}
-      <section className="relative px-5 sm:px-6 pt-12 sm:pt-20 pb-10 sm:pb-12">
-        <div className="absolute inset-0 grid-bg opacity-50 pointer-events-none" />
-        <div className="relative max-w-6xl mx-auto text-center">
+      {/* HERO — single staggered entrance */}
+      <section className="px-5 sm:px-6 pt-16 sm:pt-24 pb-12 sm:pb-16 border-b border-border">
+        <motion.div
+          variants={heroContainer}
+          initial="hidden"
+          animate="show"
+          className="max-w-4xl mx-auto text-center"
+        >
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-3.5 py-1.5 text-xs"
+            variants={heroItem}
+            className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1 text-xs text-muted-foreground"
           >
-            <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse-gold" />
-            Now in public beta
+            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+            Public beta
           </motion.div>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.05 }}
-            className="h-display-xl mt-8 sm:mt-10"
-          >
-            TradeMind,
+          <motion.h1 variants={heroItem} className="h-display-xl mt-8">
+            Grade the setup.
             <br />
-            <span className="text-primary">AI Trading Coach</span>
+            Take the trade.
           </motion.h1>
 
           <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.25 }}
-            className="mt-6 sm:mt-8 text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed"
+            variants={heroItem}
+            className="mt-6 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed"
           >
-            TradeMind is the first AI trading coach that grades every setup before you risk a dollar , 
-            so you only take the trades that deserve to win.
+            TradeMind scores every setup on structure, risk, and confluence. You see the grade before you enter, so you take the ones that meet your rules and skip the rest.
           </motion.p>
 
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="mt-8 sm:mt-10 flex flex-col items-center gap-5"
-          >
-            <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
-              {isAuthed ? (
-                <a
-                  href="/dashboard"
-                  className="group inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-7 py-3.5 text-sm font-semibold hover:scale-[1.02] transition shadow-2xl"
+          <motion.div variants={heroItem} className="mt-10 flex flex-col items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <a
+                href={dashboardHref}
+                className="inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground px-6 py-3 text-sm font-semibold border border-primary"
+              >
+                Open dashboard
+                <ArrowRight className="size-4" />
+              </a>
+              {!isAuthed && (
+                <Link
+                  to="/auth"
+                  search={{ mode: "signin" }}
+                  className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-6 py-3 text-sm font-medium"
                 >
-                  Open dashboard
-                  <ArrowRight className="size-4 group-hover:translate-x-0.5 transition" />
-                </a>
-              ) : (
-                <>
-                  <a
-                    href="/auth?mode=signin&redirect=%2Fdashboard"
-                    className="group inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-7 py-3.5 text-sm font-semibold hover:scale-[1.02] transition shadow-2xl"
-                  >
-                    Open dashboard
-                    <ArrowRight className="size-4 group-hover:translate-x-0.5 transition" />
-                  </a>
-                  <Link
-                    to="/auth"
-                    search={{ mode: "signin" }}
-                    className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-7 py-3.5 text-sm font-semibold hover:bg-card transition"
-                  >
-                    Log in
-                  </Link>
-                </>
+                  Log in
+                </Link>
               )}
             </div>
             <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
@@ -182,30 +167,29 @@ function Landing() {
               <Bullet>SOC2 compliant</Bullet>
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       </section>
 
-
       {/* LIVE CHART PREVIEW */}
-      <section className="relative px-4 sm:px-6 pb-12 sm:pb-16">
+      <section className="px-4 sm:px-6 py-12 sm:py-16 border-b border-border">
         <div className="max-w-6xl mx-auto">
-          <BrowserFrame url="">
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-5 sm:gap-6 p-4 sm:p-6">
+          <BrowserFrame url="trademind.app/dashboard">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 p-5 sm:p-6">
               <div>
-                <div className="text-sm text-muted-foreground mb-1">XAU/USD · Gold Spot</div>
+                <div className="text-sm text-muted-foreground mb-2">XAU/USD, Gold Spot</div>
                 <SymbolOverview symbol="OANDA:XAUUSD" height={320} />
               </div>
-              <aside className="space-y-4 sm:space-y-5">
-                <div className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
-                  <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse-gold" />
+              <aside className="space-y-5 border border-border rounded-md p-5 bg-card">
+                <div className="inline-flex items-center gap-2 rounded-md border border-border px-2 py-1 text-[11px] font-medium uppercase tracking-widest text-primary">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                   New signal
                 </div>
                 <div className="font-display text-6xl sm:text-7xl text-primary leading-none">A+</div>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Spring at recent low confirmed. Wait for retest before risking.
+                  Spring at the recent low confirmed. Wait for the retest before risking.
                 </p>
                 <div>
-                  <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-3">
+                  <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">
                     Watchlist
                   </div>
                   <div className="space-y-2">
@@ -220,98 +204,85 @@ function Landing() {
         </div>
       </section>
 
-
       {/* TICKER */}
-      <div className="border-y border-border/60 bg-card/30 backdrop-blur">
+      <div className="border-b border-border bg-card">
         <TickerTape symbols={TICKER} />
       </div>
 
       {/* HOW IT WORKS */}
-      <section id="product" className="px-5 sm:px-6 py-16 sm:py-24 md:py-28 scroll-mt-24">
+      <section id="product" className="px-5 sm:px-6 py-20 sm:py-28 border-b border-border scroll-mt-24">
         <div className="max-w-6xl mx-auto">
           <SectionEyebrow>How it works</SectionEyebrow>
-          <h2 className="font-display text-3xl sm:text-4xl md:text-6xl font-medium text-center leading-tight">
-            Three steps. Zero guesswork.
+          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl text-center leading-tight">
+            Three steps, chart to decision.
           </h2>
-          <p className="text-center text-sm sm:text-base text-muted-foreground mt-4 max-w-xl mx-auto px-2">
-            From chart to confident execution in under thirty seconds.
+          <p className="text-center text-sm sm:text-base text-muted-foreground mt-4 max-w-xl mx-auto">
+            Under thirty seconds from a chart to a grade you can act on.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 mt-10 sm:mt-16">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-14">
             {[
               {
-                step: "Step 01",
-                title: "Pick your setup",
-                body: "Connect a chart or paste a screenshot. TradeMind reads structure, sweeps, BOS, retests, automatically.",
+                step: "01",
+                title: "Load the setup",
+                body: "Connect a chart or paste a screenshot. TradeMind reads structure, sweeps, breaks, and retests.",
               },
               {
-                step: "Step 02",
-                title: "Get the grade",
-                body: "Every setup gets a letter grade A+ to NO ENTRY based on confluence, R:R, and your strategy.",
+                step: "02",
+                title: "Read the grade",
+                body: "Every setup gets a letter grade A+ through No Entry, scored on confluence, risk, and your strategy.",
               },
               {
-                step: "Step 03",
-                title: "Take only A and above",
-                body: "Your AI coach narrates the play, flags the trap, and journals the trade for you when it closes.",
+                step: "03",
+                title: "Take A and A+",
+                body: "Skip the B and C setups. Your entries, stops, and journal notes are logged automatically.",
               },
-            ].map((s, i) => (
-              <motion.div
+            ].map((s) => (
+              <div
                 key={s.step}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-80px" }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="rounded-2xl border border-border bg-card/40 p-6 sm:p-8 hover-lift"
+                className="rounded-md border border-border bg-card p-6 sm:p-8"
               >
-                <div className="font-mono text-xs uppercase tracking-[0.2em] text-primary">{s.step}</div>
-                <h3 className="font-display text-xl sm:text-2xl md:text-3xl mt-4 sm:mt-5">{s.title}</h3>
-                <p className="text-sm text-muted-foreground mt-3 sm:mt-4 leading-relaxed">{s.body}</p>
-              </motion.div>
+                <div className="font-mono text-xs uppercase tracking-widest text-primary">Step {s.step}</div>
+                <h3 className="font-display text-xl sm:text-2xl mt-4">{s.title}</h3>
+                <p className="text-sm text-muted-foreground mt-3 leading-relaxed">{s.body}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-
       {/* GRADING SECTION */}
-      <section className="px-5 sm:px-6 py-16 sm:py-24 md:py-28 border-t border-border/60">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 sm:gap-12 lg:gap-16 items-center">
+      <section className="px-5 sm:px-6 py-20 sm:py-28 border-b border-border">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div>
             <SectionEyebrow align="left">Signal grading</SectionEyebrow>
-            <h2 className="font-display text-3xl sm:text-4xl md:text-6xl font-medium leading-[1.05] tracking-tight">
-              Grade every setup before you fire.
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl leading-tight tracking-tight">
+              Score every setup on six dimensions.
             </h2>
-            <p className="text-sm sm:text-base text-muted-foreground mt-5 sm:mt-6 leading-relaxed max-w-md">
-              Each TradeMind signal is graded on six dimensions, structure, momentum, risk, confluence,
-              session, and your personal track record. Only A and A+ deserve real risk.
+            <p className="text-sm sm:text-base text-muted-foreground mt-5 leading-relaxed max-w-md">
+              Structure, momentum, risk, confluence, session, and your own track record. Only A and A+ setups earn real capital.
             </p>
-            <div className="grid grid-cols-4 gap-2 sm:gap-3 mt-8 sm:mt-10 max-w-md">
-              <GradeChip grade="A+" color="text-primary" border="border-primary/50" label="Take it" />
-              <GradeChip grade="A" color="text-bull" border="border-bull/40" label="Strong" />
+            <div className="grid grid-cols-4 gap-3 mt-10 max-w-md">
+              <GradeChip grade="A+" color="text-primary" border="border-primary" label="Take it" />
+              <GradeChip grade="A" color="text-bull" border="border-border" label="Strong" />
               <GradeChip grade="B" color="text-foreground/80" border="border-border" label="Optional" />
-              <GradeChip grade="C" color="text-destructive" border="border-destructive/40" label="Skip" />
+              <GradeChip grade="C" color="text-destructive" border="border-border" label="Skip" />
             </div>
           </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="rounded-2xl glass-strong p-6 sm:p-8 space-y-5 sm:space-y-6"
-          >
+          <div className="rounded-md border border-border bg-card p-6 sm:p-8 space-y-5">
             <div className="flex items-center justify-between gap-2 text-xs">
-              <div className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 font-semibold uppercase tracking-[0.16em] text-primary text-[10px] sm:text-xs">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse-gold" />
-                Long · XAU/USD
+              <div className="inline-flex items-center gap-2 rounded-md border border-border px-2 py-1 font-medium uppercase tracking-widest text-primary text-[10px]">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                Long, XAU/USD
               </div>
-              <span className="font-mono text-muted-foreground shrink-0">13:42:08</span>
+              <span className="font-mono text-muted-foreground">13:42:08</span>
             </div>
-            <div className="font-display text-6xl sm:text-7xl md:text-8xl text-primary leading-none">A+</div>
-            <p className="text-sm leading-relaxed">
-              "Spring at recent low confirmed. Phase D BOS on the 5m. Wait for the retest, your stop is structurally clean."
+            <div className="font-display text-6xl sm:text-7xl text-primary leading-none">A+</div>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Spring at the recent low confirmed. Phase D break of structure on the 5m. Wait for the retest, the stop is structurally clean.
             </p>
-            <div className="border-t border-border/60 pt-4 sm:pt-5">
+            <div className="border-t border-border pt-5">
               <MiniChart symbol="OANDA:XAUUSD" height={120} dateRange="1D" />
             </div>
             <div>
@@ -319,62 +290,55 @@ function Landing() {
                 <span className="text-muted-foreground">Confidence</span>
                 <span className="text-primary font-semibold">84%</span>
               </div>
-              <div className="h-1.5 rounded-full bg-border overflow-hidden">
-                <div className="h-full w-[84%] bg-gold-gradient" />
+              <div className="h-1 rounded-md bg-border overflow-hidden">
+                <div className="h-full w-[84%] bg-primary" />
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
-
-
-
       {/* PRICING */}
-      <section id="pricing" className="px-5 sm:px-6 py-16 sm:py-24 md:py-28 border-t border-border/60 scroll-mt-24">
-
+      <section id="pricing" className="px-5 sm:px-6 py-20 sm:py-28 border-b border-border scroll-mt-24">
         <div className="max-w-6xl mx-auto">
-          <h2 className="font-display text-3xl sm:text-4xl md:text-6xl font-medium text-center leading-tight">
-            Choose your edge.
+          <SectionEyebrow>Pricing</SectionEyebrow>
+          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl text-center leading-tight">
+            Plans that scale with your trading.
           </h2>
-          <p className="text-center text-sm sm:text-base text-muted-foreground mt-4">Start free. Upgrade when the trades pay for it.</p>
+          <p className="text-center text-sm sm:text-base text-muted-foreground mt-4">
+            Start on Basic. Move up when the trades pay for it.
+          </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 mt-10 sm:mt-16 items-start">
-            {PRICING.map((p, i) => (
-              <motion.div
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-14 items-start">
+            {PRICING.map((p) => (
+              <div
                 key={p.name}
-                initial={{ opacity: 0, y: 18 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.08 }}
-                className={`relative rounded-3xl border p-6 sm:p-8 ${
-                  p.popular
-                    ? "border-primary/60 bg-card/60 shadow-gold md:-mt-6"
-                    : "border-border bg-card/30"
+                className={`relative rounded-md border p-6 sm:p-8 bg-card ${
+                  p.popular ? "border-primary" : "border-border"
                 }`}
               >
                 {p.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center rounded-full border border-primary/50 bg-background px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center rounded-md border border-primary bg-background px-2 py-1 text-[10px] font-medium uppercase tracking-widest text-primary">
                     Most popular
                   </div>
                 )}
                 <div className="text-muted-foreground text-sm">{p.name}</div>
-                <div className="mt-3 sm:mt-4 flex items-baseline gap-1">
+                <div className="mt-4 flex items-baseline gap-1">
                   <span className="text-2xl text-muted-foreground">$</span>
-                  <span className="font-display text-5xl sm:text-6xl font-medium">{p.price}</span>
+                  <span className="font-display text-5xl sm:text-6xl">{p.price}</span>
                   <span className="text-sm text-muted-foreground ml-1">/month</span>
                 </div>
                 <a
                   href={isAuthed ? "/dashboard" : signupHref}
-                  className={`mt-6 sm:mt-8 block text-center rounded-full px-5 py-3 text-sm font-semibold transition ${
+                  className={`mt-6 block text-center rounded-md px-5 py-3 text-sm font-semibold border ${
                     p.popular
-                      ? "bg-primary text-primary-foreground hover:opacity-90"
-                      : "bg-foreground text-background hover:opacity-90"
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-foreground text-background border-foreground"
                   }`}
                 >
                   Start free trial
                 </a>
-                <ul className="mt-6 sm:mt-8 space-y-3 pt-5 sm:pt-6 border-t border-border/60">
+                <ul className="mt-6 space-y-3 pt-5 border-t border-border">
                   {p.features.map((f) => (
                     <li key={f} className="flex items-center gap-2.5 text-sm">
                       <Check className="size-4 text-bull shrink-0" />
@@ -382,40 +346,31 @@ function Landing() {
                     </li>
                   ))}
                 </ul>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="px-5 sm:px-6 py-16 sm:py-24 md:py-28 border-t border-border/60 scroll-mt-24">
+      <section id="faq" className="px-5 sm:px-6 py-20 sm:py-28 border-b border-border scroll-mt-24">
         <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-10 sm:mb-14">
+          <div className="text-center mb-12">
             <SectionEyebrow>FAQ</SectionEyebrow>
-            <h2 className="font-display text-3xl sm:text-4xl md:text-6xl font-medium leading-tight">
-              Questions, answered.
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl leading-tight">
+              Common questions.
             </h2>
-            <p className="text-center text-sm sm:text-base text-muted-foreground mt-4 max-w-xl mx-auto px-2">
-              The most common things traders ask before getting started.
-            </p>
           </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="rounded-2xl border border-border bg-card/40 p-2 sm:p-4"
-          >
+          <div className="rounded-md border border-border bg-card p-2 sm:p-4">
             <Accordion type="single" collapsible className="w-full">
               {FAQS.map((item, i) => (
                 <AccordionItem
                   key={i}
                   value={`faq-${i}`}
-                  className="border-border/60 px-2 sm:px-4"
+                  className="border-border px-2 sm:px-4"
                 >
-                  <AccordionTrigger className="text-sm sm:text-base font-medium py-4 sm:py-5 hover:no-underline hover:text-primary transition">
+                  <AccordionTrigger className="text-sm sm:text-base font-medium py-4 hover:no-underline">
                     {item.q}
                   </AccordionTrigger>
                   <AccordionContent className="text-sm sm:text-base text-muted-foreground leading-relaxed">
@@ -424,14 +379,13 @@ function Landing() {
                 </AccordionItem>
               ))}
             </Accordion>
-          </motion.div>
+          </div>
 
-          <div className="mt-8 sm:mt-10 text-center">
+          <div className="mt-10 text-center">
             <Link
               to="/faq"
-              className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-5 py-2.5 text-sm font-medium hover:bg-card transition"
+              className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-5 py-2.5 text-sm font-medium"
             >
-              <HelpCircle className="size-4 text-primary" />
               View all FAQ
               <ArrowRight className="size-4" />
             </Link>
@@ -440,27 +394,23 @@ function Landing() {
       </section>
 
       {/* FINAL CTA */}
-      <section className="relative px-5 sm:px-6 py-20 sm:py-28 md:py-32 border-t border-border/60">
-        <div className="relative max-w-3xl mx-auto text-center">
-          <h2 className="font-display text-4xl sm:text-5xl md:text-7xl font-medium leading-[1.05]">
-            The next trade is yours
-            <br />
-            to <span className="text-primary">win.</span>
+      <section className="px-5 sm:px-6 py-24 sm:py-32 border-b border-border">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="font-display text-3xl sm:text-4xl md:text-6xl leading-tight">
+            Grade the next trade.
           </h2>
-          <p className="text-sm sm:text-base text-muted-foreground mt-5 sm:mt-6">Free for 7 days. Cancel anytime.</p>
-          <div className="mt-8 sm:mt-10">
+          <p className="text-sm sm:text-base text-muted-foreground mt-5">Free for 7 days. Cancel anytime.</p>
+          <div className="mt-10">
             <a
               href={dashboardHref}
-              className="group inline-flex items-center gap-2 rounded-full bg-foreground text-background px-7 sm:px-8 py-3.5 sm:py-4 text-sm font-semibold hover:scale-[1.02] transition"
+              className="inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground px-7 py-3.5 text-sm font-semibold border border-primary"
             >
               Open dashboard
-              <ArrowRight className="size-4 group-hover:translate-x-0.5 transition" />
+              <ArrowRight className="size-4" />
             </a>
           </div>
         </div>
       </section>
-
-
 
       <Footer dashboardHref={dashboardHref} />
     </div>
@@ -470,46 +420,46 @@ function Landing() {
 function Nav({ isAuthed }: { isAuthed: boolean }) {
   const dashboardHref = isAuthed ? "/dashboard" : "/auth?mode=signin&redirect=%2Fdashboard";
   return (
-    <header className="sticky top-0 z-40 backdrop-blur-xl bg-background/60 border-b border-border/40">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-3">
+    <header className="sticky top-0 z-40 bg-background border-b border-border">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
         <Link to="/" className="flex items-center gap-2 min-w-0">
-          <img src={logoAsset.url} alt="TradeMind" className="h-9 w-9 sm:h-12 sm:w-12 object-contain shrink-0" />
-          <span className="font-display text-lg sm:text-2xl font-semibold tracking-tight truncate">TradeMind</span>
+          <img src={logoAsset.url} alt="TradeMind" className="h-8 w-8 object-contain shrink-0" />
+          <span className="font-display text-lg font-semibold tracking-tight truncate">TradeMind</span>
         </Link>
-        <nav className="hidden sm:flex items-center gap-6 lg:gap-10 text-sm">
-          <a href="#product" className="hover:text-primary transition">Product</a>
-          <a href="#pricing" className="hover:text-primary transition">Pricing</a>
-          <a href="#coaches" className="hover:text-primary transition">Coaches</a>
-          <Link to="/faq" className="hover:text-primary transition">FAQ</Link>
+        <nav className="hidden sm:flex items-center gap-8 text-sm text-muted-foreground">
+          <a href="#product" className="hover:text-foreground transition-colors">Product</a>
+          <a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a>
+          <Link to="/coaches" className="hover:text-foreground transition-colors">Coaches</Link>
+          <Link to="/faq" className="hover:text-foreground transition-colors">FAQ</Link>
         </nav>
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <Sheet>
             <SheetTrigger asChild>
               <button
-                className="sm:hidden inline-flex items-center justify-center rounded-full border border-border bg-card/60 p-2 text-foreground hover:bg-card transition"
+                className="sm:hidden inline-flex items-center justify-center rounded-md border border-border bg-card p-2"
                 aria-label="Open menu"
               >
                 <Menu className="size-5" />
               </button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[280px] bg-background/95 border-border p-6">
+            <SheetContent side="right" className="w-[280px] bg-background border-border p-6">
               <div className="flex flex-col gap-6 mt-10">
                 <SheetClose asChild>
-                  <a href="#product" className="text-lg font-medium hover:text-primary transition">Product</a>
+                  <a href="#product" className="text-lg font-medium">Product</a>
                 </SheetClose>
                 <SheetClose asChild>
-                  <a href="#pricing" className="text-lg font-medium hover:text-primary transition">Pricing</a>
+                  <a href="#pricing" className="text-lg font-medium">Pricing</a>
                 </SheetClose>
                 <SheetClose asChild>
-                  <a href="#coaches" className="text-lg font-medium hover:text-primary transition">Coaches</a>
+                  <Link to="/coaches" className="text-lg font-medium">Coaches</Link>
                 </SheetClose>
                 <SheetClose asChild>
-                  <Link to="/faq" className="text-lg font-medium hover:text-primary transition">FAQ</Link>
+                  <Link to="/faq" className="text-lg font-medium">FAQ</Link>
                 </SheetClose>
                 <SheetClose asChild>
                   <a
                     href={dashboardHref}
-                    className="mt-4 inline-flex items-center justify-center rounded-full bg-foreground text-background px-5 py-3 text-sm font-semibold hover:scale-[1.02] transition"
+                    className="mt-4 inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground px-5 py-3 text-sm font-semibold border border-primary"
                   >
                     Open dashboard
                   </a>
@@ -519,7 +469,7 @@ function Nav({ isAuthed }: { isAuthed: boolean }) {
           </Sheet>
           <a
             href={dashboardHref}
-            className="hidden sm:inline-flex rounded-full bg-foreground text-background px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold hover:scale-[1.02] transition"
+            className="hidden sm:inline-flex rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-semibold border border-primary"
           >
             Open dashboard
           </a>
@@ -539,17 +489,7 @@ function Footer({ dashboardHref }: { dashboardHref: string }) {
       items: [
         { label: "Dashboard", href: dashboardHref },
         { label: "Coaches", to: "/coaches" as const },
-        { label: "Pricing", to: "/" as const },
-        { label: "Mobile App", to: "/" as const },
-      ],
-    },
-    {
-      title: "Company",
-      items: [
-        { label: "About", to: "/" as const },
-        { label: "Careers", to: "/" as const },
-        { label: "Press", to: "/" as const },
-        { label: "Contact", to: "/" as const },
+        { label: "Pricing", to: "/pricing" as const },
       ],
     },
     {
@@ -566,34 +506,33 @@ function Footer({ dashboardHref }: { dashboardHref: string }) {
       items: [
         { label: "Privacy", to: "/privacy" as const },
         { label: "Terms", to: "/terms" as const },
-        { label: "Risk disclosure", to: "/terms" as const },
         { label: "Cookies", to: "/cookies" as const },
       ],
     },
   ];
   return (
-    <footer className="border-t border-border/60 px-5 sm:px-6 py-14 sm:py-20 bg-card/20">
-      <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-8 sm:gap-10">
+    <footer className="px-5 sm:px-6 py-16 bg-card">
+      <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
         <div className="col-span-2 md:col-span-1">
-          <img src={logoAsset.url} alt="TradeMind" className="h-14 w-14 sm:h-16 sm:w-16 object-contain mb-3 sm:mb-4" />
+          <img src={logoAsset.url} alt="TradeMind" className="h-10 w-10 object-contain mb-4" />
           <p className="text-sm text-muted-foreground max-w-[240px] leading-relaxed">
-            The first AI trading coach. Built for serious day traders, prop traders, and swing traders.
+            Setup grading and trade review for active day, swing, and prop traders.
           </p>
         </div>
         {cols.map((c) => (
           <div key={c.title}>
-            <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-3 sm:mb-4">
+            <div className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-4">
               {c.title}
             </div>
             <ul className="space-y-2.5">
               {c.items.map((i) => (
                 <li key={i.label}>
                   {"href" in i ? (
-                    <a href={i.href} className="text-sm hover:text-primary transition">
+                    <a href={i.href} className="text-sm hover:text-foreground transition-colors text-muted-foreground">
                       {i.label}
                     </a>
                   ) : (
-                    <Link to={i.to} className="text-sm hover:text-primary transition">
+                    <Link to={i.to} className="text-sm hover:text-foreground transition-colors text-muted-foreground">
                       {i.label}
                     </Link>
                   )}
@@ -603,8 +542,8 @@ function Footer({ dashboardHref }: { dashboardHref: string }) {
           </div>
         ))}
       </div>
-      <div className="max-w-7xl mx-auto mt-10 sm:mt-16 pt-6 sm:pt-8 border-t border-border/60 text-xs text-muted-foreground">
-        © {year ?? "2026"} TradeMind. Educational analysis only, not financial advice.
+      <div className="max-w-7xl mx-auto mt-14 pt-6 border-t border-border text-xs text-muted-foreground">
+        © {year ?? "2026"} TradeMind. Educational analysis only. Not financial advice.
       </div>
     </footer>
   );
@@ -612,7 +551,7 @@ function Footer({ dashboardHref }: { dashboardHref: string }) {
 
 function SectionEyebrow({ children, align = "center" }: { children: React.ReactNode; align?: "center" | "left" }) {
   return (
-    <div className={`font-mono text-[11px] uppercase tracking-[0.25em] text-primary mb-6 ${align === "center" ? "text-center" : ""}`}>
+    <div className={`font-mono text-[11px] uppercase tracking-widest text-primary mb-6 ${align === "center" ? "text-center" : ""}`}>
       {children}
     </div>
   );
@@ -629,7 +568,7 @@ function Bullet({ children }: { children: React.ReactNode }) {
 
 function WatchRow({ symbol, label }: { symbol: string; label: string }) {
   return (
-    <div className="flex items-center justify-between gap-2 rounded-lg border border-border/60 bg-background/40 p-2">
+    <div className="flex items-center justify-between gap-2 rounded-md border border-border bg-background p-2">
       <span className="text-xs font-medium w-16 shrink-0">{label}</span>
       <div className="flex-1 min-w-0">
         <MiniChart symbol={symbol} height={36} dateRange="1D" />
@@ -650,17 +589,17 @@ function GradeChip({
   label: string;
 }) {
   return (
-    <div className={`rounded-xl border ${border} p-4 text-center`}>
+    <div className={`rounded-md border ${border} p-4 text-center bg-card`}>
       <div className={`font-display text-3xl ${color}`}>{grade}</div>
-      <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground mt-2">{label}</div>
+      <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mt-2">{label}</div>
     </div>
   );
 }
 
 function BrowserFrame({ url, children }: { url: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-border bg-card/40 overflow-hidden shadow-2xl">
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-border/60 bg-card/60">
+    <div className="rounded-md border border-border bg-card overflow-hidden">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
         <div className="flex gap-1.5">
           <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
           <span className="h-3 w-3 rounded-full bg-[#febc2e]" />

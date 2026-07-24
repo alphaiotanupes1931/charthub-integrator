@@ -4,9 +4,11 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { AnimatePresence, motion } from "motion/react";
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
@@ -15,6 +17,7 @@ import logoAsset from "../assets/logo.png.asset.json";
 import { CookieBanner } from "../components/CookieBanner";
 import { Toaster } from "../components/ui/sonner";
 import { VersionWatcher } from "../components/VersionWatcher";
+
 
 
 
@@ -84,13 +87,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { name: "theme-color", content: "#0a0a0a" },
-      { title: "TradeMind, AI Trading Coach & Live Charts" },
-      { name: "description", content: "AI trading coach with live charts, trade journaling, and performance analytics for day, swing, and prop traders." },
+      { title: "TradeMind — Setup grading for active traders" },
+      { name: "description", content: "Grade setups, journal trades, review performance. Built for active day, swing, and prop traders." },
 
       { name: "robots", content: "index, follow" },
 
-      { property: "og:title", content: "TradeMind, AI Trading Coach" },
-      { property: "og:description", content: "Live charts and AI-powered coaching for serious traders." },
+      { property: "og:title", content: "TradeMind — Setup grading for active traders" },
+      { property: "og:description", content: "Grade every setup A+ to No Entry. Journal, review, improve." },
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "TradeMind" },
       { property: "og:image", content: logoAsset.url },
@@ -102,9 +105,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", type: "image/png", href: logoAsset.url },
       { rel: "apple-touch-icon", href: logoAsset.url },
       { rel: "canonical", href: "https://trademindaicoach.com/" },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" },
     ],
   }),
   shellComponent: RootShell,
@@ -175,10 +175,21 @@ function RootComponent() {
     };
   }, [router, queryClient]);
 
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={pathname}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.18, ease: [0.2, 0.8, 0.2, 1] }}
+        >
+          <Outlet />
+        </motion.div>
+      </AnimatePresence>
       <CookieBanner />
       <VersionWatcher />
       <Toaster />
