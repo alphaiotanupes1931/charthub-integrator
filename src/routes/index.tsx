@@ -191,35 +191,16 @@ function Landing() {
       <section className="px-4 sm:px-6 py-12 sm:py-16 border-b border-border">
         <div className="max-w-6xl mx-auto">
           <BrowserFrame url="trademind.app/dashboard">
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 p-5 sm:p-6">
-              <div>
-                <div className="text-sm text-muted-foreground mb-2">XAU/USD, Gold Spot</div>
-                <SymbolOverview symbol="OANDA:XAUUSD" height={320} />
-              </div>
-              <aside className="space-y-5 border border-border rounded-md p-5 bg-card">
-                <div className="inline-flex items-center gap-2 rounded-md border border-border px-2 py-1 text-[11px] font-medium uppercase tracking-widest text-primary">
-                  <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                  New signal
-                </div>
-                <div className="font-display text-6xl sm:text-7xl text-primary leading-none">A+</div>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Spring at the recent low confirmed. Wait for the retest before risking.
-                </p>
-                <div>
-                  <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">
-                    Watchlist
-                  </div>
-                  <div className="space-y-2">
-                    <WatchRow symbol="BINANCE:BTCUSDT" label="BTC/USD" />
-                    <WatchRow symbol="FOREXCOM:NSXUSD" label="NAS100" />
-                    <WatchRow symbol="FOREXCOM:SPXUSD" label="SPX" />
-                  </div>
-                </div>
-              </aside>
-            </div>
+            <img
+              src={dashboardPreview.url}
+              alt="TradeMind dashboard preview showing the gold chart, timeframes, and sidebar navigation"
+              className="block w-full h-auto"
+              loading="lazy"
+            />
           </BrowserFrame>
         </div>
       </section>
+
 
       {/* TICKER */}
       <div className="border-b border-border bg-card">
