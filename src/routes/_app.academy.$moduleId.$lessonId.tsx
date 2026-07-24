@@ -1,6 +1,6 @@
-import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useNavigate, useRouter } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { findLesson, type LessonBlock, type CalloutTone } from "@/lib/academy-content";
+import { findLesson, type Lesson, type LessonBlock, type CalloutTone } from "@/lib/academy-content";
 import { useAcademyProgress } from "@/hooks/useAcademyProgress";
 import { LessonChart } from "@/components/academy/LessonChart";
 import {
@@ -18,25 +18,58 @@ export const Route = createFileRoute("/_app/academy/$moduleId/$lessonId")({
     meta: [
       { title: loaderData ? `${loaderData.lesson.id} ${loaderData.lesson.title}, Academy` : "Lesson, Academy" },
       { name: "description", content: loaderData?.lesson.summary ?? "Academy lesson" },
+      { property: "og:title", content: loaderData ? `${loaderData.lesson.id} ${loaderData.lesson.title}, Academy` : "Lesson, Academy" },
+      { property: "og:description", content: loaderData?.lesson.summary ?? "Academy lesson" },
+      { property: "og:type", content: "article" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
-  notFoundComponent: () => (
-    <div className="max-w-3xl mx-auto py-12 text-center">
-      <div className="text-lg font-semibold mb-2">Lesson not found</div>
-      <Link to="/academy" className="text-primary text-sm">Back to Academy</Link>
-    </div>
-  ),
+  errorComponent: LessonError,
+  notFoundComponent: LessonNotFound,
   component: LessonView,
 });
 
 const TONE_STYLES: Record<CalloutTone, { border: string; bg: string; text: string; icon: React.ComponentType<{ className?: string }> }> = {
   amber:   { border: "border-amber-500/40",   bg: "bg-amber-500/5",   text: "text-amber-400",   icon: Lightbulb },
-  violet:  { border: "border-violet-500/40",  bg: "bg-violet-500/5",  text: "text-violet-400",  icon: BarChart3 },
+  violet:  { border: "border-primary/40",     bg: "bg-primary/5",     text: "text-primary",     icon: BarChart3 },
   teal:    { border: "border-teal-500/40",    bg: "bg-teal-500/5",    text: "text-teal-400",    icon: Compass },
   rose:    { border: "border-rose-500/40",    bg: "bg-rose-500/5",    text: "text-rose-400",    icon: AlertTriangle },
   sky:     { border: "border-sky-500/40",     bg: "bg-sky-500/5",     text: "text-sky-400",     icon: Sparkles },
   emerald: { border: "border-emerald-500/40", bg: "bg-emerald-500/5", text: "text-emerald-400", icon: CheckCircle2 },
 };
+
+function LessonNotFound() {
+  return (
+    <div className="max-w-3xl mx-auto py-12 text-center">
+      <div className="text-lg font-semibold mb-2">Lesson not found</div>
+      <Link to="/academy" className="text-primary text-sm">Back to Academy</Link>
+    </div>
+  );
+}
+
+function LessonError({ error, reset }: { error: Error; reset: () => void }) {
+  const router = useRouter();
+  return (
+    <div className="max-w-3xl mx-auto py-12 text-center">
+      <div className="text-lg font-semibold mb-2">Lesson did not load</div>
+      <p className="text-sm text-muted-foreground mb-4">{error.message || "Open the lesson again."}</p>
+      <div className="flex justify-center gap-2">
+        <button
+          onClick={() => {
+            router.invalidate();
+            reset();
+          }}
+          className="rounded-md border border-border bg-card px-4 py-2 text-sm font-medium"
+        >
+          Try again
+        </button>
+        <Link to="/academy" className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
+          Back to Academy
+        </Link>
+      </div>
+    </div>
+  );
+}
 
 function LessonView() {
   const { mod, lesson, index, prev, next } = Route.useLoaderData();
@@ -79,6 +112,34 @@ function LessonView() {
         </div>
         <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight">{lesson.title}</h1>
         <p className="mt-2 text-sm text-muted-foreground">{lesson.summary}</p>
+      </div>
+
+      <div className="mb-6 rounded-md border border-border bg-card p-3">
+        <div className="mb-3 flex items-center justify-between gap-3 text-xs">
+          <span className="font-semibold">Module lessons</span>
+          <span className="font-mono text-muted-foreground">{index + 1}/{mod.lessons.length}</span>
+        </div>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {mod.lessons.map((item: Lesson, itemIndex: number) => {
+            const current = item.id === lesson.id;
+            const itemDone = isDone(item.id);
+            return (
+              <Link
+                key={item.id}
+                to="/academy/$moduleId/$lessonId"
+                params={{ moduleId: String(mod.id), lessonId: item.id }}
+                aria-current={current ? "page" : undefined}
+                className={`flex items-center gap-2 rounded-md border px-3 py-2 text-xs transition-colors ${
+                  current ? "border-primary bg-primary/10 text-foreground" : "border-border bg-background hover:border-primary/40"
+                }`}
+              >
+                {itemDone ? <CheckCircle2 className="h-3.5 w-3.5 text-primary" /> : <Circle className="h-3.5 w-3.5 text-muted-foreground" />}
+                <span className="font-mono text-muted-foreground">{itemIndex + 1}</span>
+                <span className="truncate">{item.title}</span>
+              </Link>
+            );
+          })}
+        </div>
       </div>
 
       {/* Blocks */}
@@ -201,7 +262,7 @@ function BlockRenderer({ block }: { block: LessonBlock }) {
 
     case "takeaway":
       return (
-        <div className="rounded-xl border border-primary/30 bg-gradient-to-br from-primary/10 to-transparent p-4 sm:p-5">
+        <div className="rounded-md border border-primary/30 bg-primary/5 p-4 sm:p-5">
           <div className="flex items-center gap-2 mb-2 text-primary">
             <Sparkles className="h-4 w-4" />
             <span className="text-[10px] uppercase tracking-[0.18em] font-bold">Key Takeaway</span>

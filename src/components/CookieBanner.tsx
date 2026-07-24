@@ -18,6 +18,7 @@ export function CookieBanner() {
   }, []);
 
   if (ack) return null;
+  const inApp = typeof window !== "undefined" && window.location.pathname !== "/";
 
   function dismiss() {
     try {
@@ -29,8 +30,8 @@ export function CookieBanner() {
   }
 
   return (
-    <div className="fixed inset-x-3 bottom-3 sm:left-auto sm:right-4 sm:bottom-4 sm:max-w-md z-[60]">
-      <div className="rounded-xl border border-border bg-card/95 backdrop-blur p-4 sm:p-5 shadow-2xl">
+    <div className={`fixed inset-x-3 sm:left-auto sm:right-4 sm:max-w-md z-[60] ${inApp ? "top-3 sm:top-4" : "bottom-3 sm:bottom-4"}`}>
+      <div className="rounded-md border border-border bg-card p-4 sm:p-5">
         <p className="text-xs sm:text-sm text-foreground">
           We use only strictly necessary cookies and local storage to keep you signed in and remember your
           preferences. No advertising, no cross-site tracking.{" "}
@@ -40,7 +41,7 @@ export function CookieBanner() {
           <button
             type="button"
             onClick={dismiss}
-            className="inline-flex items-center h-9 px-4 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition"
+            className="inline-flex items-center h-9 px-4 rounded-md bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition"
           >
             Got it
           </button>
