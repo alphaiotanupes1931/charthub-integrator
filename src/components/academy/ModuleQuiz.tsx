@@ -5,7 +5,7 @@ import { CheckCircle2, XCircle, HelpCircle, RotateCcw } from "lucide-react";
 
 export function ModuleQuiz({ moduleId, accent }: { moduleId: number; accent: string }) {
   const questions = getQuiz(moduleId);
-  const { quizScores, recordQuiz } = useAcademyProgress();
+  const { quizScores, recordQuiz, addWrong, removeWrong } = useAcademyProgress();
   const prior = quizScores[String(moduleId)];
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [submitted, setSubmitted] = useState(false);
@@ -14,10 +14,15 @@ export function ModuleQuiz({ moduleId, accent }: { moduleId: number; accent: str
 
   function submit() {
     let score = 0;
-    questions!.forEach((q, i) => { if (answers[i] === q.answer) score++; });
+    questions!.forEach((q, i) => {
+      const correct = answers[i] === q.answer;
+      if (correct) { score++; removeWrong(moduleId, i); }
+      else { addWrong(moduleId, i); }
+    });
     setSubmitted(true);
     recordQuiz(moduleId, score, questions!.length);
   }
+
 
   function reset() {
     setAnswers({});
