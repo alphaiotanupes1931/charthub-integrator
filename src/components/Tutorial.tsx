@@ -183,7 +183,7 @@ export function Tutorial() {
   })();
 
   return (
-    <div role="dialog" aria-modal="true" aria-labelledby="tutorial-title" className="fixed inset-0 z-[100]">
+    <div role="dialog" aria-modal="true" aria-labelledby="tutorial-title" className="fixed inset-0 z-[100] pointer-events-none">
       {/* Spotlight overlay using box-shadow trick */}
       {hasSpotlight && rect ? (
         <div
@@ -200,12 +200,12 @@ export function Tutorial() {
           }}
         />
       ) : (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm" />
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm pointer-events-auto" />
       )}
 
       {/* Card */}
       <div
-        className={`fixed rounded-2xl border border-border bg-card shadow-2xl animate-in fade-in zoom-in-95 duration-200 ${
+        className={`fixed rounded-2xl border border-border bg-card shadow-2xl animate-in fade-in zoom-in-95 duration-200 pointer-events-auto ${
           hasSpotlight ? "" : "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(420px,calc(100vw-2rem))]"
         }`}
         style={hasSpotlight ? cardStyle : undefined}
