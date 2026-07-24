@@ -269,30 +269,13 @@ function Landing() {
             </div>
           </div>
 
-          <div className="rounded-md border border-border bg-card p-6 sm:p-8 space-y-5">
-            <div className="flex items-center justify-between gap-2 text-xs">
-              <div className="inline-flex items-center gap-2 rounded-md border border-border px-2 py-1 font-medium uppercase tracking-widest text-primary text-[10px]">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                Long, XAU/USD
-              </div>
-              <span className="font-mono text-muted-foreground">13:42:08</span>
-            </div>
-            <div className="font-display text-6xl sm:text-7xl text-primary leading-none">A+</div>
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              Spring at the recent low confirmed. Phase D break of structure on the 5m. Wait for the retest, the stop is structurally clean.
-            </p>
-            <div className="border-t border-border pt-5">
-              <MiniChart symbol="OANDA:XAUUSD" height={120} dateRange="1D" />
-            </div>
-            <div>
-              <div className="flex justify-between text-xs mb-2">
-                <span className="text-muted-foreground">Confidence</span>
-                <span className="text-primary font-semibold">84%</span>
-              </div>
-              <div className="h-1 rounded-md bg-border overflow-hidden">
-                <div className="h-full w-[84%] bg-primary" />
-              </div>
-            </div>
+          <div className="rounded-md border border-border bg-card p-2 sm:p-3">
+            <img
+              src={gradeCard.url}
+              alt="TradeMind grade card showing a B grade XAU/USD long setup with entry, stop, TP1, TP2, confidence, trend, volume, order flow, and volatility readings"
+              className="block w-full h-auto rounded-sm"
+              loading="lazy"
+            />
           </div>
         </div>
       </section>
