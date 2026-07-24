@@ -17,6 +17,18 @@ export const Route = createFileRoute("/_app/first-week")({
 
 function FirstWeekPage() {
   const { active, currentDay, completedCount, completed, progressPct, startedAt, dismiss } = useFirstWeek();
+  const navigate = useNavigate();
+
+  function handleStartTour() {
+    try { localStorage.removeItem("trademind.tour.v1.done"); } catch { /* noop */ }
+    startFirstWeek();
+    navigate({ to: "/dashboard" }).then(() => {
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent("trademind:open-tour"));
+        restartTutorial();
+      }, 250);
+    });
+  }
 
   return (
     <div className="max-w-4xl mx-auto">
