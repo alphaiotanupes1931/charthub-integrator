@@ -65,6 +65,7 @@ import { Route as AppAcademyReviewRouteImport } from './routes/_app.academy.revi
 import { Route as AppAcademyMasterCertificateRouteImport } from './routes/_app.academy.master-certificate'
 import { Route as AppAcademyExamRouteImport } from './routes/_app.academy.exam'
 import { Route as AppAcademyModuleIdRouteImport } from './routes/_app.academy.$moduleId'
+import { Route as AppAcademyModuleIdIndexRouteImport } from './routes/_app.academy.$moduleId.index'
 import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api.public.telegram.webhook'
 import { Route as ApiPublicHooksSendBriefingsRouteImport } from './routes/api.public.hooks.send-briefings'
 import { Route as ApiPublicHooksScanSignalsRouteImport } from './routes/api.public.hooks.scan-signals'
@@ -353,6 +354,11 @@ const AppAcademyModuleIdRoute = AppAcademyModuleIdRouteImport.update({
   path: '/$moduleId',
   getParentRoute: () => AppAcademyRoute,
 } as any)
+const AppAcademyModuleIdIndexRoute = AppAcademyModuleIdIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppAcademyModuleIdRoute,
+} as any)
 const ApiPublicTelegramWebhookRoute =
   ApiPublicTelegramWebhookRouteImport.update({
     id: '/api/public/telegram/webhook',
@@ -459,6 +465,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
+  '/academy/$moduleId/': typeof AppAcademyModuleIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -501,7 +508,6 @@ export interface FileRoutesByTo {
   '/api/version': typeof ApiVersionRoute
   '/help/$slug': typeof HelpSlugRoute
   '/invite/$code': typeof InviteCodeRoute
-  '/academy/$moduleId': typeof AppAcademyModuleIdRouteWithChildren
   '/academy/exam': typeof AppAcademyExamRoute
   '/academy/master-certificate': typeof AppAcademyMasterCertificateRoute
   '/academy/review': typeof AppAcademyReviewRoute
@@ -520,6 +526,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
+  '/academy/$moduleId': typeof AppAcademyModuleIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -586,6 +593,7 @@ export interface FileRoutesById {
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
+  '/_app/academy/$moduleId/': typeof AppAcademyModuleIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -652,6 +660,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/scan-signals'
     | '/api/public/hooks/send-briefings'
     | '/api/public/telegram/webhook'
+    | '/academy/$moduleId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -694,7 +703,6 @@ export interface FileRouteTypes {
     | '/api/version'
     | '/help/$slug'
     | '/invite/$code'
-    | '/academy/$moduleId'
     | '/academy/exam'
     | '/academy/master-certificate'
     | '/academy/review'
@@ -713,6 +721,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/scan-signals'
     | '/api/public/hooks/send-briefings'
     | '/api/public/telegram/webhook'
+    | '/academy/$moduleId'
   id:
     | '__root__'
     | '/'
@@ -778,6 +787,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/scan-signals'
     | '/api/public/hooks/send-briefings'
     | '/api/public/telegram/webhook'
+    | '/_app/academy/$moduleId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1202,6 +1212,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAcademyModuleIdRouteImport
       parentRoute: typeof AppAcademyRoute
     }
+    '/_app/academy/$moduleId/': {
+      id: '/_app/academy/$moduleId/'
+      path: '/'
+      fullPath: '/academy/$moduleId/'
+      preLoaderRoute: typeof AppAcademyModuleIdIndexRouteImport
+      parentRoute: typeof AppAcademyModuleIdRoute
+    }
     '/api/public/telegram/webhook': {
       id: '/api/public/telegram/webhook'
       path: '/api/public/telegram/webhook'
@@ -1256,10 +1273,12 @@ declare module '@tanstack/react-router' {
 
 interface AppAcademyModuleIdRouteChildren {
   AppAcademyModuleIdLessonIdRoute: typeof AppAcademyModuleIdLessonIdRoute
+  AppAcademyModuleIdIndexRoute: typeof AppAcademyModuleIdIndexRoute
 }
 
 const AppAcademyModuleIdRouteChildren: AppAcademyModuleIdRouteChildren = {
   AppAcademyModuleIdLessonIdRoute: AppAcademyModuleIdLessonIdRoute,
+  AppAcademyModuleIdIndexRoute: AppAcademyModuleIdIndexRoute,
 }
 
 const AppAcademyModuleIdRouteWithChildren =

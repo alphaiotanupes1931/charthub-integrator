@@ -102,6 +102,17 @@ function write(s: State) {
   window.dispatchEvent(new CustomEvent("academy-progress"));
 }
 
+async function hasSession(): Promise<boolean> {
+  if (typeof window === "undefined") return false;
+  try {
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { data } = await supabase.auth.getSession();
+    return Boolean(data.session);
+  } catch {
+    return false;
+  }
+}
+
 export function useAcademyProgress() {
   const [state, setState] = useState<State>(EMPTY);
   const hydrated = useRef(false);
@@ -166,15 +177,18 @@ export function useAcademyProgress() {
     write(next);
     setState(next);
     // Only send server-known fields; studyDays / wrongBank stay local.
-    saveAcademyProgress({
-      data: {
-        completed: next.completed,
-        last_module: next.lastModule,
-        last_lesson: next.lastLesson,
-        quiz_scores: next.quizScores,
-        tour_done: next.tourDone,
-      },
-    }).catch(() => { /* offline ok */ });
+    (async () => {
+      if (!(await hasSession())) return;
+      await saveAcademyProgress({
+        data: {
+          completed: next.completed,
+          last_module: next.lastModule,
+          last_lesson: next.lastLesson,
+          quiz_scores: next.quizScores,
+          tour_done: next.tourDone,
+        },
+      });
+    })().catch(() => { /* offline ok */ });
   }, []);
 
   const markStudiedToday = useCallback(() => {

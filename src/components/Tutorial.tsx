@@ -103,6 +103,7 @@ export function Tutorial() {
 
   useEffect(() => {
     try {
+      if (window.location.pathname !== "/dashboard") return;
       if (!localStorage.getItem(STORAGE_KEY)) {
         const t = window.setTimeout(() => setOpen(true), 400);
         return () => window.clearTimeout(t);
@@ -200,7 +201,7 @@ export function Tutorial() {
           }}
         />
       ) : (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm pointer-events-auto" />
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm pointer-events-none" />
       )}
 
       {/* Card */}
