@@ -114,12 +114,26 @@ function Landing() {
       <Nav isAuthed={isAuthed} />
 
       {/* HERO — single staggered entrance */}
-      <section className="px-5 sm:px-6 pt-16 sm:pt-24 pb-12 sm:pb-16 border-b border-border">
+      <section className="relative overflow-hidden px-5 sm:px-6 pt-16 sm:pt-24 pb-12 sm:pb-16 border-b border-border">
+        {/* Background video */}
+        <div className="pointer-events-none absolute inset-0 -z-10">
+          <iframe
+            className="absolute left-1/2 top-1/2 h-[300%] w-[300%] sm:h-[200%] sm:w-[200%] -translate-x-1/2 -translate-y-1/2"
+            src="https://www.youtube.com/embed/U8b3l__Av_A?autoplay=1&mute=1&loop=1&playlist=U8b3l__Av_A&controls=0&showinfo=0&modestbranding=1&rel=0&iv_load_policy=3&playsinline=1&disablekb=1"
+            title="Hero background"
+            frameBorder={0}
+            allow="autoplay; encrypted-media; picture-in-picture"
+            aria-hidden="true"
+            tabIndex={-1}
+          />
+          <div className="absolute inset-0 bg-background/70 backdrop-blur-sm" />
+        </div>
+
         <motion.div
           variants={heroContainer}
           initial="hidden"
           animate="show"
-          className="max-w-4xl mx-auto text-center"
+          className="relative max-w-4xl mx-auto text-center"
         >
           <motion.div
             variants={heroItem}
@@ -169,6 +183,7 @@ function Landing() {
           </motion.div>
         </motion.div>
       </section>
+
 
       {/* LIVE CHART PREVIEW */}
       <section className="px-4 sm:px-6 py-12 sm:py-16 border-b border-border">
