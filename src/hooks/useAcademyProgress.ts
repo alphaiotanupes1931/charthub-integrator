@@ -15,6 +15,7 @@ type State = {
   tourDone: boolean;
   studyDays: string[]; // ISO YYYY-MM-DD in local time, ascending, unique
   wrongBank: WrongEntry[]; // deduped queue of missed quiz questions
+  finalExam: QuizScore | null;
 };
 
 const EMPTY: State = {
@@ -25,6 +26,7 @@ const EMPTY: State = {
   tourDone: false,
   studyDays: [],
   wrongBank: [],
+  finalExam: null,
 };
 
 function todayISO(): string {
@@ -119,6 +121,7 @@ export function useAcademyProgress() {
           tourDone: remote.tour_done || local.tourDone,
           studyDays: local.studyDays,
           wrongBank: local.wrongBank,
+          finalExam: local.finalExam,
         };
         setState(merged);
         write(merged);
@@ -233,6 +236,17 @@ export function useAcademyProgress() {
     setState(next);
   }, []);
 
+  const recordFinalExam = useCallback((score: number, total: number) => {
+    const cur = read();
+    const prior = cur.finalExam;
+    const next: QuizScore = { score, total, at: new Date().toISOString() };
+    // Keep best attempt
+    const keep = !prior || score / total >= prior.score / prior.total ? next : prior;
+    const merged = { ...cur, finalExam: keep };
+    write(merged);
+    setState(merged);
+  }, []);
+
   const streaks = useMemo(() => computeStreaks(state.studyDays), [state.studyDays]);
   const studiedToday = useMemo(() => state.studyDays.includes(todayISO()), [state.studyDays]);
 
@@ -256,5 +270,7 @@ export function useAcademyProgress() {
     longestStreak: streaks.longest,
     studiedToday,
     markStudiedToday,
+    finalExam: state.finalExam,
+    recordFinalExam,
   };
 }

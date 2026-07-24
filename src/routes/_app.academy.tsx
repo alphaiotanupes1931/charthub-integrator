@@ -24,6 +24,7 @@ function AcademyIndex() {
     currentStreak,
     longestStreak,
     studiedToday,
+    finalExam,
   } = useAcademyProgress();
 
   const totalLessons = ACADEMY.reduce((n, m) => n + m.lessons.length, 0);
@@ -32,6 +33,8 @@ function AcademyIndex() {
 
   const resume = lastModule && lastLesson ? findLesson(lastModule, lastLesson) : null;
   const reviewCount = wrongBank.length;
+  const allComplete = totalDone === totalLessons;
+  const finalPassed = finalExam && finalExam.score / finalExam.total >= 0.8;
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -122,6 +125,45 @@ function AcademyIndex() {
             </div>
             <div className="text-xs text-muted-foreground truncate">
               {reviewCount === 0 ? "Take a module quiz to build your review queue." : "Answer correctly to clear from the queue."}
+            </div>
+          </div>
+          <ArrowRight className="h-4 w-4 shrink-0" />
+        </Link>
+      </div>
+
+      {/* Final Exam + Master Certificate */}
+      <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-3">
+        <Link
+          to="/academy/exam"
+          className={`group flex items-center gap-4 rounded-md border p-4 ${allComplete ? "border-primary bg-card" : "border-border bg-card opacity-80"}`}
+        >
+          <div className="h-10 w-10 rounded-md border border-border bg-background text-primary flex items-center justify-center shrink-0">
+            <GraduationCap className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[10px] uppercase tracking-widest font-semibold text-primary">Final exam</div>
+            <div className="font-semibold text-sm truncate">
+              {allComplete ? (finalPassed ? "Passed, retake anytime" : finalExam ? `Best ${finalExam.score}/${finalExam.total}, retry to pass` : "Take the comprehensive final") : "Unlocks after all 12 modules"}
+            </div>
+            <div className="text-xs text-muted-foreground truncate">36 questions across every module. Pass with 80% to earn the master certificate.</div>
+          </div>
+          <ArrowRight className="h-4 w-4 shrink-0" />
+        </Link>
+
+        <Link
+          to="/academy/master-certificate"
+          className={`group flex items-center gap-4 rounded-md border p-4 ${finalPassed ? "border-primary bg-card" : "border-border bg-card opacity-80"}`}
+        >
+          <div className="h-10 w-10 rounded-md border border-border bg-background text-primary flex items-center justify-center shrink-0">
+            <Award className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground">Master certificate</div>
+            <div className="font-semibold text-sm truncate">
+              {finalPassed ? "Available, print or save PDF" : "Locked"}
+            </div>
+            <div className="text-xs text-muted-foreground truncate">
+              {finalPassed ? "Awarded on final exam pass across the full curriculum." : "Complete every module and pass the final exam to unlock."}
             </div>
           </div>
           <ArrowRight className="h-4 w-4 shrink-0" />
