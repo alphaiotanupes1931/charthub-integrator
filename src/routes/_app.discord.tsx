@@ -11,6 +11,7 @@ import {
   ExternalLink,
   ArrowRight,
 } from "lucide-react";
+import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
 
 export const Route = createFileRoute("/_app/discord")({
   head: () => ({
@@ -87,6 +88,7 @@ function DiscordPage() {
             href={DISCORD_INVITE_URL}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => emitFirstWeekEvent("discord-joined")}
             className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground border border-primary shrink-0 w-full sm:w-auto"
           >
             Join the Discord
@@ -152,6 +154,7 @@ function DiscordPage() {
           href={DISCORD_INVITE_URL}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => emitFirstWeekEvent("discord-joined")}
           className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
         >
           Open the invite <ExternalLink className="h-3.5 w-3.5" />

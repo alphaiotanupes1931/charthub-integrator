@@ -36,6 +36,7 @@ import {
 import { isWelcomeBackMuted, setWelcomeBackMuted } from "@/lib/welcomeBack";
 import { useCandleColors, type CandleColors } from "@/hooks/useCandleColors";
 import { useChartBackground, CHART_BG_PRESETS, type ChartBackground } from "@/hooks/useChartBackground";
+import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
 
 export const Route = createFileRoute("/_app/settings")({
   head: () => ({ meta: [{ title: "Settings, TradeMind" }] }),
@@ -434,7 +435,7 @@ function SettingsPage() {
           Chart times, the on-chart clock, and session badges all use this timezone. Pick the one that matches how you trade so candles line up with your day.
         </p>
         <div className="max-w-sm mb-3">
-          <Select value={timezone} onChange={(e) => setTimezone(e.target.value)}>
+          <Select value={timezone} onChange={(e) => { setTimezone(e.target.value); emitFirstWeekEvent("timezone-set"); }}>
             {TIMEZONE_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}

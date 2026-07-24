@@ -13,6 +13,7 @@ import {
   unlinkDiscord,
 } from "@/lib/briefings.functions";
 import { Copy, Send, Trash2 } from "lucide-react";
+import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
 
 export const Route = createFileRoute("/_app/briefings")({
   head: () => ({ meta: [{ title: "Briefings, TradeMind" }] }),
@@ -32,7 +33,7 @@ function BriefingsPage() {
 
   const savePrefs = useMutation({
     mutationFn: useServerFn(updateBriefingPrefs),
-    onSuccess: () => { toast.success("Saved"); qc.invalidateQueries({ queryKey: ["briefingState"] }); },
+    onSuccess: () => { toast.success("Saved"); qc.invalidateQueries({ queryKey: ["briefingState"] }); emitFirstWeekEvent("briefings-set"); },
   });
   const genLink = useMutation({
     mutationFn: useServerFn(generateTelegramLinkCode),
