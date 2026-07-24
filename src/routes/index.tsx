@@ -514,7 +514,6 @@ function Footer({ dashboardHref }: { dashboardHref: string }) {
     <footer className="px-5 sm:px-6 py-16 bg-card">
       <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
         <div className="col-span-2 md:col-span-1">
-          <img src={logoAsset.url} alt="TradeMind" className="h-10 w-10 object-contain mb-4" />
           <p className="text-sm text-muted-foreground max-w-[240px] leading-relaxed">
             Setup grading and trade review for active day, swing, and prop traders.
           </p>
