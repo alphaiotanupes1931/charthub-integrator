@@ -55,6 +55,7 @@ import { Route as AppAdminRouteImport } from './routes/_app.admin'
 import { Route as AppAcademyRouteImport } from './routes/_app.academy'
 import { Route as AppStrategiesIndexRouteImport } from './routes/_app.strategies.index'
 import { Route as AppChatIndexRouteImport } from './routes/_app.chat.index'
+import { Route as AppAcademyIndexRouteImport } from './routes/_app.academy.index'
 import { Route as ApiTradelockerImportRouteImport } from './routes/api.tradelocker.import'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api.public.stripe-webhook'
 import { Route as AppStrategiesStrategyIdRouteImport } from './routes/_app.strategies.$strategyId'
@@ -301,6 +302,11 @@ const AppChatIndexRoute = AppChatIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppChatRoute,
 } as any)
+const AppAcademyIndexRoute = AppAcademyIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppAcademyRoute,
+} as any)
 const ApiTradelockerImportRoute = ApiTradelockerImportRouteImport.update({
   id: '/api/tradelocker/import',
   path: '/api/tradelocker/import',
@@ -443,6 +449,7 @@ export interface FileRoutesByFullPath {
   '/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
+  '/academy/': typeof AppAcademyIndexRoute
   '/chat/': typeof AppChatIndexRoute
   '/strategies/': typeof AppStrategiesIndexRoute
   '/academy/$moduleId/$lessonId': typeof AppAcademyModuleIdLessonIdRoute
@@ -465,7 +472,6 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
-  '/academy': typeof AppAcademyRouteWithChildren
   '/admin': typeof AppAdminRouteWithChildren
   '/alerts': typeof AppAlertsRoute
   '/analytics': typeof AppAnalyticsRoute
@@ -504,6 +510,7 @@ export interface FileRoutesByTo {
   '/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
+  '/academy': typeof AppAcademyIndexRoute
   '/chat': typeof AppChatIndexRoute
   '/strategies': typeof AppStrategiesIndexRoute
   '/academy/$moduleId/$lessonId': typeof AppAcademyModuleIdLessonIdRoute
@@ -569,6 +576,7 @@ export interface FileRoutesById {
   '/_app/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
+  '/_app/academy/': typeof AppAcademyIndexRoute
   '/_app/chat/': typeof AppChatIndexRoute
   '/_app/strategies/': typeof AppStrategiesIndexRoute
   '/_app/academy/$moduleId/$lessonId': typeof AppAcademyModuleIdLessonIdRoute
@@ -634,6 +642,7 @@ export interface FileRouteTypes {
     | '/strategies/$strategyId'
     | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
+    | '/academy/'
     | '/chat/'
     | '/strategies/'
     | '/academy/$moduleId/$lessonId'
@@ -656,7 +665,6 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/status'
     | '/terms'
-    | '/academy'
     | '/admin'
     | '/alerts'
     | '/analytics'
@@ -695,6 +703,7 @@ export interface FileRouteTypes {
     | '/strategies/$strategyId'
     | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
+    | '/academy'
     | '/chat'
     | '/strategies'
     | '/academy/$moduleId/$lessonId'
@@ -759,6 +768,7 @@ export interface FileRouteTypes {
     | '/_app/strategies/$strategyId'
     | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
+    | '/_app/academy/'
     | '/_app/chat/'
     | '/_app/strategies/'
     | '/_app/academy/$moduleId/$lessonId'
@@ -1122,6 +1132,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppChatIndexRouteImport
       parentRoute: typeof AppChatRoute
     }
+    '/_app/academy/': {
+      id: '/_app/academy/'
+      path: '/'
+      fullPath: '/academy/'
+      preLoaderRoute: typeof AppAcademyIndexRouteImport
+      parentRoute: typeof AppAcademyRoute
+    }
     '/api/tradelocker/import': {
       id: '/api/tradelocker/import'
       path: '/api/tradelocker/import'
@@ -1253,6 +1270,7 @@ interface AppAcademyRouteChildren {
   AppAcademyExamRoute: typeof AppAcademyExamRoute
   AppAcademyMasterCertificateRoute: typeof AppAcademyMasterCertificateRoute
   AppAcademyReviewRoute: typeof AppAcademyReviewRoute
+  AppAcademyIndexRoute: typeof AppAcademyIndexRoute
   AppAcademyCertificateModuleIdRoute: typeof AppAcademyCertificateModuleIdRoute
 }
 
@@ -1261,6 +1279,7 @@ const AppAcademyRouteChildren: AppAcademyRouteChildren = {
   AppAcademyExamRoute: AppAcademyExamRoute,
   AppAcademyMasterCertificateRoute: AppAcademyMasterCertificateRoute,
   AppAcademyReviewRoute: AppAcademyReviewRoute,
+  AppAcademyIndexRoute: AppAcademyIndexRoute,
   AppAcademyCertificateModuleIdRoute: AppAcademyCertificateModuleIdRoute,
 }
 
@@ -1405,3 +1424,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
