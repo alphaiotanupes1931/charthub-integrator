@@ -156,5 +156,5 @@ export const closeBrokerTrade = createServerFn({ method: "POST" })
       method: "PUT",
       body: JSON.stringify({ units: "ALL" }),
     });
-    return { ok: true, raw: resp };
+    return { ok: true };
   });
