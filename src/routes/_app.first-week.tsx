@@ -1,6 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useFirstWeek, FIRST_WEEK_TASKS, emitFirstWeekEvent } from "@/hooks/useFirstWeek";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useFirstWeek, FIRST_WEEK_TASKS, emitFirstWeekEvent, startFirstWeek } from "@/hooks/useFirstWeek";
 import { CheckCircle2, Circle, ArrowRight, Calendar, RotateCcw, Sparkles } from "lucide-react";
+import { restartTutorial } from "@/components/Tutorial";
 
 export const Route = createFileRoute("/_app/first-week")({
   head: () => ({
