@@ -318,6 +318,7 @@ export function useFirstWeek() {
     active,
     currentDay,
     completedCount,
+    completed: state.completed,
     total: FIRST_WEEK_TASKS.length,
     progressPct: Math.round((completedCount / FIRST_WEEK_TASKS.length) * 100),
     nextTask,
