@@ -10,7 +10,22 @@ import {
   placeBrokerOrder,
 } from "@/lib/broker-oanda.functions";
 
+type BrokerSearch = {
+  symbol?: string;
+  side?: "long" | "short";
+  entry?: number | string;
+  stop?: number | string;
+  tp?: number | string;
+};
+
 export const Route = createFileRoute("/_app/broker")({
+  validateSearch: (s: Record<string, unknown>): BrokerSearch => ({
+    symbol: typeof s.symbol === "string" ? s.symbol : undefined,
+    side: s.side === "long" || s.side === "short" ? s.side : undefined,
+    entry: s.entry != null && s.entry !== "" ? Number(s.entry) : undefined,
+    stop: s.stop != null && s.stop !== "" ? Number(s.stop) : undefined,
+    tp: s.tp != null && s.tp !== "" ? Number(s.tp) : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Broker (OANDA) — TradeMind" },
