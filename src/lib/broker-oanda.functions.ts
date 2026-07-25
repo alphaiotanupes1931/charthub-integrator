@@ -1,9 +1,15 @@
 // OANDA v20 broker integration.
-// Uses OANDA_API_KEY + OANDA_ACCOUNT_ID from server env. Set OANDA_ENV=practice
-// to route to the sandbox; anything else (or unset) hits live.
+// Uses OANDA_API_KEY plus OANDA_ACCOUNT_ID when it is authorized for the key.
+// If the saved account id is stale or from the wrong environment, the server
+// discovers the account that belongs to the key and uses that instead.
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+type OandaEnv = "practice" | "live";
+type OandaEndpoint = { host: string; env: OandaEnv };
+type OandaConfig = { apiKey: string; accountId?: string };
+type OandaAccount = { id?: string; tags?: string[] };
 
 const OANDA_MAP: Record<string, string> = {
   "EUR/USD": "EUR_USD", "GBP/USD": "GBP_USD", "USD/JPY": "USD_JPY",
@@ -20,22 +26,46 @@ function toOandaInstrument(symbol: string): string | null {
   return null;
 }
 
-function oandaHost(): { host: string; env: "practice" | "live" } {
+function oandaHost(): OandaEndpoint {
   const env = (process.env.OANDA_ENV ?? "practice").toLowerCase();
   return env === "live"
     ? { host: "api-fxtrade.oanda.com", env: "live" }
     : { host: "api-fxpractice.oanda.com", env: "practice" };
 }
 
-function oandaConfig() {
-  const apiKey = process.env.OANDA_API_KEY;
-  const accountId = process.env.OANDA_ACCOUNT_ID;
-  if (!apiKey || !accountId) throw new Error("OANDA credentials not configured");
-  return { apiKey, accountId };
+function oandaEndpoints(): OandaEndpoint[] {
+  const preferred = oandaHost();
+  const other = preferred.env === "live"
+    ? { host: "api-fxpractice.oanda.com", env: "practice" as const }
+    : { host: "api-fxtrade.oanda.com", env: "live" as const };
+  return [preferred, other];
 }
 
-async function tryOandaFetch(host: string, accountId: string, apiKey: string, path: string, init: RequestInit) {
-  const res = await fetch(`https://${host}/v3/accounts/${accountId}${path}`, {
+function oandaConfig(): OandaConfig {
+  const apiKey = process.env.OANDA_API_KEY;
+  const accountId = process.env.OANDA_ACCOUNT_ID;
+  if (!apiKey) throw new Error("OANDA API key is not configured");
+  return { apiKey, accountId: accountId?.trim() || undefined };
+}
+
+async function parseOandaResponse(res: Response) {
+  const text = await res.text();
+  let body: unknown = text;
+  try { body = JSON.parse(text); } catch { /* keep raw text */ }
+  return body;
+}
+
+function oandaErrorMessage(body: unknown, status: number): string {
+  if (typeof body === "object" && body) {
+    const b = body as Record<string, unknown>;
+    if (typeof b.errorMessage === "string") return b.errorMessage;
+    if (typeof b.errorCode === "string") return b.errorCode;
+  }
+  return `OANDA request failed (${status})`;
+}
+
+async function tryOandaFetch(endpoint: OandaEndpoint, accountId: string, apiKey: string, path: string, init: RequestInit) {
+  const res = await fetch(`https://${endpoint.host}/v3/accounts/${accountId}${path}`, {
     ...init,
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -44,51 +74,93 @@ async function tryOandaFetch(host: string, accountId: string, apiKey: string, pa
       ...(init.headers ?? {}),
     },
   });
-  const text = await res.text();
-  let body: unknown = text;
-  try { body = JSON.parse(text); } catch { /* keep raw text */ }
+  const body = await parseOandaResponse(res);
   return { res, body };
 }
 
-async function oandaFetch(path: string, init: RequestInit = {}): Promise<Record<string, unknown> & { __env?: "practice" | "live" }> {
-  const { apiKey, accountId } = oandaConfig();
-  const preferred = oandaHost();
-  const other = preferred.env === "live"
-    ? { host: "api-fxpractice.oanda.com", env: "practice" as const }
-    : { host: "api-fxtrade.oanda.com", env: "live" as const };
+async function listOandaAccounts(endpoint: OandaEndpoint, apiKey: string) {
+  const res = await fetch(`https://${endpoint.host}/v3/accounts`, {
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      Accept: "application/json",
+    },
+  });
+  const body = await parseOandaResponse(res);
+  if (!res.ok) return { ok: false as const, status: res.status, body, accounts: [] as OandaAccount[] };
+  const accounts = typeof body === "object" && body && Array.isArray((body as Record<string, unknown>).accounts)
+    ? ((body as Record<string, unknown>).accounts as OandaAccount[])
+    : [];
+  return { ok: true as const, status: res.status, body, accounts };
+}
 
-  // Try preferred env first; on 401/403 (wrong env), transparently retry against the other.
-  let attempt = await tryOandaFetch(preferred.host, accountId, apiKey, path, init);
-  let usedEnv = preferred.env;
-  if (!attempt.res.ok && (attempt.res.status === 401 || attempt.res.status === 403)) {
-    const retry = await tryOandaFetch(other.host, accountId, apiKey, path, init);
-    if (retry.res.ok) { attempt = retry; usedEnv = other.env; }
+async function resolveOandaAccount(): Promise<{ apiKey: string; accountId: string; configuredAccountId?: string; discovered: boolean } & OandaEndpoint> {
+  const { apiKey, accountId } = oandaConfig();
+  const endpoints = oandaEndpoints();
+  const failedMessages: string[] = [];
+
+  if (accountId) {
+    for (const endpoint of endpoints) {
+      const summary = await tryOandaFetch(endpoint, accountId, apiKey, "/summary", { method: "GET" });
+      if (summary.res.ok) {
+        return { apiKey, accountId, configuredAccountId: accountId, ...endpoint, discovered: false };
+      }
+      failedMessages.push(`${endpoint.env}: ${oandaErrorMessage(summary.body, summary.res.status)}`);
+    }
   }
+
+  for (const endpoint of endpoints) {
+    const listed = await listOandaAccounts(endpoint, apiKey);
+    if (!listed.ok) {
+      failedMessages.push(`${endpoint.env}: ${oandaErrorMessage(listed.body, listed.status)}`);
+      continue;
+    }
+    const discoveredId = listed.accounts.find((account) => typeof account.id === "string" && account.id.trim().length > 0)?.id;
+    if (discoveredId) {
+      return {
+        apiKey,
+        accountId: discoveredId,
+        configuredAccountId: accountId,
+        ...endpoint,
+        discovered: true,
+      };
+    }
+    failedMessages.push(`${endpoint.env}: no accounts available for this API key`);
+  }
+
+  const suffix = failedMessages.length > 0 ? ` ${failedMessages.join("; ")}` : "";
+  throw new Error(`The saved OANDA key is not authorized for any account.${suffix}`);
+}
+
+async function oandaFetch(path: string, init: RequestInit = {}): Promise<Record<string, unknown> & { __env?: OandaEnv; __accountId?: string; __discovered?: boolean; __configuredAccountId?: string }> {
+  const config = await resolveOandaAccount();
+  const attempt = await tryOandaFetch(config, config.accountId, config.apiKey, path, init);
   if (!attempt.res.ok) {
-    const b = attempt.body as Record<string, unknown> | string;
-    const msg = typeof b === "object" && b && "errorMessage" in b
-      ? String((b as Record<string, unknown>).errorMessage)
-      : `OANDA request failed (${attempt.res.status})`;
-    throw new Error(msg);
+    throw new Error(oandaErrorMessage(attempt.body, attempt.res.status));
   }
   const body = (typeof attempt.body === "object" && attempt.body ? attempt.body : {}) as Record<string, unknown>;
-  return Object.assign(body, { __env: usedEnv });
+  return Object.assign(body, {
+    __env: config.env,
+    __accountId: config.accountId,
+    __discovered: config.discovered,
+    __configuredAccountId: config.configuredAccountId,
+  });
 }
 
 export const getBrokerStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async () => {
-    if (!process.env.OANDA_API_KEY || !process.env.OANDA_ACCOUNT_ID) {
-      return { connected: false as const, reason: "Missing OANDA credentials" };
+    if (!process.env.OANDA_API_KEY) {
+      return { connected: false as const, reason: "OANDA API key is not configured." };
     }
     try {
-      const { env } = oandaHost();
       const account = await oandaFetch("/summary");
       const a = (account.account ?? {}) as Record<string, string>;
       return {
         connected: true as const,
-        env,
+        env: account.__env ?? oandaHost().env,
         accountId: a.id ?? null,
+        configuredAccountId: account.__configuredAccountId ?? null,
+        usingDiscoveredAccount: account.__discovered ?? false,
         currency: a.currency ?? null,
         balance: a.balance ? Number(a.balance) : null,
         nav: a.NAV ? Number(a.NAV) : null,
