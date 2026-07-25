@@ -21,22 +21,20 @@ function toOandaInstrument(symbol: string): string | null {
 }
 
 function oandaHost(): { host: string; env: "practice" | "live" } {
-  const env = (process.env.OANDA_ENV ?? "live").toLowerCase();
-  return env === "practice"
-    ? { host: "api-fxpractice.oanda.com", env: "practice" }
-    : { host: "api-fxtrade.oanda.com", env: "live" };
+  const env = (process.env.OANDA_ENV ?? "practice").toLowerCase();
+  return env === "live"
+    ? { host: "api-fxtrade.oanda.com", env: "live" }
+    : { host: "api-fxpractice.oanda.com", env: "practice" };
 }
 
 function oandaConfig() {
   const apiKey = process.env.OANDA_API_KEY;
   const accountId = process.env.OANDA_ACCOUNT_ID;
   if (!apiKey || !accountId) throw new Error("OANDA credentials not configured");
-  const { host, env } = oandaHost();
-  return { apiKey, accountId, host, env };
+  return { apiKey, accountId };
 }
 
-async function oandaFetch(path: string, init: RequestInit = {}) {
-  const { apiKey, accountId, host } = oandaConfig();
+async function tryOandaFetch(host: string, accountId: string, apiKey: string, path: string, init: RequestInit) {
   const res = await fetch(`https://${host}/v3/accounts/${accountId}${path}`, {
     ...init,
     headers: {
@@ -49,13 +47,32 @@ async function oandaFetch(path: string, init: RequestInit = {}) {
   const text = await res.text();
   let body: unknown = text;
   try { body = JSON.parse(text); } catch { /* keep raw text */ }
-  if (!res.ok) {
-    const msg = typeof body === "object" && body && "errorMessage" in (body as Record<string, unknown>)
-      ? String((body as Record<string, unknown>).errorMessage)
-      : `OANDA request failed (${res.status})`;
+  return { res, body };
+}
+
+async function oandaFetch(path: string, init: RequestInit = {}): Promise<Record<string, unknown> & { __env?: "practice" | "live" }> {
+  const { apiKey, accountId } = oandaConfig();
+  const preferred = oandaHost();
+  const other = preferred.env === "live"
+    ? { host: "api-fxpractice.oanda.com", env: "practice" as const }
+    : { host: "api-fxtrade.oanda.com", env: "live" as const };
+
+  // Try preferred env first; on 401/403 (wrong env), transparently retry against the other.
+  let attempt = await tryOandaFetch(preferred.host, accountId, apiKey, path, init);
+  let usedEnv = preferred.env;
+  if (!attempt.res.ok && (attempt.res.status === 401 || attempt.res.status === 403)) {
+    const retry = await tryOandaFetch(other.host, accountId, apiKey, path, init);
+    if (retry.res.ok) { attempt = retry; usedEnv = other.env; }
+  }
+  if (!attempt.res.ok) {
+    const b = attempt.body as Record<string, unknown> | string;
+    const msg = typeof b === "object" && b && "errorMessage" in b
+      ? String((b as Record<string, unknown>).errorMessage)
+      : `OANDA request failed (${attempt.res.status})`;
     throw new Error(msg);
   }
-  return body as Record<string, unknown>;
+  const body = (typeof attempt.body === "object" && attempt.body ? attempt.body : {}) as Record<string, unknown>;
+  return Object.assign(body, { __env: usedEnv });
 }
 
 export const getBrokerStatus = createServerFn({ method: "GET" })
