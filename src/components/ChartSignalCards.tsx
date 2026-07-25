@@ -23,7 +23,7 @@ function pct(from?: number, to?: number) {
   return `${(((to - from) / from) * 100).toFixed(2)}%`;
 }
 
-export function ChartSignalCards({ grade, lastPrice, onClear, scanning }: Props) {
+export function ChartSignalCards({ grade, lastPrice, symbol, onClear, scanning }: Props) {
   const [expanded, setExpanded] = useState(false);
 
   // Empty state - render nothing when idle so the chart can fill the whole area.
