@@ -242,10 +242,19 @@ export const placeBrokerOrder = createServerFn({ method: "POST" })
       method: "POST",
       body: JSON.stringify({ order }),
     });
-    const fill = (resp.orderFillTransaction ?? resp.orderCreateTransaction ?? {}) as Record<string, unknown>;
+    const cancel = resp.orderCancelTransaction as Record<string, unknown> | undefined;
+    const reject = resp.orderRejectTransaction as Record<string, unknown> | undefined;
+    if (cancel || reject) {
+      const reason = String(cancel?.reason ?? reject?.reason ?? "Order was not filled");
+      throw new Error(`OANDA rejected the order: ${reason}. Check account balance, margin, and instrument availability.`);
+    }
+    const fill = resp.orderFillTransaction as Record<string, unknown> | undefined;
+    if (!fill || !fill.id) {
+      throw new Error("Order was not filled by OANDA. Verify balance and margin, then try again.");
+    }
     return {
       ok: true,
-      orderId: fill.id ? String(fill.id) : null,
+      orderId: String(fill.id),
       instrument,
       units: signedUnits,
       fillPrice: fill.price ? Number(fill.price) : null,
