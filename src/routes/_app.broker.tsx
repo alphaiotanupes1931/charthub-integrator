@@ -41,6 +41,7 @@ type Status = Awaited<ReturnType<typeof getBrokerStatus>>;
 type Position = Awaited<ReturnType<typeof listBrokerPositions>>[number];
 
 function BrokerPage() {
+  const search = Route.useSearch();
   const fetchStatus = useServerFn(getBrokerStatus);
   const fetchPositions = useServerFn(listBrokerPositions);
   const closeTrade = useServerFn(closeBrokerTrade);
@@ -51,12 +52,12 @@ function BrokerPage() {
   const [loading, setLoading] = useState(true);
   const [placing, setPlacing] = useState(false);
 
-  // Manual order form
-  const [symbol, setSymbol] = useState("EUR/USD");
-  const [side, setSide] = useState<"long" | "short">("long");
+  // Manual order form — prefilled from a signal when navigating from a scan card
+  const [symbol, setSymbol] = useState(search.symbol || "EUR/USD");
+  const [side, setSide] = useState<"long" | "short">(search.side ?? "long");
   const [units, setUnits] = useState(1000);
-  const [stopLoss, setStopLoss] = useState<string>("");
-  const [takeProfit, setTakeProfit] = useState<string>("");
+  const [stopLoss, setStopLoss] = useState<string>(search.stop != null ? String(search.stop) : "");
+  const [takeProfit, setTakeProfit] = useState<string>(search.tp != null ? String(search.tp) : "");
 
   async function refresh() {
     setLoading(true);
