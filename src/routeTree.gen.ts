@@ -38,6 +38,7 @@ import { Route as AppMentorRouteImport } from './routes/_app.mentor'
 import { Route as AppMentalRouteImport } from './routes/_app.mental'
 import { Route as AppMemoryRouteImport } from './routes/_app.memory'
 import { Route as AppLevelsRouteImport } from './routes/_app.levels'
+import { Route as AppLeaderboardRouteImport } from './routes/_app.leaderboard'
 import { Route as AppJournalRouteImport } from './routes/_app.journal'
 import { Route as AppGuideRouteImport } from './routes/_app.guide'
 import { Route as AppFriendsRouteImport } from './routes/_app.friends'
@@ -218,6 +219,11 @@ const AppMemoryRoute = AppMemoryRouteImport.update({
 const AppLevelsRoute = AppLevelsRouteImport.update({
   id: '/levels',
   path: '/levels',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppLeaderboardRoute = AppLeaderboardRouteImport.update({
+  id: '/leaderboard',
+  path: '/leaderboard',
   getParentRoute: () => AppRoute,
 } as any)
 const AppJournalRoute = AppJournalRouteImport.update({
@@ -443,6 +449,7 @@ export interface FileRoutesByFullPath {
   '/friends': typeof AppFriendsRoute
   '/guide': typeof AppGuideRoute
   '/journal': typeof AppJournalRoute
+  '/leaderboard': typeof AppLeaderboardRoute
   '/levels': typeof AppLevelsRoute
   '/memory': typeof AppMemoryRoute
   '/mental': typeof AppMentalRoute
@@ -508,6 +515,7 @@ export interface FileRoutesByTo {
   '/friends': typeof AppFriendsRoute
   '/guide': typeof AppGuideRoute
   '/journal': typeof AppJournalRoute
+  '/leaderboard': typeof AppLeaderboardRoute
   '/levels': typeof AppLevelsRoute
   '/memory': typeof AppMemoryRoute
   '/mental': typeof AppMentalRoute
@@ -575,6 +583,7 @@ export interface FileRoutesById {
   '/_app/friends': typeof AppFriendsRoute
   '/_app/guide': typeof AppGuideRoute
   '/_app/journal': typeof AppJournalRoute
+  '/_app/leaderboard': typeof AppLeaderboardRoute
   '/_app/levels': typeof AppLevelsRoute
   '/_app/memory': typeof AppMemoryRoute
   '/_app/mental': typeof AppMentalRoute
@@ -644,6 +653,7 @@ export interface FileRouteTypes {
     | '/friends'
     | '/guide'
     | '/journal'
+    | '/leaderboard'
     | '/levels'
     | '/memory'
     | '/mental'
@@ -709,6 +719,7 @@ export interface FileRouteTypes {
     | '/friends'
     | '/guide'
     | '/journal'
+    | '/leaderboard'
     | '/levels'
     | '/memory'
     | '/mental'
@@ -775,6 +786,7 @@ export interface FileRouteTypes {
     | '/_app/friends'
     | '/_app/guide'
     | '/_app/journal'
+    | '/_app/leaderboard'
     | '/_app/levels'
     | '/_app/memory'
     | '/_app/mental'
@@ -1045,6 +1057,13 @@ declare module '@tanstack/react-router' {
       path: '/levels'
       fullPath: '/levels'
       preLoaderRoute: typeof AppLevelsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/leaderboard': {
+      id: '/_app/leaderboard'
+      path: '/leaderboard'
+      fullPath: '/leaderboard'
+      preLoaderRoute: typeof AppLeaderboardRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/journal': {
@@ -1401,6 +1420,7 @@ interface AppRouteChildren {
   AppFriendsRoute: typeof AppFriendsRoute
   AppGuideRoute: typeof AppGuideRoute
   AppJournalRoute: typeof AppJournalRoute
+  AppLeaderboardRoute: typeof AppLeaderboardRoute
   AppLevelsRoute: typeof AppLevelsRoute
   AppMemoryRoute: typeof AppMemoryRoute
   AppMentalRoute: typeof AppMentalRoute
@@ -1431,6 +1451,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppFriendsRoute: AppFriendsRoute,
   AppGuideRoute: AppGuideRoute,
   AppJournalRoute: AppJournalRoute,
+  AppLeaderboardRoute: AppLeaderboardRoute,
   AppLevelsRoute: AppLevelsRoute,
   AppMemoryRoute: AppMemoryRoute,
   AppMentalRoute: AppMentalRoute,
