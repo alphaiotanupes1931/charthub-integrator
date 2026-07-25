@@ -93,7 +93,7 @@ async function listOandaAccounts(endpoint: OandaEndpoint, apiKey: string) {
   return { ok: true as const, status: res.status, body, accounts };
 }
 
-async function resolveOandaAccount(): Promise<OandaConfig & OandaEndpoint & { configuredAccountId?: string; discovered: boolean }> {
+async function resolveOandaAccount(): Promise<{ apiKey: string; accountId: string; configuredAccountId?: string; discovered: boolean } & OandaEndpoint> {
   const { apiKey, accountId } = oandaConfig();
   const endpoints = oandaEndpoints();
   const failedMessages: string[] = [];
