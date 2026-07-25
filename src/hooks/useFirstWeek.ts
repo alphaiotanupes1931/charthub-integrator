@@ -257,7 +257,7 @@ export function useFirstWeek() {
     const onEvent = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (detail && typeof detail.event === "string") {
-        markFirstWeekEvent(detail.event, detail.value);
+        // emitFirstWeekEvent already persisted; just refresh local state.
         setState(read());
       }
     };
