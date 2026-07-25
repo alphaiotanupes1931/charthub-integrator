@@ -76,8 +76,11 @@ function BrokerPage() {
   const [stopLoss, setStopLoss] = useState<string>(search.stop != null ? String(search.stop) : "");
   const [takeProfit, setTakeProfit] = useState<string>(search.tp != null ? String(search.tp) : "");
 
-  async function refresh() {
-    setLoading(true);
+  // Risk sizer
+  const [riskDollars, setRiskDollars] = useState<string>("");
+
+  async function refresh(silent = false) {
+    if (!silent) setLoading(true);
     try {
       const [s, m] = await Promise.all([fetchStatus(), fetchMeta()]);
       setStatus(s);
@@ -91,13 +94,36 @@ function BrokerPage() {
         setPositions(p);
       }
     } catch (e) {
-      toast.error((e as Error).message);
+      if (!silent) toast.error((e as Error).message);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }
 
   useEffect(() => { refresh(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+
+  // Live poll every 5s when connected
+  useEffect(() => {
+    if (!status?.connected) return;
+    const t = setInterval(() => refresh(true), 5000);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status?.connected]);
+
+  function sizeFromRisk() {
+    const risk = Number(riskDollars);
+    const sl = Number(stopLoss);
+    const entryHint = Number(search.entry);
+    if (!risk || risk <= 0) { toast.error("Enter a dollar risk amount"); return; }
+    if (!sl || sl <= 0) { toast.error("Enter a stop-loss price first"); return; }
+    if (!entryHint || entryHint <= 0) { toast.error("No entry price yet — run a scan or set entry on the signal card"); return; }
+    const perUnit = Math.abs(entryHint - sl);
+    if (perUnit <= 0) { toast.error("Stop must differ from entry"); return; }
+    const u = Math.max(1, Math.floor(risk / perUnit));
+    setUnits(u);
+    toast.success(`Sized to ${u.toLocaleString()} units for $${risk} risk`);
+  }
+
 
   async function submitCreds() {
     if (!apiKey.trim() || !accountId.trim()) {
