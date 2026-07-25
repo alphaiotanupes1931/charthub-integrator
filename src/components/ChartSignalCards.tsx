@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { ArrowUpRight, ArrowDownRight, Minus, Target, Shield, Flag, Clock, ChevronDown, ChevronUp, X } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, Minus, Target, Shield, Flag, Clock, ChevronDown, ChevronUp, X, Zap } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import type { ChartGrade } from "@/lib/chartAnnotations";
 
 type Props = {
   grade: ChartGrade | null;
   lastPrice?: number;
+  symbol?: string;
   onClear?: () => void;
   scanning?: boolean;
 };
@@ -21,7 +23,7 @@ function pct(from?: number, to?: number) {
   return `${(((to - from) / from) * 100).toFixed(2)}%`;
 }
 
-export function ChartSignalCards({ grade, lastPrice, onClear, scanning }: Props) {
+export function ChartSignalCards({ grade, lastPrice, symbol, onClear, scanning }: Props) {
   const [expanded, setExpanded] = useState(false);
 
   // Empty state - render nothing when idle so the chart can fill the whole area.
@@ -110,6 +112,23 @@ export function ChartSignalCards({ grade, lastPrice, onClear, scanning }: Props)
         </div>
 
         <div className="flex-1" />
+
+        {(isLong || isShort) && (
+          <Link
+            to="/broker"
+            search={{
+              symbol: symbol ?? "",
+              side: isLong ? "long" : "short",
+              entry: grade.entry ?? "",
+              stop: grade.stop ?? "",
+              tp: grade.tp1 ?? "",
+            } as never}
+            className="inline-flex h-6 items-center gap-1 rounded px-2 text-[10px] font-bold uppercase tracking-wider bg-primary text-primary-foreground hover:opacity-90"
+            title="Send this setup to your broker"
+          >
+            <Zap className="h-3 w-3" /> Trade
+          </Link>
+        )}
 
         <button
           type="button"
