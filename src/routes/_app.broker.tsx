@@ -198,7 +198,7 @@ function BrokerPage() {
           </p>
         </div>
         <button
-          onClick={refresh}
+          onClick={() => refresh()}
           disabled={loading}
           className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md border border-border text-sm hover:bg-muted disabled:opacity-50"
         >
