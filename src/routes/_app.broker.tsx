@@ -2,13 +2,18 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Wallet, RefreshCw, X, ExternalLink } from "lucide-react";
+import { Wallet, RefreshCw, X, ExternalLink, KeyRound, Trash2, ShieldCheck } from "lucide-react";
 import {
   getBrokerStatus,
   listBrokerPositions,
   closeBrokerTrade,
   placeBrokerOrder,
 } from "@/lib/broker-oanda.functions";
+import {
+  saveOandaCredentials,
+  deleteOandaCredentials,
+  getOandaCredentialsMeta,
+} from "@/lib/broker-credentials.functions";
 
 type BrokerSearch = {
   symbol?: string;
@@ -39,6 +44,7 @@ export const Route = createFileRoute("/_app/broker")({
 
 type Status = Awaited<ReturnType<typeof getBrokerStatus>>;
 type Position = Awaited<ReturnType<typeof listBrokerPositions>>[number];
+type Meta = Awaited<ReturnType<typeof getOandaCredentialsMeta>>;
 
 function BrokerPage() {
   const search = Route.useSearch();
@@ -46,13 +52,24 @@ function BrokerPage() {
   const fetchPositions = useServerFn(listBrokerPositions);
   const closeTrade = useServerFn(closeBrokerTrade);
   const placeOrder = useServerFn(placeBrokerOrder);
+  const saveCreds = useServerFn(saveOandaCredentials);
+  const deleteCreds = useServerFn(deleteOandaCredentials);
+  const fetchMeta = useServerFn(getOandaCredentialsMeta);
 
   const [status, setStatus] = useState<Status | null>(null);
+  const [meta, setMeta] = useState<Meta | null>(null);
   const [positions, setPositions] = useState<Position[]>([]);
   const [loading, setLoading] = useState(true);
   const [placing, setPlacing] = useState(false);
 
-  // Manual order form — prefilled from a signal when navigating from a scan card
+  // Credential form
+  const [showCredForm, setShowCredForm] = useState(false);
+  const [savingCreds, setSavingCreds] = useState(false);
+  const [apiKey, setApiKey] = useState("");
+  const [accountId, setAccountId] = useState("");
+  const [envSel, setEnvSel] = useState<"practice" | "live">("practice");
+
+  // Order form
   const [symbol, setSymbol] = useState(search.symbol || "EUR/USD");
   const [side, setSide] = useState<"long" | "short">(search.side ?? "long");
   const [units, setUnits] = useState(1000);
@@ -62,8 +79,13 @@ function BrokerPage() {
   async function refresh() {
     setLoading(true);
     try {
-      const s = await fetchStatus();
+      const [s, m] = await Promise.all([fetchStatus(), fetchMeta()]);
       setStatus(s);
+      setMeta(m);
+      if (m.configured) {
+        setAccountId(m.accountId ?? "");
+        setEnvSel(m.env);
+      }
       if (s.connected) {
         const p = await fetchPositions().catch(() => []);
         setPositions(p);
@@ -76,6 +98,36 @@ function BrokerPage() {
   }
 
   useEffect(() => { refresh(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+
+  async function submitCreds() {
+    if (!apiKey.trim() || !accountId.trim()) {
+      toast.error("API key and Account ID are required");
+      return;
+    }
+    setSavingCreds(true);
+    try {
+      await saveCreds({ data: { apiKey: apiKey.trim(), accountId: accountId.trim(), env: envSel } });
+      toast.success("OANDA credentials saved securely");
+      setApiKey("");
+      setShowCredForm(false);
+      await refresh();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setSavingCreds(false);
+    }
+  }
+
+  async function removeCreds() {
+    if (!confirm("Remove your saved OANDA credentials?")) return;
+    try {
+      await deleteCreds();
+      toast.success("Credentials removed");
+      await refresh();
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
 
   async function submitOrder() {
     setPlacing(true);
@@ -116,7 +168,7 @@ function BrokerPage() {
         <div>
           <h1 className="font-display text-2xl md:text-3xl font-semibold mb-2">Broker: OANDA</h1>
           <p className="text-sm text-muted-foreground">
-            Place real orders on your connected OANDA account. Signals from the dashboard can prefill this form.
+            Connect your own OANDA account to place real orders. Your API key is encrypted on the server and never exposed to the browser.
           </p>
         </div>
         <button
@@ -128,13 +180,117 @@ function BrokerPage() {
         </button>
       </div>
 
+      {/* Credentials card */}
+      <div className="rounded-md border border-border bg-card p-5 mb-6">
+        <div className="flex items-center gap-2 mb-3">
+          <KeyRound className="h-4 w-4 text-primary" />
+          <div className="text-sm font-semibold">Your OANDA credentials</div>
+          {meta?.configured && (
+            <span className="ml-2 inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-emerald-400">
+              <ShieldCheck className="h-3 w-3" /> encrypted
+            </span>
+          )}
+          <div className="ml-auto flex items-center gap-2">
+            {meta?.configured && !showCredForm && (
+              <>
+                <button
+                  onClick={() => setShowCredForm(true)}
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-border text-xs hover:bg-muted"
+                >
+                  Update
+                </button>
+                <button
+                  onClick={removeCreds}
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-border text-xs hover:bg-muted text-red-300"
+                >
+                  <Trash2 className="h-3 w-3" /> Remove
+                </button>
+              </>
+            )}
+            {!meta?.configured && !showCredForm && (
+              <button
+                onClick={() => setShowCredForm(true)}
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90"
+              >
+                Connect account
+              </button>
+            )}
+          </div>
+        </div>
+
+        {meta?.configured && !showCredForm && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+            <Metric label="Account ID" value={meta.accountId ?? "(discovered from key)"} />
+            <Metric label="Environment" value={meta.env.toUpperCase()} />
+            <Metric label="Updated" value={new Date(meta.updatedAt).toLocaleString()} />
+          </div>
+        )}
+
+        {!meta?.configured && !showCredForm && (
+          <p className="text-xs text-muted-foreground">
+            You have not connected OANDA yet. Click Connect account to enter your API token and Account ID.
+          </p>
+        )}
+
+        {showCredForm && (
+          <div className="space-y-3">
+            <Field label="API token">
+              <input
+                type="password"
+                autoComplete="off"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="Paste your OANDA API token"
+                className="w-full px-2 py-1.5 rounded-md bg-background border border-border text-sm font-mono"
+              />
+            </Field>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Field label="Account ID">
+                <input
+                  value={accountId}
+                  onChange={(e) => setAccountId(e.target.value)}
+                  placeholder="e.g. 001-001-1234567-001"
+                  className="w-full px-2 py-1.5 rounded-md bg-background border border-border text-sm font-mono"
+                />
+              </Field>
+              <Field label="Environment">
+                <select
+                  value={envSel}
+                  onChange={(e) => setEnvSel(e.target.value as "practice" | "live")}
+                  className="w-full px-2 py-1.5 rounded-md bg-background border border-border text-sm"
+                >
+                  <option value="practice">Practice (demo)</option>
+                  <option value="live">Live</option>
+                </select>
+              </Field>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={submitCreds}
+                disabled={savingCreds || !apiKey || !accountId}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 disabled:opacity-50"
+              >
+                {savingCreds ? "Saving..." : "Save & connect"}
+              </button>
+              <button
+                onClick={() => { setShowCredForm(false); setApiKey(""); }}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md border border-border text-sm hover:bg-muted"
+              >
+                Cancel
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Your API token is encrypted at rest with AES-256-GCM. It is only decrypted server-side when placing orders on your behalf. It is never sent to the browser.
+              Get your token from OANDA: Manage Funds → API Access → Generate token.
+            </p>
+          </div>
+        )}
+      </div>
+
       {status && !status.connected && (
         <div className="rounded-md border border-red-500/30 bg-red-500/5 p-5 mb-6">
           <div className="font-semibold text-sm mb-1">Not connected</div>
           <p className="text-sm text-muted-foreground mb-2">{status.reason}</p>
-          <p className="text-xs text-muted-foreground">
-            The server now checks practice and live automatically. If this still appears, the saved key does not have access to any OANDA account.
-          </p>
         </div>
       )}
 
@@ -154,7 +310,7 @@ function BrokerPage() {
           </div>
           {status.usingDiscoveredAccount && (
             <p className="mt-3 text-xs text-muted-foreground">
-              Using the account authorized by the saved OANDA key because the saved account ID did not match.
+              Using the account authorized by your saved OANDA key because the saved account ID did not match.
             </p>
           )}
         </div>
@@ -189,7 +345,7 @@ function BrokerPage() {
             disabled={placing || !symbol || units <= 0}
             className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 disabled:opacity-50"
           >
-            {placing ? "Placing…" : `Send ${side === "long" ? "BUY" : "SELL"} ${units} ${symbol}`}
+            {placing ? "Placing..." : `Send ${side === "long" ? "BUY" : "SELL"} ${units} ${symbol}`}
           </button>
           <p className="text-xs text-muted-foreground mt-2">
             Orders route to OANDA {status.env}. Verify the symbol maps to an OANDA instrument (e.g. EUR/USD, XAU/USD, NAS100).
@@ -234,7 +390,7 @@ function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-md border border-border/60 bg-background/40 px-3 py-2">
       <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className="font-mono text-sm mt-0.5">{value}</div>
+      <div className="font-mono text-sm mt-0.5 break-all">{value}</div>
     </div>
   );
 }
