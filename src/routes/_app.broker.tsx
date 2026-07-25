@@ -133,7 +133,7 @@ function BrokerPage() {
           <div className="font-semibold text-sm mb-1">Not connected</div>
           <p className="text-sm text-muted-foreground mb-2">{status.reason}</p>
           <p className="text-xs text-muted-foreground">
-            Server needs <code>OANDA_API_KEY</code> and <code>OANDA_ACCOUNT_ID</code>. Set <code>OANDA_ENV=practice</code> to use the demo endpoint.
+            The server now checks practice and live automatically. If this still appears, the saved key does not have access to any OANDA account.
           </p>
         </div>
       )}
@@ -152,6 +152,11 @@ function BrokerPage() {
             <Metric label="Unrealized P/L" value={fmtMoney(status.unrealizedPL, status.currency)} />
             <Metric label="Open trades" value={String(status.openTradeCount)} />
           </div>
+          {status.usingDiscoveredAccount && (
+            <p className="mt-3 text-xs text-muted-foreground">
+              Using the account authorized by the saved OANDA key because the saved account ID did not match.
+            </p>
+          )}
         </div>
       )}
 
