@@ -300,6 +300,30 @@ export type Database = {
           },
         ]
       }
+      leaderboard_opt_in: {
+        Row: {
+          created_at: string
+          handle: string
+          opted_in: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          handle: string
+          opted_in?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          handle?: string
+          opted_in?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           body: string | null
@@ -772,6 +796,19 @@ export type Database = {
       bump_ai_usage: {
         Args: { _cap: number; _user_id: string }
         Returns: number
+      }
+      get_public_leaderboard: {
+        Args: { _limit?: number }
+        Returns: {
+          equity: number
+          handle: string
+          pnl_pct: number
+          starting_balance: number
+          trades: number
+          updated_at: string
+          win_rate: number
+          wins: number
+        }[]
       }
       has_active_subscription: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
