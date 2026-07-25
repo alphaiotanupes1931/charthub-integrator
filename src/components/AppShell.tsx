@@ -29,6 +29,7 @@ import {
   GraduationCap,
   Footprints,
   Building2,
+  Trophy,
 } from "lucide-react";
 import { LogoLink } from "@/components/LogoLink";
 import { Tutorial } from "@/components/Tutorial";
@@ -63,6 +64,7 @@ const NAV: NavItem[] = [
   { to: "/broker",          label: "Broker (OANDA)",  icon: Building2 },
   { to: "/briefings",       label: "Briefings",       icon: Send },
   { to: "/discord",         label: "Discord",         icon: MessageSquare },
+  { to: "/leaderboard",     label: "Leaderboard",     icon: Trophy },
   { to: "/settings",        label: "Settings",        icon: SettingsIcon },
   
   { to: "/admin",           label: "Admin",           icon: ShieldCheck, accent: true },
