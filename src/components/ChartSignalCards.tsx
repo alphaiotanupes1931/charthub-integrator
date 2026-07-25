@@ -6,6 +6,7 @@ import type { ChartGrade } from "@/lib/chartAnnotations";
 type Props = {
   grade: ChartGrade | null;
   lastPrice?: number;
+  symbol?: string;
   onClear?: () => void;
   scanning?: boolean;
 };
