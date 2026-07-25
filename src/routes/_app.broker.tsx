@@ -76,8 +76,11 @@ function BrokerPage() {
   const [stopLoss, setStopLoss] = useState<string>(search.stop != null ? String(search.stop) : "");
   const [takeProfit, setTakeProfit] = useState<string>(search.tp != null ? String(search.tp) : "");
 
-  async function refresh() {
-    setLoading(true);
+  // Risk sizer
+  const [riskDollars, setRiskDollars] = useState<string>("");
+
+  async function refresh(silent = false) {
+    if (!silent) setLoading(true);
     try {
       const [s, m] = await Promise.all([fetchStatus(), fetchMeta()]);
       setStatus(s);
@@ -91,13 +94,36 @@ function BrokerPage() {
         setPositions(p);
       }
     } catch (e) {
-      toast.error((e as Error).message);
+      if (!silent) toast.error((e as Error).message);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }
 
   useEffect(() => { refresh(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+
+  // Live poll every 5s when connected
+  useEffect(() => {
+    if (!status?.connected) return;
+    const t = setInterval(() => refresh(true), 5000);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status?.connected]);
+
+  function sizeFromRisk() {
+    const risk = Number(riskDollars);
+    const sl = Number(stopLoss);
+    const entryHint = Number(search.entry);
+    if (!risk || risk <= 0) { toast.error("Enter a dollar risk amount"); return; }
+    if (!sl || sl <= 0) { toast.error("Enter a stop-loss price first"); return; }
+    if (!entryHint || entryHint <= 0) { toast.error("No entry price yet — run a scan or set entry on the signal card"); return; }
+    const perUnit = Math.abs(entryHint - sl);
+    if (perUnit <= 0) { toast.error("Stop must differ from entry"); return; }
+    const u = Math.max(1, Math.floor(risk / perUnit));
+    setUnits(u);
+    toast.success(`Sized to ${u.toLocaleString()} units for $${risk} risk`);
+  }
+
 
   async function submitCreds() {
     if (!apiKey.trim() || !accountId.trim()) {
@@ -172,7 +198,7 @@ function BrokerPage() {
           </p>
         </div>
         <button
-          onClick={refresh}
+          onClick={() => refresh()}
           disabled={loading}
           className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md border border-border text-sm hover:bg-muted disabled:opacity-50"
         >
@@ -318,7 +344,14 @@ function BrokerPage() {
 
       {status?.connected && (
         <div className="rounded-md border border-border bg-card p-5 mb-6">
-          <div className="text-sm font-semibold mb-3">Place market order</div>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="text-sm font-semibold">Place market order</div>
+            {status.marginAvailable != null && (
+              <span className="ml-auto text-[11px] text-muted-foreground">
+                Free margin: <span className="font-mono text-foreground">{fmtMoney(status.marginAvailable, status.currency)}</span>
+              </span>
+            )}
+          </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <Field label="Symbol">
               <input value={symbol} onChange={(e) => setSymbol(e.target.value)} className="w-full px-2 py-1.5 rounded-md bg-background border border-border text-sm" />
@@ -340,16 +373,38 @@ function BrokerPage() {
               <input value={takeProfit} onChange={(e) => setTakeProfit(e.target.value)} placeholder="price" className="w-full px-2 py-1.5 rounded-md bg-background border border-border text-sm" />
             </Field>
           </div>
+          <div className="mt-3 flex items-end gap-2">
+            <Field label="Dollar risk (auto-size units)">
+              <input
+                value={riskDollars}
+                onChange={(e) => setRiskDollars(e.target.value)}
+                placeholder="e.g. 100"
+                className="w-full px-2 py-1.5 rounded-md bg-background border border-border text-sm"
+              />
+            </Field>
+            <button
+              onClick={sizeFromRisk}
+              className="px-3 py-1.5 rounded-md border border-border text-xs hover:bg-muted"
+            >
+              Size from risk
+            </button>
+          </div>
+          {status.marginAvailable != null && status.marginAvailable <= 0 && (
+            <div className="mt-3 text-xs text-red-300">
+              Free margin is 0. This order will be rejected by OANDA. Deposit or close positions first.
+            </div>
+          )}
           <button
             onClick={submitOrder}
-            disabled={placing || !symbol || units <= 0}
+            disabled={placing || !symbol || units <= 0 || (status.marginAvailable != null && status.marginAvailable <= 0)}
             className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 disabled:opacity-50"
           >
-            {placing ? "Placing..." : `Send ${side === "long" ? "BUY" : "SELL"} ${units} ${symbol}`}
+            {placing ? "Placing..." : `Send ${side === "long" ? "BUY" : "SELL"} ${units.toLocaleString()} ${symbol}`}
           </button>
           <p className="text-xs text-muted-foreground mt-2">
-            Orders route to OANDA {status.env}. Verify the symbol maps to an OANDA instrument (e.g. EUR/USD, XAU/USD, NAS100).
+            Orders route to OANDA {status.env}. If OANDA rejects (insufficient margin, halted instrument), you will see the exact reason instead of a fake fill.
           </p>
+
         </div>
       )}
 
