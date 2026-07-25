@@ -1333,7 +1333,7 @@ function Dashboard() {
             <ChartSignalCards
               grade={aiGrade}
               lastPrice={snapshot?.lastPrice}
-              symbol={symbol.display ?? symbol.ticker}
+              symbol={symbol.ticker}
               scanning={scanning}
               onClear={aiGrade ? () => { setAiGrade(null); setAiAnnotationsRaw([]); } : undefined}
             />
