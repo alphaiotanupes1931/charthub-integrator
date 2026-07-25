@@ -113,6 +113,23 @@ export function ChartSignalCards({ grade, lastPrice, symbol, onClear, scanning }
 
         <div className="flex-1" />
 
+        {(isLong || isShort) && (
+          <Link
+            to="/broker"
+            search={{
+              symbol: symbol ?? "",
+              side: isLong ? "long" : "short",
+              entry: grade.entry ?? "",
+              stop: grade.stop ?? "",
+              tp: grade.tp1 ?? "",
+            } as never}
+            className="inline-flex h-6 items-center gap-1 rounded px-2 text-[10px] font-bold uppercase tracking-wider bg-primary text-primary-foreground hover:opacity-90"
+            title="Send this setup to your broker"
+          >
+            <Zap className="h-3 w-3" /> Trade
+          </Link>
+        )}
+
         <button
           type="button"
           onClick={() => setExpanded((v) => !v)}
