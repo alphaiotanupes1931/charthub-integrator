@@ -729,6 +729,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_broker_credentials: {
+        Row: {
+          account_id: string | null
+          api_key_ciphertext: string
+          broker: string
+          created_at: string
+          env: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_id?: string | null
+          api_key_ciphertext: string
+          broker?: string
+          created_at?: string
+          env?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string | null
+          api_key_ciphertext?: string
+          broker?: string
+          created_at?: string
+          env?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
