@@ -203,6 +203,9 @@ export function startFirstWeek() {
 
 export function emitFirstWeekEvent(event: string, value?: number) {
   if (typeof window === "undefined") return;
+  // Persist immediately so completion is recorded even when the First Week
+  // panel isn't mounted (which is where the listener otherwise lives).
+  markFirstWeekEvent(event, value);
   window.dispatchEvent(new CustomEvent("trademind:first-week-event", { detail: { event, value } }));
 }
 
@@ -254,7 +257,7 @@ export function useFirstWeek() {
     const onEvent = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (detail && typeof detail.event === "string") {
-        markFirstWeekEvent(detail.event, detail.value);
+        // emitFirstWeekEvent already persisted; just refresh local state.
         setState(read());
       }
     };
