@@ -5,6 +5,17 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
 
+function uiMessageText(parts: unknown): string {
+  if (!Array.isArray(parts)) return "";
+  return (parts as Array<{ type?: string; text?: string; delta?: string }>)
+    .map((p) => {
+      if (p?.type === "text") return p.text ?? "";
+      if (p?.type === "text-delta") return p.delta ?? "";
+      return "";
+    })
+    .join("");
+}
+
 function getBearerToken() {
   const auth = getRequestHeader("authorization") ?? getRequestHeader("Authorization");
   return auth?.toLowerCase().startsWith("bearer ") ? auth.slice(7).trim() : null;
@@ -62,8 +73,7 @@ export const listChatThreads = createServerFn({ method: "POST" })
     const ordered = (msgs ?? []).slice().reverse() as Array<{ thread_id: string; role: string; parts: unknown }>;
     for (const m of ordered) {
       const tid = m.thread_id;
-      const parts = Array.isArray(m.parts) ? (m.parts as Array<{ type?: string; text?: string }>) : [];
-      const text = parts.map((p) => (p?.type === "text" ? p.text ?? "" : "")).join(" ").replace(/\s+/g, " ").trim();
+      const text = uiMessageText(m.parts).replace(/\s+/g, " ").trim();
       if (!text) continue;
       const entry = acc[tid] ?? (acc[tid] = {});
       if (!entry.first && m.role === "user") entry.first = text.slice(0, 80);
