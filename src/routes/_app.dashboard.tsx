@@ -1530,7 +1530,8 @@ function Dashboard() {
                         onStopScan={() => { voice.stop(); setScanning(false); }}
                         scanning={scanning}
                         threadIdOverride={activeThreadId}
-                        onAnnotations={setAiAnnotationsRaw}
+                        onAnnotations={(a) => { setAiAnnotationsRaw(a); if (a.length > 0) setChartTab("setup"); }}
+                        onShowMe={() => setChartTab("setup")}
                         onGrade={(g) => setAiGrade(sanitizeVisibleGrade(g))}
                         onConcept={setAiConcept}
                         chart={{
@@ -1653,7 +1654,8 @@ function Dashboard() {
                   onStopScan={() => { voice.stop(); setScanning(false); }}
                   scanning={scanning}
                   threadIdOverride={activeThreadId}
-                  onAnnotations={setAiAnnotationsRaw}
+                  onAnnotations={(a) => { setAiAnnotationsRaw(a); if (a.length > 0) setChartTab("setup"); }}
+                        onShowMe={() => setChartTab("setup")}
                   onGrade={(g) => setAiGrade(sanitizeVisibleGrade(g))}
                   onConcept={setAiConcept}
                   chart={{
@@ -1809,7 +1811,7 @@ function FloatingCoach({
             : "translate-y-full sm:translate-y-4 pointer-events-none sm:opacity-0"
         }`}
       >
-        <DashboardChatPanel ref={chatRef} chart={chart} onClose={() => { setMinimized(false); onClose(); }} onMinimize={() => setMinimized(true)} onRunScan={onRunScan} onStopScan={onStopScan} scanning={scanning} />
+        <DashboardChatPanel ref={chatRef} onShowMe={() => setChartTab("setup")} chart={chart} onClose={() => { setMinimized(false); onClose(); }} onMinimize={() => setMinimized(true)} onRunScan={onRunScan} onStopScan={onStopScan} scanning={scanning} />
       </div>
     </>
   );
