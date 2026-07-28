@@ -174,9 +174,21 @@ function ChatThreadInner({
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <div className="flex items-center justify-between px-4 md:px-8 py-2 max-w-3xl mx-auto w-full border-b border-border/60 bg-background/80">
-        <span className="text-sm font-semibold text-foreground">{readActiveCoach()}</span>
-        <span className="text-[9px] font-semibold uppercase tracking-wider text-primary px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20">
+      <div className="flex items-center justify-between gap-3 px-4 md:px-8 py-2 max-w-3xl mx-auto w-full border-b border-border/60 bg-background/80">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-sm font-semibold text-foreground truncate">{readActiveCoach()}</span>
+          {ctx.chart?.ticker && (
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-foreground px-1.5 py-0.5 rounded bg-muted border border-border truncate max-w-[180px]" title={`${ctx.chart.ticker} · ${ctx.chart.intervalLabel}`}>
+              {ctx.chart.ticker} · {ctx.chart.intervalLabel}
+            </span>
+          )}
+          {ctx.strategy && (
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-1.5 py-0.5 rounded border border-border truncate max-w-[160px]" title={`Strategy: ${ctx.strategy}`}>
+              {ctx.strategy}
+            </span>
+          )}
+        </div>
+        <span className="text-[9px] font-semibold uppercase tracking-wider text-primary px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20 shrink-0">
           {activeModel?.label ?? "AI"}
         </span>
       </div>
