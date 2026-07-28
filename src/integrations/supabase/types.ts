@@ -65,6 +65,132 @@ export type Database = {
         }
         Relationships: []
       }
+      autopilot_proposals: {
+        Row: {
+          account_target: string
+          broker_order_id: string | null
+          confidence: number | null
+          created_at: string
+          decided_at: string | null
+          entry: number
+          expires_at: string
+          grade: string | null
+          id: string
+          order_type: string
+          realized_r: number | null
+          reasoning: string | null
+          rejection_reason: string | null
+          risk_pct: number | null
+          side: string
+          status: string
+          stop_loss: number | null
+          symbol: string
+          take_profit: number | null
+          timeframe: string | null
+          units: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_target?: string
+          broker_order_id?: string | null
+          confidence?: number | null
+          created_at?: string
+          decided_at?: string | null
+          entry: number
+          expires_at?: string
+          grade?: string | null
+          id?: string
+          order_type?: string
+          realized_r?: number | null
+          reasoning?: string | null
+          rejection_reason?: string | null
+          risk_pct?: number | null
+          side: string
+          status?: string
+          stop_loss?: number | null
+          symbol: string
+          take_profit?: number | null
+          timeframe?: string | null
+          units?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_target?: string
+          broker_order_id?: string | null
+          confidence?: number | null
+          created_at?: string
+          decided_at?: string | null
+          entry?: number
+          expires_at?: string
+          grade?: string | null
+          id?: string
+          order_type?: string
+          realized_r?: number | null
+          reasoning?: string | null
+          rejection_reason?: string | null
+          risk_pct?: number | null
+          side?: string
+          status?: string
+          stop_loss?: number | null
+          symbol?: string
+          take_profit?: number | null
+          timeframe?: string | null
+          units?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      autopilot_settings: {
+        Row: {
+          account_target: string
+          allowed_symbols: string[]
+          created_at: string
+          live_acknowledged_at: string | null
+          max_daily_loss_pct: number
+          max_open_positions: number
+          min_grade: string
+          mode: string
+          paused_reason: string | null
+          risk_pct: number
+          session_windows: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_target?: string
+          allowed_symbols?: string[]
+          created_at?: string
+          live_acknowledged_at?: string | null
+          max_daily_loss_pct?: number
+          max_open_positions?: number
+          min_grade?: string
+          mode?: string
+          paused_reason?: string | null
+          risk_pct?: number
+          session_windows?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_target?: string
+          allowed_symbols?: string[]
+          created_at?: string
+          live_acknowledged_at?: string | null
+          max_daily_loss_pct?: number
+          max_open_positions?: number
+          min_grade?: string
+          mode?: string
+          paused_reason?: string | null
+          risk_pct?: number
+          session_windows?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       briefing_prefs: {
         Row: {
           created_at: string
