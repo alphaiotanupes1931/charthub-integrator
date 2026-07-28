@@ -123,6 +123,81 @@ function shouldReplaceNoEntry(plan: RawPlan, snap: MarketSnapshot, memo: Researc
   return hasDirectionalConsensus || (hasDirectionalStructure && modelWantedDirection);
 }
 
+// ---------- Structure-anchored entry refinement ----------
+// Instead of parking the entry a flat fraction of ATR under/over price, snap it
+// to the nearest real level price is likely to trade back into: 1H order block,
+// 1H FVG, 4H demand/supply zone, 4H key level, or resting liquidity. This is
+// what makes the fill precise rather than "roughly near price".
+type EntryAnchor = { entry: number; zoneFar: number; label: string };
+
+function findEntryAnchor(
+  bias: "Long" | "Short",
+  last: number,
+  atr: number,
+  snap: MarketSnapshot,
+): EntryAnchor | null {
+  const m = snap.mtf;
+  const minGap = Math.max(atr * 0.1, last * 0.0003); // must be a real pullback
+  const maxGap = atr * 2;
+  const cands: EntryAnchor[] = [];
+
+  const pushZone = (z: [number, number], label: string) => {
+    const top = Math.max(z[0], z[1]);
+    const bottom = Math.min(z[0], z[1]);
+    if (!Number.isFinite(top) || !Number.isFinite(bottom) || bottom <= 0) return;
+    // Enter at the near edge of the zone, keep the far edge for stop placement.
+    if (bias === "Long") cands.push({ entry: top, zoneFar: bottom, label });
+    else cands.push({ entry: bottom, zoneFar: top, label });
+  };
+  const pushLevel = (p: number, label: string) => {
+    if (!Number.isFinite(p) || p <= 0) return;
+    const pad = atr * 0.25;
+    if (bias === "Long") cands.push({ entry: p, zoneFar: p - pad, label });
+    else cands.push({ entry: p, zoneFar: p + pad, label });
+  };
+
+  if (m) {
+    if (bias === "Long") {
+      m.h1.orderBlocks.bull.forEach((z) => pushZone(z, "1H bullish order block"));
+      m.h1.fvg.bull.forEach((z) => pushZone(z, "1H bullish FVG"));
+      m.h4.supplyDemand.demand.forEach((z) => pushZone(z, "4H demand zone"));
+      m.h4.keyLevels.support.forEach((p) => pushLevel(p, "4H support"));
+      m.h1.liquidity.sellside.forEach((p) => pushLevel(p, "sellside liquidity"));
+    } else {
+      m.h1.orderBlocks.bear.forEach((z) => pushZone(z, "1H bearish order block"));
+      m.h1.fvg.bear.forEach((z) => pushZone(z, "1H bearish FVG"));
+      m.h4.supplyDemand.supply.forEach((z) => pushZone(z, "4H supply zone"));
+      m.h4.keyLevels.resistance.forEach((p) => pushLevel(p, "4H resistance"));
+      m.h1.liquidity.buyside.forEach((p) => pushLevel(p, "buyside liquidity"));
+    }
+  }
+  if (snap.cisd.state !== "none" && snap.cisd.level > 0) {
+    pushLevel(snap.cisd.level, "CISD level");
+  }
+
+  const valid = cands.filter((c) => {
+    const gap = bias === "Long" ? last - c.entry : c.entry - last;
+    return gap >= minGap && gap <= maxGap;
+  });
+  if (!valid.length) return null;
+  // Closest to price = highest fill probability while still a real pullback.
+  valid.sort((a, b) => Math.abs(last - a.entry) - Math.abs(last - b.entry));
+  return valid[0];
+}
+
+// Pick the first opposing level/liquidity pool beyond entry as a realistic TP1,
+// so targets sit where price actually reacts rather than at a flat 1.5R.
+function findTargetLevel(bias: "Long" | "Short", entry: number, snap: MarketSnapshot): number | null {
+  const m = snap.mtf;
+  if (!m) return null;
+  const pool = bias === "Long"
+    ? [...m.h4.keyLevels.resistance, ...m.h1.liquidity.buyside, ...m.h4.supplyDemand.supply.map((z) => Math.min(z[0], z[1]))]
+    : [...m.h4.keyLevels.support, ...m.h1.liquidity.sellside, ...m.h4.supplyDemand.demand.map((z) => Math.max(z[0], z[1]))];
+  const beyond = pool.filter((p) => Number.isFinite(p) && p > 0 && (bias === "Long" ? p > entry : p < entry));
+  if (!beyond.length) return null;
+  return bias === "Long" ? Math.min(...beyond) : Math.max(...beyond);
+}
+
 // Sanity-check the model's plan against price/ATR so we don't ship bad pending
 // orders. The default scan experience should not hand older traders a breakout
 // stop order when price has not actually reached the setup yet.
@@ -137,52 +212,68 @@ function sanitizePlan(plan: RawPlan, snap: MarketSnapshot, memo: ResearchMemo): 
     return systematicPlan(snap, memo, "Model returned invalid numbers; using systematic plan.");
   }
 
-  // 1. Clamp runaway entry: no entry more than 2x ATR away from price.
-  // When we snap entry back toward price, the model's stop/TPs are usually
-  // nonsense (still anchored to the old entry), so rebuild them from ATR.
-  const maxDist = atr * 2;
-  let entryWasClamped = false;
-  if (Math.abs(entry - last) > maxDist) {
-    entry = bias === "Long"
-      ? (entry > last ? last : last - atr * 0.5)
-      : (entry < last ? last : last + atr * 0.5);
-    entryWasClamped = true;
-  }
-
-  // 2. Force pullback entries. Longs enter BELOW live price (BUY LIMIT),
-  // Shorts enter ABOVE live price (SELL LIMIT). The buffer also absorbs
-  // normal live-price drift after the scan so the order-type label doesn't
-  // flip to a stop-entry (BUY STOP / SELL STOP). Breakout stop orders are
-  // not part of the default scanner output.
   const buffer = Math.max(atr * 0.15, last * 0.0005);
-  if (bias === "Long" && entry > last - buffer) {
-    entry = last - buffer;
-  } else if (bias === "Short" && entry < last + buffer) {
-    entry = last + buffer;
-  }
+  const anchor = findEntryAnchor(bias, last, atr, snap);
+  let anchorLabel: string | null = null;
+  let structuralStop: number | null = null;
 
-  // 3. Enforce stop/TP on correct sides of entry, and cap stop distance so
-  // the model can't ship a 100x-ATR stop.
-  const rawStopDist = entryWasClamped ? atr * 1.25 : Math.abs(entry - stop);
-  const stopDist = Math.min(Math.max(rawStopDist, atr * 0.75), atr * 3);
-  if (bias === "Long") {
-    stop = entry - stopDist;
-    tp1 = entryWasClamped ? entry + stopDist * 1.5 : Math.max(tp1, entry + stopDist * 1.5);
-    tp2 = entryWasClamped ? entry + stopDist * 3 : Math.max(tp2, tp1 + stopDist * 1.5, entry + stopDist * 3);
-    // TPs must be above entry
-    if (tp1 <= entry) tp1 = entry + stopDist * 1.5;
-    if (tp2 <= tp1) tp2 = entry + stopDist * 3;
+  if (anchor) {
+    // 1a. Structure-anchored entry. If the model already picked something within
+    // a third of an ATR of the same level, keep the model's price (it may be
+    // more precise); otherwise snap to the level.
+    const modelIsNear = Math.abs(entry - anchor.entry) <= atr * 0.33
+      && (bias === "Long" ? entry <= last - buffer * 0.5 : entry >= last + buffer * 0.5);
+    entry = modelIsNear ? entry : anchor.entry;
+    anchorLabel = anchor.label;
+    // Stop goes just past the far edge of the zone that gave us the entry.
+    const pad = Math.max(atr * 0.3, last * 0.0004);
+    structuralStop = bias === "Long" ? anchor.zoneFar - pad : anchor.zoneFar + pad;
   } else {
-    stop = entry + stopDist;
-    tp1 = entryWasClamped ? entry - stopDist * 1.5 : Math.min(tp1, entry - stopDist * 1.5);
-    tp2 = entryWasClamped ? entry - stopDist * 3 : Math.min(tp2, tp1 - stopDist * 1.5, entry - stopDist * 3);
-    if (tp1 >= entry) tp1 = entry - stopDist * 1.5;
-    if (tp2 >= tp1) tp2 = entry - stopDist * 3;
+    // 1b. No usable structure: clamp runaway entries and fall back to a
+    // pullback offset from price.
+    if (Math.abs(entry - last) > atr * 2) {
+      entry = bias === "Long" ? last - atr * 0.5 : last + atr * 0.5;
+      structuralStop = null;
+    }
+    if (bias === "Long" && entry > last - buffer) entry = last - buffer;
+    else if (bias === "Short" && entry < last + buffer) entry = last + buffer;
   }
 
+  // 2. Longs must still sit below price, shorts above (limit orders only).
+  if (bias === "Long" && entry > last - buffer) entry = last - buffer;
+  if (bias === "Short" && entry < last + buffer) entry = last + buffer;
 
-  return { ...plan, entry, stop, tp1, tp2 };
+  // 3. Stop: prefer the structural stop, else the model's distance, clamped to
+  // a sane ATR band so risk is always measurable.
+  const modelStopDist = Math.abs(entry - stop);
+  const rawStopDist = structuralStop !== null ? Math.abs(entry - structuralStop) : modelStopDist;
+  const stopDist = Math.min(Math.max(rawStopDist, atr * 0.6), atr * 2.5);
+  stop = bias === "Long" ? entry - stopDist : entry + stopDist;
+
+  // 4. Targets: use the first opposing structure level if it pays at least 1.2R,
+  // otherwise fall back to fixed R multiples.
+  const levelTarget = findTargetLevel(bias, entry, snap);
+  const levelR = levelTarget !== null ? Math.abs(levelTarget - entry) / stopDist : 0;
+  if (bias === "Long") {
+    tp1 = levelTarget !== null && levelR >= 1.2 && levelR <= 4
+      ? levelTarget
+      : entry + stopDist * 1.5;
+    tp2 = Math.max(tp1 + stopDist * 1.2, entry + stopDist * 3);
+  } else {
+    tp1 = levelTarget !== null && levelR >= 1.2 && levelR <= 4
+      ? levelTarget
+      : entry - stopDist * 1.5;
+    tp2 = Math.min(tp1 - stopDist * 1.2, entry - stopDist * 3);
+  }
+
+  const dec = decimalsFor(last);
+  const thesis = anchorLabel
+    ? `${plan.thesis} Entry refined to the ${anchorLabel} at ${fmt(entry, dec)}; stop sits ${fmt(stopDist, dec)} beyond it (${(stopDist / atr).toFixed(2)}x ATR).`
+    : plan.thesis;
+
+  return { ...plan, entry, stop, tp1, tp2, thesis };
 }
+
 
 
 
@@ -248,7 +339,7 @@ export async function runPlanner(
     const draft = await generateText({
       model: provider(MODEL),
       output: Output.object({ schema: PlanSchema }),
-      system: "You are the head trader. Follow the 'How to Analysis' cascade in the memo: 4H sets DIRECTION + TREND + key levels + supply/demand; 1H reads STRUCTURE (breaks, reversal, OB, FVG, liquidity); 15m gives CONFIRMATION. Grade A+ only when MTF alignment is aligned-long/aligned-short AND 15m confirmation matches. Grade A when alignment is aligned-* with weaker 15m. Grade B when 1H structure and 4H direction agree but 15m is neutral. Grade C when there is a 1H trigger but 4H is against or neutral. NO ENTRY when direction, structure, and confirmation all conflict. Return exactly one flat JSON object, not an array. Grade MUST be one of: A+, A, B, C, NO ENTRY. Bias MUST be Long, Short, or Neutral. Use ATR to size the stop (~1-1.5x ATR). TP1 near 1.5R, TP2 near 3R. ENTRY RULES: default to entering at current price or on the pullback side of price. For a Long setup, entry must be at or below Last unless the prompt explicitly asks for a breakout stop order. For a Short setup, entry must be at or above Last. Prefer entries at 1H order blocks, FVGs, or 4H demand/supply that align with bias. Do not default to BUY STOP or SELL STOP. Never place entry more than 2x ATR from current price. Keep thesis under 400 chars and invalidation under 200 chars. Confidence is 0-100." + memoryLine,
+      system: "You are the head trader. Follow the 'How to Analysis' cascade in the memo: 4H sets DIRECTION + TREND + key levels + supply/demand; 1H reads STRUCTURE (breaks, reversal, OB, FVG, liquidity); 15m gives CONFIRMATION. Grade A+ only when MTF alignment is aligned-long/aligned-short AND 15m confirmation matches. Grade A when alignment is aligned-* with weaker 15m. Grade B when 1H structure and 4H direction agree but 15m is neutral. Grade C when there is a 1H trigger but 4H is against or neutral. NO ENTRY when direction, structure, and confirmation all conflict. Return exactly one flat JSON object, not an array. Grade MUST be one of: A+, A, B, C, NO ENTRY. Bias MUST be Long, Short, or Neutral. ENTRY PRECISION IS THE PRIORITY: the entry must be a specific level, not a round guess near price. Anchor it to an actual level in the memo - a 1H bullish/bearish order block edge, a 1H FVG edge, a 4H demand/supply boundary, a 4H key level, or a resting liquidity pool - on the pullback side of Last and within 2x ATR. Place the stop just beyond the FAR edge of that same zone (0.6-2.5x ATR of risk), never a round ATR multiple pulled out of the air. TP1 should be the first opposing level or liquidity pool that pays at least 1.5R; TP2 the next one or 3R. In the thesis, state the exact level name and price you anchored the entry to. No generic wording. ENTRY RULES: default to entering on the pullback side of price. For a Long setup, entry must be at or below Last unless the prompt explicitly asks for a breakout stop order. For a Short setup, entry must be at or above Last. Prefer entries at 1H order blocks, FVGs, or 4H demand/supply that align with bias. Do not default to BUY STOP or SELL STOP. Never place entry more than 2x ATR from current price. Keep thesis under 400 chars and invalidation under 200 chars. Confidence is 0-100." + memoryLine,
       prompt: ctx,
     });
     plan = draft.output;
