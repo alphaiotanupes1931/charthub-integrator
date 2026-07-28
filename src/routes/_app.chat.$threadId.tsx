@@ -78,6 +78,11 @@ function ChatThreadInner({
   const [input, setInput] = useState("");
   const voice = useCoachVoice();
   const lastSpokenIdRef = useRef<string | null>(null);
+  const [activeModel, setActiveModel] = useState<ActiveModelInfo | null>(null);
+  const getModel = useServerFn(getActiveModel);
+  useEffect(() => {
+    getModel().then(setActiveModel).catch(() => setActiveModel(null));
+  }, [getModel]);
 
   const { messages, sendMessage, status } = useChat({
     id: threadId,
