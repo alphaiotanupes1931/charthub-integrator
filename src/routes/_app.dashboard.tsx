@@ -14,7 +14,7 @@ import { ChartConceptOverlay } from "@/components/ConceptDiagram";
 import { ChartSignalCards } from "@/components/ChartSignalCards";
 import { TodaysRecommendation } from "@/components/TodaysRecommendation";
 import { SCAN_LENSES, readActiveLensId, writeActiveLensId, findLens, type ScanLensId } from "@/lib/scanLens";
-import { readActiveCoach, writeActiveCoach, COACH_KEY } from "@/lib/chat-client";
+import { readActiveCoach, writeActiveCoach, COACH_KEY, writeLastChart } from "@/lib/chat-client";
 import { voiceForCoach } from "@/lib/coachVoices";
 import { COACH_ICON_META, DEFAULT_COACH_ICON } from "@/lib/coachMeta";
 import { runResearchPlan } from "@/lib/agents/research.functions";
@@ -704,6 +704,13 @@ function Dashboard() {
   const navigate = useNavigate();
   const askedRef = useRef<string | null>(null);
   const intervalLabel = INTERVALS.find((i) => i.value === interval)?.label ?? interval;
+
+  // Persist current instrument/timeframe so the standalone chat route also
+  // knows what the trader is looking at even without a live chart panel.
+  useEffect(() => {
+    const enabledLevels = ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none";
+    writeLastChart({ ticker: symbolLabel(symbol), intervalLabel, enabledLevels });
+  }, [symbol, intervalLabel, levels]);
 
   const runPlan = useServerFn(runResearchPlan);
   const createChatThreadFn = useServerFn(createChatThread);
