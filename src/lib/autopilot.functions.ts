@@ -274,3 +274,171 @@ export const markAutopilotProposalResult = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true as const };
   });
+
+// Phase 2: run the scan stack over the trader's allowed instruments and file
+// proposals for anything that clears the rails.
+export const runAutopilotScan = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) =>
+    z.object({ timeframe: z.string().default("60") }).parse(raw ?? {}),
+  )
+  .handler(async ({ data, context }) => {
+    const apiKey = process.env.LOVABLE_API_KEY;
+    if (!apiKey) throw new Error("The analysis service is not configured right now.");
+
+    const { data: row } = await context.supabase
+      .from("autopilot_settings")
+      .select("*")
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    const settings: AutopilotSettings = row
+      ? {
+          mode: row.mode as AutopilotSettings["mode"],
+          accountTarget: row.account_target as AutopilotSettings["accountTarget"],
+          minGrade: row.min_grade as AutopilotSettings["minGrade"],
+          riskPct: Number(row.risk_pct),
+          maxOpenPositions: Number(row.max_open_positions),
+          maxDailyLossPct: Number(row.max_daily_loss_pct),
+          allowedSymbols: row.allowed_symbols ?? [],
+          sessionWindows: row.session_windows ?? [],
+          liveAcknowledged: Boolean(row.live_acknowledged_at),
+          pausedReason: row.paused_reason ?? null,
+        }
+      : { ...DEFAULT_AUTOPILOT_SETTINGS };
+
+    const symbols = settings.allowedSymbols.length
+      ? settings.allowedSymbols.slice(0, 8)
+      : DEFAULT_AUTOPILOT_SETTINGS.allowedSymbols;
+
+    const { data: account } = await context.supabase
+      .from("paper_accounts")
+      .select("balance")
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    const equity = account?.balance ? Number(account.balance) : 10_000;
+
+    const { data: existing } = await context.supabase
+      .from("autopilot_proposals")
+      .select("symbol, status, expires_at")
+      .eq("user_id", context.userId)
+      .eq("status", "pending");
+    const nowMs = Date.now();
+    const openSymbols = new Set(
+      (existing ?? [])
+        .filter((p) => new Date(p.expires_at as string).getTime() > nowMs)
+        .map((p) => p.symbol as string),
+    );
+
+    const { count } = await context.supabase
+      .from("autopilot_proposals")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", context.userId)
+      .in("status", ["approved", "filled"]);
+
+    const { buildProposalDraft } = await import("@/lib/autopilot.server");
+
+    let created = 0;
+    let blocked = 0;
+    const skipped: string[] = [];
+
+    for (const symbol of symbols) {
+      if (openSymbols.has(symbol)) {
+        skipped.push(`${symbol}: already waiting for you`);
+        continue;
+      }
+      try {
+        const draft = await buildProposalDraft(apiKey, symbol, data.timeframe, settings, equity);
+        if (!draft) {
+          skipped.push(`${symbol}: no setup`);
+          continue;
+        }
+        const verdict = evaluateRails(settings, {
+          symbol,
+          grade: draft.grade,
+          openPositions: count ?? 0,
+        });
+        const { error } = await context.supabase.from("autopilot_proposals").insert({
+          user_id: context.userId,
+          symbol: draft.symbol,
+          timeframe: draft.timeframe,
+          side: draft.side,
+          grade: draft.grade,
+          confidence: draft.confidence,
+          entry: draft.entry,
+          stop_loss: draft.stopLoss,
+          take_profit: draft.takeProfit,
+          units: draft.units,
+          risk_pct: settings.riskPct,
+          order_type: "market",
+          account_target: settings.accountTarget,
+          reasoning: draft.reasoning,
+          status: verdict.allowed ? "pending" : "blocked",
+          rejection_reason: verdict.allowed ? null : verdict.reason,
+        });
+        if (error) {
+          skipped.push(`${symbol}: could not be saved`);
+          continue;
+        }
+        if (verdict.allowed) created += 1;
+        else blocked += 1;
+      } catch {
+        skipped.push(`${symbol}: data unavailable`);
+      }
+    }
+
+    return { created, blocked, skipped, scanned: symbols.length };
+  });
+
+// Execute an approved proposal on the paper account. Live orders go through
+// the broker path on the client so the OANDA margin guard still applies.
+export const fillAutopilotProposalOnPaper = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => z.object({ id: z.string().uuid() }).parse(raw))
+  .handler(async ({ data, context }) => {
+    const { data: proposal, error } = await context.supabase
+      .from("autopilot_proposals")
+      .select("*")
+      .eq("id", data.id)
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!proposal) throw new Error("Proposal not found");
+    if (proposal.status !== "approved") throw new Error(`Proposal is ${proposal.status}, not approved`);
+
+    const { data: account } = await context.supabase
+      .from("paper_accounts")
+      .select("status")
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (account && account.status !== "active") {
+      throw new Error(`Your paper account is ${account.status}. Resume it before filling trades.`);
+    }
+
+    const size = proposal.units === null ? 1 : Math.max(1, Number(proposal.units));
+    const { error: insertError } = await context.supabase.from("paper_positions").insert({
+      user_id: context.userId,
+      symbol: proposal.symbol as string,
+      side: proposal.side as string,
+      size,
+      entry: Number(proposal.entry),
+      stop: proposal.stop_loss === null ? null : Number(proposal.stop_loss),
+      take_profit: proposal.take_profit === null ? null : Number(proposal.take_profit),
+      grade: (proposal.grade as string | null) ?? null,
+    });
+    if (insertError) {
+      await context.supabase
+        .from("autopilot_proposals")
+        .update({ status: "failed", rejection_reason: insertError.message })
+        .eq("id", data.id)
+        .eq("user_id", context.userId);
+      throw new Error(insertError.message);
+    }
+
+    await context.supabase
+      .from("autopilot_proposals")
+      .update({ status: "filled" })
+      .eq("id", data.id)
+      .eq("user_id", context.userId);
+
+    return { ok: true as const, size };
+  });
