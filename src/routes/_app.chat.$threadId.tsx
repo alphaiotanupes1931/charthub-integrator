@@ -91,6 +91,25 @@ function ChatThreadInner({
     getModel().then(setActiveModel).catch(() => setActiveModel(null));
   }, [getModel]);
 
+  // Live snapshot of instrument + strategy so the header always reflects context.
+  const [ctx, setCtx] = useState<{ chart: LastChart | null; strategy: string | null }>(() => ({
+    chart: readLastChart(),
+    strategy: readActiveStrategy(),
+  }));
+  useEffect(() => {
+    const sync = () => setCtx({ chart: readLastChart(), strategy: readActiveStrategy() });
+    sync();
+    const onStorage = () => sync();
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("focus", sync);
+    const iv = window.setInterval(sync, 4000);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("focus", sync);
+      window.clearInterval(iv);
+    };
+  }, [threadId]);
+
   const { messages, sendMessage, status } = useChat({
     id: threadId,
     messages: initialMessages,
