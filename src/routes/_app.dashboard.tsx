@@ -558,6 +558,11 @@ function Dashboard() {
   }, [lastUpdatedAt]);
 
   const [rightTab, setRightTab] = useState<"analysis" | "chat">("analysis");
+  const [activeModel, setActiveModel] = useState<ActiveModelInfo | null>(null);
+  const getModel = useServerFn(getActiveModel);
+  useEffect(() => {
+    getModel().then(setActiveModel).catch(() => setActiveModel(null));
+  }, [getModel]);
   const [chatPanelView, setChatPanelView] = useState<"conversation" | "history">("conversation");
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [rightOpen, setRightOpen] = useState(true);
