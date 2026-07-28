@@ -103,14 +103,23 @@ function ChatThreadInner({
         if (token) headers.set("Authorization", `Bearer ${token}`);
         return coalesceUiMessageStream(await fetch(input, { ...init, headers }));
       },
-      prepareSendMessagesRequest: ({ messages, id }) => ({
-        body: {
-          messages,
-          threadId: id,
-          coach: readActiveCoach(),
-          journal: readJournal(),
-        },
-      }),
+      prepareSendMessagesRequest: ({ messages, id }) => {
+        const stratName = readActiveStrategy();
+        const strategy = stratName ? findStrategyByName(stratName) ?? { name: stratName } : null;
+        const lens = findLens(readActiveLensId());
+        const lastChart = readLastChart();
+        return {
+          body: {
+            messages,
+            threadId: id,
+            coach: readActiveCoach(),
+            journal: readJournal(),
+            chart: lastChart ?? undefined,
+            strategy,
+            lens: { id: lens.id, name: lens.name, promptEmphasis: lens.promptEmphasis },
+          },
+        };
+      },
     }),
     onError: (err) => {
       console.error(err);
