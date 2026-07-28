@@ -674,7 +674,11 @@ export const Route = createFileRoute("/api/chat")({
           },
         });
 
-        return stripReasoningStreamEvents(response);
+        // The AI SDK's experimental_transform above already strips reasoning-*
+        // events at the model level. Re-parsing the SSE bytes here was
+        // occasionally corrupting Claude's stream framing and truncating
+        // replies to the first few tokens, so we return the response as-is.
+        return response;
       },
     },
   },
