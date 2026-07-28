@@ -1446,6 +1446,14 @@ function Dashboard() {
                     <MessageSquare className="h-3.5 w-3.5" /> Chat
                   </button>
                 </div>
+                {activeModel && (
+                  <span
+                    className="shrink-0 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground px-1.5 py-0.5 rounded bg-muted/60 border border-border/60"
+                    title={`Powered by ${activeModel.label}`}
+                  >
+                    {activeModel.label}
+                  </span>
+                )}
                 <button
                   onClick={() => setRightOpen(false)}
                   className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 shrink-0"
