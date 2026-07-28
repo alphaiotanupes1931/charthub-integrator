@@ -30,6 +30,7 @@ import {
   Footprints,
   Building2,
   Trophy,
+  Bot,
 } from "lucide-react";
 import { LogoLink } from "@/components/LogoLink";
 import { Tutorial } from "@/components/Tutorial";
@@ -62,6 +63,7 @@ const NAV: NavItem[] = [
   { to: "/calculator",      label: "Risk Calculator", icon: Calculator },
   { to: "/testing",         label: "Testing",         icon: FlaskConical },
   { to: "/broker",          label: "Broker (OANDA)",  icon: Building2 },
+  { to: "/autopilot",       label: "Autopilot",       icon: Bot },
   { to: "/briefings",       label: "Briefings",       icon: Send },
   { to: "/discord",         label: "Discord",         icon: MessageSquare },
   { to: "/leaderboard",     label: "Leaderboard",     icon: Trophy },

@@ -52,6 +52,7 @@ import { Route as AppChatRouteImport } from './routes/_app.chat'
 import { Route as AppCalculatorRouteImport } from './routes/_app.calculator'
 import { Route as AppBrokerRouteImport } from './routes/_app.broker'
 import { Route as AppBriefingsRouteImport } from './routes/_app.briefings'
+import { Route as AppAutopilotRouteImport } from './routes/_app.autopilot'
 import { Route as AppAnalyticsRouteImport } from './routes/_app.analytics'
 import { Route as AppAlertsRouteImport } from './routes/_app.alerts'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
@@ -291,6 +292,11 @@ const AppBriefingsRoute = AppBriefingsRouteImport.update({
   path: '/briefings',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAutopilotRoute = AppAutopilotRouteImport.update({
+  id: '/autopilot',
+  path: '/autopilot',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAnalyticsRoute = AppAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
@@ -436,6 +442,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AppAdminRouteWithChildren
   '/alerts': typeof AppAlertsRoute
   '/analytics': typeof AppAnalyticsRoute
+  '/autopilot': typeof AppAutopilotRoute
   '/briefings': typeof AppBriefingsRoute
   '/broker': typeof AppBrokerRoute
   '/calculator': typeof AppCalculatorRoute
@@ -503,6 +510,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AppAdminRouteWithChildren
   '/alerts': typeof AppAlertsRoute
   '/analytics': typeof AppAnalyticsRoute
+  '/autopilot': typeof AppAutopilotRoute
   '/briefings': typeof AppBriefingsRoute
   '/broker': typeof AppBrokerRoute
   '/calculator': typeof AppCalculatorRoute
@@ -570,6 +578,7 @@ export interface FileRoutesById {
   '/_app/admin': typeof AppAdminRouteWithChildren
   '/_app/alerts': typeof AppAlertsRoute
   '/_app/analytics': typeof AppAnalyticsRoute
+  '/_app/autopilot': typeof AppAutopilotRoute
   '/_app/briefings': typeof AppBriefingsRoute
   '/_app/broker': typeof AppBrokerRoute
   '/_app/calculator': typeof AppCalculatorRoute
@@ -640,6 +649,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/alerts'
     | '/analytics'
+    | '/autopilot'
     | '/briefings'
     | '/broker'
     | '/calculator'
@@ -707,6 +717,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/alerts'
     | '/analytics'
+    | '/autopilot'
     | '/briefings'
     | '/broker'
     | '/calculator'
@@ -773,6 +784,7 @@ export interface FileRouteTypes {
     | '/_app/admin'
     | '/_app/alerts'
     | '/_app/analytics'
+    | '/_app/autopilot'
     | '/_app/briefings'
     | '/_app/broker'
     | '/_app/calculator'
@@ -1157,6 +1169,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppBriefingsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/autopilot': {
+      id: '/_app/autopilot'
+      path: '/autopilot'
+      fullPath: '/autopilot'
+      preLoaderRoute: typeof AppAutopilotRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/analytics': {
       id: '/_app/analytics'
       path: '/analytics'
@@ -1407,6 +1426,7 @@ interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRouteWithChildren
   AppAlertsRoute: typeof AppAlertsRoute
   AppAnalyticsRoute: typeof AppAnalyticsRoute
+  AppAutopilotRoute: typeof AppAutopilotRoute
   AppBriefingsRoute: typeof AppBriefingsRoute
   AppBrokerRoute: typeof AppBrokerRoute
   AppCalculatorRoute: typeof AppCalculatorRoute
@@ -1438,6 +1458,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAdminRoute: AppAdminRouteWithChildren,
   AppAlertsRoute: AppAlertsRoute,
   AppAnalyticsRoute: AppAnalyticsRoute,
+  AppAutopilotRoute: AppAutopilotRoute,
   AppBriefingsRoute: AppBriefingsRoute,
   AppBrokerRoute: AppBrokerRoute,
   AppCalculatorRoute: AppCalculatorRoute,
