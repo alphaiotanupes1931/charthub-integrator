@@ -39,6 +39,19 @@ export const Route = createFileRoute("/_app/autopilot")({
   component: AutopilotPage,
 });
 
+type SettingsPatch = {
+  mode?: AutopilotMode;
+  accountTarget?: "paper" | "live";
+  minGrade?: AutopilotSettings["minGrade"];
+  riskPct?: number;
+  maxOpenPositions?: number;
+  maxDailyLossPct?: number;
+  allowedSymbols?: string[];
+  sessionWindows?: string[];
+  acknowledgeLive?: boolean;
+  pausedReason?: string | null;
+};
+
 const SYMBOL_CHOICES = ["XAU/USD", "XAG/USD", "EUR/USD", "GBP/USD", "USD/JPY", "NAS100", "SPX500", "US30", "WTI OIL"];
 
 function StatusPill({ status }: { status: string }) {
@@ -76,7 +89,7 @@ function AutopilotPage() {
   const [liveConfirmOpen, setLiveConfirmOpen] = useState(false);
 
   const save = useMutation({
-    mutationFn: (patch: Parameters<typeof saveSettings>[0]["data"]) => saveSettings({ data: patch }),
+    mutationFn: (patch: SettingsPatch) => saveSettings({ data: patch }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["autopilot", "settings"] });
     },
