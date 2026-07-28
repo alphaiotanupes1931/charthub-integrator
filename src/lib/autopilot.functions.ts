@@ -68,7 +68,7 @@ export const updateAutopilotSettings = createServerFn({ method: "POST" })
 
     const { error } = await context.supabase
       .from("autopilot_settings")
-      .upsert(patch, { onConflict: "user_id" });
+      .upsert(patch as never, { onConflict: "user_id" });
     if (error) throw new Error(error.message);
     return { ok: true as const };
   });
@@ -138,9 +138,9 @@ export const createAutopilotProposal = createServerFn({ method: "POST" })
     const row = settingsRes.data;
     const settings: AutopilotSettings = row
       ? {
-          mode: row.mode,
-          accountTarget: row.account_target,
-          minGrade: row.min_grade,
+          mode: row.mode as AutopilotSettings["mode"],
+          accountTarget: row.account_target as AutopilotSettings["accountTarget"],
+          minGrade: row.min_grade as AutopilotSettings["minGrade"],
           riskPct: Number(row.risk_pct),
           maxOpenPositions: Number(row.max_open_positions),
           maxDailyLossPct: Number(row.max_daily_loss_pct),
