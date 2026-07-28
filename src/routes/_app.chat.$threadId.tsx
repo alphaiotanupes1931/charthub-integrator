@@ -32,6 +32,18 @@ export const Route = createFileRoute("/_app/chat/$threadId")({
   component: ChatThread,
 });
 
+function uiMessageText(message: UIMessage | null | undefined): string {
+  if (!message?.parts) return "";
+  return message.parts
+    .map((part) => {
+      const p = part as { type?: string; text?: string; delta?: string };
+      if (p.type === "text") return p.text ?? "";
+      if (p.type === "text-delta") return p.delta ?? "";
+      return "";
+    })
+    .join("");
+}
+
 function ChatThread() {
   const { threadId } = useParams({ from: "/_app/chat/$threadId" });
   const [initialMessages, setInitialMessages] = useState<UIMessage[] | null>(null);
@@ -119,10 +131,7 @@ function ChatThreadInner({
     const last = messages[messages.length - 1];
     if (!last || last.role !== "assistant") return;
     if (lastSpokenIdRef.current === last.id) return;
-    const text = last.parts
-      .map((p) => (p.type === "text" ? (p as { text: string }).text : ""))
-      .join("")
-      .trim();
+    const text = uiMessageText(last).trim();
     if (!text) return;
     lastSpokenIdRef.current = last.id;
     void voice.speak(text, voiceForCoach(readActiveCoach()));
@@ -156,9 +165,7 @@ function ChatThreadInner({
             </div>
           )}
           {messages.map((m) => {
-            const text = m.parts
-              .map((p) => (p.type === "text" ? (p as { text: string }).text : ""))
-              .join("");
+            const text = uiMessageText(m);
             return (
               <Message key={m.id} from={m.role}>
                 {m.role === "assistant" ? (
