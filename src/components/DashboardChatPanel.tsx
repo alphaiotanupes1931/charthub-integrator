@@ -32,6 +32,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { compressImage, getScreenshotQuota, bumpScreenshotQuota } from "@/lib/imageCompress";
 import { toast } from "sonner";
 import { parseAiPayload, type ChartAnnotation, type ChartGrade, type ConceptRef } from "@/lib/chartAnnotations";
+import { coalesceUiMessageStream, textFromUiMessageParts } from "@/lib/chat-stream";
 import { ConceptDiagram } from "@/components/ConceptDiagram";
 
 export type DashboardChatHandle = {
@@ -52,6 +53,10 @@ export type ChartContext = {
 type Props = { chart?: ChartContext; onClose?: () => void; onMinimize?: () => void; onRunScan?: () => void; onStopScan?: () => void; scanning?: boolean; threadIdOverride?: string | null; onAnnotations?: (a: ChartAnnotation[]) => void; onConcept?: (c: ConceptRef | null) => void; onGrade?: (g: import("@/lib/chartAnnotations").ChartGrade | null) => void; };
 
 const DASHBOARD_THREAD_FALLBACK_ID = "dashboard-scans";
+
+function uiMessageText(message: UIMessage | null | undefined): string {
+  return textFromUiMessageParts(message?.parts);
+}
 
 export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(function DashboardChatPanel({ chart, onClose, onMinimize, onRunScan, onStopScan, scanning, threadIdOverride, onAnnotations, onConcept, onGrade }, ref) {
   const [threadId, setThreadId] = useState<string | null>(threadIdOverride ?? null);
@@ -409,7 +414,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
           }
           const headers = new Headers(init?.headers);
           if (token) headers.set("Authorization", `Bearer ${token}`);
-          return fetch(input, { ...init, headers });
+          return coalesceUiMessageStream(await fetch(input, { ...init, headers }));
         },
         prepareSendMessagesRequest: ({ messages, id }) => {
           const stratName = readActiveStrategy();
@@ -448,9 +453,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
     const hasVisibleAssistantReplySince = useCallback((before: number) => {
       const assistantMessages = messagesRef.current.filter((m) => m.role === "assistant").slice(before);
       return assistantMessages.some((m) => {
-        const raw = m.parts
-          .map((p) => (p.type === "text" ? (p as { text: string }).text : ""))
-          .join("");
+        const raw = uiMessageText(m);
         const parsed = parseAiPayload(raw);
         return !!parsed.cleanText || !!parsed.grade || !!parsed.concept || parsed.annotations.length > 0;
       });
@@ -485,7 +488,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
     useEffect(() => {
       const last = [...messages].reverse().find((m) => m.role === "assistant");
       if (!last) return;
-      const text = last.parts.map((p) => (p.type === "text" ? (p as { text: string }).text : "")).join("");
+      const text = uiMessageText(last);
       const parsed = parseAiPayload(text);
       if (onAnnotations) onAnnotations(parsed.annotations);
       if (onConcept) onConcept(parsed.concept ?? null);
@@ -658,9 +661,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               </div>
             )}
             {messages.map((m) => {
-              const raw = m.parts
-                .map((p) => (p.type === "text" ? (p as { text: string }).text : ""))
-                .join("");
+              const raw = uiMessageText(m);
               if (m.role === "assistant") {
                 const parsed = parseAiPayload(raw);
                 const g = parsed.grade ? sanitizeGradeForPrice(parsed.grade, chart?.snapshot?.lastPrice) : undefined;
