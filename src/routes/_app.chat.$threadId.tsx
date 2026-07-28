@@ -25,6 +25,7 @@ import { readJournal, readActiveCoach } from "@/lib/chat-client";
 import { getChatMessages, getActiveModel, type ActiveModelInfo } from "@/lib/chat.functions";
 import { useCoachVoice } from "@/hooks/useCoachVoice";
 import { voiceForCoach } from "@/lib/coachVoices";
+import { coalesceUiMessageStream, textFromUiMessageParts } from "@/lib/chat-stream";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -33,15 +34,7 @@ export const Route = createFileRoute("/_app/chat/$threadId")({
 });
 
 function uiMessageText(message: UIMessage | null | undefined): string {
-  if (!message?.parts) return "";
-  return message.parts
-    .map((part) => {
-      const p = part as { type?: string; text?: string; delta?: string };
-      if (p.type === "text") return p.text ?? "";
-      if (p.type === "text-delta") return p.delta ?? "";
-      return "";
-    })
-    .join("");
+  return textFromUiMessageParts(message?.parts);
 }
 
 function ChatThread() {
@@ -106,7 +99,7 @@ function ChatThreadInner({
         const token = data.session?.access_token;
         const headers = new Headers(init?.headers);
         if (token) headers.set("Authorization", `Bearer ${token}`);
-        return fetch(input, { ...init, headers });
+        return coalesceUiMessageStream(await fetch(input, { ...init, headers }));
       },
       prepareSendMessagesRequest: ({ messages, id }) => ({
         body: {
