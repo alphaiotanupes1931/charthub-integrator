@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/PageHeader";
-import { Bot, Check, X, ShieldAlert, Clock } from "lucide-react";
+import { Bot, Check, X, ShieldAlert, Clock, RefreshCw } from "lucide-react";
 import {
   DEFAULT_AUTOPILOT_SETTINGS,
   MODE_COPY,
@@ -16,7 +16,11 @@ import {
   listAutopilotProposals,
   updateAutopilotSettings,
   decideAutopilotProposal,
+  markAutopilotProposalResult,
+  runAutopilotScan,
+  fillAutopilotProposalOnPaper,
 } from "@/lib/autopilot.functions";
+import { placeBrokerOrder } from "@/lib/broker-oanda.functions";
 
 export const Route = createFileRoute("/_app/autopilot")({
   head: () => ({
@@ -74,6 +78,10 @@ function AutopilotPage() {
   const loadProposals = useServerFn(listAutopilotProposals);
   const saveSettings = useServerFn(updateAutopilotSettings);
   const decide = useServerFn(decideAutopilotProposal);
+  const markResult = useServerFn(markAutopilotProposalResult);
+  const scan = useServerFn(runAutopilotScan);
+  const fillPaper = useServerFn(fillAutopilotProposalOnPaper);
+  const placeOrder = useServerFn(placeBrokerOrder);
 
   const settingsQuery = useQuery({
     queryKey: ["autopilot", "settings"],
@@ -97,9 +105,46 @@ function AutopilotPage() {
   });
 
   const decideMutation = useMutation({
-    mutationFn: (input: { id: string; decision: "approve" | "reject" }) => decide({ data: input }),
+    mutationFn: async (input: { id: string; decision: "approve" | "reject" }) => {
+      const res = await decide({ data: input });
+      if (res.status !== "approved" || !res.order) return { status: res.status, filled: false as const, detail: "" };
+      const order = res.order;
+      if (order.accountTarget === "paper") {
+        const filled = await fillPaper({ data: { id: input.id } });
+        return { status: res.status, filled: true as const, detail: `Paper fill, ${filled.size} units` };
+      }
+      if (!order.units) throw new Error("This proposal has no position size. Size it on the Broker page.");
+      const placed = await placeOrder({
+        data: {
+          symbol: order.symbol,
+          side: order.side,
+          units: order.units,
+          orderType: "market",
+          stopLoss: order.stopLoss ?? undefined,
+          takeProfit: order.takeProfit ?? undefined,
+        },
+      });
+      await markResult({ data: { id: input.id, status: "filled", brokerOrderId: placed.orderId } });
+      return { status: res.status, filled: true as const, detail: `Broker order ${placed.orderId}` };
+    },
     onSuccess: (res) => {
-      toast.success(res.status === "approved" ? "Approved. Send it from the Broker page to execute." : "Proposal rejected.");
+      if (res.status !== "approved") toast.success("Proposal rejected.");
+      else if (res.filled) toast.success(`Approved and executed. ${res.detail}`);
+      else toast.success("Approved.");
+      qc.invalidateQueries({ queryKey: ["autopilot", "proposals"] });
+    },
+    onError: (e: Error) => {
+      toast.error(e.message);
+      qc.invalidateQueries({ queryKey: ["autopilot", "proposals"] });
+    },
+  });
+
+  const scanMutation = useMutation({
+    mutationFn: () => scan({ data: { timeframe: "60" } }),
+    onSuccess: (res) => {
+      if (res.created > 0) toast.success(`${res.created} proposal${res.created === 1 ? "" : "s"} waiting for you.`);
+      else if (res.blocked > 0) toast.message(`No proposals cleared your rails. ${res.blocked} were blocked.`);
+      else toast.message("No setups on your instruments right now.");
       qc.invalidateQueries({ queryKey: ["autopilot", "proposals"] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -297,13 +342,24 @@ function AutopilotPage() {
       </section>
 
       <section className="mt-4 rounded-md border border-border bg-card p-5">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Waiting for you ({pending.length})
-        </h2>
+        <div className="flex flex-wrap items-center gap-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            Waiting for you ({pending.length})
+          </h2>
+          <button
+            type="button"
+            onClick={() => scanMutation.mutate()}
+            disabled={scanMutation.isPending}
+            className="ml-auto flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-xs disabled:opacity-60"
+          >
+            <RefreshCw className={`h-3 w-3 ${scanMutation.isPending ? "animate-spin" : ""}`} />
+            {scanMutation.isPending ? "Scanning your instruments" : "Scan for setups"}
+          </button>
+        </div>
         {pending.length === 0 ? (
           <p className="mt-3 text-sm text-muted-foreground">
-            No proposals right now. Run a scan on the dashboard and the coach will send anything that clears your rails
-            here.
+            No proposals right now. Run a scan and the coach will file anything on your instruments that clears your
+            rails here.
           </p>
         ) : (
           <ul className="mt-3 space-y-3">
@@ -333,6 +389,18 @@ function AutopilotPage() {
                     <div className="text-muted-foreground">Target</div>
                     <div className="font-mono">{p.takeProfit ?? "-"}</div>
                   </div>
+                  <div>
+                    <div className="text-muted-foreground">Size</div>
+                    <div className="font-mono">{p.units ?? "-"}</div>
+                  </div>
+                  <div>
+                    <div className="text-muted-foreground">Confidence</div>
+                    <div className="font-mono">{p.confidence === null ? "-" : `${p.confidence}%`}</div>
+                  </div>
+                  <div>
+                    <div className="text-muted-foreground">Account</div>
+                    <div className="font-mono uppercase">{p.accountTarget}</div>
+                  </div>
                 </div>
                 {p.reasoning && <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{p.reasoning}</p>}
                 <div className="mt-3 flex gap-2">
@@ -342,7 +410,8 @@ function AutopilotPage() {
                     onClick={() => decideMutation.mutate({ id: p.id, decision: "approve" })}
                     className="flex items-center gap-1 rounded-md border border-emerald-600/50 px-3 py-1.5 text-xs text-emerald-400"
                   >
-                    <Check className="h-3 w-3" /> Approve
+                    <Check className="h-3 w-3" />
+                    {settings.accountTarget === "paper" ? "Approve and fill on paper" : "Approve and send to broker"}
                   </button>
                   <button
                     type="button"
