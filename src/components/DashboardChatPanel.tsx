@@ -32,6 +32,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { compressImage, getScreenshotQuota, bumpScreenshotQuota } from "@/lib/imageCompress";
 import { toast } from "sonner";
 import { parseAiPayload, type ChartAnnotation, type ChartGrade, type ConceptRef } from "@/lib/chartAnnotations";
+import { coalesceUiMessageStream, textFromUiMessageParts } from "@/lib/chat-stream";
 import { ConceptDiagram } from "@/components/ConceptDiagram";
 
 export type DashboardChatHandle = {
@@ -54,15 +55,7 @@ type Props = { chart?: ChartContext; onClose?: () => void; onMinimize?: () => vo
 const DASHBOARD_THREAD_FALLBACK_ID = "dashboard-scans";
 
 function uiMessageText(message: UIMessage | null | undefined): string {
-  if (!message?.parts) return "";
-  return message.parts
-    .map((part) => {
-      const p = part as { type?: string; text?: string; delta?: string };
-      if (p.type === "text") return p.text ?? "";
-      if (p.type === "text-delta") return p.delta ?? "";
-      return "";
-    })
-    .join("");
+  return textFromUiMessageParts(message?.parts);
 }
 
 export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(function DashboardChatPanel({ chart, onClose, onMinimize, onRunScan, onStopScan, scanning, threadIdOverride, onAnnotations, onConcept, onGrade }, ref) {
@@ -421,7 +414,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
           }
           const headers = new Headers(init?.headers);
           if (token) headers.set("Authorization", `Bearer ${token}`);
-          return fetch(input, { ...init, headers });
+          return coalesceUiMessageStream(await fetch(input, { ...init, headers }));
         },
         prepareSendMessagesRequest: ({ messages, id }) => {
           const stratName = readActiveStrategy();
