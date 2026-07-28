@@ -705,6 +705,13 @@ function Dashboard() {
   const askedRef = useRef<string | null>(null);
   const intervalLabel = INTERVALS.find((i) => i.value === interval)?.label ?? interval;
 
+  // Persist current instrument/timeframe so the standalone chat route also
+  // knows what the trader is looking at even without a live chart panel.
+  useEffect(() => {
+    const enabledLevels = ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none";
+    writeLastChart({ ticker: symbolLabel(symbol), intervalLabel, enabledLevels });
+  }, [symbol, intervalLabel, levels]);
+
   const runPlan = useServerFn(runResearchPlan);
   const createChatThreadFn = useServerFn(createChatThread);
 
