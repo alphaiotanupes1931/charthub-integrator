@@ -144,7 +144,7 @@ function ChatThreadInner({
     <div className="flex flex-col h-full min-h-0">
       <div className="flex items-center justify-between px-4 md:px-8 py-2 max-w-3xl mx-auto w-full border-b border-border/60 bg-background/80">
         <span className="text-sm font-semibold text-foreground">{readActiveCoach()}</span>
-        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+        <span className="text-[9px] font-semibold uppercase tracking-wider text-primary px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20">
           {activeModel?.label ?? "AI"}
         </span>
       </div>
