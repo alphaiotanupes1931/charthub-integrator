@@ -325,6 +325,11 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
     const chartRef = useRef<ChartContext | undefined>(chart);
     useEffect(() => { chartRef.current = chart; }, [chart]);
     const voice = useCoachVoice();
+    const [activeModel, setActiveModel] = useState<ActiveModelInfo | null>(null);
+    const getModel = useServerFn(getActiveModel);
+    useEffect(() => {
+      getModel().then(setActiveModel).catch(() => setActiveModel(null));
+    }, [getModel]);
     const { isAdmin } = useProfile();
     const { resolvedTimezone } = useTimezone();
     const [now, setNow] = useState<Date>(() => new Date());
