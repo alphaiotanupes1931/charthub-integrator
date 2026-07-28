@@ -40,3 +40,20 @@ export function readActiveStrategy(): string | null {
   if (typeof window === "undefined") return null;
   try { return window.localStorage.getItem(STRATEGY_KEY); } catch { return null; }
 }
+
+const LAST_CHART_KEY = "trademind.lastChart.v1";
+export type LastChart = { ticker: string; intervalLabel: string; enabledLevels?: string };
+export function readLastChart(): LastChart | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(LAST_CHART_KEY);
+    if (!raw) return null;
+    const p = JSON.parse(raw);
+    if (p && typeof p.ticker === "string" && typeof p.intervalLabel === "string") return p as LastChart;
+  } catch { /* ignore */ }
+  return null;
+}
+export function writeLastChart(c: LastChart) {
+  if (typeof window === "undefined") return;
+  try { window.localStorage.setItem(LAST_CHART_KEY, JSON.stringify(c)); } catch { /* ignore */ }
+}
