@@ -22,7 +22,7 @@ import {
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { supabase } from "@/integrations/supabase/client";
 import { useTimezone, formatInTimezone } from "@/hooks/useTimezone";
-import { getOrCreateDashboardThread, getChatMessages } from "@/lib/chat.functions";
+import { getOrCreateDashboardThread, getChatMessages, getActiveModel, type ActiveModelInfo } from "@/lib/chat.functions";
 import { readJournal, readActiveCoach, writeActiveCoach, readActiveStrategy } from "@/lib/chat-client";
 import { findStrategyByName } from "@/lib/customStrategies";
 import { readActiveLensId, findLens } from "@/lib/scanLens";
@@ -325,6 +325,11 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
     const chartRef = useRef<ChartContext | undefined>(chart);
     useEffect(() => { chartRef.current = chart; }, [chart]);
     const voice = useCoachVoice();
+    const [activeModel, setActiveModel] = useState<ActiveModelInfo | null>(null);
+    const getModel = useServerFn(getActiveModel);
+    useEffect(() => {
+      getModel().then(setActiveModel).catch(() => setActiveModel(null));
+    }, [getModel]);
     const { isAdmin } = useProfile();
     const { resolvedTimezone } = useTimezone();
     const [now, setNow] = useState<Date>(() => new Date());
@@ -613,6 +618,14 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
           </div>
 
           <div className="flex items-center gap-0.5 shrink-0">
+            {activeModel && (
+              <span
+                className="hidden sm:inline-flex text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-1.5 py-0.5 rounded bg-muted/60 border border-border/60"
+                title={`Powered by ${activeModel.label}`}
+              >
+                {activeModel.label}
+              </span>
+            )}
             <Link
               to="/chat"
               className="hidden sm:inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60"

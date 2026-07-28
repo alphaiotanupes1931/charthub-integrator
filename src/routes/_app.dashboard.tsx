@@ -19,7 +19,7 @@ import { voiceForCoach } from "@/lib/coachVoices";
 import { COACH_ICON_META, DEFAULT_COACH_ICON } from "@/lib/coachMeta";
 import { runResearchPlan } from "@/lib/agents/research.functions";
 import { recordHermesFeedback } from "@/lib/agents/hermes.functions";
-import { listChatThreads, createChatThread, deleteChatThread } from "@/lib/chat.functions";
+import { listChatThreads, createChatThread, deleteChatThread, getActiveModel, type ActiveModelInfo } from "@/lib/chat.functions";
 import type { ResearchMemo } from "@/lib/agents/types";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -558,6 +558,11 @@ function Dashboard() {
   }, [lastUpdatedAt]);
 
   const [rightTab, setRightTab] = useState<"analysis" | "chat">("analysis");
+  const [activeModel, setActiveModel] = useState<ActiveModelInfo | null>(null);
+  const getModel = useServerFn(getActiveModel);
+  useEffect(() => {
+    getModel().then(setActiveModel).catch(() => setActiveModel(null));
+  }, [getModel]);
   const [chatPanelView, setChatPanelView] = useState<"conversation" | "history">("conversation");
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [rightOpen, setRightOpen] = useState(true);
@@ -1441,6 +1446,14 @@ function Dashboard() {
                     <MessageSquare className="h-3.5 w-3.5" /> Chat
                   </button>
                 </div>
+                {activeModel && (
+                  <span
+                    className="shrink-0 text-[9px] font-semibold uppercase tracking-wider text-primary px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20"
+                    title={`Powered by ${activeModel.label}`}
+                  >
+                    {activeModel.label}
+                  </span>
+                )}
                 <button
                   onClick={() => setRightOpen(false)}
                   className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 shrink-0"

@@ -22,7 +22,7 @@ import {
 } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { readJournal, readActiveCoach } from "@/lib/chat-client";
-import { getChatMessages } from "@/lib/chat.functions";
+import { getChatMessages, getActiveModel, type ActiveModelInfo } from "@/lib/chat.functions";
 import { useCoachVoice } from "@/hooks/useCoachVoice";
 import { voiceForCoach } from "@/lib/coachVoices";
 import { supabase } from "@/integrations/supabase/client";
@@ -78,6 +78,11 @@ function ChatThreadInner({
   const [input, setInput] = useState("");
   const voice = useCoachVoice();
   const lastSpokenIdRef = useRef<string | null>(null);
+  const [activeModel, setActiveModel] = useState<ActiveModelInfo | null>(null);
+  const getModel = useServerFn(getActiveModel);
+  useEffect(() => {
+    getModel().then(setActiveModel).catch(() => setActiveModel(null));
+  }, [getModel]);
 
   const { messages, sendMessage, status } = useChat({
     id: threadId,
@@ -137,6 +142,12 @@ function ChatThreadInner({
 
   return (
     <div className="flex flex-col h-full min-h-0">
+      <div className="flex items-center justify-between px-4 md:px-8 py-2 max-w-3xl mx-auto w-full border-b border-border/60 bg-background/80">
+        <span className="text-sm font-semibold text-foreground">{readActiveCoach()}</span>
+        <span className="text-[9px] font-semibold uppercase tracking-wider text-primary px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20">
+          {activeModel?.label ?? "AI"}
+        </span>
+      </div>
       <Conversation className="flex-1 min-h-0">
         <ConversationContent className="px-4 md:px-8 py-6 max-w-3xl mx-auto w-full">
           {messages.length === 0 && (
