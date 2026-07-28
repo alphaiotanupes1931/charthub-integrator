@@ -1448,7 +1448,7 @@ function Dashboard() {
                 </div>
                 {activeModel && (
                   <span
-                    className="shrink-0 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground px-1.5 py-0.5 rounded bg-muted/60 border border-border/60"
+                    className="shrink-0 text-[9px] font-semibold uppercase tracking-wider text-primary px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20"
                     title={`Powered by ${activeModel.label}`}
                   >
                     {activeModel.label}
