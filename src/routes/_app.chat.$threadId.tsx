@@ -22,7 +22,7 @@ import {
 } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { readJournal, readActiveCoach } from "@/lib/chat-client";
-import { getChatMessages } from "@/lib/chat.functions";
+import { getChatMessages, getActiveModel, type ActiveModelInfo } from "@/lib/chat.functions";
 import { useCoachVoice } from "@/hooks/useCoachVoice";
 import { voiceForCoach } from "@/lib/coachVoices";
 import { supabase } from "@/integrations/supabase/client";
