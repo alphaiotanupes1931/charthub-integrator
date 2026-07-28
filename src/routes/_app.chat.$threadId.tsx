@@ -25,12 +25,17 @@ import { readJournal, readActiveCoach } from "@/lib/chat-client";
 import { getChatMessages, getActiveModel, type ActiveModelInfo } from "@/lib/chat.functions";
 import { useCoachVoice } from "@/hooks/useCoachVoice";
 import { voiceForCoach } from "@/lib/coachVoices";
+import { coalesceUiMessageStream, textFromUiMessageParts } from "@/lib/chat-stream";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/chat/$threadId")({
   component: ChatThread,
 });
+
+function uiMessageText(message: UIMessage | null | undefined): string {
+  return textFromUiMessageParts(message?.parts);
+}
 
 function ChatThread() {
   const { threadId } = useParams({ from: "/_app/chat/$threadId" });
@@ -94,7 +99,7 @@ function ChatThreadInner({
         const token = data.session?.access_token;
         const headers = new Headers(init?.headers);
         if (token) headers.set("Authorization", `Bearer ${token}`);
-        return fetch(input, { ...init, headers });
+        return coalesceUiMessageStream(await fetch(input, { ...init, headers }));
       },
       prepareSendMessagesRequest: ({ messages, id }) => ({
         body: {
@@ -119,10 +124,7 @@ function ChatThreadInner({
     const last = messages[messages.length - 1];
     if (!last || last.role !== "assistant") return;
     if (lastSpokenIdRef.current === last.id) return;
-    const text = last.parts
-      .map((p) => (p.type === "text" ? (p as { text: string }).text : ""))
-      .join("")
-      .trim();
+    const text = uiMessageText(last).trim();
     if (!text) return;
     lastSpokenIdRef.current = last.id;
     void voice.speak(text, voiceForCoach(readActiveCoach()));
@@ -156,9 +158,7 @@ function ChatThreadInner({
             </div>
           )}
           {messages.map((m) => {
-            const text = m.parts
-              .map((p) => (p.type === "text" ? (p as { text: string }).text : ""))
-              .join("");
+            const text = uiMessageText(m);
             return (
               <Message key={m.id} from={m.role}>
                 {m.role === "assistant" ? (

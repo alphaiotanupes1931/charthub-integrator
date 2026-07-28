@@ -25,53 +25,6 @@ const stripReasoningTransform: StreamTextTransform<ToolSet> = () =>
     },
   });
 
-const stripReasoningStreamEvents = (response: Response) => {
-  if (!response.body) return response;
-
-  const decoder = new TextDecoder();
-  const encoder = new TextEncoder();
-  let buffer = "";
-
-  const filtered = response.body.pipeThrough(
-    new TransformStream<Uint8Array, Uint8Array>({
-      transform(chunk, controller) {
-        buffer += decoder.decode(chunk, { stream: true }).replace(/\r\n/g, "\n");
-        const events = buffer.split("\n\n");
-        buffer = events.pop() ?? "";
-
-        for (const event of events) {
-          const dataLine = event
-            .split("\n")
-            .find((line) => line.startsWith("data: "));
-          if (dataLine) {
-            const data = dataLine.slice(6).trim();
-            if (data !== "[DONE]") {
-              try {
-                const parsed = JSON.parse(data) as { type?: string };
-                if (parsed.type === "reasoning-start" || parsed.type === "reasoning-delta" || parsed.type === "reasoning-end") {
-                  continue;
-                }
-              } catch {
-                // Keep non-JSON stream chunks intact.
-              }
-            }
-          }
-          controller.enqueue(encoder.encode(`${event}\n\n`));
-        }
-      },
-      flush(controller) {
-        if (buffer) controller.enqueue(encoder.encode(buffer.replace(/\r\n/g, "\n")));
-      },
-    }),
-  );
-
-  return new Response(filtered, {
-    status: response.status,
-    statusText: response.statusText,
-    headers: response.headers,
-  });
-};
-
 type Trade = {
   id: string;
   date: string;
@@ -365,6 +318,8 @@ When (and only when) they explicitly ask for a setup, entry, plan, or "grade thi
 Rules:
 - Be conversational, like a real coach and teacher. Short paragraphs. Direct. Use examples. Contractions are fine.
 - Write in full sentences and always finish your thought. Never stop mid-sentence. If you are running long, wrap up cleanly rather than leaving a dangling clause.
+- Never answer a greeting, short opener, or casual message with only one word or one phrase. For greetings, reply with 2-3 complete sentences and offer a specific next step like scanning the current chart, reviewing the journal, or explaining a setup.
+- For normal non-scan answers, write at least 2 complete sentences unless the user explicitly asks for a one-word answer.
 - Explain any term plainly when asked (FVG, OB, liquidity sweep, R-multiple, Wyckoff phases, etc.).
 - Never invent trades that aren't in their journal. If you don't have the data, say so.
 - Never say you are waiting for a live price feed, waiting for live data, or unable to provide levels because the feed has not loaded. If exact live price is unavailable, proceed with approximate/illustrative levels and label them clearly.

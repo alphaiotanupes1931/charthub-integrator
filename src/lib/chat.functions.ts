@@ -58,12 +58,21 @@ export const listChatThreads = createServerFn({ method: "POST" })
       SPX500: "SPX500", GSPC: "SPX500", SPY: "SPX500",
     };
     const acc: Record<string, { first?: string; symbol?: string; grade?: string; scanned?: boolean }> = {};
+    const uiMessageText = (parts: unknown): string => {
+      if (!Array.isArray(parts)) return "";
+      return (parts as Array<{ type?: string; text?: string; delta?: string }>)
+        .map((p) => {
+          if (p?.type === "text") return p.text ?? "";
+          if (p?.type === "text-delta") return p.delta ?? "";
+          return "";
+        })
+        .join("");
+    };
     // Iterate oldest→newest so "first" user text is captured, latest symbol/grade wins.
     const ordered = (msgs ?? []).slice().reverse() as Array<{ thread_id: string; role: string; parts: unknown }>;
     for (const m of ordered) {
       const tid = m.thread_id;
-      const parts = Array.isArray(m.parts) ? (m.parts as Array<{ type?: string; text?: string }>) : [];
-      const text = parts.map((p) => (p?.type === "text" ? p.text ?? "" : "")).join(" ").replace(/\s+/g, " ").trim();
+      const text = uiMessageText(m.parts).replace(/\s+/g, " ").trim();
       if (!text) continue;
       const entry = acc[tid] ?? (acc[tid] = {});
       if (!entry.first && m.role === "user") entry.first = text.slice(0, 80);
