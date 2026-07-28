@@ -602,13 +602,17 @@ export const Route = createFileRoute("/api/chat")({
           model: primaryModel,
           system,
           messages: await convertToModelMessages(messages),
-          maxOutputTokens: 4096,
+          maxOutputTokens: useClaude ? 8192 : 4096,
+          temperature: useClaude ? 0.7 : undefined,
           abortSignal: request.signal,
           ...(useClaude ? {} : { providerOptions: { lovable: { service_tier: "priority" } } }),
           experimental_transform: stripReasoningTransform,
           onError: async ({ error }) => {
             const msg = (error as Error)?.message ?? String(error);
             console.error(`[chat] req=${reqId} stream_error`, msg);
+          },
+          onFinish: async ({ finishReason, usage }) => {
+            console.log(`[chat] req=${reqId} finish reason=${finishReason} in=${usage?.inputTokens ?? "?"} out=${usage?.outputTokens ?? "?"} claude=${useClaude}`);
           },
         });
 
