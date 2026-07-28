@@ -50,7 +50,7 @@ export type ChartContext = {
   snapshot?: import("@/components/NativeChart").ChartSnapshot;
 };
 
-type Props = { chart?: ChartContext; onClose?: () => void; onMinimize?: () => void; onRunScan?: () => void; onStopScan?: () => void; scanning?: boolean; threadIdOverride?: string | null; onAnnotations?: (a: ChartAnnotation[]) => void; onConcept?: (c: ConceptRef | null) => void; onGrade?: (g: import("@/lib/chartAnnotations").ChartGrade | null) => void; };
+type Props = { chart?: ChartContext; onClose?: () => void; onMinimize?: () => void; onRunScan?: () => void; onStopScan?: () => void; scanning?: boolean; threadIdOverride?: string | null; onAnnotations?: (a: ChartAnnotation[]) => void; onConcept?: (c: ConceptRef | null) => void; onGrade?: (g: import("@/lib/chartAnnotations").ChartGrade | null) => void; onShowMe?: () => void; };
 
 const DASHBOARD_THREAD_FALLBACK_ID = "dashboard-scans";
 
@@ -58,7 +58,7 @@ function uiMessageText(message: UIMessage | null | undefined): string {
   return textFromUiMessageParts(message?.parts);
 }
 
-export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(function DashboardChatPanel({ chart, onClose, onMinimize, onRunScan, onStopScan, scanning, threadIdOverride, onAnnotations, onConcept, onGrade }, ref) {
+export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(function DashboardChatPanel({ chart, onClose, onMinimize, onRunScan, onStopScan, scanning, threadIdOverride, onAnnotations, onConcept, onGrade, onShowMe }, ref) {
   const [threadId, setThreadId] = useState<string | null>(threadIdOverride ?? null);
   const [initial, setInitial] = useState<UIMessage[] | null>(null);
   const innerRef = useRef<DashboardChatHandle | null>(null);
@@ -220,7 +220,7 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
     );
   }
 
-  return <ChatInner key={threadId} ref={innerRef} threadId={threadId} initial={initial} chart={chart} onClose={onClose} onMinimize={onMinimize} onRunScan={onRunScan} onStopScan={onStopScan} scanning={scanning} onAnnotations={onAnnotations} onConcept={onConcept} onGrade={onGrade} />;
+  return <ChatInner key={threadId} ref={innerRef} threadId={threadId} initial={initial} chart={chart} onClose={onClose} onMinimize={onMinimize} onRunScan={onRunScan} onStopScan={onStopScan} scanning={scanning} onAnnotations={onAnnotations} onConcept={onConcept} onGrade={onGrade} onShowMe={onShowMe} />;
 });
 
 
@@ -316,8 +316,8 @@ function GradeCard({ grade, lastPrice }: { grade: ChartGrade; lastPrice?: number
 }
 
 
-const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: UIMessage[]; chart?: ChartContext; onClose?: () => void; onMinimize?: () => void; onRunScan?: () => void; onStopScan?: () => void; scanning?: boolean; onAnnotations?: (a: ChartAnnotation[]) => void; onConcept?: (c: ConceptRef | null) => void; onGrade?: (g: import("@/lib/chartAnnotations").ChartGrade | null) => void }>(
-  function ChatInner({ threadId, initial, chart, onClose, onMinimize, onRunScan, onStopScan, scanning, onAnnotations, onConcept, onGrade }, ref) {
+const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: UIMessage[]; chart?: ChartContext; onClose?: () => void; onMinimize?: () => void; onRunScan?: () => void; onStopScan?: () => void; scanning?: boolean; onAnnotations?: (a: ChartAnnotation[]) => void; onConcept?: (c: ConceptRef | null) => void; onGrade?: (g: import("@/lib/chartAnnotations").ChartGrade | null) => void; onShowMe?: () => void }>(
+  function ChatInner({ threadId, initial, chart, onClose, onMinimize, onRunScan, onStopScan, scanning, onAnnotations, onConcept, onGrade, onShowMe }, ref) {
 
     const [input, setInput] = useState("");
     const [pendingImage, setPendingImage] = useState<{ url: string; name: string; mediaType: string } | null>(null);
@@ -555,6 +555,8 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
       if (!text && !img) return;
       if (chatBusy) return;
       if (voice.enabled) voice.prime();
+      // "show me ..." means the coach will draw on the chart - jump to Setup view.
+      if (text && /\bshow\s*me\b/i.test(text)) onShowMe?.();
       setInput("");
       setPendingImage(null);
       if (img) {
