@@ -21,7 +21,9 @@ import {
   PromptInputSubmit,
 } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
-import { readJournal, readActiveCoach } from "@/lib/chat-client";
+import { readJournal, readActiveCoach, readActiveStrategy, readLastChart, type LastChart } from "@/lib/chat-client";
+import { findStrategyByName } from "@/lib/customStrategies";
+import { findLens, readActiveLensId } from "@/lib/scanLens";
 import { getChatMessages, getActiveModel, type ActiveModelInfo } from "@/lib/chat.functions";
 import { useCoachVoice } from "@/hooks/useCoachVoice";
 import { voiceForCoach } from "@/lib/coachVoices";
@@ -89,6 +91,25 @@ function ChatThreadInner({
     getModel().then(setActiveModel).catch(() => setActiveModel(null));
   }, [getModel]);
 
+  // Live snapshot of instrument + strategy so the header always reflects context.
+  const [ctx, setCtx] = useState<{ chart: LastChart | null; strategy: string | null }>(() => ({
+    chart: readLastChart(),
+    strategy: readActiveStrategy(),
+  }));
+  useEffect(() => {
+    const sync = () => setCtx({ chart: readLastChart(), strategy: readActiveStrategy() });
+    sync();
+    const onStorage = () => sync();
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("focus", sync);
+    const iv = window.setInterval(sync, 4000);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("focus", sync);
+      window.clearInterval(iv);
+    };
+  }, [threadId]);
+
   const { messages, sendMessage, status } = useChat({
     id: threadId,
     messages: initialMessages,
@@ -101,14 +122,23 @@ function ChatThreadInner({
         if (token) headers.set("Authorization", `Bearer ${token}`);
         return coalesceUiMessageStream(await fetch(input, { ...init, headers }));
       },
-      prepareSendMessagesRequest: ({ messages, id }) => ({
-        body: {
-          messages,
-          threadId: id,
-          coach: readActiveCoach(),
-          journal: readJournal(),
-        },
-      }),
+      prepareSendMessagesRequest: ({ messages, id }) => {
+        const stratName = readActiveStrategy();
+        const strategy = stratName ? findStrategyByName(stratName) ?? { name: stratName } : null;
+        const lens = findLens(readActiveLensId());
+        const lastChart = readLastChart();
+        return {
+          body: {
+            messages,
+            threadId: id,
+            coach: readActiveCoach(),
+            journal: readJournal(),
+            chart: lastChart ?? undefined,
+            strategy,
+            lens: { id: lens.id, name: lens.name, promptEmphasis: lens.promptEmphasis },
+          },
+        };
+      },
     }),
     onError: (err) => {
       console.error(err);
@@ -144,9 +174,21 @@ function ChatThreadInner({
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <div className="flex items-center justify-between px-4 md:px-8 py-2 max-w-3xl mx-auto w-full border-b border-border/60 bg-background/80">
-        <span className="text-sm font-semibold text-foreground">{readActiveCoach()}</span>
-        <span className="text-[9px] font-semibold uppercase tracking-wider text-primary px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20">
+      <div className="flex items-center justify-between gap-3 px-4 md:px-8 py-2 max-w-3xl mx-auto w-full border-b border-border/60 bg-background/80">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-sm font-semibold text-foreground truncate">{readActiveCoach()}</span>
+          {ctx.chart?.ticker && (
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-foreground px-1.5 py-0.5 rounded bg-muted border border-border truncate max-w-[180px]" title={`${ctx.chart.ticker} · ${ctx.chart.intervalLabel}`}>
+              {ctx.chart.ticker} · {ctx.chart.intervalLabel}
+            </span>
+          )}
+          {ctx.strategy && (
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-1.5 py-0.5 rounded border border-border truncate max-w-[160px]" title={`Strategy: ${ctx.strategy}`}>
+              {ctx.strategy}
+            </span>
+          )}
+        </div>
+        <span className="text-[9px] font-semibold uppercase tracking-wider text-primary px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20 shrink-0">
           {activeModel?.label ?? "AI"}
         </span>
       </div>
