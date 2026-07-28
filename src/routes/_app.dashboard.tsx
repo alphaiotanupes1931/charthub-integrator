@@ -1530,7 +1530,8 @@ function Dashboard() {
                         onStopScan={() => { voice.stop(); setScanning(false); }}
                         scanning={scanning}
                         threadIdOverride={activeThreadId}
-                        onAnnotations={setAiAnnotationsRaw}
+                        onAnnotations={(a) => { setAiAnnotationsRaw(a); if (a.length > 0) setChartTab("setup"); }}
+                        onShowMe={() => setChartTab("setup")}
                         onGrade={(g) => setAiGrade(sanitizeVisibleGrade(g))}
                         onConcept={setAiConcept}
                         chart={{
@@ -1653,7 +1654,8 @@ function Dashboard() {
                   onStopScan={() => { voice.stop(); setScanning(false); }}
                   scanning={scanning}
                   threadIdOverride={activeThreadId}
-                  onAnnotations={setAiAnnotationsRaw}
+                  onAnnotations={(a) => { setAiAnnotationsRaw(a); if (a.length > 0) setChartTab("setup"); }}
+                        onShowMe={() => setChartTab("setup")}
                   onGrade={(g) => setAiGrade(sanitizeVisibleGrade(g))}
                   onConcept={setAiConcept}
                   chart={{
