@@ -22,7 +22,7 @@ import {
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { supabase } from "@/integrations/supabase/client";
 import { useTimezone, formatInTimezone } from "@/hooks/useTimezone";
-import { getOrCreateDashboardThread, getChatMessages } from "@/lib/chat.functions";
+import { getOrCreateDashboardThread, getChatMessages, getActiveModel, type ActiveModelInfo } from "@/lib/chat.functions";
 import { readJournal, readActiveCoach, writeActiveCoach, readActiveStrategy } from "@/lib/chat-client";
 import { findStrategyByName } from "@/lib/customStrategies";
 import { readActiveLensId, findLens } from "@/lib/scanLens";
