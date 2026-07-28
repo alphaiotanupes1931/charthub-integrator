@@ -1,5 +1,4 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getEvent } from "@tanstack/react-start/server";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
