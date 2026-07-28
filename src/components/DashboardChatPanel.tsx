@@ -53,6 +53,18 @@ type Props = { chart?: ChartContext; onClose?: () => void; onMinimize?: () => vo
 
 const DASHBOARD_THREAD_FALLBACK_ID = "dashboard-scans";
 
+function uiMessageText(message: UIMessage | null | undefined): string {
+  if (!message?.parts) return "";
+  return message.parts
+    .map((part) => {
+      const p = part as { type?: string; text?: string; delta?: string };
+      if (p.type === "text") return p.text ?? "";
+      if (p.type === "text-delta") return p.delta ?? "";
+      return "";
+    })
+    .join("");
+}
+
 export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(function DashboardChatPanel({ chart, onClose, onMinimize, onRunScan, onStopScan, scanning, threadIdOverride, onAnnotations, onConcept, onGrade }, ref) {
   const [threadId, setThreadId] = useState<string | null>(threadIdOverride ?? null);
   const [initial, setInitial] = useState<UIMessage[] | null>(null);
@@ -448,9 +460,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
     const hasVisibleAssistantReplySince = useCallback((before: number) => {
       const assistantMessages = messagesRef.current.filter((m) => m.role === "assistant").slice(before);
       return assistantMessages.some((m) => {
-        const raw = m.parts
-          .map((p) => (p.type === "text" ? (p as { text: string }).text : ""))
-          .join("");
+        const raw = uiMessageText(m);
         const parsed = parseAiPayload(raw);
         return !!parsed.cleanText || !!parsed.grade || !!parsed.concept || parsed.annotations.length > 0;
       });
@@ -485,7 +495,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
     useEffect(() => {
       const last = [...messages].reverse().find((m) => m.role === "assistant");
       if (!last) return;
-      const text = last.parts.map((p) => (p.type === "text" ? (p as { text: string }).text : "")).join("");
+      const text = uiMessageText(last);
       const parsed = parseAiPayload(text);
       if (onAnnotations) onAnnotations(parsed.annotations);
       if (onConcept) onConcept(parsed.concept ?? null);
@@ -658,9 +668,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               </div>
             )}
             {messages.map((m) => {
-              const raw = m.parts
-                .map((p) => (p.type === "text" ? (p as { text: string }).text : ""))
-                .join("");
+              const raw = uiMessageText(m);
               if (m.role === "assistant") {
                 const parsed = parseAiPayload(raw);
                 const g = parsed.grade ? sanitizeGradeForPrice(parsed.grade, chart?.snapshot?.lastPrice) : undefined;
