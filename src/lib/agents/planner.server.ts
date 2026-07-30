@@ -416,6 +416,14 @@ export async function runPlanner(
     ? Math.max(25, Math.min(modelConf || consensusConf || 35, 45))
     : Math.max(modelConf, consensusConf, gradeFloor[grade]);
 
+  // Daily bias sets the day's direction; 4H is the current trend. They can
+  // disagree (price rallying up into a daily sell zone), which is exactly what
+  // the trader needs to see.
+  const ladder = snap.mtf?.ladder ?? [];
+  const dailyBias = ladder.find((r) => r.label === "Daily")?.bias ?? snap.cisd.htfBias;
+  const currentTrend = ladder.find((r) => r.label === "4H")?.trend ?? snap.mtf?.h4.trend ?? "range";
+  const synopsis = buildSynopsis(snap, memo, grade, bias, dailyBias, currentTrend);
+
   return {
     grade,
     bias,
@@ -428,5 +436,56 @@ export async function runPlanner(
     rr:    isNoEntry ? "-" : rr,
     details,
     memo,
+    orderFlow: snap.orderFlow,
+    dailyBias,
+    currentTrend,
+    synopsis,
   };
+}
+
+/**
+ * One short paragraph explaining why this grade was given, built from the
+ * actual numbers rather than generic strength/weakness bullets.
+ */
+function buildSynopsis(
+  snap: MarketSnapshot,
+  memo: ResearchMemo,
+  grade: string,
+  bias: string,
+  dailyBias: string,
+  currentTrend: string,
+): string {
+  const l = snap.mtf?.ladder ?? [];
+  const rung = (label: string) => l.find((r) => r.label === label);
+  const of = snap.orderFlow;
+  const parts: string[] = [];
+
+  const monthly = rung("Monthly");
+  const weekly = rung("Weekly");
+  if (monthly && weekly) parts.push(`Monthly is ${monthly.bias} and weekly is ${weekly.bias}`);
+  parts.push(`the daily bias for today is ${dailyBias}`);
+  parts.push(`the 4H trend is ${currentTrend}`);
+
+  const h1 = snap.mtf?.h1;
+  if (h1 && h1.structureBreak !== "none") parts.push(`the 1H broke structure to the ${h1.structureBreak === "bullish" ? "upside" : "downside"}`);
+  else parts.push("the 1H has not broken structure yet");
+
+  const m15 = snap.mtf?.m15;
+  if (m15) parts.push(m15.confirmation === "none" ? "the 15m has not confirmed" : `the 15m confirms ${m15.confirmation}`);
+
+  if (of) {
+    parts.push(
+      `order flow shows ${of.buyPct.toFixed(0)}% buy volume with CVD ${of.cvdSlope >= 0 ? "rising" : "falling"}, price ${of.priceVsPoc} the point of control, and a ${of.depth} book`,
+    );
+  }
+
+  const conflict =
+    (dailyBias === "bullish" && currentTrend === "down") || (dailyBias === "bearish" && currentTrend === "up");
+  const tail = conflict
+    ? " Daily bias and the current 4H trend disagree, so price is likely travelling into the level rather than away from it. Wait for the 15m to confirm before committing."
+    : grade === "NO ENTRY"
+      ? " Nothing lines up cleanly enough to justify risk right now."
+      : ` That is why this reads as a ${grade} ${bias.toLowerCase()}.`;
+
+  return `${parts.join(", ")}.${tail} Analyst consensus: ${memo.consensus}.`;
 }
