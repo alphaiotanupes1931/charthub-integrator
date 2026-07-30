@@ -127,4 +127,12 @@ export type TradePlan = {
   rr: string;
   details: string;
   memo: ResearchMemo;
+  /** Real order-flow metrics for the scanned instrument. */
+  orderFlow?: OrderFlow;
+  /** Daily bias for the day, from the Daily rung of the ladder. */
+  dailyBias?: "bullish" | "bearish" | "neutral";
+  /** Current trend, from the 4H rung - can disagree with daily bias. */
+  currentTrend?: "up" | "down" | "range";
+  /** Short plain-language synopsis of why this grade was given. */
+  synopsis?: string;
 };
