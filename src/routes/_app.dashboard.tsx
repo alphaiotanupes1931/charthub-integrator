@@ -171,6 +171,15 @@ function fmtPrice(n: number, decimals: number): string {
   return n.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 }
 
+/** Compact volume figures: 1.2M, 340K, 512. */
+function fmtCompact(n: number): string {
+  const abs = Math.abs(n);
+  if (abs >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(2)}B`;
+  if (abs >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
+  if (abs >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return n.toFixed(0);
+}
+
 function decimalsFor(price: number): number {
   if (price >= 1000) return 2;
   if (price >= 10) return 3;
