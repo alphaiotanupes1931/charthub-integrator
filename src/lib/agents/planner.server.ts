@@ -324,6 +324,7 @@ function memoBlock(memo: ResearchMemo, snap: MarketSnapshot, lensDesc?: string):
     `20-bar range: ${snap.stats.low20} - ${snap.stats.high20}`,
     `Consensus: ${memo.consensus} @ ${memo.consensusConfidence}%`,
     mtfBlock(snap),
+    formatOrderFlow(snap.orderFlow),
     lensDesc ? `Scan lens focus: ${lensDesc}` : "",
     "Analyst notes:",
     notes,
