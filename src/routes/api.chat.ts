@@ -586,7 +586,7 @@ export const Route = createFileRoute("/api/chat")({
           try {
             const { getSnapshot } = await import("@/lib/agents/market-data.server");
             const { formatOrderFlow } = await import("@/lib/agents/order-flow.server");
-            const snap = await getSnapshot(rawTicker, chart.interval ?? "60");
+            const snap = await getSnapshot(rawTicker, "60");
             if (snap.orderFlow) orderFlowText = formatOrderFlow(snap.orderFlow);
           } catch (e) {
             console.warn(`[chat] req=${reqId} order_flow_failed`, (e as Error).message);
