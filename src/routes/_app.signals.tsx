@@ -1,10 +1,20 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { PageHeader } from "@/components/PageHeader";
-import { Radar, TrendingUp, TrendingDown, Minus, Loader2, RefreshCw } from "lucide-react";
+import { Radar, TrendingUp, TrendingDown, Minus, Loader2, RefreshCw, BookOpen, History, Trash2 } from "lucide-react";
 import { runSignalScan, type Signal } from "@/lib/agents/signal-engine.functions";
+import {
+  listSignals,
+  onSignalHistoryChange,
+  recordSignal,
+  takeTrade,
+  setSignalOutcome,
+  clearSignalHistory,
+  deleteSignal,
+  type SignalRecord,
+} from "@/lib/signalHistory";
 
 export const Route = createFileRoute("/_app/signals")({
   head: () => ({ meta: [{ title: "AI Signals, TradeMind" }] }),
@@ -18,17 +28,49 @@ const TF_OPTIONS = [
   { v: "D", l: "1D" },
 ];
 
+const num = (s?: string): number | undefined => {
+  if (!s || s === "-") return undefined;
+  const n = parseFloat(String(s).replace(/[^0-9.\-]/g, ""));
+  return Number.isFinite(n) ? n : undefined;
+};
+
 function SignalsPage() {
   const navigate = useNavigate();
   const scan = useServerFn(runSignalScan);
   const [interval, setInterval] = useState("60");
   const [signals, setSignals] = useState<Signal[]>([]);
   const [scannedAt, setScannedAt] = useState<string | null>(null);
+  const [history, setHistory] = useState<SignalRecord[]>([]);
+
+  useEffect(() => {
+    const sync = () => setHistory(listSignals());
+    sync();
+    return onSignalHistoryChange(sync);
+  }, []);
 
   const mut = useMutation({
     mutationFn: async () => scan({ data: { interval } }),
-    onSuccess: (data) => { setSignals(data); setScannedAt(new Date().toLocaleTimeString()); },
+    onSuccess: (data) => {
+      setSignals(data);
+      setScannedAt(new Date().toLocaleTimeString());
+      for (const s of data) {
+        recordSignal({
+          symbol: s.ticker,
+          interval,
+          grade: s.grade,
+          bias: s.action === "BUY" ? "Long" : s.action === "SELL" ? "Short" : "Neutral",
+          entry: num(s.entry),
+          stop: num(s.stop),
+          tp1: num(s.tp1),
+          rr: s.rr,
+          synopsis: s.notes,
+          source: "engine",
+        });
+      }
+      setHistory(listSignals());
+    },
   });
+
 
   const grouped = {
     BUY: signals.filter((s) => s.action === "BUY").sort((a, b) => b.confidence - a.confidence),
