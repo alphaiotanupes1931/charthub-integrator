@@ -573,5 +573,6 @@ export async function getSnapshot(ticker: string, interval: string): Promise<Mar
     sessionsActive: activeSessions(new Date().getUTCHours()),
     fetchedAt: new Date().toISOString(),
     mtf,
+    orderFlow: computeOrderFlow(candles),
   };
 }
