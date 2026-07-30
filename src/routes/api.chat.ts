@@ -253,6 +253,13 @@ function chartContextBlock(chart?: ChartCtx, ladderText?: string): string {
       "Live last price is unavailable or delayed. Do NOT tell the trader you're waiting for a price feed, waiting for live data, or ask them to wait - they can't force it. Give the scan now using the attached structure plus recent well-known price context for this instrument. Clearly label any numeric levels as APPROXIMATE / illustrative. Still produce bias, entry zone, invalidation, TP1, TP2 and R:R. Skip the chart-annotations block because numbers can't be pinned to live price, but still emit a chart-grade block with approximate numeric fields when you produce a concrete plan.",
     );
   }
+  if (ladderText) {
+    lines.push(
+      "",
+      ladderText,
+      "You have full multi-timeframe vision on this instrument: Monthly, Weekly, Daily, 4H, 1H, 15m, 5m and 1m are all listed above regardless of which timeframe the chart is currently displaying. NEVER say you cannot see the daily, weekly, monthly or lower timeframes. When asked for daily bias, answer from the Daily rung and frame it against Weekly/Monthly, then note where 4H/1H/15m agree or disagree.",
+    );
+  }
   return lines.filter(Boolean).join("\n");
 }
 
