@@ -862,6 +862,20 @@ function Dashboard() {
     } else {
       setAiAnnotationsRaw([]);
     }
+    // Record every scan so the signal history shows previous signals.
+    recordSignal({
+      symbol: symbol.ticker,
+      interval,
+      grade: plan.grade,
+      bias: plan.bias,
+      entry,
+      stop,
+      tp1,
+      tp2,
+      rr: plan.rr,
+      synopsis: plan.synopsis ?? plan.notes,
+      source: "chart",
+    });
   };
 
   const scanResultToChatText = (plan: ScanResult, scanSymbol: Symbol) => {
