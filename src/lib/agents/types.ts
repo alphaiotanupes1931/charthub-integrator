@@ -3,7 +3,29 @@
 //   L2 Research → AnalystNote[] + ResearchMemo
 //   L3 Planner → TradePlan
 
-export type Candle = { time: number; open: number; high: number; low: number; close: number };
+export type Candle = { time: number; open: number; high: number; low: number; close: number; volume?: number };
+
+/** Real order-flow metrics derived from OHLCV. See order-flow.server.ts. */
+export type OrderFlow = {
+  /** True when the feed supplied no volume and it was estimated from bar range. */
+  estimated: boolean;
+  bars: number;
+  delta: number;
+  deltaAvg: number;
+  cvd: number;
+  cvdSlope: number;
+  poc: number;
+  valueAreaLow: number;
+  valueAreaHigh: number;
+  priceVsPoc: "above" | "below" | "at";
+  buyPct: number;
+  imbalanceSkew: number;
+  stackedImbalances: number;
+  stackedSide: "buy" | "sell" | "none";
+  depth: "thin" | "normal" | "deep" | "absorbing";
+  lastVolRatio: number;
+  bias: "bullish" | "bearish" | "neutral";
+};
 
 export type MarketSnapshot = {
   ticker: string;
@@ -31,6 +53,7 @@ export type MarketSnapshot = {
   sessionsActive: string[];
   fetchedAt: string;
   mtf?: MtfContext;
+  orderFlow?: OrderFlow;
 };
 
 // Multi-timeframe context (4H → 1H → 15m cascade).
@@ -104,4 +127,12 @@ export type TradePlan = {
   rr: string;
   details: string;
   memo: ResearchMemo;
+  /** Real order-flow metrics for the scanned instrument. */
+  orderFlow?: OrderFlow;
+  /** Daily bias for the day, from the Daily rung of the ladder. */
+  dailyBias?: "bullish" | "bearish" | "neutral";
+  /** Current trend, from the 4H rung - can disagree with daily bias. */
+  currentTrend?: "up" | "down" | "range";
+  /** Short plain-language synopsis of why this grade was given. */
+  synopsis?: string;
 };

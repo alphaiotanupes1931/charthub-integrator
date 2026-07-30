@@ -203,7 +203,7 @@ function coachPersona(coach?: string) {
   }
 }
 
-function chartContextBlock(chart?: ChartCtx, ladderText?: string): string {
+function chartContextBlock(chart?: ChartCtx, ladderText?: string, orderFlowText?: string): string {
   if (!chart?.ticker) return "The trader has not selected a chart yet.";
   // The client sends a friendly label such as "Gold Spot (XAU/USD)". Extract the
   // display name so the coach ALWAYS refers to it that way (never as raw
@@ -258,6 +258,13 @@ function chartContextBlock(chart?: ChartCtx, ladderText?: string): string {
       "",
       ladderText,
       "You have full multi-timeframe vision on this instrument: Monthly, Weekly, Daily, 4H, 1H, 15m, 5m and 1m are all listed above regardless of which timeframe the chart is currently displaying. NEVER say you cannot see the daily, weekly, monthly or lower timeframes. When asked for daily bias, answer from the Daily rung and frame it against Weekly/Monthly, then note where 4H/1H/15m agree or disagree.",
+    );
+  }
+  if (orderFlowText) {
+    lines.push(
+      "",
+      orderFlowText,
+      "When the trader asks about order flow, answer with these five metrics only: delta, cumulative volume delta, volume point of control, volume imbalance and market depth. Never answer an order-flow question with 'directional strength', 'key levels' or 'macro' - those are not order flow.",
     );
   }
   return lines.filter(Boolean).join("\n");
@@ -565,18 +572,28 @@ export const Route = createFileRoute("/api/chat")({
         // Monthly → 1m read of the active instrument so the coach can answer
         // "what's the daily bias?" no matter which timeframe is on screen.
         let ladderText: string | undefined;
+        let orderFlowText: string | undefined;
         if (chart?.ticker) {
+          const rawTicker = (chart.ticker.match(/\(([^)]+)\)\s*$/)?.[1] ?? chart.ticker).trim();
           try {
             const { getTimeframeLadder, formatLadder } = await import("@/lib/agents/market-data.server");
-            const rawTicker = (chart.ticker.match(/\(([^)]+)\)\s*$/)?.[1] ?? chart.ticker).trim();
             const rows = await getTimeframeLadder(rawTicker);
             if (rows.length) ladderText = formatLadder(rows);
           } catch (e) {
             console.warn(`[chat] req=${reqId} ladder_failed`, (e as Error).message);
           }
+          // Real order-flow metrics: delta, CVD, VPOC, imbalance, depth.
+          try {
+            const { getSnapshot } = await import("@/lib/agents/market-data.server");
+            const { formatOrderFlow } = await import("@/lib/agents/order-flow.server");
+            const snap = await getSnapshot(rawTicker, "60");
+            if (snap.orderFlow) orderFlowText = formatOrderFlow(snap.orderFlow);
+          } catch (e) {
+            console.warn(`[chat] req=${reqId} order_flow_failed`, (e as Error).message);
+          }
         }
 
-        const system = systemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText), strategyContextBlock(strategy), lensContextBlock(lens));
+        const system = systemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens));
 
         const useClaude = !!anthropicKey;
         const claudeModel = useClaude

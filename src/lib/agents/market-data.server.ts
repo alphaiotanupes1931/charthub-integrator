@@ -4,6 +4,7 @@
 // swapped for OpenBB or another provider without touching the chart route.
 
 import type { Candle, MarketSnapshot, MtfContext, TimeframeRead } from "./types";
+import { computeOrderFlow } from "./order-flow.server";
 
 const YAHOO: Record<string, string> = {
   "XAU/USD": "GC=F",
@@ -81,7 +82,7 @@ async function fromYahoo(ticker: string, interval: string): Promise<Candle[]> {
   const iv = yahooRange(interval);
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=${iv.interval}&range=${iv.range}`;
   const json = await fetchJson<{
-    chart?: { result?: Array<{ timestamp?: number[]; indicators?: { quote?: Array<{ open?: (number|null)[]; high?: (number|null)[]; low?: (number|null)[]; close?: (number|null)[] }> } }> };
+    chart?: { result?: Array<{ timestamp?: number[]; indicators?: { quote?: Array<{ open?: (number|null)[]; high?: (number|null)[]; low?: (number|null)[]; close?: (number|null)[]; volume?: (number|null)[] }> } }> };
   }>(url);
   const r = json.chart?.result?.[0];
   const q = r?.indicators?.quote?.[0];
@@ -90,7 +91,8 @@ async function fromYahoo(ticker: string, interval: string): Promise<Candle[]> {
   for (let i = 0; i < r.timestamp.length; i++) {
     const o = q.open?.[i], h = q.high?.[i], l = q.low?.[i], c = q.close?.[i];
     if (o == null || h == null || l == null || c == null) continue;
-    bars.push({ time: r.timestamp[i], open: o, high: h, low: l, close: c });
+    const v = q.volume?.[i];
+    bars.push({ time: r.timestamp[i], open: o, high: h, low: l, close: c, volume: v == null ? undefined : v });
   }
   return bars.slice(-220);
 }
@@ -571,5 +573,6 @@ export async function getSnapshot(ticker: string, interval: string): Promise<Mar
     sessionsActive: activeSessions(new Date().getUTCHours()),
     fetchedAt: new Date().toISOString(),
     mtf,
+    orderFlow: computeOrderFlow(candles),
   };
 }
