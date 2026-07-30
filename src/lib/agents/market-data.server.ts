@@ -4,6 +4,7 @@
 // swapped for OpenBB or another provider without touching the chart route.
 
 import type { Candle, MarketSnapshot, MtfContext, TimeframeRead } from "./types";
+import { computeOrderFlow } from "./order-flow.server";
 
 const YAHOO: Record<string, string> = {
   "XAU/USD": "GC=F",
