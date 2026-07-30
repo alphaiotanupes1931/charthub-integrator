@@ -346,25 +346,24 @@ function ScanTicket({
                   const n = parseFloat(String(v).replace(/[^0-9.\-]/g, ""));
                   return Number.isFinite(n) ? n : undefined;
                 };
-                const prefill = {
+                takeTrade({
                   symbol: symbol.ticker,
-                  side: result.bias === "Short" ? "Short" : "Long",
+                  bias: result.bias,
+                  grade: result.grade,
+                  rr: result.rr,
                   entry: parseNum(result.entry),
                   stop: parseNum(result.stop),
                   tp1: parseNum(result.tp1),
                   tp2: parseNum(result.tp2),
-                  setup: `Scan ${result.grade}`,
-                  notes: `Auto-logged from TradeMind scan. Grade ${result.grade}, ${result.bias}, R:R ${result.rr}.`,
-                };
-                try { localStorage.setItem("trademind.journal.prefill.v1", JSON.stringify(prefill)); } catch { /* ignore */ }
-                window.location.assign("/journal");
+                });
               }}
-              className="inline-flex items-center gap-1.5 rounded-md border border-primary/30 bg-primary/10 px-2.5 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 whitespace-nowrap"
-              title="Log this setup to your trade journal"
+              className="inline-flex items-center gap-1.5 rounded-md bg-primary/15 border border-primary/40 px-2.5 py-1.5 text-xs font-semibold text-primary hover:bg-primary/25 whitespace-nowrap"
+              title="Log this setup in your trade journal as a trade you are taking"
             >
-              <BookOpen className="h-3 w-3" /> Log to Journal
+              <BookOpen className="h-3 w-3" /> I am taking this trade
             </button>
           )}
+
         </div>
 
       </div>
