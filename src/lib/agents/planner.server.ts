@@ -5,6 +5,7 @@ import { generateText, Output, NoObjectGeneratedError } from "ai";
 import { z } from "zod";
 import { createAiGatewayProvider } from "@/lib/ai-gateway.server";
 import type { MarketSnapshot, ResearchMemo, TradePlan } from "./types";
+import { formatOrderFlow } from "./order-flow.server";
 
 const MODEL = "google/gemini-3-flash-preview";
 
