@@ -572,18 +572,28 @@ export const Route = createFileRoute("/api/chat")({
         // Monthly → 1m read of the active instrument so the coach can answer
         // "what's the daily bias?" no matter which timeframe is on screen.
         let ladderText: string | undefined;
+        let orderFlowText: string | undefined;
         if (chart?.ticker) {
+          const rawTicker = (chart.ticker.match(/\(([^)]+)\)\s*$/)?.[1] ?? chart.ticker).trim();
           try {
             const { getTimeframeLadder, formatLadder } = await import("@/lib/agents/market-data.server");
-            const rawTicker = (chart.ticker.match(/\(([^)]+)\)\s*$/)?.[1] ?? chart.ticker).trim();
             const rows = await getTimeframeLadder(rawTicker);
             if (rows.length) ladderText = formatLadder(rows);
           } catch (e) {
             console.warn(`[chat] req=${reqId} ladder_failed`, (e as Error).message);
           }
+          // Real order-flow metrics: delta, CVD, VPOC, imbalance, depth.
+          try {
+            const { getSnapshot } = await import("@/lib/agents/market-data.server");
+            const { formatOrderFlow } = await import("@/lib/agents/order-flow.server");
+            const snap = await getSnapshot(rawTicker, chart.interval ?? "60");
+            if (snap.orderFlow) orderFlowText = formatOrderFlow(snap.orderFlow);
+          } catch (e) {
+            console.warn(`[chat] req=${reqId} order_flow_failed`, (e as Error).message);
+          }
         }
 
-        const system = systemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText), strategyContextBlock(strategy), lensContextBlock(lens));
+        const system = systemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens));
 
         const useClaude = !!anthropicKey;
         const claudeModel = useClaude
