@@ -378,53 +378,79 @@ function ScanTicket({
         </div>
       )}
 
-      <div>
-        <div className="flex justify-between text-[11px] mb-2">
-          <span className="text-muted-foreground">Confidence · R:R {result.rr}</span>
-          <span className="text-primary font-semibold">{result.confidence}%</span>
+      {!isNoEntry && (
+        <div className="flex items-baseline justify-between rounded-lg border border-border/60 bg-background/30 px-3 py-2.5 text-[11px]">
+          <span className="text-muted-foreground uppercase tracking-wider text-[10px]">Risk / reward</span>
+          <span className="font-mono font-semibold text-foreground">{result.rr}</span>
         </div>
-        <div className="h-1.5 rounded-full bg-border/60 overflow-hidden">
-          <div className="h-full bg-primary transition-[width] duration-500" style={{ width: `${result.confidence}%` }} />
-        </div>
-      </div>
+      )}
 
-      {/* Trend meter - visual bullish vs bearish split */}
-      <div>
-        <div className="flex justify-between items-baseline text-[11px] mb-2">
-          <span className="text-muted-foreground uppercase tracking-wider text-[10px]">Trend</span>
-          <span className="font-semibold text-foreground">{trendLabel}</span>
-        </div>
-        <div className="flex h-2 rounded-full overflow-hidden bg-border/40">
-          <div className="bg-bull transition-[width] duration-500" style={{ width: `${bullishPct}%` }} />
-          <div className="bg-red-500 transition-[width] duration-500" style={{ width: `${bearishPct}%` }} />
-        </div>
-        <div className="flex justify-between text-[10px] mt-1 font-mono">
-          <span className="text-bull">{bullishPct}% bullish</span>
-          <span className="text-red-400">{bearishPct}% bearish</span>
-        </div>
-      </div>
-
-      {/* Volume snapshot */}
-      <MetricBlock title="Volume" tag={volumeTag} tone={flowStrength >= 45 ? "neutral" : "muted"}>
-        <MetricRow label="Participation" value={`${Math.round(flowStrength)}%`} />
-        
-        {sentNote && <MetricRow label="Sentiment" value={`${sentNote.bias} · ${Math.round(sentNote.confidence)}%`} />}
+      {/* Daily bias and current trend - they can disagree, and that matters */}
+      <MetricBlock
+        title="Bias and trend"
+        tag={biasTrendConflict ? "Conflict" : "Aligned"}
+        tone={biasTrendConflict ? "bad" : "neutral"}
+      >
+        <MetricRow label="Daily bias (today)" value={dailyBiasLabel} />
+        <MetricRow label="Current trend (4H)" value={currentTrendLabel} />
+        {biasTrendConflict && (
+          <p className="pt-1 text-[10px] leading-relaxed text-muted-foreground">
+            Price is moving against the daily bias, so it is travelling into the level rather than away from it. Wait
+            for confirmation on the lower timeframe.
+          </p>
+        )}
       </MetricBlock>
 
-      {/* Order flow snapshot */}
-      <MetricBlock title="Order Flow" tag={flowLabel} tone={flowBias === "bullish" ? "good" : flowBias === "bearish" ? "bad" : "neutral"}>
-        <MetricRow label="Directional strength" value={`${Math.round(flowStrength)}%`} />
-        {techNote?.keyLevels && techNote.keyLevels.length > 0 && (
-          <MetricRow label="Key levels" value={techNote.keyLevels.slice(0, 3).map((n) => n.toLocaleString()).join(", ")} />
+      {/* Real order flow: delta, CVD, VPOC, imbalance, depth */}
+      <MetricBlock
+        title={of ? (of.estimated ? "Order flow (estimated)" : "Order flow") : "Order flow"}
+        tag={of ? (of.bias === "bullish" ? "Buyers in control" : of.bias === "bearish" ? "Sellers in control" : "Balanced") : "No data"}
+        tone={of ? (of.bias === "bullish" ? "good" : of.bias === "bearish" ? "bad" : "neutral") : "muted"}
+      >
+        {of ? (
+          <>
+            <MetricRow label="Delta (last bar)" value={`${of.delta >= 0 ? "+" : ""}${fmtCompact(of.delta)}`} />
+            <MetricRow
+              label="Cumulative volume delta"
+              value={`${of.cvd >= 0 ? "+" : ""}${fmtCompact(of.cvd)} · ${of.cvdSlope >= 0 ? "rising" : "falling"}`}
+            />
+            <MetricRow label="Volume point of control" value={of.poc.toLocaleString()} />
+            <MetricRow
+              label="Volume imbalance"
+              value={`${of.buyPct.toFixed(0)}% buy / ${(100 - of.buyPct).toFixed(0)}% sell${of.stackedSide !== "none" ? ` · ${of.stackedImbalances} stacked ${of.stackedSide}` : ""}`}
+            />
+            <MetricRow label="Market depth" value={`${of.depth} · ${of.lastVolRatio.toFixed(2)}x average`} />
+            <MetricRow label="Value area" value={`${of.valueAreaLow.toLocaleString()} to ${of.valueAreaHigh.toLocaleString()}`} />
+            <MetricRow label="Price vs point of control" value={of.priceVsPoc} />
+            {of.estimated && (
+              <p className="pt-1 text-[10px] leading-relaxed text-muted-foreground">
+                This feed does not publish volume for this instrument, so these figures are derived from bar range and
+                close position. Treat them as directional, not exact.
+              </p>
+            )}
+          </>
+        ) : (
+          <p className="text-[11px] text-muted-foreground">
+            No volume data available for this instrument on this timeframe.
+          </p>
         )}
-        {macroNote && <MetricRow label="Macro" value={`${macroNote.bias} · ${Math.round(macroNote.confidence)}%`} />}
       </MetricBlock>
 
       {/* Volatility */}
       <MetricBlock title="Volatility" tag={volatilityTag} tone={volatilityConf >= 65 ? "bad" : "neutral"}>
-        <MetricRow label="Risk read" value={`${Math.round(volatilityConf)}%`} />
+        <MetricRow label="Risk read" value={volatilityTag} />
         {riskNote?.summary && <MetricRow label="Note" value={riskNote.summary.slice(0, 80)} />}
       </MetricBlock>
+
+      {/* Why this grade - built from the real numbers, not generic bullets */}
+      {result.synopsis && (
+        <div className="rounded-lg border border-border/60 bg-background/30 p-3">
+          <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-semibold mb-1.5">
+            Why this grade
+          </div>
+          <p className="text-[11px] leading-relaxed text-foreground/90">{result.synopsis}</p>
+        </div>
+      )}
 
       <p className="text-[11px] text-muted-foreground text-center">
         Read the full breakdown in the Chat tab.
