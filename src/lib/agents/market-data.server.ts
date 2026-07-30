@@ -3,7 +3,7 @@
 // Deliberately independent from src/routes/api.ohlc.ts so this layer can be
 // swapped for OpenBB or another provider without touching the chart route.
 
-import type { Candle, MarketSnapshot, MtfContext } from "./types";
+import type { Candle, MarketSnapshot, MtfContext, TimeframeRead } from "./types";
 
 const YAHOO: Record<string, string> = {
   "XAU/USD": "GC=F",
