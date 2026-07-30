@@ -203,7 +203,7 @@ function coachPersona(coach?: string) {
   }
 }
 
-function chartContextBlock(chart?: ChartCtx): string {
+function chartContextBlock(chart?: ChartCtx, ladderText?: string): string {
   if (!chart?.ticker) return "The trader has not selected a chart yet.";
   // The client sends a friendly label such as "Gold Spot (XAU/USD)". Extract the
   // display name so the coach ALWAYS refers to it that way (never as raw
@@ -251,6 +251,13 @@ function chartContextBlock(chart?: ChartCtx): string {
     lines.push(
       "",
       "Live last price is unavailable or delayed. Do NOT tell the trader you're waiting for a price feed, waiting for live data, or ask them to wait - they can't force it. Give the scan now using the attached structure plus recent well-known price context for this instrument. Clearly label any numeric levels as APPROXIMATE / illustrative. Still produce bias, entry zone, invalidation, TP1, TP2 and R:R. Skip the chart-annotations block because numbers can't be pinned to live price, but still emit a chart-grade block with approximate numeric fields when you produce a concrete plan.",
+    );
+  }
+  if (ladderText) {
+    lines.push(
+      "",
+      ladderText,
+      "You have full multi-timeframe vision on this instrument: Monthly, Weekly, Daily, 4H, 1H, 15m, 5m and 1m are all listed above regardless of which timeframe the chart is currently displaying. NEVER say you cannot see the daily, weekly, monthly or lower timeframes. When asked for daily bias, answer from the Daily rung and frame it against Weekly/Monthly, then note where 4H/1H/15m agree or disagree.",
     );
   }
   return lines.filter(Boolean).join("\n");
@@ -555,7 +562,21 @@ export const Route = createFileRoute("/api/chat")({
           }
         }
 
-        const system = systemPrompt(coach, journalCtx, chartContextBlock(enrichedChart), strategyContextBlock(strategy), lensContextBlock(lens));
+        // Monthly → 1m read of the active instrument so the coach can answer
+        // "what's the daily bias?" no matter which timeframe is on screen.
+        let ladderText: string | undefined;
+        if (chart?.ticker) {
+          try {
+            const { getTimeframeLadder, formatLadder } = await import("@/lib/agents/market-data.server");
+            const rawTicker = (chart.ticker.match(/\(([^)]+)\)\s*$/)?.[1] ?? chart.ticker).trim();
+            const rows = await getTimeframeLadder(rawTicker);
+            if (rows.length) ladderText = formatLadder(rows);
+          } catch (e) {
+            console.warn(`[chat] req=${reqId} ladder_failed`, (e as Error).message);
+          }
+        }
+
+        const system = systemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText), strategyContextBlock(strategy), lensContextBlock(lens));
 
         const useClaude = !!anthropicKey;
         const claudeModel = useClaude

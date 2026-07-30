@@ -106,6 +106,11 @@ function buildContext(snap: MarketSnapshot): string {
     lines.push(
       `MTF cascade — 4H direction=${m.h4.direction} trend=${m.h4.trend}; 1H structureBreak=${m.h1.structureBreak} reversal=${m.h1.reversal}; 15m confirmation=${m.m15.confirmation} (${m.m15.reason}); alignment=${m.alignment}`,
     );
+    if (m.ladder?.length) {
+      lines.push(
+        `Timeframe ladder: ${m.ladder.map((r) => `${r.label}=${r.bias}/${r.trend}`).join(" | ")}`,
+      );
+    }
   }
   return lines.join("\n");
 }
