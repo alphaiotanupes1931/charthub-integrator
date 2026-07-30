@@ -203,7 +203,7 @@ function coachPersona(coach?: string) {
   }
 }
 
-function chartContextBlock(chart?: ChartCtx, ladderText?: string): string {
+function chartContextBlock(chart?: ChartCtx, ladderText?: string, orderFlowText?: string): string {
   if (!chart?.ticker) return "The trader has not selected a chart yet.";
   // The client sends a friendly label such as "Gold Spot (XAU/USD)". Extract the
   // display name so the coach ALWAYS refers to it that way (never as raw
