@@ -53,6 +53,7 @@ export type MarketSnapshot = {
   sessionsActive: string[];
   fetchedAt: string;
   mtf?: MtfContext;
+  orderFlow?: OrderFlow;
 };
 
 // Multi-timeframe context (4H → 1H → 15m cascade).
