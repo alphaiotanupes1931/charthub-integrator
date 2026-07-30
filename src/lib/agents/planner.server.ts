@@ -306,7 +306,15 @@ function mtfBlock(snap: MarketSnapshot): string {
     `  1H liquidity: buyside=[${liq.buyside.map((n) => n.toFixed(4)).join(", ")}] sellside=[${liq.sellside.map((n) => n.toFixed(4)).join(", ")}]`,
     `  15m confirmation=${m.m15.confirmation} (${m.m15.reason})`,
     `  Alignment: ${m.alignment}`,
-  ].join("\n");
+    m.ladder?.length
+      ? [
+          "  Full ladder (Monthly → 1m):",
+          ...m.ladder.map(
+            (r) => `    ${r.label}: bias=${r.bias} trend=${r.trend} structure=${r.structure} range=${r.low.toFixed(4)}-${r.high.toFixed(4)}`,
+          ),
+        ].join("\n")
+      : "",
+  ].filter(Boolean).join("\n");
 }
 
 function memoBlock(memo: ResearchMemo, snap: MarketSnapshot, lensDesc?: string): string {
