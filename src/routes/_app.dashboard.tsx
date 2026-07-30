@@ -161,6 +161,10 @@ type ScanResult = {
   rr: string;
   details: string;
   memo?: ResearchMemo;
+  orderFlow?: OrderFlow;
+  dailyBias?: "bullish" | "bearish" | "neutral";
+  currentTrend?: "up" | "down" | "range";
+  synopsis?: string;
 };
 
 function fmtPrice(n: number, decimals: number): string {
