@@ -353,7 +353,7 @@ function ScanTicket({
                   tp1: parseNum(result.tp1),
                   tp2: parseNum(result.tp2),
                   setup: `Scan ${result.grade}`,
-                  notes: `Auto-logged from TradeMind scan. Grade ${result.grade}, ${result.bias}, confidence ${result.confidence}%, R:R ${result.rr}.`,
+                  notes: `Auto-logged from TradeMind scan. Grade ${result.grade}, ${result.bias}, R:R ${result.rr}.`,
                 };
                 try { localStorage.setItem("trademind.journal.prefill.v1", JSON.stringify(prefill)); } catch { /* ignore */ }
                 window.location.assign("/journal");
