@@ -562,7 +562,21 @@ export const Route = createFileRoute("/api/chat")({
           }
         }
 
-        const system = systemPrompt(coach, journalCtx, chartContextBlock(enrichedChart), strategyContextBlock(strategy), lensContextBlock(lens));
+        // Monthly → 1m read of the active instrument so the coach can answer
+        // "what's the daily bias?" no matter which timeframe is on screen.
+        let ladderText: string | undefined;
+        if (chart?.ticker) {
+          try {
+            const { getTimeframeLadder, formatLadder } = await import("@/lib/agents/market-data.server");
+            const rawTicker = (chart.ticker.match(/\(([^)]+)\)\s*$/)?.[1] ?? chart.ticker).trim();
+            const rows = await getTimeframeLadder(rawTicker);
+            if (rows.length) ladderText = formatLadder(rows);
+          } catch (e) {
+            console.warn(`[chat] req=${reqId} ladder_failed`, (e as Error).message);
+          }
+        }
+
+        const system = systemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText), strategyContextBlock(strategy), lensContextBlock(lens));
 
         const useClaude = !!anthropicKey;
         const claudeModel = useClaude
