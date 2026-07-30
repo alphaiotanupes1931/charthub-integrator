@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { ArrowUpRight, ArrowDownRight, Minus, Target, Shield, Flag, Clock, ChevronDown, ChevronUp, X, Zap } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, Minus, Target, Shield, Flag, Clock, ChevronDown, ChevronUp, X, Zap, BookOpen } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import { takeTrade } from "@/lib/signalHistory";
 import type { ChartGrade } from "@/lib/chartAnnotations";
 
 type Props = {
