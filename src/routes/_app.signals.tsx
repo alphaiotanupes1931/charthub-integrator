@@ -242,7 +242,7 @@ function SignalColumn({ title, tone, signals, onClick }: { title: string; tone: 
               <div className="text-xs px-1.5 py-0.5 rounded bg-muted">{s.grade}</div>
             </div>
             <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
-              <span>Conf {s.confidence}%</span>
+              <span>{s.action}</span>
               <span>R:R {s.rr}</span>
             </div>
             {s.action !== "HOLD" && (
