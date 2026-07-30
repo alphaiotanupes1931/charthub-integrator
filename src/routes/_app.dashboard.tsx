@@ -22,6 +22,7 @@ import { recordHermesFeedback } from "@/lib/agents/hermes.functions";
 import { listChatThreads, createChatThread, deleteChatThread, getActiveModel, type ActiveModelInfo } from "@/lib/chat.functions";
 import type { ResearchMemo, OrderFlow } from "@/lib/agents/types";
 import { Link } from "@tanstack/react-router";
+import { recordSignal, takeTrade } from "@/lib/signalHistory";
 import { toast } from "sonner";
 
 
