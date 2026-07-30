@@ -301,6 +301,7 @@ function ScanTicket({
   const volatilityConf = riskNote?.confidence ?? 50;
   const volatilityTag = volatilityConf >= 65 ? "Elevated" : volatilityConf >= 40 ? "Normal" : "Quiet";
 
+  return (
     <div className="space-y-5">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
         <div className="min-w-0">
