@@ -84,14 +84,8 @@ export function ChartSignalCards({ grade, lastPrice, symbol, onClear, scanning }
         <span className="rounded border border-border/60 bg-background/60 px-1.5 py-0.5 text-[10px] font-bold text-foreground">
           {grade.grade.toUpperCase()}
         </span>
-        {typeof grade.confidence === "number" && (
-          <span
-            className="rounded border border-border/60 bg-background/60 px-1.5 py-0.5 text-[10px] font-mono text-foreground"
-            title="Model confidence"
-          >
-            {Math.round(grade.confidence)}%
-          </span>
-        )}
+        {/* Confidence percentage removed: the model pinned it near 100% and it
+            misled traders. The grade carries the conviction instead. */}
         {orderType && (
           <span
             className={`rounded border px-1.5 py-0.5 text-[10px] font-bold tracking-wider ${biasBg} ${biasText}`}
