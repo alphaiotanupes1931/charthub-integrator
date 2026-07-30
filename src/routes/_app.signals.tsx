@@ -1,10 +1,20 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { PageHeader } from "@/components/PageHeader";
-import { Radar, TrendingUp, TrendingDown, Minus, Loader2, RefreshCw } from "lucide-react";
+import { Radar, TrendingUp, TrendingDown, Minus, Loader2, RefreshCw, BookOpen, History, Trash2 } from "lucide-react";
 import { runSignalScan, type Signal } from "@/lib/agents/signal-engine.functions";
+import {
+  listSignals,
+  onSignalHistoryChange,
+  recordSignal,
+  takeTrade,
+  setSignalOutcome,
+  clearSignalHistory,
+  deleteSignal,
+  type SignalRecord,
+} from "@/lib/signalHistory";
 
 export const Route = createFileRoute("/_app/signals")({
   head: () => ({ meta: [{ title: "AI Signals, TradeMind" }] }),
@@ -18,17 +28,49 @@ const TF_OPTIONS = [
   { v: "D", l: "1D" },
 ];
 
+const num = (s?: string): number | undefined => {
+  if (!s || s === "-") return undefined;
+  const n = parseFloat(String(s).replace(/[^0-9.\-]/g, ""));
+  return Number.isFinite(n) ? n : undefined;
+};
+
 function SignalsPage() {
   const navigate = useNavigate();
   const scan = useServerFn(runSignalScan);
   const [interval, setInterval] = useState("60");
   const [signals, setSignals] = useState<Signal[]>([]);
   const [scannedAt, setScannedAt] = useState<string | null>(null);
+  const [history, setHistory] = useState<SignalRecord[]>([]);
+
+  useEffect(() => {
+    const sync = () => setHistory(listSignals());
+    sync();
+    return onSignalHistoryChange(sync);
+  }, []);
 
   const mut = useMutation({
     mutationFn: async () => scan({ data: { interval } }),
-    onSuccess: (data) => { setSignals(data); setScannedAt(new Date().toLocaleTimeString()); },
+    onSuccess: (data) => {
+      setSignals(data);
+      setScannedAt(new Date().toLocaleTimeString());
+      for (const s of data) {
+        recordSignal({
+          symbol: s.ticker,
+          interval,
+          grade: s.grade,
+          bias: s.action === "BUY" ? "Long" : s.action === "SELL" ? "Short" : "Neutral",
+          entry: num(s.entry),
+          stop: num(s.stop),
+          tp1: num(s.tp1),
+          rr: s.rr,
+          synopsis: s.notes,
+          source: "engine",
+        });
+      }
+      setHistory(listSignals());
+    },
   });
+
 
   const grouped = {
     BUY: signals.filter((s) => s.action === "BUY").sort((a, b) => b.confidence - a.confidence),
@@ -88,12 +130,100 @@ function SignalsPage() {
         </div>
       )}
 
+      <SignalHistory
+        records={history}
+        onOpen={(t) => navigate({ to: "/dashboard", search: { symbol: t } as never })}
+      />
+
       <div className="text-xs text-muted-foreground">
         Signals are AI-generated and educational. Not financial advice. Use with the <Link to="/journal" className="text-primary underline">journal</Link> to track outcomes.
       </div>
     </div>
   );
 }
+
+function SignalHistory({ records, onOpen }: { records: SignalRecord[]; onOpen: (ticker: string) => void }) {
+  return (
+    <div className="rounded-xl border border-border bg-card">
+      <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
+        <div className="flex items-center gap-2 text-sm font-semibold">
+          <History className="h-4 w-4" /> Signal history
+          <span className="font-normal text-muted-foreground">({records.length})</span>
+        </div>
+        {records.length > 0 && (
+          <button
+            onClick={() => clearSignalHistory()}
+            className="text-xs text-muted-foreground hover:text-foreground"
+          >
+            Clear
+          </button>
+        )}
+      </div>
+
+      {records.length === 0 ? (
+        <div className="px-4 py-8 text-center text-sm text-muted-foreground">
+          Every scan you run, here and on the chart, is saved to this list.
+        </div>
+      ) : (
+        <div className="divide-y divide-border">
+          {records.slice(0, 50).map((r) => {
+            const when = new Date(r.at);
+            const dir = r.bias === "Long" ? "text-bull" : r.bias === "Short" ? "text-red-500" : "text-muted-foreground";
+            return (
+              <div key={r.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 text-xs">
+                <button onClick={() => onOpen(r.symbol)} className="font-semibold text-sm hover:underline">
+                  {r.symbol}
+                </button>
+                <span className="rounded border border-border px-1.5 py-0.5 font-semibold">{r.grade}</span>
+                <span className={`font-semibold uppercase tracking-wider ${dir}`}>{r.bias}</span>
+                <span className="text-muted-foreground">
+                  {when.toLocaleDateString()} {when.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                </span>
+                <span className="font-mono text-muted-foreground">
+                  {r.entry != null ? `E ${r.entry}` : ""} {r.stop != null ? `· S ${r.stop}` : ""} {r.tp1 != null ? `· TP ${r.tp1}` : ""}
+                </span>
+                <div className="flex-1" />
+                {r.taken ? (
+                  <div className="flex items-center gap-1">
+                    <span className="rounded bg-primary/15 px-1.5 py-0.5 font-semibold text-primary">Taken</span>
+                    {(["win", "loss", "breakeven"] as const).map((o) => (
+                      <button
+                        key={o}
+                        onClick={() => setSignalOutcome(r.id, r.outcome === o ? null : o)}
+                        className={`rounded border px-1.5 py-0.5 capitalize ${
+                          r.outcome === o ? "border-primary bg-primary/15 text-primary" : "border-border text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {o}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  r.bias !== "Neutral" && (
+                    <button
+                      onClick={() => takeTrade(r)}
+                      className="inline-flex items-center gap-1 rounded-md bg-primary px-2 py-1 font-semibold text-primary-foreground hover:opacity-90"
+                    >
+                      <BookOpen className="h-3 w-3" /> Take trade
+                    </button>
+                  )
+                )}
+                <button
+                  onClick={() => deleteSignal(r.id)}
+                  className="rounded p-1 text-muted-foreground hover:text-destructive"
+                  aria-label="Delete signal"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 function SignalColumn({ title, tone, signals, onClick }: { title: string; tone: "buy" | "sell" | "hold"; signals: Signal[]; onClick: (ticker: string) => void }) {
   const Icon = tone === "buy" ? TrendingUp : tone === "sell" ? TrendingDown : Minus;
@@ -112,7 +242,7 @@ function SignalColumn({ title, tone, signals, onClick }: { title: string; tone: 
               <div className="text-xs px-1.5 py-0.5 rounded bg-muted">{s.grade}</div>
             </div>
             <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
-              <span>Conf {s.confidence}%</span>
+              <span>{s.action}</span>
               <span>R:R {s.rr}</span>
             </div>
             {s.action !== "HOLD" && (

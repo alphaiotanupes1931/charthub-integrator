@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { ArrowUpRight, ArrowDownRight, Minus, Target, Shield, Flag, Clock, ChevronDown, ChevronUp, X, Zap } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, Minus, Target, Shield, Flag, Clock, ChevronDown, ChevronUp, X, Zap, BookOpen } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import { takeTrade } from "@/lib/signalHistory";
 import type { ChartGrade } from "@/lib/chartAnnotations";
 
 type Props = {
@@ -108,6 +109,27 @@ export function ChartSignalCards({ grade, lastPrice, symbol, onClear, scanning }
         <div className="flex-1" />
 
         {(isLong || isShort) && (
+          <button
+            type="button"
+            onClick={() =>
+              takeTrade({
+                symbol: symbol ?? "",
+                bias: isLong ? "Long" : "Short",
+                grade: grade.grade,
+                entry: grade.entry,
+                stop: grade.stop,
+                tp1: grade.tp1,
+                tp2: grade.tp2,
+              })
+            }
+            className="inline-flex h-6 items-center gap-1 rounded px-2 text-[10px] font-bold uppercase tracking-wider bg-primary text-primary-foreground hover:opacity-90"
+            title="Log this setup in your journal as a trade you are taking"
+          >
+            <BookOpen className="h-3 w-3" /> Take trade
+          </button>
+        )}
+
+        {(isLong || isShort) && (
           <Link
             to="/broker"
             search={{
@@ -117,12 +139,13 @@ export function ChartSignalCards({ grade, lastPrice, symbol, onClear, scanning }
               stop: grade.stop ?? "",
               tp: grade.tp1 ?? "",
             } as never}
-            className="inline-flex h-6 items-center gap-1 rounded px-2 text-[10px] font-bold uppercase tracking-wider bg-primary text-primary-foreground hover:opacity-90"
+            className="inline-flex h-6 items-center gap-1 rounded px-2 text-[10px] font-bold uppercase tracking-wider border border-border text-foreground hover:bg-muted/60"
             title="Send this setup to your broker"
           >
-            <Zap className="h-3 w-3" /> Trade
+            <Zap className="h-3 w-3" /> Broker
           </Link>
         )}
+
 
         <button
           type="button"
