@@ -283,35 +283,24 @@ function ScanTicket({
   // narrative (strength/weakness, coach reasoning) lives in the chat panel;
   // this card stays purely numeric and glanceable.
   const notes = result.memo?.notes ?? [];
-  const techNote = notes.find((n) => n.role === "technical");
-  const macroNote = notes.find((n) => n.role === "macro");
-  const sentNote = notes.find((n) => n.role === "sentiment");
   const riskNote = notes.find((n) => n.role === "risk");
 
-  // Trend strength: convert consensus bias + confidence to a bullish %.
-  const consensus = result.memo?.consensus ?? (result.bias === "Long" ? "bullish" : result.bias === "Short" ? "bearish" : "neutral");
-  const consensusConf = result.memo?.consensusConfidence ?? result.confidence;
-  const bullishPct = consensus === "bullish"
-    ? Math.round(50 + consensusConf / 2)
-    : consensus === "bearish"
-    ? Math.round(50 - consensusConf / 2)
-    : 50;
-  const bearishPct = 100 - bullishPct;
-  const trendLabel = bullishPct >= 65 ? "Strongly bullish" : bullishPct >= 55 ? "Leaning bullish" : bullishPct <= 35 ? "Strongly bearish" : bullishPct <= 45 ? "Leaning bearish" : "Balanced";
+  // Real order-flow metrics computed server-side from OHLCV.
+  const of = result.orderFlow;
 
-  // Order flow: technical analyst read.
-  const flowBias = techNote?.bias ?? consensus;
-  const flowStrength = techNote?.confidence ?? consensusConf;
-  const flowLabel = flowBias === "bullish" ? "Buyers in control" : flowBias === "bearish" ? "Sellers in control" : "Balanced";
+  // Daily bias is the direction for the day; current trend is what price is
+  // doing right now. When they disagree the trader needs to know.
+  const dailyBias = result.dailyBias ?? "neutral";
+  const currentTrend = result.currentTrend ?? "range";
+  const dailyBiasLabel = dailyBias === "bullish" ? "Bullish" : dailyBias === "bearish" ? "Bearish" : "Neutral";
+  const currentTrendLabel = currentTrend === "up" ? "Up" : currentTrend === "down" ? "Down" : "Ranging";
+  const biasTrendConflict =
+    (dailyBias === "bullish" && currentTrend === "down") || (dailyBias === "bearish" && currentTrend === "up");
 
-  // Volume: use range20Pct and 24h change as a proxy for participation.
-  const volumeTag = flowStrength >= 70 ? "High" : flowStrength >= 45 ? "Medium" : "Light";
-
-  // Volatility from risk analyst.
+  // Volatility from the risk analyst read.
   const volatilityConf = riskNote?.confidence ?? 50;
   const volatilityTag = volatilityConf >= 65 ? "Elevated" : volatilityConf >= 40 ? "Normal" : "Quiet";
 
-  return (
     <div className="space-y-5">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
         <div className="min-w-0">
