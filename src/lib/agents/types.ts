@@ -55,6 +55,22 @@ export type MtfContext = {
     reason: string;
   };
   alignment: "aligned-long" | "aligned-short" | "mixed" | "none";
+  /** Full ladder: Monthly, Weekly, Daily, 4H, 1H, 15m, 5m, 1m. */
+  ladder?: TimeframeRead[];
+};
+
+/** One rung of the timeframe ladder. */
+export type TimeframeRead = {
+  label: "Monthly" | "Weekly" | "Daily" | "4H" | "1H" | "15m" | "5m" | "1m";
+  interval: string;
+  bias: "bullish" | "bearish" | "neutral";
+  trend: "up" | "down" | "range";
+  structure: "bullish" | "bearish" | "none";
+  last: number;
+  high: number;
+  low: number;
+  changePct: number;
+  bars: number;
 };
 
 export type AnalystRole = "technical" | "macro" | "sentiment" | "risk";

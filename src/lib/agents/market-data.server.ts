@@ -3,7 +3,7 @@
 // Deliberately independent from src/routes/api.ohlc.ts so this layer can be
 // swapped for OpenBB or another provider without touching the chart route.
 
-import type { Candle, MarketSnapshot, MtfContext } from "./types";
+import type { Candle, MarketSnapshot, MtfContext, TimeframeRead } from "./types";
 
 const YAHOO: Record<string, string> = {
   "XAU/USD": "GC=F",
@@ -446,13 +446,81 @@ async function loadCandlesSafe(ticker: string, interval: string): Promise<Candle
   }
 }
 
+// ---------------- Full timeframe ladder (Monthly → 1m) ----------------
+
+const LADDER: Array<{ label: TimeframeRead["label"]; interval: string }> = [
+  { label: "Monthly", interval: "M" },
+  { label: "Weekly", interval: "W" },
+  { label: "Daily", interval: "D" },
+  { label: "4H", interval: "240" },
+  { label: "1H", interval: "60" },
+  { label: "15m", interval: "15" },
+  { label: "5m", interval: "5" },
+  { label: "1m", interval: "1" },
+];
+
+function readTimeframe(label: TimeframeRead["label"], interval: string, candles: Candle[]): TimeframeRead | null {
+  if (candles.length < 6) return null;
+  const closes = candles.map((c) => c.close);
+  const last = closes.at(-1) ?? 0;
+  const window = closes.slice(-40);
+  const sl = slope(window);
+  const magnitude = Math.abs(sl) / Math.max(last, 1e-9);
+  const trend: TimeframeRead["trend"] = magnitude < 0.0002 ? "range" : sl > 0 ? "up" : "down";
+  const cisd = detectCisd(candles);
+  const htf = detectHtfBias(candles);
+  const bias: TimeframeRead["bias"] =
+    htf !== "neutral" ? htf : cisd.state !== "none" ? cisd.state : trend === "up" ? "bullish" : trend === "down" ? "bearish" : "neutral";
+  const ref = closes.length >= 20 ? closes[closes.length - 20] : closes[0];
+  return {
+    label,
+    interval,
+    bias,
+    trend,
+    structure: cisd.state,
+    last,
+    high: Math.max(...candles.slice(-40).map((c) => c.high)),
+    low: Math.min(...candles.slice(-40).map((c) => c.low)),
+    changePct: ref ? ((last - ref) / ref) * 100 : 0,
+    bars: candles.length,
+  };
+}
+
+const ladderCache = new Map<string, { at: number; data: TimeframeRead[] }>();
+const LADDER_TTL_MS = 60_000;
+
+/** Monthly → 1m read of the same instrument. Cached briefly so chat turns are cheap. */
+export async function getTimeframeLadder(ticker: string): Promise<TimeframeRead[]> {
+  const hit = ladderCache.get(ticker);
+  if (hit && Date.now() - hit.at < LADDER_TTL_MS) return hit.data;
+  const rows = await Promise.all(
+    LADDER.map(async (tf) => readTimeframe(tf.label, tf.interval, await loadCandlesSafe(ticker, tf.interval))),
+  );
+  const data = rows.filter((r): r is TimeframeRead => r !== null);
+  if (data.length) ladderCache.set(ticker, { at: Date.now(), data });
+  return data;
+}
+
+export function formatLadder(rows: TimeframeRead[]): string {
+  if (!rows.length) return "Timeframe ladder: unavailable";
+  const d = (n: number) => (Math.abs(n) >= 100 ? n.toFixed(2) : n.toFixed(4));
+  return [
+    "TIMEFRAME LADDER (Monthly → 1m, computed server-side from live candles - you CAN see every one of these):",
+    ...rows.map(
+      (r) =>
+        `  ${r.label.padEnd(7)} bias=${r.bias} trend=${r.trend} structure=${r.structure} last=${d(r.last)} range=${d(r.low)}-${d(r.high)} chg=${r.changePct.toFixed(2)}% (${r.bars} bars)`,
+    ),
+  ].join("\n");
+}
+
 async function buildMtf(ticker: string, primaryInterval: string, primaryCandles: Candle[]): Promise<MtfContext | undefined> {
   const useH4 = primaryInterval === "240" ? primaryCandles : await loadCandlesSafe(ticker, "240");
   const useH1 = primaryInterval === "60"  ? primaryCandles : await loadCandlesSafe(ticker, "60");
   const use15 = primaryInterval === "15"  ? primaryCandles : await loadCandlesSafe(ticker, "15");
   if (useH4.length < 20 || useH1.length < 20 || use15.length < 10) return undefined;
   const base = { h4: h4Analysis(useH4), h1: h1Analysis(useH1), m15: m15Confirmation(use15) };
-  return { ...base, alignment: computeAlignment(base) };
+  const ladder = await getTimeframeLadder(ticker).catch(() => [] as TimeframeRead[]);
+  return { ...base, alignment: computeAlignment(base), ladder };
 }
 
 
