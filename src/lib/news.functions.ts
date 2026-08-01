@@ -31,16 +31,19 @@ export const getMarketNews = createServerFn({ method: "POST" })
     const { fetchCalendar, todaysEvents, highImpactAhead, writeNewsBriefing } = await import("@/lib/news.server");
     const all = await fetchCalendar();
     const today = todaysEvents(all);
-    const ahead = highImpactAhead(all, 48);
+    // Today plus everything still ahead in the next 7 days, so weekends and
+    // quiet sessions still show what is coming.
+    const ahead = highImpactAhead(all, 24 * 7);
     const seen = new Set<string>();
     const events = [...today, ...ahead].filter((e) => {
       const k = `${e.date}|${e.title}`;
       if (seen.has(k)) return false;
       seen.add(k);
       return true;
-    });
+    }).sort((a, b) => a.date.localeCompare(b.date));
     const writeup = data.withWriteup
-      ? await writeNewsBriefing(events.filter((e) => /high|medium/i.test(e.impact)), data.watchlist)
+      ? await writeNewsBriefing(events.filter((e) => /high|medium/i.test(e.impact)).slice(0, 20), data.watchlist)
       : null;
     return { events, writeup, fetchedAt: new Date().toISOString() };
+
   });
