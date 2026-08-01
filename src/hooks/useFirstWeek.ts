@@ -116,16 +116,6 @@ export const FIRST_WEEK_TASKS: FirstWeekTask[] = [
     event: "calculator-used",
   },
   {
-    id: "briefings",
-    label: "Join the community Discord",
-    description: "Daily briefings and every A/A+ signal get posted there automatically.",
-    cta: "Open community",
-    route: "/discord",
-    day: 5,
-    kind: "event",
-    event: "discord-joined",
-  },
-  {
     id: "review",
     label: "Review a missed quiz question",
     description: "Clear one item from your wrong-answer bank to reinforce what you have learned.",
