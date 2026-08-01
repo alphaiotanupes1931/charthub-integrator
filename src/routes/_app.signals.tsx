@@ -15,6 +15,8 @@ import {
   deleteSignal,
   type SignalRecord,
 } from "@/lib/signalHistory";
+import { BacktestPanel } from "@/components/BacktestPanel";
+
 
 export const Route = createFileRoute("/_app/signals")({
   head: () => ({ meta: [{ title: "AI Signals, TradeMind" }] }),
@@ -134,6 +136,9 @@ function SignalsPage() {
         records={history}
         onOpen={(t) => navigate({ to: "/dashboard", search: { symbol: t } as never })}
       />
+
+      <BacktestPanel />
+
 
       <div className="text-xs text-muted-foreground">
         Signals are AI-generated and educational. Not financial advice. Use with the <Link to="/journal" className="text-primary underline">journal</Link> to track outcomes.

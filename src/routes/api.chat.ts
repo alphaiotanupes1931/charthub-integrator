@@ -78,7 +78,9 @@ type ChatRequestBody = {
   chart?: ChartCtx;
   strategy?: StrategyCtx | null;
   lens?: LensCtx | null;
+  signalLearning?: string | null;
 };
+
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -315,7 +317,7 @@ function historyTitleFromChart(chart?: ChartCtx): string | null {
   return displayName.slice(0, 60) || null;
 }
 
-function systemPrompt(coach: string | undefined, journalContext: string, chartCtx: string, strategyCtx: string, lensCtx: string) {
+function systemPrompt(coach: string | undefined, journalContext: string, chartCtx: string, strategyCtx: string, lensCtx: string, learningCtx: string) {
   return `# ROLE
 You are the TradeMind AI Coach - a senior trading educator, chart analyst, and mentor built into the TradeMind platform. Your job is to help retail traders (many are older beginners) learn to trade safely, read charts, size risk, and improve their journal. You are NOT a licensed advisor. You are opinionated, direct, calm, and warm - like a mentor sitting next to them at the desk. You always finish your thoughts in full sentences; never stop after a couple of words.
 
@@ -416,7 +418,13 @@ ${chartCtx}
 
 === TRADER'S JOURNAL ===
 ${journalContext}
-=== END JOURNAL ===`;
+=== END JOURNAL ===
+
+=== SIGNAL BACKTEST (measured outcomes of signals this trader actually took) ===
+${learningCtx}
+Use these measured numbers when the trader asks how they are doing, whether a setup is worth taking, or why a grade matters. If a bucket (symbol, grade, direction, timeframe or session) has negative expectancy, say so plainly and tell them to skip or reduce size there. Never invent performance numbers that are not listed above.
+=== END SIGNAL BACKTEST ===`;
+
 }
 
 export const Route = createFileRoute("/api/chat")({
@@ -442,7 +450,7 @@ export const Route = createFileRoute("/api/chat")({
         } catch {
           return new Response("Invalid JSON", { status: 400, headers: cors });
         }
-        const { messages, threadId, coach, journal, chart, strategy, lens } = body;
+        const { messages, threadId, coach, journal, chart, strategy, lens, signalLearning } = body;
         if (!Array.isArray(messages) || !threadId) {
           return new Response("messages, threadId required", { status: 400, headers: cors });
         }
@@ -593,7 +601,11 @@ export const Route = createFileRoute("/api/chat")({
           }
         }
 
-        const system = systemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens));
+        const learningCtx = (typeof signalLearning === "string" && signalLearning.trim())
+          ? signalLearning.trim().slice(0, 4000)
+          : "The trader has not tagged any taken signal with an outcome yet, so there is no measured signal edge. Do not invent past performance numbers.";
+        const system = systemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens), learningCtx);
+
 
         const useClaude = !!anthropicKey;
         const claudeModel = useClaude
