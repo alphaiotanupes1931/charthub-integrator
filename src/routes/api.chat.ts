@@ -594,15 +594,32 @@ export const Route = createFileRoute("/api/chat")({
           } catch (e) {
             console.warn(`[chat] req=${reqId} ladder_failed`, (e as Error).message);
           }
-          // Real order-flow metrics: delta, CVD, VPOC, imbalance, depth.
+          // Real order-flow metrics: delta, CVD, VPOC, imbalance, depth. This
+          // snapshot also carries a last price, so it doubles as the final
+          // fallback when the spot quote above failed - otherwise the coach
+          // invents stale levels while claiming the feed has not loaded.
           try {
             const { getSnapshot } = await import("@/lib/agents/market-data.server");
             const { formatOrderFlow } = await import("@/lib/agents/order-flow.server");
             const snap = await getSnapshot(rawTicker, "60");
             if (snap.orderFlow) orderFlowText = formatOrderFlow(snap.orderFlow);
+            const hasPrice = typeof enrichedChart?.snapshot?.lastPrice === "number" && isFinite(enrichedChart.snapshot.lastPrice);
+            if (!hasPrice && Number.isFinite(snap.lastPrice) && snap.lastPrice > 0 && chart) {
+              enrichedChart = {
+                ...chart,
+                snapshot: {
+                  ...(chart.snapshot ?? {}),
+                  lastPrice: snap.lastPrice,
+                  source: "ohlc",
+                  sourceLabel: "Latest candle close (server)",
+                  fetchedAt: new Date().toISOString(),
+                },
+              };
+            }
           } catch (e) {
             console.warn(`[chat] req=${reqId} order_flow_failed`, (e as Error).message);
           }
+
         }
 
         const learningCtx = (typeof signalLearning === "string" && signalLearning.trim())
