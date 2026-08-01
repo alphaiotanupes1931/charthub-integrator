@@ -765,6 +765,51 @@ export type Database = {
         }
         Relationships: []
       }
+      signal_feed: {
+        Row: {
+          action: string
+          bias: string
+          confidence: number | null
+          created_at: string
+          entry: number | null
+          grade: string
+          id: string
+          notes: string | null
+          rr: number | null
+          stop: number | null
+          symbol: string
+          tp1: number | null
+        }
+        Insert: {
+          action: string
+          bias: string
+          confidence?: number | null
+          created_at?: string
+          entry?: number | null
+          grade: string
+          id?: string
+          notes?: string | null
+          rr?: number | null
+          stop?: number | null
+          symbol: string
+          tp1?: number | null
+        }
+        Update: {
+          action?: string
+          bias?: string
+          confidence?: number | null
+          created_at?: string
+          entry?: number | null
+          grade?: string
+          id?: string
+          notes?: string | null
+          rr?: number | null
+          stop?: number | null
+          symbol?: string
+          tp1?: number | null
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           cancel_at_period_end: boolean
