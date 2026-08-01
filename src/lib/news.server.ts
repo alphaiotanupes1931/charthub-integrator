@@ -117,7 +117,7 @@ export async function calendarContextBlock(symbol?: string): Promise<string | un
     wanted.length ? list.filter((e) => wanted.includes(e.country.toUpperCase())) : list;
 
   const today = relevant(todaysEvents(all)).filter((e) => /high|medium/i.test(e.impact));
-  const ahead = relevant(highImpactAhead(all, 24));
+  const ahead = relevant(highImpactAhead(all, 72));
   if (!today.length && !ahead.length) return undefined;
 
   const lines: string[] = ["ECONOMIC CALENDAR (Forex Factory, times in UTC)"];
@@ -126,7 +126,7 @@ export async function calendarContextBlock(symbol?: string): Promise<string | un
     lines.push(...formatCalendarLines(today, "UTC", 10).map((l) => `- ${l}`));
   }
   if (ahead.length) {
-    lines.push("Next 24 hours:");
+    lines.push("Next 72 hours:");
     lines.push(...formatCalendarLines(ahead, "UTC", 10).map((l) => `- ${l}`));
   }
   lines.push(
