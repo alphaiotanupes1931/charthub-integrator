@@ -16,7 +16,7 @@ const MODEL = "google/gemini-3-flash-preview";
 const PlanSchema = z.object({
   grade: z.string(),
   bias: z.string(),
-  confidence: z.coerce.number(),
+  confidence: z.coerce.number().optional().default(0),
   entry: z.coerce.number(),
   stop: z.coerce.number(),
   tp1: z.coerce.number(),
@@ -115,7 +115,59 @@ function systematicPlan(snap: MarketSnapshot, memo: ResearchMemo, thesisPrefix?:
   };
 }
 
+// ---------- Evidence-counted conviction ----------
+// Every point below comes from a measurable check on the snapshot. Nothing is
+// asserted by the model and nothing is floored by grade, so a thin setup reads
+// thin instead of "95%".
+export function countEvidence(
+  snap: MarketSnapshot,
+  memo: ResearchMemo,
+  grade: typeof GRADES[number],
+  bias: typeof BIASES[number],
+  rrMultiple: number,
+): number {
+  if (grade === "NO ENTRY" || bias === "Neutral") return 0;
+  const wantBull = bias === "Long";
+  let hits = 0;
+  let checks = 0;
+  const check = (present: boolean, weight = 1) => { checks += weight; if (present) hits += weight; };
+
+  const mtf = snap.mtf;
+  // 4H direction, 1H structure, 15m confirmation: the cascade, weighted double.
+  check(mtf?.h4.direction === (wantBull ? "bullish" : "bearish"), 2);
+  check(!!mtf?.h1.structureBreak && mtf.h1.structureBreak.toLowerCase().includes(wantBull ? "bull" : "bear"), 2);
+  check(!!mtf?.m15.confirmation && mtf.m15.confirmation.toLowerCase().includes(wantBull ? "bull" : "bear"), 2);
+
+  // Higher-timeframe rungs that agree with the trade.
+  const ladder = mtf?.ladder ?? [];
+  for (const label of ["Monthly", "Weekly", "Daily"]) {
+    const rung = ladder.find((r) => r.label === label);
+    if (rung) check(rung.bias === (wantBull ? "bullish" : "bearish"));
+  }
+
+  // Trigger and analyst consensus.
+  check(snap.cisd.state === (wantBull ? "bullish" : "bearish"));
+  check(memo.consensus === (wantBull ? "bullish" : "bearish"));
+
+  // Real order flow agreement.
+  const of = snap.orderFlow;
+  if (of) {
+    check(wantBull ? of.cvd > 0 : of.cvd < 0);
+    check(wantBull ? of.delta > 0 : of.delta < 0);
+    check(wantBull ? of.priceVsPoc !== "below" : of.priceVsPoc !== "above");
+
+  }
+
+  // Payoff quality.
+  check(Number.isFinite(rrMultiple) && rrMultiple >= 2);
+
+  if (checks === 0) return 0;
+  // Map onto 25-90: no data-driven setup deserves a 100.
+  return Math.round(25 + (hits / checks) * 65);
+}
+
 function shouldReplaceNoEntry(plan: RawPlan, snap: MarketSnapshot, memo: ResearchMemo): boolean {
+
   const grade = normalizeGrade(plan.grade);
   if (grade !== "NO ENTRY") return false;
   const hasDirectionalConsensus = memo.consensus !== "neutral" && (memo.consensusConfidence ?? 0) >= 45;
@@ -349,7 +401,7 @@ export async function runPlanner(
     const draft = await generateText({
       model: provider(MODEL),
       output: Output.object({ schema: PlanSchema }),
-      system: "You are the head trader. Follow the 'How to Analysis' cascade in the memo: 4H sets DIRECTION + TREND + key levels + supply/demand; 1H reads STRUCTURE (breaks, reversal, OB, FVG, liquidity); 15m gives CONFIRMATION. Grade A+ only when MTF alignment is aligned-long/aligned-short AND 15m confirmation matches. Grade A when alignment is aligned-* with weaker 15m. Grade B when 1H structure and 4H direction agree but 15m is neutral. Grade C when there is a 1H trigger but 4H is against or neutral. NO ENTRY when direction, structure, and confirmation all conflict. Return exactly one flat JSON object, not an array. Grade MUST be one of: A+, A, B, C, NO ENTRY. Bias MUST be Long, Short, or Neutral. ENTRY PRECISION IS THE PRIORITY: the entry must be a specific level, not a round guess near price. Anchor it to an actual level in the memo - a 1H bullish/bearish order block edge, a 1H FVG edge, a 4H demand/supply boundary, a 4H key level, or a resting liquidity pool - on the pullback side of Last and within 2x ATR. Place the stop just beyond the FAR edge of that same zone (0.6-2.5x ATR of risk), never a round ATR multiple pulled out of the air. TP1 should be the first opposing level or liquidity pool that pays at least 1.5R; TP2 the next one or 3R. In the thesis, state the exact level name and price you anchored the entry to. No generic wording. ENTRY RULES: default to entering on the pullback side of price. For a Long setup, entry must be at or below Last unless the prompt explicitly asks for a breakout stop order. For a Short setup, entry must be at or above Last. Prefer entries at 1H order blocks, FVGs, or 4H demand/supply that align with bias. Do not default to BUY STOP or SELL STOP. Never place entry more than 2x ATR from current price. Keep thesis under 400 chars and invalidation under 200 chars. Confidence is 0-100." + memoryLine,
+      system: "You are the head trader. Follow the 'How to Analysis' cascade in the memo: 4H sets DIRECTION + TREND + key levels + supply/demand; 1H reads STRUCTURE (breaks, reversal, OB, FVG, liquidity); 15m gives CONFIRMATION. Grade A+ only when MTF alignment is aligned-long/aligned-short AND 15m confirmation matches. Grade A when alignment is aligned-* with weaker 15m. Grade B when 1H structure and 4H direction agree but 15m is neutral. Grade C when there is a 1H trigger but 4H is against or neutral. NO ENTRY when direction, structure, and confirmation all conflict. Return exactly one flat JSON object, not an array. Grade MUST be one of: A+, A, B, C, NO ENTRY. Bias MUST be Long, Short, or Neutral. ENTRY PRECISION IS THE PRIORITY: the entry must be a specific level, not a round guess near price. Anchor it to an actual level in the memo - a 1H bullish/bearish order block edge, a 1H FVG edge, a 4H demand/supply boundary, a 4H key level, or a resting liquidity pool - on the pullback side of Last and within 2x ATR. Place the stop just beyond the FAR edge of that same zone (0.6-2.5x ATR of risk), never a round ATR multiple pulled out of the air. TP1 should be the first opposing level or liquidity pool that pays at least 1.5R; TP2 the next one or 3R. In the thesis, state the exact level name and price you anchored the entry to. No generic wording. ENTRY RULES: default to entering on the pullback side of price. For a Long setup, entry must be at or below Last unless the prompt explicitly asks for a breakout stop order. For a Short setup, entry must be at or above Last. Prefer entries at 1H order blocks, FVGs, or 4H demand/supply that align with bias. Do not default to BUY STOP or SELL STOP. Never place entry more than 2x ATR from current price. Keep thesis under 400 chars and invalidation under 200 chars. Do NOT state a confidence percentage; conviction is counted from the data by the platform, not asserted by you." + memoryLine,
       prompt: ctx,
     });
     plan = draft.output;
@@ -403,18 +455,12 @@ export async function runPlanner(
   const isNoEntry = grade === "NO ENTRY";
   const details = `${finalPlan.thesis} Invalidation: ${finalPlan.invalidation}. Manage to break-even at TP1 (${fmt(finalPlan.tp1, dec)}), trail runner to TP2 (${fmt(finalPlan.tp2, dec)}). Risk 0.5-1R of account.`;
 
-  // Backfill confidence: models frequently return 0 or omit the field. Fall
-  // back to the analyst-consensus confidence and enforce a per-grade floor
-  // so a real setup never displays as 0%.
-  const gradeFloor: Record<typeof GRADES[number], number> = {
-    "A+": 85, "A": 75, "B": 60, "C": 40, "NO ENTRY": 0,
-  };
-  const rawModelConf = Number.isFinite(finalPlan.confidence) ? Number(finalPlan.confidence) : 0;
-  const modelConf = Math.round(rawModelConf > 0 && rawModelConf <= 1 ? rawModelConf * 100 : rawModelConf);
-  const consensusConf = Number.isFinite(memo.consensusConfidence) ? memo.consensusConfidence : 0;
-  const confidence = isNoEntry
-    ? Math.max(25, Math.min(modelConf || consensusConf || 35, 45))
-    : Math.max(modelConf, consensusConf, gradeFloor[grade]);
+  // Conviction is counted from evidence that is actually present in the data,
+  // not asserted by the model and not floored by grade. The old version took
+  // max(model, consensus, gradeFloor), which pinned nearly every A/A+ setup at
+  // 85-100% and made the number meaningless.
+  const confidence = countEvidence(snap, memo, grade, bias, reward / risk);
+
 
   // Daily bias sets the day's direction; 4H is the current trend. They can
   // disagree (price rallying up into a daily sell zone), which is exactly what
