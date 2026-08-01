@@ -3,7 +3,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getBriefingState, sendBriefingNow } from "@/lib/briefings.functions";
+import { getMarketNews } from "@/lib/news.functions";
 import { Send, ArrowRight, CalendarClock } from "lucide-react";
+
 
 export const Route = createFileRoute("/_app/briefings")({
   head: () => ({
