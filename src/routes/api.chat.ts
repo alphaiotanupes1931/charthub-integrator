@@ -428,7 +428,12 @@ ${journalContext}
 === SIGNAL BACKTEST (measured outcomes of signals this trader actually took) ===
 ${learningCtx}
 Use these measured numbers when the trader asks how they are doing, whether a setup is worth taking, or why a grade matters. If a bucket (symbol, grade, direction, timeframe or session) has negative expectancy, say so plainly and tell them to skip or reduce size there. Never invent performance numbers that are not listed above.
-=== END SIGNAL BACKTEST ===`;
+=== END SIGNAL BACKTEST ===
+
+=== NEWS AND ECONOMIC CALENDAR ===
+${newsCtx ?? "No economic calendar data is loaded right now. Say so plainly if the trader asks about news, and do not invent releases or times."}
+=== END NEWS ===`;
+
 
 }
 
