@@ -135,6 +135,9 @@ function SignalsPage() {
         onOpen={(t) => navigate({ to: "/dashboard", search: { symbol: t } as never })}
       />
 
+      <BacktestPanel />
+
+
       <div className="text-xs text-muted-foreground">
         Signals are AI-generated and educational. Not financial advice. Use with the <Link to="/journal" className="text-primary underline">journal</Link> to track outcomes.
       </div>
