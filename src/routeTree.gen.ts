@@ -30,7 +30,6 @@ import { Route as ApiHealthRouteImport } from './routes/api.health'
 import { Route as ApiChatRouteImport } from './routes/api.chat'
 import { Route as AppVoiceCoachRouteImport } from './routes/_app.voice-coach'
 import { Route as AppTestingRouteImport } from './routes/_app.testing'
-import { Route as AppTelegramRouteImport } from './routes/_app.telegram'
 import { Route as AppStrategiesRouteImport } from './routes/_app.strategies'
 import { Route as AppSignalsRouteImport } from './routes/_app.signals'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
@@ -53,7 +52,6 @@ import { Route as AppCoachDashboardRouteImport } from './routes/_app.coach-dashb
 import { Route as AppChatRouteImport } from './routes/_app.chat'
 import { Route as AppCalculatorRouteImport } from './routes/_app.calculator'
 import { Route as AppBrokerRouteImport } from './routes/_app.broker'
-import { Route as AppBriefingsRouteImport } from './routes/_app.briefings'
 import { Route as AppAutopilotRouteImport } from './routes/_app.autopilot'
 import { Route as AppAnalyticsRouteImport } from './routes/_app.analytics'
 import { Route as AppAlertsRouteImport } from './routes/_app.alerts'
@@ -184,11 +182,6 @@ const AppTestingRoute = AppTestingRouteImport.update({
   path: '/testing',
   getParentRoute: () => AppRoute,
 } as any)
-const AppTelegramRoute = AppTelegramRouteImport.update({
-  id: '/telegram',
-  path: '/telegram',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppStrategiesRoute = AppStrategiesRouteImport.update({
   id: '/strategies',
   path: '/strategies',
@@ -297,11 +290,6 @@ const AppCalculatorRoute = AppCalculatorRouteImport.update({
 const AppBrokerRoute = AppBrokerRouteImport.update({
   id: '/broker',
   path: '/broker',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppBriefingsRoute = AppBriefingsRouteImport.update({
-  id: '/briefings',
-  path: '/briefings',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAutopilotRoute = AppAutopilotRouteImport.update({
@@ -455,7 +443,6 @@ export interface FileRoutesByFullPath {
   '/alerts': typeof AppAlertsRoute
   '/analytics': typeof AppAnalyticsRoute
   '/autopilot': typeof AppAutopilotRoute
-  '/briefings': typeof AppBriefingsRoute
   '/broker': typeof AppBrokerRoute
   '/calculator': typeof AppCalculatorRoute
   '/chat': typeof AppChatRouteWithChildren
@@ -478,7 +465,6 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AppSettingsRoute
   '/signals': typeof AppSignalsRoute
   '/strategies': typeof AppStrategiesRouteWithChildren
-  '/telegram': typeof AppTelegramRoute
   '/testing': typeof AppTestingRoute
   '/voice-coach': typeof AppVoiceCoachRoute
   '/api/chat': typeof ApiChatRoute
@@ -525,7 +511,6 @@ export interface FileRoutesByTo {
   '/alerts': typeof AppAlertsRoute
   '/analytics': typeof AppAnalyticsRoute
   '/autopilot': typeof AppAutopilotRoute
-  '/briefings': typeof AppBriefingsRoute
   '/broker': typeof AppBrokerRoute
   '/calculator': typeof AppCalculatorRoute
   '/coach-dashboard': typeof AppCoachDashboardRoute
@@ -546,7 +531,6 @@ export interface FileRoutesByTo {
   '/scan-lens': typeof AppScanLensRoute
   '/settings': typeof AppSettingsRoute
   '/signals': typeof AppSignalsRoute
-  '/telegram': typeof AppTelegramRoute
   '/testing': typeof AppTestingRoute
   '/voice-coach': typeof AppVoiceCoachRoute
   '/api/chat': typeof ApiChatRoute
@@ -595,7 +579,6 @@ export interface FileRoutesById {
   '/_app/alerts': typeof AppAlertsRoute
   '/_app/analytics': typeof AppAnalyticsRoute
   '/_app/autopilot': typeof AppAutopilotRoute
-  '/_app/briefings': typeof AppBriefingsRoute
   '/_app/broker': typeof AppBrokerRoute
   '/_app/calculator': typeof AppCalculatorRoute
   '/_app/chat': typeof AppChatRouteWithChildren
@@ -618,7 +601,6 @@ export interface FileRoutesById {
   '/_app/settings': typeof AppSettingsRoute
   '/_app/signals': typeof AppSignalsRoute
   '/_app/strategies': typeof AppStrategiesRouteWithChildren
-  '/_app/telegram': typeof AppTelegramRoute
   '/_app/testing': typeof AppTestingRoute
   '/_app/voice-coach': typeof AppVoiceCoachRoute
   '/api/chat': typeof ApiChatRoute
@@ -668,7 +650,6 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/analytics'
     | '/autopilot'
-    | '/briefings'
     | '/broker'
     | '/calculator'
     | '/chat'
@@ -691,7 +672,6 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signals'
     | '/strategies'
-    | '/telegram'
     | '/testing'
     | '/voice-coach'
     | '/api/chat'
@@ -738,7 +718,6 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/analytics'
     | '/autopilot'
-    | '/briefings'
     | '/broker'
     | '/calculator'
     | '/coach-dashboard'
@@ -759,7 +738,6 @@ export interface FileRouteTypes {
     | '/scan-lens'
     | '/settings'
     | '/signals'
-    | '/telegram'
     | '/testing'
     | '/voice-coach'
     | '/api/chat'
@@ -807,7 +785,6 @@ export interface FileRouteTypes {
     | '/_app/alerts'
     | '/_app/analytics'
     | '/_app/autopilot'
-    | '/_app/briefings'
     | '/_app/broker'
     | '/_app/calculator'
     | '/_app/chat'
@@ -830,7 +807,6 @@ export interface FileRouteTypes {
     | '/_app/settings'
     | '/_app/signals'
     | '/_app/strategies'
-    | '/_app/telegram'
     | '/_app/testing'
     | '/_app/voice-coach'
     | '/api/chat'
@@ -1039,13 +1015,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTestingRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/telegram': {
-      id: '/_app/telegram'
-      path: '/telegram'
-      fullPath: '/telegram'
-      preLoaderRoute: typeof AppTelegramRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/strategies': {
       id: '/_app/strategies'
       path: '/strategies'
@@ -1198,13 +1167,6 @@ declare module '@tanstack/react-router' {
       path: '/broker'
       fullPath: '/broker'
       preLoaderRoute: typeof AppBrokerRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/briefings': {
-      id: '/_app/briefings'
-      path: '/briefings'
-      fullPath: '/briefings'
-      preLoaderRoute: typeof AppBriefingsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/autopilot': {
@@ -1465,7 +1427,6 @@ interface AppRouteChildren {
   AppAlertsRoute: typeof AppAlertsRoute
   AppAnalyticsRoute: typeof AppAnalyticsRoute
   AppAutopilotRoute: typeof AppAutopilotRoute
-  AppBriefingsRoute: typeof AppBriefingsRoute
   AppBrokerRoute: typeof AppBrokerRoute
   AppCalculatorRoute: typeof AppCalculatorRoute
   AppChatRoute: typeof AppChatRouteWithChildren
@@ -1488,7 +1449,6 @@ interface AppRouteChildren {
   AppSettingsRoute: typeof AppSettingsRoute
   AppSignalsRoute: typeof AppSignalsRoute
   AppStrategiesRoute: typeof AppStrategiesRouteWithChildren
-  AppTelegramRoute: typeof AppTelegramRoute
   AppTestingRoute: typeof AppTestingRoute
   AppVoiceCoachRoute: typeof AppVoiceCoachRoute
 }
@@ -1499,7 +1459,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppAlertsRoute: AppAlertsRoute,
   AppAnalyticsRoute: AppAnalyticsRoute,
   AppAutopilotRoute: AppAutopilotRoute,
-  AppBriefingsRoute: AppBriefingsRoute,
   AppBrokerRoute: AppBrokerRoute,
   AppCalculatorRoute: AppCalculatorRoute,
   AppChatRoute: AppChatRouteWithChildren,
@@ -1522,7 +1481,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppSettingsRoute: AppSettingsRoute,
   AppSignalsRoute: AppSignalsRoute,
   AppStrategiesRoute: AppStrategiesRouteWithChildren,
-  AppTelegramRoute: AppTelegramRoute,
   AppTestingRoute: AppTestingRoute,
   AppVoiceCoachRoute: AppVoiceCoachRoute,
 }

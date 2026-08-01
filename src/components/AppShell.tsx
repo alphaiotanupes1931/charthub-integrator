@@ -65,8 +65,6 @@ const NAV: NavItem[] = [
   { to: "/testing",         label: "Testing",         icon: FlaskConical },
   { to: "/broker",          label: "Broker (OANDA)",  icon: Building2 },
   { to: "/autopilot",       label: "Autopilot",       icon: Bot },
-  { to: "/briefings",       label: "Briefings",       icon: Send },
-  { to: "/telegram",        label: "Telegram",        icon: Send },
   { to: "/news",            label: "News",            icon: Newspaper },
   { to: "/discord",         label: "Discord",         icon: MessageSquare },
   { to: "/leaderboard",     label: "Leaderboard",     icon: Trophy },

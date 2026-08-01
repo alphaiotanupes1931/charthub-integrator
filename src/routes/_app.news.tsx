@@ -159,13 +159,10 @@ function NewsPage() {
       </section>
 
       <p className="text-sm text-muted-foreground">
-        Delivery settings:{" "}
-        <Link to="/briefings" className="underline">
-          Briefings
-        </Link>{" "}
-        and{" "}
-        <Link to="/telegram" className="underline">
-          Telegram
+        This calendar feeds the AI coach directly, so every scan and chat answer accounts for the
+        releases above. Signal alerts are posted in the{" "}
+        <Link to="/discord" className="underline">
+          TradeMind Community
         </Link>
         .
       </p>
