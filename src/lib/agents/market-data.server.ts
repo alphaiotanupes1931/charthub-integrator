@@ -21,11 +21,35 @@ const YAHOO: Record<string, string> = {
   "XRP/USD": "XRP-USD",
 };
 
+// Accepts the many ways a symbol can arrive (watchlists, chat, deep links)
+// and maps it onto the canonical key used by YAHOO / COINGECKO above.
+const TICKER_ALIASES: Record<string, string> = {
+  XAUUSD: "XAU/USD", GOLD: "XAU/USD", "GC=F": "XAU/USD",
+  XAGUSD: "XAG/USD", SILVER: "XAG/USD", "SI=F": "XAG/USD",
+  EURUSD: "EUR/USD", GBPUSD: "GBP/USD", USDJPY: "USD/JPY",
+  BTCUSD: "BTC/USD", "BTC-USD": "BTC/USD",
+  ETHUSD: "ETH/USD", "ETH-USD": "ETH/USD",
+  XRPUSD: "XRP/USD", "XRP-USD": "XRP/USD",
+  "^NDX": "NAS100", NDX: "NAS100", NAS: "NAS100", USTEC: "NAS100", NASDAQ: "NAS100",
+  "^GSPC": "SPX500", SPX: "SPX500", SP500: "SPX500", US500: "SPX500",
+  "^DJI": "US30", DJI: "US30", DOW: "US30",
+  "CL=F": "WTI Oil", USOIL: "WTI Oil", WTI: "WTI Oil",
+};
+
+export function normalizeTicker(raw: string): string {
+  const t = (raw ?? "").trim();
+  if (!t) return t;
+  if (YAHOO[t] || COINGECKO_ID[t]) return t;
+  const upper = t.toUpperCase().replace(/^OANDA:/, "").replace(/\s+/g, "");
+  return TICKER_ALIASES[upper] ?? TICKER_ALIASES[t] ?? t;
+}
+
 const COINGECKO_ID: Record<string, string> = {
   "BTC/USD": "bitcoin",
   "ETH/USD": "ethereum",
   "XRP/USD": "ripple",
 };
+
 
 function yahooRange(interval: string): { interval: string; range: string } {
   switch (interval) {
