@@ -80,6 +80,29 @@ function BriefingsPage() {
           Every briefing includes the high and medium impact releases for the session, pulled from the economic calendar on <Link to="/news" className="underline">News</Link>.
         </p>
       </section>
+      <section className="rounded-md border border-border bg-card p-4">
+        <h2 className="font-semibold mb-1">Latest A / A+ signals</h2>
+        <p className="text-xs text-muted-foreground mb-3">
+          The same alerts posted to Discord. Only grade A and A+ setups with directional bias make it here.
+        </p>
+        {(s as any).signals?.length ? (
+          <ul className="divide-y divide-border">
+            {(s as any).signals.map((g: any) => (
+              <li key={g.id} className="py-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                <span className="rounded-md border border-primary px-1.5 py-0.5 text-xs font-semibold text-primary">{g.grade}</span>
+                <span className="font-semibold">{g.action} {g.symbol}</span>
+                <span className="text-muted-foreground font-mono text-xs">
+                  entry {g.entry} · stop {g.stop} · tp1 {g.tp1} · R:R {g.rr} · {g.confidence}%
+                </span>
+                <span className="ml-auto text-xs text-muted-foreground">{new Date(g.created_at).toLocaleString()}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-muted-foreground">No A or A+ signals recorded yet. The scanner posts them as they set up.</p>
+        )}
+      </section>
+
 
       <section className="rounded-md border border-border bg-card p-4">
         <div className="flex items-center justify-between mb-3">
