@@ -13,10 +13,59 @@ export type CalendarEvent = {
 };
 
 const HOSTS = ["https://nfs.faireconomy.media", "https://cdn-nfs.faireconomy.media"];
-const WEEKS = ["ff_calendar_thisweek.json", "ff_calendar_nextweek.json"];
+const WEEKS = ["ff_calendar_thisweek", "ff_calendar_nextweek"];
 
 let cache: { at: number; events: CalendarEvent[] } | null = null;
 const TTL_MS = 10 * 60 * 1000;
+
+function push(merged: CalendarEvent[], e: Partial<CalendarEvent>) {
+  if (!e?.title || !e?.date) return;
+  merged.push({
+    title: String(e.title),
+    country: String(e.country ?? ""),
+    date: String(e.date),
+    impact: String(e.impact ?? "Low"),
+    forecast: String(e.forecast ?? ""),
+    previous: String(e.previous ?? ""),
+    actual: e.actual ? String(e.actual) : undefined,
+  });
+}
+
+// Faireconomy also publishes the same calendar as XML. Used when the JSON
+// mirror is unreachable or returns an empty body.
+function parseFaireconomyXml(xml: string): Partial<CalendarEvent>[] {
+  const out: Partial<CalendarEvent>[] = [];
+  const tag = (block: string, name: string) => {
+    const m = block.match(new RegExp(`<${name}>(?:<!\\[CDATA\\[)?([\\s\\S]*?)(?:\\]\\]>)?</${name}>`, "i"));
+    return m ? m[1].trim() : "";
+  };
+  for (const m of xml.matchAll(/<event>([\s\S]*?)<\/event>/gi)) {
+    const b = m[1];
+    const date = tag(b, "date");
+    const time = tag(b, "time");
+    if (!date) continue;
+    // Feed dates look like "08-03-2026" (MM-DD-YYYY) with times like "8:30am".
+    const [mm, dd, yyyy] = date.split("-");
+    let hours = 0;
+    let mins = 0;
+    const t = time.match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/i);
+    if (t) {
+      hours = Number(t[1]) % 12 + (/pm/i.test(t[3]) ? 12 : 0);
+      mins = Number(t[2]);
+    }
+    const iso = new Date(Date.UTC(Number(yyyy), Number(mm) - 1, Number(dd), hours, mins)).toISOString();
+    out.push({
+      title: tag(b, "title"),
+      country: tag(b, "country"),
+      date: iso,
+      impact: tag(b, "impact") || "Low",
+      forecast: tag(b, "forecast"),
+      previous: tag(b, "previous"),
+      actual: tag(b, "actual") || undefined,
+    });
+  }
+  return out;
+}
 
 export async function fetchCalendar(): Promise<CalendarEvent[]> {
   if (cache && Date.now() - cache.at < TTL_MS) return cache.events;
@@ -25,40 +74,42 @@ export async function fetchCalendar(): Promise<CalendarEvent[]> {
   // a weekend when the current week's releases are all in the past.
   const merged: CalendarEvent[] = [];
   for (const week of WEEKS) {
+    let got = false;
     for (const host of HOSTS) {
-      try {
-        const res = await fetch(`${host}/${week}`, {
-          headers: {
-            "User-Agent": "Mozilla/5.0 (compatible; TradeMind/1.0)",
-            Accept: "application/json",
-          },
-        });
-        if (!res.ok) continue;
-        const raw = (await res.json()) as CalendarEvent[];
-        if (!Array.isArray(raw) || raw.length === 0) continue;
-        for (const e of raw) {
-          if (!e?.title || !e?.date) continue;
-          merged.push({
-            title: String(e.title),
-            country: String(e.country ?? ""),
-            date: String(e.date),
-            impact: String(e.impact ?? "Low"),
-            forecast: String(e.forecast ?? ""),
-            previous: String(e.previous ?? ""),
-            actual: e.actual ? String(e.actual) : undefined,
+      if (got) break;
+      for (const ext of ["json", "xml"] as const) {
+        try {
+          const res = await fetch(`${host}/${week}.${ext}`, {
+            headers: {
+              "User-Agent": "Mozilla/5.0 (compatible; TradeMind/1.0)",
+              Accept: ext === "json" ? "application/json" : "application/xml,text/xml",
+            },
           });
+          if (!res.ok) continue;
+          if (ext === "json") {
+            const raw = (await res.json()) as CalendarEvent[];
+            if (!Array.isArray(raw) || raw.length === 0) continue;
+            for (const e of raw) push(merged, e);
+          } else {
+            const rows = parseFaireconomyXml(await res.text());
+            if (!rows.length) continue;
+            for (const e of rows) push(merged, e);
+          }
+          got = true;
+          break;
+        } catch {
+          /* try next format / mirror */
         }
-        break;
-      } catch {
-        /* try next mirror */
       }
     }
   }
+  // Keep serving the last good copy rather than going blank when every mirror fails.
   if (!merged.length) return cache?.events ?? [];
   merged.sort((a, b) => a.date.localeCompare(b.date));
   cache = { at: Date.now(), events: merged };
   return merged;
 }
+
 
 function sameUtcDay(iso: string, ref: Date): boolean {
   const d = new Date(iso);
