@@ -35,9 +35,12 @@ const Input = z.object({
 
 function toAction(plan: TradePlan): Signal["action"] {
   if (plan.grade === "NO ENTRY" || plan.bias === "Neutral") return "HOLD";
-  if (plan.confidence < 55) return "HOLD";
+  // Conviction is now counted from evidence (25-90) rather than floored by
+  // grade, so the actionable cut-off sits lower than the old 55.
+  if (plan.confidence < 45) return "HOLD";
   return plan.bias === "Long" ? "BUY" : "SELL";
 }
+
 
 export const runSignalScan = createServerFn({ method: "POST" })
   .inputValidator((raw: unknown) => Input.parse(raw))
