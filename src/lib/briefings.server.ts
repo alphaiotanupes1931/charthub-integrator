@@ -76,6 +76,27 @@ export async function buildBriefingBody(
     /* calendar is best effort */
   }
 
+  // Recent A / A+ signals from the shared scanner feed.
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { data: sigs } = await supabaseAdmin
+      .from("signal_feed")
+      .select("symbol,grade,action,entry,stop,tp1,rr,confidence,created_at")
+      .gte("created_at", since)
+      .order("created_at", { ascending: false })
+      .limit(8);
+    if (sigs?.length) {
+      lines.push("");
+      lines.push("A / A+ signals in the last 24h:");
+      for (const g of sigs as any[]) {
+        lines.push(`- ${g.grade} ${g.action} ${g.symbol}: entry ${g.entry} stop ${g.stop} tp1 ${g.tp1} (R:R ${g.rr}, confidence ${g.confidence}%)`);
+      }
+    }
+  } catch {
+    /* signal feed is best effort */
+  }
+
   if (paperSummary) {
     lines.push("");
     lines.push("Paper account:");
