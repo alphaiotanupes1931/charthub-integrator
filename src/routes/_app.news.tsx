@@ -32,7 +32,7 @@ function impactClass(impact: string) {
 }
 
 function NewsPage() {
-  const { timezone } = useTimezone();
+  const { timezone, resolvedTimezone } = useTimezone();
   const [filter, setFilter] = useState<Impact>("high");
 
   const getState = useServerFn(getBriefingState);
@@ -56,7 +56,7 @@ function NewsPage() {
 
   const fmtTime = (iso: string) => {
     try {
-      return new Intl.DateTimeFormat("en-US", { timeZone: timezone, weekday: "short", hour: "numeric", minute: "2-digit" }).format(new Date(iso));
+      return new Intl.DateTimeFormat("en-US", { timeZone: resolvedTimezone, weekday: "short", hour: "numeric", minute: "2-digit" }).format(new Date(iso));
     } catch {
       return new Date(iso).toUTCString().slice(0, 22);
     }
@@ -68,7 +68,7 @@ function NewsPage() {
         <div>
           <h1 className="text-2xl font-semibold">News and economic calendar</h1>
           <p className="text-sm text-muted-foreground">
-            Forex Factory releases for this session, shown in {timezone}. The same feed is attached to your briefings and to the AI coach.
+            Forex Factory releases for this session, shown in {resolvedTimezone ?? "your local time"}. The same feed is attached to your briefings and to the AI coach.
           </p>
         </div>
         <button
