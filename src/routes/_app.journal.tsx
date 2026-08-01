@@ -1142,6 +1142,10 @@ function TradeFormModal({
 
   const hasImage = !!pendingImage || (!!editing?.hasImage && !removeImage);
 
+  // A trade you just took has no exit yet. Treat a blank exit as "still open"
+  // and fall back to the entry so P&L reads 0 until the trade is closed.
+  const effectiveExit = exit === "" ? Number(entry) || 0 : Number(exit) || 0;
+
   const preview: Trade = {
     id: editing?.id ?? "preview",
     date,
@@ -1149,7 +1153,7 @@ function TradeFormModal({
     symbol,
     side,
     entry: Number(entry) || 0,
-    exit: Number(exit) || 0,
+    exit: effectiveExit,
     stop: Number(stop) || 0,
     takeProfit: takeProfit === "" ? undefined : Number(takeProfit),
     size: Number(size) || 0,
@@ -1169,10 +1173,12 @@ function TradeFormModal({
   const previewPlannedRR = plannedRR(preview);
   const isLoss = previewPnl < 0;
 
-  const canSave = symbol.trim() && entry !== "" && exit !== "" && stop !== "" && date;
+  // Exit is optional: an open trade can be logged in one click.
+  const canSave = !!(symbol.trim() && entry !== "" && stop !== "" && date);
 
   const submit = async () => {
     if (!canSave) return;
+
     const id = editing?.id ?? `t_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
     if (pendingImage) {
       await putTradeImage(id, pendingImage);
@@ -1275,7 +1281,7 @@ function TradeFormModal({
             <Field label="Take profit">
               <input inputMode="decimal" value={takeProfit} onChange={(e) => setTakeProfit(e.target.value)} placeholder="planned" className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
             </Field>
-            <Field label="Exit (actual)">
+            <Field label="Exit (leave blank if still open)">
               <input inputMode="decimal" value={exit} onChange={(e) => setExit(e.target.value)} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
             </Field>
           </div>

@@ -30,10 +30,12 @@ import { Route as ApiHealthRouteImport } from './routes/api.health'
 import { Route as ApiChatRouteImport } from './routes/api.chat'
 import { Route as AppVoiceCoachRouteImport } from './routes/_app.voice-coach'
 import { Route as AppTestingRouteImport } from './routes/_app.testing'
+import { Route as AppTelegramRouteImport } from './routes/_app.telegram'
 import { Route as AppStrategiesRouteImport } from './routes/_app.strategies'
 import { Route as AppSignalsRouteImport } from './routes/_app.signals'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppScanLensRouteImport } from './routes/_app.scan-lens'
+import { Route as AppNewsRouteImport } from './routes/_app.news'
 import { Route as AppMentorRouteImport } from './routes/_app.mentor'
 import { Route as AppMentalRouteImport } from './routes/_app.mental'
 import { Route as AppMemoryRouteImport } from './routes/_app.memory'
@@ -182,6 +184,11 @@ const AppTestingRoute = AppTestingRouteImport.update({
   path: '/testing',
   getParentRoute: () => AppRoute,
 } as any)
+const AppTelegramRoute = AppTelegramRouteImport.update({
+  id: '/telegram',
+  path: '/telegram',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppStrategiesRoute = AppStrategiesRouteImport.update({
   id: '/strategies',
   path: '/strategies',
@@ -200,6 +207,11 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
 const AppScanLensRoute = AppScanLensRouteImport.update({
   id: '/scan-lens',
   path: '/scan-lens',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppNewsRoute = AppNewsRouteImport.update({
+  id: '/news',
+  path: '/news',
   getParentRoute: () => AppRoute,
 } as any)
 const AppMentorRoute = AppMentorRouteImport.update({
@@ -461,10 +473,12 @@ export interface FileRoutesByFullPath {
   '/memory': typeof AppMemoryRoute
   '/mental': typeof AppMentalRoute
   '/mentor': typeof AppMentorRoute
+  '/news': typeof AppNewsRoute
   '/scan-lens': typeof AppScanLensRoute
   '/settings': typeof AppSettingsRoute
   '/signals': typeof AppSignalsRoute
   '/strategies': typeof AppStrategiesRouteWithChildren
+  '/telegram': typeof AppTelegramRoute
   '/testing': typeof AppTestingRoute
   '/voice-coach': typeof AppVoiceCoachRoute
   '/api/chat': typeof ApiChatRoute
@@ -528,9 +542,11 @@ export interface FileRoutesByTo {
   '/memory': typeof AppMemoryRoute
   '/mental': typeof AppMentalRoute
   '/mentor': typeof AppMentorRoute
+  '/news': typeof AppNewsRoute
   '/scan-lens': typeof AppScanLensRoute
   '/settings': typeof AppSettingsRoute
   '/signals': typeof AppSignalsRoute
+  '/telegram': typeof AppTelegramRoute
   '/testing': typeof AppTestingRoute
   '/voice-coach': typeof AppVoiceCoachRoute
   '/api/chat': typeof ApiChatRoute
@@ -597,10 +613,12 @@ export interface FileRoutesById {
   '/_app/memory': typeof AppMemoryRoute
   '/_app/mental': typeof AppMentalRoute
   '/_app/mentor': typeof AppMentorRoute
+  '/_app/news': typeof AppNewsRoute
   '/_app/scan-lens': typeof AppScanLensRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/signals': typeof AppSignalsRoute
   '/_app/strategies': typeof AppStrategiesRouteWithChildren
+  '/_app/telegram': typeof AppTelegramRoute
   '/_app/testing': typeof AppTestingRoute
   '/_app/voice-coach': typeof AppVoiceCoachRoute
   '/api/chat': typeof ApiChatRoute
@@ -668,10 +686,12 @@ export interface FileRouteTypes {
     | '/memory'
     | '/mental'
     | '/mentor'
+    | '/news'
     | '/scan-lens'
     | '/settings'
     | '/signals'
     | '/strategies'
+    | '/telegram'
     | '/testing'
     | '/voice-coach'
     | '/api/chat'
@@ -735,9 +755,11 @@ export interface FileRouteTypes {
     | '/memory'
     | '/mental'
     | '/mentor'
+    | '/news'
     | '/scan-lens'
     | '/settings'
     | '/signals'
+    | '/telegram'
     | '/testing'
     | '/voice-coach'
     | '/api/chat'
@@ -803,10 +825,12 @@ export interface FileRouteTypes {
     | '/_app/memory'
     | '/_app/mental'
     | '/_app/mentor'
+    | '/_app/news'
     | '/_app/scan-lens'
     | '/_app/settings'
     | '/_app/signals'
     | '/_app/strategies'
+    | '/_app/telegram'
     | '/_app/testing'
     | '/_app/voice-coach'
     | '/api/chat'
@@ -1015,6 +1039,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTestingRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/telegram': {
+      id: '/_app/telegram'
+      path: '/telegram'
+      fullPath: '/telegram'
+      preLoaderRoute: typeof AppTelegramRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/strategies': {
       id: '/_app/strategies'
       path: '/strategies'
@@ -1041,6 +1072,13 @@ declare module '@tanstack/react-router' {
       path: '/scan-lens'
       fullPath: '/scan-lens'
       preLoaderRoute: typeof AppScanLensRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/news': {
+      id: '/_app/news'
+      path: '/news'
+      fullPath: '/news'
+      preLoaderRoute: typeof AppNewsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/mentor': {
@@ -1445,10 +1483,12 @@ interface AppRouteChildren {
   AppMemoryRoute: typeof AppMemoryRoute
   AppMentalRoute: typeof AppMentalRoute
   AppMentorRoute: typeof AppMentorRoute
+  AppNewsRoute: typeof AppNewsRoute
   AppScanLensRoute: typeof AppScanLensRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppSignalsRoute: typeof AppSignalsRoute
   AppStrategiesRoute: typeof AppStrategiesRouteWithChildren
+  AppTelegramRoute: typeof AppTelegramRoute
   AppTestingRoute: typeof AppTestingRoute
   AppVoiceCoachRoute: typeof AppVoiceCoachRoute
 }
@@ -1477,10 +1517,12 @@ const AppRouteChildren: AppRouteChildren = {
   AppMemoryRoute: AppMemoryRoute,
   AppMentalRoute: AppMentalRoute,
   AppMentorRoute: AppMentorRoute,
+  AppNewsRoute: AppNewsRoute,
   AppScanLensRoute: AppScanLensRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppSignalsRoute: AppSignalsRoute,
   AppStrategiesRoute: AppStrategiesRouteWithChildren,
+  AppTelegramRoute: AppTelegramRoute,
   AppTestingRoute: AppTestingRoute,
   AppVoiceCoachRoute: AppVoiceCoachRoute,
 }
@@ -1527,13 +1569,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
