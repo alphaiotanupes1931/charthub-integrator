@@ -737,12 +737,11 @@ function SettingsPage() {
       <Card className="mt-4">
         <h2 className="text-lg font-semibold mb-2">Daily briefings</h2>
         <p className="text-sm text-muted-foreground mb-4">
-          A morning briefing before the session and an evening report after the close, delivered in-app,
-          to Telegram, and to Discord. Configure hours, timezone, watchlist, Telegram, and Discord webhooks
-          from the Briefings page.
+          A morning briefing before the session and an evening report after the close, plus every A and A+
+          signal, are posted automatically in the TradeMind Community Discord. Nothing to configure.
         </p>
-        <a href="/briefings" className="inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/90">
-          Open Briefings
+        <a href="/discord" className="inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/90">
+          Open Community
         </a>
       </Card>
 
