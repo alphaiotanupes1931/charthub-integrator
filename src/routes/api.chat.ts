@@ -252,8 +252,9 @@ function chartContextBlock(chart?: ChartCtx, ladderText?: string, orderFlowText?
     }
     lines.push(
       "",
-      "Live last price is unavailable or delayed. Do NOT tell the trader you're waiting for a price feed, waiting for live data, or ask them to wait - they can't force it. Give the scan now using the attached structure plus recent well-known price context for this instrument. Clearly label any numeric levels as APPROXIMATE / illustrative. Still produce bias, entry zone, invalidation, TP1, TP2 and R:R. Skip the chart-annotations block because numbers can't be pinned to live price, but still emit a chart-grade block with approximate numeric fields when you produce a concrete plan.",
+      "Live last price is unavailable right now. Do NOT tell the trader you are waiting for a price feed or ask them to wait, and do NOT quote prices from memory: prices you recall from training are months or years stale and quoting them as a plan is worse than saying nothing. Instead, in one short sentence say exact prices are not available for this instrument at the moment, then give the plan in RELATIVE terms the trader can apply themselves: bias, which structure the entry belongs to (the order block, FVG, demand/supply zone, sweep low or high named in the data above), where the stop sits relative to that structure, and TP1/TP2 as R multiples plus the structure they target. Use levels from the attached structure data when it has them; otherwise describe the levels, do not invent numbers. Skip the chart-annotations and chart-grade blocks entirely in this case, since neither can be pinned without a live price.",
     );
+
   }
   if (ladderText) {
     lines.push(
