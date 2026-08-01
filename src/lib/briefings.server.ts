@@ -4,7 +4,11 @@ import type { MarketSnapshot } from "@/lib/agents/types";
 
 export type BriefingKind = "morning" | "evening" | "ad_hoc";
 
-const DEFAULT_WATCHLIST = ["XAU/USD", "EUR/USD", "^GSPC", "^NDX"];
+// Briefings cover every instrument TradeMind tracks. No per-user watchlist.
+const ALL_INSTRUMENTS = [
+  "XAU/USD", "XAG/USD", "EUR/USD", "GBP/USD", "USD/JPY",
+  "NAS100", "SPX500", "US30", "WTI Oil", "BTC/USD", "ETH/USD",
+];
 
 function fmt(n: number, digits = 2) {
   if (!Number.isFinite(n)) return "n/a";
@@ -31,7 +35,8 @@ export async function buildBriefingBody(
   watchlist: string[],
   paperSummary: string | null,
 ): Promise<{ title: string; body: string }> {
-  const symbols = watchlist.length ? watchlist : DEFAULT_WATCHLIST;
+  void watchlist; // briefings always cover the full instrument list
+  const symbols = ALL_INSTRUMENTS;
   const interval = kind === "morning" ? "60" : "15";
   const snaps = await Promise.all(symbols.map(s => fetchSnapshotSafe(s, interval)));
 
