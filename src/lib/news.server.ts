@@ -12,42 +12,49 @@ export type CalendarEvent = {
   actual?: string;
 };
 
-const FEEDS = [
-  "https://nfs.faireconomy.media/ff_calendar_thisweek.json",
-  "https://cdn-nfs.faireconomy.media/ff_calendar_thisweek.json",
-];
+const HOSTS = ["https://nfs.faireconomy.media", "https://cdn-nfs.faireconomy.media"];
+const WEEKS = ["ff_calendar_thisweek.json", "ff_calendar_nextweek.json"];
 
 let cache: { at: number; events: CalendarEvent[] } | null = null;
 const TTL_MS = 10 * 60 * 1000;
 
 export async function fetchCalendar(): Promise<CalendarEvent[]> {
   if (cache && Date.now() - cache.at < TTL_MS) return cache.events;
-  for (const url of FEEDS) {
-    try {
-      const res = await fetch(url, {
-        headers: { "User-Agent": "Mozilla/5.0 (compatible; TradeMind/1.0)", Accept: "application/json" },
-      });
-      if (!res.ok) continue;
-      const raw = (await res.json()) as CalendarEvent[];
-      if (!Array.isArray(raw) || raw.length === 0) continue;
-      const events = raw
-        .filter((e) => e && e.title && e.date)
-        .map((e) => ({
-          title: String(e.title),
-          country: String(e.country ?? ""),
-          date: String(e.date),
-          impact: String(e.impact ?? "Low"),
-          forecast: String(e.forecast ?? ""),
-          previous: String(e.previous ?? ""),
-          actual: e.actual ? String(e.actual) : undefined,
-        }));
-      cache = { at: Date.now(), events };
-      return events;
-    } catch {
-      /* try next mirror */
+
+  // This week plus next week, so the page and briefings are never blank over
+  // a weekend when the current week's releases are all in the past.
+  const merged: CalendarEvent[] = [];
+  for (const week of WEEKS) {
+    for (const host of HOSTS) {
+      try {
+        const res = await fetch(`${host}/${week}`, {
+          headers: { "User-Agent": "Mozilla/5.0 (compatible; TradeMind/1.0)", Accept: "application/json" },
+        });
+        if (!res.ok) continue;
+        const raw = (await res.json()) as CalendarEvent[];
+        if (!Array.isArray(raw) || raw.length === 0) continue;
+        for (const e of raw) {
+          if (!e?.title || !e?.date) continue;
+          merged.push({
+            title: String(e.title),
+            country: String(e.country ?? ""),
+            date: String(e.date),
+            impact: String(e.impact ?? "Low"),
+            forecast: String(e.forecast ?? ""),
+            previous: String(e.previous ?? ""),
+            actual: e.actual ? String(e.actual) : undefined,
+          });
+        }
+        break;
+      } catch {
+        /* try next mirror */
+      }
     }
   }
-  return cache?.events ?? [];
+  if (!merged.length) return cache?.events ?? [];
+  merged.sort((a, b) => a.date.localeCompare(b.date));
+  cache = { at: Date.now(), events: merged };
+  return merged;
 }
 
 function sameUtcDay(iso: string, ref: Date): boolean {
