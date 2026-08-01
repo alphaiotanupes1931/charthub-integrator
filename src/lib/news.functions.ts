@@ -41,9 +41,18 @@ export const getMarketNews = createServerFn({ method: "POST" })
       seen.add(k);
       return true;
     }).sort((a, b) => a.date.localeCompare(b.date));
+
+    // Weekend or end of the published week: nothing is ahead, so show the last
+    // session's releases with their actuals instead of an empty page.
+    const now = Date.now();
+    const list = events.length
+      ? events
+      : all.filter((e) => new Date(e.date).getTime() <= now).slice(-20);
+
     const writeup = data.withWriteup
-      ? await writeNewsBriefing(events.filter((e) => /high|medium/i.test(e.impact)).slice(0, 20), data.watchlist)
+      ? await writeNewsBriefing(list.filter((e) => /high|medium/i.test(e.impact)).slice(0, 20), data.watchlist)
       : null;
-    return { events, writeup, fetchedAt: new Date().toISOString() };
+    return { events: list, writeup, fetchedAt: new Date().toISOString() };
+
 
   });
