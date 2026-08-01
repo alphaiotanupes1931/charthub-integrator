@@ -6,17 +6,24 @@ import { toast } from "sonner";
 import {
   getBriefingState,
   updateBriefingPrefs,
-  generateTelegramLinkCode,
-  unlinkTelegram,
   sendBriefingNow,
   setDiscordWebhook,
   unlinkDiscord,
 } from "@/lib/briefings.functions";
-import { Copy, Send, Trash2 } from "lucide-react";
+import { Send, Trash2 } from "lucide-react";
 import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
 
 export const Route = createFileRoute("/_app/briefings")({
-  head: () => ({ meta: [{ title: "Briefings, TradeMind" }] }),
+  head: () => ({
+    meta: [
+      { title: "Daily briefings, TradeMind" },
+      { name: "description", content: "Schedule morning briefings and evening reports on your watchlist, with the economic calendar attached, delivered in app, to Telegram and to Discord." },
+      { property: "og:title", content: "Daily briefings, TradeMind" },
+      { property: "og:description", content: "Morning and evening market briefings on your watchlist, with the session's risk events." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: BriefingsPage,
 });
 
@@ -34,14 +41,6 @@ function BriefingsPage() {
   const savePrefs = useMutation({
     mutationFn: useServerFn(updateBriefingPrefs),
     onSuccess: () => { toast.success("Saved"); qc.invalidateQueries({ queryKey: ["briefingState"] }); emitFirstWeekEvent("briefings-set"); },
-  });
-  const genLink = useMutation({
-    mutationFn: useServerFn(generateTelegramLinkCode),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["briefingState"] }); },
-  });
-  const unlink = useMutation({
-    mutationFn: useServerFn(unlinkTelegram),
-    onSuccess: () => { toast.success("Telegram unlinked"); qc.invalidateQueries({ queryKey: ["briefingState"] }); },
   });
   const sendNow = useMutation({
     mutationFn: useServerFn(sendBriefingNow),
