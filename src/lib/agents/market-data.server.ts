@@ -215,6 +215,46 @@ function buildSnapshotCandles(symbol: string, interval: string, latest: Candle):
   return out;
 }
 
+// Optional paid provider. Enabled automatically when TWELVE_DATA_API_KEY is set.
+const TWELVE_DATA: Record<string, string> = {
+  "XAU/USD": "XAU/USD",
+  "XAG/USD": "XAG/USD",
+  "EUR/USD": "EUR/USD",
+  "GBP/USD": "GBP/USD",
+  "USD/JPY": "USD/JPY",
+  "BTC/USD": "BTC/USD",
+  "ETH/USD": "ETH/USD",
+  "WTI Oil": "WTI/USD",
+};
+
+function twelveInterval(interval: string): string {
+  switch (interval) {
+    case "1": return "1min";
+    case "5": return "5min";
+    case "15": return "15min";
+    case "60": return "1h";
+    case "240": return "4h";
+    case "D": return "1day";
+    case "W": return "1week";
+    case "M": return "1month";
+    default: return "1h";
+  }
+}
+
+async function fromTwelveData(ticker: string, interval: string): Promise<Candle[]> {
+  const key = process.env.TWELVE_DATA_API_KEY;
+  const sym = TWELVE_DATA[ticker];
+  if (!key || !sym) throw new Error("twelvedata not configured for ticker");
+  const url = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(sym)}&interval=${twelveInterval(interval)}&outputsize=220&order=ASC&apikey=${key}`;
+  const json = await fetchJson<{ values?: Array<{ datetime: string; open: string; high: string; low: string; close: string; volume?: string }>; status?: string }>(url);
+  if (!json.values?.length) throw new Error("twelvedata empty");
+  return json.values.map((v) => ({
+    time: Math.floor(new Date(v.datetime.replace(" ", "T") + "Z").getTime() / 1000),
+    open: Number(v.open), high: Number(v.high), low: Number(v.low), close: Number(v.close),
+    volume: v.volume == null ? undefined : Number(v.volume),
+  })).filter((c) => Number.isFinite(c.close));
+}
+
 async function fromBackup(ticker: string, interval: string): Promise<Candle[]> {
   const info = BACKUP[ticker];
   if (!info) throw new Error(`no backup mapping for ${ticker}`);
@@ -559,7 +599,10 @@ export async function getSnapshot(rawTicker: string, interval: string): Promise<
     if (COINGECKO_ID[ticker]) { candles = await fromCoinGecko(ticker, interval); source = "coingecko"; }
     else { candles = await fromYahoo(ticker, interval); source = "yahoo"; }
   } catch {
-    try { candles = await fromBackup(ticker, interval); source = "backup"; } catch { /* remain unavailable */ }
+    try { candles = await fromTwelveData(ticker, interval); source = "yahoo"; }
+    catch {
+      try { candles = await fromBackup(ticker, interval); source = "backup"; } catch { /* remain unavailable */ }
+    }
   }
 
   const last = candles.at(-1)?.close ?? 0;
