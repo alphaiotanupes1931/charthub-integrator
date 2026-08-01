@@ -32,6 +32,13 @@ function BriefingsPage() {
   const qc = useQueryClient();
   const getState = useServerFn(getBriefingState);
   const state = useQuery({ queryKey: ["briefingState"], queryFn: () => getState() });
+  const getNews = useServerFn(getMarketNews);
+  const news = useQuery({
+    queryKey: ["briefingNews"],
+    queryFn: () => getNews({ data: { withWriteup: false, watchlist: [] } }),
+    staleTime: 10 * 60 * 1000,
+  });
+
 
   const sendNow = useMutation({
     mutationFn: useServerFn(sendBriefingNow),
