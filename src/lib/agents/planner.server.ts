@@ -152,9 +152,10 @@ export function countEvidence(
   // Real order flow agreement.
   const of = snap.orderFlow;
   if (of) {
-    check(wantBull ? of.cumulativeDelta > 0 : of.cumulativeDelta < 0);
+    check(wantBull ? of.cvd > 0 : of.cvd < 0);
     check(wantBull ? of.delta > 0 : of.delta < 0);
-    check(wantBull ? snap.lastPrice >= of.vpoc : snap.lastPrice <= of.vpoc);
+    check(wantBull ? of.priceVsPoc !== "below" : of.priceVsPoc !== "above");
+
   }
 
   // Payoff quality.
