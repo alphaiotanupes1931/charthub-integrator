@@ -30,6 +30,7 @@ import { voiceForCoach } from "@/lib/coachVoices";
 import { coalesceUiMessageStream, textFromUiMessageParts } from "@/lib/chat-stream";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { buildLearningPromptBlock } from "@/lib/signalLearning";
 
 export const Route = createFileRoute("/_app/chat/$threadId")({
   component: ChatThread,
@@ -136,6 +137,7 @@ function ChatThreadInner({
             chart: lastChart ?? undefined,
             strategy,
             lens: { id: lens.id, name: lens.name, promptEmphasis: lens.promptEmphasis },
+            signalLearning: buildLearningPromptBlock(),
           },
         };
       },

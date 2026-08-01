@@ -34,6 +34,7 @@ import { toast } from "sonner";
 import { parseAiPayload, type ChartAnnotation, type ChartGrade, type ConceptRef } from "@/lib/chartAnnotations";
 import { coalesceUiMessageStream, textFromUiMessageParts } from "@/lib/chat-stream";
 import { ConceptDiagram } from "@/components/ConceptDiagram";
+import { buildLearningPromptBlock } from "@/lib/signalLearning";
 
 export type DashboardChatHandle = {
   scan: (prompt: string, targetThreadId?: string | null) => void;
@@ -429,6 +430,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               chart: chartRef.current,
               strategy,
               lens: { id: lens.id, name: lens.name, promptEmphasis: lens.promptEmphasis },
+              signalLearning: buildLearningPromptBlock(),
             },
           };
         },
