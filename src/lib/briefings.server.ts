@@ -48,6 +48,28 @@ export async function buildBriefingBody(
     lines.push(`${sym}: ${fmt(s.lastPrice, 5)} (${pct(change)} 24h, ${range.toFixed(2)}% 20-bar range)`);
   }
 
+  // Forex Factory economic calendar + AI write-up over it.
+  try {
+    const { fetchCalendar, todaysEvents, highImpactAhead, formatCalendarLines, writeNewsBriefing } = await import("@/lib/news.server");
+    const all = await fetchCalendar();
+    if (all.length) {
+      const scope = kind === "evening" ? highImpactAhead(all, 24) : todaysEvents(all).filter(e => /high|medium/i.test(e.impact));
+      if (scope.length) {
+        lines.push("");
+        lines.push(kind === "evening" ? "Next 24h risk events (Forex Factory):" : "Today's risk events (Forex Factory):");
+        for (const l of formatCalendarLines(scope, "UTC", 10)) lines.push(`- ${l}`);
+      }
+      const writeup = await writeNewsBriefing(scope.length ? scope : todaysEvents(all), symbols);
+      if (writeup) {
+        lines.push("");
+        lines.push("News read:");
+        lines.push(writeup);
+      }
+    }
+  } catch {
+    /* calendar is best effort */
+  }
+
   if (paperSummary) {
     lines.push("");
     lines.push("Paper account:");
@@ -60,6 +82,7 @@ export async function buildBriefingBody(
     : "Log today's trades and mental state before you shut down.");
 
   return { title, body: lines.join("\n") };
+
 }
 
 // Telegram delivery via connector gateway.
