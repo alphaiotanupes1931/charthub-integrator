@@ -32,7 +32,12 @@ export const getBriefingState = createServerFn({ method: "GET" })
       .eq("user_id", userId)
       .order("sent_at", { ascending: false })
       .limit(30);
-    return { prefs, history: history ?? [] };
+    const { data: signals } = await supabase
+      .from("signal_feed")
+      .select("id,symbol,grade,bias,action,entry,stop,tp1,rr,confidence,notes,created_at")
+      .order("created_at", { ascending: false })
+      .limit(20);
+    return { prefs, history: history ?? [], signals: signals ?? [] };
   });
 
 const prefsInput = z.object({
