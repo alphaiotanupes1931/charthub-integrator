@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -6,17 +6,24 @@ import { toast } from "sonner";
 import {
   getBriefingState,
   updateBriefingPrefs,
-  generateTelegramLinkCode,
-  unlinkTelegram,
   sendBriefingNow,
   setDiscordWebhook,
   unlinkDiscord,
 } from "@/lib/briefings.functions";
-import { Copy, Send, Trash2 } from "lucide-react";
+import { Send, Trash2 } from "lucide-react";
 import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
 
 export const Route = createFileRoute("/_app/briefings")({
-  head: () => ({ meta: [{ title: "Briefings, TradeMind" }] }),
+  head: () => ({
+    meta: [
+      { title: "Daily briefings, TradeMind" },
+      { name: "description", content: "Schedule morning briefings and evening reports on your watchlist, with the economic calendar attached, delivered in app, to Telegram and to Discord." },
+      { property: "og:title", content: "Daily briefings, TradeMind" },
+      { property: "og:description", content: "Morning and evening market briefings on your watchlist, with the session's risk events." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: BriefingsPage,
 });
 
@@ -34,14 +41,6 @@ function BriefingsPage() {
   const savePrefs = useMutation({
     mutationFn: useServerFn(updateBriefingPrefs),
     onSuccess: () => { toast.success("Saved"); qc.invalidateQueries({ queryKey: ["briefingState"] }); emitFirstWeekEvent("briefings-set"); },
-  });
-  const genLink = useMutation({
-    mutationFn: useServerFn(generateTelegramLinkCode),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["briefingState"] }); },
-  });
-  const unlink = useMutation({
-    mutationFn: useServerFn(unlinkTelegram),
-    onSuccess: () => { toast.success("Telegram unlinked"); qc.invalidateQueries({ queryKey: ["briefingState"] }); },
   });
   const sendNow = useMutation({
     mutationFn: useServerFn(sendBriefingNow),
@@ -129,34 +128,17 @@ function BriefingsPage() {
         </div>
       </section>
 
-      <section className="rounded-lg border border-border bg-card/40 p-4 space-y-3">
-        <h2 className="font-semibold">Telegram</h2>
-        {prefs.telegram_chat_id ? (
-          <div className="flex items-center justify-between gap-2">
-            <div className="text-sm">
-              Linked to chat <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{prefs.telegram_chat_id}</code>
-            </div>
-            <button onClick={() => unlink.mutate({})} className="rounded-md border border-border px-3 py-1.5 text-sm">Unlink</button>
-          </div>
-        ) : prefs.telegram_link_code ? (
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">Open Telegram, find the TradeMind bot, and send this message:</p>
-            <div className="flex items-center gap-2">
-              <code className="flex-1 rounded bg-muted px-3 py-2 text-sm">/start {prefs.telegram_link_code}</code>
-              <button onClick={() => { navigator.clipboard.writeText(`/start ${prefs.telegram_link_code}`); toast.success("Copied"); }} className="inline-flex items-center gap-1 rounded border border-border px-3 py-2 text-sm">
-                <Copy className="size-3.5" /> Copy
-              </button>
-            </div>
-            <p className="text-xs text-muted-foreground">Waiting for the bot to receive your message. Refresh this page after sending.</p>
-          </div>
-        ) : (
-          <div>
-            <button onClick={() => genLink.mutate({})} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">
-              Generate link code
-            </button>
-          </div>
-        )}
+      <section className="rounded-lg border border-border bg-card/40 p-4 space-y-2">
+        <h2 className="font-semibold">Delivery channels</h2>
+        <p className="text-sm text-muted-foreground">
+          Telegram delivery has its own page now:{" "}
+          <Link to="/telegram" className="underline">
+            {prefs.telegram_chat_id ? "Telegram (linked)" : "set up Telegram"}
+          </Link>
+          . The session news read and full economic calendar live on <Link to="/news" className="underline">News</Link>.
+        </p>
       </section>
+
 
       <section className="rounded-lg border border-border bg-card/40 p-4 space-y-3">
         <h2 className="font-semibold">Discord</h2>
