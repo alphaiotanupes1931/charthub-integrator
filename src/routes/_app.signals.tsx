@@ -15,6 +15,8 @@ import {
   deleteSignal,
   type SignalRecord,
 } from "@/lib/signalHistory";
+import { BacktestPanel } from "@/components/BacktestPanel";
+
 
 export const Route = createFileRoute("/_app/signals")({
   head: () => ({ meta: [{ title: "AI Signals, TradeMind" }] }),
