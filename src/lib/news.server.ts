@@ -118,7 +118,9 @@ export async function calendarContextBlock(symbol?: string): Promise<string | un
 
   const today = relevant(todaysEvents(all)).filter((e) => /high|medium/i.test(e.impact));
   const ahead = relevant(highImpactAhead(all, 72));
-  if (!today.length && !ahead.length) return undefined;
+  const now = Date.now();
+  const recent = relevant(all.filter((e) => new Date(e.date).getTime() <= now && /high|medium/i.test(e.impact))).slice(-6);
+  if (!today.length && !ahead.length && !recent.length) return undefined;
 
   const lines: string[] = ["ECONOMIC CALENDAR (Forex Factory, times in UTC)"];
   if (today.length) {
@@ -128,6 +130,10 @@ export async function calendarContextBlock(symbol?: string): Promise<string | un
   if (ahead.length) {
     lines.push("Next 72 hours:");
     lines.push(...formatCalendarLines(ahead, "UTC", 10).map((l) => `- ${l}`));
+  }
+  if (!today.length && !ahead.length && recent.length) {
+    lines.push("Most recent releases (nothing scheduled in the next 72 hours):");
+    lines.push(...formatCalendarLines(recent, "UTC", 6).map((l) => `- ${l}`));
   }
   lines.push(
     "Use this when judging timing and risk. Warn the trader when a high-impact release lands inside the trade window. Never invent releases that are not listed here.",
