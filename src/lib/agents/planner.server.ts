@@ -403,18 +403,12 @@ export async function runPlanner(
   const isNoEntry = grade === "NO ENTRY";
   const details = `${finalPlan.thesis} Invalidation: ${finalPlan.invalidation}. Manage to break-even at TP1 (${fmt(finalPlan.tp1, dec)}), trail runner to TP2 (${fmt(finalPlan.tp2, dec)}). Risk 0.5-1R of account.`;
 
-  // Backfill confidence: models frequently return 0 or omit the field. Fall
-  // back to the analyst-consensus confidence and enforce a per-grade floor
-  // so a real setup never displays as 0%.
-  const gradeFloor: Record<typeof GRADES[number], number> = {
-    "A+": 85, "A": 75, "B": 60, "C": 40, "NO ENTRY": 0,
-  };
-  const rawModelConf = Number.isFinite(finalPlan.confidence) ? Number(finalPlan.confidence) : 0;
-  const modelConf = Math.round(rawModelConf > 0 && rawModelConf <= 1 ? rawModelConf * 100 : rawModelConf);
-  const consensusConf = Number.isFinite(memo.consensusConfidence) ? memo.consensusConfidence : 0;
-  const confidence = isNoEntry
-    ? Math.max(25, Math.min(modelConf || consensusConf || 35, 45))
-    : Math.max(modelConf, consensusConf, gradeFloor[grade]);
+  // Conviction is counted from evidence that is actually present in the data,
+  // not asserted by the model and not floored by grade. The old version took
+  // max(model, consensus, gradeFloor), which pinned nearly every A/A+ setup at
+  // 85-100% and made the number meaningless.
+  const confidence = countEvidence(snap, memo, grade, bias, reward / risk);
+
 
   // Daily bias sets the day's direction; 4H is the current trend. They can
   // disagree (price rallying up into a daily sell zone), which is exactly what
