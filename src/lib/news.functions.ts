@@ -28,19 +28,22 @@ export const getMarketNews = createServerFn({ method: "POST" })
       .parse(raw ?? {}),
   )
   .handler(async ({ data }): Promise<NewsPayload> => {
-    const { fetchCalendar, todaysEvents, highImpactAhead, writeNewsBriefing } = await import("@/lib/news.server");
+    const { fetchCalendar, todaysEvents, highImpactAhead, writeNewsBriefing } =
+      await import("@/lib/news.server");
     const all = await fetchCalendar();
     const today = todaysEvents(all);
     // Today plus everything still ahead in the next 7 days, so weekends and
     // quiet sessions still show what is coming.
     const ahead = highImpactAhead(all, 24 * 7);
     const seen = new Set<string>();
-    const events = [...today, ...ahead].filter((e) => {
-      const k = `${e.date}|${e.title}`;
-      if (seen.has(k)) return false;
-      seen.add(k);
-      return true;
-    }).sort((a, b) => a.date.localeCompare(b.date));
+    const events = [...today, ...ahead]
+      .filter((e) => {
+        const k = `${e.date}|${e.title}`;
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      })
+      .sort((a, b) => a.date.localeCompare(b.date));
 
     // Weekend or end of the published week: nothing is ahead, so show the last
     // session's releases with their actuals instead of an empty page.
@@ -50,9 +53,10 @@ export const getMarketNews = createServerFn({ method: "POST" })
       : all.filter((e) => new Date(e.date).getTime() <= now).slice(-20);
 
     const writeup = data.withWriteup
-      ? await writeNewsBriefing(list.filter((e) => /high|medium/i.test(e.impact)).slice(0, 20), data.watchlist)
+      ? await writeNewsBriefing(
+          list.filter((e) => /high|medium/i.test(e.impact)).slice(0, 20),
+          data.watchlist,
+        )
       : null;
     return { events: list, writeup, fetchedAt: new Date().toISOString() };
-
-
   });

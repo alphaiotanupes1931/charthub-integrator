@@ -28,7 +28,10 @@ export async function fetchCalendar(): Promise<CalendarEvent[]> {
     for (const host of HOSTS) {
       try {
         const res = await fetch(`${host}/${week}`, {
-          headers: { "User-Agent": "Mozilla/5.0 (compatible; TradeMind/1.0)", Accept: "application/json" },
+          headers: {
+            "User-Agent": "Mozilla/5.0 (compatible; TradeMind/1.0)",
+            Accept: "application/json",
+          },
         });
         if (!res.ok) continue;
         const raw = (await res.json()) as CalendarEvent[];
@@ -66,7 +69,11 @@ export function todaysEvents(events: CalendarEvent[], ref = new Date()): Calenda
   return events.filter((e) => sameUtcDay(e.date, ref)).sort((a, b) => a.date.localeCompare(b.date));
 }
 
-export function highImpactAhead(events: CalendarEvent[], hours = 24, ref = new Date()): CalendarEvent[] {
+export function highImpactAhead(
+  events: CalendarEvent[],
+  hours = 24,
+  ref = new Date(),
+): CalendarEvent[] {
   const until = ref.getTime() + hours * 3600_000;
   return events
     .filter((e) => {
@@ -92,7 +99,11 @@ export function currenciesFor(symbol: string): string[] {
 export function formatCalendarLines(events: CalendarEvent[], tz = "UTC", limit = 12): string[] {
   const fmt = (iso: string) => {
     try {
-      return new Intl.DateTimeFormat("en-US", { timeZone: tz, hour: "numeric", minute: "2-digit" }).format(new Date(iso));
+      return new Intl.DateTimeFormat("en-US", {
+        timeZone: tz,
+        hour: "numeric",
+        minute: "2-digit",
+      }).format(new Date(iso));
     } catch {
       return new Date(iso).toISOString().slice(11, 16);
     }
@@ -119,7 +130,9 @@ export async function calendarContextBlock(symbol?: string): Promise<string | un
   const today = relevant(todaysEvents(all)).filter((e) => /high|medium/i.test(e.impact));
   const ahead = relevant(highImpactAhead(all, 72));
   const now = Date.now();
-  const recent = relevant(all.filter((e) => new Date(e.date).getTime() <= now && /high|medium/i.test(e.impact))).slice(-6);
+  const recent = relevant(
+    all.filter((e) => new Date(e.date).getTime() <= now && /high|medium/i.test(e.impact)),
+  ).slice(-6);
   if (!today.length && !ahead.length && !recent.length) return undefined;
 
   const lines: string[] = ["ECONOMIC CALENDAR (Forex Factory, times in UTC)"];
@@ -166,10 +179,14 @@ export async function writeNewsBriefing(
     let model: Parameters<typeof generateText>[0]["model"];
     if (anthropicKey) {
       const { createAnthropic } = await import("@ai-sdk/anthropic");
-      model = createAnthropic({ apiKey: anthropicKey })("claude-sonnet-4-5") as unknown as Parameters<typeof generateText>[0]["model"];
+      model = createAnthropic({ apiKey: anthropicKey })(
+        "claude-sonnet-4-5",
+      ) as unknown as Parameters<typeof generateText>[0]["model"];
     } else {
       const { createAiGatewayProvider } = await import("@/lib/ai-gateway.server");
-      model = createAiGatewayProvider(gatewayKey!)("google/gemini-2.5-flash") as unknown as Parameters<typeof generateText>[0]["model"];
+      model = createAiGatewayProvider(gatewayKey!)(
+        "google/gemini-2.5-flash",
+      ) as unknown as Parameters<typeof generateText>[0]["model"];
     }
     const { text } = await generateText({ model, prompt, maxRetries: 1 });
     const clean = text.replace(/[\u2013\u2014]/g, "-").trim();

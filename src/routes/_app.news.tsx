@@ -11,9 +11,16 @@ export const Route = createFileRoute("/_app/news")({
   head: () => ({
     meta: [
       { title: "Market news and economic calendar, TradeMind" },
-      { name: "description", content: "Today's high impact economic releases from the Forex Factory calendar plus a plain language session read for your watchlist." },
+      {
+        name: "description",
+        content:
+          "Today's high impact economic releases from the Forex Factory calendar plus a plain language session read for your watchlist.",
+      },
       { property: "og:title", content: "Market news and economic calendar, TradeMind" },
-      { property: "og:description", content: "High impact releases and a session read for the instruments you trade." },
+      {
+        property: "og:description",
+        content: "High impact releases and a session read for the instruments you trade.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -56,7 +63,12 @@ function NewsPage() {
 
   const fmtTime = (iso: string) => {
     try {
-      return new Intl.DateTimeFormat("en-US", { timeZone: resolvedTimezone, weekday: "short", hour: "numeric", minute: "2-digit" }).format(new Date(iso));
+      return new Intl.DateTimeFormat("en-US", {
+        timeZone: resolvedTimezone,
+        weekday: "short",
+        hour: "numeric",
+        minute: "2-digit",
+      }).format(new Date(iso));
     } catch {
       return new Date(iso).toUTCString().slice(0, 22);
     }
@@ -68,14 +80,18 @@ function NewsPage() {
         <div>
           <h1 className="text-2xl font-semibold">News and economic calendar</h1>
           <p className="text-sm text-muted-foreground">
-            Forex Factory releases for this session, shown in {resolvedTimezone ?? "your local time"}. The same feed is attached to your briefings and to the AI coach.
+            Forex Factory releases for this session, shown in{" "}
+            {resolvedTimezone ?? "your local time"}. The same feed is attached to your briefings and
+            to the AI coach.
           </p>
         </div>
         <button
           onClick={() => news.refetch()}
           disabled={news.isFetching}
           className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-sm disabled:opacity-50"
-        ><RefreshCw className={`size-4 ${news.isFetching ? "animate-spin" : ""}`} /> Refresh</button>
+        >
+          <RefreshCw className={`size-4 ${news.isFetching ? "animate-spin" : ""}`} /> Refresh
+        </button>
       </header>
 
       <section className="rounded-md border border-border bg-card/40 p-4">
@@ -83,7 +99,9 @@ function NewsPage() {
         {news.isLoading ? (
           <p className="text-sm text-muted-foreground">Reading the calendar...</p>
         ) : news.data?.writeup ? (
-          <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">{news.data.writeup}</p>
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
+            {news.data.writeup}
+          </p>
         ) : (
           <p className="text-sm text-muted-foreground">No session read available right now.</p>
         )}
@@ -98,7 +116,9 @@ function NewsPage() {
                 key={f}
                 onClick={() => setFilter(f)}
                 className={`rounded-md border px-2 py-1 capitalize ${filter === f ? "border-primary text-primary" : "border-border text-muted-foreground"}`}
-              >{f === "medium" ? "high + medium" : f}</button>
+              >
+                {f === "medium" ? "high + medium" : f}
+              </button>
             ))}
           </div>
         </div>
@@ -106,13 +126,21 @@ function NewsPage() {
         {news.isLoading ? (
           <p className="text-sm text-muted-foreground">Loading calendar...</p>
         ) : events.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nothing on the calendar for this filter. Quiet tape, trade your levels.</p>
+          <p className="text-sm text-muted-foreground">
+            Nothing on the calendar for this filter. Quiet tape, trade your levels.
+          </p>
         ) : (
           <ul className="divide-y divide-border">
             {events.map((e, i) => (
               <li key={`${e.date}-${e.title}-${i}`} className="flex items-start gap-3 py-2.5">
-                <span className="w-32 shrink-0 text-xs text-muted-foreground">{fmtTime(e.date)}</span>
-                <span className={`shrink-0 rounded border px-1.5 py-0.5 text-[10px] uppercase ${impactClass(e.impact)}`}>{e.impact}</span>
+                <span className="w-32 shrink-0 text-xs text-muted-foreground">
+                  {fmtTime(e.date)}
+                </span>
+                <span
+                  className={`shrink-0 rounded border px-1.5 py-0.5 text-[10px] uppercase ${impactClass(e.impact)}`}
+                >
+                  {e.impact}
+                </span>
                 <div className="min-w-0 flex-1">
                   <div className="text-sm font-medium">
                     <span className="mr-1.5 text-xs text-muted-foreground">{e.country}</span>
@@ -131,7 +159,15 @@ function NewsPage() {
       </section>
 
       <p className="text-sm text-muted-foreground">
-        Delivery settings: <Link to="/briefings" className="underline">Briefings</Link> and <Link to="/telegram" className="underline">Telegram</Link>.
+        Delivery settings:{" "}
+        <Link to="/briefings" className="underline">
+          Briefings
+        </Link>{" "}
+        and{" "}
+        <Link to="/telegram" className="underline">
+          Telegram
+        </Link>
+        .
       </p>
     </div>
   );
