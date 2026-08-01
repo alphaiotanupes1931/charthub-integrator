@@ -115,7 +115,58 @@ function systematicPlan(snap: MarketSnapshot, memo: ResearchMemo, thesisPrefix?:
   };
 }
 
+// ---------- Evidence-counted conviction ----------
+// Every point below comes from a measurable check on the snapshot. Nothing is
+// asserted by the model and nothing is floored by grade, so a thin setup reads
+// thin instead of "95%".
+export function countEvidence(
+  snap: MarketSnapshot,
+  memo: ResearchMemo,
+  grade: typeof GRADES[number],
+  bias: typeof BIASES[number],
+  rrMultiple: number,
+): number {
+  if (grade === "NO ENTRY" || bias === "Neutral") return 0;
+  const wantBull = bias === "Long";
+  let hits = 0;
+  let checks = 0;
+  const check = (present: boolean, weight = 1) => { checks += weight; if (present) hits += weight; };
+
+  const mtf = snap.mtf;
+  // 4H direction, 1H structure, 15m confirmation: the cascade, weighted double.
+  check(mtf?.h4.direction === (wantBull ? "bullish" : "bearish"), 2);
+  check(!!mtf?.h1.structureBreak && mtf.h1.structureBreak.toLowerCase().includes(wantBull ? "bull" : "bear"), 2);
+  check(!!mtf?.m15.confirmation && mtf.m15.confirmation.toLowerCase().includes(wantBull ? "bull" : "bear"), 2);
+
+  // Higher-timeframe rungs that agree with the trade.
+  const ladder = mtf?.ladder ?? [];
+  for (const label of ["Monthly", "Weekly", "Daily"]) {
+    const rung = ladder.find((r) => r.label === label);
+    if (rung) check(rung.bias === (wantBull ? "bullish" : "bearish"));
+  }
+
+  // Trigger and analyst consensus.
+  check(snap.cisd.state === (wantBull ? "bullish" : "bearish"));
+  check(memo.consensus === (wantBull ? "bullish" : "bearish"));
+
+  // Real order flow agreement.
+  const of = snap.orderFlow;
+  if (of) {
+    check(wantBull ? of.cumulativeDelta > 0 : of.cumulativeDelta < 0);
+    check(wantBull ? of.delta > 0 : of.delta < 0);
+    check(wantBull ? snap.lastPrice >= of.vpoc : snap.lastPrice <= of.vpoc);
+  }
+
+  // Payoff quality.
+  check(Number.isFinite(rrMultiple) && rrMultiple >= 2);
+
+  if (checks === 0) return 0;
+  // Map onto 25-90: no data-driven setup deserves a 100.
+  return Math.round(25 + (hits / checks) * 65);
+}
+
 function shouldReplaceNoEntry(plan: RawPlan, snap: MarketSnapshot, memo: ResearchMemo): boolean {
+
   const grade = normalizeGrade(plan.grade);
   if (grade !== "NO ENTRY") return false;
   const hasDirectionalConsensus = memo.consensus !== "neutral" && (memo.consensusConfidence ?? 0) >= 45;
