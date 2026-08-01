@@ -473,7 +473,7 @@ export async function runPlanner(
   const reward = Math.abs(finalPlan.tp2 - finalPlan.entry);
   const rr = `1 : ${(reward / risk).toFixed(1)}`;
   const isNoEntry = grade === "NO ENTRY";
-  const details = `${finalPlan.thesis} Invalidation: ${finalPlan.invalidation}. Manage to break-even at TP1 (${fmt(finalPlan.tp1, dec)}), trail runner to TP2 (${fmt(finalPlan.tp2, dec)}). Risk 0.5-1R of account.`;
+  const details = `${finalPlan.thesis} Invalidation: ${finalPlan.invalidation}. Manage to break-even at TP1 (${fmt(finalPlan.tp1, dec)}), trail runner to TP2 (${fmt(finalPlan.tp2, dec)}). Risk 0.5-1R of account.${newsWarning}`;
 
   // Conviction is counted from evidence that is actually present in the data,
   // not asserted by the model and not floored by grade. The old version took
