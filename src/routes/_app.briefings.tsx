@@ -1,25 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
 import { toast } from "sonner";
-import {
-  getBriefingState,
-  updateBriefingPrefs,
-  sendBriefingNow,
-  setDiscordWebhook,
-  unlinkDiscord,
-} from "@/lib/briefings.functions";
-import { Send, Trash2 } from "lucide-react";
-import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
+import { getBriefingState, sendBriefingNow } from "@/lib/briefings.functions";
+import { Send, ArrowRight, CalendarClock } from "lucide-react";
 
 export const Route = createFileRoute("/_app/briefings")({
   head: () => ({
     meta: [
       { title: "Daily briefings, TradeMind" },
-      { name: "description", content: "Schedule morning briefings and evening reports on your watchlist, with the economic calendar attached, delivered in app, to Telegram and to Discord." },
+      { name: "description", content: "Morning and evening briefings covering every instrument TradeMind tracks, with the market events driving the session, delivered in app and to the community Discord." },
       { property: "og:title", content: "Daily briefings, TradeMind" },
-      { property: "og:description", content: "Morning and evening market briefings on your watchlist, with the session's risk events." },
+      { property: "og:description", content: "Morning and evening market briefings across all instruments, with the session's risk events." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -27,10 +19,11 @@ export const Route = createFileRoute("/_app/briefings")({
   component: BriefingsPage,
 });
 
-const TZ_OPTIONS = [
-  "UTC", "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
-  "Europe/London", "Europe/Berlin", "Europe/Paris", "Africa/Lagos", "Asia/Dubai",
-  "Asia/Kolkata", "Asia/Singapore", "Asia/Tokyo", "Australia/Sydney",
+const DISCORD_INVITE_URL = "https://discord.gg/trademind";
+
+const COVERED = [
+  "XAU/USD", "XAG/USD", "EUR/USD", "GBP/USD", "USD/JPY",
+  "NAS100", "SPX500", "US30", "WTI Oil", "BTC/USD", "ETH/USD",
 ];
 
 function BriefingsPage() {
@@ -38,150 +31,65 @@ function BriefingsPage() {
   const getState = useServerFn(getBriefingState);
   const state = useQuery({ queryKey: ["briefingState"], queryFn: () => getState() });
 
-  const savePrefs = useMutation({
-    mutationFn: useServerFn(updateBriefingPrefs),
-    onSuccess: () => { toast.success("Saved"); qc.invalidateQueries({ queryKey: ["briefingState"] }); emitFirstWeekEvent("briefings-set"); },
-  });
   const sendNow = useMutation({
     mutationFn: useServerFn(sendBriefingNow),
-    onSuccess: (r: any) => { toast.success(r.delivered ? "Sent to Telegram + in-app" : "Saved in-app (Telegram not linked)"); qc.invalidateQueries({ queryKey: ["briefingState"] }); },
+    onSuccess: () => { toast.success("Briefing generated"); qc.invalidateQueries({ queryKey: ["briefingState"] }); },
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const saveDiscord = useMutation({
-    mutationFn: useServerFn(setDiscordWebhook),
-    onSuccess: () => { toast.success("Discord linked. Check your channel for the test message."); qc.invalidateQueries({ queryKey: ["briefingState"] }); },
-    onError: (e: Error) => toast.error(e.message),
-  });
-  const unlinkDisc = useMutation({
-    mutationFn: useServerFn(unlinkDiscord),
-    onSuccess: () => { toast.success("Discord unlinked"); qc.invalidateQueries({ queryKey: ["briefingState"] }); },
-  });
-
-  const [watchInput, setWatchInput] = useState("");
-  const [discordInput, setDiscordInput] = useState("");
-
-  if (state.isLoading) return <div className="p-6 text-sm text-muted-foreground">Loading briefings…</div>;
+  if (state.isLoading) return <div className="p-6 text-sm text-muted-foreground">Loading briefings...</div>;
   const s = state.data;
   if (!s) return null;
-
-  const prefs = s.prefs;
-  const watchlist: string[] = prefs.watchlist ?? [];
 
   return (
     <div className="mx-auto max-w-4xl p-4 md:p-6 space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold">Daily briefings</h1>
-        <p className="text-sm text-muted-foreground">Morning + evening report on your watchlist. In-app and Telegram.</p>
+        <h1 className="font-display text-2xl font-semibold">Daily briefings</h1>
+        <p className="text-sm text-muted-foreground">
+          A morning briefing and an evening report covering every instrument TradeMind tracks, plus the events moving the market that session.
+        </p>
       </header>
 
-      <section className="rounded-lg border border-border bg-card/40 p-4 space-y-4">
-        <h2 className="font-semibold">Schedule</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-xs uppercase tracking-wide text-muted-foreground">Timezone</span>
-            <select className="rounded border border-border bg-background px-2 py-1.5" defaultValue={prefs.timezone} onChange={(e) => savePrefs.mutate({ data: { timezone: e.target.value } })}>
-              {TZ_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-xs uppercase tracking-wide text-muted-foreground">Morning hour (local)</span>
-            <div className="flex items-center gap-2">
-              <input type="checkbox" defaultChecked={prefs.morning_enabled} onChange={(e) => savePrefs.mutate({ data: { morning_enabled: e.target.checked } })} />
-              <input type="number" min={0} max={23} defaultValue={prefs.morning_hour} onBlur={(e) => savePrefs.mutate({ data: { morning_hour: Number(e.target.value) } })} className="w-16 rounded border border-border bg-background px-2 py-1" />
-            </div>
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-xs uppercase tracking-wide text-muted-foreground">Evening hour (local)</span>
-            <div className="flex items-center gap-2">
-              <input type="checkbox" defaultChecked={prefs.evening_enabled} onChange={(e) => savePrefs.mutate({ data: { evening_enabled: e.target.checked } })} />
-              <input type="number" min={0} max={23} defaultValue={prefs.evening_hour} onBlur={(e) => savePrefs.mutate({ data: { evening_hour: Number(e.target.value) } })} className="w-16 rounded border border-border bg-background px-2 py-1" />
-            </div>
-          </label>
-        </div>
+      <section className="rounded-md border border-border bg-card p-4 space-y-3">
+        <h2 className="font-semibold">Where they get posted</h2>
+        <p className="text-sm text-muted-foreground">
+          Briefings and A/A+ signals go out automatically to the community Discord. No webhook setup, no schedule to configure. Join the server and turn on notifications for the channels you care about.
+        </p>
+        <a
+          href={DISCORD_INVITE_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 rounded-md border border-primary bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+        >
+          Join the Discord <ArrowRight className="size-4" />
+        </a>
+        <p className="text-xs text-muted-foreground">
+          More detail on the server is on the <Link to="/discord" className="underline">Community</Link> page.
+        </p>
       </section>
 
-      <section className="rounded-lg border border-border bg-card/40 p-4 space-y-3">
-        <h2 className="font-semibold">Watchlist</h2>
+      <section className="rounded-md border border-border bg-card p-4 space-y-2">
+        <h2 className="font-semibold">Coverage</h2>
         <div className="flex flex-wrap gap-2">
-          {watchlist.map((w) => (
-            <span key={w} className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/40 px-3 py-1 text-xs">
-              {w}
-              <button
-                onClick={() => savePrefs.mutate({ data: { watchlist: watchlist.filter((x) => x !== w) } })}
-                className="text-muted-foreground hover:text-destructive"
-              ><Trash2 className="size-3" /></button>
-            </span>
+          {COVERED.map((c) => (
+            <span key={c} className="rounded-md border border-border bg-background px-2 py-1 text-xs font-mono">{c}</span>
           ))}
         </div>
-        <div className="flex items-center gap-2">
-          <input value={watchInput} onChange={(e) => setWatchInput(e.target.value)} placeholder="Add symbol e.g. XAU/USD" className="flex-1 rounded border border-border bg-background px-2 py-1.5 text-sm" />
-          <button
-            onClick={() => {
-              const v = watchInput.trim().toUpperCase();
-              if (!v || watchlist.includes(v)) return;
-              savePrefs.mutate({ data: { watchlist: [...watchlist, v] } });
-              setWatchInput("");
-            }}
-            className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground"
-          >Add</button>
-        </div>
-      </section>
-
-      <section className="rounded-lg border border-border bg-card/40 p-4 space-y-2">
-        <h2 className="font-semibold">Delivery channels</h2>
-        <p className="text-sm text-muted-foreground">
-          Telegram delivery has its own page now:{" "}
-          <Link to="/telegram" className="underline">
-            {prefs.telegram_chat_id ? "Telegram (linked)" : "set up Telegram"}
-          </Link>
-          . The session news read and full economic calendar live on <Link to="/news" className="underline">News</Link>.
+        <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+          <CalendarClock className="size-3.5" />
+          Every briefing includes the high and medium impact releases for the session, pulled from the economic calendar on <Link to="/news" className="underline">News</Link>.
         </p>
       </section>
 
-
-      <section className="rounded-lg border border-border bg-card/40 p-4 space-y-3">
-        <h2 className="font-semibold">Discord</h2>
-        <p className="text-xs text-muted-foreground">
-          Get briefings, A/A+ signals, and kill-switch alerts posted to a Discord channel. In your Discord server go to
-          <span className="mx-1 font-medium text-foreground">Server Settings → Integrations → Webhooks → New Webhook</span>,
-          pick a channel, then paste the webhook URL below.
-        </p>
-        {(prefs as any).discord_webhook_url ? (
-          <div className="flex items-center justify-between gap-2">
-            <div className="text-sm truncate">
-              Linked · <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{String((prefs as any).discord_webhook_url).replace(/(\/webhooks\/\d+\/).+/, "$1•••")}</code>
-            </div>
-            <button onClick={() => unlinkDisc.mutate({})} className="rounded-md border border-border px-3 py-1.5 text-sm">Unlink</button>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            <input
-              value={discordInput}
-              onChange={(e) => setDiscordInput(e.target.value)}
-              placeholder="https://discord.com/api/webhooks/…"
-              className="flex-1 rounded border border-border bg-background px-2 py-1.5 text-sm font-mono"
-            />
-            <button
-              onClick={() => {
-                const v = discordInput.trim();
-                if (!v) return;
-                saveDiscord.mutate({ data: { webhook_url: v } });
-              }}
-              disabled={saveDiscord.isPending}
-              className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
-            >
-              {saveDiscord.isPending ? "Linking…" : "Link Discord"}
-            </button>
-          </div>
-        )}
-      </section>
-
-      <section className="rounded-lg border border-border bg-card/40 p-4">
+      <section className="rounded-md border border-border bg-card p-4">
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-semibold">History</h2>
-          <button onClick={() => sendNow.mutate({ data: { kind: "ad_hoc" } })} disabled={sendNow.isPending} className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground">
-            <Send className="size-4" /> Send me a briefing now
+          <button
+            onClick={() => sendNow.mutate({ data: { kind: "ad_hoc" } })}
+            disabled={sendNow.isPending}
+            className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground disabled:opacity-50"
+          >
+            <Send className="size-4" /> {sendNow.isPending ? "Building..." : "Build a briefing now"}
           </button>
         </div>
         {s.history.length === 0 ? (
@@ -189,7 +97,7 @@ function BriefingsPage() {
         ) : (
           <ul className="space-y-3">
             {s.history.map((b: any) => (
-              <li key={b.id} className="rounded border border-border p-3">
+              <li key={b.id} className="rounded-md border border-border p-3">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span className="uppercase">{b.kind}</span>
                   <span>{new Date(b.sent_at).toLocaleString()}</span>
