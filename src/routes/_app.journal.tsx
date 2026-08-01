@@ -1281,7 +1281,7 @@ function TradeFormModal({
             <Field label="Take profit">
               <input inputMode="decimal" value={takeProfit} onChange={(e) => setTakeProfit(e.target.value)} placeholder="planned" className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
             </Field>
-            <Field label="Exit (actual)">
+            <Field label="Exit (leave blank if still open)">
               <input inputMode="decimal" value={exit} onChange={(e) => setExit(e.target.value)} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
             </Field>
           </div>
