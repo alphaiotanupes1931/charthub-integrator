@@ -89,6 +89,41 @@ function BriefingsPage() {
           Every briefing includes the high and medium impact releases for the session, pulled from the economic calendar on <Link to="/news" className="underline">News</Link>.
         </p>
       </section>
+
+      <section className="rounded-md border border-border bg-card p-4">
+        <h2 className="font-semibold mb-1">Events moving the market</h2>
+        <p className="text-xs text-muted-foreground mb-3">
+          High and medium impact releases from the Forex Factory calendar (Faireconomy feed), the same list every briefing is built on. Times shown in your local zone.
+        </p>
+        {news.isLoading ? (
+          <p className="text-sm text-muted-foreground">Loading the calendar...</p>
+        ) : (news.data?.events?.filter((e) => /high|medium/i.test(e.impact)).length ?? 0) === 0 ? (
+          <p className="text-sm text-muted-foreground">No high or medium impact releases scheduled. Calendar is quiet.</p>
+        ) : (
+          <ul className="divide-y divide-border">
+            {news.data!.events
+              .filter((e) => /high|medium/i.test(e.impact))
+              .slice(0, 12)
+              .map((e) => (
+                <li key={`${e.date}-${e.title}`} className="py-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                  <span className={`rounded-md border px-1.5 py-0.5 text-xs font-semibold ${/high/i.test(e.impact) ? "border-primary text-primary" : "border-border text-muted-foreground"}`}>
+                    {e.impact.toUpperCase()}
+                  </span>
+                  <span className="font-mono text-xs text-muted-foreground">{e.country}</span>
+                  <span className="font-medium">{e.title}</span>
+                  <span className="text-xs text-muted-foreground font-mono">
+                    {e.actual ? `actual ${e.actual} · ` : ""}{e.forecast ? `forecast ${e.forecast} · ` : ""}{e.previous ? `previous ${e.previous}` : ""}
+                  </span>
+                  <span className="ml-auto text-xs text-muted-foreground">{new Date(e.date).toLocaleString()}</span>
+                </li>
+              ))}
+          </ul>
+        )}
+        <p className="text-xs text-muted-foreground mt-3">
+          Full calendar and the AI read on it are on <Link to="/news" className="underline">News</Link>.
+        </p>
+      </section>
+
       <section className="rounded-md border border-border bg-card p-4">
         <h2 className="font-semibold mb-1">Latest A / A+ signals</h2>
         <p className="text-xs text-muted-foreground mb-3">
