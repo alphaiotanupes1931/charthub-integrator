@@ -550,8 +550,10 @@ async function buildMtf(ticker: string, primaryInterval: string, primaryCandles:
 }
 
 
-export async function getSnapshot(ticker: string, interval: string): Promise<MarketSnapshot> {
+export async function getSnapshot(rawTicker: string, interval: string): Promise<MarketSnapshot> {
+  const ticker = normalizeTicker(rawTicker);
   let candles: Candle[] = [];
+
   let source: MarketSnapshot["source"] = "unavailable";
   try {
     if (COINGECKO_ID[ticker]) { candles = await fromCoinGecko(ticker, interval); source = "coingecko"; }
