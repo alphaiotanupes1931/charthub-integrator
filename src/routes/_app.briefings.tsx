@@ -129,34 +129,17 @@ function BriefingsPage() {
         </div>
       </section>
 
-      <section className="rounded-lg border border-border bg-card/40 p-4 space-y-3">
-        <h2 className="font-semibold">Telegram</h2>
-        {prefs.telegram_chat_id ? (
-          <div className="flex items-center justify-between gap-2">
-            <div className="text-sm">
-              Linked to chat <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{prefs.telegram_chat_id}</code>
-            </div>
-            <button onClick={() => unlink.mutate({})} className="rounded-md border border-border px-3 py-1.5 text-sm">Unlink</button>
-          </div>
-        ) : prefs.telegram_link_code ? (
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">Open Telegram, find the TradeMind bot, and send this message:</p>
-            <div className="flex items-center gap-2">
-              <code className="flex-1 rounded bg-muted px-3 py-2 text-sm">/start {prefs.telegram_link_code}</code>
-              <button onClick={() => { navigator.clipboard.writeText(`/start ${prefs.telegram_link_code}`); toast.success("Copied"); }} className="inline-flex items-center gap-1 rounded border border-border px-3 py-2 text-sm">
-                <Copy className="size-3.5" /> Copy
-              </button>
-            </div>
-            <p className="text-xs text-muted-foreground">Waiting for the bot to receive your message. Refresh this page after sending.</p>
-          </div>
-        ) : (
-          <div>
-            <button onClick={() => genLink.mutate({})} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">
-              Generate link code
-            </button>
-          </div>
-        )}
+      <section className="rounded-lg border border-border bg-card/40 p-4 space-y-2">
+        <h2 className="font-semibold">Delivery channels</h2>
+        <p className="text-sm text-muted-foreground">
+          Telegram delivery has its own page now:{" "}
+          <Link to="/telegram" className="underline">
+            {prefs.telegram_chat_id ? "Telegram (linked)" : "set up Telegram"}
+          </Link>
+          . The session news read and full economic calendar live on <Link to="/news" className="underline">News</Link>.
+        </p>
       </section>
+
 
       <section className="rounded-lg border border-border bg-card/40 p-4 space-y-3">
         <h2 className="font-semibold">Discord</h2>
