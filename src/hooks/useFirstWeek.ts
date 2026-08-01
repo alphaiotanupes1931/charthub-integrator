@@ -117,13 +117,13 @@ export const FIRST_WEEK_TASKS: FirstWeekTask[] = [
   },
   {
     id: "briefings",
-    label: "Set up daily briefings",
-    description: "Choose when you want your morning and evening market reports delivered.",
-    cta: "Open briefings",
-    route: "/briefings",
+    label: "Join the community Discord",
+    description: "Daily briefings and every A/A+ signal get posted there automatically.",
+    cta: "Open community",
+    route: "/discord",
     day: 5,
     kind: "event",
-    event: "briefings-set",
+    event: "discord-joined",
   },
   {
     id: "review",
