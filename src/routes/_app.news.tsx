@@ -32,7 +32,7 @@ function impactClass(impact: string) {
 }
 
 function NewsPage() {
-  const { timezone, resolvedTimezone } = useTimezone();
+  const { resolvedTimezone } = useTimezone();
   const [filter, setFilter] = useState<Impact>("high");
 
   const getState = useServerFn(getBriefingState);
