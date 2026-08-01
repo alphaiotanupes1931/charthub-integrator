@@ -116,16 +116,6 @@ export const FIRST_WEEK_TASKS: FirstWeekTask[] = [
     event: "calculator-used",
   },
   {
-    id: "briefings",
-    label: "Set up daily briefings",
-    description: "Choose when you want your morning and evening market reports delivered.",
-    cta: "Open briefings",
-    route: "/briefings",
-    day: 5,
-    kind: "event",
-    event: "briefings-set",
-  },
-  {
     id: "review",
     label: "Review a missed quiz question",
     description: "Clear one item from your wrong-answer bank to reinforce what you have learned.",
