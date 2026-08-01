@@ -631,7 +631,17 @@ export const Route = createFileRoute("/api/chat")({
         const learningCtx = (typeof signalLearning === "string" && signalLearning.trim())
           ? signalLearning.trim().slice(0, 4000)
           : "The trader has not tagged any taken signal with an outcome yet, so there is no measured signal edge. Do not invent past performance numbers.";
-        const system = systemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens), learningCtx);
+
+        // Forex Factory economic calendar for the instrument on screen.
+        let newsCtx: string | undefined;
+        try {
+          const { calendarContextBlock } = await import("@/lib/news.server");
+          newsCtx = await calendarContextBlock(chart?.ticker);
+        } catch (e) {
+          console.warn(`[chat] req=${reqId} calendar_failed`, (e as Error).message);
+        }
+
+        const system = systemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens), learningCtx, newsCtx);
 
 
         const useClaude = !!anthropicKey;
