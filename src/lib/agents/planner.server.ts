@@ -488,7 +488,7 @@ export async function runPlanner(
   const ladder = snap.mtf?.ladder ?? [];
   const dailyBias = ladder.find((r) => r.label === "Daily")?.bias ?? snap.cisd.htfBias;
   const currentTrend = ladder.find((r) => r.label === "4H")?.trend ?? snap.mtf?.h4.trend ?? "range";
-  const synopsis = buildSynopsis(snap, memo, grade, bias, dailyBias, currentTrend);
+  const synopsis = buildSynopsis(snap, memo, grade, bias, dailyBias, currentTrend) + newsWarning;
 
   return {
     grade,
