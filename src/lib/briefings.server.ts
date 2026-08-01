@@ -53,13 +53,14 @@ export async function buildBriefingBody(
     const { fetchCalendar, todaysEvents, highImpactAhead, formatCalendarLines, writeNewsBriefing } = await import("@/lib/news.server");
     const all = await fetchCalendar();
     if (all.length) {
-      const scope = kind === "evening" ? highImpactAhead(all, 24) : todaysEvents(all).filter(e => /high|medium/i.test(e.impact));
+      const todayHi = todaysEvents(all).filter(e => /high|medium/i.test(e.impact));
+      const scope = kind === "evening" ? highImpactAhead(all, 24) : (todayHi.length ? todayHi : highImpactAhead(all, 72));
       if (scope.length) {
         lines.push("");
         lines.push(kind === "evening" ? "Next 24h risk events (Forex Factory):" : "Today's risk events (Forex Factory):");
         for (const l of formatCalendarLines(scope, "UTC", 10)) lines.push(`- ${l}`);
       }
-      const writeup = await writeNewsBriefing(scope.length ? scope : todaysEvents(all), symbols);
+      const writeup = await writeNewsBriefing(scope.length ? scope : highImpactAhead(all, 72), symbols);
       if (writeup) {
         lines.push("");
         lines.push("News read:");
