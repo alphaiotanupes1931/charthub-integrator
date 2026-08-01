@@ -450,7 +450,7 @@ export const Route = createFileRoute("/api/chat")({
         } catch {
           return new Response("Invalid JSON", { status: 400, headers: cors });
         }
-        const { messages, threadId, coach, journal, chart, strategy, lens } = body;
+        const { messages, threadId, coach, journal, chart, strategy, lens, signalLearning } = body;
         if (!Array.isArray(messages) || !threadId) {
           return new Response("messages, threadId required", { status: 400, headers: cors });
         }
