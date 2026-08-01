@@ -63,6 +63,22 @@ export const Route = createFileRoute("/api/public/hooks/scan-signals")({
               (plan.notes ? `_${plan.notes}_` : "");
 
             const r = await sendDiscordShared(msg);
+            // Record in the shared in-app feed regardless of Discord result.
+            try {
+              const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+              await (supabaseAdmin.from("signal_feed") as any).insert({
+                symbol: ticker,
+                grade: plan.grade,
+                bias: plan.bias,
+                action,
+                entry: plan.entry,
+                stop: plan.stop,
+                tp1: plan.tp1,
+                rr: plan.rr,
+                confidence: plan.confidence,
+                notes: plan.notes ?? null,
+              });
+            } catch { /* feed write is best effort */ }
             if (r.ok) {
               lastPostedAt.set(key, now);
               posted.push(ticker);
