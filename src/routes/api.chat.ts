@@ -601,7 +601,11 @@ export const Route = createFileRoute("/api/chat")({
           }
         }
 
-        const system = systemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens));
+        const learningCtx = (typeof signalLearning === "string" && signalLearning.trim())
+          ? signalLearning.trim().slice(0, 4000)
+          : "The trader has not tagged any taken signal with an outcome yet, so there is no measured signal edge. Do not invent past performance numbers.";
+        const system = systemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens), learningCtx);
+
 
         const useClaude = !!anthropicKey;
         const claudeModel = useClaude
