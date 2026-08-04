@@ -14,7 +14,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { runHistoricalBacktest, type BacktestResponse } from "@/lib/backtest/backtest.functions";
-import { BACKTEST_SYMBOLS, BACKTEST_TIMEFRAMES, TIMEFRAME_LABEL, type BacktestTimeframe } from "@/lib/backtest/history.server";
+import { BACKTEST_SYMBOLS, BACKTEST_TIMEFRAMES, TIMEFRAME_LABEL, type BacktestTimeframe } from "@/lib/backtest/catalog";
 import type { BtBucket, BtResult } from "@/lib/backtest/engine";
 
 export const Route = createFileRoute("/_app/backtest")({
