@@ -16,7 +16,8 @@ import {
 import { runHistoricalBacktest, type BacktestResponse } from "@/lib/backtest/backtest.functions";
 import StrategyEdgePanel from "@/components/StrategyEdgePanel";
 import { BACKTEST_SYMBOLS, BACKTEST_TIMEFRAMES, TIMEFRAME_LABEL, type BacktestTimeframe } from "@/lib/backtest/catalog";
-import type { BtBucket, BtResult } from "@/lib/backtest/engine";
+import type { BtBar, BtBucket, BtResult } from "@/lib/backtest/engine";
+import { BacktestReplay } from "@/components/BacktestReplay";
 
 export const Route = createFileRoute("/_app/backtest")({
   head: () => ({
@@ -73,7 +74,7 @@ function BucketTable({ title, rows }: { title: string; rows: BtBucket[] }) {
   );
 }
 
-function Results({ result }: { result: BtResult }) {
+function Results({ result, bars }: { result: BtResult; bars: BtBar[] }) {
   const s = result.stats;
   const curve = [{ time: result.from, balance: 10000, netR: 0 }, ...result.equity];
   return (
@@ -184,6 +185,7 @@ function BacktestPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<BtResult | null>(null);
+  const [bars, setBars] = useState<BtBar[]>([]);
 
   const toggleSession = (s: string) =>
     setSessions((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
@@ -206,9 +208,13 @@ function BacktestPage() {
           sessions,
         },
       });
-      if (res.ok) setResult(res.result);
+      if (res.ok) {
+        setResult(res.result);
+        setBars(res.bars);
+      }
       else {
         setResult(null);
+        setBars([]);
         setError(res.error);
       }
     } catch (e) {
@@ -330,7 +336,7 @@ function BacktestPage() {
         </div>
       </div>
 
-      {result && <Results result={result} />}
+      {result && <Results result={result} bars={bars} />}
     </div>
   );
 }
