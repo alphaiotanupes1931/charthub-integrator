@@ -5,6 +5,7 @@ import { MessageSquare, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { listChatThreads, createChatThread, deleteChatThread } from "@/lib/chat.functions";
+import { clearLastThreadId } from "@/lib/chat-client";
 
 export const Route = createFileRoute("/_app/chat")({
   head: () => ({ meta: [{ title: "AI Coach Chat, TradeMind" }] }),
@@ -51,6 +52,7 @@ function ChatLayout() {
     if (!confirm("Delete this TradeMind conversation?")) return;
     try {
       await delFn({ data: { threadId: id } });
+      clearLastThreadId(id);
       setThreads((prev) => prev.filter((t) => t.id !== id));
       if (params.threadId === id) navigate({ to: "/chat" });
     } catch {
