@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { BACKTEST_SYMBOLS, BACKTEST_TIMEFRAMES, TIMEFRAME_LABEL, type BacktestTimeframe } from "@/lib/backtest/catalog";
 import { listStrategyPerformance, recordStrategyBacktest, type StrategyPerfRow } from "@/lib/strategy-perf.functions";
 import { readActiveStrategy } from "@/lib/chat-client";
+import { STRATEGIES } from "@/data/strategies";
 import { edgeVerdict } from "@/lib/strategy-perf.shared";
 
 const VERDICT_COPY: Record<string, string> = {
@@ -36,7 +37,7 @@ export default function StrategyEdgePanel() {
 
   const measure = async () => {
     if (!strategy) {
-      toast.error("Pick an active strategy first on the Strategies page.");
+      toast.error("Pick a playbook to measure.");
       return;
     }
     setBusy(true);
@@ -62,7 +63,7 @@ export default function StrategyEdgePanel() {
         <div>
           <h2 className="text-sm font-medium">Strategy edge on record</h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Measure your active playbook over past price history. Saved results are read by the scanner: a playbook with
+            Measure a playbook over past price history. Saved results are read by the scanner: a playbook with
             negative expectancy on an instrument gets its grade capped, one with a proven edge keeps its grade.
           </p>
         </div>
