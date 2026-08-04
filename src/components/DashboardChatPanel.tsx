@@ -698,7 +698,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                 const parsed = parseAiPayload(raw);
                 const g = parsed.grade ? sanitizeGradeForPrice(parsed.grade, chart?.snapshot?.lastPrice) : undefined;
                 const summary = g
-                  ? `${(g.bias || "neutral").toString().toUpperCase()} setup - Grade ${g.grade.toUpperCase()}${typeof g.entry === "number" ? ` · Entry ${g.entry}` : ""}${typeof g.stop === "number" ? ` · Stop ${g.stop}` : ""}`
+                  ? `${(g.bias || "neutral").toString().toUpperCase()} setup - Grade ${g.grade.toUpperCase()}${typeof g.entry === "number" ? ` · Entry ${formatPrice(g.entry, chart?.snapshot?.lastPrice)}` : ""}${typeof g.stop === "number" ? ` · Stop ${formatPrice(g.stop, chart?.snapshot?.lastPrice)}` : ""}`
                   : null;
                 return (
                   <Message key={m.id} from={m.role}>
