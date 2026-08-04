@@ -133,6 +133,8 @@ function Results({ result, bars }: { result: BtResult; bars: BtBar[] }) {
         </div>
       )}
 
+      {bars.length > 0 && <BacktestReplay bars={bars} result={result} />}
+
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <BucketTable title="By grade" rows={result.byGrade} />
         <BucketTable title="By direction" rows={result.bySide} />
