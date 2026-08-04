@@ -674,6 +674,16 @@ export async function placeOrderAt(
       case "tradier": return await orderTradier(creds, env, order);
       case "binance": return await orderBinance(creds, env, order);
       case "coinbase": return await orderCoinbase(creds, env, order);
+      case "tastytrade": return await orderTastytrade(creds, env, order);
+      case "tradovate": return await orderTradovate(creds, env, order);
+      case "capitalcom": return await orderCapital(creds, env, order);
+      case "bybit": return await orderBybit(creds, env, order);
+      case "okx": return await orderOkx(creds, env, order);
+      case "kucoin": return await orderKucoin(creds, env, order);
+      case "bitget": return await orderBitget(creds, env, order);
+      case "kraken": return await orderKraken(creds, env, order);
+      case "gemini": return await orderGemini(creds, env, order);
+      case "bitmex": return await orderBitmex(creds, env, order);
       default:
         return fail("Order routing is not available for this venue yet.");
     }
