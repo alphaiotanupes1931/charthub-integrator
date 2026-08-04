@@ -1,7 +1,7 @@
 // Server-only order routing adapters. Each function places ONE order at the
 // named venue using the caller's stored credentials. Never import from browser
 // code. Read-only verification lives in adapters.server.ts.
-import { createHmac } from "node:crypto";
+import { createHash, createHmac } from "node:crypto";
 import type { Creds } from "@/lib/brokers/adapters.server";
 
 export type OrderRequest = {
