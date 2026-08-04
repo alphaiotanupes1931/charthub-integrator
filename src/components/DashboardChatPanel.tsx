@@ -741,7 +741,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                 return (
                   <Message key={m.id} from={m.role}>
                     <div className="flex flex-col gap-2 max-w-full">
-                      {g && <GradeCard grade={g} lastPrice={chart?.snapshot?.lastPrice} symbol={chart?.ticker} interval={chart?.interval} />}
+                      {g && <GradeCard grade={g} lastPrice={chart?.snapshot?.lastPrice} symbol={chart?.ticker} />}
                       {summary && (
                         <div className="text-sm text-foreground/90 leading-snug">{summary}</div>
                       )}
