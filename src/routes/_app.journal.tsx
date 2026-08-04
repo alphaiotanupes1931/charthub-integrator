@@ -294,8 +294,12 @@ function JournalPage() {
   const [formDate, setFormDate] = useState<string>(todayYmd());
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  useEffect(() => { setTrades(loadTrades()); }, []);
-  useEffect(() => { saveTrades(trades); }, [trades]);
+  // Load once, then only write back after the load has happened. Without the
+  // gate the first save runs with the empty initial state and erases the log.
+  const loadedRef = useRef(false);
+  useEffect(() => { setTrades(loadTrades()); loadedRef.current = true; }, []);
+  useEffect(() => { if (loadedRef.current) saveTrades(trades); }, [trades]);
+
 
   type Prefill = { symbol?: string; timeframe?: string; notes?: string; entry?: number; stop?: number; tp1?: number; tp2?: number; side?: Side; setup?: string };
   const [prefill, setPrefill] = useState<Prefill | null>(null);
