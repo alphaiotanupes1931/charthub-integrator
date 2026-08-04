@@ -27,6 +27,27 @@ import { Link } from "@tanstack/react-router";
 import { recordSignal, takeTrade } from "@/lib/signalHistory";
 import { toast } from "sonner";
 
+// Scan context: the active strategy playbook is fed to the planner so the
+// Analysis grade is scored against the same rules the chat coach uses.
+function activeStrategyDesc(): string | undefined {
+  const name = readActiveStrategy();
+  if (!name) return undefined;
+  const s = findStrategyByName(name);
+  if (!s) return name;
+  const bits = [
+    s.name,
+    "style" in s && s.style ? `style ${s.style}` : "",
+    "level" in s && s.level ? `level ${s.level}` : "",
+    "rr" in s && s.rr != null ? `baseline R:R ${s.rr}` : "",
+    "winRate" in s && s.winRate != null ? `baseline win rate ${s.winRate}%` : "",
+    "rules" in s && s.rules ? `rules: ${s.rules}` : "",
+    s.description ?? "",
+  ].filter(Boolean);
+  return bits.join(" | ").slice(0, 800);
+}
+
+
+
 
 type DashboardSearch = { ask?: string; symbol?: string };
 
