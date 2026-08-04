@@ -17,8 +17,10 @@ const Input = z.object({
   interval: z.string().min(1).max(4),
   lensDesc: z.string().max(500).optional(),
   strategyDesc: z.string().max(800).optional(),
+  strategyId: z.string().max(80).optional(),
   coach: z.string().max(60).optional(),
 });
+
 
 export const runResearchPlan = createServerFn({ method: "POST" })
   .inputValidator((raw: unknown) => Input.parse(raw))
@@ -66,6 +68,7 @@ export const runResearchPlan = createServerFn({ method: "POST" })
 
     // Load Hermes memory relevant to this ticker / lens.
     let hermesPrompt = "";
+    let perfDesc = "";
     try {
       const auth = getRequestHeader("authorization") ?? getRequestHeader("Authorization");
       const token = auth?.toLowerCase().startsWith("bearer ") ? auth.slice(7).trim() : null;
@@ -91,11 +94,45 @@ export const runResearchPlan = createServerFn({ method: "POST" })
             .order("created_at", { ascending: false })
             .limit(8);
           hermesPrompt = formatLessonsForPrompt((lessons ?? []) as HermesLessonRow[]);
+
+          // Strategy performance loop: the measured edge of this playbook on
+          // this instrument feeds straight into how the planner grades.
+          if (data.strategyId) {
+            const { data: perf } = await supabase
+              .from("strategy_performance")
+              .select("strategy_id,symbol,timeframe,trades,win_rate,expectancy_r,net_r,max_drawdown_pct")
+              .eq("user_id", userId)
+              .eq("strategy_id", data.strategyId)
+              .order("updated_at", { ascending: false })
+              .limit(6);
+            const rows = (perf ?? []).map((r) => ({
+              strategyId: r.strategy_id as string,
+              symbol: r.symbol as string,
+              timeframe: r.timeframe as string,
+              trades: Number(r.trades),
+              winRate: Number(r.win_rate),
+              expectancyR: Number(r.expectancy_r),
+              netR: Number(r.net_r),
+              maxDrawdownPct: Number(r.max_drawdown_pct),
+            }));
+            const sameSymbol = rows.filter((r) => r.symbol === data.ticker);
+            perfDesc = formatPerfForPrompt(sameSymbol.length ? sameSymbol : rows);
+          }
         }
       }
     } catch { /* memory is best-effort */ }
 
     const memo = await runResearch(apiKey, snap);
-    const plan = await runPlanner(apiKey, snap, memo, data.lensDesc, hermesPrompt || undefined, data.strategyDesc, data.coach);
+    const plan = await runPlanner(
+      apiKey,
+      snap,
+      memo,
+      data.lensDesc,
+      hermesPrompt || undefined,
+      data.strategyDesc,
+      data.coach,
+      perfDesc || undefined,
+    );
     return plan;
   });
+
