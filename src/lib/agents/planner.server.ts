@@ -378,7 +378,13 @@ const COACH_TONE: Record<string, string> = {
   "The Psychologist": "Write the thesis with a note on the emotional trap this setup invites (chasing, revenge, fear of missing).",
 };
 
-function memoBlock(memo: ResearchMemo, snap: MarketSnapshot, lensDesc?: string, strategyDesc?: string): string {
+function memoBlock(
+  memo: ResearchMemo,
+  snap: MarketSnapshot,
+  lensDesc?: string,
+  strategyDesc?: string,
+  perfDesc?: string,
+): string {
   const notes = memo.notes.map(n => `- ${n.role.toUpperCase()} (${n.bias}, ${n.confidence}%): ${n.summary}`).join("\n");
   return [
     `Ticker: ${snap.ticker} | Interval: ${snap.interval} | Last: ${snap.lastPrice} | ATR14: ${snap.stats.atr14.toFixed(4)}`,
@@ -388,6 +394,7 @@ function memoBlock(memo: ResearchMemo, snap: MarketSnapshot, lensDesc?: string, 
     formatOrderFlow(snap.orderFlow),
     lensDesc ? `Scan lens focus: ${lensDesc}` : "",
     strategyDesc ? `Active strategy playbook (grade the setup against these rules): ${strategyDesc}` : "The trader has no active strategy selected; grade on structure alone.",
+    perfDesc ? `Measured edge of this playbook (from historical backtests on this trader's own settings): ${perfDesc}` : "",
     "Analyst notes:",
     notes,
   ].filter(Boolean).join("\n");
@@ -401,7 +408,9 @@ export async function runPlanner(
   hermesMemory?: string,
   strategyDesc?: string,
   coach?: string,
+  perfDesc?: string,
 ): Promise<TradePlan> {
+
   const provider = createAiGatewayProvider(apiKey);
 
   // Forex Factory calendar feeds the scan decision, not just the chat and the
@@ -422,9 +431,11 @@ export async function runPlanner(
     // calendar unavailable; plan on price structure alone
   }
 
-  const ctx = memoBlock(memo, snap, lensDesc, strategyDesc) + (newsBlock ? `\n\n${newsBlock}` : "");
+  const ctx = memoBlock(memo, snap, lensDesc, strategyDesc, perfDesc) + (newsBlock ? `\n\n${newsBlock}` : "");
   const memoryLine = (hermesMemory ? `\n\n${hermesMemory}` : "")
+    + (perfDesc ? `\n\nWeight the measured edge: if this playbook has a negative expectancy on this instrument, cap the grade at C and say why. If it has a positive expectancy over 20+ trades, you may keep a high grade when structure agrees.` : "")
     + (coach && COACH_TONE[coach] ? `\n\nCoach voice: you are ${coach}. ${COACH_TONE[coach]}` : "");
+
 
   let plan: RawPlan;
   try {

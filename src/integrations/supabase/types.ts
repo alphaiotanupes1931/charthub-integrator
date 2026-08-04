@@ -191,6 +191,90 @@ export type Database = {
         }
         Relationships: []
       }
+      bridge_orders: {
+        Row: {
+          account_id: string | null
+          broker_order_id: string | null
+          claimed_at: string | null
+          completed_at: string | null
+          created_at: string
+          error: string | null
+          id: string
+          order_type: string
+          price: number | null
+          quantity: number
+          side: string
+          status: string
+          stop_loss: number | null
+          symbol: string
+          take_profit: number | null
+          updated_at: string
+          user_id: string
+          venue: string
+        }
+        Insert: {
+          account_id?: string | null
+          broker_order_id?: string | null
+          claimed_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          order_type?: string
+          price?: number | null
+          quantity: number
+          side: string
+          status?: string
+          stop_loss?: number | null
+          symbol: string
+          take_profit?: number | null
+          updated_at?: string
+          user_id: string
+          venue: string
+        }
+        Update: {
+          account_id?: string | null
+          broker_order_id?: string | null
+          claimed_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          order_type?: string
+          price?: number | null
+          quantity?: number
+          side?: string
+          status?: string
+          stop_loss?: number | null
+          symbol?: string
+          take_profit?: number | null
+          updated_at?: string
+          user_id?: string
+          venue?: string
+        }
+        Relationships: []
+      }
+      bridge_tokens: {
+        Row: {
+          created_at: string
+          last_seen_at: string | null
+          token: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          last_seen_at?: string | null
+          token: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          last_seen_at?: string | null
+          token?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       briefing_prefs: {
         Row: {
           created_at: string
@@ -425,6 +509,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      journal_reviews: {
+        Row: {
+          correlations: Json
+          created_at: string
+          id: string
+          mistakes: Json
+          strengths: Json
+          summary: string
+          trade_count: number
+          user_id: string
+        }
+        Insert: {
+          correlations?: Json
+          created_at?: string
+          id?: string
+          mistakes?: Json
+          strengths?: Json
+          summary: string
+          trade_count?: number
+          user_id: string
+        }
+        Update: {
+          correlations?: Json
+          created_at?: string
+          id?: string
+          mistakes?: Json
+          strengths?: Json
+          summary?: string
+          trade_count?: number
+          user_id?: string
+        }
+        Relationships: []
       }
       leaderboard_opt_in: {
         Row: {
@@ -807,6 +924,54 @@ export type Database = {
           stop?: number | null
           symbol?: string
           tp1?: number | null
+        }
+        Relationships: []
+      }
+      strategy_performance: {
+        Row: {
+          created_at: string
+          expectancy_r: number
+          id: string
+          max_drawdown_pct: number
+          net_r: number
+          source: string
+          strategy_id: string
+          symbol: string
+          timeframe: string
+          trades: number
+          updated_at: string
+          user_id: string
+          win_rate: number
+        }
+        Insert: {
+          created_at?: string
+          expectancy_r?: number
+          id?: string
+          max_drawdown_pct?: number
+          net_r?: number
+          source?: string
+          strategy_id: string
+          symbol: string
+          timeframe: string
+          trades?: number
+          updated_at?: string
+          user_id: string
+          win_rate?: number
+        }
+        Update: {
+          created_at?: string
+          expectancy_r?: number
+          id?: string
+          max_drawdown_pct?: number
+          net_r?: number
+          source?: string
+          strategy_id?: string
+          symbol?: string
+          timeframe?: string
+          trades?: number
+          updated_at?: string
+          user_id?: string
+          win_rate?: number
         }
         Relationships: []
       }

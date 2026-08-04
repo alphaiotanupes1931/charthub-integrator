@@ -64,6 +64,7 @@ import { Route as AppChatIndexRouteImport } from './routes/_app.chat.index'
 import { Route as AppAcademyIndexRouteImport } from './routes/_app.academy.index'
 import { Route as ApiTradelockerImportRouteImport } from './routes/api.tradelocker.import'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api.public.stripe-webhook'
+import { Route as ApiPublicBridgeRouteImport } from './routes/api.public.bridge'
 import { Route as AppStrategiesStrategyIdRouteImport } from './routes/_app.strategies.$strategyId'
 import { Route as AppChatThreadIdRouteImport } from './routes/_app.chat.$threadId'
 import { Route as AppAdminSubscribersRouteImport } from './routes/_app.admin.subscribers'
@@ -77,6 +78,7 @@ import { Route as ApiPublicHooksSendBriefingsRouteImport } from './routes/api.pu
 import { Route as ApiPublicHooksScanSignalsRouteImport } from './routes/api.public.hooks.scan-signals'
 import { Route as ApiPublicHooksReconcilePaperRouteImport } from './routes/api.public.hooks.reconcile-paper'
 import { Route as ApiPublicHooksPriceAlertsTickRouteImport } from './routes/api.public.hooks.price-alerts-tick'
+import { Route as ApiPublicHooksAutopilotTickRouteImport } from './routes/api.public.hooks.autopilot-tick'
 import { Route as AppAcademyCertificateModuleIdRouteImport } from './routes/_app.academy.certificate.$moduleId'
 import { Route as AppAcademyModuleIdLessonIdRouteImport } from './routes/_app.academy.$moduleId.$lessonId'
 
@@ -354,6 +356,11 @@ const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
   path: '/api/public/stripe-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicBridgeRoute = ApiPublicBridgeRouteImport.update({
+  id: '/api/public/bridge',
+  path: '/api/public/bridge',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppStrategiesStrategyIdRoute = AppStrategiesStrategyIdRouteImport.update({
   id: '/$strategyId',
   path: '/$strategyId',
@@ -423,6 +430,12 @@ const ApiPublicHooksPriceAlertsTickRoute =
   ApiPublicHooksPriceAlertsTickRouteImport.update({
     id: '/api/public/hooks/price-alerts-tick',
     path: '/api/public/hooks/price-alerts-tick',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksAutopilotTickRoute =
+  ApiPublicHooksAutopilotTickRouteImport.update({
+    id: '/api/public/hooks/autopilot-tick',
+    path: '/api/public/hooks/autopilot-tick',
     getParentRoute: () => rootRouteImport,
   } as any)
 const AppAcademyCertificateModuleIdRoute =
@@ -495,6 +508,7 @@ export interface FileRoutesByFullPath {
   '/admin/subscribers': typeof AppAdminSubscribersRoute
   '/chat/$threadId': typeof AppChatThreadIdRoute
   '/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
+  '/api/public/bridge': typeof ApiPublicBridgeRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/academy/': typeof AppAcademyIndexRoute
@@ -502,6 +516,7 @@ export interface FileRoutesByFullPath {
   '/strategies/': typeof AppStrategiesIndexRoute
   '/academy/$moduleId/$lessonId': typeof AppAcademyModuleIdLessonIdRoute
   '/academy/certificate/$moduleId': typeof AppAcademyCertificateModuleIdRoute
+  '/api/public/hooks/autopilot-tick': typeof ApiPublicHooksAutopilotTickRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
   '/api/public/hooks/reconcile-paper': typeof ApiPublicHooksReconcilePaperRoute
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
@@ -562,6 +577,7 @@ export interface FileRoutesByTo {
   '/admin/subscribers': typeof AppAdminSubscribersRoute
   '/chat/$threadId': typeof AppChatThreadIdRoute
   '/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
+  '/api/public/bridge': typeof ApiPublicBridgeRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/academy': typeof AppAcademyIndexRoute
@@ -569,6 +585,7 @@ export interface FileRoutesByTo {
   '/strategies': typeof AppStrategiesIndexRoute
   '/academy/$moduleId/$lessonId': typeof AppAcademyModuleIdLessonIdRoute
   '/academy/certificate/$moduleId': typeof AppAcademyCertificateModuleIdRoute
+  '/api/public/hooks/autopilot-tick': typeof ApiPublicHooksAutopilotTickRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
   '/api/public/hooks/reconcile-paper': typeof ApiPublicHooksReconcilePaperRoute
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
@@ -635,6 +652,7 @@ export interface FileRoutesById {
   '/_app/admin/subscribers': typeof AppAdminSubscribersRoute
   '/_app/chat/$threadId': typeof AppChatThreadIdRoute
   '/_app/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
+  '/api/public/bridge': typeof ApiPublicBridgeRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/_app/academy/': typeof AppAcademyIndexRoute
@@ -642,6 +660,7 @@ export interface FileRoutesById {
   '/_app/strategies/': typeof AppStrategiesIndexRoute
   '/_app/academy/$moduleId/$lessonId': typeof AppAcademyModuleIdLessonIdRoute
   '/_app/academy/certificate/$moduleId': typeof AppAcademyCertificateModuleIdRoute
+  '/api/public/hooks/autopilot-tick': typeof ApiPublicHooksAutopilotTickRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
   '/api/public/hooks/reconcile-paper': typeof ApiPublicHooksReconcilePaperRoute
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
@@ -708,6 +727,7 @@ export interface FileRouteTypes {
     | '/admin/subscribers'
     | '/chat/$threadId'
     | '/strategies/$strategyId'
+    | '/api/public/bridge'
     | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
     | '/academy/'
@@ -715,6 +735,7 @@ export interface FileRouteTypes {
     | '/strategies/'
     | '/academy/$moduleId/$lessonId'
     | '/academy/certificate/$moduleId'
+    | '/api/public/hooks/autopilot-tick'
     | '/api/public/hooks/price-alerts-tick'
     | '/api/public/hooks/reconcile-paper'
     | '/api/public/hooks/scan-signals'
@@ -775,6 +796,7 @@ export interface FileRouteTypes {
     | '/admin/subscribers'
     | '/chat/$threadId'
     | '/strategies/$strategyId'
+    | '/api/public/bridge'
     | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
     | '/academy'
@@ -782,6 +804,7 @@ export interface FileRouteTypes {
     | '/strategies'
     | '/academy/$moduleId/$lessonId'
     | '/academy/certificate/$moduleId'
+    | '/api/public/hooks/autopilot-tick'
     | '/api/public/hooks/price-alerts-tick'
     | '/api/public/hooks/reconcile-paper'
     | '/api/public/hooks/scan-signals'
@@ -847,6 +870,7 @@ export interface FileRouteTypes {
     | '/_app/admin/subscribers'
     | '/_app/chat/$threadId'
     | '/_app/strategies/$strategyId'
+    | '/api/public/bridge'
     | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
     | '/_app/academy/'
@@ -854,6 +878,7 @@ export interface FileRouteTypes {
     | '/_app/strategies/'
     | '/_app/academy/$moduleId/$lessonId'
     | '/_app/academy/certificate/$moduleId'
+    | '/api/public/hooks/autopilot-tick'
     | '/api/public/hooks/price-alerts-tick'
     | '/api/public/hooks/reconcile-paper'
     | '/api/public/hooks/scan-signals'
@@ -881,8 +906,10 @@ export interface RootRouteChildren {
   ApiTtsRoute: typeof ApiTtsRoute
   ApiVersionRoute: typeof ApiVersionRoute
   InviteCodeRoute: typeof InviteCodeRoute
+  ApiPublicBridgeRoute: typeof ApiPublicBridgeRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
   ApiTradelockerImportRoute: typeof ApiTradelockerImportRoute
+  ApiPublicHooksAutopilotTickRoute: typeof ApiPublicHooksAutopilotTickRoute
   ApiPublicHooksPriceAlertsTickRoute: typeof ApiPublicHooksPriceAlertsTickRoute
   ApiPublicHooksReconcilePaperRoute: typeof ApiPublicHooksReconcilePaperRoute
   ApiPublicHooksScanSignalsRoute: typeof ApiPublicHooksScanSignalsRoute
@@ -1277,6 +1304,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicStripeWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/bridge': {
+      id: '/api/public/bridge'
+      path: '/api/public/bridge'
+      fullPath: '/api/public/bridge'
+      preLoaderRoute: typeof ApiPublicBridgeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app/strategies/$strategyId': {
       id: '/_app/strategies/$strategyId'
       path: '/$strategyId'
@@ -1366,6 +1400,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/hooks/price-alerts-tick'
       fullPath: '/api/public/hooks/price-alerts-tick'
       preLoaderRoute: typeof ApiPublicHooksPriceAlertsTickRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/autopilot-tick': {
+      id: '/api/public/hooks/autopilot-tick'
+      path: '/api/public/hooks/autopilot-tick'
+      fullPath: '/api/public/hooks/autopilot-tick'
+      preLoaderRoute: typeof ApiPublicHooksAutopilotTickRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/academy/certificate/$moduleId': {
@@ -1558,8 +1599,10 @@ const rootRouteChildren: RootRouteChildren = {
   ApiTtsRoute: ApiTtsRoute,
   ApiVersionRoute: ApiVersionRoute,
   InviteCodeRoute: InviteCodeRoute,
+  ApiPublicBridgeRoute: ApiPublicBridgeRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
   ApiTradelockerImportRoute: ApiTradelockerImportRoute,
+  ApiPublicHooksAutopilotTickRoute: ApiPublicHooksAutopilotTickRoute,
   ApiPublicHooksPriceAlertsTickRoute: ApiPublicHooksPriceAlertsTickRoute,
   ApiPublicHooksReconcilePaperRoute: ApiPublicHooksReconcilePaperRoute,
   ApiPublicHooksScanSignalsRoute: ApiPublicHooksScanSignalsRoute,
