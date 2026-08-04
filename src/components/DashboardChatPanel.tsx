@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { Link } from "@tanstack/react-router";
-import { MessageSquare, ExternalLink, X, Minus, Volume2, VolumeX, Crosshair, Square, Paperclip, ImageIcon, ThumbsUp, ThumbsDown, HelpCircle } from "lucide-react";
+import { MessageSquare, ExternalLink, X, Minus, Volume2, VolumeX, Crosshair, Square, Paperclip, ImageIcon, ThumbsUp, ThumbsDown, HelpCircle, BookOpen, Zap } from "lucide-react";
 import { recordHermesFeedback } from "@/lib/agents/hermes.functions";
 import { COACH_ICON_META, DEFAULT_COACH_ICON } from "@/lib/coachMeta";
 import { useFirstWeek } from "@/hooks/useFirstWeek";
@@ -35,6 +35,7 @@ import { parseAiPayload, type ChartAnnotation, type ChartGrade, type ConceptRef 
 import { coalesceUiMessageStream, textFromUiMessageParts } from "@/lib/chat-stream";
 import { ConceptDiagram } from "@/components/ConceptDiagram";
 import { buildLearningPromptBlock } from "@/lib/signalLearning";
+import { takeTrade } from "@/lib/signalHistory";
 
 export type DashboardChatHandle = {
   scan: (prompt: string, targetThreadId?: string | null) => void;
@@ -294,7 +295,7 @@ function orderTypeFor(grade: ChartGrade, lastPrice?: number): string | null {
   return null;
 }
 
-function GradeCard({ grade, lastPrice }: { grade: ChartGrade; lastPrice?: number }) {
+function GradeCard({ grade, lastPrice, symbol, interval }: { grade: ChartGrade; lastPrice?: number; symbol?: string; interval?: string }) {
   const g = grade.grade.toUpperCase();
   const tone = g.startsWith("A") ? "text-bull border-bull/40 bg-bull/10"
     : g.startsWith("B") ? "text-lime-300 border-lime-500/40 bg-lime-500/10"
@@ -338,6 +339,43 @@ function GradeCard({ grade, lastPrice }: { grade: ChartGrade; lastPrice?: number
           {grade.weakness && (
             <div><span className="text-red-400 font-semibold">Weakness: </span><span className="text-foreground/90">{grade.weakness}</span></div>
           )}
+        </div>
+      )}
+      {(grade.bias === "long" || grade.bias === "short") && (
+        <div className="flex items-center gap-2 border-t border-border/60 p-2">
+          <button
+            type="button"
+            onClick={() =>
+              takeTrade({
+                symbol: symbol ?? "",
+                bias: grade.bias === "long" ? "Long" : "Short",
+                interval,
+                grade: grade.grade,
+                entry: grade.entry,
+                stop: grade.stop,
+                tp1: grade.tp1,
+                tp2: grade.tp2,
+              })
+            }
+            className="inline-flex h-7 items-center gap-1 rounded px-2 text-[10px] font-bold uppercase tracking-wider bg-primary text-primary-foreground hover:opacity-90"
+            title="Log this setup in your journal as a trade you are taking"
+          >
+            <BookOpen className="h-3 w-3" /> Take trade
+          </button>
+          <Link
+            to="/broker"
+            search={{
+              symbol: symbol ?? "",
+              side: grade.bias === "long" ? "long" : "short",
+              entry: grade.entry ?? "",
+              stop: grade.stop ?? "",
+              tp: grade.tp1 ?? "",
+            } as never}
+            className="inline-flex h-7 items-center gap-1 rounded border border-border px-2 text-[10px] font-bold uppercase tracking-wider text-foreground hover:bg-muted/60"
+            title="Send this setup to your broker"
+          >
+            <Zap className="h-3 w-3" /> Broker
+          </Link>
         </div>
       )}
     </div>
@@ -703,7 +741,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                 return (
                   <Message key={m.id} from={m.role}>
                     <div className="flex flex-col gap-2 max-w-full">
-                      {g && <GradeCard grade={g} lastPrice={chart?.snapshot?.lastPrice} />}
+                      {g && <GradeCard grade={g} lastPrice={chart?.snapshot?.lastPrice} symbol={chart?.ticker} />}
                       {summary && (
                         <div className="text-sm text-foreground/90 leading-snug">{summary}</div>
                       )}
