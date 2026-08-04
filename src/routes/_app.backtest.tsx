@@ -220,10 +220,11 @@ function BacktestPage() {
   return (
     <div className="space-y-4 p-4 md:p-6">
       <PageHeader
-        icon={FlaskConical}
+        icon={<FlaskConical className="h-6 w-6" />}
         title="Historical backtest"
-        subtitle="Replay the signal rules bar by bar over past price history. Signals fill at the next bar's open and exits walk forward one bar at a time, so nothing uses future data."
+        description="Replay the signal rules bar by bar over past price history. Signals fill at the next bar's open and exits walk forward one bar at a time, so nothing uses future data."
       />
+
 
       <div className="rounded-xl border border-border bg-card p-4">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
