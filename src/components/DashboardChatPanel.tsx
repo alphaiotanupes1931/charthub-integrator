@@ -304,7 +304,7 @@ function GradeCard({ grade, lastPrice }: { grade: ChartGrade; lastPrice?: number
   const biasTone = grade.bias === "long" ? "text-bull"
     : grade.bias === "short" ? "text-red-300"
     : "text-muted-foreground";
-  const fmt = (n?: number) => (typeof n === "number" && isFinite(n) ? n.toString() : "-");
+  const fmt = (n?: number) => formatPrice(n, lastPrice ?? grade.entry);
   const orderType = orderTypeFor(grade, lastPrice);
   return (
     <div className="rounded-lg border border-border bg-card/60 overflow-hidden">
