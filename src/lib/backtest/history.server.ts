@@ -6,6 +6,7 @@
 // because Yahoo does not serve a native 4H series.
 
 import type { BtBar } from "./engine";
+import type { BacktestTimeframe } from "./catalog";
 
 const YAHOO_SYMBOL: Record<string, string> = {
   "XAU/USD": "GC=F",
@@ -20,17 +21,6 @@ const YAHOO_SYMBOL: Record<string, string> = {
   "BTC/USD": "BTC-USD",
   "ETH/USD": "ETH-USD",
   "XRP/USD": "XRP-USD",
-};
-
-export const BACKTEST_SYMBOLS = Object.keys(YAHOO_SYMBOL);
-export const BACKTEST_TIMEFRAMES = ["15", "60", "240", "D"] as const;
-export type BacktestTimeframe = (typeof BACKTEST_TIMEFRAMES)[number];
-
-export const TIMEFRAME_LABEL: Record<BacktestTimeframe, string> = {
-  "15": "15 minute",
-  "60": "1 hour",
-  "240": "4 hour",
-  D: "Daily",
 };
 
 // Yahoo caps intraday history: 60 days for minute data, 730 days for hourly.
