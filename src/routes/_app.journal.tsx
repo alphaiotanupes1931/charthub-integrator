@@ -25,6 +25,8 @@ import {
   HeartPulse,
 } from "lucide-react";
 import { MentalStatePanel, upsertMentalEntry, SCORE_META, loadMental, type MentalEntry } from "@/components/MentalStatePanel";
+import JournalReviewPanel from "@/components/JournalReviewPanel";
+
 import { exportMyData } from "@/lib/privacy.functions";
 import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
 
