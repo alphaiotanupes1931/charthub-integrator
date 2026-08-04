@@ -70,11 +70,15 @@ export default function StrategyEdgePanel() {
 
       <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div className="space-y-1">
-          <Label className="text-xs">Active strategy</Label>
-          <div className="rounded-md border border-border px-3 py-2 text-sm">
-            {strategy ?? "None selected"}
-          </div>
+          <Label className="text-xs">Playbook</Label>
+          <Select value={strategy ?? ""} onValueChange={setStrategy}>
+            <SelectTrigger><SelectValue placeholder="Pick a playbook" /></SelectTrigger>
+            <SelectContent>
+              {STRATEGIES.map((s) => <SelectItem key={s.name} value={s.name}>{s.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
+
         <div className="space-y-1">
           <Label className="text-xs">Instrument</Label>
           <Select value={symbol} onValueChange={setSymbol}>
