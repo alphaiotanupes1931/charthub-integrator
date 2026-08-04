@@ -408,6 +408,78 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 }
 
+function NavLinkRow({
+  item,
+  pathname,
+  collapsed,
+  nested,
+}: {
+  item: NavItem;
+  pathname: string;
+  collapsed?: boolean;
+  nested?: boolean;
+}) {
+  const active = pathname === item.to || pathname.startsWith(item.to + "/");
+  const Icon = item.icon;
+  return (
+    <Link
+      to={item.to}
+      className={`group relative flex items-center gap-3 rounded-lg text-sm transition-all duration-200 ${
+        nested ? "pl-9 pr-3 py-2" : "px-3 py-2.5"
+      } ${
+        active
+          ? "bg-gradient-to-r from-primary/15 via-primary/8 to-transparent text-primary ring-gold"
+          : item.accent
+          ? "text-primary/80 hover:bg-accent/40"
+          : "text-foreground/80 hover:bg-accent/40 hover:text-foreground"
+      }`}
+      title={item.label}
+    >
+      {active && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-r bg-gold-gradient" />}
+      <Icon className={`h-4 w-4 shrink-0 ${active ? "drop-shadow-[0_0_6px_color-mix(in_oklab,var(--gold)_60%,transparent)]" : ""}`} />
+      {!collapsed && <span className="font-medium truncate">{item.label}</span>}
+    </Link>
+  );
+}
+
+function NavGroupBlock({
+  group,
+  pathname,
+  open,
+  onToggle,
+}: {
+  group: NavGroup;
+  pathname: string;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  const Icon = group.icon;
+  const hasActive = group.items.some((i) => pathname === i.to || pathname.startsWith(i.to + "/"));
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
+          hasActive ? "text-primary" : "text-foreground/80 hover:bg-accent/40 hover:text-foreground"
+        }`}
+      >
+        <Icon className="h-4 w-4 shrink-0" />
+        <span className="font-medium truncate flex-1 text-left">{group.label}</span>
+        <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="mt-0.5 space-y-0.5">
+          {group.items.map((item) => (
+            <NavLinkRow key={item.to} item={item} pathname={pathname} nested />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ComplianceGate() {
   const [open, setOpen] = useState(false);
   useEffect(() => {
