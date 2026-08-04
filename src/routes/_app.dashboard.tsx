@@ -13,6 +13,8 @@ import { DashboardChatPanel, type DashboardChatHandle } from "@/components/Dashb
 import { ChartConceptOverlay } from "@/components/ConceptDiagram";
 import { ChartSignalCards } from "@/components/ChartSignalCards";
 import { TodaysRecommendation } from "@/components/TodaysRecommendation";
+import { findStrategyByName } from "@/lib/customStrategies";
+import { readActiveStrategy } from "@/lib/chat-client";
 import { SCAN_LENSES, readActiveLensId, writeActiveLensId, findLens, type ScanLensId } from "@/lib/scanLens";
 import { clearLastThreadId, readActiveCoach, writeActiveCoach, COACH_KEY, writeLastChart, readLastThreadId, writeLastThreadId } from "@/lib/chat-client";
 import { voiceForCoach } from "@/lib/coachVoices";
@@ -24,6 +26,27 @@ import type { ResearchMemo, OrderFlow } from "@/lib/agents/types";
 import { Link } from "@tanstack/react-router";
 import { recordSignal, takeTrade } from "@/lib/signalHistory";
 import { toast } from "sonner";
+
+// Scan context: the active strategy playbook is fed to the planner so the
+// Analysis grade is scored against the same rules the chat coach uses.
+function activeStrategyDesc(): string | undefined {
+  const name = readActiveStrategy();
+  if (!name) return undefined;
+  const s = findStrategyByName(name);
+  if (!s) return name;
+  const bits = [
+    s.name,
+    "style" in s && s.style ? `style ${s.style}` : "",
+    "level" in s && s.level ? `level ${s.level}` : "",
+    "rr" in s && s.rr != null ? `baseline R:R ${s.rr}` : "",
+    "winRate" in s && s.winRate != null ? `baseline win rate ${s.winRate}%` : "",
+    "rules" in s && s.rules ? `rules: ${s.rules}` : "",
+    s.description ?? "",
+  ].filter(Boolean);
+  return bits.join(" | ").slice(0, 800);
+}
+
+
 
 
 type DashboardSearch = { ask?: string; symbol?: string };
@@ -1005,7 +1028,7 @@ function Dashboard() {
     // Always post the scan prompt to chat so the user sees activity immediately.
     sendToChat(prompt, { focusChat: from === "chat", targetThreadId: scanThreadId });
 
-    runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
+    runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}`, strategyDesc: activeStrategyDesc(), coach: readActiveCoach() } })
       .then((plan) => {
         const r = plan as ScanResult;
         setResult(r);
@@ -1547,7 +1570,7 @@ function Dashboard() {
                     setTimeout(() => { chatRef.current?.attach(file, attachPrompt); }, 0);
                     setScanning(true);
                     const lens = findLens(lensId);
-                    runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
+                    runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}`, strategyDesc: activeStrategyDesc(), coach: readActiveCoach() } })
                       .then((plan) => { const r = plan as ScanResult; setResult(r); applyPlanToSignalCards(r); })
                       .catch(() => { /* coach chat still runs the vision analysis */ })
                       .finally(() => setScanning(false));
@@ -1672,7 +1695,7 @@ function Dashboard() {
                 setTimeout(() => { chatRef.current?.attach(file, attachPrompt); }, 0);
                 setScanning(true);
                 const lens = findLens(lensId);
-                runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
+                runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}`, strategyDesc: activeStrategyDesc(), coach: readActiveCoach() } })
                   .then((plan) => { const r = plan as ScanResult; setResult(r); applyPlanToSignalCards(r); })
                   .catch(() => { /* coach chat still runs the vision analysis */ })
                   .finally(() => setScanning(false));
