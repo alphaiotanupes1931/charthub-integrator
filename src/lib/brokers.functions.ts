@@ -142,3 +142,61 @@ export const deleteBrokerConnection = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true as const };
   });
+
+const OrderSchema = z.object({
+  broker: z.string().trim().min(2).max(40),
+  symbol: z.string().trim().min(1).max(40),
+  side: z.enum(["buy", "sell"]),
+  quantity: z.number().positive(),
+  type: z.enum(["market", "limit"]).default("market"),
+  limitPrice: z.number().positive().optional(),
+  stopLoss: z.number().positive().optional(),
+  takeProfit: z.number().positive().optional(),
+});
+
+/**
+ * Route one live order to a connected venue using stored credentials.
+ * Credentials never leave the server; the client only sends order intent.
+ */
+export const placeVenueOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => OrderSchema.parse(raw))
+  .handler(async ({ data, context }) => {
+    const { BROKER_BY_ID } = await import("@/lib/brokers/registry");
+    const def = BROKER_BY_ID[data.broker];
+    if (!def) throw new Error("Unknown broker");
+    if (!def.trading) {
+      return { ok: false as const, detail: `Order routing is not available for ${def.name} yet.` };
+    }
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row, error } = await supabaseAdmin
+      .from("user_broker_credentials")
+      .select("api_key_ciphertext, env")
+      .eq("user_id", context.userId)
+      .eq("broker", data.broker)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!row) return { ok: false as const, detail: "Connect this venue before sending orders." };
+
+    const { decryptSecret } = await import("@/lib/broker-crypto.server");
+    const plaintext = decryptSecret(row.api_key_ciphertext as string);
+    let creds: Record<string, string>;
+    try {
+      creds = JSON.parse(plaintext) as Record<string, string>;
+    } catch {
+      creds = { apiKey: plaintext };
+    }
+
+    const { placeOrderAt } = await import("@/lib/brokers/orders.server");
+    const result = await placeOrderAt(data.broker, creds, (row.env as string) ?? "practice", {
+      symbol: data.symbol,
+      side: data.side,
+      quantity: data.quantity,
+      type: data.type,
+      limitPrice: data.limitPrice,
+      stopLoss: data.stopLoss,
+      takeProfit: data.takeProfit,
+    });
+    return { ok: result.ok, detail: result.detail, orderId: result.orderId ?? null };
+  });
