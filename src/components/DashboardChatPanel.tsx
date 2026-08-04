@@ -179,12 +179,10 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
             setThreadId(threadIdOverride);
             setInitial(rows as UIMessage[]);
           }
+          return;
         } catch (e) {
           console.warn("[chat] load thread failed", e);
           clearLastThreadId(threadIdOverride);
-        }
-        if (!cancelled && activeThreadRef.current === threadIdOverride) {
-          activeThreadRef.current = null;
         }
       }
 
