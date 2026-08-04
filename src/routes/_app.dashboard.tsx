@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { TradingViewChart } from "@/components/TradingViewChart";
 import { NativeChart, LEVEL_META, type LevelKey, type ChartSnapshot } from "@/components/NativeChart";
 
@@ -612,6 +612,14 @@ function Dashboard() {
   const [aiAnnotationsRaw, setAiAnnotationsRaw] = useState<import("@/lib/chartAnnotations").ChartAnnotation[]>([]);
   const [aiConcept, setAiConcept] = useState<import("@/lib/chartAnnotations").ConceptRef | null>(null);
   const [aiGrade, setAiGrade] = useState<import("@/lib/chartAnnotations").ChartGrade | null>(null);
+  const handleChatAnnotations = useCallback((annotations: import("@/lib/chartAnnotations").ChartAnnotation[]) => {
+    setAiAnnotationsRaw(annotations);
+    if (annotations.length > 0) setChartTab("setup");
+  }, []);
+  const handleShowMe = useCallback(() => setChartTab("setup"), []);
+  const handleChatGrade = useCallback((grade: import("@/lib/chartAnnotations").ChartGrade | null) => {
+    setAiGrade(sanitizeVisibleGrade(grade));
+  }, []);
 
   // Full-screen chart toggle
   const chartAreaRef = useRef<HTMLDivElement>(null);
@@ -1577,9 +1585,9 @@ function Dashboard() {
                         onStopScan={() => { voice.stop(); setScanning(false); }}
                         scanning={scanning}
                         threadIdOverride={activeThreadId}
-                        onAnnotations={(a) => { setAiAnnotationsRaw(a); if (a.length > 0) setChartTab("setup"); }}
-                        onShowMe={() => setChartTab("setup")}
-                        onGrade={(g) => setAiGrade(sanitizeVisibleGrade(g))}
+                        onAnnotations={handleChatAnnotations}
+                        onShowMe={handleShowMe}
+                        onGrade={handleChatGrade}
                         onConcept={setAiConcept}
                         chart={{
                           ticker: symbolLabel(symbol),
@@ -1701,9 +1709,9 @@ function Dashboard() {
                   onStopScan={() => { voice.stop(); setScanning(false); }}
                   scanning={scanning}
                   threadIdOverride={activeThreadId}
-                  onAnnotations={(a) => { setAiAnnotationsRaw(a); if (a.length > 0) setChartTab("setup"); }}
-                        onShowMe={() => setChartTab("setup")}
-                  onGrade={(g) => setAiGrade(sanitizeVisibleGrade(g))}
+                  onAnnotations={handleChatAnnotations}
+                  onShowMe={handleShowMe}
+                  onGrade={handleChatGrade}
                   onConcept={setAiConcept}
                   chart={{
                     ticker: symbolLabel(symbol),
