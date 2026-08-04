@@ -1,28 +1,17 @@
 import { createServerFn } from "@tanstack/react-start";
-import { z } from "zod";
-import { DEFAULT_PARAMS, runBacktest, type BtResult } from "./engine";
-import { BACKTEST_TIMEFRAMES } from "./catalog";
+import { BacktestInput } from "./schemas";
+import type { BtBar, BtResult } from "./engine";
 
-const Input = z.object({
-  symbol: z.string().min(1),
-  timeframe: z.enum(BACKTEST_TIMEFRAMES),
-  lookback: z.enum(["60d", "1y", "2y", "5y"]).default("2y"),
-  minGrade: z.enum(["A+", "A", "B", "C"]).default("B"),
-  direction: z.enum(["both", "long", "short"]).default("both"),
-  riskPct: z.coerce.number().min(0.1).max(10).default(1),
-  rrTarget: z.coerce.number().min(0.5).max(10).default(2),
-  atrStopMult: z.coerce.number().min(0.3).max(5).default(1.2),
-  maxHoldBars: z.coerce.number().int().min(3).max(300).default(40),
-  sessions: z.array(z.string()).default([]),
-});
-
-export type BacktestRequest = z.input<typeof Input>;
-export type BacktestResponse = { ok: true; result: BtResult } | { ok: false; error: string };
+export type BacktestRequest = import("zod").input<typeof BacktestInput>;
+export type BacktestResponse =
+  | { ok: true; result: BtResult; bars: BtBar[] }
+  | { ok: false; error: string };
 
 export const runHistoricalBacktest = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => Input.parse(input))
+  .inputValidator((input: unknown) => BacktestInput.parse(input))
   .handler(async ({ data }): Promise<BacktestResponse> => {
     const { getHistory } = await import("./history.server");
+    const { DEFAULT_PARAMS, runBacktest } = await import("./engine");
     try {
       const { bars, source } = await getHistory(data.symbol, data.timeframe, data.lookback);
       const result = runBacktest(
@@ -39,7 +28,8 @@ export const runHistoricalBacktest = createServerFn({ method: "POST" })
         },
         { symbol: data.symbol, timeframe: data.timeframe, source },
       );
-      return { ok: true, result };
+      // Bars are returned so the UI can replay every simulated trade on a chart.
+      return { ok: true, result, bars: bars.slice(-6000) };
     } catch (e) {
       return { ok: false, error: (e as Error).message };
     }
