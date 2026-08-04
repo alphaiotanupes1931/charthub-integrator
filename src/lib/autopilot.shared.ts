@@ -38,8 +38,14 @@ export function gradeMeets(grade: string | null, minGrade: string): boolean {
 
 export function evaluateRails(
   settings: AutopilotSettings,
-  candidate: { symbol: string; grade: string | null; openPositions: number },
+  candidate: { symbol: string; grade: string | null; openPositions: number; dailyLossPct?: number },
 ): { allowed: boolean; reason: string | null } {
+  if (candidate.dailyLossPct !== undefined && candidate.dailyLossPct >= settings.maxDailyLossPct) {
+    return {
+      allowed: false,
+      reason: `Down ${candidate.dailyLossPct}% today, at or past your ${settings.maxDailyLossPct}% daily loss cap`,
+    };
+  }
   if (settings.pausedReason) {
     return { allowed: false, reason: `Autopilot paused: ${settings.pausedReason}` };
   }
