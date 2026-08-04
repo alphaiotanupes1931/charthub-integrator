@@ -4,6 +4,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { FlaskConical } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { listSignals, onSignalHistoryChange, type SignalRecord } from "@/lib/signalHistory";
 import { buildLearningReport, type Bucket } from "@/lib/signalLearning";
 
@@ -46,6 +47,9 @@ export function BacktestPanel() {
       <div className="flex items-center gap-2 border-b border-border px-4 py-3 text-sm font-semibold">
         <FlaskConical className="h-4 w-4" /> Backtest and learn
         <span className="font-normal text-muted-foreground">({report.graded} graded of {report.taken} taken)</span>
+        <Link to="/backtest" className="ml-auto text-xs font-normal text-primary underline-offset-2 hover:underline">
+          Run a historical backtest
+        </Link>
       </div>
 
       <div className="space-y-4 p-4">
