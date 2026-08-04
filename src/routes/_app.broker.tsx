@@ -23,6 +23,8 @@ type BrokerSearch = {
   tp?: number | string;
 };
 
+import { VenueRouter } from "@/components/VenueRouter";
+
 export const Route = createFileRoute("/_app/broker")({
   validateSearch: (s: Record<string, unknown>): BrokerSearch => ({
     symbol: typeof s.symbol === "string" ? s.symbol : undefined,
@@ -431,6 +433,19 @@ function BrokerPage() {
           </div>
         </div>
       )}
+
+      <div className="mt-6">
+        <VenueRouter
+          exclude={["oanda"]}
+          prefill={{
+            symbol: search.symbol ?? undefined,
+            side: side === "long" ? "buy" : "sell",
+            limitPrice: search.entry != null ? String(search.entry) : undefined,
+            stopLoss: stopLoss || undefined,
+            takeProfit: takeProfit || undefined,
+          }}
+        />
+      </div>
 
       <div className="mt-6 text-xs text-muted-foreground">
         <Link to="/dashboard" className="inline-flex items-center gap-1 hover:text-foreground">
