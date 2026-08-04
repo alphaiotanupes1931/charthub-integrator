@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import BridgePanel from "@/components/BridgePanel";
 import { motion } from "framer-motion";
 import { Check, ExternalLink, Loader2, Plug, RefreshCw, ShieldCheck, Trash2, X, Send } from "lucide-react";
 import {
@@ -173,6 +174,8 @@ function ConnectionsPage() {
           </button>
         ))}
       </div>
+
+      <BridgePanel />
 
       {loading ? (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
