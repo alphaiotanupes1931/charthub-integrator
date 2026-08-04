@@ -35,7 +35,7 @@ export const runHistoricalBacktest = createServerFn({ method: "POST" })
           rrTarget: data.rrTarget,
           atrStopMult: data.atrStopMult,
           maxHoldBars: data.maxHoldBars,
-          sessions: data.sessions.filter((s) => GRADE_ORDER.length > 0),
+          sessions: data.sessions,
         },
         { symbol: data.symbol, timeframe: data.timeframe, source },
       );
