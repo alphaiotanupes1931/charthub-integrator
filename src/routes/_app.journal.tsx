@@ -290,15 +290,17 @@ function JournalPage() {
     const d = new Date(); d.setDate(1); return d;
   });
   const [trades, setTrades] = useState<Trade[]>([]);
+  const [hydrated, setHydrated] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [formDate, setFormDate] = useState<string>(todayYmd());
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  // Load once, then only write back after the load has happened. Without the
-  // gate the first save runs with the empty initial state and erases the log.
-  const loadedRef = useRef(false);
-  useEffect(() => { setTrades(loadTrades()); loadedRef.current = true; }, []);
-  useEffect(() => { if (loadedRef.current) saveTrades(trades); }, [trades]);
+  // Load once, and only write back on renders that happen after the load.
+  // Saving during the first commit would persist the empty initial state and
+  // erase a log that is already on disk.
+  useEffect(() => { setTrades(loadTrades()); setHydrated(true); }, []);
+  useEffect(() => { if (hydrated) saveTrades(trades); }, [hydrated, trades]);
+
 
 
   type Prefill = { symbol?: string; timeframe?: string; notes?: string; entry?: number; stop?: number; tp1?: number; tp2?: number; side?: Side; setup?: string };
