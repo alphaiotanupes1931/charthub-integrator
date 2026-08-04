@@ -294,7 +294,7 @@ function orderTypeFor(grade: ChartGrade, lastPrice?: number): string | null {
   return null;
 }
 
-function GradeCard({ grade, lastPrice }: { grade: ChartGrade; lastPrice?: number }) {
+function GradeCard({ grade, lastPrice, symbol, interval }: { grade: ChartGrade; lastPrice?: number; symbol?: string; interval?: string }) {
   const g = grade.grade.toUpperCase();
   const tone = g.startsWith("A") ? "text-bull border-bull/40 bg-bull/10"
     : g.startsWith("B") ? "text-lime-300 border-lime-500/40 bg-lime-500/10"
