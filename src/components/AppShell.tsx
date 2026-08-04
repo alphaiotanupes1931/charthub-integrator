@@ -33,6 +33,7 @@ import {
   Bot,
   Newspaper,
   Plug,
+  ChevronDown,
 
 } from "lucide-react";
 import { LogoLink } from "@/components/LogoLink";
@@ -50,32 +51,91 @@ type NavItem = {
   accent?: boolean;
 };
 
-const NAV: NavItem[] = [
-  { to: "/dashboard",       label: "Dashboard",       icon: LayoutDashboard },
-  { to: "/first-week",      label: "First Week",      icon: Footprints },
-  { to: "/guide",           label: "Guide",           icon: BookOpen },
-  { to: "/academy",         label: "Academy",         icon: GraduationCap },
-  { to: "/flashcards",      label: "Flashcards",      icon: BookOpen },
-  { to: "/journal",         label: "Trade Journal",   icon: NotebookPen },
-  { to: "/strategies",      label: "Strategies",      icon: Library },
-  { to: "/coaches",         label: "AI Coaches",      icon: Users },
-  { to: "/analytics",       label: "Analytics",       icon: BarChart3 },
-  { to: "/signals",         label: "AI Signals",      icon: Radar },
-  { to: "/memory",          label: "Trading Memory",  icon: Brain },
-  { to: "/alerts",          label: "Price Alerts",    icon: Bell },
-  { to: "/calculator",      label: "Risk Calculator", icon: Calculator },
-  { to: "/testing",         label: "Testing",         icon: FlaskConical },
-  { to: "/broker",          label: "Broker (OANDA)",  icon: Building2 },
-  { to: "/connections",     label: "Connections",     icon: Plug },
+type NavGroup = {
+  id: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  items: NavItem[];
+};
 
-  { to: "/autopilot",       label: "Autopilot",       icon: Bot },
-  { to: "/news",            label: "News",            icon: Newspaper },
-  { to: "/discord",         label: "Discord",         icon: MessageSquare },
-  { to: "/leaderboard",     label: "Leaderboard",     icon: Trophy },
-  { to: "/settings",        label: "Settings",        icon: SettingsIcon },
-  
-  { to: "/admin",           label: "Admin",           icon: ShieldCheck, accent: true },
+// Pinned links, always visible at the top of the sidebar.
+const TOP_NAV: NavItem[] = [
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
 ];
+
+// Everything else is nested inside a small number of groups so the sidebar
+// stays short. Groups auto-open when the active route lives inside them.
+const NAV_GROUPS: NavGroup[] = [
+  {
+    id: "trade",
+    label: "Trade",
+    icon: Radar,
+    items: [
+      { to: "/signals",    label: "AI Signals",      icon: Radar },
+      { to: "/journal",    label: "Trade Journal",   icon: NotebookPen },
+      { to: "/alerts",     label: "Price Alerts",    icon: Bell },
+      { to: "/calculator", label: "Risk Calculator", icon: Calculator },
+      { to: "/autopilot",  label: "Autopilot",       icon: Bot },
+      { to: "/testing",    label: "Paper Testing",   icon: FlaskConical },
+    ],
+  },
+  {
+    id: "insights",
+    label: "Insights",
+    icon: BarChart3,
+    items: [
+      { to: "/analytics",   label: "Analytics",      icon: BarChart3 },
+      { to: "/memory",      label: "Trading Memory", icon: Brain },
+      { to: "/news",        label: "News",           icon: Newspaper },
+      { to: "/leaderboard", label: "Leaderboard",    icon: Trophy },
+    ],
+  },
+  {
+    id: "coaching",
+    label: "Coaching",
+    icon: Users,
+    items: [
+      { to: "/coaches",    label: "AI Coaches", icon: Users },
+      { to: "/strategies", label: "Strategies", icon: Library },
+    ],
+  },
+  {
+    id: "learn",
+    label: "Learn",
+    icon: GraduationCap,
+    items: [
+      { to: "/academy",    label: "Academy",    icon: GraduationCap },
+      { to: "/flashcards", label: "Flashcards", icon: BookOpen },
+      { to: "/guide",      label: "Guide",      icon: BookOpen },
+      { to: "/first-week", label: "First Week", icon: Footprints },
+    ],
+  },
+  {
+    id: "accounts",
+    label: "Accounts",
+    icon: Plug,
+    items: [
+      { to: "/connections", label: "Broker Connections", icon: Plug },
+      { to: "/broker",      label: "OANDA",              icon: Building2 },
+      { to: "/discord",     label: "Discord",            icon: MessageSquare },
+    ],
+  },
+];
+
+// Pinned links at the bottom.
+const BOTTOM_NAV: NavItem[] = [
+  { to: "/settings", label: "Settings", icon: SettingsIcon },
+  { to: "/admin",    label: "Admin",    icon: ShieldCheck, accent: true },
+];
+
+// Flat list used by search, the collapsed icon rail, and the mobile drawer.
+const NAV: NavItem[] = [
+  ...TOP_NAV,
+  ...NAV_GROUPS.flatMap((g) => g.items),
+  ...BOTTOM_NAV,
+];
+
+const GROUP_STORAGE_KEY = "trademind.sidebar.groups.v1";
 
 // Robinhood-style bottom tab bar (mobile only). Four primary tabs + More.
 const MOBILE_TABS: { to: string; label: string; icon: typeof LayoutDashboard }[] = [
@@ -96,6 +156,35 @@ export function AppShell({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const { isAdmin, profile } = useProfile();
   const nav = NAV.filter((n) => n.to !== "/admin" || isAdmin);
+
+  // Which sidebar groups are expanded. Persisted, and the group holding the
+  // active route is always opened so the user never loses their place.
+  const [openGroups, setOpenGroups] = useState<string[]>(() => {
+    try {
+      const raw = typeof window !== "undefined" ? localStorage.getItem(GROUP_STORAGE_KEY) : null;
+      if (raw) return JSON.parse(raw) as string[];
+    } catch { /* ignore */ }
+    return ["trade"];
+  });
+
+  useEffect(() => {
+    const owning = NAV_GROUPS.find((g) =>
+      g.items.some((i) => pathname === i.to || pathname.startsWith(i.to + "/")),
+    );
+    if (owning && !openGroups.includes(owning.id)) {
+      setOpenGroups((prev) => [...prev, owning.id]);
+    }
+  }, [pathname, openGroups]);
+
+  const toggleGroup = (id: string) => {
+    setOpenGroups((prev) => {
+      const next = prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id];
+      try { localStorage.setItem(GROUP_STORAGE_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+  };
+
+
 
 
   async function handleSignOut() {
@@ -151,28 +240,32 @@ export function AppShell({ children }: { children: ReactNode }) {
       )}
 
       <nav className="flex-1 px-2 py-2 space-y-0.5 overflow-y-auto">
-        {nav.map((item) => {
-          const active = pathname === item.to || pathname.startsWith(item.to + "/");
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.to}
-              to={item.to}
-              className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200 ${
-                active
-                  ? "bg-gradient-to-r from-primary/15 via-primary/8 to-transparent text-primary ring-gold"
-                  : item.accent
-                  ? "text-primary/80 hover:bg-accent/40"
-                  : "text-foreground/80 hover:bg-accent/40 hover:text-foreground"
-              }`}
-              title={item.label}
-            >
-              {active && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-r bg-gold-gradient" />}
-              <Icon className={`h-4 w-4 shrink-0 ${active ? "drop-shadow-[0_0_6px_color-mix(in_oklab,var(--gold)_60%,transparent)]" : ""}`} />
-              {!collapsed && <span className="font-medium truncate">{item.label}</span>}
-            </Link>
-          );
-        })}
+        {collapsed ? (
+          // Collapsed rail: flat icon list, no group headers.
+          nav.map((item) => (
+            <NavLinkRow key={item.to} item={item} pathname={pathname} collapsed />
+          ))
+        ) : (
+          <>
+            {TOP_NAV.map((item) => (
+              <NavLinkRow key={item.to} item={item} pathname={pathname} />
+            ))}
+            {NAV_GROUPS.map((group) => (
+              <NavGroupBlock
+                key={group.id}
+                group={group}
+                pathname={pathname}
+                open={openGroups.includes(group.id)}
+                onToggle={() => toggleGroup(group.id)}
+              />
+            ))}
+            <div className="pt-2 mt-2 border-t border-border/60 space-y-0.5">
+              {BOTTOM_NAV.filter((n) => n.to !== "/admin" || isAdmin).map((item) => (
+                <NavLinkRow key={item.to} item={item} pathname={pathname} />
+              ))}
+            </div>
+          </>
+        )}
       </nav>
 
       {!collapsed ? (
@@ -313,6 +406,78 @@ export function AppShell({ children }: { children: ReactNode }) {
       <WelcomeBackGreeter />
     </div>
     </WelcomeBackProvider>
+  );
+}
+
+function NavLinkRow({
+  item,
+  pathname,
+  collapsed,
+  nested,
+}: {
+  item: NavItem;
+  pathname: string;
+  collapsed?: boolean;
+  nested?: boolean;
+}) {
+  const active = pathname === item.to || pathname.startsWith(item.to + "/");
+  const Icon = item.icon;
+  return (
+    <Link
+      to={item.to}
+      className={`group relative flex items-center gap-3 rounded-lg text-sm transition-all duration-200 ${
+        nested ? "pl-9 pr-3 py-2" : "px-3 py-2.5"
+      } ${
+        active
+          ? "bg-gradient-to-r from-primary/15 via-primary/8 to-transparent text-primary ring-gold"
+          : item.accent
+          ? "text-primary/80 hover:bg-accent/40"
+          : "text-foreground/80 hover:bg-accent/40 hover:text-foreground"
+      }`}
+      title={item.label}
+    >
+      {active && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-r bg-gold-gradient" />}
+      <Icon className={`h-4 w-4 shrink-0 ${active ? "drop-shadow-[0_0_6px_color-mix(in_oklab,var(--gold)_60%,transparent)]" : ""}`} />
+      {!collapsed && <span className="font-medium truncate">{item.label}</span>}
+    </Link>
+  );
+}
+
+function NavGroupBlock({
+  group,
+  pathname,
+  open,
+  onToggle,
+}: {
+  group: NavGroup;
+  pathname: string;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  const Icon = group.icon;
+  const hasActive = group.items.some((i) => pathname === i.to || pathname.startsWith(i.to + "/"));
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
+          hasActive ? "text-primary" : "text-foreground/80 hover:bg-accent/40 hover:text-foreground"
+        }`}
+      >
+        <Icon className="h-4 w-4 shrink-0" />
+        <span className="font-medium truncate flex-1 text-left">{group.label}</span>
+        <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="mt-0.5 space-y-0.5">
+          {group.items.map((item) => (
+            <NavLinkRow key={item.to} item={item} pathname={pathname} nested />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 

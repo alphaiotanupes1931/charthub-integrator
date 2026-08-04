@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { Check, ExternalLink, Loader2, Plug, RefreshCw, ShieldCheck, Trash2, X } from "lucide-react";
+import { Check, ExternalLink, Loader2, Plug, RefreshCw, ShieldCheck, Trash2, X, Send } from "lucide-react";
 import {
   BROKERS,
   BROKER_GROUPS,
@@ -15,6 +15,7 @@ import {
   testBrokerConnection,
   deleteBrokerConnection,
 } from "@/lib/brokers.functions";
+import { VenueOrderTicket } from "@/components/VenueOrderTicket";
 
 export const Route = createFileRoute("/_app/connections")({
   head: () => ({
@@ -53,6 +54,7 @@ function ConnectionsPage() {
   const [conns, setConns] = useState<Conn[]>([]);
   const [loading, setLoading] = useState(true);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [ticketId, setTicketId] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [form, setForm] = useState<Record<string, string>>({});
   const [env, setEnv] = useState("practice");
@@ -312,10 +314,24 @@ function ConnectionsPage() {
                             >
                               <Trash2 className="h-3.5 w-3.5" /> Disconnect
                             </button>
+                            {def.trading ? (
+                              <button
+                                type="button"
+                                onClick={() => setTicketId(ticketId === def.id ? null : def.id)}
+                                className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-xs"
+                              >
+                                <Send className="h-3.5 w-3.5" />
+                                {ticketId === def.id ? "Hide ticket" : "Send order"}
+                              </button>
+                            ) : null}
                           </>
                         ) : null}
                       </div>
                     )}
+                    {conn && def.trading && ticketId === def.id && !isOpen ? (
+                      <VenueOrderTicket broker={def.id} venueName={def.name} />
+                    ) : null}
+
                   </motion.div>
                 );
               })}
