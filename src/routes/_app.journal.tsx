@@ -25,6 +25,8 @@ import {
   HeartPulse,
 } from "lucide-react";
 import { MentalStatePanel, upsertMentalEntry, SCORE_META, loadMental, type MentalEntry } from "@/components/MentalStatePanel";
+import JournalReviewPanel from "@/components/JournalReviewPanel";
+
 import { exportMyData } from "@/lib/privacy.functions";
 import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
 
@@ -489,7 +491,21 @@ function JournalPage() {
       )}
 
       {tab === "insights" && (
-        <InsightsPanel trades={sortedTrades} />
+        <div className="space-y-4">
+          <JournalReviewPanel
+            trades={sortedTrades.map((t) => ({
+              date: t.date,
+              symbol: t.symbol,
+              side: t.side,
+              pnl: tradePnl(t),
+              rr: tradeRR(t) ?? undefined,
+              notes: t.notes || undefined,
+              followedPlan: t.ruleBroken === undefined ? undefined : !t.ruleBroken,
+            }))}
+            mental={loadMental().map((m) => ({ date: m.date, score: m.score, mood: m.mood }))}
+          />
+          <InsightsPanel trades={sortedTrades} />
+        </div>
       )}
 
       {tab === "mental" && (

@@ -14,6 +14,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { runHistoricalBacktest, type BacktestResponse } from "@/lib/backtest/backtest.functions";
+import StrategyEdgePanel from "@/components/StrategyEdgePanel";
 import { BACKTEST_SYMBOLS, BACKTEST_TIMEFRAMES, TIMEFRAME_LABEL, type BacktestTimeframe } from "@/lib/backtest/catalog";
 import type { BtBucket, BtResult } from "@/lib/backtest/engine";
 
@@ -225,6 +226,8 @@ function BacktestPage() {
         description="Replay the signal rules bar by bar over past price history. Signals fill at the next bar's open and exits walk forward one bar at a time, so nothing uses future data."
       />
 
+
+      <StrategyEdgePanel />
 
       <div className="rounded-xl border border-border bg-card p-4">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
