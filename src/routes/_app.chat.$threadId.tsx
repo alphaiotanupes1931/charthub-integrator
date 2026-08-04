@@ -47,6 +47,7 @@ function ChatThread() {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
+    writeLastThreadId(threadId);
     setInitialMessages(null);
     getMsgs({ data: { threadId } })
       .then((rows) => setInitialMessages(rows as UIMessage[]))
