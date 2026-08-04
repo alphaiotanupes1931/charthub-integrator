@@ -14,7 +14,7 @@ import { ChartConceptOverlay } from "@/components/ConceptDiagram";
 import { ChartSignalCards } from "@/components/ChartSignalCards";
 import { TodaysRecommendation } from "@/components/TodaysRecommendation";
 import { SCAN_LENSES, readActiveLensId, writeActiveLensId, findLens, type ScanLensId } from "@/lib/scanLens";
-import { readActiveCoach, writeActiveCoach, COACH_KEY, writeLastChart } from "@/lib/chat-client";
+import { readActiveCoach, writeActiveCoach, COACH_KEY, writeLastChart, readLastThreadId, writeLastThreadId } from "@/lib/chat-client";
 import { voiceForCoach } from "@/lib/coachVoices";
 import { COACH_ICON_META, DEFAULT_COACH_ICON } from "@/lib/coachMeta";
 import { runResearchPlan } from "@/lib/agents/research.functions";
@@ -593,11 +593,15 @@ function Dashboard() {
     getModel().then(setActiveModel).catch(() => setActiveModel(null));
   }, [getModel]);
   const [chatPanelView, setChatPanelView] = useState<"conversation" | "history">("conversation");
-  const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
+  const [activeThreadId, setActiveThreadId] = useState<string | null>(() => readLastThreadId());
   const [rightOpen, setRightOpen] = useState(true);
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
   const viewMenuRef = useRef<HTMLDivElement>(null);
   const [panelWidth, setPanelWidth] = useState<"narrow" | "default" | "wide">("default");
+
+  useEffect(() => {
+    if (activeThreadId) writeLastThreadId(activeThreadId);
+  }, [activeThreadId]);
 
   const [chartTab, setChartTab] = useState<"live" | "setup">("live");
   // Mobile-only: which pane is visible full-height (chart / scan / chat). On >=lg
