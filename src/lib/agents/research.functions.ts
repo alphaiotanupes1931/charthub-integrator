@@ -16,6 +16,8 @@ const Input = z.object({
   ticker: z.string().min(1).max(20),
   interval: z.string().min(1).max(4),
   lensDesc: z.string().max(500).optional(),
+  strategyDesc: z.string().max(800).optional(),
+  coach: z.string().max(60).optional(),
 });
 
 export const runResearchPlan = createServerFn({ method: "POST" })
@@ -94,6 +96,6 @@ export const runResearchPlan = createServerFn({ method: "POST" })
     } catch { /* memory is best-effort */ }
 
     const memo = await runResearch(apiKey, snap);
-    const plan = await runPlanner(apiKey, snap, memo, data.lensDesc, hermesPrompt || undefined);
+    const plan = await runPlanner(apiKey, snap, memo, data.lensDesc, hermesPrompt || undefined, data.strategyDesc, data.coach);
     return plan;
   });

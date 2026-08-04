@@ -370,7 +370,15 @@ function mtfBlock(snap: MarketSnapshot): string {
   ].filter(Boolean).join("\n");
 }
 
-function memoBlock(memo: ResearchMemo, snap: MarketSnapshot, lensDesc?: string): string {
+const COACH_TONE: Record<string, string> = {
+  "The Analyst": "Write the thesis like an institutional desk note: measured, data-led, no hype.",
+  "The Disciplinarian": "Write the thesis as rules enforcement: if a rule is unmet, say it plainly and refuse the trade.",
+  "The Mentor": "Write the thesis so it teaches the why behind the level, in plain language.",
+  "The Minimalist": "Write the thesis in as few words as possible. Only take obvious setups; downgrade anything marginal.",
+  "The Psychologist": "Write the thesis with a note on the emotional trap this setup invites (chasing, revenge, fear of missing).",
+};
+
+function memoBlock(memo: ResearchMemo, snap: MarketSnapshot, lensDesc?: string, strategyDesc?: string): string {
   const notes = memo.notes.map(n => `- ${n.role.toUpperCase()} (${n.bias}, ${n.confidence}%): ${n.summary}`).join("\n");
   return [
     `Ticker: ${snap.ticker} | Interval: ${snap.interval} | Last: ${snap.lastPrice} | ATR14: ${snap.stats.atr14.toFixed(4)}`,
@@ -379,6 +387,7 @@ function memoBlock(memo: ResearchMemo, snap: MarketSnapshot, lensDesc?: string):
     mtfBlock(snap),
     formatOrderFlow(snap.orderFlow),
     lensDesc ? `Scan lens focus: ${lensDesc}` : "",
+    strategyDesc ? `Active strategy playbook (grade the setup against these rules): ${strategyDesc}` : "The trader has no active strategy selected; grade on structure alone.",
     "Analyst notes:",
     notes,
   ].filter(Boolean).join("\n");
@@ -390,6 +399,8 @@ export async function runPlanner(
   memo: ResearchMemo,
   lensDesc?: string,
   hermesMemory?: string,
+  strategyDesc?: string,
+  coach?: string,
 ): Promise<TradePlan> {
   const provider = createAiGatewayProvider(apiKey);
 
@@ -411,8 +422,9 @@ export async function runPlanner(
     // calendar unavailable; plan on price structure alone
   }
 
-  const ctx = memoBlock(memo, snap, lensDesc) + (newsBlock ? `\n\n${newsBlock}` : "");
-  const memoryLine = hermesMemory ? `\n\n${hermesMemory}` : "";
+  const ctx = memoBlock(memo, snap, lensDesc, strategyDesc) + (newsBlock ? `\n\n${newsBlock}` : "");
+  const memoryLine = (hermesMemory ? `\n\n${hermesMemory}` : "")
+    + (coach && COACH_TONE[coach] ? `\n\nCoach voice: you are ${coach}. ${COACH_TONE[coach]}` : "");
 
   let plan: RawPlan;
   try {
