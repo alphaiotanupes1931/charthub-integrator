@@ -10,6 +10,8 @@ import { getSnapshot } from "./market-data.server";
 import { runResearch } from "./research.server";
 import { runPlanner } from "./planner.server";
 import { formatLessonsForPrompt, type HermesLessonRow } from "./hermes.server";
+import { formatPerfForPrompt } from "@/lib/strategy-perf.shared";
+
 import type { TradePlan } from "./types";
 
 const Input = z.object({
