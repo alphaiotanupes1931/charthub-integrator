@@ -193,7 +193,8 @@ function StrategiesPage() {
                   {isActive ? (<><CheckCircle2 className="h-4 w-4" /> Selected</>) : "Select strategy"}
                 </button>
                 <Link
-                  to={`/strategies/${s.slug}`}
+                  to="/strategies/$strategyId"
+                  params={{ strategyId: s.slug }}
                   className="rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-primary/40"
                 >
                   Details
