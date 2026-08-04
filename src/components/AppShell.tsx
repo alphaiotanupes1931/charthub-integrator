@@ -32,6 +32,8 @@ import {
   Trophy,
   Bot,
   Newspaper,
+  Plug,
+
 } from "lucide-react";
 import { LogoLink } from "@/components/LogoLink";
 import { Tutorial } from "@/components/Tutorial";
