@@ -13,6 +13,8 @@ import { DashboardChatPanel, type DashboardChatHandle } from "@/components/Dashb
 import { ChartConceptOverlay } from "@/components/ConceptDiagram";
 import { ChartSignalCards } from "@/components/ChartSignalCards";
 import { TodaysRecommendation } from "@/components/TodaysRecommendation";
+import { findStrategyByName } from "@/lib/customStrategies";
+import { readActiveStrategy } from "@/lib/chat-client";
 import { SCAN_LENSES, readActiveLensId, writeActiveLensId, findLens, type ScanLensId } from "@/lib/scanLens";
 import { clearLastThreadId, readActiveCoach, writeActiveCoach, COACH_KEY, writeLastChart, readLastThreadId, writeLastThreadId } from "@/lib/chat-client";
 import { voiceForCoach } from "@/lib/coachVoices";
@@ -1005,7 +1007,7 @@ function Dashboard() {
     // Always post the scan prompt to chat so the user sees activity immediately.
     sendToChat(prompt, { focusChat: from === "chat", targetThreadId: scanThreadId });
 
-    runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
+    runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}`, strategyDesc: activeStrategyDesc(), coach: readActiveCoach() } })
       .then((plan) => {
         const r = plan as ScanResult;
         setResult(r);
@@ -1547,7 +1549,7 @@ function Dashboard() {
                     setTimeout(() => { chatRef.current?.attach(file, attachPrompt); }, 0);
                     setScanning(true);
                     const lens = findLens(lensId);
-                    runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
+                    runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}`, strategyDesc: activeStrategyDesc(), coach: readActiveCoach() } })
                       .then((plan) => { const r = plan as ScanResult; setResult(r); applyPlanToSignalCards(r); })
                       .catch(() => { /* coach chat still runs the vision analysis */ })
                       .finally(() => setScanning(false));
@@ -1672,7 +1674,7 @@ function Dashboard() {
                 setTimeout(() => { chatRef.current?.attach(file, attachPrompt); }, 0);
                 setScanning(true);
                 const lens = findLens(lensId);
-                runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}` } })
+                runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}`, strategyDesc: activeStrategyDesc(), coach: readActiveCoach() } })
                   .then((plan) => { const r = plan as ScanResult; setResult(r); applyPlanToSignalCards(r); })
                   .catch(() => { /* coach chat still runs the vision analysis */ })
                   .finally(() => setScanning(false));
