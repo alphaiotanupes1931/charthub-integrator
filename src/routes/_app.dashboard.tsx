@@ -14,7 +14,7 @@ import { ChartConceptOverlay } from "@/components/ConceptDiagram";
 import { ChartSignalCards } from "@/components/ChartSignalCards";
 import { TodaysRecommendation } from "@/components/TodaysRecommendation";
 import { SCAN_LENSES, readActiveLensId, writeActiveLensId, findLens, type ScanLensId } from "@/lib/scanLens";
-import { readActiveCoach, writeActiveCoach, COACH_KEY, writeLastChart, readLastThreadId, writeLastThreadId } from "@/lib/chat-client";
+import { clearLastThreadId, readActiveCoach, writeActiveCoach, COACH_KEY, writeLastChart, readLastThreadId, writeLastThreadId } from "@/lib/chat-client";
 import { voiceForCoach } from "@/lib/coachVoices";
 import { COACH_ICON_META, DEFAULT_COACH_ICON } from "@/lib/coachMeta";
 import { runResearchPlan } from "@/lib/agents/research.functions";
@@ -1907,7 +1907,10 @@ function ChatHistoryList({
     try {
       await delFn({ data: { threadId: id } });
       setThreads((prev) => prev.filter((t) => t.id !== id));
-      if (activeThreadId === id) onNew(null);
+      if (activeThreadId === id) {
+        clearLastThreadId(id);
+        onNew(null);
+      }
     } catch { toast.error("Could not delete conversation"); }
   };
 

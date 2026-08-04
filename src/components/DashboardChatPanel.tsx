@@ -23,7 +23,7 @@ import { Shimmer } from "@/components/ai-elements/shimmer";
 import { supabase } from "@/integrations/supabase/client";
 import { useTimezone, formatInTimezone } from "@/hooks/useTimezone";
 import { getOrCreateDashboardThread, getChatMessages, getActiveModel, type ActiveModelInfo } from "@/lib/chat.functions";
-import { readJournal, readActiveCoach, writeActiveCoach, readActiveStrategy, writeLastThreadId } from "@/lib/chat-client";
+import { clearLastThreadId, readJournal, readActiveCoach, writeActiveCoach, readActiveStrategy, writeLastThreadId } from "@/lib/chat-client";
 import { findStrategyByName } from "@/lib/customStrategies";
 import { readActiveLensId, findLens } from "@/lib/scanLens";
 import { useCoachVoice } from "@/hooks/useCoachVoice";
@@ -181,8 +181,11 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
           }
         } catch (e) {
           console.warn("[chat] load thread failed", e);
+          clearLastThreadId(threadIdOverride);
         }
-        return;
+        if (!cancelled && activeThreadRef.current === threadIdOverride) {
+          activeThreadRef.current = null;
+        }
       }
 
       // Default: get-or-create the dashboard scratch thread with retry.
