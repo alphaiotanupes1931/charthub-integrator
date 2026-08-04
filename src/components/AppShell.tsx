@@ -33,6 +33,7 @@ import {
   Bot,
   Newspaper,
   Plug,
+  ChevronDown,
 
 } from "lucide-react";
 import { LogoLink } from "@/components/LogoLink";
