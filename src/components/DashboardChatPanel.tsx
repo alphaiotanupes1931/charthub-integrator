@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { Link } from "@tanstack/react-router";
-import { MessageSquare, ExternalLink, X, Minus, Volume2, VolumeX, Crosshair, Square, Paperclip, ImageIcon, ThumbsUp, ThumbsDown, HelpCircle } from "lucide-react";
+import { MessageSquare, ExternalLink, X, Minus, Volume2, VolumeX, Crosshair, Square, Paperclip, ImageIcon, ThumbsUp, ThumbsDown, HelpCircle, BookOpen, Zap } from "lucide-react";
 import { recordHermesFeedback } from "@/lib/agents/hermes.functions";
 import { COACH_ICON_META, DEFAULT_COACH_ICON } from "@/lib/coachMeta";
 import { useFirstWeek } from "@/hooks/useFirstWeek";
@@ -35,6 +35,7 @@ import { parseAiPayload, type ChartAnnotation, type ChartGrade, type ConceptRef 
 import { coalesceUiMessageStream, textFromUiMessageParts } from "@/lib/chat-stream";
 import { ConceptDiagram } from "@/components/ConceptDiagram";
 import { buildLearningPromptBlock } from "@/lib/signalLearning";
+import { takeTrade } from "@/lib/signalHistory";
 
 export type DashboardChatHandle = {
   scan: (prompt: string, targetThreadId?: string | null) => void;
@@ -740,7 +741,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                 return (
                   <Message key={m.id} from={m.role}>
                     <div className="flex flex-col gap-2 max-w-full">
-                      {g && <GradeCard grade={g} lastPrice={chart?.snapshot?.lastPrice} />}
+                      {g && <GradeCard grade={g} lastPrice={chart?.snapshot?.lastPrice} symbol={chart?.ticker} interval={chart?.interval} />}
                       {summary && (
                         <div className="text-sm text-foreground/90 leading-snug">{summary}</div>
                       )}
