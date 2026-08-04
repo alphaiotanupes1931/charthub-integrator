@@ -7,15 +7,29 @@ import { placeVenueOrder } from "@/lib/brokers.functions";
  * Minimal manual order ticket for a connected venue that supports routing.
  * Credentials stay server-side; this only sends order intent.
  */
-export function VenueOrderTicket({ broker, venueName }: { broker: string; venueName: string }) {
+export function VenueOrderTicket({
+  broker,
+  venueName,
+  initial,
+}: {
+  broker: string;
+  venueName: string;
+  initial?: {
+    symbol?: string;
+    side?: "buy" | "sell";
+    limitPrice?: string;
+    stopLoss?: string;
+    takeProfit?: string;
+  };
+}) {
   const place = useServerFn(placeVenueOrder);
-  const [symbol, setSymbol] = useState("");
-  const [side, setSide] = useState<"buy" | "sell">("buy");
+  const [symbol, setSymbol] = useState(initial?.symbol ?? "");
+  const [side, setSide] = useState<"buy" | "sell">(initial?.side ?? "buy");
   const [qty, setQty] = useState("");
   const [type, setType] = useState<"market" | "limit">("market");
-  const [limitPrice, setLimitPrice] = useState("");
-  const [stopLoss, setStopLoss] = useState("");
-  const [takeProfit, setTakeProfit] = useState("");
+  const [limitPrice, setLimitPrice] = useState(initial?.limitPrice ?? "");
+  const [stopLoss, setStopLoss] = useState(initial?.stopLoss ?? "");
+  const [takeProfit, setTakeProfit] = useState(initial?.takeProfit ?? "");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
