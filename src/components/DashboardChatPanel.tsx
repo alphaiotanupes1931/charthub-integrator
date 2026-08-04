@@ -225,11 +225,34 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
 });
 
 
+// Price display helpers. The model streams raw floats (e.g. 3991.1399999999994)
+// which look broken in the card, so every level is rounded to the instrument's
+// tick precision before it is stored or rendered.
+function decimalsForPrice(px: number): number {
+  if (px >= 1000) return 2;
+  if (px >= 10) return 3;
+  if (px >= 1) return 4;
+  return 5;
+}
+function roundPrice(n: number, px: number): number {
+  const d = decimalsForPrice(px);
+  return Number(n.toFixed(d));
+}
+function formatPrice(n?: number, ref?: number): string {
+  if (typeof n !== "number" || !isFinite(n)) return "-";
+  const d = decimalsForPrice(ref && isFinite(ref) && ref > 0 ? ref : n);
+  return n.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
+}
+
 function sanitizeGradeForPrice(grade: ChartGrade, lastPrice?: number): ChartGrade {
   const bias = grade.bias ?? "neutral";
   if (!lastPrice || !isFinite(lastPrice) || lastPrice <= 0 || typeof grade.entry !== "number" || typeof grade.stop !== "number") return grade;
   if (!isFinite(grade.entry) || !isFinite(grade.stop)) return grade;
-  const riskBase = Math.max(Math.abs(grade.entry - grade.stop), lastPrice * 0.001);
+  // Risk and pullback distance both get a sane ceiling so the chat card can
+  // never show an entry parked far away from where price actually is.
+  const maxRisk = lastPrice * 0.006;
+  const maxGap = lastPrice * 0.004;
+  const riskBase = Math.min(Math.max(Math.abs(grade.entry - grade.stop), lastPrice * 0.001), maxRisk);
   const tol = Math.max(lastPrice * 0.0001, riskBase * 0.05);
   let entry = grade.entry;
   let stop = grade.stop;
@@ -237,7 +260,10 @@ function sanitizeGradeForPrice(grade: ChartGrade, lastPrice?: number): ChartGrad
   let tp2 = grade.tp2;
   if (bias === "long" && entry > lastPrice + tol) entry = lastPrice;
   if (bias === "short" && entry < lastPrice - tol) entry = lastPrice;
-  const risk = Math.max(Math.abs(entry - stop), lastPrice * 0.001);
+  // Keep the entry a realistic pullback away from price.
+  if (bias === "long" && lastPrice - entry > maxGap) entry = lastPrice - maxGap;
+  if (bias === "short" && entry - lastPrice > maxGap) entry = lastPrice + maxGap;
+  const risk = Math.min(Math.max(Math.abs(entry - stop), lastPrice * 0.001), maxRisk);
   if (bias === "long") {
     stop = entry - risk;
     tp1 = typeof tp1 === "number" && isFinite(tp1) ? Math.max(tp1, entry + risk * 1.5) : entry + risk * 1.5;
@@ -247,8 +273,10 @@ function sanitizeGradeForPrice(grade: ChartGrade, lastPrice?: number): ChartGrad
     tp1 = typeof tp1 === "number" && isFinite(tp1) ? Math.min(tp1, entry - risk * 1.5) : entry - risk * 1.5;
     tp2 = typeof tp2 === "number" && isFinite(tp2) ? Math.min(tp2, tp1 - risk * 1.5, entry - risk * 3) : entry - risk * 3;
   }
-  return { ...grade, entry, stop, tp1, tp2 };
+  const r = (n?: number) => (typeof n === "number" && isFinite(n) ? roundPrice(n, lastPrice) : n);
+  return { ...grade, entry: r(entry), stop: r(stop), tp1: r(tp1), tp2: r(tp2) };
 }
+
 
 function orderTypeFor(grade: ChartGrade, lastPrice?: number): string | null {
   if (!lastPrice || typeof grade.entry !== "number" || !isFinite(lastPrice) || !isFinite(grade.entry)) return null;
