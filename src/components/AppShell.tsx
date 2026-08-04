@@ -156,6 +156,35 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { isAdmin, profile } = useProfile();
   const nav = NAV.filter((n) => n.to !== "/admin" || isAdmin);
 
+  // Which sidebar groups are expanded. Persisted, and the group holding the
+  // active route is always opened so the user never loses their place.
+  const [openGroups, setOpenGroups] = useState<string[]>(() => {
+    try {
+      const raw = typeof window !== "undefined" ? localStorage.getItem(GROUP_STORAGE_KEY) : null;
+      if (raw) return JSON.parse(raw) as string[];
+    } catch { /* ignore */ }
+    return ["trade"];
+  });
+
+  useEffect(() => {
+    const owning = NAV_GROUPS.find((g) =>
+      g.items.some((i) => pathname === i.to || pathname.startsWith(i.to + "/")),
+    );
+    if (owning && !openGroups.includes(owning.id)) {
+      setOpenGroups((prev) => [...prev, owning.id]);
+    }
+  }, [pathname, openGroups]);
+
+  const toggleGroup = (id: string) => {
+    setOpenGroups((prev) => {
+      const next = prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id];
+      try { localStorage.setItem(GROUP_STORAGE_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+  };
+
+
+
 
   async function handleSignOut() {
     try {
