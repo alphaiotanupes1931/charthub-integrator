@@ -57,3 +57,21 @@ export function writeLastChart(c: LastChart) {
   if (typeof window === "undefined") return;
   try { window.localStorage.setItem(LAST_CHART_KEY, JSON.stringify(c)); } catch { /* ignore */ }
 }
+
+const LAST_THREAD_KEY = "trademind.lastThread.v1";
+export function readLastThreadId(): string | null {
+  if (typeof window === "undefined") return null;
+  try { return window.localStorage.getItem(LAST_THREAD_KEY); } catch { return null; }
+}
+export function writeLastThreadId(id: string) {
+  if (typeof window === "undefined") return;
+  try { window.localStorage.setItem(LAST_THREAD_KEY, id); } catch { /* ignore */ }
+}
+export function clearLastThreadId(id?: string) {
+  if (typeof window === "undefined") return;
+  try {
+    if (!id || window.localStorage.getItem(LAST_THREAD_KEY) === id) {
+      window.localStorage.removeItem(LAST_THREAD_KEY);
+    }
+  } catch { /* ignore */ }
+}
