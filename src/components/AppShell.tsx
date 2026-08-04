@@ -50,32 +50,91 @@ type NavItem = {
   accent?: boolean;
 };
 
-const NAV: NavItem[] = [
-  { to: "/dashboard",       label: "Dashboard",       icon: LayoutDashboard },
-  { to: "/first-week",      label: "First Week",      icon: Footprints },
-  { to: "/guide",           label: "Guide",           icon: BookOpen },
-  { to: "/academy",         label: "Academy",         icon: GraduationCap },
-  { to: "/flashcards",      label: "Flashcards",      icon: BookOpen },
-  { to: "/journal",         label: "Trade Journal",   icon: NotebookPen },
-  { to: "/strategies",      label: "Strategies",      icon: Library },
-  { to: "/coaches",         label: "AI Coaches",      icon: Users },
-  { to: "/analytics",       label: "Analytics",       icon: BarChart3 },
-  { to: "/signals",         label: "AI Signals",      icon: Radar },
-  { to: "/memory",          label: "Trading Memory",  icon: Brain },
-  { to: "/alerts",          label: "Price Alerts",    icon: Bell },
-  { to: "/calculator",      label: "Risk Calculator", icon: Calculator },
-  { to: "/testing",         label: "Testing",         icon: FlaskConical },
-  { to: "/broker",          label: "Broker (OANDA)",  icon: Building2 },
-  { to: "/connections",     label: "Connections",     icon: Plug },
+type NavGroup = {
+  id: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  items: NavItem[];
+};
 
-  { to: "/autopilot",       label: "Autopilot",       icon: Bot },
-  { to: "/news",            label: "News",            icon: Newspaper },
-  { to: "/discord",         label: "Discord",         icon: MessageSquare },
-  { to: "/leaderboard",     label: "Leaderboard",     icon: Trophy },
-  { to: "/settings",        label: "Settings",        icon: SettingsIcon },
-  
-  { to: "/admin",           label: "Admin",           icon: ShieldCheck, accent: true },
+// Pinned links, always visible at the top of the sidebar.
+const TOP_NAV: NavItem[] = [
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
 ];
+
+// Everything else is nested inside a small number of groups so the sidebar
+// stays short. Groups auto-open when the active route lives inside them.
+const NAV_GROUPS: NavGroup[] = [
+  {
+    id: "trade",
+    label: "Trade",
+    icon: Radar,
+    items: [
+      { to: "/signals",    label: "AI Signals",      icon: Radar },
+      { to: "/journal",    label: "Trade Journal",   icon: NotebookPen },
+      { to: "/alerts",     label: "Price Alerts",    icon: Bell },
+      { to: "/calculator", label: "Risk Calculator", icon: Calculator },
+      { to: "/autopilot",  label: "Autopilot",       icon: Bot },
+      { to: "/testing",    label: "Paper Testing",   icon: FlaskConical },
+    ],
+  },
+  {
+    id: "insights",
+    label: "Insights",
+    icon: BarChart3,
+    items: [
+      { to: "/analytics",   label: "Analytics",      icon: BarChart3 },
+      { to: "/memory",      label: "Trading Memory", icon: Brain },
+      { to: "/news",        label: "News",           icon: Newspaper },
+      { to: "/leaderboard", label: "Leaderboard",    icon: Trophy },
+    ],
+  },
+  {
+    id: "coaching",
+    label: "Coaching",
+    icon: Users,
+    items: [
+      { to: "/coaches",    label: "AI Coaches", icon: Users },
+      { to: "/strategies", label: "Strategies", icon: Library },
+    ],
+  },
+  {
+    id: "learn",
+    label: "Learn",
+    icon: GraduationCap,
+    items: [
+      { to: "/academy",    label: "Academy",    icon: GraduationCap },
+      { to: "/flashcards", label: "Flashcards", icon: BookOpen },
+      { to: "/guide",      label: "Guide",      icon: BookOpen },
+      { to: "/first-week", label: "First Week", icon: Footprints },
+    ],
+  },
+  {
+    id: "accounts",
+    label: "Accounts",
+    icon: Plug,
+    items: [
+      { to: "/connections", label: "Broker Connections", icon: Plug },
+      { to: "/broker",      label: "OANDA",              icon: Building2 },
+      { to: "/discord",     label: "Discord",            icon: MessageSquare },
+    ],
+  },
+];
+
+// Pinned links at the bottom.
+const BOTTOM_NAV: NavItem[] = [
+  { to: "/settings", label: "Settings", icon: SettingsIcon },
+  { to: "/admin",    label: "Admin",    icon: ShieldCheck, accent: true },
+];
+
+// Flat list used by search, the collapsed icon rail, and the mobile drawer.
+const NAV: NavItem[] = [
+  ...TOP_NAV,
+  ...NAV_GROUPS.flatMap((g) => g.items),
+  ...BOTTOM_NAV,
+];
+
+const GROUP_STORAGE_KEY = "trademind.sidebar.groups.v1";
 
 // Robinhood-style bottom tab bar (mobile only). Four primary tabs + More.
 const MOBILE_TABS: { to: string; label: string; icon: typeof LayoutDashboard }[] = [
