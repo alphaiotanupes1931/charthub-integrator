@@ -312,10 +312,24 @@ function ConnectionsPage() {
                             >
                               <Trash2 className="h-3.5 w-3.5" /> Disconnect
                             </button>
+                            {def.trading ? (
+                              <button
+                                type="button"
+                                onClick={() => setTicketId(ticketId === def.id ? null : def.id)}
+                                className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-xs"
+                              >
+                                <Send className="h-3.5 w-3.5" />
+                                {ticketId === def.id ? "Hide ticket" : "Send order"}
+                              </button>
+                            ) : null}
                           </>
                         ) : null}
                       </div>
                     )}
+                    {conn && def.trading && ticketId === def.id && !isOpen ? (
+                      <VenueOrderTicket broker={def.id} venueName={def.name} />
+                    ) : null}
+
                   </motion.div>
                 );
               })}
