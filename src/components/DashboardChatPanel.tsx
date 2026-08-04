@@ -340,6 +340,43 @@ function GradeCard({ grade, lastPrice, symbol, interval }: { grade: ChartGrade; 
           )}
         </div>
       )}
+      {(grade.bias === "long" || grade.bias === "short") && (
+        <div className="flex items-center gap-2 border-t border-border/60 p-2">
+          <button
+            type="button"
+            onClick={() =>
+              takeTrade({
+                symbol: symbol ?? "",
+                bias: grade.bias === "long" ? "Long" : "Short",
+                interval,
+                grade: grade.grade,
+                entry: grade.entry,
+                stop: grade.stop,
+                tp1: grade.tp1,
+                tp2: grade.tp2,
+              })
+            }
+            className="inline-flex h-7 items-center gap-1 rounded px-2 text-[10px] font-bold uppercase tracking-wider bg-primary text-primary-foreground hover:opacity-90"
+            title="Log this setup in your journal as a trade you are taking"
+          >
+            <BookOpen className="h-3 w-3" /> Take trade
+          </button>
+          <Link
+            to="/broker"
+            search={{
+              symbol: symbol ?? "",
+              side: grade.bias === "long" ? "long" : "short",
+              entry: grade.entry ?? "",
+              stop: grade.stop ?? "",
+              tp: grade.tp1 ?? "",
+            } as never}
+            className="inline-flex h-7 items-center gap-1 rounded border border-border px-2 text-[10px] font-bold uppercase tracking-wider text-foreground hover:bg-muted/60"
+            title="Send this setup to your broker"
+          >
+            <Zap className="h-3 w-3" /> Broker
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
