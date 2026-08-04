@@ -1028,7 +1028,7 @@ function Dashboard() {
     // Always post the scan prompt to chat so the user sees activity immediately.
     sendToChat(prompt, { focusChat: from === "chat", targetThreadId: scanThreadId });
 
-    runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}`, strategyDesc: activeStrategyDesc(), coach: readActiveCoach() } })
+    runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}`, strategyDesc: activeStrategyDesc(), strategyId: readActiveStrategy() ?? undefined, coach: readActiveCoach() } })
       .then((plan) => {
         const r = plan as ScanResult;
         setResult(r);
@@ -1570,7 +1570,7 @@ function Dashboard() {
                     setTimeout(() => { chatRef.current?.attach(file, attachPrompt); }, 0);
                     setScanning(true);
                     const lens = findLens(lensId);
-                    runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}`, strategyDesc: activeStrategyDesc(), coach: readActiveCoach() } })
+                    runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}`, strategyDesc: activeStrategyDesc(), strategyId: readActiveStrategy() ?? undefined, coach: readActiveCoach() } })
                       .then((plan) => { const r = plan as ScanResult; setResult(r); applyPlanToSignalCards(r); })
                       .catch(() => { /* coach chat still runs the vision analysis */ })
                       .finally(() => setScanning(false));
@@ -1695,7 +1695,7 @@ function Dashboard() {
                 setTimeout(() => { chatRef.current?.attach(file, attachPrompt); }, 0);
                 setScanning(true);
                 const lens = findLens(lensId);
-                runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}`, strategyDesc: activeStrategyDesc(), coach: readActiveCoach() } })
+                runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}`, strategyDesc: activeStrategyDesc(), strategyId: readActiveStrategy() ?? undefined, coach: readActiveCoach() } })
                   .then((plan) => { const r = plan as ScanResult; setResult(r); applyPlanToSignalCards(r); })
                   .catch(() => { /* coach chat still runs the vision analysis */ })
                   .finally(() => setScanning(false));
