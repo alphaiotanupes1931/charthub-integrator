@@ -21,7 +21,7 @@ import {
   PromptInputSubmit,
 } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
-import { readJournal, readActiveCoach, readActiveStrategy, readLastChart, type LastChart } from "@/lib/chat-client";
+import { readJournal, readActiveCoach, readActiveStrategy, readLastChart, writeLastThreadId, type LastChart } from "@/lib/chat-client";
 import { findStrategyByName } from "@/lib/customStrategies";
 import { findLens, readActiveLensId } from "@/lib/scanLens";
 import { getChatMessages, getActiveModel, type ActiveModelInfo } from "@/lib/chat.functions";
@@ -47,6 +47,7 @@ function ChatThread() {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
+    writeLastThreadId(threadId);
     setInitialMessages(null);
     getMsgs({ data: { threadId } })
       .then((rows) => setInitialMessages(rows as UIMessage[]))
