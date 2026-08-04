@@ -210,28 +210,32 @@ export function AppShell({ children }: { children: ReactNode }) {
       )}
 
       <nav className="flex-1 px-2 py-2 space-y-0.5 overflow-y-auto">
-        {nav.map((item) => {
-          const active = pathname === item.to || pathname.startsWith(item.to + "/");
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.to}
-              to={item.to}
-              className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200 ${
-                active
-                  ? "bg-gradient-to-r from-primary/15 via-primary/8 to-transparent text-primary ring-gold"
-                  : item.accent
-                  ? "text-primary/80 hover:bg-accent/40"
-                  : "text-foreground/80 hover:bg-accent/40 hover:text-foreground"
-              }`}
-              title={item.label}
-            >
-              {active && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-r bg-gold-gradient" />}
-              <Icon className={`h-4 w-4 shrink-0 ${active ? "drop-shadow-[0_0_6px_color-mix(in_oklab,var(--gold)_60%,transparent)]" : ""}`} />
-              {!collapsed && <span className="font-medium truncate">{item.label}</span>}
-            </Link>
-          );
-        })}
+        {collapsed ? (
+          // Collapsed rail: flat icon list, no group headers.
+          nav.map((item) => (
+            <NavLinkRow key={item.to} item={item} pathname={pathname} collapsed />
+          ))
+        ) : (
+          <>
+            {TOP_NAV.map((item) => (
+              <NavLinkRow key={item.to} item={item} pathname={pathname} />
+            ))}
+            {NAV_GROUPS.map((group) => (
+              <NavGroupBlock
+                key={group.id}
+                group={group}
+                pathname={pathname}
+                open={openGroups.includes(group.id)}
+                onToggle={() => toggleGroup(group.id)}
+              />
+            ))}
+            <div className="pt-2 mt-2 border-t border-border/60 space-y-0.5">
+              {BOTTOM_NAV.filter((n) => n.to !== "/admin" || isAdmin).map((item) => (
+                <NavLinkRow key={item.to} item={item} pathname={pathname} />
+              ))}
+            </div>
+          </>
+        )}
       </nav>
 
       {!collapsed ? (
