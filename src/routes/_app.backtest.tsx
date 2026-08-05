@@ -30,7 +30,7 @@ type BacktestSearch = {
 export const Route = createFileRoute("/_app/backtest")({
   validateSearch: (s: Record<string, unknown>): BacktestSearch => ({
     symbol: typeof s.symbol === "string" ? s.symbol : undefined,
-    tf: typeof s.tf === "string" ? s.tf : undefined,
+    tf: s.tf != null ? String(s.tf) : undefined,
     side: typeof s.side === "string" ? s.side : undefined,
     run: s.run != null && !Number.isNaN(Number(s.run)) ? Number(s.run) : undefined,
   }),
