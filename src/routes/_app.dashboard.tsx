@@ -13,6 +13,7 @@ import { useCoachVoice } from "@/hooks/useCoachVoice";
 import { DashboardChatPanel, type DashboardChatHandle } from "@/components/DashboardChatPanel";
 import { ChartConceptOverlay } from "@/components/ConceptDiagram";
 import { ChartSignalCards } from "@/components/ChartSignalCards";
+import { LivePerformancePanel } from "@/components/LivePerformancePanel";
 import { TodaysRecommendation } from "@/components/TodaysRecommendation";
 import { findStrategyByName } from "@/lib/customStrategies";
 import { readActiveStrategy } from "@/lib/chat-client";
