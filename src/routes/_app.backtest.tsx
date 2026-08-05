@@ -264,6 +264,10 @@ function BacktestPage() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<BtResult | null>(null);
   const [bars, setBars] = useState<BtBar[]>([]);
+  const [saved, setSaved] = useState<SavedRun[]>([]);
+
+  // Saved runs are read after mount so server rendering and hydration match.
+  useEffect(() => setSaved(readSavedRuns()), []);
 
   const toggleSession = (s: string) =>
     setSessions((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
@@ -289,6 +293,21 @@ function BacktestPage() {
       if (res.ok) {
         setResult(res.result);
         setBars(res.bars);
+        setSaved(
+          saveRun({
+            symbol,
+            timeframe,
+            lookback,
+            minGrade,
+            direction,
+            riskPct: Number(riskPct),
+            rrTarget: Number(rrTarget),
+            atrStopMult: Number(atrStopMult),
+            maxHoldBars: Number(maxHoldBars),
+            sessions,
+            result: res.result,
+          }),
+        );
       }
       else {
         setResult(null);
@@ -301,6 +320,24 @@ function BacktestPage() {
       setBusy(false);
     }
   }, [run, symbol, timeframe, lookback, minGrade, direction, riskPct, rrTarget, atrStopMult, maxHoldBars, sessions]);
+
+  // Reopening a saved run restores its settings and stats. The replay needs
+  // bars, which are not stored, so re-run to get the candles back.
+  const openSaved = useCallback((r: SavedRun) => {
+    setSymbol(r.symbol);
+    setTimeframe(r.timeframe as BacktestTimeframe);
+    setLookback(r.lookback);
+    setMinGrade(r.minGrade);
+    setDirection(r.direction);
+    setRiskPct(String(r.riskPct));
+    setRrTarget(String(r.rrTarget));
+    setAtrStopMult(String(r.atrStopMult));
+    setMaxHoldBars(String(r.maxHoldBars));
+    setSessions(r.sessions);
+    setResult(r.result);
+    setBars([]);
+    setError(null);
+  }, []);
 
   // A scan card can deep link here with ?symbol=&tf=&side=&run=1: the fields are
   // prefilled above and the run fires once, then the flag is dropped from the URL.
