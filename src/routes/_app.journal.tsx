@@ -1370,6 +1370,43 @@ function TradeFormModal({
             </Field>
           )}
 
+          <div className="rounded-lg border border-border p-3 space-y-3">
+            <div className="text-sm font-semibold">Trade review checklist</div>
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={followedPlan}
+                  onChange={(e) => setFollowedPlan(e.target.checked)}
+                  className="h-4 w-4 rounded border-border"
+                />
+                <span>I followed my plan</span>
+              </label>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {(["yes", "no", "partial"] as const).map((g) => (
+                <button
+                  key={g}
+                  type="button"
+                  onClick={() => setGradeMatch(g)}
+                  className={`rounded-md border px-2 py-1.5 text-xs font-medium transition ${
+                    gradeMatch === g
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Grade match: {g}
+                </button>
+              ))}
+            </div>
+            <input
+              value={takeaway}
+              onChange={(e) => setTakeaway(e.target.value)}
+              placeholder="One takeaway from this trade (e.g. 'wait for confirmation')"
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
+          </div>
+
           <Field label="Notes">
             <textarea
               value={notes}
