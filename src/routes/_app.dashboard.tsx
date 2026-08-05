@@ -5,7 +5,7 @@ import { TradingViewChart } from "@/components/TradingViewChart";
 import { NativeChart, LEVEL_META, type LevelKey, type ChartSnapshot } from "@/components/NativeChart";
 
 import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
-import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Clock, MessageSquare, X, Plug, Maximize2, Square, Paperclip, ChevronUp, PanelRightClose, PanelRightOpen, BarChart3, ThumbsUp, ThumbsDown, Brain, LineChart, Settings2, Maximize, Minimize, BookOpen } from "lucide-react";
+import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Clock, MessageSquare, X, Plug, Maximize2, Square, Paperclip, ChevronUp, PanelRightClose, PanelRightOpen, BarChart3, ThumbsUp, ThumbsDown, Brain, LineChart, Settings2, Maximize, Minimize, BookOpen, FlaskConical } from "lucide-react";
 
 
 import { useCoachVoice } from "@/hooks/useCoachVoice";
@@ -1790,12 +1790,13 @@ function Dashboard() {
 }
 
 function ScanBody({
-  result, scanning, symbol, intervalLabel, lensId, runScan, onAttach, onStopScan, onStopVoice, voiceSpeaking,
+  result, scanning, symbol, intervalLabel, interval, lensId, runScan, onAttach, onStopScan, onStopVoice, voiceSpeaking,
 }: {
   result: ScanResult | null;
   scanning: boolean;
   symbol: Symbol;
   intervalLabel: string;
+  interval: string;
   lensId: ScanLensId;
   runScan: () => void;
   onAttach: (file: File) => void;
@@ -1842,6 +1843,7 @@ function ScanBody({
     <ScanTicket
       result={result!}
       symbol={symbol}
+      interval={interval}
       lensId={lensId}
       onRescan={runScan}
       onAttach={onAttach}
