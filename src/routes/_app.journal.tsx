@@ -1195,7 +1195,11 @@ function TradeFormModal({
     ruleBrokenNote: ruleBroken ? (ruleBrokenNote || undefined) : undefined,
     lossCategory: lossCategory || undefined,
     hasImage,
+    followedPlan: followedPlan || undefined,
+    gradeMatch: gradeMatch || undefined,
+    takeaway: takeaway.trim() || undefined,
     createdAt: editing?.createdAt ?? Date.now(),
+  };
   };
   const previewPnl = tradePnl(preview);
   const previewRR = tradeRR(preview);
