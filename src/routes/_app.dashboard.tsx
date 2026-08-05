@@ -27,6 +27,7 @@ import { listChatThreads, createChatThread, deleteChatThread, getActiveModel, ty
 import type { ResearchMemo, OrderFlow } from "@/lib/agents/types";
 import { Link } from "@tanstack/react-router";
 import { recordSignal, takeTrade } from "@/lib/signalHistory";
+import { formatJournalPerf } from "@/lib/journalStats";
 import { toast } from "sonner";
 
 // Scan context: the active strategy playbook is fed to the planner so the
