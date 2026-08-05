@@ -41,6 +41,8 @@ import { Tutorial } from "@/components/Tutorial";
 import { WelcomeBackGreeter, WelcomeBackProvider } from "@/components/WelcomeBackGreeter";
 import { useProfile } from "@/hooks/useProfile";
 import { NotificationBell } from "@/components/NotificationBell";
+import { NewsMarquee } from "@/components/NewsMarquee";
+
 import { OnboardingTour } from "@/components/OnboardingTour";
 
 
