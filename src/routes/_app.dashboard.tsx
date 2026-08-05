@@ -1,3 +1,4 @@
+import { PageInstructions } from "@/components/PageInstructions";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -5,7 +6,7 @@ import { TradingViewChart } from "@/components/TradingViewChart";
 import { NativeChart, LEVEL_META, type LevelKey, type ChartSnapshot } from "@/components/NativeChart";
 
 import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
-import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Clock, MessageSquare, X, Plug, Maximize2, Square, Paperclip, ChevronUp, PanelRightClose, PanelRightOpen, BarChart3, ThumbsUp, ThumbsDown, Brain, LineChart, Settings2, Maximize, Minimize, BookOpen } from "lucide-react";
+import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Clock, MessageSquare, X, Plug, Maximize2, Square, Paperclip, ChevronUp, PanelRightClose, PanelRightOpen, BarChart3, ThumbsUp, ThumbsDown, Brain, LineChart, Settings2, Maximize, Minimize, BookOpen, FlaskConical } from "lucide-react";
 
 
 import { useCoachVoice } from "@/hooks/useCoachVoice";
@@ -299,11 +300,19 @@ function ScreenshotAttach({ onPick }: { onPick: (file: File) => void }) {
   );
 }
 
+function toBacktestTf(interval: string): "15" | "60" | "240" | "D" {
+  if (interval === "1" || interval === "5" || interval === "15" || interval === "30") return "15";
+  if (interval === "240") return "240";
+  if (interval === "D" || interval === "1D" || interval === "W") return "D";
+  return "60";
+}
+
 function ScanTicket({
-  result, symbol, onRescan, onAttach, onStopVoice, voiceSpeaking,
+  result, symbol, interval, onRescan, onAttach, onStopVoice, voiceSpeaking,
 }: {
   result: ScanResult;
   symbol: Symbol;
+  interval: string;
   lensId: ScanLensId;
   onRescan: () => void;
   onAttach: (file: File) => void;
@@ -380,14 +389,29 @@ function ScanTicket({
                   tp2: parseNum(result.tp2),
                 });
               }}
-              className="inline-flex items-center gap-1.5 rounded-md bg-primary/15 border border-primary/40 px-2.5 py-1.5 text-xs font-semibold text-primary hover:bg-primary/25 whitespace-nowrap"
+              className="inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-primary/15 border border-primary/40 px-2.5 py-1.5 text-xs font-semibold text-primary hover:bg-primary/25 whitespace-nowrap"
               title="Log this setup in your trade journal as a trade you are taking"
             >
               <BookOpen className="h-3 w-3" /> I am taking this trade
             </button>
           )}
 
+          <Link
+            to="/backtest"
+            search={{
+              symbol: symbol.ticker,
+              tf: toBacktestTf(interval),
+              side: result.bias?.toLowerCase().includes("short") ? "short" : result.bias?.toLowerCase().includes("long") ? "long" : "both",
+              run: 1,
+            } as never}
+            className="inline-flex w-full items-center justify-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-accent/40 whitespace-nowrap"
+            title="Backtest this instrument, timeframe and direction over past price history"
+          >
+            <FlaskConical className="h-3 w-3" /> Backtest this setup
+          </Link>
+
         </div>
+
 
       </div>
 
@@ -1556,11 +1580,13 @@ function Dashboard() {
             <div className="flex-1 min-h-0 overflow-hidden relative">
             <div className={`absolute inset-0 overflow-y-auto ${rightTab === "analysis" ? "" : "hidden"}`}>
               <div className="p-5">
+                <PageInstructions path="/dashboard" className="mb-4" />
                 <ScanBody
                   result={result}
                   scanning={scanning}
                   symbol={symbol}
                   intervalLabel={intervalLabel}
+                  interval={interval}
                   lensId={lensId}
                   runScan={() => runScan("analysis")}
 
@@ -1687,6 +1713,7 @@ function Dashboard() {
               scanning={scanning}
               symbol={symbol}
               intervalLabel={intervalLabel}
+              interval={interval}
               lensId={lensId}
               runScan={() => runScan("analysis")}
               onAttach={(file) => {
@@ -1767,12 +1794,13 @@ function Dashboard() {
 }
 
 function ScanBody({
-  result, scanning, symbol, intervalLabel, lensId, runScan, onAttach, onStopScan, onStopVoice, voiceSpeaking,
+  result, scanning, symbol, intervalLabel, interval, lensId, runScan, onAttach, onStopScan, onStopVoice, voiceSpeaking,
 }: {
   result: ScanResult | null;
   scanning: boolean;
   symbol: Symbol;
   intervalLabel: string;
+  interval: string;
   lensId: ScanLensId;
   runScan: () => void;
   onAttach: (file: File) => void;
@@ -1819,6 +1847,7 @@ function ScanBody({
     <ScanTicket
       result={result!}
       symbol={symbol}
+      interval={interval}
       lensId={lensId}
       onRescan={runScan}
       onAttach={onAttach}

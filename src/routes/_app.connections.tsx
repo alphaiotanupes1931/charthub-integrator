@@ -1,3 +1,4 @@
+import { PageInstructions } from "@/components/PageInstructions";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -159,6 +160,7 @@ function ConnectionsPage() {
           {conns.length} of {BROKERS.length} connected.
         </p>
       </header>
+      <PageInstructions className="mb-6" />
 
       <div className="mb-6 flex flex-wrap gap-2">
         {(["all", ...BROKER_GROUPS] as const).map((g) => (

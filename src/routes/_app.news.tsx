@@ -1,3 +1,4 @@
+import { PageInstructions } from "@/components/PageInstructions";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
@@ -93,6 +94,7 @@ function NewsPage() {
           <RefreshCw className={`size-4 ${news.isFetching ? "animate-spin" : ""}`} /> Refresh
         </button>
       </header>
+      <PageInstructions className="mb-6" />
 
       <section className="rounded-md border border-border bg-card/40 p-4">
         <h2 className="mb-2 font-semibold">Session read</h2>

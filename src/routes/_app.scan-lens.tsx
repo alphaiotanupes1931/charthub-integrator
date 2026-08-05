@@ -1,3 +1,4 @@
+import { PageInstructions } from "@/components/PageInstructions";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Crosshair, Check } from "lucide-react";
@@ -36,6 +37,7 @@ function ScanLensPage() {
         <Crosshair className="size-6 text-primary" />
         <h1 className="text-2xl font-semibold tracking-tight">Scan Lens</h1>
       </div>
+      <PageInstructions className="mb-6" />
       <p className="text-sm text-muted-foreground mb-8 max-w-xl">
         The lens controls how your AI coach reads charts. Wyckoff Sweep -&gt; BOS -&gt; Retest still runs on every scan - the lens only shifts emphasis, targets, and which setups get flagged off-playbook.
       </p>

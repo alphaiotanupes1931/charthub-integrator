@@ -1,3 +1,4 @@
+import { PageInstructions } from "@/components/PageInstructions";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useFirstWeek, FIRST_WEEK_TASKS, emitFirstWeekEvent, startFirstWeek } from "@/hooks/useFirstWeek";
 import { CheckCircle2, Circle, ArrowRight, Calendar, RotateCcw, Sparkles } from "lucide-react";
@@ -38,6 +39,7 @@ function FirstWeekPage() {
           A seven-day path from your first scan to placing your first practice trade. One step at a time.
         </p>
       </div>
+      <PageInstructions className="mb-6" />
 
       {!active && (
         <div className="rounded-md border border-border bg-card p-5 mb-6">
