@@ -1,3 +1,4 @@
+import { PageInstructions } from "@/components/PageInstructions";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";

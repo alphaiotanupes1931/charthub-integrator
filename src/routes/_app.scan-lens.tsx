@@ -1,3 +1,4 @@
+import { PageInstructions } from "@/components/PageInstructions";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Crosshair, Check } from "lucide-react";
