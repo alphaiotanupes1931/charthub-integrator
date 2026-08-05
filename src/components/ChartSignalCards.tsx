@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowUpRight, ArrowDownRight, Minus, Target, Shield, Flag, Clock, ChevronDown, ChevronUp, X, Zap, BookOpen } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, Minus, Target, Shield, Flag, Clock, ChevronDown, ChevronUp, X, Zap, BookOpen, FlaskConical } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { takeTrade } from "@/lib/signalHistory";
 import type { ChartGrade } from "@/lib/chartAnnotations";
@@ -8,9 +8,31 @@ type Props = {
   grade: ChartGrade | null;
   lastPrice?: number;
   symbol?: string;
+  /** Chart interval in TradingView form (1, 5, 15, 60, 240, D, W, M). */
+  interval?: string;
   onClear?: () => void;
   scanning?: boolean;
 };
+
+// Chart intervals the historical engine supports; anything finer or coarser is
+// snapped to the closest supported bar size.
+function toBacktestTf(interval?: string): "15" | "60" | "240" | "D" {
+  switch (interval) {
+    case "1":
+    case "5":
+    case "15":
+      return "15";
+    case "240":
+      return "240";
+    case "D":
+    case "W":
+    case "M":
+      return "D";
+    default:
+      return "60";
+  }
+}
+
 
 function fmt(n?: number) {
   if (typeof n !== "number" || !isFinite(n)) return "-";
