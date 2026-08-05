@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { FlaskConical, Play } from "lucide-react";
+import { FlaskConical, Play, Download } from "lucide-react";
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
 } from "recharts";
@@ -15,11 +15,25 @@ import {
 } from "@/components/ui/select";
 import { runHistoricalBacktest, type BacktestResponse } from "@/lib/backtest/backtest.functions";
 import StrategyEdgePanel from "@/components/StrategyEdgePanel";
+import { BacktestCompare } from "@/components/BacktestCompare";
 import { BACKTEST_SYMBOLS, BACKTEST_TIMEFRAMES, TIMEFRAME_LABEL, type BacktestTimeframe } from "@/lib/backtest/catalog";
 import type { BtBar, BtBucket, BtResult } from "@/lib/backtest/engine";
 import { BacktestReplay } from "@/components/BacktestReplay";
 
+type BacktestSearch = {
+  symbol?: string;
+  tf?: string;
+  side?: string;
+  run?: number;
+};
+
 export const Route = createFileRoute("/_app/backtest")({
+  validateSearch: (s: Record<string, unknown>): BacktestSearch => ({
+    symbol: typeof s.symbol === "string" ? s.symbol : undefined,
+    tf: s.tf != null ? String(s.tf) : undefined,
+    side: typeof s.side === "string" ? s.side : undefined,
+    run: s.run != null && !Number.isNaN(Number(s.run)) ? Number(s.run) : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Historical Backtest, TradeMind" },
@@ -32,6 +46,7 @@ export const Route = createFileRoute("/_app/backtest")({
   }),
   component: BacktestPage,
 });
+
 
 const SESSIONS = ["Asia", "London", "New York", "Late US"];
 
@@ -74,9 +89,35 @@ function BucketTable({ title, rows }: { title: string; rows: BtBucket[] }) {
   );
 }
 
+function downloadFile(name: string, mime: string, body: string) {
+  const url = URL.createObjectURL(new Blob([body], { type: mime }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function tradesCsv(result: BtResult): string {
+  const head = [
+    "id", "side", "grade", "score", "session", "entry_time", "exit_time",
+    "entry", "stop", "target", "exit", "r", "outcome", "hold_bars", "balance_after", "reasons",
+  ].join(",");
+  const rows = result.trades.map((t) =>
+    [
+      t.id, t.side, t.grade, t.score, t.session,
+      new Date(t.entryTime * 1000).toISOString(), new Date(t.exitTime * 1000).toISOString(),
+      t.entry, t.stop, t.target, t.exit, t.r, t.outcome, t.holdBars, t.balanceAfter,
+      `"${t.reasons.join(" | ").replace(/"/g, "'")}"`,
+    ].join(","),
+  );
+  return [head, ...rows].join("\n");
+}
+
 function Results({ result, bars }: { result: BtResult; bars: BtBar[] }) {
   const s = result.stats;
   const curve = [{ time: result.from, balance: 10000, netR: 0 }, ...result.equity];
+  const stamp = `${result.symbol.replace(/[^A-Za-z0-9]/g, "")}-${result.timeframe}-${new Date().toISOString().slice(0, 10)}`;
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -84,10 +125,36 @@ function Results({ result, bars }: { result: BtResult; bars: BtBar[] }) {
       transition={{ duration: 0.25 }}
       className="space-y-4"
     >
-      <div className="rounded-md border border-border p-3 text-xs text-muted-foreground">
-        {result.symbol} · {TIMEFRAME_LABEL[result.timeframe as BacktestTimeframe] ?? result.timeframe} ·{" "}
-        {result.barCount} bars from {fmtDate(result.from)} to {fmtDate(result.to)} · feed {result.source}
+      <div className="flex flex-wrap items-center gap-3 rounded-md border border-border p-3 text-xs text-muted-foreground">
+        <span>
+          {result.symbol} · {TIMEFRAME_LABEL[result.timeframe as BacktestTimeframe] ?? result.timeframe} ·{" "}
+          {result.barCount} bars from {fmtDate(result.from)} to {fmtDate(result.to)} · feed {result.source}
+        </span>
+        <div className="ml-auto flex gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => downloadFile(`backtest-trades-${stamp}.csv`, "text/csv", tradesCsv(result))}
+            disabled={result.trades.length === 0}
+          >
+            <Download className="mr-2 h-4 w-4" /> Trades CSV
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() =>
+              downloadFile(
+                `backtest-${stamp}.json`,
+                "application/json",
+                JSON.stringify({ ...result, exportedAt: new Date().toISOString() }, null, 2),
+              )
+            }
+          >
+            <Download className="mr-2 h-4 w-4" /> Full JSON
+          </Button>
+        </div>
       </div>
+
 
       {result.notes.length > 0 && (
         <ul className="space-y-1 rounded-md border border-border p-3 text-xs text-muted-foreground">
@@ -174,11 +241,20 @@ function Results({ result, bars }: { result: BtResult; bars: BtBar[] }) {
 
 function BacktestPage() {
   const run = useServerFn(runHistoricalBacktest);
-  const [symbol, setSymbol] = useState("XAU/USD");
-  const [timeframe, setTimeframe] = useState<BacktestTimeframe>("60");
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const initSymbol = search.symbol && (BACKTEST_SYMBOLS as readonly string[]).includes(search.symbol)
+    ? search.symbol
+    : "XAU/USD";
+  const initTf = search.tf && (BACKTEST_TIMEFRAMES as readonly string[]).includes(search.tf)
+    ? (search.tf as BacktestTimeframe)
+    : "60";
+  const initSide = search.side === "long" || search.side === "short" ? search.side : "both";
+  const [symbol, setSymbol] = useState(initSymbol);
+  const [timeframe, setTimeframe] = useState<BacktestTimeframe>(initTf);
   const [lookback, setLookback] = useState("2y");
   const [minGrade, setMinGrade] = useState("B");
-  const [direction, setDirection] = useState("both");
+  const [direction, setDirection] = useState(initSide);
   const [riskPct, setRiskPct] = useState("1");
   const [rrTarget, setRrTarget] = useState("2");
   const [atrStopMult, setAtrStopMult] = useState("1.2");
@@ -192,7 +268,7 @@ function BacktestPage() {
   const toggleSession = (s: string) =>
     setSessions((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
 
-  const submit = async () => {
+  const submit = useCallback(async () => {
     setBusy(true);
     setError(null);
     try {
@@ -224,7 +300,18 @@ function BacktestPage() {
     } finally {
       setBusy(false);
     }
-  };
+  }, [run, symbol, timeframe, lookback, minGrade, direction, riskPct, rrTarget, atrStopMult, maxHoldBars, sessions]);
+
+  // A scan card can deep link here with ?symbol=&tf=&side=&run=1: the fields are
+  // prefilled above and the run fires once, then the flag is dropped from the URL.
+  const autoRan = useRef(false);
+  useEffect(() => {
+    if (!search.run || autoRan.current) return;
+    autoRan.current = true;
+    navigate({ search: (prev: BacktestSearch) => ({ ...prev, run: undefined }), replace: true });
+    void submit();
+  }, [search.run, navigate, submit]);
+
 
   return (
     <div className="space-y-4 p-4 md:p-6">
@@ -338,7 +425,21 @@ function BacktestPage() {
         </div>
       </div>
 
+      <BacktestCompare
+        base={{
+          lookback: lookback as "60d" | "1y" | "2y" | "5y",
+          minGrade: minGrade as "A+" | "A" | "B" | "C",
+          direction: direction as "both" | "long" | "short",
+          riskPct: Number(riskPct),
+          rrTarget: Number(rrTarget),
+          atrStopMult: Number(atrStopMult),
+          maxHoldBars: Number(maxHoldBars),
+          sessions,
+        }}
+      />
+
       {result && <Results result={result} bars={bars} />}
+
     </div>
   );
 }
