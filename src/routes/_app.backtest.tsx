@@ -19,6 +19,7 @@ import { BacktestCompare } from "@/components/BacktestCompare";
 import { BACKTEST_SYMBOLS, BACKTEST_TIMEFRAMES, TIMEFRAME_LABEL, type BacktestTimeframe } from "@/lib/backtest/catalog";
 import type { BtBar, BtBucket, BtResult } from "@/lib/backtest/engine";
 import { BacktestReplay } from "@/components/BacktestReplay";
+import { readSavedRuns, saveRun, deleteRun, clearRuns, type SavedRun } from "@/lib/backtest/savedRuns";
 
 type BacktestSearch = {
   symbol?: string;
