@@ -241,11 +241,20 @@ function Results({ result, bars }: { result: BtResult; bars: BtBar[] }) {
 
 function BacktestPage() {
   const run = useServerFn(runHistoricalBacktest);
-  const [symbol, setSymbol] = useState("XAU/USD");
-  const [timeframe, setTimeframe] = useState<BacktestTimeframe>("60");
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const initSymbol = search.symbol && (BACKTEST_SYMBOLS as readonly string[]).includes(search.symbol)
+    ? search.symbol
+    : "XAU/USD";
+  const initTf = search.tf && (BACKTEST_TIMEFRAMES as readonly string[]).includes(search.tf)
+    ? (search.tf as BacktestTimeframe)
+    : "60";
+  const initSide = search.side === "long" || search.side === "short" ? search.side : "both";
+  const [symbol, setSymbol] = useState(initSymbol);
+  const [timeframe, setTimeframe] = useState<BacktestTimeframe>(initTf);
   const [lookback, setLookback] = useState("2y");
   const [minGrade, setMinGrade] = useState("B");
-  const [direction, setDirection] = useState("both");
+  const [direction, setDirection] = useState(initSide);
   const [riskPct, setRiskPct] = useState("1");
   const [rrTarget, setRrTarget] = useState("2");
   const [atrStopMult, setAtrStopMult] = useState("1.2");
@@ -259,7 +268,7 @@ function BacktestPage() {
   const toggleSession = (s: string) =>
     setSessions((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
 
-  const submit = async () => {
+  const submit = useCallback(async () => {
     setBusy(true);
     setError(null);
     try {
@@ -291,7 +300,18 @@ function BacktestPage() {
     } finally {
       setBusy(false);
     }
-  };
+  }, [run, symbol, timeframe, lookback, minGrade, direction, riskPct, rrTarget, atrStopMult, maxHoldBars, sessions]);
+
+  // A scan card can deep link here with ?symbol=&tf=&side=&run=1: the fields are
+  // prefilled above and the run fires once, then the flag is dropped from the URL.
+  const autoRan = useRef(false);
+  useEffect(() => {
+    if (!search.run || autoRan.current) return;
+    autoRan.current = true;
+    navigate({ search: (prev: BacktestSearch) => ({ ...prev, run: undefined }), replace: true });
+    void submit();
+  }, [search.run, navigate, submit]);
+
 
   return (
     <div className="space-y-4 p-4 md:p-6">
