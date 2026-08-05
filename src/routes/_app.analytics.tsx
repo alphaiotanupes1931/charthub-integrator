@@ -299,7 +299,7 @@ function AnalyticsPage() {
   return (
     <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-6">
       <PageHeader title="Analytics" description="Your trading performance at a glance" />
-      <PageInstructions path="/analytics" className="mb-2" />
+
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
         {kpis.map((k) => {
