@@ -1,3 +1,4 @@
+import { PageInstructions } from "@/components/PageInstructions";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useFirstWeek, FIRST_WEEK_TASKS, emitFirstWeekEvent, startFirstWeek } from "@/hooks/useFirstWeek";
 import { CheckCircle2, Circle, ArrowRight, Calendar, RotateCcw, Sparkles } from "lucide-react";

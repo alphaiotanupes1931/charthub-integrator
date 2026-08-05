@@ -1,3 +1,4 @@
+import { PageInstructions } from "@/components/PageInstructions";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
