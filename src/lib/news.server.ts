@@ -196,6 +196,11 @@ export async function calendarContextBlock(symbol?: string): Promise<string | un
   if (!today.length && !ahead.length && !recent.length) return undefined;
 
   const lines: string[] = ["ECONOMIC CALENDAR (Forex Factory, times in UTC)"];
+  if (symbol) {
+    lines.push(
+      `Filtered for ${symbol}, which is driven by: ${wanted.join(", ")}. These releases ARE the news for this instrument, so treat them as directly relevant.`,
+    );
+  }
   if (today.length) {
     lines.push("Today:");
     lines.push(...formatCalendarLines(today, "UTC", 10).map((l) => `- ${l}`));
@@ -209,7 +214,7 @@ export async function calendarContextBlock(symbol?: string): Promise<string | un
     lines.push(...formatCalendarLines(recent, "UTC", 6).map((l) => `- ${l}`));
   }
   lines.push(
-    "Use this when judging timing and risk. Warn the trader when a high-impact release lands inside the trade window. Never invent releases that are not listed here.",
+    "Use this when judging timing and risk. If the trader asks whether you are considering news for this instrument, answer yes and name the releases and times listed here. Never say you have no news when this block is present, and never invent releases that are not listed.",
   );
   return lines.join("\n");
 }
