@@ -1584,6 +1584,7 @@ function Dashboard() {
                   scanning={scanning}
                   symbol={symbol}
                   intervalLabel={intervalLabel}
+                  interval={interval}
                   lensId={lensId}
                   runScan={() => runScan("analysis")}
 
@@ -1710,6 +1711,7 @@ function Dashboard() {
               scanning={scanning}
               symbol={symbol}
               intervalLabel={intervalLabel}
+              interval={interval}
               lensId={lensId}
               runScan={() => runScan("analysis")}
               onAttach={(file) => {
