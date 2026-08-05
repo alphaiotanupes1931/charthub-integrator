@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { FlaskConical, Play } from "lucide-react";
+import { FlaskConical, Play, Download } from "lucide-react";
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
 } from "recharts";
@@ -15,11 +15,25 @@ import {
 } from "@/components/ui/select";
 import { runHistoricalBacktest, type BacktestResponse } from "@/lib/backtest/backtest.functions";
 import StrategyEdgePanel from "@/components/StrategyEdgePanel";
+import { BacktestCompare } from "@/components/BacktestCompare";
 import { BACKTEST_SYMBOLS, BACKTEST_TIMEFRAMES, TIMEFRAME_LABEL, type BacktestTimeframe } from "@/lib/backtest/catalog";
 import type { BtBar, BtBucket, BtResult } from "@/lib/backtest/engine";
 import { BacktestReplay } from "@/components/BacktestReplay";
 
+type BacktestSearch = {
+  symbol?: string;
+  tf?: string;
+  side?: string;
+  run?: number;
+};
+
 export const Route = createFileRoute("/_app/backtest")({
+  validateSearch: (s: Record<string, unknown>): BacktestSearch => ({
+    symbol: typeof s.symbol === "string" ? s.symbol : undefined,
+    tf: typeof s.tf === "string" ? s.tf : undefined,
+    side: typeof s.side === "string" ? s.side : undefined,
+    run: s.run != null && !Number.isNaN(Number(s.run)) ? Number(s.run) : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Historical Backtest, TradeMind" },
@@ -32,6 +46,7 @@ export const Route = createFileRoute("/_app/backtest")({
   }),
   component: BacktestPage,
 });
+
 
 const SESSIONS = ["Asia", "London", "New York", "Late US"];
 
