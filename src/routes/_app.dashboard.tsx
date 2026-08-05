@@ -13,6 +13,7 @@ import { useCoachVoice } from "@/hooks/useCoachVoice";
 import { DashboardChatPanel, type DashboardChatHandle } from "@/components/DashboardChatPanel";
 import { ChartConceptOverlay } from "@/components/ConceptDiagram";
 import { ChartSignalCards } from "@/components/ChartSignalCards";
+import { LivePerformancePanel } from "@/components/LivePerformancePanel";
 import { TodaysRecommendation } from "@/components/TodaysRecommendation";
 import { findStrategyByName } from "@/lib/customStrategies";
 import { readActiveStrategy } from "@/lib/chat-client";
@@ -26,6 +27,7 @@ import { listChatThreads, createChatThread, deleteChatThread, getActiveModel, ty
 import type { ResearchMemo, OrderFlow } from "@/lib/agents/types";
 import { Link } from "@tanstack/react-router";
 import { recordSignal, takeTrade } from "@/lib/signalHistory";
+import { formatJournalPerf } from "@/lib/journalStats";
 import { toast } from "sonner";
 
 // Scan context: the active strategy playbook is fed to the planner so the
@@ -1052,7 +1054,7 @@ function Dashboard() {
     // Always post the scan prompt to chat so the user sees activity immediately.
     sendToChat(prompt, { focusChat: from === "chat", targetThreadId: scanThreadId });
 
-    runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}`, strategyDesc: activeStrategyDesc(), strategyId: readActiveStrategy() ?? undefined, coach: readActiveCoach() } })
+    runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}`, strategyDesc: activeStrategyDesc(), strategyId: readActiveStrategy() ?? undefined, coach: readActiveCoach(), journalPerf: formatJournalPerf(symbol.ticker) ?? undefined } })
       .then((plan) => {
         const r = plan as ScanResult;
         setResult(r);
@@ -1442,17 +1444,19 @@ function Dashboard() {
 
         <div className="flex-1 min-w-0 flex flex-col">
 
-          {/* Scan output preview - sits above the chart so it never overlaps candles */}
+          {/* Scan output preview + live performance strip */}
           {!isChartFullscreen && (
-            <ChartSignalCards
-              grade={aiGrade}
-              lastPrice={snapshot?.lastPrice}
-              symbol={symbol.ticker}
-              interval={interval}
-
-              scanning={scanning}
-              onClear={aiGrade ? () => { setAiGrade(null); setAiAnnotationsRaw([]); } : undefined}
-            />
+            <div className="space-y-3">
+              <ChartSignalCards
+                grade={aiGrade}
+                lastPrice={snapshot?.lastPrice}
+                symbol={symbol.ticker}
+                interval={interval}
+                scanning={scanning}
+                onClear={aiGrade ? () => { setAiGrade(null); setAiAnnotationsRaw([]); } : undefined}
+              />
+              <LivePerformancePanel />
+            </div>
           )}
 
 
