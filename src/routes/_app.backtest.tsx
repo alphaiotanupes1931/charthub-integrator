@@ -425,7 +425,21 @@ function BacktestPage() {
         </div>
       </div>
 
+      <BacktestCompare
+        base={{
+          lookback: lookback as "60d" | "1y" | "2y" | "5y",
+          minGrade: minGrade as "A+" | "A" | "B" | "C",
+          direction: direction as "both" | "long" | "short",
+          riskPct: Number(riskPct),
+          rrTarget: Number(rrTarget),
+          atrStopMult: Number(atrStopMult),
+          maxHoldBars: Number(maxHoldBars),
+          sessions,
+        }}
+      />
+
       {result && <Results result={result} bars={bars} />}
+
     </div>
   );
 }
