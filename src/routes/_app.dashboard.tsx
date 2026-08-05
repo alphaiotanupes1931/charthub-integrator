@@ -1424,6 +1424,8 @@ function Dashboard() {
               grade={aiGrade}
               lastPrice={snapshot?.lastPrice}
               symbol={symbol.ticker}
+              interval={interval}
+
               scanning={scanning}
               onClear={aiGrade ? () => { setAiGrade(null); setAiAnnotationsRaw([]); } : undefined}
             />
