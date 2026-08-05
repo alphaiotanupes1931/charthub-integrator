@@ -112,6 +112,8 @@ export function BacktestReplay({ bars, result }: Props) {
         },
       ];
     });
+    // lightweight-charts requires markers in ascending time order.
+    markers.sort((a, b) => (a.time as number) - (b.time as number));
     createSeriesMarkers(series, markers);
     chartRef.current?.timeScale().fitContent();
   }, [candles, trades]);
