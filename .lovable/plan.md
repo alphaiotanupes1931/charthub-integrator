@@ -1,83 +1,79 @@
-# Paper Trading + Daily Briefings + Kill Switch
+# Phase 4: Performance Intelligence & Weekly Review
 
-Three connected features. All three can share the same paper-trading engine and the same Telegram delivery pipe.
+The app now collects trades, signals, journal notes, mental-state checks, and paper-account P&L. The next phase turns that raw data into trader-facing insights that drive behavior change.
 
-## 1. Testing Mode (Paper Trading)
+## What we build
 
-A toggle in Settings: "Testing Mode". When on, the app shows a persistent "TESTING" banner at the top and unlocks a paper account.
+### 1. Analytics dashboard (new page)
 
-- Starting balance: $10,000 (configurable per user, default 10k).
-- The AI (existing scanner + planner) auto-executes its A / A+ signals on the paper account: fills at the entry price, respects the stop and TP, closes at TP/SL touch.
-- Fills are simulated against live OHLC (same feed the chart uses), so results reflect real market moves — no synthetic data.
-- Position sizing uses the user's configured risk % per trade (already in Settings).
-- Every fill, close, and equity change writes a row so the user can review history.
-- A "Testing" page shows: current equity, open positions, closed trades, win rate, P&L curve, max drawdown, and a Reset button that wipes and restarts at $10k.
+`/analytics` becomes the single place a trader reviews how they are actually performing.
 
-## 2. Kill Switch (10% drawdown from peak)
+- **Equity curve**: P&L over time from journal + paper trades + closed autopilot proposals.
+- **Win rate by day / session / instrument / grade**: which conditions produce edge.
+- **R-multiple distribution**: average winner vs. average loser, expectancy, profit factor.
+- **Mental-state correlation**: P&L and win rate grouped by pre-trade mental-health score.
+- **Grade follow-through**: win rate of A/A+ setups the trader actually took vs. skipped.
+- **Drawdown / streaks**: consecutive losses, max drawdown, recovery days.
 
-Runs inside the paper engine and — later, when live broker execution ships — the live engine too.
+Charts stay flat/neutral, using the existing design system (1px borders, `rounded-md`, no gradients).
 
-- Track the running peak equity per account.
-- If equity drops ≥10% from peak: close every open position at market, block new AI trades, flip account status to `paused_for_review`.
-- User gets an in-app alert + Telegram push explaining what happened and the drawdown number.
-- Nothing resumes until the user hits "Resume trading" in the Testing page and acknowledges.
+### 2. Sunday prep report
 
-## 3. Morning + Evening Briefings via Telegram
+Auto-generated every Sunday or on-demand from `/analytics`:
 
-Two scheduled jobs.
+- Last week's closed trades, P&L, and win rate.
+- Best and worst setups, with the lesson text from the journal.
+- One concrete rule to follow next week based on the losing buckets.
+- Watchlist from the user's saved instruments.
 
-- **Morning (07:00 user local time):** overnight moves on their watchlist, any A/A+ setups the scanner found pre-market, upcoming high-impact news, and — if Testing Mode is on — paper account status.
-- **Evening (21:00 user local time):** what actually happened today on the watchlist, closed paper trades with P&L, running week performance, mental-state prompt link.
-- Delivery: Telegram DM to the user's chat via the existing Telegram connector.
-- Setup flow in Settings → Notifications: user clicks "Connect Telegram", we show a link to `t.me/<bot>?start=<one-time-code>`, they message the bot, we store their `chat_id` against their profile.
-- Also viewable in-app under a "Briefings" page so users who skip Telegram still get value.
+Stored in `weekly_reports` so it can be viewed later and sent to Telegram/Discord if configured.
 
-## Technical notes
+### 3. Trade review checklist
 
-**Data model (new tables, all RLS-scoped to `auth.uid()`):**
+After a trade is closed (manual journal entry, paper trade close, or autopilot fill), prompt the trader to answer 3 questions:
+
+- Did I follow my plan? (yes / partial / no)
+- Did the grade match the outcome? (A/A+ worked, B/C failed, etc.)
+- What would I do identically next time?
+
+Answers are stored on the journal row and feed the Sunday report.
+
+### 4. Shared signal-engine context
+
+Make sure `runPlan`, backtest engine, and autopilot scanner all read the same performance context:
+
+- Current week's win rate / expectancy.
+- Recent losing buckets from the learning report.
+- Active strategy edge from `strategy_performance`.
+
+This prevents the AI coach from giving generic advice while the trader is bleeding in a specific bucket.
+
+### 5. Live-performance feed on the dashboard
+
+Add a small panel to `/dashboard` that shows the current week at a glance:
+
+- Trades taken / closed this week.
+- Net P&L and R.
+- Current drawdown from peak.
+- One-sentence coaching nudge from the learning report.
+
+## Data model
 
 ```text
-paper_accounts        one row per user; balance, peak_equity, status, starting_balance
-paper_positions       open positions: symbol, side, entry, stop, tp, size, opened_at
-paper_trades          closed trades: entry/exit/pnl/reason (tp|sl|kill_switch|manual)
-paper_equity_snapshots  timestamped equity for the P&L curve
-briefing_prefs        user_id, telegram_chat_id, morning_enabled, evening_enabled, timezone
-briefings             sent briefings (kind, sent_at, body) so we can show in-app history
+weekly_reports        user_id, week_ending, metrics_json, lesson, created_at
+journal_reviews       journal_id, followed_plan, grade_match, takeaway
+paper_equity_curve    already exists; surface it in analytics
 ```
-
-**Engine (server functions, not edge functions):**
-
-- `src/lib/paper-engine.functions.ts` — `openPosition`, `closePosition`, `reconcileOpenPositions` (runs on a cron every 1m; checks live price vs stop/TP, updates equity, triggers kill switch).
-- Reuses existing `runPlan` output as the trade source when a scan produces an A or A+ grade in Testing Mode.
-
-**Scheduled jobs (pg_cron → TanStack public routes):**
-
-- `/api/public/hooks/reconcile-paper` — every 1 minute during market hours.
-- `/api/public/hooks/send-briefings` — every 15 minutes; picks users whose local 07:00 or 21:00 window matches now (uses `briefing_prefs.timezone`).
-- Auth via `apikey` header (Supabase anon key), per project convention.
-
-**Telegram:**
-
-- Uses the existing Telegram connector via `standard_connectors--call_gateway_connection`.
-- Bot receives `/start <code>` in a webhook route at `/api/public/telegram/webhook`, links `chat_id` to the user who generated the code.
-- If the user hasn't linked Telegram yet, briefings still write to the DB and appear in-app; no send is attempted.
-
-**UI:**
-
-- `src/routes/_authenticated/testing.tsx` — paper account dashboard, reset, resume-after-kill.
-- `src/routes/_authenticated/briefings.tsx` — history + on-demand "send me now" button.
-- Settings additions: Testing Mode toggle, starting balance input, Telegram link flow, briefing time overrides.
-- Dashboard banner component when `testing_mode = on`.
 
 ## Rollout order
 
-1. DB schema + RLS + grants.
-2. Paper engine + Testing UI + Settings toggle (no Telegram yet).
-3. Kill switch inside the engine + resume flow.
-4. Telegram connector wiring + link flow.
-5. Briefing generator + pg_cron schedules.
-6. QA: run testing mode against a couple of scanned setups, force a 10% drawdown to confirm the kill switch fires and pauses cleanly.
+1. Backend aggregators: compute weekly stats from journal + paper trades + autopilot proposals.
+2. `/analytics` page with equity curve, win-rate breakdowns, and mental-state correlation.
+3. Sunday prep report generator + storage.
+4. Trade review checklist added to journal entry and close flows.
+5. Dashboard live-performance panel.
+6. QA: verify numbers match journal P&L, that paper trades are included, and that mental-state grouping is accurate.
 
-## Open question before I start
+## Success metric
 
-The Telegram connector needs to be linked to the project (one click on your side). Want me to kick that off after step 3, or set it up first so briefings are ready the moment the engine is done?
+A trader can open `/analytics` on Sunday and in under 60 seconds know: what worked, what didn't, and what to change next week.
