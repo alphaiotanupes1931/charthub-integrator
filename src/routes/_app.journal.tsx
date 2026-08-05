@@ -1200,7 +1200,6 @@ function TradeFormModal({
     takeaway: takeaway.trim() || undefined,
     createdAt: editing?.createdAt ?? Date.now(),
   };
-  };
   const previewPnl = tradePnl(preview);
   const previewRR = tradeRR(preview);
   const previewPlannedRR = plannedRR(preview);
