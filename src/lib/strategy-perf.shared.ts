@@ -10,6 +10,9 @@ export type StrategyPerfSummary = {
   maxDrawdownPct: number;
 };
 
+export type StrategyPerfRow = StrategyPerfSummary & { updatedAt: string };
+
+
 export function formatPerfForPrompt(rows: StrategyPerfSummary[]): string {
   if (rows.length === 0) return "";
   return rows
