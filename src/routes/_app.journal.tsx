@@ -145,7 +145,10 @@ function loadTrades(): Trade[] {
   }
 }
 function saveTrades(trades: Trade[]) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(trades)); } catch { /* ignore */ }
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(trades));
+    if (typeof window !== "undefined") window.dispatchEvent(new Event("trademind:trades-updated"));
+  } catch { /* ignore */ }
 }
 
 function csvEscape(v: unknown): string {
