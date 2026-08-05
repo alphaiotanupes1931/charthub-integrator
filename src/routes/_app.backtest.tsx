@@ -89,9 +89,35 @@ function BucketTable({ title, rows }: { title: string; rows: BtBucket[] }) {
   );
 }
 
+function downloadFile(name: string, mime: string, body: string) {
+  const url = URL.createObjectURL(new Blob([body], { type: mime }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function tradesCsv(result: BtResult): string {
+  const head = [
+    "id", "side", "grade", "score", "session", "entry_time", "exit_time",
+    "entry", "stop", "target", "exit", "r", "outcome", "hold_bars", "balance_after", "reasons",
+  ].join(",");
+  const rows = result.trades.map((t) =>
+    [
+      t.id, t.side, t.grade, t.score, t.session,
+      new Date(t.entryTime * 1000).toISOString(), new Date(t.exitTime * 1000).toISOString(),
+      t.entry, t.stop, t.target, t.exit, t.r, t.outcome, t.holdBars, t.balanceAfter,
+      `"${t.reasons.join(" | ").replace(/"/g, "'")}"`,
+    ].join(","),
+  );
+  return [head, ...rows].join("\n");
+}
+
 function Results({ result, bars }: { result: BtResult; bars: BtBar[] }) {
   const s = result.stats;
   const curve = [{ time: result.from, balance: 10000, netR: 0 }, ...result.equity];
+  const stamp = `${result.symbol.replace(/[^A-Za-z0-9]/g, "")}-${result.timeframe}-${new Date().toISOString().slice(0, 10)}`;
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -99,10 +125,36 @@ function Results({ result, bars }: { result: BtResult; bars: BtBar[] }) {
       transition={{ duration: 0.25 }}
       className="space-y-4"
     >
-      <div className="rounded-md border border-border p-3 text-xs text-muted-foreground">
-        {result.symbol} · {TIMEFRAME_LABEL[result.timeframe as BacktestTimeframe] ?? result.timeframe} ·{" "}
-        {result.barCount} bars from {fmtDate(result.from)} to {fmtDate(result.to)} · feed {result.source}
+      <div className="flex flex-wrap items-center gap-3 rounded-md border border-border p-3 text-xs text-muted-foreground">
+        <span>
+          {result.symbol} · {TIMEFRAME_LABEL[result.timeframe as BacktestTimeframe] ?? result.timeframe} ·{" "}
+          {result.barCount} bars from {fmtDate(result.from)} to {fmtDate(result.to)} · feed {result.source}
+        </span>
+        <div className="ml-auto flex gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => downloadFile(`backtest-trades-${stamp}.csv`, "text/csv", tradesCsv(result))}
+            disabled={result.trades.length === 0}
+          >
+            <Download className="mr-2 h-4 w-4" /> Trades CSV
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() =>
+              downloadFile(
+                `backtest-${stamp}.json`,
+                "application/json",
+                JSON.stringify({ ...result, exportedAt: new Date().toISOString() }, null, 2),
+              )
+            }
+          >
+            <Download className="mr-2 h-4 w-4" /> Full JSON
+          </Button>
+        </div>
       </div>
+
 
       {result.notes.length > 0 && (
         <ul className="space-y-1 rounded-md border border-border p-3 text-xs text-muted-foreground">
