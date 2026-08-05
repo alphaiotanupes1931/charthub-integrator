@@ -463,6 +463,55 @@ function BacktestPage() {
         </div>
       </div>
 
+      {saved.length > 0 && (
+        <div className="rounded-xl border border-border bg-card">
+          <div className="flex items-center gap-2 border-b border-border px-3 py-2">
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Saved runs ({saved.length})
+            </span>
+            <button
+              type="button"
+              onClick={() => setSaved(clearRuns())}
+              className="ml-auto text-[11px] text-muted-foreground hover:text-foreground"
+            >
+              Clear all
+            </button>
+          </div>
+          <div className="max-h-64 divide-y divide-border overflow-auto">
+            {saved.map((r) => (
+              <div key={r.id} className="flex items-center gap-3 px-3 py-2 text-xs">
+                <button
+                  type="button"
+                  onClick={() => openSaved(r)}
+                  className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1 text-left hover:text-primary"
+                >
+                  <span className="font-semibold">{r.symbol}</span>
+                  <span className="text-muted-foreground">
+                    {TIMEFRAME_LABEL[r.timeframe as BacktestTimeframe] ?? r.timeframe} · {r.lookback} · {r.minGrade}+ ·{" "}
+                    {r.direction} · {r.riskPct}% risk · {r.rrTarget}R
+                  </span>
+                  <span className="text-muted-foreground">{r.result.stats.trades} trades</span>
+                  <span className={`font-mono font-semibold ${r.result.stats.expectancyR > 0 ? "text-bull" : r.result.stats.expectancyR < 0 ? "text-red-500" : "text-muted-foreground"}`}>
+                    {r.result.stats.expectancyR > 0 ? "+" : ""}{r.result.stats.expectancyR}R
+                  </span>
+                  <span className="ml-auto font-mono text-muted-foreground">{r.savedAt.slice(0, 16).replace("T", " ")}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSaved(deleteRun(r.id))}
+                  className="shrink-0 rounded p-1 text-muted-foreground hover:text-red-500"
+                  aria-label={`Delete saved run for ${r.symbol}`}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+
+
       <BacktestCompare
         base={{
           lookback: lookback as "60d" | "1y" | "2y" | "5y",
