@@ -1119,6 +1119,33 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_reports: {
+        Row: {
+          created_at: string
+          id: string
+          lesson: string
+          metrics_json: Json
+          user_id: string
+          week_ending: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lesson?: string
+          metrics_json?: Json
+          user_id: string
+          week_ending: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lesson?: string
+          metrics_json?: Json
+          user_id?: string
+          week_ending?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

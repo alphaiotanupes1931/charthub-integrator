@@ -21,6 +21,7 @@ const Input = z.object({
   strategyDesc: z.string().max(800).optional(),
   strategyId: z.string().max(80).optional(),
   coach: z.string().max(60).optional(),
+  journalPerf: z.string().max(300).optional(),
 });
 
 
@@ -119,6 +120,30 @@ export const runResearchPlan = createServerFn({ method: "POST" })
             }));
             const sameSymbol = rows.filter((r) => r.symbol === data.ticker);
             perfDesc = formatPerfForPrompt(sameSymbol.length ? sameSymbol : rows);
+          }
+
+          // Actual execution record on this symbol (paper/live) also shapes the
+          // scanner's confidence; a playbook that backtests well but loses live
+          // should get a warning.
+          const { data: paper } = await supabase
+            .from("paper_trades")
+            .select("symbol,pnl,side,size,entry,exit")
+            .eq("user_id", userId)
+            .eq("symbol", data.ticker)
+            .order("closed_at", { ascending: false })
+            .limit(50);
+          if (paper && paper.length > 0) {
+            const trades = paper.length;
+            const wins = paper.filter((t) => Number(t.pnl) > 0).length;
+            const winRate = Math.round((wins / trades) * 100);
+            const netPnl = paper.reduce((sum, t) => sum + Number(t.pnl), 0);
+            const paperLine = `Paper execution on ${data.ticker}: ${trades} trades, ${winRate}% win rate, net P&L ${netPnl >= 0 ? "+" : ""}${netPnl.toFixed(2)}.`;
+            perfDesc = perfDesc ? `${perfDesc} | ${paperLine}` : paperLine;
+          }
+
+          // If the user just passed a journal-performance summary, fold it in.
+          if (data.journalPerf) {
+            perfDesc = perfDesc ? `${perfDesc} | ${data.journalPerf}` : data.journalPerf;
           }
         }
       }

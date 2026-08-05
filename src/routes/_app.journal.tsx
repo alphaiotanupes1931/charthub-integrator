@@ -86,6 +86,10 @@ type Trade = {
   ruleBrokenNote?: string;
   lossCategory?: LossCategory;
   setup?: string;         // free-text pattern tag e.g. "UTAD", "Breakout"
+  // Trade review checklist — helps weekly reviews and AI coaching.
+  followedPlan?: boolean;
+  gradeMatch?: "yes" | "no" | "partial";
+  takeaway?: string;
   createdAt: number;
 };
 
@@ -141,7 +145,10 @@ function loadTrades(): Trade[] {
   }
 }
 function saveTrades(trades: Trade[]) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(trades)); } catch { /* ignore */ }
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(trades));
+    if (typeof window !== "undefined") window.dispatchEvent(new Event("trademind:trades-updated"));
+  } catch { /* ignore */ }
 }
 
 function csvEscape(v: unknown): string {
@@ -151,7 +158,7 @@ function csvEscape(v: unknown): string {
 }
 
 function exportTradesCsv(trades: Trade[]) {
-  const headers = ["date","timeframe","symbol","side","entry","exit","stop","takeProfit","size","pointValue","fees","pnl","rr","plannedRR","ruleBroken","ruleBrokenNote","lossCategory","setup","notes"];
+  const headers = ["date","timeframe","symbol","side","entry","exit","stop","takeProfit","size","pointValue","fees","pnl","rr","plannedRR","ruleBroken","ruleBrokenNote","lossCategory","setup","followedPlan","gradeMatch","takeaway","notes"];
   const rows = trades.map((t) => {
     const rr = tradeRR(t);
     const prr = plannedRR(t);
@@ -166,6 +173,9 @@ function exportTradesCsv(trades: Trade[]) {
       t.ruleBrokenNote ?? "",
       t.lossCategory ?? "",
       t.setup ?? "",
+      t.followedPlan ? "yes" : t.followedPlan === false ? "no" : "",
+      t.gradeMatch ?? "",
+      t.takeaway ?? "",
       t.notes ?? "",
     ].map(csvEscape).join(",");
   });
@@ -1103,6 +1113,9 @@ function TradeFormModal({
   const [ruleBroken, setRuleBroken] = useState<boolean>(editing?.ruleBroken ?? false);
   const [ruleBrokenNote, setRuleBrokenNote] = useState<string>(editing?.ruleBrokenNote ?? "");
   const [lossCategory, setLossCategory] = useState<LossCategory | "">(editing?.lossCategory ?? "");
+  const [followedPlan, setFollowedPlan] = useState<boolean>(editing?.followedPlan ?? true);
+  const [gradeMatch, setGradeMatch] = useState<"yes" | "no" | "partial" | "">(editing?.gradeMatch ?? "");
+  const [takeaway, setTakeaway] = useState<string>(editing?.takeaway ?? "");
 
   // Mental state for this trade's date — two birds, one stone.
   const [mentalScore, setMentalScore] = useState<1 | 2 | 3 | 4 | 5 | null>(null);
@@ -1188,6 +1201,9 @@ function TradeFormModal({
     ruleBrokenNote: ruleBroken ? (ruleBrokenNote || undefined) : undefined,
     lossCategory: lossCategory || undefined,
     hasImage,
+    followedPlan: followedPlan || undefined,
+    gradeMatch: gradeMatch || undefined,
+    takeaway: takeaway.trim() || undefined,
     createdAt: editing?.createdAt ?? Date.now(),
   };
   const previewPnl = tradePnl(preview);
@@ -1359,6 +1375,43 @@ function TradeFormModal({
               </select>
             </Field>
           )}
+
+          <div className="rounded-lg border border-border p-3 space-y-3">
+            <div className="text-sm font-semibold">Trade review checklist</div>
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={followedPlan}
+                  onChange={(e) => setFollowedPlan(e.target.checked)}
+                  className="h-4 w-4 rounded border-border"
+                />
+                <span>I followed my plan</span>
+              </label>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {(["yes", "no", "partial"] as const).map((g) => (
+                <button
+                  key={g}
+                  type="button"
+                  onClick={() => setGradeMatch(g)}
+                  className={`rounded-md border px-2 py-1.5 text-xs font-medium transition ${
+                    gradeMatch === g
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Grade match: {g}
+                </button>
+              ))}
+            </div>
+            <input
+              value={takeaway}
+              onChange={(e) => setTakeaway(e.target.value)}
+              placeholder="One takeaway from this trade (e.g. 'wait for confirmation')"
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
+          </div>
 
           <Field label="Notes">
             <textarea
