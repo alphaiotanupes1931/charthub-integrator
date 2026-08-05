@@ -1443,17 +1443,19 @@ function Dashboard() {
 
         <div className="flex-1 min-w-0 flex flex-col">
 
-          {/* Scan output preview - sits above the chart so it never overlaps candles */}
+          {/* Scan output preview + live performance strip */}
           {!isChartFullscreen && (
-            <ChartSignalCards
-              grade={aiGrade}
-              lastPrice={snapshot?.lastPrice}
-              symbol={symbol.ticker}
-              interval={interval}
-
-              scanning={scanning}
-              onClear={aiGrade ? () => { setAiGrade(null); setAiAnnotationsRaw([]); } : undefined}
-            />
+            <div className="space-y-3">
+              <ChartSignalCards
+                grade={aiGrade}
+                lastPrice={snapshot?.lastPrice}
+                symbol={symbol.ticker}
+                interval={interval}
+                scanning={scanning}
+                onClear={aiGrade ? () => { setAiGrade(null); setAiAnnotationsRaw([]); } : undefined}
+              />
+              <LivePerformancePanel />
+            </div>
           )}
 
 
