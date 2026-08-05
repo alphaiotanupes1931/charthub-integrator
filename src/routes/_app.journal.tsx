@@ -86,6 +86,10 @@ type Trade = {
   ruleBrokenNote?: string;
   lossCategory?: LossCategory;
   setup?: string;         // free-text pattern tag e.g. "UTAD", "Breakout"
+  // Trade review checklist — helps weekly reviews and AI coaching.
+  followedPlan?: boolean;
+  gradeMatch?: "yes" | "no" | "partial";
+  takeaway?: string;
   createdAt: number;
 };
 
