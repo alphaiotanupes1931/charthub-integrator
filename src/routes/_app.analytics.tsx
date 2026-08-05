@@ -263,8 +263,8 @@ function AnalyticsPage() {
     return (
       <div className="p-4 md:p-8 max-w-[1400px] mx-auto">
         <PageHeader title="Analytics" description="Your trading performance at a glance" />
-        <PageInstructions path="/analytics" className="mb-6" />
         <div className="rounded-md border border-border bg-card p-12 text-center space-y-4">
+
           <BarChart3 className="h-10 w-10 mx-auto text-muted-foreground" />
           <h3 className="text-lg font-semibold">No data yet</h3>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
