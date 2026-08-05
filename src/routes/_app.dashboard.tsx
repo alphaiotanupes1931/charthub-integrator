@@ -388,14 +388,29 @@ function ScanTicket({
                   tp2: parseNum(result.tp2),
                 });
               }}
-              className="inline-flex items-center gap-1.5 rounded-md bg-primary/15 border border-primary/40 px-2.5 py-1.5 text-xs font-semibold text-primary hover:bg-primary/25 whitespace-nowrap"
+              className="inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-primary/15 border border-primary/40 px-2.5 py-1.5 text-xs font-semibold text-primary hover:bg-primary/25 whitespace-nowrap"
               title="Log this setup in your trade journal as a trade you are taking"
             >
               <BookOpen className="h-3 w-3" /> I am taking this trade
             </button>
           )}
 
+          <Link
+            to="/backtest"
+            search={{
+              symbol: symbol.ticker,
+              tf: toBacktestTf(interval),
+              side: result.bias?.toLowerCase().includes("short") ? "short" : result.bias?.toLowerCase().includes("long") ? "long" : "both",
+              run: 1,
+            } as never}
+            className="inline-flex w-full items-center justify-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-accent/40 whitespace-nowrap"
+            title="Backtest this instrument, timeframe and direction over past price history"
+          >
+            <FlaskConical className="h-3 w-3" /> Backtest this setup
+          </Link>
+
         </div>
+
 
       </div>
 
