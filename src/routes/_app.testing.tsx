@@ -88,6 +88,7 @@ function TestingPage() {
           </button>
         </div>
       </header>
+      <PageInstructions className="mb-6" />
 
       {s.account.status === "paused_for_review" && (
         <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 flex items-start gap-3">

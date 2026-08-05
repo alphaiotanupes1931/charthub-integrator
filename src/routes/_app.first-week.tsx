@@ -38,6 +38,7 @@ function FirstWeekPage() {
           A seven-day path from your first scan to placing your first practice trade. One step at a time.
         </p>
       </div>
+      <PageInstructions className="mb-6" />
 
       {!active && (
         <div className="rounded-md border border-border bg-card p-5 mb-6">
