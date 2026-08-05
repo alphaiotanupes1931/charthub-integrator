@@ -2,30 +2,11 @@
 // given instrument/timeframe, store the measured edge, and feed it back into
 // scan grading so proven playbooks weigh more than untested ones.
 import { createServerFn } from "@tanstack/react-start";
-import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { BACKTEST_TIMEFRAMES } from "@/lib/backtest/catalog";
+import { StrategyPerfInput } from "@/lib/backtest/schemas";
+import type { StrategyPerfRow } from "@/lib/strategy-perf.shared";
 
-const RunInput = z.object({
-  strategyId: z.string().min(1).max(80),
-  symbol: z.string().min(1).max(20),
-  timeframe: z.enum(BACKTEST_TIMEFRAMES),
-  lookback: z.enum(["60d", "1y", "2y", "5y"]).default("2y"),
-  minGrade: z.enum(["A+", "A", "B", "C"]).default("B"),
-  direction: z.enum(["both", "long", "short"]).default("both"),
-});
-
-export type StrategyPerfRow = {
-  strategyId: string;
-  symbol: string;
-  timeframe: string;
-  trades: number;
-  winRate: number;
-  expectancyR: number;
-  netR: number;
-  maxDrawdownPct: number;
-  updatedAt: string;
-};
+export type { StrategyPerfRow };
 
 export const listStrategyPerformance = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -52,7 +33,7 @@ export const listStrategyPerformance = createServerFn({ method: "GET" })
 
 export const recordStrategyBacktest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((raw: unknown) => RunInput.parse(raw))
+  .inputValidator((raw: unknown) => StrategyPerfInput.parse(raw))
   .handler(async ({ data, context }): Promise<{ ok: true; row: StrategyPerfRow } | { ok: false; error: string }> => {
     const { getHistory } = await import("@/lib/backtest/history.server");
     const { runBacktest, DEFAULT_PARAMS } = await import("@/lib/backtest/engine");
@@ -63,6 +44,7 @@ export const recordStrategyBacktest = createServerFn({ method: "POST" })
         { ...DEFAULT_PARAMS, minGrade: data.minGrade, direction: data.direction },
         { symbol: data.symbol, timeframe: data.timeframe, source },
       );
+      const updatedAt = new Date().toISOString();
       const patch = {
         user_id: context.userId,
         strategy_id: data.strategyId,
@@ -74,12 +56,15 @@ export const recordStrategyBacktest = createServerFn({ method: "POST" })
         net_r: result.stats.netR,
         max_drawdown_pct: result.stats.maxDrawdownPct,
         source: "backtest",
-        updated_at: new Date().toISOString(),
+        updated_at: updatedAt,
       };
       const { error } = await context.supabase
         .from("strategy_performance")
         .upsert(patch as never, { onConflict: "user_id,strategy_id,symbol,timeframe" });
-      if (error) return { ok: false, error: error.message };
+      if (error) {
+        console.error("[strategy-perf] upsert failed", error.message);
+        return { ok: false, error: error.message };
+      }
       return {
         ok: true,
         row: {
@@ -91,10 +76,11 @@ export const recordStrategyBacktest = createServerFn({ method: "POST" })
           expectancyR: result.stats.expectancyR,
           netR: result.stats.netR,
           maxDrawdownPct: result.stats.maxDrawdownPct,
-          updatedAt: patch.updated_at,
+          updatedAt,
         },
       };
     } catch (e) {
+      console.error("[strategy-perf] run failed", (e as Error).message);
       return { ok: false, error: (e as Error).message };
     }
   });

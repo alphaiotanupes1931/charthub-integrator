@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { BACKTEST_SYMBOLS, BACKTEST_TIMEFRAMES, TIMEFRAME_LABEL, type BacktestTimeframe } from "@/lib/backtest/catalog";
 import { listStrategyPerformance, recordStrategyBacktest, type StrategyPerfRow } from "@/lib/strategy-perf.functions";
 import { readActiveStrategy } from "@/lib/chat-client";
+import { STRATEGIES } from "@/data/strategies";
 import { edgeVerdict } from "@/lib/strategy-perf.shared";
 
 const VERDICT_COPY: Record<string, string> = {
@@ -36,7 +37,7 @@ export default function StrategyEdgePanel() {
 
   const measure = async () => {
     if (!strategy) {
-      toast.error("Pick an active strategy first on the Strategies page.");
+      toast.error("Pick a playbook to measure.");
       return;
     }
     setBusy(true);
@@ -62,7 +63,7 @@ export default function StrategyEdgePanel() {
         <div>
           <h2 className="text-sm font-medium">Strategy edge on record</h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Measure your active playbook over past price history. Saved results are read by the scanner: a playbook with
+            Measure a playbook over past price history. Saved results are read by the scanner: a playbook with
             negative expectancy on an instrument gets its grade capped, one with a proven edge keeps its grade.
           </p>
         </div>
@@ -70,11 +71,15 @@ export default function StrategyEdgePanel() {
 
       <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div className="space-y-1">
-          <Label className="text-xs">Active strategy</Label>
-          <div className="rounded-md border border-border px-3 py-2 text-sm">
-            {strategy ?? "None selected"}
-          </div>
+          <Label className="text-xs">Playbook</Label>
+          <Select value={strategy ?? ""} onValueChange={setStrategy}>
+            <SelectTrigger><SelectValue placeholder="Pick a playbook" /></SelectTrigger>
+            <SelectContent>
+              {STRATEGIES.map((s) => <SelectItem key={s.name} value={s.name}>{s.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
+
         <div className="space-y-1">
           <Label className="text-xs">Instrument</Label>
           <Select value={symbol} onValueChange={setSymbol}>
