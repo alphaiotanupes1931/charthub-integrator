@@ -1107,6 +1107,9 @@ function TradeFormModal({
   const [ruleBroken, setRuleBroken] = useState<boolean>(editing?.ruleBroken ?? false);
   const [ruleBrokenNote, setRuleBrokenNote] = useState<string>(editing?.ruleBrokenNote ?? "");
   const [lossCategory, setLossCategory] = useState<LossCategory | "">(editing?.lossCategory ?? "");
+  const [followedPlan, setFollowedPlan] = useState<boolean>(editing?.followedPlan ?? true);
+  const [gradeMatch, setGradeMatch] = useState<"yes" | "no" | "partial" | "">(editing?.gradeMatch ?? "");
+  const [takeaway, setTakeaway] = useState<string>(editing?.takeaway ?? "");
 
   // Mental state for this trade's date — two birds, one stone.
   const [mentalScore, setMentalScore] = useState<1 | 2 | 3 | 4 | 5 | null>(null);
