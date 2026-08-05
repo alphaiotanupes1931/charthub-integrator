@@ -299,11 +299,19 @@ function ScreenshotAttach({ onPick }: { onPick: (file: File) => void }) {
   );
 }
 
+function toBacktestTf(interval: string): "15" | "60" | "240" | "D" {
+  if (interval === "1" || interval === "5" || interval === "15" || interval === "30") return "15";
+  if (interval === "240") return "240";
+  if (interval === "D" || interval === "1D" || interval === "W") return "D";
+  return "60";
+}
+
 function ScanTicket({
-  result, symbol, onRescan, onAttach, onStopVoice, voiceSpeaking,
+  result, symbol, interval, onRescan, onAttach, onStopVoice, voiceSpeaking,
 }: {
   result: ScanResult;
   symbol: Symbol;
+  interval: string;
   lensId: ScanLensId;
   onRescan: () => void;
   onAttach: (file: File) => void;
