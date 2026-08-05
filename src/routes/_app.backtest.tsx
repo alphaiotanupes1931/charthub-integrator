@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { FlaskConical, Play, Download } from "lucide-react";
+import { FlaskConical, Play, Download, Trash2 } from "lucide-react";
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
 } from "recharts";
@@ -19,6 +19,7 @@ import { BacktestCompare } from "@/components/BacktestCompare";
 import { BACKTEST_SYMBOLS, BACKTEST_TIMEFRAMES, TIMEFRAME_LABEL, type BacktestTimeframe } from "@/lib/backtest/catalog";
 import type { BtBar, BtBucket, BtResult } from "@/lib/backtest/engine";
 import { BacktestReplay } from "@/components/BacktestReplay";
+import { readSavedRuns, saveRun, deleteRun, clearRuns, type SavedRun } from "@/lib/backtest/savedRuns";
 
 type BacktestSearch = {
   symbol?: string;
@@ -264,6 +265,10 @@ function BacktestPage() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<BtResult | null>(null);
   const [bars, setBars] = useState<BtBar[]>([]);
+  const [saved, setSaved] = useState<SavedRun[]>([]);
+
+  // Saved runs are read after mount so server rendering and hydration match.
+  useEffect(() => setSaved(readSavedRuns()), []);
 
   const toggleSession = (s: string) =>
     setSessions((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
@@ -289,6 +294,21 @@ function BacktestPage() {
       if (res.ok) {
         setResult(res.result);
         setBars(res.bars);
+        setSaved(
+          saveRun({
+            symbol,
+            timeframe,
+            lookback,
+            minGrade,
+            direction,
+            riskPct: Number(riskPct),
+            rrTarget: Number(rrTarget),
+            atrStopMult: Number(atrStopMult),
+            maxHoldBars: Number(maxHoldBars),
+            sessions,
+            result: res.result,
+          }),
+        );
       }
       else {
         setResult(null);
@@ -301,6 +321,24 @@ function BacktestPage() {
       setBusy(false);
     }
   }, [run, symbol, timeframe, lookback, minGrade, direction, riskPct, rrTarget, atrStopMult, maxHoldBars, sessions]);
+
+  // Reopening a saved run restores its settings and stats. The replay needs
+  // bars, which are not stored, so re-run to get the candles back.
+  const openSaved = useCallback((r: SavedRun) => {
+    setSymbol(r.symbol);
+    setTimeframe(r.timeframe as BacktestTimeframe);
+    setLookback(r.lookback);
+    setMinGrade(r.minGrade);
+    setDirection(r.direction);
+    setRiskPct(String(r.riskPct));
+    setRrTarget(String(r.rrTarget));
+    setAtrStopMult(String(r.atrStopMult));
+    setMaxHoldBars(String(r.maxHoldBars));
+    setSessions(r.sessions);
+    setResult(r.result);
+    setBars([]);
+    setError(null);
+  }, []);
 
   // A scan card can deep link here with ?symbol=&tf=&side=&run=1: the fields are
   // prefilled above and the run fires once, then the flag is dropped from the URL.
@@ -424,6 +462,55 @@ function BacktestPage() {
           {error && <span className="text-xs text-red-500">{error}</span>}
         </div>
       </div>
+
+      {saved.length > 0 && (
+        <div className="rounded-xl border border-border bg-card">
+          <div className="flex items-center gap-2 border-b border-border px-3 py-2">
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Saved runs ({saved.length})
+            </span>
+            <button
+              type="button"
+              onClick={() => setSaved(clearRuns())}
+              className="ml-auto text-[11px] text-muted-foreground hover:text-foreground"
+            >
+              Clear all
+            </button>
+          </div>
+          <div className="max-h-64 divide-y divide-border overflow-auto">
+            {saved.map((r) => (
+              <div key={r.id} className="flex items-center gap-3 px-3 py-2 text-xs">
+                <button
+                  type="button"
+                  onClick={() => openSaved(r)}
+                  className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1 text-left hover:text-primary"
+                >
+                  <span className="font-semibold">{r.symbol}</span>
+                  <span className="text-muted-foreground">
+                    {TIMEFRAME_LABEL[r.timeframe as BacktestTimeframe] ?? r.timeframe} · {r.lookback} · {r.minGrade}+ ·{" "}
+                    {r.direction} · {r.riskPct}% risk · {r.rrTarget}R
+                  </span>
+                  <span className="text-muted-foreground">{r.result.stats.trades} trades</span>
+                  <span className={`font-mono font-semibold ${r.result.stats.expectancyR > 0 ? "text-bull" : r.result.stats.expectancyR < 0 ? "text-red-500" : "text-muted-foreground"}`}>
+                    {r.result.stats.expectancyR > 0 ? "+" : ""}{r.result.stats.expectancyR}R
+                  </span>
+                  <span className="ml-auto font-mono text-muted-foreground">{r.savedAt.slice(0, 16).replace("T", " ")}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSaved(deleteRun(r.id))}
+                  className="shrink-0 rounded p-1 text-muted-foreground hover:text-red-500"
+                  aria-label={`Delete saved run for ${r.symbol}`}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+
 
       <BacktestCompare
         base={{

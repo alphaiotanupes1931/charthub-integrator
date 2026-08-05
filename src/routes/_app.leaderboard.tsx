@@ -1,3 +1,4 @@
+import { PageInstructions } from "@/components/PageInstructions";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -83,6 +84,7 @@ function LeaderboardPage() {
           <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh
         </button>
       </div>
+      <PageInstructions className="mb-6" />
 
       <div className="rounded-md border border-border bg-card p-5 mb-6">
         <div className="text-sm font-semibold mb-3">Your visibility</div>
