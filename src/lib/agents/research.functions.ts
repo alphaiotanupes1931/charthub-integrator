@@ -21,6 +21,7 @@ const Input = z.object({
   strategyDesc: z.string().max(800).optional(),
   strategyId: z.string().max(80).optional(),
   coach: z.string().max(60).optional(),
+  journalPerf: z.string().max(300).optional(),
 });
 
 
