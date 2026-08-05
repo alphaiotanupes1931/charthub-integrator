@@ -207,6 +207,7 @@ function BrokerPage() {
           <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh
         </button>
       </div>
+      <PageInstructions className="mb-6" />
 
       {/* Credentials card */}
       <div className="rounded-md border border-border bg-card p-5 mb-6">

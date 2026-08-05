@@ -95,6 +95,7 @@ function AlertsPage() {
           <p className="text-sm text-muted-foreground">Get notified the moment a symbol crosses your target. Checked every minute.</p>
         </div>
       </header>
+      <PageInstructions className="mb-6" />
 
       <form onSubmit={submit} className="rounded-2xl border border-border bg-card p-4 md:p-5 mb-8 space-y-3">
         <div className="grid grid-cols-1 md:grid-cols-[1fr_120px_1fr] gap-3">
