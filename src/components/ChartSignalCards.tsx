@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowUpRight, ArrowDownRight, Minus, Target, Shield, Flag, Clock, ChevronDown, ChevronUp, X, Zap, BookOpen } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, Minus, Target, Shield, Flag, Clock, ChevronDown, ChevronUp, X, Zap, BookOpen, FlaskConical } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { takeTrade } from "@/lib/signalHistory";
 import type { ChartGrade } from "@/lib/chartAnnotations";
@@ -8,9 +8,31 @@ type Props = {
   grade: ChartGrade | null;
   lastPrice?: number;
   symbol?: string;
+  /** Chart interval in TradingView form (1, 5, 15, 60, 240, D, W, M). */
+  interval?: string;
   onClear?: () => void;
   scanning?: boolean;
 };
+
+// Chart intervals the historical engine supports; anything finer or coarser is
+// snapped to the closest supported bar size.
+function toBacktestTf(interval?: string): "15" | "60" | "240" | "D" {
+  switch (interval) {
+    case "1":
+    case "5":
+    case "15":
+      return "15";
+    case "240":
+      return "240";
+    case "D":
+    case "W":
+    case "M":
+      return "D";
+    default:
+      return "60";
+  }
+}
+
 
 function fmt(n?: number) {
   if (typeof n !== "number" || !isFinite(n)) return "-";
@@ -24,7 +46,7 @@ function pct(from?: number, to?: number) {
   return `${(((to - from) / from) * 100).toFixed(2)}%`;
 }
 
-export function ChartSignalCards({ grade, lastPrice, symbol, onClear, scanning }: Props) {
+export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, scanning }: Props) {
   const [expanded, setExpanded] = useState(false);
 
   // Empty state - render nothing when idle so the chart can fill the whole area.
@@ -145,6 +167,22 @@ export function ChartSignalCards({ grade, lastPrice, symbol, onClear, scanning }
             <Zap className="h-3 w-3" /> Broker
           </Link>
         )}
+
+        <Link
+          to="/backtest"
+          search={{
+            symbol: symbol ?? "",
+            tf: toBacktestTf(interval),
+            side: isLong ? "long" : isShort ? "short" : "both",
+            run: 1,
+          } as never}
+          className="inline-flex h-6 items-center gap-1 rounded px-2 text-[10px] font-bold uppercase tracking-wider border border-border text-foreground hover:bg-muted/60"
+          title="Backtest this instrument, timeframe and direction over past price history"
+        >
+          <FlaskConical className="h-3 w-3" /> Backtest
+        </Link>
+
+
 
 
         <button
