@@ -1579,6 +1579,7 @@ function Dashboard() {
             <div className="flex-1 min-h-0 overflow-hidden relative">
             <div className={`absolute inset-0 overflow-y-auto ${rightTab === "analysis" ? "" : "hidden"}`}>
               <div className="p-5">
+                <PageInstructions path="/dashboard" className="mb-4" />
                 <ScanBody
                   result={result}
                   scanning={scanning}
