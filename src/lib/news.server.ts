@@ -178,12 +178,21 @@ export async function calendarContextBlock(symbol?: string): Promise<string | un
   const relevant = (list: CalendarEvent[]) =>
     wanted.length ? list.filter((e) => wanted.includes(e.country.toUpperCase())) : list;
 
-  const today = relevant(todaysEvents(all)).filter((e) => /high|medium/i.test(e.impact));
-  const ahead = relevant(highImpactAhead(all, 72));
   const now = Date.now();
-  const recent = relevant(
+  let today = relevant(todaysEvents(all)).filter((e) => /high|medium/i.test(e.impact));
+  let ahead = relevant(highImpactAhead(all, 72));
+  let recent = relevant(
     all.filter((e) => new Date(e.date).getTime() <= now && /high|medium/i.test(e.impact)),
   ).slice(-6);
+  // If nothing maps to this instrument's currencies, fall back to the whole
+  // calendar so the coach still has session risk to reason about.
+  if (!today.length && !ahead.length && !recent.length && wanted.length) {
+    today = todaysEvents(all).filter((e) => /high|medium/i.test(e.impact));
+    ahead = highImpactAhead(all, 72);
+    recent = all
+      .filter((e) => new Date(e.date).getTime() <= now && /high|medium/i.test(e.impact))
+      .slice(-6);
+  }
   if (!today.length && !ahead.length && !recent.length) return undefined;
 
   const lines: string[] = ["ECONOMIC CALENDAR (Forex Factory, times in UTC)"];
