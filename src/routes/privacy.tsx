@@ -71,7 +71,7 @@ function PrivacyPage() {
       <Section title="6. Your rights">
         <p>
           Under GDPR, UK GDPR, and CCPA you have the right to access, export, correct, and delete your personal data.
-          You can exercise these rights directly from <Link to="/_app/settings" className="text-primary underline">Settings → Privacy &amp; Data</Link>:
+          You can exercise these rights directly from <Link to="/settings" className="text-primary underline">Settings → Privacy &amp; Data</Link>:
         </p>
         <ul className="list-disc pl-5 space-y-2 mt-3">
           <li><strong>Download all my data</strong> - exports your account, profile, chats, and usage as a JSON file.</li>
