@@ -256,14 +256,25 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
         onLoad={() => { setLoaded(true); setFailed(false); }}
         onError={() => setFailed(true)}
       />
-      {failed && !loaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background/70 backdrop-blur-sm p-4 text-center">
+      {(failed || stalled) && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/85 p-4 text-center">
           <div className="max-w-sm text-xs text-muted-foreground">
-            <p className="font-medium text-foreground mb-1">Live chart couldn't load</p>
-            <p>The TradingView widget was blocked (ad blocker or network). Switch to Native above for the live price feed.</p>
+            <p className="font-medium text-foreground mb-1">Live chart is not streaming</p>
+            <p>
+              The embedded TradingView feed is blocked on this network or browser, so the panel stays black with
+              zeroed prices. The Setup tab uses our own price feed and always works.
+            </p>
+            <button
+              type="button"
+              onClick={() => { setStalled(false); setFailed(false); setReloadKey((k) => k + 1); }}
+              className="mt-3 rounded-md border border-border px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-foreground hover:bg-muted"
+            >
+              Retry live chart
+            </button>
           </div>
         </div>
       )}
+
 
       {/* Drawing overlay */}
       <canvas
