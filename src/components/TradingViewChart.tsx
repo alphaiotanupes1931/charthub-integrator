@@ -30,12 +30,20 @@ type DrawTool = "pen" | "line" | "rect" | "arrow" | "eraser";
 type Pt = { x: number; y: number };
 type Stroke = { tool: DrawTool; color: string; width: number; points: Pt[] };
 
-export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _sessions }: Props) {
+export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _sessions, onStall }: Props) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
   const drawCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  // The embed can load its shell and still render an empty black panel with
+  // O0 H0 L0 C0 when the data socket is blocked. We detect that separately.
+  const [stalled, setStalled] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+  const aliveRef = useRef(false);
+  const onStallRef = useRef(onStall);
+  onStallRef.current = onStall;
+
 
   const [drawMode, setDrawMode] = useState(false);
   const [drawTool, setDrawTool] = useState<DrawTool>("pen");
