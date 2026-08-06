@@ -50,7 +50,7 @@ function StrategyDetailPage() {
     return (
       <div className="p-4 md:p-8 max-w-[1200px] mx-auto">
         <PageHeader title="Strategy not found" description="That strategy doesn't exist in the library." />
-        <Link to="/strategies" className="inline-flex items-center gap-2 text-sm text-primary hover:underline mt-4">
+        <Link to="/strategies" search={{ edit: undefined }} className="inline-flex items-center gap-2 text-sm text-primary hover:underline mt-4">
           <ArrowLeft className="h-4 w-4" /> Back to library
         </Link>
       </div>
@@ -76,14 +76,14 @@ function StrategyDetailPage() {
       try { localStorage.removeItem(STRAT_KEY); } catch { /* ignore */ }
     }
     toast.success(`${custom.name} deleted`);
-    navigate({ to: "/strategies" });
+    navigate({ to: "/strategies", search: { edit: undefined } });
   };
 
   const playbook = strategy.playbook ?? [];
 
   return (
     <div className="p-4 md:p-8 max-w-[1200px] mx-auto">
-      <Link to="/strategies" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4">
+      <Link to="/strategies" search={{ edit: undefined }} className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4">
         <ArrowLeft className="h-4 w-4" /> Back to library
       </Link>
 
