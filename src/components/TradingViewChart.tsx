@@ -7,7 +7,10 @@ interface Props {
   interval?: string;
   enabled?: Partial<Record<LevelKey, boolean>>;
   sessions?: boolean;
+  /** Called when the embed loads but never streams data (blocked/blank panel). */
+  onStall?: () => void;
 }
+
 
 const STUDY_MAP: Partial<Record<LevelKey, string>> = {
   VWAP:  "STD;VWAP",
