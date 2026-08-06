@@ -7,7 +7,10 @@ interface Props {
   interval?: string;
   enabled?: Partial<Record<LevelKey, boolean>>;
   sessions?: boolean;
+  /** Called when the embed loads but never streams data (blocked/blank panel). */
+  onStall?: () => void;
 }
+
 
 const STUDY_MAP: Partial<Record<LevelKey, string>> = {
   VWAP:  "STD;VWAP",
@@ -27,12 +30,20 @@ type DrawTool = "pen" | "line" | "rect" | "arrow" | "eraser";
 type Pt = { x: number; y: number };
 type Stroke = { tool: DrawTool; color: string; width: number; points: Pt[] };
 
-export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _sessions }: Props) {
+export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _sessions, onStall }: Props) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
   const drawCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  // The embed can load its shell and still render an empty black panel with
+  // O0 H0 L0 C0 when the data socket is blocked. We detect that separately.
+  const [stalled, setStalled] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+  const aliveRef = useRef(false);
+  const onStallRef = useRef(onStall);
+  onStallRef.current = onStall;
+
 
   const [drawMode, setDrawMode] = useState(false);
   const [drawTool, setDrawTool] = useState<DrawTool>("pen");
@@ -75,13 +86,39 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
   useEffect(() => {
     setFailed(false);
     setLoaded(false);
+    setStalled(false);
+    aliveRef.current = false;
     const timer = window.setTimeout(() => {
       if (!iframeRef.current?.contentDocument && !loaded) {
         setFailed(true);
       }
     }, 15_000);
     return () => window.clearTimeout(timer);
-  }, [src]);
+  }, [src, reloadKey]);
+
+  // The embed talks to its parent window while it streams. No messages inside
+  // 14s after the shell loads means the data feed is blocked and the panel is
+  // sitting there black with zeroed OHLC.
+  useEffect(() => {
+    const onMessage = (e: MessageEvent) => {
+      if (typeof e.origin === "string" && e.origin.includes("tradingview.com")) {
+        aliveRef.current = true;
+        setStalled(false);
+      }
+    };
+    window.addEventListener("message", onMessage);
+    const timer = window.setTimeout(() => {
+      if (!aliveRef.current) {
+        setStalled(true);
+        onStallRef.current?.();
+      }
+    }, 14_000);
+    return () => {
+      window.removeEventListener("message", onMessage);
+      window.clearTimeout(timer);
+    };
+  }, [src, reloadKey]);
+
 
   const redraw = useCallback(() => {
     const cvs = drawCanvasRef.current;
@@ -211,7 +248,7 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
     <div ref={hostRef} className="relative h-full w-full">
       <iframe
         ref={iframeRef}
-        key={src}
+        key={`${src}|${reloadKey}`}
         src={src}
         title="TradingView chart"
         className="h-full w-full border-0"
@@ -219,14 +256,25 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
         onLoad={() => { setLoaded(true); setFailed(false); }}
         onError={() => setFailed(true)}
       />
-      {failed && !loaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background/70 backdrop-blur-sm p-4 text-center">
+      {(failed || stalled) && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/85 p-4 text-center">
           <div className="max-w-sm text-xs text-muted-foreground">
-            <p className="font-medium text-foreground mb-1">Live chart couldn't load</p>
-            <p>The TradingView widget was blocked (ad blocker or network). Switch to Native above for the live price feed.</p>
+            <p className="font-medium text-foreground mb-1">Live chart is not streaming</p>
+            <p>
+              The embedded TradingView feed is blocked on this network or browser, so the panel stays black with
+              zeroed prices. The Setup tab uses our own price feed and always works.
+            </p>
+            <button
+              type="button"
+              onClick={() => { setStalled(false); setFailed(false); setReloadKey((k) => k + 1); }}
+              className="mt-3 rounded-md border border-border px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-foreground hover:bg-muted"
+            >
+              Retry live chart
+            </button>
           </div>
         </div>
       )}
+
 
       {/* Drawing overlay */}
       <canvas
