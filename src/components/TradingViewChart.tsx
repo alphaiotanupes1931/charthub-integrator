@@ -86,13 +86,39 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
   useEffect(() => {
     setFailed(false);
     setLoaded(false);
+    setStalled(false);
+    aliveRef.current = false;
     const timer = window.setTimeout(() => {
       if (!iframeRef.current?.contentDocument && !loaded) {
         setFailed(true);
       }
     }, 15_000);
     return () => window.clearTimeout(timer);
-  }, [src]);
+  }, [src, reloadKey]);
+
+  // The embed talks to its parent window while it streams. No messages inside
+  // 14s after the shell loads means the data feed is blocked and the panel is
+  // sitting there black with zeroed OHLC.
+  useEffect(() => {
+    const onMessage = (e: MessageEvent) => {
+      if (typeof e.origin === "string" && e.origin.includes("tradingview.com")) {
+        aliveRef.current = true;
+        setStalled(false);
+      }
+    };
+    window.addEventListener("message", onMessage);
+    const timer = window.setTimeout(() => {
+      if (!aliveRef.current) {
+        setStalled(true);
+        onStallRef.current?.();
+      }
+    }, 14_000);
+    return () => {
+      window.removeEventListener("message", onMessage);
+      window.clearTimeout(timer);
+    };
+  }, [src, reloadKey]);
+
 
   const redraw = useCallback(() => {
     const cvs = drawCanvasRef.current;
