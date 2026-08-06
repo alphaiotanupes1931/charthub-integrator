@@ -1462,7 +1462,14 @@ function Dashboard() {
 
           <div className="flex-1 min-h-0 overflow-hidden relative">
             {chartTab === "live" ? (
-              <TradingViewChart symbol={symbol.tv} interval={interval} enabled={levels} sessions={sessionsOn} />
+              <TradingViewChart
+                symbol={symbol.tv}
+                interval={interval}
+                enabled={levels}
+                sessions={sessionsOn}
+                onStall={() => setChartTab("setup")}
+              />
+
             ) : (
               <NativeChart symbol={symbol.tv} ticker={symbol.ticker} interval={interval} enabled={levels} sessions={sessionsOn} onSnapshot={setSnapshot} annotations={aiAnnotations} candleType={candleType} />
             )}
