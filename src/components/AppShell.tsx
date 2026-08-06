@@ -107,10 +107,10 @@ const NAV_GROUPS: NavGroup[] = [
     label: "Learn",
     icon: GraduationCap,
     items: [
+      { to: "/first-week", label: "First Week", icon: Footprints },
       { to: "/academy",    label: "Academy",    icon: GraduationCap },
       { to: "/flashcards", label: "Flashcards", icon: BookOpen },
       { to: "/guide",      label: "Guide",      icon: BookOpen },
-      { to: "/first-week", label: "First Week", icon: Footprints },
     ],
   },
   {
