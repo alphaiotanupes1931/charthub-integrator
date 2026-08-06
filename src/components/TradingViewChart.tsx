@@ -248,7 +248,7 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
     <div ref={hostRef} className="relative h-full w-full">
       <iframe
         ref={iframeRef}
-        key={src}
+        key={`${src}|${reloadKey}`}
         src={src}
         title="TradingView chart"
         className="h-full w-full border-0"
