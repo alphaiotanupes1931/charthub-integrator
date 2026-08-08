@@ -180,9 +180,28 @@ export async function runAutopilotForUser(
 
       if (!verdict.allowed) {
         result.blocked += 1;
+        await logAutopilotEvent(
+          userId,
+          "blocked",
+          `${draft.symbol} ${draft.side} blocked: ${verdict.reason ?? "rails"}`,
+          { symbol: draft.symbol, grade: draft.grade, proposalId: inserted.id },
+        );
         continue;
       }
       result.created += 1;
+      await logAutopilotEvent(
+        userId,
+        "proposal",
+        `${draft.symbol} ${draft.side} grade ${draft.grade ?? "-"} filed at ${draft.entry}`,
+        {
+          symbol: draft.symbol,
+          grade: draft.grade,
+          entry: draft.entry,
+          stop: draft.stopLoss,
+          target: draft.takeProfit,
+          proposalId: inserted.id,
+        },
+      );
 
       if (autoFill) {
         const size = Math.max(1, Math.floor(draft.units ?? 1));
@@ -201,6 +220,10 @@ export async function runAutopilotForUser(
             .from("autopilot_proposals")
             .update({ status: "failed", rejection_reason: posError.message })
             .eq("id", inserted.id as string);
+          await logAutopilotEvent(userId, "failed", `${draft.symbol} auto-fill failed`, {
+            symbol: draft.symbol,
+            proposalId: inserted.id,
+          });
         } else {
           await client
             .from("autopilot_proposals")
@@ -208,8 +231,15 @@ export async function runAutopilotForUser(
             .eq("id", inserted.id as string);
           result.executed += 1;
           openPositions += 1;
+          await logAutopilotEvent(
+            userId,
+            "filled",
+            `${draft.symbol} ${draft.side} auto-filled on paper, ${size} units at ${draft.entry}`,
+            { symbol: draft.symbol, size, entry: draft.entry, proposalId: inserted.id },
+          );
         }
       }
+
     } catch {
       result.skipped.push(`${symbol}: data unavailable`);
     }
