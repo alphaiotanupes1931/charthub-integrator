@@ -72,6 +72,9 @@ export const runResearchPlan = createServerFn({ method: "POST" })
     // Load Hermes memory relevant to this ticker / lens.
     let hermesPrompt = "";
     let perfDesc = "";
+    let scoreDesc = "";
+    let gradeCap: "A+" | "A" | "B" | "C" | null = null;
+    let capReason: string | null = null;
     try {
       const auth = getRequestHeader("authorization") ?? getRequestHeader("Authorization");
       const token = auth?.toLowerCase().startsWith("bearer ") ? auth.slice(7).trim() : null;
@@ -141,6 +144,21 @@ export const runResearchPlan = createServerFn({ method: "POST" })
             perfDesc = perfDesc ? `${perfDesc} | ${paperLine}` : paperLine;
           }
 
+          // Scoreboard feedback: what past scans on this instrument actually
+          // did. This both informs the prompt and caps the final grade.
+          try {
+            const { scoreEvidenceFor } = await import("@/lib/signal-evidence.server");
+            const ev = await scoreEvidenceFor(
+              supabase as never,
+              userId,
+              data.ticker,
+              data.strategyId,
+            );
+            if (ev.prompt) scoreDesc = ev.prompt;
+            gradeCap = ev.cap;
+            capReason = ev.reason;
+          } catch { /* scoreboard feedback is best-effort */ }
+
           // If the user just passed a journal-performance summary, fold it in.
           if (data.journalPerf) {
             perfDesc = perfDesc ? `${perfDesc} | ${data.journalPerf}` : data.journalPerf;
@@ -159,7 +177,22 @@ export const runResearchPlan = createServerFn({ method: "POST" })
       data.strategyDesc,
       data.coach,
       perfDesc || undefined,
+      scoreDesc || undefined,
     );
+
+    // Hard self-correction: the measured record outranks the model's own
+    // opinion of the setup, so the grade is clamped after the fact too.
+    if (gradeCap) {
+      const { applyGradeCap } = await import("@/lib/signal-evidence.server");
+      const capped = applyGradeCap(plan.grade, gradeCap);
+      if (capped !== plan.grade) {
+        return {
+          ...plan,
+          grade: capped as TradePlan["grade"],
+          details: capReason ? `${plan.details} ${capReason}` : plan.details,
+        };
+      }
+    }
     return plan;
   });
 
