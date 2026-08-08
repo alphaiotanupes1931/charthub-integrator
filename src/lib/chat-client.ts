@@ -40,6 +40,14 @@ export function readActiveStrategy(): string | null {
   if (typeof window === "undefined") return null;
   try { return window.localStorage.getItem(STRATEGY_KEY); } catch { return null; }
 }
+export function writeActiveStrategy(name: string | null) {
+  if (typeof window === "undefined") return;
+  try {
+    if (name) window.localStorage.setItem(STRATEGY_KEY, name);
+    else window.localStorage.removeItem(STRATEGY_KEY);
+    window.dispatchEvent(new Event("trademind:strategy"));
+  } catch { /* ignore */ }
+}
 
 const LAST_CHART_KEY = "trademind.lastChart.v1";
 export type LastChart = { ticker: string; intervalLabel: string; enabledLevels?: string };

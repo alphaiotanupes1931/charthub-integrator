@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, ChevronDown } from "lucide-react";
 import { getMarketNews } from "@/lib/news.functions";
 import { getBriefingState } from "@/lib/briefings.functions";
 import { useTimezone } from "@/hooks/useTimezone";
@@ -39,9 +39,26 @@ function impactClass(impact: string) {
   return "border-border text-muted-foreground";
 }
 
+/** Plain language read of an actual print against its forecast. */
+function surpriseRead(e: { actual?: string; forecast?: string; title: string }): string {
+  const num = (v?: string) => {
+    if (!v) return undefined;
+    const n = parseFloat(v.replace(/[^0-9.\-]/g, ""));
+    return isFinite(n) ? n : undefined;
+  };
+  const a = num(e.actual);
+  const f = num(e.forecast);
+  if (a === undefined) return "This release has not printed yet, so the market is still positioning on the forecast.";
+  if (f === undefined) return "This release printed but there was no forecast to measure it against.";
+  if (a > f) return `It printed above forecast (${e.actual} vs ${e.forecast}), which usually supports the currency and pressures rate sensitive assets.`;
+  if (a < f) return `It printed below forecast (${e.actual} vs ${e.forecast}), which usually weakens the currency and helps rate sensitive assets.`;
+  return `It printed in line with forecast (${e.actual}), so the reaction is usually limited.`;
+}
+
 function NewsPage() {
   const { resolvedTimezone } = useTimezone();
   const [filter, setFilter] = useState<Impact>("high");
+  const [openKey, setOpenKey] = useState<string | null>(null);
 
   const getState = useServerFn(getBriefingState);
   const stateQ = useQuery({ queryKey: ["briefingState"], queryFn: () => getState() });
@@ -133,29 +150,77 @@ function NewsPage() {
           </p>
         ) : (
           <ul className="divide-y divide-border">
-            {events.map((e, i) => (
-              <li key={`${e.date}-${e.title}-${i}`} className="flex items-start gap-3 py-2.5">
-                <span className="w-32 shrink-0 text-xs text-muted-foreground">
-                  {fmtTime(e.date)}
-                </span>
-                <span
-                  className={`shrink-0 rounded border px-1.5 py-0.5 text-[10px] uppercase ${impactClass(e.impact)}`}
-                >
-                  {e.impact}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm font-medium">
-                    <span className="mr-1.5 text-xs text-muted-foreground">{e.country}</span>
-                    {e.title}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {e.actual ? `Actual ${e.actual} · ` : ""}
-                    {e.forecast ? `Forecast ${e.forecast} · ` : ""}
-                    {e.previous ? `Previous ${e.previous}` : ""}
-                  </div>
-                </div>
-              </li>
-            ))}
+            {events.map((e, i) => {
+              const key = `${e.date}-${e.title}-${i}`;
+              const open = openKey === key;
+              return (
+                <li key={key} className="py-1">
+                  <button
+                    type="button"
+                    onClick={() => setOpenKey(open ? null : key)}
+                    className="flex w-full items-start gap-3 py-1.5 text-left hover:bg-muted/40 rounded-md px-1"
+                    aria-expanded={open}
+                  >
+                    <span className="w-32 shrink-0 text-xs text-muted-foreground">
+                      {fmtTime(e.date)}
+                    </span>
+                    <span
+                      className={`shrink-0 rounded border px-1.5 py-0.5 text-[10px] uppercase ${impactClass(e.impact)}`}
+                    >
+                      {e.impact}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium">
+                        <span className="mr-1.5 text-xs text-muted-foreground">{e.country}</span>
+                        {e.title}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {e.actual ? `Actual ${e.actual} · ` : ""}
+                        {e.forecast ? `Forecast ${e.forecast} · ` : ""}
+                        {e.previous ? `Previous ${e.previous}` : ""}
+                      </div>
+                    </div>
+                    <ChevronDown
+                      className={`mt-0.5 size-4 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`}
+                    />
+                  </button>
+
+                  {open && (
+                    <div className="ml-32 mr-1 mb-2 space-y-2 rounded-md border border-border bg-background/60 p-3 text-xs">
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                        {[
+                          ["Country", e.country],
+                          ["Impact", e.impact],
+                          ["Actual", e.actual || "not released"],
+                          ["Forecast", e.forecast || "none"],
+                          ["Previous", e.previous || "none"],
+                          ["Release time", fmtTime(e.date)],
+                        ].map(([label, value]) => (
+                          <div key={label as string}>
+                            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                              {label}
+                            </div>
+                            <div className="text-foreground">{value}</div>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-muted-foreground">
+                        {surpriseRead(e)} Around a high impact release, spreads widen and stops get
+                        run in both directions. If you are already in a position, either bank
+                        partials or move to break-even before the print.
+                      </p>
+                      <Link
+                        to="/dashboard"
+                        search={{ ask: `How should I trade around ${e.country} ${e.title}?` } as never}
+                        className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs hover:border-primary/60"
+                      >
+                        Ask the coach about this release
+                      </Link>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>
