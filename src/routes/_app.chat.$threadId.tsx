@@ -40,6 +40,52 @@ function uiMessageText(message: UIMessage | null | undefined): string {
   return textFromUiMessageParts(message?.parts);
 }
 
+function num(n?: number) {
+  if (typeof n !== "number" || !isFinite(n)) return "-";
+  const abs = Math.abs(n);
+  return n.toFixed(abs >= 1000 ? 2 : abs >= 10 ? 3 : abs >= 1 ? 4 : 5);
+}
+
+/** Compact setup card so saved threads show the analysis, not just the text. */
+function ThreadGradeCard({ grade }: { grade: ChartGrade }) {
+  const bias = (grade.bias ?? "neutral").toString();
+  const tone = bias === "long" ? "text-bull" : bias === "short" ? "text-red-300" : "text-muted-foreground";
+  const rows: Array<[string, number | undefined]> = [
+    ["Entry", grade.entry],
+    ["Stop", grade.stop],
+    ["TP1", grade.tp1],
+    ["TP2", grade.tp2],
+  ];
+  return (
+    <div className="rounded-md border border-border bg-card/50 w-full">
+      <div className="flex items-center gap-2 px-3 py-1.5 border-b border-border/60">
+        <span className={`text-[10px] font-bold uppercase tracking-wider ${tone}`}>{bias}</span>
+        <span className="rounded border border-border/60 bg-background/60 px-1.5 py-0.5 text-[10px] font-bold">
+          {grade.grade.toUpperCase()}
+        </span>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2">
+        {rows.map(([label, value]) => (
+          <div key={label} className="rounded border border-border/50 bg-background/40 px-2 py-1">
+            <div className="text-[9px] uppercase tracking-wider text-muted-foreground">{label}</div>
+            <div className="font-mono text-[11px] text-foreground">{num(value)}</div>
+          </div>
+        ))}
+      </div>
+      {(grade.strength || grade.weakness) && (
+        <div className="border-t border-border/50 px-3 py-2 space-y-1 text-xs">
+          {grade.strength && (
+            <div><span className="font-semibold text-bull">Why take this trade: </span><span className="text-foreground/90">{grade.strength}</span></div>
+          )}
+          {grade.weakness && grade.weakness !== grade.strength && (
+            <div><span className="font-semibold text-red-400">Risk and invalidation: </span><span className="text-foreground/90">{grade.weakness}</span></div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ChatThread() {
   const { threadId } = useParams({ from: "/_app/chat/$threadId" });
   const [initialMessages, setInitialMessages] = useState<UIMessage[] | null>(null);
