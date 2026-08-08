@@ -65,6 +65,33 @@ export type Database = {
         }
         Relationships: []
       }
+      autopilot_events: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          message: string
+          meta: Json
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          message: string
+          meta?: Json
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          message?: string
+          meta?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       autopilot_proposals: {
         Row: {
           account_target: string
