@@ -244,6 +244,30 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
     else redraw();
   };
 
+  const down = failed || stalled;
+
+  // Backup chart: when the embed is blocked or black, swap our own feed into
+  // the same panel so the trader always has a working chart in this view.
+  if (down && fallback) {
+    return (
+      <div ref={hostRef} className="relative h-full w-full">
+        <div className="absolute inset-0">{fallback}</div>
+        <div className="absolute left-2 top-2 z-30 flex items-center gap-2 rounded-md border border-border bg-background/90 px-2 py-1">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+            Backup chart, live embed blocked
+          </span>
+          <button
+            type="button"
+            onClick={() => { setStalled(false); setFailed(false); aliveRef.current = false; setReloadKey((k) => k + 1); }}
+            className="rounded border border-border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-foreground hover:bg-muted"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div ref={hostRef} className="relative h-full w-full">
       <iframe
@@ -256,7 +280,7 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
         onLoad={() => { setLoaded(true); setFailed(false); }}
         onError={() => setFailed(true)}
       />
-      {(failed || stalled) && (
+      {down && (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/85 p-4 text-center">
           <div className="max-w-sm text-xs text-muted-foreground">
             <p className="font-medium text-foreground mb-1">Live chart is not streaming</p>
@@ -266,7 +290,7 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
             </p>
             <button
               type="button"
-              onClick={() => { setStalled(false); setFailed(false); setReloadKey((k) => k + 1); }}
+              onClick={() => { setStalled(false); setFailed(false); aliveRef.current = false; setReloadKey((k) => k + 1); }}
               className="mt-3 rounded-md border border-border px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-foreground hover:bg-muted"
             >
               Retry live chart
