@@ -9,6 +9,8 @@ import {
   type AutopilotSettings,
 } from "@/lib/autopilot.shared";
 import { buildProposalDraft } from "@/lib/autopilot.server";
+import { logAutopilotEvent } from "@/lib/autopilot-events.server";
+import { createNotification } from "@/lib/notifications.server";
 
 type Client = SupabaseClient<Database>;
 
