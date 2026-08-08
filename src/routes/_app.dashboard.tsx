@@ -1249,6 +1249,61 @@ function Dashboard() {
               </div>
             );
           })()}
+
+          {/* Active strategy playbook - sits beside the coach so both pieces of
+              scan context are changeable from the same bar. */}
+          <div className="relative" ref={strategyRef}>
+            <button
+              onClick={() => setStrategyOpen((o) => !o)}
+              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/50 px-2.5 py-1.5 text-xs font-medium hover:border-primary/50 transition"
+              title="Change the strategy playbook your scans are graded against"
+            >
+              <BookOpen className="h-3.5 w-3.5 text-primary" />
+              <span className="max-w-[9rem] truncate">{activeStrategy ?? "No strategy"}</span>
+              <ChevronDown className={`h-3 w-3 transition-transform ${strategyOpen ? "rotate-180" : ""}`} />
+            </button>
+            {strategyOpen && (
+              <div role="listbox" className="absolute right-0 mt-2 w-72 max-h-96 overflow-y-auto rounded-lg border border-border bg-card shadow-xl z-50">
+                <button
+                  role="option"
+                  aria-selected={!activeStrategy}
+                  onClick={() => { writeActiveStrategy(null); setActiveStrategy(null); setStrategyOpen(false); }}
+                  className={`w-full text-left px-3 py-2.5 text-sm border-b border-border/40 hover:bg-accent/40 transition ${!activeStrategy ? "bg-primary/10 text-primary" : ""}`}
+                >
+                  No strategy
+                  <div className="text-[11px] text-muted-foreground mt-0.5">Grade on raw structure only.</div>
+                </button>
+                {strategyOptions.map((s) => {
+                  const isActive = s.name === activeStrategy;
+                  return (
+                    <button
+                      key={s.name}
+                      role="option"
+                      aria-selected={isActive}
+                      onClick={() => {
+                        writeActiveStrategy(s.name);
+                        setActiveStrategy(s.name);
+                        setStrategyOpen(false);
+                        if (!isActive) toast.success(`Scans now graded against ${s.name}`);
+                      }}
+                      className={`w-full text-left px-3 py-2.5 text-sm border-b border-border/40 last:border-0 hover:bg-accent/40 transition ${isActive ? "bg-primary/10 text-primary" : ""}`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-medium truncate">{s.name}</span>
+                        {isActive && <Check className="h-3.5 w-3.5 shrink-0" />}
+                      </div>
+                      {s.blurb && (
+                        <div className="text-[11px] text-muted-foreground mt-0.5 leading-snug line-clamp-2">{s.blurb}</div>
+                      )}
+                    </button>
+                  );
+                })}
+                <Link to="/strategies" className="block px-3 py-2 text-[11px] text-muted-foreground hover:text-foreground border-t border-border/60">
+                  Manage all strategies →
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
