@@ -338,10 +338,10 @@ function GradeCard({ grade, lastPrice, symbol, interval }: { grade: ChartGrade; 
       {(grade.strength || grade.weakness) && (
         <div className="p-2 space-y-1 text-xs border-t border-border/60">
           {grade.strength && (
-            <div><span className="text-bull font-semibold">Strength: </span><span className="text-foreground/90">{grade.strength}</span></div>
+            <div><span className="text-bull font-semibold">Why take this trade: </span><span className="text-foreground/90">{grade.strength}</span></div>
           )}
-          {grade.weakness && (
-            <div><span className="text-red-400 font-semibold">Weakness: </span><span className="text-foreground/90">{grade.weakness}</span></div>
+          {grade.weakness && grade.weakness !== grade.strength && (
+            <div><span className="text-red-400 font-semibold">Risk and invalidation: </span><span className="text-foreground/90">{grade.weakness}</span></div>
           )}
         </div>
       )}
