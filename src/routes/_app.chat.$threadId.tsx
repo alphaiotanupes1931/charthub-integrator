@@ -204,13 +204,22 @@ function ChatThreadInner({
           )}
           {messages.map((m) => {
             const text = uiMessageText(m);
+            if (m.role !== "assistant") {
+              return (
+                <Message key={m.id} from={m.role}>
+                  <MessageContent>{text}</MessageContent>
+                </Message>
+              );
+            }
+            // Saved threads store the raw reply, including the analysis block,
+            // so reopening old history shows the setup card again, not just text.
+            const parsed = parseAiPayload(text);
             return (
               <Message key={m.id} from={m.role}>
-                {m.role === "assistant" ? (
-                  <MessageResponse>{text}</MessageResponse>
-                ) : (
-                  <MessageContent>{text}</MessageContent>
-                )}
+                <div className="flex flex-col gap-2 w-full">
+                  {parsed.grade && <ThreadGradeCard grade={parsed.grade} />}
+                  <MessageResponse>{parsed.cleanText || text}</MessageResponse>
+                </div>
               </Message>
             );
           })}
