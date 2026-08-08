@@ -1,10 +1,7 @@
 // Autopilot audit log. Every automated decision the runner makes gets written
 // here so a trader can reconstruct exactly why a trade was taken, blocked, or
-// why the engine paused itself. Writes go through whichever client the caller
-// already authorized (service role in the cron tick, user client in-app).
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/integrations/supabase/types";
-
+// why the engine paused itself. Rows are system-written (service role), and
+// traders can only read their own.
 export type AutopilotEventKind =
   | "run"
   | "proposal"
@@ -15,14 +12,14 @@ export type AutopilotEventKind =
   | "resumed";
 
 export async function logAutopilotEvent(
-  client: SupabaseClient<Database>,
   userId: string,
   kind: AutopilotEventKind,
   message: string,
   meta: Record<string, unknown> = {},
 ): Promise<void> {
   try {
-    await client.from("autopilot_events").insert({
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("autopilot_events").insert({
       user_id: userId,
       kind,
       message,
