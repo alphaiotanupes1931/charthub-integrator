@@ -72,6 +72,9 @@ export const runResearchPlan = createServerFn({ method: "POST" })
     // Load Hermes memory relevant to this ticker / lens.
     let hermesPrompt = "";
     let perfDesc = "";
+    let scoreDesc = "";
+    let gradeCap: "A+" | "A" | "B" | "C" | null = null;
+    let capReason: string | null = null;
     try {
       const auth = getRequestHeader("authorization") ?? getRequestHeader("Authorization");
       const token = auth?.toLowerCase().startsWith("bearer ") ? auth.slice(7).trim() : null;
