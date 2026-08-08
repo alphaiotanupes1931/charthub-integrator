@@ -1,3 +1,4 @@
+import type React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pencil, Minus as LineIcon, Square as RectIcon, ArrowUpRight, Undo2, Trash2, Eraser as EraserIcon, X as CloseIcon } from "lucide-react";
 import type { LevelKey } from "@/components/NativeChart";
@@ -9,6 +10,8 @@ interface Props {
   sessions?: boolean;
   /** Called when the embed loads but never streams data (blocked/blank panel). */
   onStall?: () => void;
+  /** Rendered in place of the embed when the live feed is blocked or black. */
+  fallback?: React.ReactNode;
 }
 
 
@@ -30,7 +33,7 @@ type DrawTool = "pen" | "line" | "rect" | "arrow" | "eraser";
 type Pt = { x: number; y: number };
 type Stroke = { tool: DrawTool; color: string; width: number; points: Pt[] };
 
-export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _sessions, onStall }: Props) {
+export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _sessions, onStall, fallback }: Props) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
   const drawCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -244,6 +247,30 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
     else redraw();
   };
 
+  const down = failed || stalled;
+
+  // Backup chart: when the embed is blocked or black, swap our own feed into
+  // the same panel so the trader always has a working chart in this view.
+  if (down && fallback) {
+    return (
+      <div ref={hostRef} className="relative h-full w-full">
+        <div className="absolute inset-0">{fallback}</div>
+        <div className="absolute left-2 top-2 z-30 flex items-center gap-2 rounded-md border border-border bg-background/90 px-2 py-1">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+            Backup chart, live embed blocked
+          </span>
+          <button
+            type="button"
+            onClick={() => { setStalled(false); setFailed(false); aliveRef.current = false; setReloadKey((k) => k + 1); }}
+            className="rounded border border-border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-foreground hover:bg-muted"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div ref={hostRef} className="relative h-full w-full">
       <iframe
@@ -256,7 +283,7 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
         onLoad={() => { setLoaded(true); setFailed(false); }}
         onError={() => setFailed(true)}
       />
-      {(failed || stalled) && (
+      {down && (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/85 p-4 text-center">
           <div className="max-w-sm text-xs text-muted-foreground">
             <p className="font-medium text-foreground mb-1">Live chart is not streaming</p>
@@ -266,7 +293,7 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
             </p>
             <button
               type="button"
-              onClick={() => { setStalled(false); setFailed(false); setReloadKey((k) => k + 1); }}
+              onClick={() => { setStalled(false); setFailed(false); aliveRef.current = false; setReloadKey((k) => k + 1); }}
               className="mt-3 rounded-md border border-border px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-foreground hover:bg-muted"
             >
               Retry live chart
