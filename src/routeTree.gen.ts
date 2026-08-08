@@ -33,6 +33,7 @@ import { Route as AppTestingRouteImport } from './routes/_app.testing'
 import { Route as AppStrategiesRouteImport } from './routes/_app.strategies'
 import { Route as AppSignalsRouteImport } from './routes/_app.signals'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
+import { Route as AppScoreboardRouteImport } from './routes/_app.scoreboard'
 import { Route as AppScanLensRouteImport } from './routes/_app.scan-lens'
 import { Route as AppNewsRouteImport } from './routes/_app.news'
 import { Route as AppMentorRouteImport } from './routes/_app.mentor'
@@ -77,6 +78,7 @@ import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api.publi
 import { Route as ApiPublicHooksWeeklyReviewRouteImport } from './routes/api.public.hooks.weekly-review'
 import { Route as ApiPublicHooksSendBriefingsRouteImport } from './routes/api.public.hooks.send-briefings'
 import { Route as ApiPublicHooksScanSignalsRouteImport } from './routes/api.public.hooks.scan-signals'
+import { Route as ApiPublicHooksResolveSignalsRouteImport } from './routes/api.public.hooks.resolve-signals'
 import { Route as ApiPublicHooksReconcilePaperRouteImport } from './routes/api.public.hooks.reconcile-paper'
 import { Route as ApiPublicHooksPriceAlertsTickRouteImport } from './routes/api.public.hooks.price-alerts-tick'
 import { Route as ApiPublicHooksAutopilotTickRouteImport } from './routes/api.public.hooks.autopilot-tick'
@@ -200,6 +202,11 @@ const AppSignalsRoute = AppSignalsRouteImport.update({
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppScoreboardRoute = AppScoreboardRouteImport.update({
+  id: '/scoreboard',
+  path: '/scoreboard',
   getParentRoute: () => AppRoute,
 } as any)
 const AppScanLensRoute = AppScanLensRouteImport.update({
@@ -427,6 +434,12 @@ const ApiPublicHooksScanSignalsRoute =
     path: '/api/public/hooks/scan-signals',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksResolveSignalsRoute =
+  ApiPublicHooksResolveSignalsRouteImport.update({
+    id: '/api/public/hooks/resolve-signals',
+    path: '/api/public/hooks/resolve-signals',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksReconcilePaperRoute =
   ApiPublicHooksReconcilePaperRouteImport.update({
     id: '/api/public/hooks/reconcile-paper',
@@ -496,6 +509,7 @@ export interface FileRoutesByFullPath {
   '/mentor': typeof AppMentorRoute
   '/news': typeof AppNewsRoute
   '/scan-lens': typeof AppScanLensRoute
+  '/scoreboard': typeof AppScoreboardRoute
   '/settings': typeof AppSettingsRoute
   '/signals': typeof AppSignalsRoute
   '/strategies': typeof AppStrategiesRouteWithChildren
@@ -526,6 +540,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/autopilot-tick': typeof ApiPublicHooksAutopilotTickRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
   '/api/public/hooks/reconcile-paper': typeof ApiPublicHooksReconcilePaperRoute
+  '/api/public/hooks/resolve-signals': typeof ApiPublicHooksResolveSignalsRoute
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
   '/api/public/hooks/weekly-review': typeof ApiPublicHooksWeeklyReviewRoute
@@ -568,6 +583,7 @@ export interface FileRoutesByTo {
   '/mentor': typeof AppMentorRoute
   '/news': typeof AppNewsRoute
   '/scan-lens': typeof AppScanLensRoute
+  '/scoreboard': typeof AppScoreboardRoute
   '/settings': typeof AppSettingsRoute
   '/signals': typeof AppSignalsRoute
   '/testing': typeof AppTestingRoute
@@ -596,6 +612,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/autopilot-tick': typeof ApiPublicHooksAutopilotTickRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
   '/api/public/hooks/reconcile-paper': typeof ApiPublicHooksReconcilePaperRoute
+  '/api/public/hooks/resolve-signals': typeof ApiPublicHooksResolveSignalsRoute
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
   '/api/public/hooks/weekly-review': typeof ApiPublicHooksWeeklyReviewRoute
@@ -642,6 +659,7 @@ export interface FileRoutesById {
   '/_app/mentor': typeof AppMentorRoute
   '/_app/news': typeof AppNewsRoute
   '/_app/scan-lens': typeof AppScanLensRoute
+  '/_app/scoreboard': typeof AppScoreboardRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/signals': typeof AppSignalsRoute
   '/_app/strategies': typeof AppStrategiesRouteWithChildren
@@ -672,6 +690,7 @@ export interface FileRoutesById {
   '/api/public/hooks/autopilot-tick': typeof ApiPublicHooksAutopilotTickRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
   '/api/public/hooks/reconcile-paper': typeof ApiPublicHooksReconcilePaperRoute
+  '/api/public/hooks/resolve-signals': typeof ApiPublicHooksResolveSignalsRoute
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
   '/api/public/hooks/weekly-review': typeof ApiPublicHooksWeeklyReviewRoute
@@ -718,6 +737,7 @@ export interface FileRouteTypes {
     | '/mentor'
     | '/news'
     | '/scan-lens'
+    | '/scoreboard'
     | '/settings'
     | '/signals'
     | '/strategies'
@@ -748,6 +768,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/autopilot-tick'
     | '/api/public/hooks/price-alerts-tick'
     | '/api/public/hooks/reconcile-paper'
+    | '/api/public/hooks/resolve-signals'
     | '/api/public/hooks/scan-signals'
     | '/api/public/hooks/send-briefings'
     | '/api/public/hooks/weekly-review'
@@ -790,6 +811,7 @@ export interface FileRouteTypes {
     | '/mentor'
     | '/news'
     | '/scan-lens'
+    | '/scoreboard'
     | '/settings'
     | '/signals'
     | '/testing'
@@ -818,6 +840,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/autopilot-tick'
     | '/api/public/hooks/price-alerts-tick'
     | '/api/public/hooks/reconcile-paper'
+    | '/api/public/hooks/resolve-signals'
     | '/api/public/hooks/scan-signals'
     | '/api/public/hooks/send-briefings'
     | '/api/public/hooks/weekly-review'
@@ -863,6 +886,7 @@ export interface FileRouteTypes {
     | '/_app/mentor'
     | '/_app/news'
     | '/_app/scan-lens'
+    | '/_app/scoreboard'
     | '/_app/settings'
     | '/_app/signals'
     | '/_app/strategies'
@@ -893,6 +917,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/autopilot-tick'
     | '/api/public/hooks/price-alerts-tick'
     | '/api/public/hooks/reconcile-paper'
+    | '/api/public/hooks/resolve-signals'
     | '/api/public/hooks/scan-signals'
     | '/api/public/hooks/send-briefings'
     | '/api/public/hooks/weekly-review'
@@ -925,6 +950,7 @@ export interface RootRouteChildren {
   ApiPublicHooksAutopilotTickRoute: typeof ApiPublicHooksAutopilotTickRoute
   ApiPublicHooksPriceAlertsTickRoute: typeof ApiPublicHooksPriceAlertsTickRoute
   ApiPublicHooksReconcilePaperRoute: typeof ApiPublicHooksReconcilePaperRoute
+  ApiPublicHooksResolveSignalsRoute: typeof ApiPublicHooksResolveSignalsRoute
   ApiPublicHooksScanSignalsRoute: typeof ApiPublicHooksScanSignalsRoute
   ApiPublicHooksSendBriefingsRoute: typeof ApiPublicHooksSendBriefingsRoute
   ApiPublicHooksWeeklyReviewRoute: typeof ApiPublicHooksWeeklyReviewRoute
@@ -1099,6 +1125,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/scoreboard': {
+      id: '/_app/scoreboard'
+      path: '/scoreboard'
+      fullPath: '/scoreboard'
+      preLoaderRoute: typeof AppScoreboardRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/scan-lens': {
@@ -1409,6 +1442,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksScanSignalsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/resolve-signals': {
+      id: '/api/public/hooks/resolve-signals'
+      path: '/api/public/hooks/resolve-signals'
+      fullPath: '/api/public/hooks/resolve-signals'
+      preLoaderRoute: typeof ApiPublicHooksResolveSignalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/reconcile-paper': {
       id: '/api/public/hooks/reconcile-paper'
       path: '/api/public/hooks/reconcile-paper'
@@ -1548,6 +1588,7 @@ interface AppRouteChildren {
   AppMentorRoute: typeof AppMentorRoute
   AppNewsRoute: typeof AppNewsRoute
   AppScanLensRoute: typeof AppScanLensRoute
+  AppScoreboardRoute: typeof AppScoreboardRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppSignalsRoute: typeof AppSignalsRoute
   AppStrategiesRoute: typeof AppStrategiesRouteWithChildren
@@ -1582,6 +1623,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppMentorRoute: AppMentorRoute,
   AppNewsRoute: AppNewsRoute,
   AppScanLensRoute: AppScanLensRoute,
+  AppScoreboardRoute: AppScoreboardRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppSignalsRoute: AppSignalsRoute,
   AppStrategiesRoute: AppStrategiesRouteWithChildren,
@@ -1626,6 +1668,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksAutopilotTickRoute: ApiPublicHooksAutopilotTickRoute,
   ApiPublicHooksPriceAlertsTickRoute: ApiPublicHooksPriceAlertsTickRoute,
   ApiPublicHooksReconcilePaperRoute: ApiPublicHooksReconcilePaperRoute,
+  ApiPublicHooksResolveSignalsRoute: ApiPublicHooksResolveSignalsRoute,
   ApiPublicHooksScanSignalsRoute: ApiPublicHooksScanSignalsRoute,
   ApiPublicHooksSendBriefingsRoute: ApiPublicHooksSendBriefingsRoute,
   ApiPublicHooksWeeklyReviewRoute: ApiPublicHooksWeeklyReviewRoute,
@@ -1634,13 +1677,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

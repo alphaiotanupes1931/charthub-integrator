@@ -19,6 +19,17 @@ export const PAGE_INSTRUCTIONS: Record<string, { title: string; steps: string[] 
       "Ask the coach follow-up questions in the Chat tab; it sees the same scan you are looking at.",
     ],
   },
+  "/scoreboard": {
+    title: "How to read the signal scoreboard",
+    steps: [
+      "Every scan with an entry, stop and target is filed here automatically. You do not have to tag anything.",
+      "Each filed signal is checked against real price bars: whichever printed first, the stop or the first target, decides the outcome.",
+      "If a bar contains both the stop and the target, it counts as a stop. That keeps the numbers honest rather than flattering.",
+      "Hit rate only counts signals that reached a stop or target. Expired means the signal ran out of time without touching either.",
+      "Compare the breakdowns: if one instrument or timeframe has negative average R over enough signals, trade it smaller or drop it.",
+      "Taken versus skipped shows whether your own filtering helps. If skipped beats taken, your selection is cutting the good ones.",
+    ],
+  },
   "/backtest": {
     title: "How to use the backtest",
     steps: [
