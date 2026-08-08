@@ -23,9 +23,8 @@ export const Route = createFileRoute("/_app/discord")({
   component: DiscordPage,
 });
 
-// Update this if the channel ever changes.
-const DISCORD_INVITE_URL =
-  "https://discord.com/channels/1529863811459186829/1529863813552275569";
+// Update this if the invite ever changes.
+const DISCORD_INVITE_URL = "https://discord.gg/QxFmjccTH";
 
 const FEATURES: Array<{ icon: React.ReactNode; title: string; desc: string }> = [
   {
