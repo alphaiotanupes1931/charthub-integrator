@@ -9,6 +9,8 @@ import {
   type AutopilotSettings,
 } from "@/lib/autopilot.shared";
 import { buildProposalDraft } from "@/lib/autopilot.server";
+import { logAutopilotEvent } from "@/lib/autopilot-events.server";
+import { createNotification } from "@/lib/notifications.server";
 
 type Client = SupabaseClient<Database>;
 
@@ -81,9 +83,25 @@ export async function runAutopilotForUser(
     await client
       .from("autopilot_settings")
       .upsert({ user_id: userId, paused_reason: reason } as never, { onConflict: "user_id" });
+    await logAutopilotEvent(userId, "paused", reason, {
+      dailyLossPct: pct,
+      capPct: settings.maxDailyLossPct,
+    });
+    try {
+      await createNotification({
+        userId,
+        kind: "system",
+        title: "Autopilot paused",
+        body: reason,
+        url: "/autopilot",
+      });
+    } catch {
+      // notification failure must not block the halt
+    }
     result.haltedReason = reason;
     return result;
   }
+
 
   const symbols = settings.allowedSymbols.length
     ? settings.allowedSymbols.slice(0, 8)
@@ -162,9 +180,28 @@ export async function runAutopilotForUser(
 
       if (!verdict.allowed) {
         result.blocked += 1;
+        await logAutopilotEvent(
+          userId,
+          "blocked",
+          `${draft.symbol} ${draft.side} blocked: ${verdict.reason ?? "rails"}`,
+          { symbol: draft.symbol, grade: draft.grade, proposalId: inserted.id },
+        );
         continue;
       }
       result.created += 1;
+      await logAutopilotEvent(
+        userId,
+        "proposal",
+        `${draft.symbol} ${draft.side} grade ${draft.grade ?? "-"} filed at ${draft.entry}`,
+        {
+          symbol: draft.symbol,
+          grade: draft.grade,
+          entry: draft.entry,
+          stop: draft.stopLoss,
+          target: draft.takeProfit,
+          proposalId: inserted.id,
+        },
+      );
 
       if (autoFill) {
         const size = Math.max(1, Math.floor(draft.units ?? 1));
@@ -183,6 +220,10 @@ export async function runAutopilotForUser(
             .from("autopilot_proposals")
             .update({ status: "failed", rejection_reason: posError.message })
             .eq("id", inserted.id as string);
+          await logAutopilotEvent(userId, "failed", `${draft.symbol} auto-fill failed`, {
+            symbol: draft.symbol,
+            proposalId: inserted.id,
+          });
         } else {
           await client
             .from("autopilot_proposals")
@@ -190,12 +231,27 @@ export async function runAutopilotForUser(
             .eq("id", inserted.id as string);
           result.executed += 1;
           openPositions += 1;
+          await logAutopilotEvent(
+            userId,
+            "filled",
+            `${draft.symbol} ${draft.side} auto-filled on paper, ${size} units at ${draft.entry}`,
+            { symbol: draft.symbol, size, entry: draft.entry, proposalId: inserted.id },
+          );
         }
       }
+
     } catch {
       result.skipped.push(`${symbol}: data unavailable`);
     }
   }
 
+  await logAutopilotEvent(
+    userId,
+    "run",
+    `Scan finished: ${result.scanned} instruments, ${result.created} filed, ${result.blocked} blocked, ${result.executed} auto-filled`,
+    { ...result, timeframe },
+  );
+
   return result;
 }
+
