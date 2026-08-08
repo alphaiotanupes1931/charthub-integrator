@@ -948,7 +948,10 @@ function Dashboard() {
       rr: plan.rr,
       synopsis: plan.synopsis ?? plan.notes,
       source: "chart",
+      confidence: typeof plan.confidence === "number" ? plan.confidence : null,
+      strategyId: readActiveStrategy() ?? null,
     });
+
   };
 
   const scanResultToChatText = (plan: ScanResult, scanSymbol: Symbol) => {
