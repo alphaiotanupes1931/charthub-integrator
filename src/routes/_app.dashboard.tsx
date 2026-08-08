@@ -711,6 +711,14 @@ function Dashboard() {
   const [lensOpen, setLensOpen] = useState(false);
   const coachRef = useRef<HTMLDivElement>(null);
   const [coachOpen, setCoachOpen] = useState(false);
+  const strategyRef = useRef<HTMLDivElement>(null);
+  const [strategyOpen, setStrategyOpen] = useState(false);
+  const [activeStrategy, setActiveStrategy] = useState<string | null>(null);
+  useEffect(() => { setActiveStrategy(readActiveStrategy()); }, []);
+  const strategyOptions = useMemo(
+    () => allStrategies().map((s) => ({ name: s.name, blurb: s.description ?? "" })),
+    [strategyOpen],
+  );
   const [broker, setBroker] = useState<{ email: string; server: string; accountType: "demo" | "live" } | null>(null);
   const [activeCoach, setActiveCoach] = useState<string>(() =>
     typeof window === "undefined" ? "The Analyst" : readActiveCoach(),
