@@ -245,5 +245,13 @@ export async function runAutopilotForUser(
     }
   }
 
+  await logAutopilotEvent(
+    userId,
+    "run",
+    `Scan finished: ${result.scanned} instruments, ${result.created} filed, ${result.blocked} blocked, ${result.executed} auto-filled`,
+    { ...result, timeframe },
+  );
+
   return result;
 }
+
