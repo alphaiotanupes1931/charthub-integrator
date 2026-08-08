@@ -9,6 +9,8 @@ interface Props {
   sessions?: boolean;
   /** Called when the embed loads but never streams data (blocked/blank panel). */
   onStall?: () => void;
+  /** Rendered in place of the embed when the live feed is blocked or black. */
+  fallback?: React.ReactNode;
 }
 
 
@@ -30,7 +32,7 @@ type DrawTool = "pen" | "line" | "rect" | "arrow" | "eraser";
 type Pt = { x: number; y: number };
 type Stroke = { tool: DrawTool; color: string; width: number; points: Pt[] };
 
-export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _sessions, onStall }: Props) {
+export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _sessions, onStall, fallback }: Props) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
   const drawCanvasRef = useRef<HTMLCanvasElement | null>(null);
