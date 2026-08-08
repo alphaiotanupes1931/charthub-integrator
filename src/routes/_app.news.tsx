@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, ChevronDown } from "lucide-react";
 import { getMarketNews } from "@/lib/news.functions";
 import { getBriefingState } from "@/lib/briefings.functions";
 import { useTimezone } from "@/hooks/useTimezone";
