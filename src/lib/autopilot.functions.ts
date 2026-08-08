@@ -358,7 +358,6 @@ export type AutopilotEventRow = {
   id: string;
   kind: string;
   message: string;
-  meta: Record<string, unknown>;
   createdAt: string;
 };
 
@@ -367,7 +366,7 @@ export const listAutopilotEvents = createServerFn({ method: "GET" })
   .handler(async ({ context }): Promise<AutopilotEventRow[]> => {
     const { data, error } = await context.supabase
       .from("autopilot_events")
-      .select("id, kind, message, meta, created_at")
+      .select("id, kind, message, created_at")
       .eq("user_id", context.userId)
       .order("created_at", { ascending: false })
       .limit(100);
@@ -376,7 +375,6 @@ export const listAutopilotEvents = createServerFn({ method: "GET" })
       id: r.id as string,
       kind: r.kind as string,
       message: r.message as string,
-      meta: (r.meta as Record<string, unknown>) ?? {},
       createdAt: r.created_at as string,
     }));
   });
