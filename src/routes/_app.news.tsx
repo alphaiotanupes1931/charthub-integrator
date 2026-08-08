@@ -39,9 +39,26 @@ function impactClass(impact: string) {
   return "border-border text-muted-foreground";
 }
 
+/** Plain language read of an actual print against its forecast. */
+function surpriseRead(e: { actual?: string; forecast?: string; title: string }): string {
+  const num = (v?: string) => {
+    if (!v) return undefined;
+    const n = parseFloat(v.replace(/[^0-9.\-]/g, ""));
+    return isFinite(n) ? n : undefined;
+  };
+  const a = num(e.actual);
+  const f = num(e.forecast);
+  if (a === undefined) return "This release has not printed yet, so the market is still positioning on the forecast.";
+  if (f === undefined) return "This release printed but there was no forecast to measure it against.";
+  if (a > f) return `It printed above forecast (${e.actual} vs ${e.forecast}), which usually supports the currency and pressures rate sensitive assets.`;
+  if (a < f) return `It printed below forecast (${e.actual} vs ${e.forecast}), which usually weakens the currency and helps rate sensitive assets.`;
+  return `It printed in line with forecast (${e.actual}), so the reaction is usually limited.`;
+}
+
 function NewsPage() {
   const { resolvedTimezone } = useTimezone();
   const [filter, setFilter] = useState<Impact>("high");
+  const [openKey, setOpenKey] = useState<string | null>(null);
 
   const getState = useServerFn(getBriefingState);
   const stateQ = useQuery({ queryKey: ["briefingState"], queryFn: () => getState() });
