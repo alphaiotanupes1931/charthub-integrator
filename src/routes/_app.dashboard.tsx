@@ -994,8 +994,8 @@ function Dashboard() {
     return [
       `${scanSymbol.name} scan: ${plan.grade} ${plan.bias}. Confidence ${plan.confidence}%.`,
       ...levelLines,
-      `Strength: ${plan.notes}`,
-      `Weakness: ${plan.details}`,
+      `Why take this trade: ${plan.notes}`,
+      ...(plan.details && plan.details !== plan.notes ? [`Risk and invalidation: ${plan.details}`] : []),
       "```chart-grade",
       JSON.stringify(gradePayload),
       "```",
