@@ -122,6 +122,20 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
     };
   }, [src, reloadKey]);
 
+  // Silent auto-recovery: while the embed is blocked or black, keep reloading it
+  // in the background every 20s so it comes back on its own. No banner, no
+  // button, the backup chart stays visible in the meantime.
+  useEffect(() => {
+    if (!failed && !stalled) return;
+    const timer = window.setTimeout(() => {
+      setStalled(false);
+      setFailed(false);
+      aliveRef.current = false;
+      setReloadKey((k) => k + 1);
+    }, 20_000);
+    return () => window.clearTimeout(timer);
+  }, [failed, stalled]);
+
 
   const redraw = useCallback(() => {
     const cvs = drawCanvasRef.current;
