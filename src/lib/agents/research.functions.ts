@@ -188,7 +188,7 @@ export const runResearchPlan = createServerFn({ method: "POST" })
       if (capped !== plan.grade) {
         return {
           ...plan,
-          grade: capped,
+          grade: capped as TradePlan["grade"],
           details: capReason ? `${plan.details} ${capReason}` : plan.details,
         };
       }
