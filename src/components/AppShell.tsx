@@ -34,6 +34,8 @@ import {
   Newspaper,
   Plug,
   ChevronDown,
+  Target,
+
 
 } from "lucide-react";
 import { LogoLink } from "@/components/LogoLink";
