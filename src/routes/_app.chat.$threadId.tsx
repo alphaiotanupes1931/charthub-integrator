@@ -31,6 +31,7 @@ import { coalesceUiMessageStream, textFromUiMessageParts } from "@/lib/chat-stre
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { buildLearningPromptBlock } from "@/lib/signalLearning";
+import { parseAiPayload, type ChartGrade } from "@/lib/chartAnnotations";
 
 export const Route = createFileRoute("/_app/chat/$threadId")({
   component: ChatThread,
@@ -38,6 +39,52 @@ export const Route = createFileRoute("/_app/chat/$threadId")({
 
 function uiMessageText(message: UIMessage | null | undefined): string {
   return textFromUiMessageParts(message?.parts);
+}
+
+function num(n?: number) {
+  if (typeof n !== "number" || !isFinite(n)) return "-";
+  const abs = Math.abs(n);
+  return n.toFixed(abs >= 1000 ? 2 : abs >= 10 ? 3 : abs >= 1 ? 4 : 5);
+}
+
+/** Compact setup card so saved threads show the analysis, not just the text. */
+function ThreadGradeCard({ grade }: { grade: ChartGrade }) {
+  const bias = (grade.bias ?? "neutral").toString();
+  const tone = bias === "long" ? "text-bull" : bias === "short" ? "text-red-300" : "text-muted-foreground";
+  const rows: Array<[string, number | undefined]> = [
+    ["Entry", grade.entry],
+    ["Stop", grade.stop],
+    ["TP1", grade.tp1],
+    ["TP2", grade.tp2],
+  ];
+  return (
+    <div className="rounded-md border border-border bg-card/50 w-full">
+      <div className="flex items-center gap-2 px-3 py-1.5 border-b border-border/60">
+        <span className={`text-[10px] font-bold uppercase tracking-wider ${tone}`}>{bias}</span>
+        <span className="rounded border border-border/60 bg-background/60 px-1.5 py-0.5 text-[10px] font-bold">
+          {grade.grade.toUpperCase()}
+        </span>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2">
+        {rows.map(([label, value]) => (
+          <div key={label} className="rounded border border-border/50 bg-background/40 px-2 py-1">
+            <div className="text-[9px] uppercase tracking-wider text-muted-foreground">{label}</div>
+            <div className="font-mono text-[11px] text-foreground">{num(value)}</div>
+          </div>
+        ))}
+      </div>
+      {(grade.strength || grade.weakness) && (
+        <div className="border-t border-border/50 px-3 py-2 space-y-1 text-xs">
+          {grade.strength && (
+            <div><span className="font-semibold text-bull">Why take this trade: </span><span className="text-foreground/90">{grade.strength}</span></div>
+          )}
+          {grade.weakness && grade.weakness !== grade.strength && (
+            <div><span className="font-semibold text-red-400">Risk and invalidation: </span><span className="text-foreground/90">{grade.weakness}</span></div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function ChatThread() {
@@ -204,13 +251,22 @@ function ChatThreadInner({
           )}
           {messages.map((m) => {
             const text = uiMessageText(m);
+            if (m.role !== "assistant") {
+              return (
+                <Message key={m.id} from={m.role}>
+                  <MessageContent>{text}</MessageContent>
+                </Message>
+              );
+            }
+            // Saved threads store the raw reply, including the analysis block,
+            // so reopening old history shows the setup card again, not just text.
+            const parsed = parseAiPayload(text);
             return (
               <Message key={m.id} from={m.role}>
-                {m.role === "assistant" ? (
-                  <MessageResponse>{text}</MessageResponse>
-                ) : (
-                  <MessageContent>{text}</MessageContent>
-                )}
+                <div className="flex flex-col gap-2 w-full">
+                  {parsed.grade && <ThreadGradeCard grade={parsed.grade} />}
+                  <MessageResponse>{parsed.cleanText || text}</MessageResponse>
+                </div>
               </Message>
             );
           })}
