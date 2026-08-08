@@ -74,6 +74,7 @@ import { Route as AppAcademyExamRouteImport } from './routes/_app.academy.exam'
 import { Route as AppAcademyModuleIdRouteImport } from './routes/_app.academy.$moduleId'
 import { Route as AppAcademyModuleIdIndexRouteImport } from './routes/_app.academy.$moduleId.index'
 import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api.public.telegram.webhook'
+import { Route as ApiPublicHooksWeeklyReviewRouteImport } from './routes/api.public.hooks.weekly-review'
 import { Route as ApiPublicHooksSendBriefingsRouteImport } from './routes/api.public.hooks.send-briefings'
 import { Route as ApiPublicHooksScanSignalsRouteImport } from './routes/api.public.hooks.scan-signals'
 import { Route as ApiPublicHooksReconcilePaperRouteImport } from './routes/api.public.hooks.reconcile-paper'
@@ -408,6 +409,12 @@ const ApiPublicTelegramWebhookRoute =
     path: '/api/public/telegram/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksWeeklyReviewRoute =
+  ApiPublicHooksWeeklyReviewRouteImport.update({
+    id: '/api/public/hooks/weekly-review',
+    path: '/api/public/hooks/weekly-review',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksSendBriefingsRoute =
   ApiPublicHooksSendBriefingsRouteImport.update({
     id: '/api/public/hooks/send-briefings',
@@ -521,6 +528,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/reconcile-paper': typeof ApiPublicHooksReconcilePaperRoute
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
+  '/api/public/hooks/weekly-review': typeof ApiPublicHooksWeeklyReviewRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
   '/academy/$moduleId/': typeof AppAcademyModuleIdIndexRoute
 }
@@ -590,6 +598,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/reconcile-paper': typeof ApiPublicHooksReconcilePaperRoute
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
+  '/api/public/hooks/weekly-review': typeof ApiPublicHooksWeeklyReviewRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
   '/academy/$moduleId': typeof AppAcademyModuleIdIndexRoute
 }
@@ -665,6 +674,7 @@ export interface FileRoutesById {
   '/api/public/hooks/reconcile-paper': typeof ApiPublicHooksReconcilePaperRoute
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
+  '/api/public/hooks/weekly-review': typeof ApiPublicHooksWeeklyReviewRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
   '/_app/academy/$moduleId/': typeof AppAcademyModuleIdIndexRoute
 }
@@ -740,6 +750,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/reconcile-paper'
     | '/api/public/hooks/scan-signals'
     | '/api/public/hooks/send-briefings'
+    | '/api/public/hooks/weekly-review'
     | '/api/public/telegram/webhook'
     | '/academy/$moduleId/'
   fileRoutesByTo: FileRoutesByTo
@@ -809,6 +820,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/reconcile-paper'
     | '/api/public/hooks/scan-signals'
     | '/api/public/hooks/send-briefings'
+    | '/api/public/hooks/weekly-review'
     | '/api/public/telegram/webhook'
     | '/academy/$moduleId'
   id:
@@ -883,6 +895,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/reconcile-paper'
     | '/api/public/hooks/scan-signals'
     | '/api/public/hooks/send-briefings'
+    | '/api/public/hooks/weekly-review'
     | '/api/public/telegram/webhook'
     | '/_app/academy/$moduleId/'
   fileRoutesById: FileRoutesById
@@ -914,6 +927,7 @@ export interface RootRouteChildren {
   ApiPublicHooksReconcilePaperRoute: typeof ApiPublicHooksReconcilePaperRoute
   ApiPublicHooksScanSignalsRoute: typeof ApiPublicHooksScanSignalsRoute
   ApiPublicHooksSendBriefingsRoute: typeof ApiPublicHooksSendBriefingsRoute
+  ApiPublicHooksWeeklyReviewRoute: typeof ApiPublicHooksWeeklyReviewRoute
   ApiPublicTelegramWebhookRoute: typeof ApiPublicTelegramWebhookRoute
 }
 
@@ -1374,6 +1388,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicTelegramWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/weekly-review': {
+      id: '/api/public/hooks/weekly-review'
+      path: '/api/public/hooks/weekly-review'
+      fullPath: '/api/public/hooks/weekly-review'
+      preLoaderRoute: typeof ApiPublicHooksWeeklyReviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/send-briefings': {
       id: '/api/public/hooks/send-briefings'
       path: '/api/public/hooks/send-briefings'
@@ -1607,6 +1628,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksReconcilePaperRoute: ApiPublicHooksReconcilePaperRoute,
   ApiPublicHooksScanSignalsRoute: ApiPublicHooksScanSignalsRoute,
   ApiPublicHooksSendBriefingsRoute: ApiPublicHooksSendBriefingsRoute,
+  ApiPublicHooksWeeklyReviewRoute: ApiPublicHooksWeeklyReviewRoute,
   ApiPublicTelegramWebhookRoute: ApiPublicTelegramWebhookRoute,
 }
 export const routeTree = rootRouteImport

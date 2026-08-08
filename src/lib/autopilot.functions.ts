@@ -351,3 +351,55 @@ export const fillAutopilotProposalOnPaper = createServerFn({ method: "POST" })
 
     return { ok: true as const, size };
   });
+
+// ---- Audit log + manual kill switch (phase: autopilot hardening) ----
+
+export type AutopilotEventRow = {
+  id: string;
+  kind: string;
+  message: string;
+  createdAt: string;
+};
+
+export const listAutopilotEvents = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<AutopilotEventRow[]> => {
+    const { data, error } = await context.supabase
+      .from("autopilot_events")
+      .select("id, kind, message, created_at")
+      .eq("user_id", context.userId)
+      .order("created_at", { ascending: false })
+      .limit(100);
+    if (error) throw new Error(error.message);
+    return (data ?? []).map((r) => ({
+      id: r.id as string,
+      kind: r.kind as string,
+      message: r.message as string,
+      createdAt: r.created_at as string,
+    }));
+  });
+
+// Manual kill switch. Pausing drops autopilot out of the scheduled tick
+// immediately; resuming clears the reason and records who cleared it.
+export const setAutopilotPause = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) =>
+    z.object({ paused: z.boolean(), reason: z.string().max(300).optional() }).parse(raw),
+  )
+  .handler(async ({ data, context }) => {
+    const reason = data.paused
+      ? (data.reason?.trim() || "Paused by you. Autopilot will not scan or fill until you resume it.")
+      : null;
+    const { error } = await context.supabase
+      .from("autopilot_settings")
+      .upsert({ user_id: context.userId, paused_reason: reason } as never, { onConflict: "user_id" });
+    if (error) throw new Error(error.message);
+
+    const { logAutopilotEvent } = await import("@/lib/autopilot-events.server");
+    await logAutopilotEvent(
+      context.userId,
+      data.paused ? "paused" : "resumed",
+      data.paused ? (reason as string) : "Autopilot resumed by you.",
+    );
+    return { ok: true as const, pausedReason: reason };
+  });
