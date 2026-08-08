@@ -83,9 +83,25 @@ export async function runAutopilotForUser(
     await client
       .from("autopilot_settings")
       .upsert({ user_id: userId, paused_reason: reason } as never, { onConflict: "user_id" });
+    await logAutopilotEvent(userId, "paused", reason, {
+      dailyLossPct: pct,
+      capPct: settings.maxDailyLossPct,
+    });
+    try {
+      await createNotification({
+        userId,
+        kind: "system",
+        title: "Autopilot paused",
+        body: reason,
+        url: "/autopilot",
+      });
+    } catch {
+      // notification failure must not block the halt
+    }
     result.haltedReason = reason;
     return result;
   }
+
 
   const symbols = settings.allowedSymbols.length
     ? settings.allowedSymbols.slice(0, 8)
