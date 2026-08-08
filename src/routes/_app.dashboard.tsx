@@ -1534,7 +1534,18 @@ function Dashboard() {
                 interval={interval}
                 enabled={levels}
                 sessions={sessionsOn}
-                onStall={() => setChartTab("setup")}
+                fallback={
+                  <NativeChart
+                    symbol={symbol.tv}
+                    ticker={symbol.ticker}
+                    interval={interval}
+                    enabled={levels}
+                    sessions={sessionsOn}
+                    onSnapshot={setSnapshot}
+                    annotations={aiAnnotations}
+                    candleType={candleType}
+                  />
+                }
               />
 
             ) : (
