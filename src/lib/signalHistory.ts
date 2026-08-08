@@ -118,8 +118,19 @@ export function takeTrade(rec: {
   tp1?: number;
   tp2?: number;
   rr?: string;
+  /** The reason the setup was worth taking. Saved with the journal entry. */
+  why?: string;
+  /** What would invalidate the setup. Saved with the journal entry. */
+  risk?: string;
 }) {
   const tfMap: Record<string, string> = { "1": "1m", "5": "5m", "15": "15m", "30": "30m", "60": "1H", "240": "4H", D: "1D", W: "1W" };
+  const notes = [
+    `Taken from TradeMind signal. Grade ${rec.grade ?? "-"}, ${rec.bias}${rec.rr ? `, R:R ${rec.rr}` : ""}.`,
+    rec.why ? `Why I took it: ${rec.why}` : "",
+    rec.risk ? `Risk and invalidation: ${rec.risk}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n\n");
   const prefill = {
     symbol: rec.symbol,
     timeframe: rec.interval ? tfMap[rec.interval] : undefined,
@@ -129,7 +140,7 @@ export function takeTrade(rec: {
     tp1: rec.tp1,
     tp2: rec.tp2,
     setup: rec.grade ? `Scan ${rec.grade}` : "Scan",
-    notes: `Taken from TradeMind signal. Grade ${rec.grade ?? "-"}, ${rec.bias}${rec.rr ? `, R:R ${rec.rr}` : ""}.`,
+    notes,
   };
   try {
     localStorage.setItem("trademind.journal.prefill.v1", JSON.stringify(prefill));
