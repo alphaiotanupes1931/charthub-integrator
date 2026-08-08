@@ -954,6 +954,69 @@ export type Database = {
         }
         Relationships: []
       }
+      signal_scores: {
+        Row: {
+          bias: string
+          confidence: number | null
+          created_at: string
+          entry: number
+          grade: string
+          id: string
+          planned_r: number | null
+          realized_r: number | null
+          resolved_at: string | null
+          status: string
+          stop: number
+          strategy_id: string | null
+          symbol: string
+          taken: boolean
+          timeframe: string
+          tp1: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bias: string
+          confidence?: number | null
+          created_at?: string
+          entry: number
+          grade: string
+          id?: string
+          planned_r?: number | null
+          realized_r?: number | null
+          resolved_at?: string | null
+          status?: string
+          stop: number
+          strategy_id?: string | null
+          symbol: string
+          taken?: boolean
+          timeframe?: string
+          tp1: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bias?: string
+          confidence?: number | null
+          created_at?: string
+          entry?: number
+          grade?: string
+          id?: string
+          planned_r?: number | null
+          realized_r?: number | null
+          resolved_at?: string | null
+          status?: string
+          stop?: number
+          strategy_id?: string | null
+          symbol?: string
+          taken?: boolean
+          timeframe?: string
+          tp1?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       strategy_performance: {
         Row: {
           created_at: string

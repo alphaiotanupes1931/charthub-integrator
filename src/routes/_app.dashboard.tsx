@@ -948,7 +948,10 @@ function Dashboard() {
       rr: plan.rr,
       synopsis: plan.synopsis ?? plan.notes,
       source: "chart",
+      confidence: typeof plan.confidence === "number" ? plan.confidence : null,
+      strategyId: readActiveStrategy() ?? null,
     });
+
   };
 
   const scanResultToChatText = (plan: ScanResult, scanSymbol: Symbol) => {
@@ -1310,7 +1313,7 @@ function Dashboard() {
                     </button>
                   );
                 })}
-                <Link to="/strategies" className="block px-3 py-2 text-[11px] text-muted-foreground hover:text-foreground border-t border-border/60">
+                <Link to="/strategies" search={{}} className="block px-3 py-2 text-[11px] text-muted-foreground hover:text-foreground border-t border-border/60">
                   Manage all strategies →
                 </Link>
               </div>

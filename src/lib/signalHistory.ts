@@ -19,6 +19,10 @@ export type SignalRecord = {
   taken?: boolean;          // trader pressed "I'm taking this trade"
   takenAt?: number;
   outcome?: "win" | "loss" | "breakeven" | null;
+  /** Confidence from the scan, kept so the scoreboard can band it. */
+  confidence?: number | null;
+  /** Active playbook at scan time, kept so the scoreboard can group by it. */
+  strategyId?: string | null;
 };
 
 const KEY = "trademind.signalHistory.v1";
@@ -76,6 +80,27 @@ export function recordSignal(input: Omit<SignalRecord, "id" | "at">): SignalReco
   if (dupe) return dupe;
   const rec: SignalRecord = { ...input, id: `${now}-${Math.random().toString(36).slice(2, 8)}`, at: now };
   write([rec, ...list]);
+  // File the same scan server-side so the scoreboard can resolve it against
+  // real bars later. Fire and forget: a signed-out or test session just skips.
+  if (input.entry && input.stop && input.tp1 && input.grade !== "NO ENTRY") {
+    void import("@/lib/signal-scores.functions")
+      .then(({ recordSignalScore }) =>
+        recordSignalScore({
+          data: {
+            symbol: input.symbol,
+            timeframe: input.interval,
+            grade: input.grade,
+            bias: input.bias,
+            confidence: input.confidence ?? null,
+            strategyId: input.strategyId ?? null,
+            entry: input.entry as number,
+            stop: input.stop as number,
+            tp1: input.tp1 as number,
+          },
+        }),
+      )
+      .catch(() => undefined);
+  }
   return rec;
 }
 
@@ -148,5 +173,8 @@ export function takeTrade(rec: {
     /* ignore */
   }
   markLatestTaken(rec.symbol);
+  void import("@/lib/signal-scores.functions")
+    .then(({ markSignalScoreTaken }) => markSignalScoreTaken({ data: { symbol: rec.symbol } }))
+    .catch(() => undefined);
   window.location.assign("/journal");
 }
