@@ -137,11 +137,14 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
               takeTrade({
                 symbol: symbol ?? "",
                 bias: isLong ? "Long" : "Short",
+                interval,
                 grade: grade.grade,
                 entry: grade.entry,
                 stop: grade.stop,
                 tp1: grade.tp1,
                 tp2: grade.tp2,
+                why: grade.strength,
+                risk: grade.weakness,
               })
             }
             className="inline-flex h-6 items-center gap-1 rounded px-2 text-[10px] font-bold uppercase tracking-wider bg-primary text-primary-foreground hover:opacity-90"
