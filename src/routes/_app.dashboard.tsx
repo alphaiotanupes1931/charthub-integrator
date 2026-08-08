@@ -383,12 +383,15 @@ function ScanTicket({
                 takeTrade({
                   symbol: symbol.ticker,
                   bias: result.bias,
+                  interval,
                   grade: result.grade,
                   rr: result.rr,
                   entry: parseNum(result.entry),
                   stop: parseNum(result.stop),
                   tp1: parseNum(result.tp1),
                   tp2: parseNum(result.tp2),
+                  why: result.notes,
+                  risk: result.details,
                 });
               }}
               className="inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-primary/15 border border-primary/40 px-2.5 py-1.5 text-xs font-semibold text-primary hover:bg-primary/25 whitespace-nowrap"
