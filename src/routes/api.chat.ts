@@ -711,7 +711,7 @@ export const Route = createFileRoute("/api/chat")({
           try {
             const { scoreEvidenceFor } = await import("@/lib/signal-evidence.server");
             const symbol = (chart.ticker.match(/\(([^)]+)\)\s*$/)?.[1] ?? chart.ticker).trim();
-            const ev = await scoreEvidenceFor(sb as never, userId, symbol, typeof strategy === "string" ? strategy : undefined);
+            const ev = await scoreEvidenceFor(sb as never, userId, symbol);
             if (ev.prompt) scoreCtx = ev.prompt;
           } catch (e) {
             console.warn(`[chat] req=${reqId} score_record_failed`, (e as Error).message);
