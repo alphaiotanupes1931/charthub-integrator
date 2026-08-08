@@ -355,7 +355,7 @@ function historyTitleFromChart(chart?: ChartCtx): string | null {
   return displayName.slice(0, 60) || null;
 }
 
-function systemPrompt(coach: string | undefined, journalContext: string, chartCtx: string, strategyCtx: string, lensCtx: string, learningCtx: string, newsCtx?: string) {
+function systemPrompt(coach: string | undefined, journalContext: string, chartCtx: string, strategyCtx: string, lensCtx: string, learningCtx: string, newsCtx?: string, scoreCtx?: string) {
   return `# ROLE
 You are the TradeMind AI Coach - a senior trading educator, chart analyst, and mentor built into the TradeMind platform. Your job is to help retail traders (many are older beginners) learn to trade safely, read charts, size risk, and improve their journal. You are NOT a licensed advisor. You are opinionated, direct, calm, and warm - like a mentor sitting next to them at the desk. You always finish your thoughts in full sentences; never stop after a couple of words.
 
@@ -474,12 +474,17 @@ ${learningCtx}
 Use these measured numbers when the trader asks how they are doing, whether a setup is worth taking, or why a grade matters. If a bucket (symbol, grade, direction, timeframe or session) has negative expectancy, say so plainly and tell them to skip or reduce size there. Never invent performance numbers that are not listed above.
 === END SIGNAL BACKTEST ===
 
+=== SCAN TRACK RECORD (how the platform's own scans on this instrument actually resolved) ===
+${scoreCtx ?? "No past scans on this instrument have resolved yet, so there is no measured scan record. Say so plainly if asked, and do not claim a hit rate."}
+Self-correct against this. If the record is negative or the hit rate on past A grades is weak, downgrade what you would otherwise call a high-quality setup, say in one clause that past scans here have not paid, and tell the trader to cut size or stand aside. If the record is positive, you may back a high grade with more conviction. Never quote a hit rate that is not in this block.
+=== END SCAN TRACK RECORD ===
+
 === NEWS AND ECONOMIC CALENDAR ===
 ${newsCtx ?? "No economic calendar data is loaded right now. Say so plainly if the trader asks about news, and do not invent releases or times."}
 === END NEWS ===
 
 === WHAT IS FEEDING YOU (check every one of these before you answer) ===
-Ten inputs are attached to this conversation. Silently run through them, use the ones that change your answer, and never claim an input is missing when its block above has content:
+Eleven inputs are attached to this conversation. Silently run through them, use the ones that change your answer, and never claim an input is missing when its block above has content:
 1. Coach persona and the trader's chosen coach.
 2. Active scan lens (what kind of setups they want surfaced).
 3. Active strategy / playbook rules.
@@ -489,7 +494,8 @@ Ten inputs are attached to this conversation. Silently run through them, use the
 7. Economic calendar and news for THIS instrument's currencies (block above).
 8. The trader's journal: open positions, recent fills, P&L, mental state.
 9. Signal backtest: measured win rate and expectancy by symbol, grade, direction, timeframe, session.
-10. Conversation history in this thread, plus any attached screenshot (the image overrides the live chart).
+10. Scan track record: how past scans on this instrument resolved, and whether your own grades have been earning their hit rate.
+11. Conversation history in this thread, plus any attached screenshot (the image overrides the live chart).
 
 Rules for using them:
 - News is never "not relevant" just because the instrument is not a forex pair. An index, metal, or crypto is still driven by the currencies listed in the calendar block; if USD releases are listed, they matter for NAS100, US30, SPX500, XAUUSD and BTC.
@@ -697,6 +703,21 @@ export const Route = createFileRoute("/api/chat")({
           ? signalLearning.trim().slice(0, 4000)
           : "The trader has not tagged any taken signal with an outcome yet, so there is no measured signal edge. Do not invent past performance numbers.";
 
+        // Scoreboard self-correction: the measured outcome of this platform's
+        // own past scans on this instrument, so the coach downgrades where it
+        // has actually been losing instead of repeating a stale opinion.
+        let scoreCtx: string | undefined;
+        if (sb && userId && chart?.ticker) {
+          try {
+            const { scoreEvidenceFor } = await import("@/lib/signal-evidence.server");
+            const symbol = (chart.ticker.match(/\(([^)]+)\)\s*$/)?.[1] ?? chart.ticker).trim();
+            const ev = await scoreEvidenceFor(sb as never, userId, symbol, typeof strategy === "string" ? strategy : undefined);
+            if (ev.prompt) scoreCtx = ev.prompt;
+          } catch (e) {
+            console.warn(`[chat] req=${reqId} score_record_failed`, (e as Error).message);
+          }
+        }
+
         // Forex Factory economic calendar for the instrument on screen.
         let newsCtx: string | undefined;
         try {
@@ -706,7 +727,7 @@ export const Route = createFileRoute("/api/chat")({
           console.warn(`[chat] req=${reqId} calendar_failed`, (e as Error).message);
         }
 
-        const system = systemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens), learningCtx, newsCtx);
+        const system = systemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens), learningCtx, newsCtx, scoreCtx);
 
 
         const useClaude = !!anthropicKey;
