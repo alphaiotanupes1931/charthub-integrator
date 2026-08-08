@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/PageHeader";
-import { Bot, Check, X, ShieldAlert, Clock, RefreshCw } from "lucide-react";
+import { Bot, Check, X, ShieldAlert, Clock, RefreshCw, Pause, Play, ScrollText } from "lucide-react";
 import {
   DEFAULT_AUTOPILOT_SETTINGS,
   MODE_COPY,
@@ -19,6 +19,8 @@ import {
   markAutopilotProposalResult,
   runAutopilotScan,
   fillAutopilotProposalOnPaper,
+  listAutopilotEvents,
+  setAutopilotPause,
 } from "@/lib/autopilot.functions";
 import { placeBrokerOrder } from "@/lib/broker-oanda.functions";
 
@@ -82,6 +84,8 @@ function AutopilotPage() {
   const scan = useServerFn(runAutopilotScan);
   const fillPaper = useServerFn(fillAutopilotProposalOnPaper);
   const placeOrder = useServerFn(placeBrokerOrder);
+  const loadEvents = useServerFn(listAutopilotEvents);
+  const togglePause = useServerFn(setAutopilotPause);
 
   const settingsQuery = useQuery({
     queryKey: ["autopilot", "settings"],
@@ -91,6 +95,12 @@ function AutopilotPage() {
     queryKey: ["autopilot", "proposals"],
     queryFn: () => loadProposals(),
     refetchInterval: 30_000,
+  });
+
+  const eventsQuery = useQuery({
+    queryKey: ["autopilot", "events"],
+    queryFn: () => loadEvents(),
+    refetchInterval: 60_000,
   });
 
   const settings: AutopilotSettings = settingsQuery.data ?? DEFAULT_AUTOPILOT_SETTINGS;
@@ -139,6 +149,16 @@ function AutopilotPage() {
     },
   });
 
+  const pauseMutation = useMutation({
+    mutationFn: (paused: boolean) => togglePause({ data: { paused } }),
+    onSuccess: (res) => {
+      toast.success(res.pausedReason ? "Autopilot paused." : "Autopilot resumed.");
+      qc.invalidateQueries({ queryKey: ["autopilot", "settings"] });
+      qc.invalidateQueries({ queryKey: ["autopilot", "events"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const scanMutation = useMutation({
     mutationFn: () => scan({ data: { timeframe: "60" } }),
     onSuccess: (res) => {
@@ -146,6 +166,8 @@ function AutopilotPage() {
       else if (res.blocked > 0) toast.message(`No proposals cleared your rails. ${res.blocked} were blocked.`);
       else toast.message("No setups on your instruments right now.");
       qc.invalidateQueries({ queryKey: ["autopilot", "proposals"] });
+      qc.invalidateQueries({ queryKey: ["autopilot", "events"] });
+      qc.invalidateQueries({ queryKey: ["autopilot", "settings"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -177,7 +199,47 @@ function AutopilotPage() {
         description="Decide how much the coach is allowed to do on its own. Every decision it makes is recorded below."
       />
 
-      <section className="mt-6 rounded-md border border-border bg-card p-5">
+      <section
+        className={`mt-6 rounded-md border p-4 ${
+          settings.pausedReason ? "border-red-600/50 bg-red-950/20" : "border-border bg-card"
+        }`}
+      >
+        <div className="flex flex-wrap items-center gap-3">
+          <ShieldAlert
+            className={`h-4 w-4 ${settings.pausedReason ? "text-red-400" : "text-muted-foreground"}`}
+          />
+          <div className="min-w-[12rem] flex-1">
+            <div className="text-sm font-semibold">
+              {settings.pausedReason ? "Autopilot is paused" : "Autopilot is armed"}
+            </div>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {settings.pausedReason ??
+                `Rails: min grade ${settings.minGrade}, ${settings.riskPct}% risk per trade, max ${settings.maxOpenPositions} open, daily loss cap ${settings.maxDailyLossPct}%.`}
+            </p>
+          </div>
+          {settings.pausedReason ? (
+            <button
+              type="button"
+              onClick={() => pauseMutation.mutate(false)}
+              disabled={pauseMutation.isPending}
+              className="flex items-center gap-2 rounded-md border border-emerald-600/50 px-3 py-1.5 text-xs text-emerald-400 disabled:opacity-60"
+            >
+              <Play className="h-3 w-3" /> Resume autopilot
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => pauseMutation.mutate(true)}
+              disabled={pauseMutation.isPending}
+              className="flex items-center gap-2 rounded-md border border-red-600/50 px-3 py-1.5 text-xs text-red-400 disabled:opacity-60"
+            >
+              <Pause className="h-3 w-3" /> Pause everything
+            </button>
+          )}
+        </div>
+      </section>
+
+      <section className="mt-4 rounded-md border border-border bg-card p-5">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Automation level</h2>
         <div className="mt-3 grid gap-3 md:grid-cols-3">
           {(Object.keys(MODE_COPY) as AutopilotMode[]).map((mode) => {
@@ -442,6 +504,30 @@ function AutopilotPage() {
                 <StatusPill status={p.status} />
                 {p.rejectionReason && <span className="text-muted-foreground">{p.rejectionReason}</span>}
                 <span className="ml-auto text-muted-foreground">{new Date(p.createdAt).toLocaleString()}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="mt-4 rounded-md border border-border bg-card p-5">
+        <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          <ScrollText className="h-4 w-4" /> Activity log
+        </h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Every scan, block, fill, and pause, in order. This is the record to check when a trade appeared or did not.
+        </p>
+        {(eventsQuery.data ?? []).length === 0 ? (
+          <p className="mt-3 text-sm text-muted-foreground">No autopilot activity recorded yet.</p>
+        ) : (
+          <ul className="mt-3 divide-y divide-border">
+            {(eventsQuery.data ?? []).map((e) => (
+              <li key={e.id} className="flex flex-wrap items-baseline gap-2 py-2 text-xs">
+                <span className="w-20 shrink-0 rounded-md border border-border px-2 py-0.5 text-center text-[10px] uppercase tracking-wide text-muted-foreground">
+                  {e.kind}
+                </span>
+                <span className="flex-1">{e.message}</span>
+                <span className="text-muted-foreground">{new Date(e.createdAt).toLocaleString()}</span>
               </li>
             ))}
           </ul>
