@@ -384,6 +384,7 @@ function memoBlock(
   lensDesc?: string,
   strategyDesc?: string,
   perfDesc?: string,
+  scoreDesc?: string,
 ): string {
   const notes = memo.notes.map(n => `- ${n.role.toUpperCase()} (${n.bias}, ${n.confidence}%): ${n.summary}`).join("\n");
   return [
@@ -395,6 +396,7 @@ function memoBlock(
     lensDesc ? `Scan lens focus: ${lensDesc}` : "",
     strategyDesc ? `Active strategy playbook (grade the setup against these rules): ${strategyDesc}` : "The trader has no active strategy selected; grade on structure alone.",
     perfDesc ? `Measured edge of this playbook (from historical backtests on this trader's own settings): ${perfDesc}` : "",
+    scoreDesc || "",
     "Analyst notes:",
     notes,
   ].filter(Boolean).join("\n");
@@ -409,6 +411,7 @@ export async function runPlanner(
   strategyDesc?: string,
   coach?: string,
   perfDesc?: string,
+  scoreDesc?: string,
 ): Promise<TradePlan> {
 
   const provider = createAiGatewayProvider(apiKey);
@@ -431,7 +434,7 @@ export async function runPlanner(
     // calendar unavailable; plan on price structure alone
   }
 
-  const ctx = memoBlock(memo, snap, lensDesc, strategyDesc, perfDesc) + (newsBlock ? `\n\n${newsBlock}` : "");
+  const ctx = memoBlock(memo, snap, lensDesc, strategyDesc, perfDesc, scoreDesc) + (newsBlock ? `\n\n${newsBlock}` : "");
   const memoryLine = (hermesMemory ? `\n\n${hermesMemory}` : "")
     + (perfDesc ? `\n\nWeight the measured edge: if this playbook has a negative expectancy on this instrument, cap the grade at C and say why. If it has a positive expectancy over 20+ trades, you may keep a high grade when structure agrees.` : "")
     + (coach && COACH_TONE[coach] ? `\n\nCoach voice: you are ${coach}. ${COACH_TONE[coach]}` : "");
