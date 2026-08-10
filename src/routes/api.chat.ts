@@ -751,19 +751,42 @@ export const Route = createFileRoute("/api/chat")({
           console.warn(`[chat] req=${reqId} calendar_failed`, (e as Error).message);
         }
 
-        const system = systemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens), learningCtx, newsCtx, scoreCtx);
-
+        const staticSystem = staticSystemPrompt();
+        const liveSystem = dynamicSystemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens), learningCtx, newsCtx, scoreCtx);
 
         const useClaude = !!anthropicKey;
+        // Model routing: a plain setup grade or a short factual question runs on
+        // the cheap model; open-ended coaching, teaching, psychology, and
+        // screenshot reads stay on the top model.
+        const routed = routeChatModel(messages);
+        const claudeId = routed === "cheap" ? CLAUDE_CHEAP : CLAUDE_SMART;
+        const gatewayId = routed === "cheap" ? "google/gemini-2.5-flash" : "google/gemini-2.5-flash";
         const claudeModel = useClaude
-          ? (createAnthropic({ apiKey: anthropicKey! })("claude-sonnet-4-5") as unknown as Parameters<typeof streamText>[0]["model"])
+          ? (createAnthropic({ apiKey: anthropicKey! })(claudeId) as unknown as Parameters<typeof streamText>[0]["model"])
           : null;
-        const gatewayModel = key ? createAiGatewayProvider(key)("google/gemini-2.5-flash") : null;
+        const gatewayModel = key ? createAiGatewayProvider(key)(gatewayId) : null;
         const primaryModel = claudeModel ?? gatewayModel!;
+        const activeModelId = useClaude ? claudeId : gatewayId;
+        console.log(`[chat] req=${reqId} route=${routed} model=${activeModelId}`);
+
+        // Prompt caching: mark the static prefix as an ephemeral cache breakpoint
+        // so repeat requests read it at ~10% of input price instead of resending
+        // the full rubric every turn.
+        const modelMessages: Parameters<typeof streamText>[0]["messages"] = [
+          {
+            role: "system",
+            content: staticSystem,
+            ...(useClaude
+              ? { providerOptions: { anthropic: { cacheControl: { type: "ephemeral" } } } }
+              : {}),
+          },
+          { role: "system", content: liveSystem },
+          ...(await convertToModelMessages(messages)),
+        ];
+
         const result = streamText({
           model: primaryModel,
-          system,
-          messages: await convertToModelMessages(messages),
+          messages: modelMessages,
           maxOutputTokens: useClaude ? 8192 : 4096,
           temperature: useClaude ? 0.7 : undefined,
           abortSignal: request.signal,
@@ -773,10 +796,19 @@ export const Route = createFileRoute("/api/chat")({
             const msg = (error as Error)?.message ?? String(error);
             console.error(`[chat] req=${reqId} stream_error`, msg);
           },
-          onFinish: async ({ finishReason, usage }) => {
-            console.log(`[chat] req=${reqId} finish reason=${finishReason} in=${usage?.inputTokens ?? "?"} out=${usage?.outputTokens ?? "?"} claude=${useClaude}`);
+          onFinish: async ({ finishReason, usage, providerMetadata }) => {
+            console.log(`[chat] req=${reqId} finish reason=${finishReason} model=${activeModelId} in=${usage?.inputTokens ?? "?"} cached=${usage?.cachedInputTokens ?? 0} out=${usage?.outputTokens ?? "?"}`);
+            const { logAiCost } = await import("@/lib/ai-cost.server");
+            await logAiCost({
+              kind: routed === "cheap" ? "grade" : "chat",
+              model: activeModelId,
+              usage,
+              providerMetadata,
+              userId,
+            });
           },
         });
+
 
         const response = result.toUIMessageStreamResponse({
           headers: { "X-Request-Id": reqId },
