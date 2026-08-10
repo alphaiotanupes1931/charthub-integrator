@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { countEvidence } from "@/lib/agents/planner.server";
+import { countEvidence, gradeFromEvidence } from "@/lib/agents/planner.server";
 import type { MarketSnapshot, ResearchMemo } from "@/lib/agents/types";
 
 const snap = (bull: boolean): MarketSnapshot => ({
@@ -41,5 +41,23 @@ describe("countEvidence", () => {
   it("does not floor by grade", () => {
     const aPlusAgainst = countEvidence(snap(false), memo(false), "A+", "Long", 1);
     expect(aPlusAgainst).toBeLessThan(40);
+  });
+});
+
+describe("gradeFromEvidence", () => {
+  it("varies the grade with measured evidence", () => {
+    expect(gradeFromEvidence("Long", 90, snap(true))).toBe("A+");
+    expect(gradeFromEvidence("Long", 72, snap(true))).toBe("A");
+    expect(gradeFromEvidence("Long", 60, snap(true))).toBe("B");
+    expect(gradeFromEvidence("Long", 40, snap(true))).toBe("C");
+  });
+
+  it("does not let a missing MTF read claim a high grade", () => {
+    const withoutMtf = { ...snap(true), mtf: undefined };
+    expect(gradeFromEvidence("Long", 90, withoutMtf)).toBe("C");
+  });
+
+  it("returns no entry only when direction is neutral", () => {
+    expect(gradeFromEvidence("Neutral", 90, snap(true))).toBe("NO ENTRY");
   });
 });
