@@ -125,7 +125,10 @@ async function askAnalyst(apiKey: string, system: string, snap: MarketSnapshot):
       system: `${system} Return exactly one flat JSON object with keys: bias (bullish, bearish, or neutral), confidence (0-100), summary (one sentence), keyLevels (numbers). Do not nest the answer.`,
       prompt: buildContext(snap),
     });
+    const { logAiCost } = await import("@/lib/ai-cost.server");
+    await logAiCost({ kind: "analyst", model: MODEL, usage: result.usage, providerMetadata: result.providerMetadata });
     output = result.output;
+
   } catch (e) {
     if (!NoObjectGeneratedError.isInstance(e)) throw e;
     output = salvageNoteFromText(e.text) ?? { bias: snap.cisd.state, confidence: snap.cisd.state === "none" ? 35 : 55, summary: e.text ?? "Analyst output could not be structured." };

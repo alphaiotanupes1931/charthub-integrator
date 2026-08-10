@@ -71,6 +71,8 @@ export const runResearchPlan = createServerFn({ method: "POST" })
 
     // Load Hermes memory relevant to this ticker / lens.
     let hermesPrompt = "";
+    let costUserId: string | null = null;
+
     let perfDesc = "";
     let scoreDesc = "";
     let gradeCap: "A+" | "A" | "B" | "C" | null = null;
@@ -89,6 +91,8 @@ export const runResearchPlan = createServerFn({ method: "POST" })
         );
         const { data: userData } = await supabase.auth.getUser(token);
         const userId = userData.user?.id;
+        costUserId = userId ?? null;
+
         if (userId) {
           const topics = [data.ticker, "general", data.lensDesc?.split(":")[0] ?? ""].filter(Boolean);
           const { data: lessons } = await supabase
@@ -167,18 +171,24 @@ export const runResearchPlan = createServerFn({ method: "POST" })
       }
     } catch { /* memory is best-effort */ }
 
-    const memo = await runResearch(apiKey, snap);
-    const plan = await runPlanner(
-      apiKey,
-      snap,
-      memo,
-      data.lensDesc,
-      hermesPrompt || undefined,
-      data.strategyDesc,
-      data.coach,
-      perfDesc || undefined,
-      scoreDesc || undefined,
-    );
+    const { withAiCostUser } = await import("@/lib/ai-cost.server");
+    const { memo, plan } = await withAiCostUser(costUserId, async () => {
+      const memo = await runResearch(apiKey, snap);
+      const plan = await runPlanner(
+        apiKey,
+        snap,
+        memo,
+        data.lensDesc,
+        hermesPrompt || undefined,
+        data.strategyDesc,
+        data.coach,
+        perfDesc || undefined,
+        scoreDesc || undefined,
+      );
+      return { memo, plan };
+    });
+    void memo;
+
 
     // Hard self-correction: the measured record outranks the model's own
     // opinion of the setup, so the grade is clamped after the fact too.
