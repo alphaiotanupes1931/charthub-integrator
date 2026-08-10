@@ -728,6 +728,7 @@ function Dashboard() {
   const levelsRef = useRef<HTMLDivElement>(null);
   const lensRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<DashboardChatHandle>(null);
+  const activeScanRequestRef = useRef(0);
   const [isDesktop, setIsDesktop] = useState(false);
   const [lensId, setLensId] = useState<ScanLensId>("wyckoff");
   const [lensOpen, setLensOpen] = useState(false);
@@ -832,6 +833,14 @@ function Dashboard() {
     const enabledLevels = ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none";
     writeLastChart({ ticker: symbolLabel(symbol), intervalLabel, enabledLevels });
   }, [symbol, intervalLabel, levels]);
+
+  // Invalidate any in-flight scan as soon as the chart context changes. A
+  // slower response for the previous instrument/timeframe must never replace
+  // the result on the chart the trader is viewing now.
+  useEffect(() => {
+    activeScanRequestRef.current += 1;
+    setScanning(false);
+  }, [symbol.ticker, interval]);
 
   const runPlan = useServerFn(runResearchPlan);
   const createChatThreadFn = useServerFn(createChatThread);
@@ -1052,6 +1061,9 @@ function Dashboard() {
 
 
   const runScan = async (from: "chat" | "analysis" = "analysis") => {
+    const requestId = ++activeScanRequestRef.current;
+    const scanSymbol = symbol;
+    const scanInterval = interval;
     setScanning(true);
     emitFirstWeekEvent("scan-run");
 
@@ -1088,17 +1100,22 @@ function Dashboard() {
     // Always post the scan prompt to chat so the user sees activity immediately.
     sendToChat(prompt, { focusChat: from === "chat", targetThreadId: scanThreadId });
 
-    runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}`, strategyDesc: activeStrategyDesc(), strategyId: readActiveStrategy() ?? undefined, coach: readActiveCoach(), journalPerf: formatJournalPerf(symbol.ticker) ?? undefined } })
+    runPlan({ data: { ticker: scanSymbol.ticker, interval: scanInterval, lensDesc: `${lens.name}: ${lens.promptEmphasis}`, strategyDesc: activeStrategyDesc(), strategyId: readActiveStrategy() ?? undefined, coach: readActiveCoach(), journalPerf: formatJournalPerf(scanSymbol.ticker) ?? undefined } })
       .then((plan) => {
         const r = plan as ScanResult;
+        if (requestId !== activeScanRequestRef.current) return;
+        if (r.memo?.ticker !== scanSymbol.ticker || r.memo?.interval !== scanInterval) {
+          throw new Error(`Scan response mismatch: requested ${scanSymbol.ticker} ${scanInterval}`);
+        }
         setResult(r);
         applyPlanToSignalCards(r);
         // Single source of truth: the Analysis engine's grade card is always
         // appended to the chat thread so Chat and Analysis never disagree.
-        const replyText = scanResultToChatText(r, symbol);
+        const replyText = scanResultToChatText(r, scanSymbol);
         chatRef.current?.appendScanReply(replyText, scanThreadId);
       })
       .catch(() => {
+        if (requestId !== activeScanRequestRef.current) return;
         setResult({
           grade: "NO ENTRY", bias: "Neutral", confidence: 0,
           notes: "Research service is temporarily unavailable. Please try again in a moment.",
@@ -1107,6 +1124,7 @@ function Dashboard() {
         });
       })
       .finally(() => {
+        if (requestId !== activeScanRequestRef.current) return;
         setScanning(false);
         setLastUpdatedAt(Date.now());
       });
