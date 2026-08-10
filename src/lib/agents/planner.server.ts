@@ -507,25 +507,38 @@ export async function runPlanner(
   }
 
 
-  let finalPlan = shouldReplaceNoEntry(plan, snap, memo) ? systematicPlan(snap, memo, "AI marked no entry despite directional evidence;") : plan;
+  // ---- Deterministic direction + grade ----------------------------------
+  // The model used to own both, so two identical scans could come back "B" for
+  // one trader and "NO ENTRY" for another purely on sampling luck. Direction and
+  // grade are now measured from the snapshot; the model only writes the words.
+  const resolved = resolveDirection(snap, memo, normalizeBias(plan.bias));
+
+  let finalPlan =
+    resolved.bias !== "Neutral" && normalizeBias(plan.bias) !== resolved.bias
+      ? systematicPlan(snap, memo, `Direction taken from measured structure (${resolved.reason});`)
+      : plan;
   finalPlan = sanitizePlan(finalPlan, snap, memo);
-  const grade = normalizeGrade(finalPlan.grade);
-  const bias = normalizeBias(finalPlan.bias);
+
+  const bias = resolved.bias;
   const dec = decimalsFor(snap.lastPrice || finalPlan.entry || 1);
   const risk = Math.abs(finalPlan.entry - finalPlan.stop) || 1;
   const reward = Math.abs(finalPlan.tp2 - finalPlan.entry);
   const rr = `1 : ${(reward / risk).toFixed(1)}`;
+
+  // Conviction is counted from evidence that is actually present in the data.
+  const confidence = bias === "Neutral" ? 0 : countEvidence(snap, memo, "B", bias, reward / risk);
+  const grade = gradeFromEvidence(bias, confidence, snap, normalizeGrade(finalPlan.grade));
   const isNoEntry = grade === "NO ENTRY";
+
   // `notes` already carries the thesis ("why take this trade"), so the details
   // block must NOT repeat it - that was showing identical text under both
   // Strength and Weakness in the UI.
-  const details = `Invalidation: ${finalPlan.invalidation}. Manage to break-even at TP1 (${fmt(finalPlan.tp1, dec)}), trail runner to TP2 (${fmt(finalPlan.tp2, dec)}). Risk 0.5-1R of account.${newsWarning}`;
+  const dataNote = snap.mtf
+    ? ""
+    : " Higher-timeframe data was incomplete on this scan, so the grade is capped at C until the feed fills in.";
+  const details = `Invalidation: ${finalPlan.invalidation}. Manage to break-even at TP1 (${fmt(finalPlan.tp1, dec)}), trail runner to TP2 (${fmt(finalPlan.tp2, dec)}). Risk 0.5-1R of account.${newsWarning}${dataNote}`;
 
-  // Conviction is counted from evidence that is actually present in the data,
-  // not asserted by the model and not floored by grade. The old version took
-  // max(model, consensus, gradeFloor), which pinned nearly every A/A+ setup at
-  // 85-100% and made the number meaningless.
-  const confidence = countEvidence(snap, memo, grade, bias, reward / risk);
+
 
 
   // Daily bias sets the day's direction; 4H is the current trend. They can
