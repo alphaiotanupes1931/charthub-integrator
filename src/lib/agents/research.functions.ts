@@ -171,18 +171,24 @@ export const runResearchPlan = createServerFn({ method: "POST" })
       }
     } catch { /* memory is best-effort */ }
 
-    const memo = await runResearch(apiKey, snap);
-    const plan = await runPlanner(
-      apiKey,
-      snap,
-      memo,
-      data.lensDesc,
-      hermesPrompt || undefined,
-      data.strategyDesc,
-      data.coach,
-      perfDesc || undefined,
-      scoreDesc || undefined,
-    );
+    const { withAiCostUser } = await import("@/lib/ai-cost.server");
+    const { memo, plan } = await withAiCostUser(costUserId, async () => {
+      const memo = await runResearch(apiKey, snap);
+      const plan = await runPlanner(
+        apiKey,
+        snap,
+        memo,
+        data.lensDesc,
+        hermesPrompt || undefined,
+        data.strategyDesc,
+        data.coach,
+        perfDesc || undefined,
+        scoreDesc || undefined,
+      );
+      return { memo, plan };
+    });
+    void memo;
+
 
     // Hard self-correction: the measured record outranks the model's own
     // opinion of the setup, so the grade is clamped after the fact too.
