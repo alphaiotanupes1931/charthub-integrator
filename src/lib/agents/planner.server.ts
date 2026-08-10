@@ -537,10 +537,10 @@ export async function runPlanner(
     await logPlannerCost("plan-draft", draft.usage, draft.providerMetadata);
 
   } catch (e) {
-    if (!NoObjectGeneratedError.isInstance(e)) throw e;
-    // Salvage: the model likely returned valid JSON that just failed strict
-    // schema validation. Try to parse the raw text before giving up.
-    const salvaged = salvagePlanFromText(e.text);
+    // The model writes the explanation, but it must never be a hard dependency
+    // for a market scan. On malformed output, quota, or gateway failure, keep
+    // scanning with the deterministic plan built from the real snapshot.
+    const salvaged = NoObjectGeneratedError.isInstance(e) ? salvagePlanFromText(e.text) : null;
     plan = salvaged ?? fallbackPlan(snap, memo);
   }
 
@@ -570,15 +570,14 @@ export async function runPlanner(
         plan = revised.output;
         await logPlannerCost("plan-revise", revised.usage, revised.providerMetadata);
       } catch (e) {
-        if (!NoObjectGeneratedError.isInstance(e)) throw e;
-        const salvaged = salvagePlanFromText(e.text);
+        const salvaged = NoObjectGeneratedError.isInstance(e) ? salvagePlanFromText(e.text) : null;
         if (salvaged) plan = salvaged;
         // otherwise keep prior plan
       }
     }
-  } catch (e) {
-    if (!NoObjectGeneratedError.isInstance(e)) throw e;
-    // skip critique step
+  } catch {
+    // Risk-manager wording is best-effort. Deterministic sanitization below
+    // still validates entry, stop, targets, direction, grade, and confidence.
   }
 
 
