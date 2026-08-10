@@ -224,14 +224,13 @@ function resolveDirection(
 }
 
 // ---------- Deterministic grade ----------
-// Grade is a function of the counted evidence, not of model sampling. The
-// model's own grade can only pull the grade DOWN (it may see something the
-// counters miss), never up.
-function gradeFromEvidence(
+// Grade is a function of counted evidence, not model sampling. Objective risk
+// controls can cap it later, but the model's habitual grade must not flatten
+// different instruments into the same result.
+export function gradeFromEvidence(
   bias: typeof BIASES[number],
   confidence: number,
   snap: MarketSnapshot,
-  modelGrade: typeof GRADES[number],
 ): typeof GRADES[number] {
   if (bias === "Neutral") return "NO ENTRY";
   const m15 = snap.mtf?.m15.confirmation;
@@ -246,10 +245,6 @@ function gradeFromEvidence(
 
   // Missing higher-timeframe data means the counters had little to work with.
   if (!snap.mtf && grade !== "C") grade = "C";
-
-  // Let the model demote (risk it spotted), but never promote.
-  const order = ["NO ENTRY", "C", "B", "A", "A+"];
-  if (modelGrade !== "NO ENTRY" && order.indexOf(modelGrade) < order.indexOf(grade)) grade = modelGrade;
   return grade;
 }
 
@@ -502,7 +497,11 @@ export async function runPlanner(
     const { calendarContextBlock, fetchCalendar, highImpactAhead, currenciesFor } = await import("@/lib/news.server");
     newsBlock = await calendarContextBlock(snap.ticker);
     const wanted = currenciesFor(snap.ticker);
-    const soon = highImpactAhead(await fetchCalendar(), 4).filter((e) => wanted.includes(e.country.toUpperCase()));
+    // The shared calendar helper includes medium-impact events for display.
+    // Only genuinely high-impact releases should reduce a setup's grade.
+    const soon = highImpactAhead(await fetchCalendar(), 4).filter(
+      (e) => wanted.includes(e.country.toUpperCase()) && /^high$/i.test(e.impact.trim()),
+    );
     if (soon.length) {
       const first = soon[0]!;
       const mins = Math.max(0, Math.round((new Date(first.date).getTime() - Date.now()) / 60000));
@@ -596,7 +595,14 @@ export async function runPlanner(
 
   // Conviction is counted from evidence that is actually present in the data.
   const confidence = bias === "Neutral" ? 0 : countEvidence(snap, memo, "B", bias, reward / risk);
-  const grade = gradeFromEvidence(bias, confidence, snap, normalizeGrade(finalPlan.grade));
+  let grade = gradeFromEvidence(bias, confidence, snap);
+  // Calendar risk is measurable and therefore remains a valid hard cap. The
+  // user's scorecard cap is applied by the authenticated server-function
+  // wrapper after this planner returns.
+  if (newsWarning) {
+    if (grade === "A+") grade = "A";
+    else if (grade === "A") grade = "B";
+  }
   const isNoEntry = grade === "NO ENTRY";
 
   // `notes` already carries the thesis ("why take this trade"), so the details
