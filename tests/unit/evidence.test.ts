@@ -9,7 +9,7 @@ const snap = (bull: boolean): MarketSnapshot => ({
   mtf: {
     alignment: bull ? "aligned-long" : "aligned-short",
     h4: { direction: bull ? "bullish" : "bearish", trend: "up" },
-    h1: { structureBreak: bull ? "bullish BOS" : "bearish BOS" },
+    h1: { structureBreak: bull ? "bullish" : "bearish" },
     m15: { confirmation: bull ? "bullish" : "bearish", reason: "test confirmation" },
     ladder: [
       { label: "Monthly", bias: bull ? "bullish" : "bearish" },
@@ -42,14 +42,41 @@ describe("countEvidence", () => {
     const aPlusAgainst = countEvidence(snap(false), memo(false), "A+", "Long", 1);
     expect(aPlusAgainst).toBeLessThan(40);
   });
+
+  it("does not double-count the direction cascade as confidence", () => {
+    const cascadeOnly = {
+      ...snap(true),
+      cisd: { ...snap(true).cisd, state: "none" },
+      orderFlow: undefined,
+      mtf: {
+        ...snap(true).mtf,
+        ladder: [
+          { label: "Monthly", bias: "neutral" },
+          { label: "Weekly", bias: "neutral" },
+          { label: "Daily", bias: "neutral" },
+        ],
+      },
+    } as MarketSnapshot;
+    const neutralMemo = { ...memo(true), consensus: "neutral" } as ResearchMemo;
+    expect(countEvidence(cascadeOnly, neutralMemo, "A", "Long", 3)).toBe(25);
+  });
 });
 
 describe("gradeFromEvidence", () => {
   it("varies the grade with measured evidence", () => {
     expect(gradeFromEvidence("Long", 90, snap(true))).toBe("A+");
-    expect(gradeFromEvidence("Long", 72, snap(true))).toBe("A");
+    expect(gradeFromEvidence("Long", 76, snap(true))).toBe("A");
+    expect(gradeFromEvidence("Long", 72, snap(true))).toBe("B");
     expect(gradeFromEvidence("Long", 60, snap(true))).toBe("B");
     expect(gradeFromEvidence("Long", 40, snap(true))).toBe("C");
+  });
+
+  it("does not award A without 4H and 1H agreement", () => {
+    const mixed = {
+      ...snap(true),
+      mtf: { ...snap(true).mtf, alignment: "mixed", h1: { structureBreak: "bearish" } },
+    } as MarketSnapshot;
+    expect(gradeFromEvidence("Long", 82, mixed)).toBe("B");
   });
 
   it("does not let a missing MTF read claim a high grade", () => {

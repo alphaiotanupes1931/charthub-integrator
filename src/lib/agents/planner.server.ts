@@ -142,10 +142,9 @@ export function countEvidence(
   const check = (present: boolean, weight = 1) => { checks += weight; if (present) hits += weight; };
 
   const mtf = snap.mtf;
-  // 4H direction, 1H structure, 15m confirmation: the cascade, weighted double.
-  check(mtf?.h4.direction === (wantBull ? "bullish" : "bearish"), 2);
-  check(!!mtf?.h1.structureBreak && mtf.h1.structureBreak.toLowerCase().includes(wantBull ? "bull" : "bear"), 2);
-  check(!!mtf?.m15.confirmation && mtf.m15.confirmation.toLowerCase().includes(wantBull ? "bull" : "bear"), 2);
+  // The 4H/1H/15m cascade already determines direction in resolveDirection().
+  // Do not count those same votes again as confidence. Conviction must come
+  // from confirmation beyond the evidence that selected Long or Short.
 
   // Higher-timeframe rungs that agree with the trade.
   const ladder = mtf?.ladder ?? [];
@@ -167,8 +166,9 @@ export function countEvidence(
 
   }
 
-  // Payoff quality.
-  check(Number.isFinite(rrMultiple) && rrMultiple >= 2);
+  // R:R is constructed by the planner, not observed in the market, so it is a
+  // risk-quality gate rather than evidence of directional conviction.
+  if (!Number.isFinite(rrMultiple) || rrMultiple < 1.5) return 25;
 
   if (checks === 0) return 0;
   // Map onto 25-90: no data-driven setup deserves a 100.
@@ -233,14 +233,21 @@ export function gradeFromEvidence(
   snap: MarketSnapshot,
 ): typeof GRADES[number] {
   if (bias === "Neutral") return "NO ENTRY";
-  const m15 = snap.mtf?.m15.confirmation;
+  const mtf = snap.mtf;
+  const m15 = mtf?.m15.confirmation;
   const wantBull = bias === "Long";
-  const m15Agrees = m15 === (wantBull ? "bullish" : "bearish");
+  const wanted = wantBull ? "bullish" : "bearish";
+  const m15Agrees = m15 === wanted;
+  const h4Agrees = mtf?.h4.direction === wanted;
+  const h1Agrees = mtf?.h1.structureBreak === wanted;
+  const fullyAligned = mtf?.alignment === (wantBull ? "aligned-long" : "aligned-short");
 
   let grade: typeof GRADES[number];
-  if (confidence >= 78 && m15Agrees) grade = "A+";
-  else if (confidence >= 68) grade = "A";
-  else if (confidence >= 55) grade = "B";
+  // High grades require both a high evidence ratio and named structural
+  // agreement. A majority-selected direction by itself cannot earn an A.
+  if (confidence >= 84 && fullyAligned && m15Agrees) grade = "A+";
+  else if (confidence >= 74 && h4Agrees && h1Agrees) grade = "A";
+  else if (confidence >= 58) grade = "B";
   else grade = "C";
 
   // Missing higher-timeframe data means the counters had little to work with.
@@ -640,6 +647,9 @@ export async function runPlanner(
     dailyBias,
     currentTrend,
     synopsis,
+    dataSource: snap.source,
+    dataFetchedAt: snap.fetchedAt,
+    candleCount: snap.candles.length,
   };
 }
 
