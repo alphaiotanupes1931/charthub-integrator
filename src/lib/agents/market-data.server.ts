@@ -508,7 +508,10 @@ async function loadCandlesSafe(ticker: string, interval: string): Promise<Candle
     if (COINGECKO_ID[ticker]) return await fromCoinGecko(ticker, interval);
     return await fromYahoo(ticker, interval);
   } catch {
-    try { return await fromBackup(ticker, interval); } catch { return []; }
+    // A single quote is not candle history. Never let the TradingView snapshot
+    // fallback manufacture bars for MTF grading; use a second real history
+    // provider or report the timeframe as unavailable.
+    try { return await fromTwelveData(ticker, interval); } catch { return []; }
   }
 }
 
@@ -599,10 +602,8 @@ export async function getSnapshot(rawTicker: string, interval: string): Promise<
     if (COINGECKO_ID[ticker]) { candles = await fromCoinGecko(ticker, interval); source = "coingecko"; }
     else { candles = await fromYahoo(ticker, interval); source = "yahoo"; }
   } catch {
-    try { candles = await fromTwelveData(ticker, interval); source = "yahoo"; }
-    catch {
-      try { candles = await fromBackup(ticker, interval); source = "backup"; } catch { /* remain unavailable */ }
-    }
+    try { candles = await fromTwelveData(ticker, interval); source = "twelvedata"; }
+    catch { /* remain unavailable: quote-only backups cannot support a scan */ }
   }
 
   const last = candles.at(-1)?.close ?? 0;

@@ -38,6 +38,9 @@ export type ChartGrade = {
   tp2?: number;
   strength?: string;
   weakness?: string;
+  dataSource?: string;
+  dataFetchedAt?: string;
+  candleCount?: number;
 };
 
 export type ConceptId =
