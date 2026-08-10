@@ -44,6 +44,45 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_cost_log: {
+        Row: {
+          cache_write_tokens: number
+          cached_input_tokens: number
+          cost_usd: number
+          created_at: string
+          id: number
+          input_tokens: number
+          kind: string
+          model: string
+          output_tokens: number
+          user_id: string | null
+        }
+        Insert: {
+          cache_write_tokens?: number
+          cached_input_tokens?: number
+          cost_usd?: number
+          created_at?: string
+          id?: number
+          input_tokens?: number
+          kind: string
+          model: string
+          output_tokens?: number
+          user_id?: string | null
+        }
+        Update: {
+          cache_write_tokens?: number
+          cached_input_tokens?: number
+          cost_usd?: number
+          created_at?: string
+          id?: number
+          input_tokens?: number
+          kind?: string
+          model?: string
+          output_tokens?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       ai_usage: {
         Row: {
           count: number
@@ -1241,6 +1280,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_ai_cost_per_user: {
+        Args: { _days?: number; _limit?: number }
+        Returns: {
+          calls: number
+          cost_per_setup: number
+          cost_usd: number
+          email: string
+          graded_setups: number
+          user_id: string
+        }[]
+      }
+      admin_ai_cost_summary: {
+        Args: { _days?: number }
+        Returns: {
+          cached_input_tokens: number
+          calls: number
+          cost_usd: number
+          input_tokens: number
+          kind: string
+          model: string
+          output_tokens: number
+        }[]
+      }
       admin_referral_stats: {
         Args: never
         Returns: {
