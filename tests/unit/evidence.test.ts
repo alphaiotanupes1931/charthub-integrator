@@ -42,6 +42,24 @@ describe("countEvidence", () => {
     const aPlusAgainst = countEvidence(snap(false), memo(false), "A+", "Long", 1);
     expect(aPlusAgainst).toBeLessThan(40);
   });
+
+  it("does not double-count the direction cascade as confidence", () => {
+    const cascadeOnly = {
+      ...snap(true),
+      cisd: { ...snap(true).cisd, state: "none" },
+      orderFlow: undefined,
+      mtf: {
+        ...snap(true).mtf,
+        ladder: [
+          { label: "Monthly", bias: "neutral" },
+          { label: "Weekly", bias: "neutral" },
+          { label: "Daily", bias: "neutral" },
+        ],
+      },
+    } as MarketSnapshot;
+    const neutralMemo = { ...memo(true), consensus: "neutral" } as ResearchMemo;
+    expect(countEvidence(cascadeOnly, neutralMemo, "A", "Long", 3)).toBe(25);
+  });
 });
 
 describe("gradeFromEvidence", () => {
