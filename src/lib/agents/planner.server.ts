@@ -175,15 +175,84 @@ export function countEvidence(
   return Math.round(25 + (hits / checks) * 65);
 }
 
-function shouldReplaceNoEntry(plan: RawPlan, snap: MarketSnapshot, memo: ResearchMemo): boolean {
+// ---------- Deterministic direction ----------
+// Same inputs must always give the same read. The model's bias is only a
+// tie-breaker; everything else here is measured off the snapshot. This is what
+// stops one trader getting "B long" and another "NO ENTRY" on the same chart.
+function resolveDirection(
+  snap: MarketSnapshot,
+  memo: ResearchMemo,
+  modelBias: typeof BIASES[number],
+): { bias: typeof BIASES[number]; reason: string } {
+  const mtf = snap.mtf;
+  const votes: { dir: "bullish" | "bearish"; weight: number; label: string }[] = [];
+  const vote = (d: string | undefined, weight: number, label: string) => {
+    if (d === "bullish") votes.push({ dir: "bullish", weight, label });
+    else if (d === "bearish") votes.push({ dir: "bearish", weight, label });
+  };
 
-  const grade = normalizeGrade(plan.grade);
-  if (grade !== "NO ENTRY") return false;
-  const hasDirectionalConsensus = memo.consensus !== "neutral" && (memo.consensusConfidence ?? 0) >= 45;
-  const hasDirectionalStructure = snap.cisd.state !== "none";
-  const modelWantedDirection = normalizeBias(plan.bias) !== "Neutral";
-  return hasDirectionalConsensus || (hasDirectionalStructure && modelWantedDirection);
+  if (mtf?.alignment === "aligned-long") return { bias: "Long", reason: "MTF aligned long" };
+  if (mtf?.alignment === "aligned-short") return { bias: "Short", reason: "MTF aligned short" };
+
+  vote(mtf?.h4.direction, 3, "4H direction");
+  vote(mtf?.h1.structureBreak, 2, "1H structure break");
+  vote(mtf?.m15.confirmation, 1, "15m confirmation");
+  for (const label of ["Monthly", "Weekly", "Daily"]) {
+    vote((mtf?.ladder ?? []).find((r) => r.label === label)?.bias, 1, label);
+  }
+  vote(snap.cisd.state !== "none" ? snap.cisd.state : undefined, 2, "CISD");
+  vote(snap.cisd.htfBias, 1, "HTF bias");
+  vote(memo.consensus !== "neutral" ? memo.consensus : undefined, 2, "analyst consensus");
+  vote(snap.orderFlow?.bias, 1, "order flow");
+
+  const bull = votes.filter((v) => v.dir === "bullish").reduce((s, v) => s + v.weight, 0);
+  const bear = votes.filter((v) => v.dir === "bearish").reduce((s, v) => s + v.weight, 0);
+  if (bull > bear) return { bias: "Long", reason: `weight of evidence bullish ${bull} to ${bear}` };
+  if (bear > bull) return { bias: "Short", reason: `weight of evidence bearish ${bear} to ${bull}` };
+
+  // Nothing structural to lean on: fall back to where price sits in the 20-bar
+  // range, then to the model. Only a genuinely flat tape returns Neutral.
+  const { high20, low20 } = snap.stats;
+  const span = high20 - low20;
+  if (span > 0 && Number.isFinite(snap.lastPrice)) {
+    const pos = (snap.lastPrice - low20) / span;
+    if (pos >= 0.6) return { bias: "Long", reason: "price in the upper third of the 20-bar range" };
+    if (pos <= 0.4) return { bias: "Short", reason: "price in the lower third of the 20-bar range" };
+  }
+  if (modelBias !== "Neutral") return { bias: modelBias, reason: "model read, no measurable structure" };
+  return { bias: "Neutral", reason: "no directional evidence" };
 }
+
+// ---------- Deterministic grade ----------
+// Grade is a function of the counted evidence, not of model sampling. The
+// model's own grade can only pull the grade DOWN (it may see something the
+// counters miss), never up.
+function gradeFromEvidence(
+  bias: typeof BIASES[number],
+  confidence: number,
+  snap: MarketSnapshot,
+  modelGrade: typeof GRADES[number],
+): typeof GRADES[number] {
+  if (bias === "Neutral") return "NO ENTRY";
+  const m15 = snap.mtf?.m15.confirmation;
+  const wantBull = bias === "Long";
+  const m15Agrees = m15 === (wantBull ? "bullish" : "bearish");
+
+  let grade: typeof GRADES[number];
+  if (confidence >= 78 && m15Agrees) grade = "A+";
+  else if (confidence >= 68) grade = "A";
+  else if (confidence >= 55) grade = "B";
+  else grade = "C";
+
+  // Missing higher-timeframe data means the counters had little to work with.
+  if (!snap.mtf && grade !== "C") grade = "C";
+
+  // Let the model demote (risk it spotted), but never promote.
+  const order = ["NO ENTRY", "C", "B", "A", "A+"];
+  if (modelGrade !== "NO ENTRY" && order.indexOf(modelGrade) < order.indexOf(grade)) grade = modelGrade;
+  return grade;
+}
+
 
 // ---------- Structure-anchored entry refinement ----------
 // Instead of parking the entry a flat fraction of ATR under/over price, snap it
