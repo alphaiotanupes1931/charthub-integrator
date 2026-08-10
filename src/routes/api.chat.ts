@@ -458,10 +458,20 @@ SCREENSHOT ANALYSIS RULES (when the user attaches an image):
 - Otherwise, derive entry from visible structure: order blocks, fair value gaps, swing highs/lows, liquidity pools, trendlines, moving averages, session opens. Place stop beyond the invalidation structure (not a fixed pip/percent from price). Place TP1/TP2 at the next liquidity or structural targets visible in the image.
 - ALWAYS start your reply with a one-line confirmation of what you see, in this exact format: "Reading: <INSTRUMENT> <TIMEFRAME> (<broker/platform if visible>)." Example: "Reading: EURUSD 15m (TradingView)." If the ticker or timeframe is not legible, say "Reading: instrument unclear" or "Reading: timeframe unclear" so the trader knows to re-upload a clearer image. Never skip this line on a screenshot reply.
 - Numeric precision must match what is visible on the screenshot's price axis.
+`;
+}
 
+// The per-request half: coach voice plus every live context block.
+function dynamicSystemPrompt(coach: string | undefined, journalContext: string, chartCtx: string, strategyCtx: string, lensCtx: string, learningCtx: string, newsCtx?: string, scoreCtx?: string) {
+  return `# COACH PERSONA
+${coachPersona(coach)}
 
+# VOICE ENFORCEMENT (non-negotiable)
+${coachVoiceRules(coach)}
+Your persona is not decoration. A reader must be able to tell which coach wrote the reply from the first sentence alone. If your draft would read the same coming from any other coach, rewrite it in this voice before sending.
 
 === ACTIVE SCAN LENS ===
+
 ${lensCtx}
 === END LENS ===
 
