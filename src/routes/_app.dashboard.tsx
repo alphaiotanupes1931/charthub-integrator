@@ -604,8 +604,22 @@ function Dashboard() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      const raw = window.sessionStorage.getItem(`trademind.scanResult.${symbol.ticker}`);
-      setResult(raw ? (JSON.parse(raw) as ScanResult) : null);
+      const key = `trademind.scanResult.${symbol.ticker}`;
+      const raw = window.sessionStorage.getItem(key);
+      if (!raw) {
+        setResult(null);
+        return;
+      }
+      const saved = JSON.parse(raw) as ScanResult;
+      // Older builds could write the previous instrument's result into the new
+      // instrument's storage key during the symbol-change render. Never display
+      // or preserve a result unless its research memo belongs to this symbol.
+      if (saved.memo?.ticker !== symbol.ticker) {
+        window.sessionStorage.removeItem(key);
+        setResult(null);
+        return;
+      }
+      setResult(saved);
     } catch { setResult(null); }
   }, [symbol.ticker]);
 
@@ -619,7 +633,12 @@ function Dashboard() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      if (result) window.sessionStorage.setItem(`trademind.scanResult.${symbol.ticker}`, JSON.stringify(result));
+      // On a symbol change React renders once with the old result before the
+      // loader effect above replaces it. The memo check prevents that stale
+      // result from being copied into every symbol's storage slot.
+      if (result?.memo?.ticker === symbol.ticker) {
+        window.sessionStorage.setItem(`trademind.scanResult.${symbol.ticker}`, JSON.stringify(result));
+      }
     } catch { /* ignore */ }
   }, [result, symbol.ticker]);
 
@@ -709,6 +728,7 @@ function Dashboard() {
   const levelsRef = useRef<HTMLDivElement>(null);
   const lensRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<DashboardChatHandle>(null);
+  const activeScanRequestRef = useRef(0);
   const [isDesktop, setIsDesktop] = useState(false);
   const [lensId, setLensId] = useState<ScanLensId>("wyckoff");
   const [lensOpen, setLensOpen] = useState(false);
@@ -813,6 +833,14 @@ function Dashboard() {
     const enabledLevels = ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none";
     writeLastChart({ ticker: symbolLabel(symbol), intervalLabel, enabledLevels });
   }, [symbol, intervalLabel, levels]);
+
+  // Invalidate any in-flight scan as soon as the chart context changes. A
+  // slower response for the previous instrument/timeframe must never replace
+  // the result on the chart the trader is viewing now.
+  useEffect(() => {
+    activeScanRequestRef.current += 1;
+    setScanning(false);
+  }, [symbol.ticker, interval]);
 
   const runPlan = useServerFn(runResearchPlan);
   const createChatThreadFn = useServerFn(createChatThread);
@@ -1033,6 +1061,9 @@ function Dashboard() {
 
 
   const runScan = async (from: "chat" | "analysis" = "analysis") => {
+    const requestId = ++activeScanRequestRef.current;
+    const scanSymbol = symbol;
+    const scanInterval = interval;
     setScanning(true);
     emitFirstWeekEvent("scan-run");
 
@@ -1069,17 +1100,22 @@ function Dashboard() {
     // Always post the scan prompt to chat so the user sees activity immediately.
     sendToChat(prompt, { focusChat: from === "chat", targetThreadId: scanThreadId });
 
-    runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}`, strategyDesc: activeStrategyDesc(), strategyId: readActiveStrategy() ?? undefined, coach: readActiveCoach(), journalPerf: formatJournalPerf(symbol.ticker) ?? undefined } })
+    runPlan({ data: { ticker: scanSymbol.ticker, interval: scanInterval, lensDesc: `${lens.name}: ${lens.promptEmphasis}`, strategyDesc: activeStrategyDesc(), strategyId: readActiveStrategy() ?? undefined, coach: readActiveCoach(), journalPerf: formatJournalPerf(scanSymbol.ticker) ?? undefined } })
       .then((plan) => {
         const r = plan as ScanResult;
+        if (requestId !== activeScanRequestRef.current) return;
+        if (r.memo?.ticker !== scanSymbol.ticker || r.memo?.interval !== scanInterval) {
+          throw new Error(`Scan response mismatch: requested ${scanSymbol.ticker} ${scanInterval}`);
+        }
         setResult(r);
         applyPlanToSignalCards(r);
         // Single source of truth: the Analysis engine's grade card is always
         // appended to the chat thread so Chat and Analysis never disagree.
-        const replyText = scanResultToChatText(r, symbol);
+        const replyText = scanResultToChatText(r, scanSymbol);
         chatRef.current?.appendScanReply(replyText, scanThreadId);
       })
       .catch(() => {
+        if (requestId !== activeScanRequestRef.current) return;
         setResult({
           grade: "NO ENTRY", bias: "Neutral", confidence: 0,
           notes: "Research service is temporarily unavailable. Please try again in a moment.",
@@ -1088,6 +1124,7 @@ function Dashboard() {
         });
       })
       .finally(() => {
+        if (requestId !== activeScanRequestRef.current) return;
         setScanning(false);
         setLastUpdatedAt(Date.now());
       });
