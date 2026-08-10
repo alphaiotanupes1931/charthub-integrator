@@ -497,7 +497,11 @@ export async function runPlanner(
     const { calendarContextBlock, fetchCalendar, highImpactAhead, currenciesFor } = await import("@/lib/news.server");
     newsBlock = await calendarContextBlock(snap.ticker);
     const wanted = currenciesFor(snap.ticker);
-    const soon = highImpactAhead(await fetchCalendar(), 4).filter((e) => wanted.includes(e.country.toUpperCase()));
+    // The shared calendar helper includes medium-impact events for display.
+    // Only genuinely high-impact releases should reduce a setup's grade.
+    const soon = highImpactAhead(await fetchCalendar(), 4).filter(
+      (e) => wanted.includes(e.country.toUpperCase()) && /^high$/i.test(e.impact.trim()),
+    );
     if (soon.length) {
       const first = soon[0]!;
       const mins = Math.max(0, Math.round((new Date(first.date).getTime() - Date.now()) / 60000));
@@ -595,7 +599,10 @@ export async function runPlanner(
   // Calendar risk is measurable and therefore remains a valid hard cap. The
   // user's scorecard cap is applied by the authenticated server-function
   // wrapper after this planner returns.
-  if (newsWarning && (grade === "A+" || grade === "A")) grade = "B";
+  if (newsWarning) {
+    if (grade === "A+") grade = "A";
+    else if (grade === "A") grade = "B";
+  }
   const isNoEntry = grade === "NO ENTRY";
 
   // `notes` already carries the thesis ("why take this trade"), so the details
