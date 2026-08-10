@@ -9,6 +9,15 @@ import { formatOrderFlow } from "./order-flow.server";
 
 const MODEL = "google/gemini-3-flash-preview";
 
+/** Best-effort cost accounting for each planner step. Never blocks a scan. */
+async function logPlannerCost(kind: string, usage: unknown, providerMetadata: unknown) {
+  try {
+    const { logAiCost } = await import("@/lib/ai-cost.server");
+    await logAiCost({ kind, model: MODEL, usage: usage as never, providerMetadata: providerMetadata as never });
+  } catch { /* cost logging is never fatal */ }
+}
+
+
 // Permissive schema: accept strings that look like numbers/enums, then coerce.
 // Gemini via the OpenAI-compat gateway does not enforce strict json_schema, so
 // slight deviations (extra whitespace, "A+ setup", numbers-as-strings) would
@@ -450,6 +459,7 @@ export async function runPlanner(
       prompt: ctx,
     });
     plan = draft.output;
+    await logPlannerCost("plan-draft", draft.usage, draft.providerMetadata);
 
   } catch (e) {
     if (!NoObjectGeneratedError.isInstance(e)) throw e;
@@ -459,14 +469,19 @@ export async function runPlanner(
     plan = salvaged ?? fallbackPlan(snap, memo);
   }
 
-  // Step 2 - critic (best-effort)
-  try {
+  // Step 2 - critic (best-effort). A draft the model already graded C or
+  // NO ENTRY will not become tradable after a risk review, so we skip the
+  // critique/revise calls entirely for those and save two model calls per scan.
+  const draftGrade = String(plan.grade ?? "").toUpperCase();
+  const worthCritiquing = draftGrade === "A+" || draftGrade === "A" || draftGrade === "B";
+  if (worthCritiquing) try {
     const critique = await generateText({
       model: provider(MODEL),
       output: Output.object({ schema: CritiqueSchema }),
       system: "You are the risk manager. Approve the plan if entry/stop/TP are in sensible relation to price (stop within 3x ATR, TPs on the correct side of entry, R:R >= 1.5). Otherwise say revise. Keep reason under 300 chars.",
       prompt: `${ctx}\n\nProposed plan: ${JSON.stringify(plan)}`,
     });
+    await logPlannerCost("plan-critique", critique.usage, critique.providerMetadata);
 
     // Step 3 - refine once if needed
     if (critique.output.verdict === "revise") {
@@ -478,6 +493,7 @@ export async function runPlanner(
           prompt: `${ctx}\n\nPrevious plan: ${JSON.stringify(plan)}\nRisk manager: ${critique.output.reason}`,
         });
         plan = revised.output;
+        await logPlannerCost("plan-revise", revised.usage, revised.providerMetadata);
       } catch (e) {
         if (!NoObjectGeneratedError.isInstance(e)) throw e;
         const salvaged = salvagePlanFromText(e.text);
@@ -489,6 +505,7 @@ export async function runPlanner(
     if (!NoObjectGeneratedError.isInstance(e)) throw e;
     // skip critique step
   }
+
 
   let finalPlan = shouldReplaceNoEntry(plan, snap, memo) ? systematicPlan(snap, memo, "AI marked no entry despite directional evidence;") : plan;
   finalPlan = sanitizePlan(finalPlan, snap, memo);

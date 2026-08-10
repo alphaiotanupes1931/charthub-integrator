@@ -3,9 +3,11 @@ import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
-import { Loader2, ShieldAlert, Users, BarChart3, CircleDot, CircleOff, CircleDashed, Ban, ShieldCheck } from "lucide-react";
+import { Loader2, ShieldAlert, Users, BarChart3, CircleDot, CircleOff, CircleDashed, Ban, ShieldCheck, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 import { adminReferralStats, adminUsersOverview, adminSetPlatformStatus } from "@/lib/admin.functions";
+import { aiCostSummary } from "@/lib/ai-cost.functions";
+
 
 export const Route = createFileRoute("/_app/admin")({
   head: () => ({ meta: [{ title: "Admin, TradeMind" }] }),
@@ -204,9 +206,141 @@ function AdminPage() {
           </div>
         </div>
       </section>
+
+      <AiCostPanel />
     </div>
   );
 }
+
+function AiCostPanel() {
+  const [days, setDays] = useState(30);
+  const [data, setData] = useState<Awaited<ReturnType<typeof aiCostSummary>> | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    aiCostSummary({ data: { days } })
+      .then((res) => { if (!cancelled) { setData(res); setError(null); } })
+      .catch((e: Error) => { if (!cancelled) setError(e.message); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [days]);
+
+  const total = (data?.byKind ?? []).reduce((s, r) => s + Number(r.cost_usd), 0);
+  const cachedTokens = (data?.byKind ?? []).reduce((s, r) => s + Number(r.cached_input_tokens ?? 0), 0);
+  const inputTokens = (data?.byKind ?? []).reduce((s, r) => s + Number(r.input_tokens ?? 0), 0);
+  const cacheHitPct = inputTokens + cachedTokens > 0
+    ? Math.round((cachedTokens / (inputTokens + cachedTokens)) * 100)
+    : 0;
+  const usd = (n: number) => `$${n.toFixed(n < 1 ? 4 : 2)}`;
+
+  return (
+    <section className="mt-8">
+      <div className="flex items-center justify-between gap-3 mb-3">
+        <h2 className="text-sm font-medium flex items-center gap-2">
+          <DollarSign className="h-4 w-4 text-muted-foreground" /> AI spend
+        </h2>
+        <div className="flex items-center gap-1">
+          {[7, 30, 90].map((d) => (
+            <button
+              key={d}
+              onClick={() => setDays(d)}
+              className={`rounded-md border px-2 py-1 text-[11px] ${d === days ? "border-foreground/40 bg-muted" : "border-border text-muted-foreground"}`}
+            >
+              {d}d
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {error && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">{error}</div>
+      )}
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="rounded-md border border-border p-4">
+          <div className="text-xs text-muted-foreground">Total spend, last {days} days</div>
+          <div className="mt-2 text-2xl font-semibold">{usd(total)}</div>
+        </div>
+        <div className="rounded-md border border-border p-4">
+          <div className="text-xs text-muted-foreground">Cache hit rate on input</div>
+          <div className="mt-2 text-2xl font-semibold">{cacheHitPct}%</div>
+        </div>
+        <div className="rounded-md border border-border p-4">
+          <div className="text-xs text-muted-foreground">Logged calls</div>
+          <div className="mt-2 text-2xl font-semibold">
+            {(data?.byKind ?? []).reduce((s, r) => s + Number(r.calls), 0)}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <div className="rounded-md border border-border overflow-hidden">
+          <div className="border-b border-border px-4 py-2 text-xs text-muted-foreground">By call type and model</div>
+          {loading ? (
+            <div className="p-4 text-sm text-muted-foreground flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Loading</div>
+          ) : (data?.byKind.length ?? 0) === 0 ? (
+            <div className="p-4 text-sm text-muted-foreground">No AI calls logged yet.</div>
+          ) : (
+            <table className="w-full text-xs">
+              <thead className="text-muted-foreground">
+                <tr className="border-b border-border">
+                  <th className="text-left px-3 py-2">Kind</th>
+                  <th className="text-left px-3 py-2">Model</th>
+                  <th className="text-right px-3 py-2">Calls</th>
+                  <th className="text-right px-3 py-2">Cost</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data!.byKind.map((r, i) => (
+                  <tr key={`${r.kind}-${r.model}-${i}`} className="border-b border-border/60">
+                    <td className="px-3 py-2">{r.kind}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{r.model}</td>
+                    <td className="px-3 py-2 text-right">{r.calls}</td>
+                    <td className="px-3 py-2 text-right">{usd(Number(r.cost_usd))}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        <div className="rounded-md border border-border overflow-hidden">
+          <div className="border-b border-border px-4 py-2 text-xs text-muted-foreground">Per user, cost per graded setup</div>
+          {loading ? (
+            <div className="p-4 text-sm text-muted-foreground flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Loading</div>
+          ) : (data?.byUser.length ?? 0) === 0 ? (
+            <div className="p-4 text-sm text-muted-foreground">No usage attributed yet.</div>
+          ) : (
+            <table className="w-full text-xs">
+              <thead className="text-muted-foreground">
+                <tr className="border-b border-border">
+                  <th className="text-left px-3 py-2">User</th>
+                  <th className="text-right px-3 py-2">Setups</th>
+                  <th className="text-right px-3 py-2">Spend</th>
+                  <th className="text-right px-3 py-2">Per setup</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data!.byUser.map((r) => (
+                  <tr key={r.user_id} className="border-b border-border/60">
+                    <td className="px-3 py-2 truncate max-w-[180px]">{r.email ?? r.user_id.slice(0, 8)}</td>
+                    <td className="px-3 py-2 text-right">{r.graded_setups}</td>
+                    <td className="px-3 py-2 text-right">{usd(Number(r.cost_usd))}</td>
+                    <td className="px-3 py-2 text-right">{Number(r.cost_per_setup) > 0 ? usd(Number(r.cost_per_setup)) : "-"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 
 type StatusLevel = "operational" | "degraded" | "down";
 

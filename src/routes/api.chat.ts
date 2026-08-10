@@ -15,6 +15,39 @@ import type { Database, Json } from "@/integrations/supabase/types";
 
 const DAILY_AI_CAP = 100; // requests per user per UTC day
 
+// Model routing. Setup grading is a mechanical job against a fixed rubric, so it
+// runs on the cheap model; coaching, teaching, psychology, and screenshot reads
+// need the stronger one.
+const CLAUDE_SMART = "claude-sonnet-4-5-20250929";
+const CLAUDE_CHEAP = "claude-haiku-4-5-20251001";
+
+const GRADE_INTENT = /\b(scan|grade|rate|score|setup|entry|entries|plan|trade idea|is this a good|long or short|buy or sell|levels?)\b/i;
+const DEEP_INTENT = /\b(why|explain|teach|walk me|help me understand|how do|how does|what is|what are|difference|psychology|mindset|tilt|revenge|discipline|journal review|mistake|habit|routine|review my|lesson|history|compare|strategy for|should i change)\b/i;
+
+function lastUserText(messages: UIMessage[]): { text: string; hasImage: boolean } {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const m = messages[i];
+    if (!m || m.role !== "user") continue;
+    const parts = (m.parts ?? []) as Array<{ type: string; text?: string; mediaType?: string }>;
+    const text = parts.filter((p) => p.type === "text").map((p) => p.text ?? "").join(" ").trim();
+    const hasImage = parts.some((p) => p.type === "file" || p.type.startsWith("image"));
+    return { text, hasImage };
+  }
+  return { text: "", hasImage: false };
+}
+
+/** "cheap" = mechanical grading or a short factual ask. "smart" = coaching. */
+function routeChatModel(messages: UIMessage[]): "cheap" | "smart" {
+  const { text, hasImage } = lastUserText(messages);
+  if (hasImage) return "smart";          // screenshot reads need the stronger vision model
+  if (!text) return "smart";
+  if (DEEP_INTENT.test(text)) return "smart";
+  if (GRADE_INTENT.test(text)) return "cheap";
+  if (text.length <= 90 && text.split(/\s+/).length <= 14) return "cheap";
+  return "smart";
+}
+
+
 const stripReasoningTransform: StreamTextTransform<ToolSet> = () =>
   new TransformStream({
     transform(chunk, controller) {
@@ -365,19 +398,17 @@ function historyTitleFromChart(chart?: ChartCtx): string | null {
   return displayName.slice(0, 60) || null;
 }
 
-function systemPrompt(coach: string | undefined, journalContext: string, chartCtx: string, strategyCtx: string, lensCtx: string, learningCtx: string, newsCtx?: string, scoreCtx?: string) {
+// The static half of the system prompt: identical for every user, every coach,
+// and every request. Anthropic prompt caching keys off an exact prefix match,
+// so this block is sent first and marked cacheable; the per-request context
+// (coach voice, chart, journal, news) follows in a second system message.
+function staticSystemPrompt() {
   return `# ROLE
 You are the TradeMind AI Coach - a senior trading educator, chart analyst, and mentor built into the TradeMind platform. Your job is to help retail traders (many are older beginners) learn to trade safely, read charts, size risk, and improve their journal. You are NOT a licensed advisor. You are opinionated, direct, calm, and warm - like a mentor sitting next to them at the desk. You always finish your thoughts in full sentences; never stop after a couple of words.
 
-# COACH PERSONA
-${coachPersona(coach)}
-
-# VOICE ENFORCEMENT (non-negotiable)
-${coachVoiceRules(coach)}
-Your persona is not decoration. A reader must be able to tell which coach wrote the reply from the first sentence alone. If your draft would read the same coming from any other coach, rewrite it in this voice before sending.
-
 # INSTRUMENT CHECK (every single message)
 Before you answer anything, re-read the LIVE CHART CONTEXT block below and confirm which instrument and timeframe the trader is on right now. It can change between messages. Open your answer by anchoring to that instrument by name whenever the question touches the market, and never carry over levels, bias, or numbers from an earlier instrument in this thread. If the question is about a different instrument than the chart shows, say which one you are answering about.
+
 
 # CORE BEHAVIOR
 You are TradeMind, the trader's personal AI trading educator and coach. TradeMind is an EDUCATIONAL platform - your primary job is to teach. Answer ANY question the user types: trading concepts, market structure, indicators, psychology, risk management, strategy theory, historical examples, jargon definitions, "explain like I'm 5" walkthroughs, worked examples, or broader finance/economics questions that help them learn. Never refuse a question just because it isn't a setup request. Never tell the user to rephrase or that you only do X - if the question is unclear, make your best interpretation and answer it, then offer to go deeper.
@@ -460,10 +491,20 @@ SCREENSHOT ANALYSIS RULES (when the user attaches an image):
 - Otherwise, derive entry from visible structure: order blocks, fair value gaps, swing highs/lows, liquidity pools, trendlines, moving averages, session opens. Place stop beyond the invalidation structure (not a fixed pip/percent from price). Place TP1/TP2 at the next liquidity or structural targets visible in the image.
 - ALWAYS start your reply with a one-line confirmation of what you see, in this exact format: "Reading: <INSTRUMENT> <TIMEFRAME> (<broker/platform if visible>)." Example: "Reading: EURUSD 15m (TradingView)." If the ticker or timeframe is not legible, say "Reading: instrument unclear" or "Reading: timeframe unclear" so the trader knows to re-upload a clearer image. Never skip this line on a screenshot reply.
 - Numeric precision must match what is visible on the screenshot's price axis.
+`;
+}
 
+// The per-request half: coach voice plus every live context block.
+function dynamicSystemPrompt(coach: string | undefined, journalContext: string, chartCtx: string, strategyCtx: string, lensCtx: string, learningCtx: string, newsCtx?: string, scoreCtx?: string) {
+  return `# COACH PERSONA
+${coachPersona(coach)}
 
+# VOICE ENFORCEMENT (non-negotiable)
+${coachVoiceRules(coach)}
+Your persona is not decoration. A reader must be able to tell which coach wrote the reply from the first sentence alone. If your draft would read the same coming from any other coach, rewrite it in this voice before sending.
 
 === ACTIVE SCAN LENS ===
+
 ${lensCtx}
 === END LENS ===
 
@@ -743,19 +784,42 @@ export const Route = createFileRoute("/api/chat")({
           console.warn(`[chat] req=${reqId} calendar_failed`, (e as Error).message);
         }
 
-        const system = systemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens), learningCtx, newsCtx, scoreCtx);
-
+        const staticSystem = staticSystemPrompt();
+        const liveSystem = dynamicSystemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens), learningCtx, newsCtx, scoreCtx);
 
         const useClaude = !!anthropicKey;
+        // Model routing: a plain setup grade or a short factual question runs on
+        // the cheap model; open-ended coaching, teaching, psychology, and
+        // screenshot reads stay on the top model.
+        const routed = routeChatModel(messages);
+        const claudeId = routed === "cheap" ? CLAUDE_CHEAP : CLAUDE_SMART;
+        const gatewayId = routed === "cheap" ? "google/gemini-2.5-flash" : "google/gemini-2.5-flash";
         const claudeModel = useClaude
-          ? (createAnthropic({ apiKey: anthropicKey! })("claude-sonnet-4-5") as unknown as Parameters<typeof streamText>[0]["model"])
+          ? (createAnthropic({ apiKey: anthropicKey! })(claudeId) as unknown as Parameters<typeof streamText>[0]["model"])
           : null;
-        const gatewayModel = key ? createAiGatewayProvider(key)("google/gemini-2.5-flash") : null;
+        const gatewayModel = key ? createAiGatewayProvider(key)(gatewayId) : null;
         const primaryModel = claudeModel ?? gatewayModel!;
+        const activeModelId = useClaude ? claudeId : gatewayId;
+        console.log(`[chat] req=${reqId} route=${routed} model=${activeModelId}`);
+
+        // Prompt caching: mark the static prefix as an ephemeral cache breakpoint
+        // so repeat requests read it at ~10% of input price instead of resending
+        // the full rubric every turn.
+        const modelMessages: Parameters<typeof streamText>[0]["messages"] = [
+          {
+            role: "system",
+            content: staticSystem,
+            ...(useClaude
+              ? { providerOptions: { anthropic: { cacheControl: { type: "ephemeral" } } } }
+              : {}),
+          },
+          { role: "system", content: liveSystem },
+          ...(await convertToModelMessages(messages)),
+        ];
+
         const result = streamText({
           model: primaryModel,
-          system,
-          messages: await convertToModelMessages(messages),
+          messages: modelMessages,
           maxOutputTokens: useClaude ? 8192 : 4096,
           temperature: useClaude ? 0.7 : undefined,
           abortSignal: request.signal,
@@ -765,10 +829,19 @@ export const Route = createFileRoute("/api/chat")({
             const msg = (error as Error)?.message ?? String(error);
             console.error(`[chat] req=${reqId} stream_error`, msg);
           },
-          onFinish: async ({ finishReason, usage }) => {
-            console.log(`[chat] req=${reqId} finish reason=${finishReason} in=${usage?.inputTokens ?? "?"} out=${usage?.outputTokens ?? "?"} claude=${useClaude}`);
+          onFinish: async ({ finishReason, usage, providerMetadata }) => {
+            console.log(`[chat] req=${reqId} finish reason=${finishReason} model=${activeModelId} in=${usage?.inputTokens ?? "?"} cached=${usage?.cachedInputTokens ?? 0} out=${usage?.outputTokens ?? "?"}`);
+            const { logAiCost } = await import("@/lib/ai-cost.server");
+            await logAiCost({
+              kind: routed === "cheap" ? "grade" : "chat",
+              model: activeModelId,
+              usage,
+              providerMetadata,
+              userId,
+            });
           },
         });
+
 
         const response = result.toUIMessageStreamResponse({
           headers: { "X-Request-Id": reqId },
