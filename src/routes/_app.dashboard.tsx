@@ -604,8 +604,22 @@ function Dashboard() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      const raw = window.sessionStorage.getItem(`trademind.scanResult.${symbol.ticker}`);
-      setResult(raw ? (JSON.parse(raw) as ScanResult) : null);
+      const key = `trademind.scanResult.${symbol.ticker}`;
+      const raw = window.sessionStorage.getItem(key);
+      if (!raw) {
+        setResult(null);
+        return;
+      }
+      const saved = JSON.parse(raw) as ScanResult;
+      // Older builds could write the previous instrument's result into the new
+      // instrument's storage key during the symbol-change render. Never display
+      // or preserve a result unless its research memo belongs to this symbol.
+      if (saved.memo?.ticker !== symbol.ticker) {
+        window.sessionStorage.removeItem(key);
+        setResult(null);
+        return;
+      }
+      setResult(saved);
     } catch { setResult(null); }
   }, [symbol.ticker]);
 
@@ -619,7 +633,12 @@ function Dashboard() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      if (result) window.sessionStorage.setItem(`trademind.scanResult.${symbol.ticker}`, JSON.stringify(result));
+      // On a symbol change React renders once with the old result before the
+      // loader effect above replaces it. The memo check prevents that stale
+      // result from being copied into every symbol's storage slot.
+      if (result?.memo?.ticker === symbol.ticker) {
+        window.sessionStorage.setItem(`trademind.scanResult.${symbol.ticker}`, JSON.stringify(result));
+      }
     } catch { /* ignore */ }
   }, [result, symbol.ticker]);
 
