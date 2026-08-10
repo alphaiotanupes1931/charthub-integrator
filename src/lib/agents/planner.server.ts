@@ -233,14 +233,21 @@ export function gradeFromEvidence(
   snap: MarketSnapshot,
 ): typeof GRADES[number] {
   if (bias === "Neutral") return "NO ENTRY";
-  const m15 = snap.mtf?.m15.confirmation;
+  const mtf = snap.mtf;
+  const m15 = mtf?.m15.confirmation;
   const wantBull = bias === "Long";
-  const m15Agrees = m15 === (wantBull ? "bullish" : "bearish");
+  const wanted = wantBull ? "bullish" : "bearish";
+  const m15Agrees = m15 === wanted;
+  const h4Agrees = mtf?.h4.direction === wanted;
+  const h1Agrees = mtf?.h1.structureBreak === wanted;
+  const fullyAligned = mtf?.alignment === (wantBull ? "aligned-long" : "aligned-short");
 
   let grade: typeof GRADES[number];
-  if (confidence >= 78 && m15Agrees) grade = "A+";
-  else if (confidence >= 68) grade = "A";
-  else if (confidence >= 55) grade = "B";
+  // High grades require both a high evidence ratio and named structural
+  // agreement. A majority-selected direction by itself cannot earn an A.
+  if (confidence >= 84 && fullyAligned && m15Agrees) grade = "A+";
+  else if (confidence >= 74 && h4Agrees && h1Agrees) grade = "A";
+  else if (confidence >= 58) grade = "B";
   else grade = "C";
 
   // Missing higher-timeframe data means the counters had little to work with.
@@ -640,6 +647,9 @@ export async function runPlanner(
     dailyBias,
     currentTrend,
     synopsis,
+    dataSource: snap.source,
+    dataFetchedAt: snap.fetchedAt,
+    candleCount: snap.candles.length,
   };
 }
 

@@ -30,7 +30,7 @@ export type OrderFlow = {
 export type MarketSnapshot = {
   ticker: string;
   interval: string;
-  source: "yahoo" | "coingecko" | "backup" | "unavailable";
+  source: "yahoo" | "coingecko" | "twelvedata" | "backup" | "unavailable";
   lastPrice: number;
   candles: Candle[];
   stats: {
@@ -135,4 +135,8 @@ export type TradePlan = {
   currentTrend?: "up" | "down" | "range";
   /** Short plain-language synopsis of why this grade was given. */
   synopsis?: string;
+  /** Provider and candle audit trail for this exact scan. */
+  dataSource?: MarketSnapshot["source"];
+  dataFetchedAt?: string;
+  candleCount?: number;
 };

@@ -47,9 +47,18 @@ describe("countEvidence", () => {
 describe("gradeFromEvidence", () => {
   it("varies the grade with measured evidence", () => {
     expect(gradeFromEvidence("Long", 90, snap(true))).toBe("A+");
-    expect(gradeFromEvidence("Long", 72, snap(true))).toBe("A");
+    expect(gradeFromEvidence("Long", 76, snap(true))).toBe("A");
+    expect(gradeFromEvidence("Long", 72, snap(true))).toBe("B");
     expect(gradeFromEvidence("Long", 60, snap(true))).toBe("B");
     expect(gradeFromEvidence("Long", 40, snap(true))).toBe("C");
+  });
+
+  it("does not award A without 4H and 1H agreement", () => {
+    const mixed = {
+      ...snap(true),
+      mtf: { ...snap(true).mtf, alignment: "mixed", h1: { structureBreak: "bearish" } },
+    } as MarketSnapshot;
+    expect(gradeFromEvidence("Long", 82, mixed)).toBe("B");
   });
 
   it("does not let a missing MTF read claim a high grade", () => {

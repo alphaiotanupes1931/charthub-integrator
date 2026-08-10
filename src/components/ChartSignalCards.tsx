@@ -117,6 +117,12 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
             {orderType}
           </span>
         )}
+        <span
+          className="rounded border border-border/60 bg-background/60 px-1.5 py-0.5 text-[9px] font-medium uppercase text-muted-foreground"
+          title={grade.dataFetchedAt ? `Fetched ${new Date(grade.dataFetchedAt).toLocaleString()}` : "Feed timestamp unavailable"}
+        >
+          {grade.dataSource ?? "feed unknown"} · {grade.candleCount ?? 0} bars
+        </span>
 
         {/* Inline preview of key numbers */}
         <div className="hidden sm:flex items-center gap-3 ml-1 text-[11px] font-mono">
