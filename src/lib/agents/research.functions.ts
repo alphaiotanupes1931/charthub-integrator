@@ -91,6 +91,8 @@ export const runResearchPlan = createServerFn({ method: "POST" })
         );
         const { data: userData } = await supabase.auth.getUser(token);
         const userId = userData.user?.id;
+        costUserId = userId ?? null;
+
         if (userId) {
           const topics = [data.ticker, "general", data.lensDesc?.split(":")[0] ?? ""].filter(Boolean);
           const { data: lessons } = await supabase
