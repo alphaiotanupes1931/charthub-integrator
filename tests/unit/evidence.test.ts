@@ -10,7 +10,7 @@ const snap = (bull: boolean): MarketSnapshot => ({
     alignment: bull ? "aligned-long" : "aligned-short",
     h4: { direction: bull ? "bullish" : "bearish", trend: "up" },
     h1: { structureBreak: bull ? "bullish BOS" : "bearish BOS" },
-    m15: { confirmation: bull ? "bullish retest" : "bearish retest" },
+    m15: { confirmation: bull ? "bullish" : "bearish", reason: "test confirmation" },
     ladder: [
       { label: "Monthly", bias: bull ? "bullish" : "bearish" },
       { label: "Weekly", bias: bull ? "bullish" : "bearish" },
