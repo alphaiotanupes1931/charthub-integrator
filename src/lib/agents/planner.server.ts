@@ -142,10 +142,9 @@ export function countEvidence(
   const check = (present: boolean, weight = 1) => { checks += weight; if (present) hits += weight; };
 
   const mtf = snap.mtf;
-  // 4H direction, 1H structure, 15m confirmation: the cascade, weighted double.
-  check(mtf?.h4.direction === (wantBull ? "bullish" : "bearish"), 2);
-  check(!!mtf?.h1.structureBreak && mtf.h1.structureBreak.toLowerCase().includes(wantBull ? "bull" : "bear"), 2);
-  check(!!mtf?.m15.confirmation && mtf.m15.confirmation.toLowerCase().includes(wantBull ? "bull" : "bear"), 2);
+  // The 4H/1H/15m cascade already determines direction in resolveDirection().
+  // Do not count those same votes again as confidence. Conviction must come
+  // from confirmation beyond the evidence that selected Long or Short.
 
   // Higher-timeframe rungs that agree with the trade.
   const ladder = mtf?.ladder ?? [];
@@ -167,8 +166,9 @@ export function countEvidence(
 
   }
 
-  // Payoff quality.
-  check(Number.isFinite(rrMultiple) && rrMultiple >= 2);
+  // R:R is constructed by the planner, not observed in the market, so it is a
+  // risk-quality gate rather than evidence of directional conviction.
+  if (!Number.isFinite(rrMultiple) || rrMultiple < 1.5) return 25;
 
   if (checks === 0) return 0;
   // Map onto 25-90: no data-driven setup deserves a 100.
