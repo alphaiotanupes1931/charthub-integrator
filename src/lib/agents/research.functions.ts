@@ -71,6 +71,8 @@ export const runResearchPlan = createServerFn({ method: "POST" })
 
     // Load Hermes memory relevant to this ticker / lens.
     let hermesPrompt = "";
+    let costUserId: string | null = null;
+
     let perfDesc = "";
     let scoreDesc = "";
     let gradeCap: "A+" | "A" | "B" | "C" | null = null;
