@@ -85,10 +85,19 @@ async function fromYahoo(ticker: string, interval: string): Promise<Candle[]> {
   const sym = YAHOO[ticker];
   if (!sym) throw new Error(`no yahoo mapping for ${ticker}`);
   const iv = yahooRange(interval);
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=${iv.interval}&range=${iv.range}`;
-  const json = await fetchJson<{
+  let json: {
     chart?: { result?: Array<{ timestamp?: number[]; indicators?: { quote?: Array<{ open?: (number|null)[]; high?: (number|null)[]; low?: (number|null)[]; close?: (number|null)[]; volume?: (number|null)[] }> } }> };
-  }>(url);
+  } | undefined;
+  let lastError: unknown;
+  for (const host of ["query1.finance.yahoo.com", "query2.finance.yahoo.com"]) {
+    try {
+      json = await fetchJson(`https://${host}/v8/finance/chart/${sym}?interval=${iv.interval}&range=${iv.range}&includePrePost=true`);
+      break;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  if (!json) throw lastError instanceof Error ? lastError : new Error("yahoo unavailable");
   const r = json.chart?.result?.[0];
   const q = r?.indicators?.quote?.[0];
   if (!r?.timestamp || !q) throw new Error("yahoo empty");
@@ -100,6 +109,60 @@ async function fromYahoo(ticker: string, interval: string): Promise<Candle[]> {
     bars.push({ time: r.timestamp[i], open: o, high: h, low: l, close: c, volume: v == null ? undefined : v });
   }
   return bars.slice(-220);
+}
+
+const OANDA: Record<string, string> = {
+  "XAU/USD": "XAU_USD",
+  "XAG/USD": "XAG_USD",
+  "NAS100": "NAS100_USD",
+  "SPX500": "SPX500_USD",
+  "US30": "US30_USD",
+  "WTI Oil": "WTICO_USD",
+  "EUR/USD": "EUR_USD",
+  "GBP/USD": "GBP_USD",
+  "USD/JPY": "USD_JPY",
+};
+
+function oandaGranularity(interval: string): string {
+  return ({ "1": "M1", "5": "M5", "15": "M15", "60": "H1", "240": "H4", D: "D", W: "W", M: "M" } as Record<string, string>)[interval] ?? "H1";
+}
+
+async function fromOandaHost(host: string, key: string, ticker: string, interval: string): Promise<Candle[]> {
+  const instrument = OANDA[ticker];
+  if (!instrument) throw new Error(`no oanda mapping for ${ticker}`);
+  const url = `https://${host}/v3/instruments/${instrument}/candles?granularity=${oandaGranularity(interval)}&count=220&price=M`;
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), 8_000);
+  try {
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${key}`, Accept: "application/json" }, signal: ctl.signal });
+    if (!res.ok) throw new Error(`oanda HTTP ${res.status}`);
+    const json = await res.json() as { candles?: Array<{ time: string; mid?: { o: string; h: string; l: string; c: string }; volume?: number }> };
+    const bars = (json.candles ?? []).flatMap((c): Candle[] => {
+      if (!c.mid) return [];
+      const open = Number(c.mid.o), high = Number(c.mid.h), low = Number(c.mid.l), close = Number(c.mid.c);
+      if (![open, high, low, close].every(Number.isFinite)) return [];
+      return [{ time: Math.floor(new Date(c.time).getTime() / 1000), open, high, low, close, volume: c.volume }];
+    });
+    if (bars.length < 20) throw new Error("oanda returned insufficient candles");
+    return bars;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function fromOanda(ticker: string, interval: string): Promise<Candle[]> {
+  const key = process.env.OANDA_API_KEY;
+  if (!key || !OANDA[ticker]) throw new Error("oanda not configured for ticker");
+  const practiceFirst = (process.env.OANDA_ENV ?? "live").toLowerCase() === "practice";
+  const hosts = practiceFirst
+    ? ["api-fxpractice.oanda.com", "api-fxtrade.oanda.com"]
+    : ["api-fxtrade.oanda.com", "api-fxpractice.oanda.com"];
+  let lastError: unknown;
+  for (const host of hosts) {
+    try { return await fromOandaHost(host, key, ticker, interval); }
+    catch (error) { lastError = error; }
+  }
+  throw lastError instanceof Error ? lastError : new Error("oanda unavailable");
 }
 
 async function fromCoinGecko(ticker: string, interval: string): Promise<Candle[]> {
@@ -380,15 +443,17 @@ function computeAlignment(mtf: Omit<MtfContext, "alignment">): MtfContext["align
 }
 
 async function loadCandlesSafe(ticker: string, interval: string): Promise<Candle[]> {
-  try {
-    if (COINGECKO_ID[ticker]) return await fromCoinGecko(ticker, interval);
-    return await fromYahoo(ticker, interval);
-  } catch {
-    // A single quote is not candle history. Never let the TradingView snapshot
-    // fallback manufacture bars for MTF grading; use a second real history
-    // provider or report the timeframe as unavailable.
-    try { return await fromTwelveData(ticker, interval); } catch { return []; }
+  const loaders = COINGECKO_ID[ticker]
+    ? [() => fromCoinGecko(ticker, interval), () => fromYahoo(ticker, interval)]
+    : [() => fromOanda(ticker, interval), () => fromTwelveData(ticker, interval), () => fromYahoo(ticker, interval)];
+  for (const load of loaders) {
+    try {
+      const candles = await load();
+      if (candles.length >= 6) return candles;
+    } catch { /* try the next real history provider */ }
   }
+  // Never manufacture candles from a quote. Missing history is unavailable.
+  return [];
 }
 
 // ---------------- Full timeframe ladder (Monthly → 1m) ----------------
@@ -474,12 +539,24 @@ export async function getSnapshot(rawTicker: string, interval: string): Promise<
   let candles: Candle[] = [];
 
   let source: MarketSnapshot["source"] = "unavailable";
-  try {
-    if (COINGECKO_ID[ticker]) { candles = await fromCoinGecko(ticker, interval); source = "coingecko"; }
-    else { candles = await fromYahoo(ticker, interval); source = "yahoo"; }
-  } catch {
-    try { candles = await fromTwelveData(ticker, interval); source = "twelvedata"; }
-    catch { /* remain unavailable: quote-only backups cannot support a scan */ }
+  const loaders: Array<{ source: Exclude<MarketSnapshot["source"], "backup" | "unavailable">; load: () => Promise<Candle[]> }> = COINGECKO_ID[ticker]
+    ? [
+        { source: "coingecko", load: () => fromCoinGecko(ticker, interval) },
+        { source: "yahoo", load: () => fromYahoo(ticker, interval) },
+      ]
+    : [
+        { source: "oanda", load: () => fromOanda(ticker, interval) },
+        { source: "twelvedata", load: () => fromTwelveData(ticker, interval) },
+        { source: "yahoo", load: () => fromYahoo(ticker, interval) },
+      ];
+  for (const provider of loaders) {
+    try {
+      const next = await provider.load();
+      if (next.length < 20) continue;
+      candles = next;
+      source = provider.source;
+      break;
+    } catch { /* try the next real history provider */ }
   }
 
   const last = candles.at(-1)?.close ?? 0;
