@@ -9,6 +9,15 @@ import { formatOrderFlow } from "./order-flow.server";
 
 const MODEL = "google/gemini-3-flash-preview";
 
+/** Best-effort cost accounting for each planner step. Never blocks a scan. */
+async function logPlannerCost(kind: string, usage: unknown, providerMetadata: unknown) {
+  try {
+    const { logAiCost } = await import("@/lib/ai-cost.server");
+    await logAiCost({ kind, model: MODEL, usage: usage as never, providerMetadata: providerMetadata as never });
+  } catch { /* cost logging is never fatal */ }
+}
+
+
 // Permissive schema: accept strings that look like numbers/enums, then coerce.
 // Gemini via the OpenAI-compat gateway does not enforce strict json_schema, so
 // slight deviations (extra whitespace, "A+ setup", numbers-as-strings) would
