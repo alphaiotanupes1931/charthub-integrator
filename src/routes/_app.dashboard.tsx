@@ -192,6 +192,9 @@ type ScanResult = {
   dailyBias?: "bullish" | "bearish" | "neutral";
   currentTrend?: "up" | "down" | "range";
   synopsis?: string;
+  dataSource?: string;
+  dataFetchedAt?: string;
+  candleCount?: number;
 };
 
 function fmtPrice(n: number, decimals: number): string {
@@ -952,6 +955,9 @@ function Dashboard() {
       tp2,
       strength: plan.notes,
       weakness: plan.details,
+      dataSource: plan.dataSource,
+      dataFetchedAt: plan.dataFetchedAt,
+      candleCount: plan.candleCount,
     });
     if (entry && stop && tp1 && tp2 && bias !== "neutral") {
       setAiAnnotationsRaw([
@@ -1024,6 +1030,9 @@ function Dashboard() {
       tp2,
       strength: plan.notes,
       weakness: plan.details,
+      dataSource: plan.dataSource,
+      dataFetchedAt: plan.dataFetchedAt,
+      candleCount: plan.candleCount,
     };
     const levelLines = plan.grade === "NO ENTRY"
       ? ["No entry - stand down until the setup improves."]
@@ -1036,6 +1045,7 @@ function Dashboard() {
         ];
     return [
       `${scanSymbol.name} scan: ${plan.grade} ${plan.bias}. Confidence ${plan.confidence}%.`,
+      `Market data: ${plan.dataSource ?? "unavailable"}, ${plan.candleCount ?? 0} real candles, fetched ${plan.dataFetchedAt ?? "unknown"}.`,
       ...levelLines,
       `Why take this trade: ${plan.notes}`,
       ...(plan.details && plan.details !== plan.notes ? [`Risk and invalidation: ${plan.details}`] : []),
@@ -1350,7 +1360,7 @@ function Dashboard() {
                     </button>
                   );
                 })}
-                <Link to="/strategies" search={{}} className="block px-3 py-2 text-[11px] text-muted-foreground hover:text-foreground border-t border-border/60">
+                <Link to="/strategies" className="block px-3 py-2 text-[11px] text-muted-foreground hover:text-foreground border-t border-border/60">
                   Manage all strategies →
                 </Link>
               </div>

@@ -14,19 +14,16 @@ import { formatPerfForPrompt } from "@/lib/strategy-perf.shared";
 
 import type { TradePlan } from "./types";
 
-const Input = z.object({
-  ticker: z.string().min(1).max(20),
-  interval: z.string().min(1).max(4),
-  lensDesc: z.string().max(500).optional(),
-  strategyDesc: z.string().max(800).optional(),
-  strategyId: z.string().max(80).optional(),
-  coach: z.string().max(60).optional(),
-  journalPerf: z.string().max(300).optional(),
-});
-
-
 export const runResearchPlan = createServerFn({ method: "POST" })
-  .inputValidator((raw: unknown) => Input.parse(raw))
+  .inputValidator((raw: unknown) => z.object({
+    ticker: z.string().min(1).max(20),
+    interval: z.string().min(1).max(4),
+    lensDesc: z.string().max(500).optional(),
+    strategyDesc: z.string().max(800).optional(),
+    strategyId: z.string().max(80).optional(),
+    coach: z.string().max(60).optional(),
+    journalPerf: z.string().max(300).optional(),
+  }).parse(raw))
   .handler(async ({ data }): Promise<TradePlan> => {
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) {
