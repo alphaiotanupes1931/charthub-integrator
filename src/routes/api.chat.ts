@@ -15,6 +15,39 @@ import type { Database, Json } from "@/integrations/supabase/types";
 
 const DAILY_AI_CAP = 100; // requests per user per UTC day
 
+// Model routing. Setup grading is a mechanical job against a fixed rubric, so it
+// runs on the cheap model; coaching, teaching, psychology, and screenshot reads
+// need the stronger one.
+const CLAUDE_SMART = "claude-sonnet-4-5-20250929";
+const CLAUDE_CHEAP = "claude-haiku-4-5-20251001";
+
+const GRADE_INTENT = /\b(scan|grade|rate|score|setup|entry|entries|plan|trade idea|is this a good|long or short|buy or sell|levels?)\b/i;
+const DEEP_INTENT = /\b(why|explain|teach|walk me|help me understand|how do|how does|what is|what are|difference|psychology|mindset|tilt|revenge|discipline|journal review|mistake|habit|routine|review my|lesson|history|compare|strategy for|should i change)\b/i;
+
+function lastUserText(messages: UIMessage[]): { text: string; hasImage: boolean } {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const m = messages[i];
+    if (!m || m.role !== "user") continue;
+    const parts = (m.parts ?? []) as Array<{ type: string; text?: string; mediaType?: string }>;
+    const text = parts.filter((p) => p.type === "text").map((p) => p.text ?? "").join(" ").trim();
+    const hasImage = parts.some((p) => p.type === "file" || p.type.startsWith("image"));
+    return { text, hasImage };
+  }
+  return { text: "", hasImage: false };
+}
+
+/** "cheap" = mechanical grading or a short factual ask. "smart" = coaching. */
+function routeChatModel(messages: UIMessage[]): "cheap" | "smart" {
+  const { text, hasImage } = lastUserText(messages);
+  if (hasImage) return "smart";          // screenshot reads need the stronger vision model
+  if (!text) return "smart";
+  if (DEEP_INTENT.test(text)) return "smart";
+  if (GRADE_INTENT.test(text)) return "cheap";
+  if (text.length <= 90 && text.split(/\s+/).length <= 14) return "cheap";
+  return "smart";
+}
+
+
 const stripReasoningTransform: StreamTextTransform<ToolSet> = () =>
   new TransformStream({
     transform(chunk, controller) {
