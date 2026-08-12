@@ -89,13 +89,18 @@ async function fromYahoo(ticker: string, interval: string): Promise<Candle[]> {
     chart?: { result?: Array<{ timestamp?: number[]; indicators?: { quote?: Array<{ open?: (number|null)[]; high?: (number|null)[]; low?: (number|null)[]; close?: (number|null)[]; volume?: (number|null)[] }> } }> };
   } | undefined;
   let lastError: unknown;
-  for (const host of ["query1.finance.yahoo.com", "query2.finance.yahoo.com"]) {
-    try {
-      json = await fetchJson(`https://${host}/v8/finance/chart/${sym}?interval=${iv.interval}&range=${iv.range}&includePrePost=true`);
-      break;
-    } catch (error) {
-      lastError = error;
+  // Yahoo throws bursty 429s from a single edge. Two rounds across both public
+  // hosts with a short backoff turns almost all of those into a success.
+  outer: for (const round of [0, 1]) {
+    for (const host of ["query1.finance.yahoo.com", "query2.finance.yahoo.com"]) {
+      try {
+        json = await fetchJson(`https://${host}/v8/finance/chart/${sym}?interval=${iv.interval}&range=${iv.range}&includePrePost=true`);
+        break outer;
+      } catch (error) {
+        lastError = error;
+      }
     }
+    if (round === 0) await new Promise((r) => setTimeout(r, 700));
   }
   if (!json) throw lastError instanceof Error ? lastError : new Error("yahoo unavailable");
   const r = json.chart?.result?.[0];
@@ -212,6 +217,48 @@ async function fromTwelveData(ticker: string, interval: string): Promise<Candle[
     open: Number(v.open), high: Number(v.high), low: Number(v.low), close: Number(v.close),
     volume: v.volume == null ? undefined : Number(v.volume),
   })).filter((c) => Number.isFinite(c.close));
+}
+
+// ----- Binance klines (no key, very reliable) -----
+// Gold trades on Binance as PAXG (Paxos Gold, 1 token = 1 troy oz) which tracks
+// XAU/USD spot closely, so it is a usable last-resort history source for gold.
+const BINANCE: Record<string, string> = {
+  "XAU/USD": "PAXGUSDT",
+  "BTC/USD": "BTCUSDT",
+  "ETH/USD": "ETHUSDT",
+  "XRP/USD": "XRPUSDT",
+};
+
+function binanceInterval(interval: string): string {
+  return ({ "1": "1m", "5": "5m", "15": "15m", "60": "1h", "240": "4h", D: "1d", W: "1w", M: "1M" } as Record<string, string>)[interval] ?? "1h";
+}
+
+async function fromBinance(ticker: string, interval: string): Promise<Candle[]> {
+  const sym = BINANCE[ticker];
+  if (!sym) throw new Error(`no binance mapping for ${ticker}`);
+  const url = `https://api.binance.com/api/v3/klines?symbol=${sym}&interval=${binanceInterval(interval)}&limit=220`;
+  const raw = await fetchJson<Array<[number, string, string, string, string, string]>>(url);
+  if (!Array.isArray(raw) || raw.length === 0) throw new Error("binance empty");
+  return raw.map(([ms, o, h, l, c, v]) => ({
+    time: Math.floor(ms / 1000),
+    open: Number(o), high: Number(h), low: Number(l), close: Number(c),
+    volume: Number(v),
+  })).filter((c) => Number.isFinite(c.close));
+}
+
+// Last-good candles per ticker/interval. When every provider is rate-limited we
+// serve the most recent good history instead of collapsing the scan to NO ENTRY.
+const lastGood = new Map<string, { at: number; candles: Candle[] }>();
+const LAST_GOOD_TTL_MS = 20 * 60 * 1000;
+
+function rememberCandles(ticker: string, interval: string, candles: Candle[]) {
+  if (candles.length >= 20) lastGood.set(`${ticker}:${interval}`, { at: Date.now(), candles });
+}
+
+function recallCandles(ticker: string, interval: string): Candle[] {
+  const hit = lastGood.get(`${ticker}:${interval}`);
+  if (!hit || Date.now() - hit.at > LAST_GOOD_TTL_MS) return [];
+  return hit.candles;
 }
 
 function atr(candles: Candle[], period = 14): number {
@@ -444,16 +491,19 @@ function computeAlignment(mtf: Omit<MtfContext, "alignment">): MtfContext["align
 
 async function loadCandlesSafe(ticker: string, interval: string): Promise<Candle[]> {
   const loaders = COINGECKO_ID[ticker]
-    ? [() => fromCoinGecko(ticker, interval), () => fromYahoo(ticker, interval)]
-    : [() => fromOanda(ticker, interval), () => fromTwelveData(ticker, interval), () => fromYahoo(ticker, interval)];
+    ? [() => fromCoinGecko(ticker, interval), () => fromYahoo(ticker, interval), () => fromBinance(ticker, interval)]
+    : [() => fromOanda(ticker, interval), () => fromTwelveData(ticker, interval), () => fromYahoo(ticker, interval), () => fromBinance(ticker, interval)];
   for (const load of loaders) {
     try {
       const candles = await load();
-      if (candles.length >= 6) return candles;
+      if (candles.length >= 6) {
+        rememberCandles(ticker, interval, candles);
+        return candles;
+      }
     } catch { /* try the next real history provider */ }
   }
-  // Never manufacture candles from a quote. Missing history is unavailable.
-  return [];
+  // Never manufacture candles from a quote, but a recent real history beats none.
+  return recallCandles(ticker, interval);
 }
 
 // ---------------- Full timeframe ladder (Monthly → 1m) ----------------
@@ -543,11 +593,13 @@ export async function getSnapshot(rawTicker: string, interval: string): Promise<
     ? [
         { source: "coingecko", load: () => fromCoinGecko(ticker, interval) },
         { source: "yahoo", load: () => fromYahoo(ticker, interval) },
+        { source: "binance", load: () => fromBinance(ticker, interval) },
       ]
     : [
         { source: "oanda", load: () => fromOanda(ticker, interval) },
         { source: "twelvedata", load: () => fromTwelveData(ticker, interval) },
         { source: "yahoo", load: () => fromYahoo(ticker, interval) },
+        { source: "binance", load: () => fromBinance(ticker, interval) },
       ];
   for (const provider of loaders) {
     try {
@@ -555,8 +607,16 @@ export async function getSnapshot(rawTicker: string, interval: string): Promise<
       if (next.length < 20) continue;
       candles = next;
       source = provider.source;
+      rememberCandles(ticker, interval, next);
       break;
     } catch { /* try the next real history provider */ }
+  }
+  if (candles.length < 20) {
+    const recalled = recallCandles(ticker, interval);
+    if (recalled.length >= 20) {
+      candles = recalled;
+      source = "cached";
+    }
   }
 
   const last = candles.at(-1)?.close ?? 0;
