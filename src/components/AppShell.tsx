@@ -79,8 +79,6 @@ const NAV_GROUPS: NavGroup[] = [
       { to: "/journal",    label: "Trade Journal",   icon: NotebookPen },
       { to: "/alerts",     label: "Price Alerts",    icon: Bell },
       { to: "/calculator", label: "Risk Calculator", icon: Calculator },
-      { to: "/autopilot",  label: "Autopilot",       icon: Bot },
-      { to: "/testing",    label: "Paper Testing",   icon: FlaskConical },
     ],
   },
   {
@@ -121,9 +119,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: "Accounts",
     icon: Plug,
     items: [
-      { to: "/connections", label: "Broker Connections", icon: Plug },
-      { to: "/broker",      label: "OANDA",              icon: Building2 },
-      { to: "/discord",     label: "Discord",            icon: MessageSquare },
+      { to: "/discord", label: "Discord", icon: MessageSquare },
     ],
   },
 ];
