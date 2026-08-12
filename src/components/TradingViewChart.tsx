@@ -305,23 +305,23 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
 
       {showFallback && <div className="absolute inset-0 z-20">{fallback}</div>}
 
+      {/* Drawing overlay (the backup chart brings its own tools, so ours steps aside) */}
+      {!showFallback && (
+        <canvas
+          ref={drawCanvasRef}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
+          className="absolute inset-0 z-30"
+          style={{
+            pointerEvents: drawMode ? "auto" : "none",
+            cursor: drawMode ? "crosshair" : "default",
+            touchAction: drawMode ? "none" : "auto",
+          }}
+        />
+      )}
 
-
-
-      {/* Drawing overlay */}
-      <canvas
-        ref={drawCanvasRef}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerUp}
-        className="absolute inset-0 z-30"
-        style={{
-          pointerEvents: drawMode ? "auto" : "none",
-          cursor: drawMode ? "crosshair" : "default",
-          touchAction: drawMode ? "none" : "auto",
-        }}
-      />
 
       {drawMode && (
         <div className="absolute right-2 bottom-11 sm:right-3 sm:bottom-12 z-40 flex flex-wrap items-center gap-1 rounded-md border border-border bg-background/90 backdrop-blur px-1.5 py-1 shadow-lg">
