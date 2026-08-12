@@ -206,6 +206,17 @@ export function markFirstWeekTask(id: string) {
   write({ ...s, completed });
 }
 
+export function toggleFirstWeekTask(id: string) {
+  const s = read();
+  const completed: Record<string, true> = { ...s.completed };
+  if (completed[id]) {
+    delete completed[id];
+  } else {
+    completed[id] = true;
+  }
+  write({ ...s, completed });
+}
+
 export function markFirstWeekEvent(event: string, value?: number) {
   const s = read();
   const completed: Record<string, true> = { ...s.completed };
@@ -271,6 +282,11 @@ export function useFirstWeek() {
     setState(read());
   }, []);
 
+  const toggle = useCallback((id: string) => {
+    toggleFirstWeekTask(id);
+    setState(read());
+  }, []);
+
   const markEvent = useCallback((event: string, value?: number) => {
     markFirstWeekEvent(event, value);
     setState(read());
@@ -321,6 +337,7 @@ export function useFirstWeek() {
     startedAt: state.startedAt,
     start,
     mark,
+    toggle,
     markEvent,
     dismiss,
   };
