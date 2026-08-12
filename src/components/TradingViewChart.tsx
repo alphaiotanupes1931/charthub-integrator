@@ -323,7 +323,7 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
       )}
 
 
-      {drawMode && (
+      {drawMode && !showFallback && (
         <div className="absolute right-2 bottom-11 sm:right-3 sm:bottom-12 z-40 flex flex-wrap items-center gap-1 rounded-md border border-border bg-background/90 backdrop-blur px-1.5 py-1 shadow-lg">
           {([
             { k: "pen", Icon: Pencil, label: "Pen" },
