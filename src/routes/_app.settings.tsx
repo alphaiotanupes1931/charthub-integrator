@@ -501,51 +501,6 @@ function SettingsPage() {
         )}
       </Card>
 
-      {/* SECURITY - RECOVERY CODE */}
-      <SectionLabel>Security</SectionLabel>
-      <Card>
-        <h2 className="flex items-center gap-2 text-lg font-semibold mb-2">
-          <KeyRound className="size-5 text-primary" />
-          Account Recovery Code
-        </h2>
-        <p className="text-sm text-muted-foreground mb-4">
-          A one-time code you can use to reset your password if you ever lose access to your email.
-          Keep it somewhere safe - a password manager or your own inbox works well.
-          {hasCode === true && !newCode && (
-            <span className="block mt-2 text-foreground">You already have a recovery code set. Generating a new one will replace it.</span>
-          )}
-          {hasCode === false && !newCode && (
-            <span className="block mt-2 text-primary">You don't have a recovery code yet. Generate one now.</span>
-          )}
-        </p>
-
-        {newCode ? (
-          <div className="space-y-4">
-            <div className="rounded-lg border border-primary/40 bg-primary/5 p-5 text-center">
-              <div className="text-[11px] tracking-[0.2em] uppercase text-muted-foreground mb-2">Your recovery code</div>
-              <div className="font-mono text-xl sm:text-2xl font-semibold tracking-wider text-foreground break-all">{newCode}</div>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              This is the only time we'll show this code. Save it before leaving this page.
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <GhostButton onClick={copyCode}><Copy className="size-4" /> Copy</GhostButton>
-              <GhostButton onClick={emailCode} disabled={emailingCode || !profile?.email}>
-                <Mail className="size-4" /> Email it to me
-              </GhostButton>
-              <PrimaryButton onClick={() => setNewCode(null)}>
-                I've saved it
-              </PrimaryButton>
-            </div>
-          </div>
-        ) : (
-          <PrimaryButton onClick={generateAndSaveCode} disabled={savingCode}>
-            <KeyRound className="size-4" />
-            {savingCode ? "Generating…" : hasCode ? "Generate new code" : "Generate recovery code"}
-          </PrimaryButton>
-        )}
-      </Card>
-
       {/* BILLING */}
       <SectionLabel>Billing</SectionLabel>
       <BillingCard />
