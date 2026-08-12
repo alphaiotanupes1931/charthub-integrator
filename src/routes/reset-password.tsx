@@ -62,6 +62,12 @@ function ResetPasswordPage() {
     try {
       const { error } = await supabase.auth.updateUser({ password: parsed.data });
       if (error) throw error;
+      // First-login temporary passwords are flagged; clear the flag so the
+      // forced-reset gate stops intercepting this account.
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData.user) {
+        await supabase.from("profiles").update({ must_change_password: false }).eq("id", userData.user.id);
+      }
       toast.success("Password updated. You're signed in.");
       navigate({ to: "/dashboard", replace: true });
     } catch (err: unknown) {

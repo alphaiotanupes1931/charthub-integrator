@@ -4,6 +4,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { signUpConfirmed } from "@/lib/auth.functions";
+import { signInWithIdentifier } from "@/lib/username-auth.functions";
 import { redeemRecoveryCode } from "@/lib/recovery.functions";
 import { normalizeRecoveryCode } from "@/lib/recoveryCode";
 import { strongPasswordSchema } from "@/lib/api-security";
@@ -53,7 +54,7 @@ export const Route = createFileRoute("/auth")({
 
 
 const signInSchema = z.object({
-  email: z.string().trim().email("Enter a valid email").max(255),
+  email: z.string().trim().min(1, "Enter your email or username").max(255),
   password: z.string().min(1, "Password is required").max(72),
 });
 
@@ -237,8 +238,21 @@ function AuthPage() {
 
     try {
       if (mode === "signin") {
-        const { data: signInData, error } = await supabase.auth.signInWithPassword(parsed.data);
-        if (error) throw error;
+        let signInData: Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>["data"];
+        if (parsed.data.email.includes("@")) {
+          const res = await supabase.auth.signInWithPassword(parsed.data);
+          if (res.error) throw res.error;
+          signInData = res.data;
+        } else {
+          // Username sign-in: the server resolves the username to an account
+          // email, verifies the password, and hands back session tokens.
+          const tokens = await signInWithIdentifier({
+            data: { identifier: parsed.data.email, password: parsed.data.password },
+          });
+          const res = await supabase.auth.setSession(tokens);
+          if (res.error) throw res.error;
+          signInData = res.data;
+        }
         // eslint-disable-next-line no-console
         console.info("%c[auth]%c signInWithPassword ok", "color:#22c55e;font-weight:bold", "color:inherit", {
           userId: signInData.user?.id,
@@ -421,11 +435,15 @@ function AuthPage() {
 
             <form onSubmit={onSubmit} className="mt-5 space-y-3">
               <div>
-                <label className="text-xs font-medium text-muted-foreground" htmlFor="email">Email</label>
+                <label className="text-xs font-medium text-muted-foreground" htmlFor="email">
+                  {mode === "signin" ? "Email or username" : "Email"}
+                </label>
                 <input
                   id="email"
-                  type="email"
-                  autoComplete="email"
+                  type={mode === "signin" ? "text" : "email"}
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  autoComplete={mode === "signin" ? "username" : "email"}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="mt-1 w-full h-10 rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:border-primary/50"
@@ -436,13 +454,9 @@ function AuthPage() {
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-medium text-muted-foreground" htmlFor="password">Password</label>
                   {mode === "signin" && (
-                    <button
-                      type="button"
-                      onClick={() => { setRecoveryMode(true); setErrorMsg(null); }}
-                      className="text-xs text-primary hover:underline"
-                    >
+                    <Link to="/forgot-password" className="text-xs text-primary hover:underline">
                       Forgot password?
-                    </button>
+                    </Link>
                   )}
                 </div>
                 <div className="relative mt-1">
