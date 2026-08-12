@@ -13,6 +13,7 @@ import {
   listBrokerPendingOrders,
   cancelBrokerOrder,
   placeBrokerOrder,
+  verifyOandaIdentity,
 } from "@/lib/broker-oanda.functions";
 import {
   saveOandaCredentials,
@@ -705,6 +706,94 @@ function PositionRow({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+type Identity = Awaited<ReturnType<typeof verifyOandaIdentity>>;
+
+// OANDA does not offer an OAuth "sign in with OANDA" for retail traders, so the
+// way to confirm you are really logged in is to check which OANDA accounts your
+// saved token is authorized for, and compare them to what OANDA shows you.
+function IdentityPanel() {
+  const verify = useServerFn(verifyOandaIdentity);
+  const [id, setId] = useState<Identity | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const run = async () => {
+    setLoading(true);
+    try {
+      setId(await verify());
+    } catch (e) {
+      setId({ verified: false, reason: (e as Error).message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { void run(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+
+  return (
+    <div className="rounded-md border border-border bg-card p-5 mb-6">
+      <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-muted-foreground mb-3">
+        <ShieldCheck className="h-3.5 w-3.5" /> Who am I logged in as
+        <button
+          onClick={run}
+          disabled={loading}
+          className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-border px-2 py-1 text-[10px] font-semibold normal-case tracking-normal hover:bg-muted disabled:opacity-50"
+        >
+          <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} /> Re-check
+        </button>
+      </div>
+
+      {!id && <p className="text-sm text-muted-foreground">Checking your OANDA session...</p>}
+
+      {id && !id.verified && (
+        <p className="text-sm text-muted-foreground">{id.reason}</p>
+      )}
+
+      {id?.verified && (
+        <div className="space-y-3">
+          <div className="text-sm">
+            Your token is signed in on OANDA{" "}
+            <span className="font-semibold">{id.env === "practice" ? "fxTrade Practice (demo)" : "fxTrade (live)"}</span>{" "}
+            and can trade the accounts below.
+          </div>
+          <div className="space-y-2">
+            {id.accounts.map((a) => (
+              <div key={a.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-md border border-border px-3 py-2 text-sm">
+                <span className="font-mono">{a.id}</span>
+                {a.alias && <span className="text-muted-foreground">{a.alias}</span>}
+                <span className="text-muted-foreground">{fmtMoney(a.balance, a.currency)}</span>
+                <span className="text-muted-foreground text-xs">{a.openTradeCount} open</span>
+                {a.active && <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold text-primary">IN USE</span>}
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Open OANDA in another tab and confirm the account number and balance match. If they do, you are logged in to the right account.
+          </p>
+        </div>
+      )}
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        <a
+          href="https://www.oanda.com/demo-account/login"
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs hover:bg-muted"
+        >
+          <ExternalLink className="h-3 w-3" /> Log in to OANDA demo
+        </a>
+        <a
+          href="https://www.oanda.com/account/login"
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs hover:bg-muted"
+        >
+          <ExternalLink className="h-3 w-3" /> Log in to OANDA live
+        </a>
+      </div>
     </div>
   );
 }
