@@ -200,6 +200,10 @@ export const listBrokerPositions = createServerFn({ method: "GET" })
       price: Number(t.price ?? 0),
       unrealizedPL: Number(t.unrealizedPL ?? 0),
       openTime: String(t.openTime ?? ""),
+      stopLoss: (t.stopLossOrder as { price?: string } | undefined)?.price
+        ? Number((t.stopLossOrder as { price: string }).price) : null,
+      takeProfit: (t.takeProfitOrder as { price?: string } | undefined)?.price
+        ? Number((t.takeProfitOrder as { price: string }).price) : null,
     }));
   });
 
@@ -249,15 +253,21 @@ export const placeBrokerOrder = createServerFn({ method: "POST" })
       throw new Error(`OANDA rejected the order: ${reason}. Check account balance, margin, and instrument availability.`);
     }
     const fill = resp.orderFillTransaction as Record<string, unknown> | undefined;
-    if (!fill || !fill.id) {
-      throw new Error("Order was not filled by OANDA. Verify balance and margin, then try again.");
+    const created = resp.orderCreateTransaction as Record<string, unknown> | undefined;
+    if (type === "MARKET") {
+      if (!fill || !fill.id) {
+        throw new Error("Order was not filled by OANDA. Verify balance and margin, then try again.");
+      }
+    } else if (!created?.id) {
+      throw new Error("OANDA did not create the working order. Check the price and try again.");
     }
     return {
       ok: true,
-      orderId: String(fill.id),
+      orderId: String(fill?.id ?? created?.id ?? ""),
+      pending: type !== "MARKET",
       instrument,
       units: signedUnits,
-      fillPrice: fill.price ? Number(fill.price) : null,
+      fillPrice: fill?.price ? Number(fill.price) : null,
     };
   });
 
@@ -270,4 +280,113 @@ export const closeBrokerTrade = createServerFn({ method: "POST" })
       body: JSON.stringify({ units: "ALL" }),
     });
     return { ok: true };
+  });
+
+// ---------------------------------------------------------------------------
+// Trade adjustments: change stop-loss / take-profit on a live OANDA trade,
+// close part of a position, and manage pending (working) orders.
+// ---------------------------------------------------------------------------
+
+export const listBrokerPendingOrders = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const data = await oandaFetch(context.userId, "/pendingOrders");
+    const orders = (data.orders ?? []) as Array<Record<string, unknown>>;
+    return orders
+      .filter((o) => ["LIMIT", "STOP", "MARKET_IF_TOUCHED"].includes(String(o.type ?? "")))
+      .map((o) => ({
+        id: String(o.id ?? ""),
+        type: String(o.type ?? ""),
+        instrument: String(o.instrument ?? ""),
+        units: Number(o.units ?? 0),
+        price: o.price ? Number(o.price) : null,
+        createTime: String(o.createTime ?? ""),
+        stopLoss: (o.stopLossOnFill as { price?: string } | undefined)?.price
+          ? Number((o.stopLossOnFill as { price: string }).price) : null,
+        takeProfit: (o.takeProfitOnFill as { price?: string } | undefined)?.price
+          ? Number((o.takeProfitOnFill as { price: string }).price) : null,
+      }));
+  });
+
+export const cancelBrokerOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => z.object({ orderId: z.string().min(1) }).parse(raw))
+  .handler(async ({ data, context }) => {
+    await oandaFetch(context.userId, `/orders/${encodeURIComponent(data.orderId)}/cancel`, { method: "PUT" });
+    return { ok: true };
+  });
+
+const ModifyTradeInput = z.object({
+  tradeId: z.string().min(1),
+  stopLoss: z.number().positive().nullable().optional(),
+  takeProfit: z.number().positive().nullable().optional(),
+  trailingStopDistance: z.number().positive().nullable().optional(),
+});
+
+/** Replace/remove protective orders attached to an existing trade. */
+export const modifyBrokerTrade = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => ModifyTradeInput.parse(raw))
+  .handler(async ({ data, context }) => {
+    const body: Record<string, unknown> = {};
+    if (data.stopLoss !== undefined) {
+      body.stopLoss = data.stopLoss === null ? null : { price: data.stopLoss.toString(), timeInForce: "GTC" };
+    }
+    if (data.takeProfit !== undefined) {
+      body.takeProfit = data.takeProfit === null ? null : { price: data.takeProfit.toString(), timeInForce: "GTC" };
+    }
+    if (data.trailingStopDistance !== undefined) {
+      body.trailingStopLoss = data.trailingStopDistance === null
+        ? null
+        : { distance: data.trailingStopDistance.toString(), timeInForce: "GTC" };
+    }
+    if (Object.keys(body).length === 0) throw new Error("Nothing to change on this trade");
+
+    const resp = await oandaFetch(context.userId, `/trades/${encodeURIComponent(data.tradeId)}/orders`, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    });
+    const rejects = ["stopLossOrderRejectTransaction", "takeProfitOrderRejectTransaction", "trailingStopLossOrderRejectTransaction"]
+      .map((k) => resp[k] as Record<string, unknown> | undefined)
+      .filter(Boolean);
+    if (rejects.length > 0) {
+      throw new Error(`OANDA rejected the change: ${String(rejects[0]?.reason ?? "invalid price")}`);
+    }
+    return { ok: true };
+  });
+
+/** Close a trade fully or partially (units = number of units to close). */
+export const closeBrokerTradeUnits = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) =>
+    z.object({ tradeId: z.string().min(1), units: z.number().positive().optional() }).parse(raw))
+  .handler(async ({ data, context }) => {
+    const resp = await oandaFetch(context.userId, `/trades/${encodeURIComponent(data.tradeId)}/close`, {
+      method: "PUT",
+      body: JSON.stringify({ units: data.units ? String(Math.floor(data.units)) : "ALL" }),
+    });
+    const reject = resp.orderRejectTransaction as Record<string, unknown> | undefined;
+    if (reject) throw new Error(`OANDA rejected the close: ${String(reject.reason ?? "unknown")}`);
+    const fill = resp.orderFillTransaction as Record<string, unknown> | undefined;
+    return { ok: true, closedUnits: fill?.units ? Number(fill.units) : null, price: fill?.price ? Number(fill.price) : null };
+  });
+
+/** Full detail on one open trade, including current protective orders. */
+export const getBrokerTrade = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => z.object({ tradeId: z.string().min(1) }).parse(raw))
+  .handler(async ({ data, context }) => {
+    const resp = await oandaFetch(context.userId, `/trades/${encodeURIComponent(data.tradeId)}`);
+    const t = (resp.trade ?? {}) as Record<string, unknown>;
+    const sl = t.stopLossOrder as { price?: string } | undefined;
+    const tp = t.takeProfitOrder as { price?: string } | undefined;
+    return {
+      id: String(t.id ?? ""),
+      instrument: String(t.instrument ?? ""),
+      currentUnits: Number(t.currentUnits ?? 0),
+      price: Number(t.price ?? 0),
+      unrealizedPL: Number(t.unrealizedPL ?? 0),
+      stopLoss: sl?.price ? Number(sl.price) : null,
+      takeProfit: tp?.price ? Number(tp.price) : null,
+    };
   });

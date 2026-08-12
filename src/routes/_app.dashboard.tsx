@@ -16,6 +16,7 @@ import { ChartSignalCards } from "@/components/ChartSignalCards";
 import { LivePerformancePanel } from "@/components/LivePerformancePanel";
 import { TodaysRecommendation } from "@/components/TodaysRecommendation";
 import { findStrategyByName, allStrategies } from "@/lib/customStrategies";
+import { StrategyPresetCard } from "@/components/StrategyPresetCard";
 import { readActiveStrategy, writeActiveStrategy } from "@/lib/chat-client";
 import { SCAN_LENSES, readActiveLensId, writeActiveLensId, findLens, type ScanLensId } from "@/lib/scanLens";
 import { clearLastThreadId, readActiveCoach, writeActiveCoach, COACH_KEY, writeLastChart, readLastThreadId, writeLastThreadId } from "@/lib/chat-client";
@@ -1368,6 +1369,8 @@ function Dashboard() {
           </div>
         </div>
       </div>
+
+      <StrategyPresetCard name={activeStrategy} />
 
       {/* Row 2: Live / Setup tabs + compact View menu + fullscreen */}
       <div className="shrink-0 flex items-center gap-3 px-3 py-1 border-b border-border/60 bg-card/30 text-xs">
