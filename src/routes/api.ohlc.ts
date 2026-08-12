@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import { corsHeadersFor, enforceOrigin, preflight, rateLimit } from "@/lib/api-security";
+import { corsHeadersFor, enforceOrigin, preflight } from "@/lib/api-security";
 
 
 // ----- CoinGecko (crypto, no key) -----
@@ -115,25 +115,6 @@ function cleanBars(bars: OhlcBar[]): OhlcBar[] {
     }
   }
   return Array.from(byTime.values()).sort((a, b) => a.time - b.time);
-}
-
-async function fetchCoinGecko(coinId: string, days: number): Promise<OhlcBar[]> {
-  const url = `https://api.coingecko.com/api/v3/coins/${coinId}/ohlc?vs_currency=usd&days=${days}`;
-  const raw = await fetchJsonWithTimeout<Array<[number, number, number, number, number]>>(url);
-  return cleanBars(raw.map(([ms, o, h, l, c]) => ({
-    time: Math.floor(ms / 1000),
-    open: o,
-    high: h,
-    low: l,
-    close: c,
-  })));
-}
-
-function tickerToCoin(ticker: string): string | null {
-  const t = ticker.toUpperCase();
-  if (t.includes("BTC")) return COIN_IDS.BTC;
-  if (t.includes("ETH")) return COIN_IDS.ETH;
-  return null;
 }
 
 // ----- OANDA v20 (FX, metals, indices - most accurate) -----
@@ -300,98 +281,6 @@ async function fetchTwelveData(symbol: string, interval: string): Promise<OhlcBa
   })));
 }
 
-// ----- Yahoo Finance fallback (no key) -----
-function tickerToYahoo(ticker: string): string | null {
-  const t = ticker.toUpperCase();
-  if (t.includes("BTC")) return "BTC-USD";
-  if (t.includes("ETH")) return "ETH-USD";
-  if (t.includes("XRP")) return "XRP-USD";
-  if (t === "XAU/USD") return "GC=F";
-  if (t === "XAG/USD") return "SI=F";
-  if (t === "WTI OIL") return "CL=F";
-  if (t === "NAS100") return "^NDX";      // Real Nasdaq-100 index (~20,000+), not QQQ ETF (~500)
-  if (t === "SPX500") return "^GSPC";     // Real S&P 500 index
-  if (t === "US30")   return "^DJI";      // Real Dow Jones index
-  if (t === "EUR/USD") return "EURUSD=X";
-  if (t === "GBP/USD") return "GBPUSD=X";
-  if (t === "USD/JPY") return "USDJPY=X";
-  return null;
-}
-
-
-function yahooInterval(interval: string): { interval: string; range: string } {
-  switch (interval) {
-    case "1":
-      return { interval: "1m", range: "1d" };
-    case "5":
-      return { interval: "5m", range: "5d" };
-    case "15":
-      return { interval: "15m", range: "5d" };
-    case "60":
-      return { interval: "1h", range: "1mo" };
-    case "240":
-      return { interval: "1h", range: "3mo" };
-    case "D":
-      return { interval: "1d", range: "6mo" };
-    case "W":
-      return { interval: "1wk", range: "2y" };
-    case "M":
-      return { interval: "1mo", range: "5y" };
-    default:
-      return { interval: "1h", range: "1mo" };
-  }
-}
-
-async function fetchYahooHost(host: string, symbol: string, interval: string): Promise<OhlcBar[]> {
-  const iv = yahooInterval(interval);
-  // Yahoo symbols (e.g. "SI=F", "EURUSD=X") must keep their literal "=" and "^" -
-  // encodeURIComponent would turn "SI=F" into "SI%3DF" which Yahoo rejects.
-  const url = `https://${host}/v8/finance/chart/${symbol}?interval=${iv.interval}&range=${iv.range}&includePrePost=true`;
-  const json = await fetchJsonWithTimeout<{
-    chart?: {
-      error?: { description?: string } | null;
-      result?: Array<{
-        timestamp?: number[];
-        indicators?: { quote?: Array<{ open?: Array<number | null>; high?: Array<number | null>; low?: Array<number | null>; close?: Array<number | null> }> };
-      }>;
-    };
-  }>(url);
-  const result = json.chart?.result?.[0];
-  const quote = result?.indicators?.quote?.[0];
-  if (json.chart?.error || !result?.timestamp || !quote) {
-    throw new Error(`Yahoo: ${json.chart?.error?.description ?? "no data"}`);
-  }
-  const bars = result.timestamp.map((time, i) => {
-    const open = quote.open?.[i];
-    const high = quote.high?.[i];
-    const low = quote.low?.[i];
-    const close = quote.close?.[i];
-    if (open == null || high == null || low == null || close == null) return null;
-    return { time, open, high, low, close } satisfies OhlcBar;
-  }).filter((bar): bar is OhlcBar => bar !== null);
-  return cleanBars(bars).slice(-220);
-}
-
-async function fetchYahoo(symbol: string, interval: string): Promise<OhlcBar[]> {
-  // Yahoo intermittently returns 429/999 from one edge; race between the
-  // two public hosts and use whichever answers first.
-  const hosts = ["query1.finance.yahoo.com", "query2.finance.yahoo.com"];
-  let lastErr: unknown;
-  // Two rounds with a short backoff: Yahoo's 429s are bursty, not sticky.
-  for (const round of [0, 1]) {
-    for (const host of hosts) {
-      try {
-        const bars = await fetchYahooHost(host, symbol, interval);
-        if (bars.length > 0) return bars;
-      } catch (e) {
-        lastErr = e;
-      }
-    }
-    if (round === 0) await new Promise((r) => setTimeout(r, 700));
-  }
-  throw lastErr instanceof Error ? lastErr : new Error("Yahoo unavailable");
-}
-
 // ----- Binance klines (no key, no quota). Gold trades as PAXG (1 token = 1 oz),
 // which tracks XAU/USD spot closely, so it is a real last-resort history feed. -----
 function tickerToBinance(ticker: string): string | null {
@@ -428,169 +317,6 @@ async function fetchBinance(symbol: string, interval: string): Promise<OhlcBar[]
     open: parseFloat(o), high: parseFloat(h), low: parseFloat(l), close: parseFloat(c),
   })).filter((b) => Number.isFinite(b.close));
   return cleanBars(bars).slice(-220);
-}
-
-// ----- Stooq (free, no key). Daily candles only, but always available. -----
-function tickerToStooq(ticker: string): string | null {
-  const t = ticker.toUpperCase();
-  const map: Record<string, string> = {
-    "EUR/USD": "eurusd",
-    "GBP/USD": "gbpusd",
-    "USD/JPY": "usdjpy",
-    "XAU/USD": "xauusd",
-    "XAG/USD": "xagusd",
-    "WTI OIL": "cl.f",
-    "NAS100": "^ndx",
-    "SPX500": "^spx",
-    "US30": "^dji",
-  };
-  if (map[t]) return map[t];
-  if (t.includes("BTC")) return "btcusd";
-  if (t.includes("ETH")) return "ethusd";
-  return null;
-}
-
-async function fetchStooq(symbol: string): Promise<OhlcBar[]> {
-  // Stooq exposes free daily CSV history at /q/d/l/. Intraday isn't public,
-  // so this is a daily-only safety net used when live intraday feeds are
-  // rate-limited or key-less.
-  const url = `https://stooq.com/q/d/l/?s=${encodeURIComponent(symbol)}&i=d`;
-  const csv = await fetchTextWithTimeout(url);
-  const lines = csv.trim().split(/\r?\n/);
-  if (lines.length < 2) throw new Error("Stooq: empty CSV");
-  // Header: Date,Open,High,Low,Close,Volume
-  const bars: OhlcBar[] = [];
-  for (let i = 1; i < lines.length; i++) {
-    const parts = lines[i].split(",");
-    if (parts.length < 5) continue;
-    const [date, o, h, l, c] = parts;
-    const t = Math.floor(new Date(date + "T00:00:00Z").getTime() / 1000);
-    const open = parseFloat(o);
-    const high = parseFloat(h);
-    const low = parseFloat(l);
-    const close = parseFloat(c);
-    if (!Number.isFinite(t) || !Number.isFinite(open)) continue;
-    bars.push({ time: t, open, high, low, close });
-  }
-  return cleanBars(bars).slice(-220);
-}
-
-// ----- Backup market snapshot feed -----
-// Free feeds can rate-limit or reject individual symbols. As the final safety
-// net, pull a real current OHLC snapshot from TradingView's public scanner and
-// expand it into stable candles so the native setup view never goes blank.
-type BackupSymbol = { market: "cfd" | "forex" | "america" | "crypto"; symbol: string };
-
-function tickerToBackup(ticker: string): BackupSymbol | null {
-  const t = ticker.toUpperCase();
-  const map: Record<string, BackupSymbol> = {
-    "EUR/USD": { market: "forex", symbol: "OANDA:EURUSD" },
-    "GBP/USD": { market: "forex", symbol: "OANDA:GBPUSD" },
-    "USD/JPY": { market: "forex", symbol: "OANDA:USDJPY" },
-    "XAU/USD": { market: "cfd", symbol: "OANDA:XAUUSD" },
-    "XAG/USD": { market: "cfd", symbol: "TVC:SILVER" },
-    "NAS100": { market: "america", symbol: "NASDAQ:NDX" },
-    "SPX500": { market: "america", symbol: "SP:SPX" },
-    "US30": { market: "cfd", symbol: "OANDA:US30USD" },
-    "WTI OIL": { market: "cfd", symbol: "TVC:USOIL" },
-    "BTC/USD": { market: "crypto", symbol: "BINANCE:BTCUSDT" },
-    "ETH/USD": { market: "crypto", symbol: "BINANCE:ETHUSDT" },
-    "XRP/USD": { market: "crypto", symbol: "BINANCE:XRPUSDT" },
-  };
-  return map[t] ?? null;
-}
-
-function scannerSuffix(interval: string): string {
-  switch (interval) {
-    case "1": return "|1";
-    case "5": return "|5";
-    case "15": return "|15";
-    case "60": return "|60";
-    case "240": return "|240";
-    case "W": return "|1W";
-    case "M": return "|1M";
-    case "D":
-    default: return "";
-  }
-}
-
-function secondsForInterval(interval: string): number {
-  switch (interval) {
-    case "1": return 60;
-    case "5": return 300;
-    case "15": return 900;
-    case "60": return 3600;
-    case "240": return 14_400;
-    case "D": return 86_400;
-    case "W": return 604_800;
-    case "M": return 2_592_000;
-    default: return 3600;
-  }
-}
-
-function hashSeed(input: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < input.length; i++) {
-    h ^= input.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
-}
-
-function seededNoise(seed: number, i: number): number {
-  const x = Math.sin(seed * 0.000001 + i * 12.9898) * 43758.5453;
-  return x - Math.floor(x);
-}
-
-function makeBackupBars(symbol: string, interval: string, latest: OhlcBar): OhlcBar[] {
-  const step = secondsForInterval(interval);
-  const count = 160;
-  const alignedNow = Math.floor(Date.now() / 1000 / step) * step;
-  const seed = hashSeed(`${symbol}:${interval}:${latest.close}`);
-  const latestRange = Math.max(Math.abs(latest.high - latest.low), Math.abs(latest.close) * 0.0015, 1e-8);
-  const direction = latest.close >= latest.open ? 1 : -1;
-  const driftPerBar = (Math.abs(latest.close - latest.open) / Math.max(18, count / 2)) * direction;
-  const bars: OhlcBar[] = [];
-  let close = latest.close - driftPerBar * (count - 1);
-
-  for (let i = 0; i < count - 1; i++) {
-    const n1 = seededNoise(seed, i) - 0.5;
-    const n2 = seededNoise(seed + 97, i) - 0.5;
-    const open = close;
-    close = Math.max(1e-8, open + driftPerBar + n1 * latestRange * 0.55);
-    const spread = latestRange * (0.35 + Math.abs(n2) * 0.9);
-    bars.push({
-      time: alignedNow - (count - 1 - i) * step,
-      open,
-      high: Math.max(open, close) + spread * 0.5,
-      low: Math.min(open, close) - spread * 0.5,
-      close,
-    });
-  }
-
-  bars.push({ ...latest, time: alignedNow });
-  return cleanBars(bars);
-}
-
-async function fetchBackup(symbolInfo: BackupSymbol, interval: string): Promise<OhlcBar[]> {
-  const suffix = scannerSuffix(interval);
-  const columns = [`open${suffix}`, `high${suffix}`, `low${suffix}`, `close${suffix}`, "open", "high", "low", "close"];
-  const json = await postJsonWithTimeout<{
-    data?: Array<{ s: string; d: Array<number | null> }>;
-  }>(`https://scanner.tradingview.com/${symbolInfo.market}/scan`, {
-    symbols: { tickers: [symbolInfo.symbol], query: { types: [] } },
-    columns,
-  });
-  const row = json.data?.find((r) => r.s === symbolInfo.symbol) ?? json.data?.[0];
-  const d = row?.d;
-  if (!d) throw new Error("Backup feed: no data");
-  const [o0, h0, l0, c0, od, hd, ld, cd] = d;
-  const open = Number.isFinite(o0) ? Number(o0) : Number(od);
-  const high = Number.isFinite(h0) ? Number(h0) : Number(hd);
-  const low = Number.isFinite(l0) ? Number(l0) : Number(ld);
-  const close = Number.isFinite(c0) ? Number(c0) : Number(cd);
-  if (![open, high, low, close].every(Number.isFinite)) throw new Error("Backup feed: incomplete candle");
-  return makeBackupBars(symbolInfo.symbol, interval, { time: 0, open, high, low, close });
 }
 
 
@@ -659,7 +385,7 @@ export const Route = createFileRoute("/api/ohlc")({
         }
 
         const { ticker: t, interval: iv } = parsed.data;
-        if (!tickerToCoin(t) && !tickerToOanda(t) && !tickerToTwelveData(t) && !tickerToYahoo(t) && !tickerToStooq(t) && !tickerToBackup(t)) {
+        if (!tickerToOanda(t) && !tickerToBinance(t) && !tickerToTwelveData(t)) {
           return new Response(JSON.stringify({ source: null, bars: [], cachedAt: Date.now(), ttlMs: 0 }), {
             headers: jsonHeaders,
           });
