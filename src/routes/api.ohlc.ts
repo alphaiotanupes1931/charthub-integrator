@@ -148,9 +148,36 @@ function tickerToOanda(ticker: string): string | null {
     "NAS100": "NAS100_USD",
     "SPX500": "SPX500_USD",
     "US30": "US30_USD",
+    "US2000": "US2000_USD",
+    "GER40": "DE30_EUR",
+    "UK100": "UK100_GBP",
+    "JPN225": "JP225_USD",
     "WTI OIL": "WTICO_USD",
+    "BRENT OIL": "BCO_USD",
+    "NATGAS": "NATGAS_USD",
+    "XPT/USD": "XPT_USD",
+    "XPD/USD": "XPD_USD",
+    "AUD/USD": "AUD_USD",
+    "NZD/USD": "NZD_USD",
+    "USD/CAD": "USD_CAD",
+    "USD/CHF": "USD_CHF",
+    "EUR/JPY": "EUR_JPY",
+    "GBP/JPY": "GBP_JPY",
+    "EUR/GBP": "EUR_GBP",
+    "AUD/JPY": "AUD_JPY",
+    "CAD/JPY": "CAD_JPY",
+    "CHF/JPY": "CHF_JPY",
+    "EUR/AUD": "EUR_AUD",
+    "GBP/AUD": "GBP_AUD",
+    "EUR/CHF": "EUR_CHF",
+    "USD/SGD": "USD_SGD",
+    "USD/MXN": "USD_MXN",
+    "USD/ZAR": "USD_ZAR",
   };
-  return map[t] ?? null;
+  if (map[t]) return map[t];
+  // Any plain FX pair OANDA quotes, e.g. "NOK/SEK" -> "NOK_SEK".
+  if (/^[A-Z]{3}\/[A-Z]{3}$/.test(t)) return t.replace("/", "_");
+  return null;
 }
 
 function oandaGranularity(interval: string): string {
@@ -377,8 +404,15 @@ function tickerToBinance(ticker: string): string | null {
     "ETH/USD": "ETHUSDT",
     "XRP/USD": "XRPUSDT",
     "SOL/USD": "SOLUSDT",
+    "DOGE/USD": "DOGEUSDT",
+    "ADA/USD": "ADAUSDT",
+    "LINK/USD": "LINKUSDT",
+    "AVAX/USD": "AVAXUSDT",
   };
-  return map[t] ?? null;
+  if (map[t]) return map[t];
+  const crypto = t.match(/^([A-Z]{2,6})\/(USD|USDT)$/);
+  if (crypto) return `${crypto[1]}USDT`;
+  return null;
 }
 
 function binanceInterval(interval: string): string {
@@ -567,38 +601,23 @@ const TTL_MS = 30_000;
 const INFLIGHT = new Map<string, Promise<CacheEntry>>();
 
 async function fetchBestAvailable(ticker: string, interval: string): Promise<CacheEntry> {
-  const coin = tickerToCoin(ticker);
-  const oandaSymbol = coin ? null : tickerToOanda(ticker);
-  const tdSymbol = coin ? null : tickerToTwelveData(ticker);
-  const yahooSymbol = tickerToYahoo(ticker);
-  const stooqSymbol = tickerToStooq(ticker);
+  // One consistent feed order everywhere in the app: OANDA (broker-grade,
+  // no daily quota) for FX/metals/indices/energy, Binance for crypto and as a
+  // gold backstop via PAXG, Twelve Data only as a final safety net.
+  const oandaSymbol = tickerToOanda(ticker);
   const binanceSymbol = tickerToBinance(ticker);
-  const backupSymbol = tickerToBackup(ticker);
+  const tdSymbol = tickerToTwelveData(ticker);
   const attempts: Array<() => Promise<CacheEntry>> = [];
 
-  if (coin) {
-    attempts.push(async () => ({ at: Date.now(), bars: await fetchCoinGecko(coin, daysForInterval(interval)), source: "coingecko" }));
-  }
   if (oandaSymbol && process.env.OANDA_API_KEY) {
     attempts.push(async () => ({ at: Date.now(), bars: await fetchOanda(oandaSymbol, interval), source: "oanda" }));
-  }
-  if (tdSymbol) {
-    attempts.push(async () => ({ at: Date.now(), bars: await fetchTwelveData(tdSymbol, tdInterval(interval)), source: "twelvedata" }));
-  }
-  if (yahooSymbol) {
-    attempts.push(async () => ({ at: Date.now(), bars: await fetchYahoo(yahooSymbol, interval), source: "yahoo" }));
   }
   if (binanceSymbol) {
     attempts.push(async () => ({ at: Date.now(), bars: await fetchBinance(binanceSymbol, interval), source: "binance" }));
   }
-  // Stooq is daily-only, so only use it for daily+ requests. Never fake intraday from it.
-  const isDailyPlus = interval === "D" || interval === "W" || interval === "M";
-  if (stooqSymbol && isDailyPlus) {
-    attempts.push(async () => ({ at: Date.now(), bars: await fetchStooq(stooqSymbol), source: "stooq" }));
+  if (tdSymbol) {
+    attempts.push(async () => ({ at: Date.now(), bars: await fetchTwelveData(tdSymbol, tdInterval(interval)), source: "twelvedata" }));
   }
-  // Backup source fabricates synthetic candles around a live snapshot. Do not use it -
-  // if real data is unavailable, the chart should show an "unavailable" message instead.
-  void backupSymbol;
 
   let lastError: unknown;
   for (const attempt of attempts) {
@@ -620,8 +639,6 @@ export const Route = createFileRoute("/api/ohlc")({
       GET: async ({ request }) => {
         const originBlock = enforceOrigin(request);
         if (originBlock) return originBlock;
-        const limited = rateLimit(request, { key: "ohlc", limit: 120, windowMs: 60_000 });
-        if (limited) return limited;
         const cors = corsHeadersFor(request);
         const jsonHeaders = { "content-type": "application/json", ...cors };
         const url = new URL(request.url);
