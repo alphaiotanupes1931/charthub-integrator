@@ -15,7 +15,6 @@ import {
   deleteSignal,
   type SignalRecord,
 } from "@/lib/signalHistory";
-import { BacktestPanel } from "@/components/BacktestPanel";
 
 
 export const Route = createFileRoute("/_app/signals")({
@@ -137,7 +136,6 @@ function SignalsPage() {
         onOpen={(t) => navigate({ to: "/dashboard", search: { symbol: t } as never })}
       />
 
-      <BacktestPanel />
 
 
       <div className="text-xs text-muted-foreground">
