@@ -726,7 +726,13 @@ function MiniTradeRow({ t, onEdit }: { t: Trade; onEdit: (t: Trade) => void }) {
           {t.ruleBroken && <span className="text-[10px] rounded bg-amber-500/15 text-amber-500 px-1.5 py-0.5">rule break</span>}
         </div>
         {t.lossCategory && <div className="mt-1 text-[11px] text-destructive/90">Cause: {t.lossCategory}</div>}
+        <div className="mt-0.5 flex flex-wrap gap-x-3 text-[10px] text-muted-foreground tabular-nums">
+          <span>Entry <span className="text-foreground">{t.entry}</span></span>
+          <span>Stop <span className="text-foreground">{t.stop || "-"}</span></span>
+          <span>Exit <span className="text-foreground">{t.exit && t.exit !== t.entry ? t.exit : "open"}</span></span>
+        </div>
         <div className="text-[10px] text-muted-foreground mt-0.5">{formatYmdHuman(t.date)}</div>
+
       </div>
       <div className={`text-sm font-semibold ${pnl >= 0 ? "text-bull" : "text-destructive"}`}>
         {pnl >= 0 ? "+" : ""}{pnl.toFixed(2)}
