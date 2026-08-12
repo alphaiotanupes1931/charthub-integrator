@@ -337,6 +337,7 @@ export function useFirstWeek() {
     startedAt: state.startedAt,
     start,
     mark,
+    toggle,
     markEvent,
     dismiss,
   };
