@@ -29,7 +29,7 @@ function daysForInterval(interval: string): number {
 }
 
 export type OhlcBar = { time: number; open: number; high: number; low: number; close: number };
-export type OhlcSource = "coingecko" | "oanda" | "twelvedata" | "yahoo" | "stooq" | "backup";
+export type OhlcSource = "coingecko" | "oanda" | "twelvedata" | "yahoo" | "binance" | "stooq" | "backup";
 export type OhlcResponse = {
   source: OhlcSource | null;
   bars: OhlcBar[];
@@ -350,15 +350,50 @@ async function fetchYahoo(symbol: string, interval: string): Promise<OhlcBar[]> 
   // two public hosts and use whichever answers first.
   const hosts = ["query1.finance.yahoo.com", "query2.finance.yahoo.com"];
   let lastErr: unknown;
-  for (const host of hosts) {
-    try {
-      const bars = await fetchYahooHost(host, symbol, interval);
-      if (bars.length > 0) return bars;
-    } catch (e) {
-      lastErr = e;
+  // Two rounds with a short backoff: Yahoo's 429s are bursty, not sticky.
+  for (const round of [0, 1]) {
+    for (const host of hosts) {
+      try {
+        const bars = await fetchYahooHost(host, symbol, interval);
+        if (bars.length > 0) return bars;
+      } catch (e) {
+        lastErr = e;
+      }
     }
+    if (round === 0) await new Promise((r) => setTimeout(r, 700));
   }
   throw lastErr instanceof Error ? lastErr : new Error("Yahoo unavailable");
+}
+
+// ----- Binance klines (no key, no quota). Gold trades as PAXG (1 token = 1 oz),
+// which tracks XAU/USD spot closely, so it is a real last-resort history feed. -----
+function tickerToBinance(ticker: string): string | null {
+  const t = ticker.toUpperCase().replace(/\s+/g, "");
+  const map: Record<string, string> = {
+    "XAU/USD": "PAXGUSDT",
+    XAUUSD: "PAXGUSDT",
+    GOLD: "PAXGUSDT",
+    "BTC/USD": "BTCUSDT",
+    "ETH/USD": "ETHUSDT",
+    "XRP/USD": "XRPUSDT",
+    "SOL/USD": "SOLUSDT",
+  };
+  return map[t] ?? null;
+}
+
+function binanceInterval(interval: string): string {
+  return ({ "1": "1m", "5": "5m", "15": "15m", "30": "30m", "60": "1h", "240": "4h", D: "1d", W: "1w", M: "1M" } as Record<string, string>)[interval] ?? "1h";
+}
+
+async function fetchBinance(symbol: string, interval: string): Promise<OhlcBar[]> {
+  const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${binanceInterval(interval)}&limit=220`;
+  const raw = await fetchJsonWithTimeout<Array<[number, string, string, string, string, string]>>(url);
+  if (!Array.isArray(raw) || raw.length === 0) throw new Error("Binance: no data");
+  const bars = raw.map(([ms, o, h, l, c]) => ({
+    time: Math.floor(ms / 1000),
+    open: parseFloat(o), high: parseFloat(h), low: parseFloat(l), close: parseFloat(c),
+  })).filter((b) => Number.isFinite(b.close));
+  return cleanBars(bars).slice(-220);
 }
 
 // ----- Stooq (free, no key). Daily candles only, but always available. -----
@@ -537,6 +572,7 @@ async function fetchBestAvailable(ticker: string, interval: string): Promise<Cac
   const tdSymbol = coin ? null : tickerToTwelveData(ticker);
   const yahooSymbol = tickerToYahoo(ticker);
   const stooqSymbol = tickerToStooq(ticker);
+  const binanceSymbol = tickerToBinance(ticker);
   const backupSymbol = tickerToBackup(ticker);
   const attempts: Array<() => Promise<CacheEntry>> = [];
 
@@ -551,6 +587,9 @@ async function fetchBestAvailable(ticker: string, interval: string): Promise<Cac
   }
   if (yahooSymbol) {
     attempts.push(async () => ({ at: Date.now(), bars: await fetchYahoo(yahooSymbol, interval), source: "yahoo" }));
+  }
+  if (binanceSymbol) {
+    attempts.push(async () => ({ at: Date.now(), bars: await fetchBinance(binanceSymbol, interval), source: "binance" }));
   }
   // Stooq is daily-only, so only use it for daily+ requests. Never fake intraday from it.
   const isDailyPlus = interval === "D" || interval === "W" || interval === "M";
@@ -567,6 +606,7 @@ async function fetchBestAvailable(ticker: string, interval: string): Promise<Cac
       const entry = await attempt();
       if (entry.bars.length > 0) return entry;
     } catch (error) {
+      console.error("[ohlc] attempt failed", ticker, interval, (error as Error)?.message);
       lastError = error;
     }
   }

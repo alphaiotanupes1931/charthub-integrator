@@ -30,7 +30,7 @@ export type OrderFlow = {
 export type MarketSnapshot = {
   ticker: string;
   interval: string;
-  source: "oanda" | "yahoo" | "coingecko" | "twelvedata" | "backup" | "unavailable";
+  source: "oanda" | "yahoo" | "coingecko" | "twelvedata" | "binance" | "cached" | "backup" | "unavailable";
   lastPrice: number;
   candles: Candle[];
   stats: {
