@@ -6,7 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
 import { useTimeFormat, formatTime } from "@/hooks/useTimeFormat";
 import { useTimezone, TIMEZONE_OPTIONS, AUTO_TZ } from "@/hooks/useTimezone";
-import { recordBrokerConnection } from "@/lib/broker.functions";
 import { exportMyData, deleteMyAccount } from "@/lib/privacy.functions";
 import { createPortalSession, getMySubscription } from "@/lib/billing.functions";
 import { setRecoveryCode, hasRecoveryCode } from "@/lib/recovery.functions";
@@ -14,16 +13,12 @@ import { generateRecoveryCode } from "@/lib/recoveryCode";
 import { toast } from "sonner";
 
 import {
-  Plug,
   ShieldCheck,
   User as UserIcon,
-  Eye,
   CreditCard,
   ExternalLink,
   Monitor,
   Save,
-  XCircle,
-  AlertCircle,
   Volume2,
   VolumeX,
   Download,
