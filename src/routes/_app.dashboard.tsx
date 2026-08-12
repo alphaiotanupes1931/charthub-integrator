@@ -1380,7 +1380,7 @@ function Dashboard() {
           <Activity className="h-3.5 w-3.5" /> Live
         </button>
         <button
-          onClick={() => setChartTab("setup")}
+          onClick={() => { setChartTab("setup"); setIntervalState("60"); }}
           className={`inline-flex items-center gap-1.5 py-1 border-b-2 transition ${
             chartTab === "setup" ? "border-primary text-primary font-semibold" : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
