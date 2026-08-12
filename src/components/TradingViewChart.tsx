@@ -305,6 +305,12 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
 
       {showFallback && <div className="absolute inset-0 z-20">{fallback}</div>}
 
+      {/* Always tell the trader which feed is drawing this chart. */}
+      {!showFallback && (
+        <ChartSourceBadge live={loaded && !stalled} label="TradingView" className="absolute right-2 bottom-2 z-30" />
+      )}
+
+
       {/* Drawing overlay (the backup chart brings its own tools, so ours steps aside) */}
       {!showFallback && (
         <canvas
