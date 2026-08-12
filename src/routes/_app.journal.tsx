@@ -642,7 +642,15 @@ function TradeRow({ t, onEdit, onDelete }: { t: Trade; onEdit: (t: Trade) => voi
             <span className="text-[10px] rounded bg-destructive/10 text-destructive px-1.5 py-0.5">{t.lossCategory}</span>
           )}
         </div>
+        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground tabular-nums">
+          <span>Entry <span className="text-foreground font-medium">{t.entry}</span></span>
+          <span>Stop <span className="text-foreground font-medium">{t.stop || "-"}</span></span>
+          {t.takeProfit != null && t.takeProfit !== 0 && <span>TP <span className="text-foreground font-medium">{t.takeProfit}</span></span>}
+          <span>Exit <span className="text-foreground font-medium">{t.exit && t.exit !== t.entry ? t.exit : "open"}</span></span>
+          <span>Size <span className="text-foreground font-medium">{t.size}</span></span>
+        </div>
         {t.notes && <div className="mt-1 text-xs text-muted-foreground line-clamp-1">{t.notes}</div>}
+
       </button>
       <div className="text-right shrink-0">
         <div className={`font-semibold ${pnl > 0 ? "text-bull" : pnl < 0 ? "text-destructive" : ""}`}>
@@ -718,7 +726,13 @@ function MiniTradeRow({ t, onEdit }: { t: Trade; onEdit: (t: Trade) => void }) {
           {t.ruleBroken && <span className="text-[10px] rounded bg-amber-500/15 text-amber-500 px-1.5 py-0.5">rule break</span>}
         </div>
         {t.lossCategory && <div className="mt-1 text-[11px] text-destructive/90">Cause: {t.lossCategory}</div>}
+        <div className="mt-0.5 flex flex-wrap gap-x-3 text-[10px] text-muted-foreground tabular-nums">
+          <span>Entry <span className="text-foreground">{t.entry}</span></span>
+          <span>Stop <span className="text-foreground">{t.stop || "-"}</span></span>
+          <span>Exit <span className="text-foreground">{t.exit && t.exit !== t.entry ? t.exit : "open"}</span></span>
+        </div>
         <div className="text-[10px] text-muted-foreground mt-0.5">{formatYmdHuman(t.date)}</div>
+
       </div>
       <div className={`text-sm font-semibold ${pnl >= 0 ? "text-bull" : "text-destructive"}`}>
         {pnl >= 0 ? "+" : ""}{pnl.toFixed(2)}
