@@ -92,28 +92,37 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
     return `https://s.tradingview.com/widgetembed/?${params.toString()}`;
   }, [symbol, interval, studies]);
 
+  // Only a symbol/interval change resets the sticky state; a background retry
+  // must not clear it (that is what caused the flicker).
   useEffect(() => {
     setFailed(false);
     setLoaded(false);
     setStalled(false);
+    setDownSticky(false);
     aliveRef.current = false;
+    everAliveRef.current = false;
+  }, [src]);
+
+  useEffect(() => {
     const timer = window.setTimeout(() => {
       if (!iframeRef.current?.contentDocument && !loaded) {
         setFailed(true);
       }
     }, 15_000);
     return () => window.clearTimeout(timer);
-  }, [src, reloadKey]);
+  }, [src, reloadKey, loaded]);
 
   // The embed talks to its parent window while it streams. If it never says
-  // anything at all we treat the panel as blocked. Once it has ever streamed we
-  // stop second-guessing it, so a quiet moment can't flip the chart away.
+  // anything at all we treat the panel as blocked. Once it streams we drop the
+  // backup feed and hand the panel back to the embed.
   useEffect(() => {
     const onMessage = (e: MessageEvent) => {
       if (typeof e.origin === "string" && e.origin.includes("tradingview.com")) {
         aliveRef.current = true;
         everAliveRef.current = true;
         setStalled(false);
+        setFailed(false);
+        setDownSticky(false);
       }
     };
     window.addEventListener("message", onMessage);
@@ -129,19 +138,24 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
     };
   }, [src, reloadKey]);
 
-  // Silent auto-recovery: while the embed is blocked or black, keep reloading it
-  // in the background every 20s so it comes back on its own. No banner, no
-  // button, the backup chart stays visible in the meantime.
+  // Pin the backup feed as soon as the panel is known-bad.
   useEffect(() => {
-    if (!failed && !stalled) return;
-    const timer = window.setTimeout(() => {
-      setStalled(false);
-      setFailed(false);
+    if (failed || stalled) setDownSticky(true);
+  }, [failed, stalled]);
+
+  // Silent auto-recovery: while the embed is blocked or black, keep reloading it
+  // in the background every 45s. The backup chart stays put the whole time and
+  // only steps aside once the embed streams for real.
+  useEffect(() => {
+    if (!downSticky) return;
+    const timer = window.setInterval(() => {
       aliveRef.current = false;
       setReloadKey((k) => k + 1);
-    }, 20_000);
-    return () => window.clearTimeout(timer);
-  }, [failed, stalled]);
+    }, 45_000);
+    return () => window.clearInterval(timer);
+  }, [downSticky]);
+
+
 
 
 
