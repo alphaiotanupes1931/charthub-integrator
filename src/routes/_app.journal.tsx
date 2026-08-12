@@ -304,6 +304,7 @@ function JournalPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [formDate, setFormDate] = useState<string>(todayYmd());
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [dayView, setDayView] = useState<string | null>(null);
 
   // Load once, and only write back on renders that happen after the load.
   // Saving during the first commit would persist the empty initial state and
