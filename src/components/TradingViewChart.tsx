@@ -42,11 +42,16 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
   // The embed can load its shell and still render an empty black panel with
   // O0 H0 L0 C0 when the data socket is blocked. We detect that separately.
   const [stalled, setStalled] = useState(false);
+  // Once the panel is known-bad we keep the backup feed pinned until the embed
+  // actually streams again. Without this the panel flickers between the backup
+  // chart and a black embed on every background retry.
+  const [downSticky, setDownSticky] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const aliveRef = useRef(false);
   const everAliveRef = useRef(false);
   const onStallRef = useRef(onStall);
   onStallRef.current = onStall;
+
 
 
   const [drawMode, setDrawMode] = useState(false);
@@ -87,28 +92,37 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
     return `https://s.tradingview.com/widgetembed/?${params.toString()}`;
   }, [symbol, interval, studies]);
 
+  // Only a symbol/interval change resets the sticky state; a background retry
+  // must not clear it (that is what caused the flicker).
   useEffect(() => {
     setFailed(false);
     setLoaded(false);
     setStalled(false);
+    setDownSticky(false);
     aliveRef.current = false;
+    everAliveRef.current = false;
+  }, [src]);
+
+  useEffect(() => {
     const timer = window.setTimeout(() => {
       if (!iframeRef.current?.contentDocument && !loaded) {
         setFailed(true);
       }
     }, 15_000);
     return () => window.clearTimeout(timer);
-  }, [src, reloadKey]);
+  }, [src, reloadKey, loaded]);
 
   // The embed talks to its parent window while it streams. If it never says
-  // anything at all we treat the panel as blocked. Once it has ever streamed we
-  // stop second-guessing it, so a quiet moment can't flip the chart away.
+  // anything at all we treat the panel as blocked. Once it streams we drop the
+  // backup feed and hand the panel back to the embed.
   useEffect(() => {
     const onMessage = (e: MessageEvent) => {
       if (typeof e.origin === "string" && e.origin.includes("tradingview.com")) {
         aliveRef.current = true;
         everAliveRef.current = true;
         setStalled(false);
+        setFailed(false);
+        setDownSticky(false);
       }
     };
     window.addEventListener("message", onMessage);
@@ -124,19 +138,24 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
     };
   }, [src, reloadKey]);
 
-  // Silent auto-recovery: while the embed is blocked or black, keep reloading it
-  // in the background every 20s so it comes back on its own. No banner, no
-  // button, the backup chart stays visible in the meantime.
+  // Pin the backup feed as soon as the panel is known-bad.
   useEffect(() => {
-    if (!failed && !stalled) return;
-    const timer = window.setTimeout(() => {
-      setStalled(false);
-      setFailed(false);
+    if (failed || stalled) setDownSticky(true);
+  }, [failed, stalled]);
+
+  // Silent auto-recovery: while the embed is blocked or black, keep reloading it
+  // in the background every 45s. The backup chart stays put the whole time and
+  // only steps aside once the embed streams for real.
+  useEffect(() => {
+    if (!downSticky) return;
+    const timer = window.setInterval(() => {
       aliveRef.current = false;
       setReloadKey((k) => k + 1);
-    }, 20_000);
-    return () => window.clearTimeout(timer);
-  }, [failed, stalled]);
+    }, 45_000);
+    return () => window.clearInterval(timer);
+  }, [downSticky]);
+
+
 
 
 
@@ -264,8 +283,7 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
     else redraw();
   };
 
-  const down = failed || stalled;
-  const showFallback = down && !!fallback;
+  const showFallback = downSticky && !!fallback;
 
   // Backup chart: when the embed is blocked or black, our own feed is laid over
   // the same panel so the trader always has a working chart. The embed stays
@@ -278,32 +296,34 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
         src={src}
         title="TradingView chart"
         className="h-full w-full border-0"
+        style={showFallback ? { pointerEvents: "none", visibility: "hidden" } : undefined}
         allow="fullscreen"
+
         onLoad={() => { setLoaded(true); setFailed(false); }}
         onError={() => setFailed(true)}
       />
 
       {showFallback && <div className="absolute inset-0 z-20">{fallback}</div>}
 
+      {/* Drawing overlay (the backup chart brings its own tools, so ours steps aside) */}
+      {!showFallback && (
+        <canvas
+          ref={drawCanvasRef}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
+          className="absolute inset-0 z-30"
+          style={{
+            pointerEvents: drawMode ? "auto" : "none",
+            cursor: drawMode ? "crosshair" : "default",
+            touchAction: drawMode ? "none" : "auto",
+          }}
+        />
+      )}
 
 
-
-      {/* Drawing overlay */}
-      <canvas
-        ref={drawCanvasRef}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerUp}
-        className="absolute inset-0 z-30"
-        style={{
-          pointerEvents: drawMode ? "auto" : "none",
-          cursor: drawMode ? "crosshair" : "default",
-          touchAction: drawMode ? "none" : "auto",
-        }}
-      />
-
-      {drawMode && (
+      {drawMode && !showFallback && (
         <div className="absolute right-2 bottom-11 sm:right-3 sm:bottom-12 z-40 flex flex-wrap items-center gap-1 rounded-md border border-border bg-background/90 backdrop-blur px-1.5 py-1 shadow-lg">
           {([
             { k: "pen", Icon: Pencil, label: "Pen" },
@@ -345,22 +365,25 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
         </div>
       )}
 
-      <div className="absolute right-2 bottom-2 sm:right-3 sm:bottom-3 z-40">
-        <button
-          type="button"
-          onClick={() => setDrawMode((v) => !v)}
-          title={drawMode ? "Exit draw mode (chart interactive again)" : "Draw on chart"}
-          aria-label={drawMode ? "Exit draw mode" : "Draw on chart"}
-          className={`inline-flex items-center gap-1.5 rounded-md border backdrop-blur px-2 py-1.5 text-[10px] font-mono uppercase tracking-wider transition-colors ${
-            drawMode
-              ? "border-primary/50 bg-primary/15 text-primary hover:bg-primary/20"
-              : "border-border bg-background/80 hover:bg-background text-foreground/90 hover:text-foreground"
-          }`}
-        >
-          {drawMode ? <CloseIcon className="h-3.5 w-3.5" /> : <Pencil className="h-3.5 w-3.5" />}
-          <span className="hidden sm:inline">{drawMode ? "Done" : "Draw"}</span>
-        </button>
-      </div>
+      {!showFallback && (
+        <div className="absolute right-2 bottom-2 sm:right-3 sm:bottom-3 z-40">
+          <button
+            type="button"
+            onClick={() => setDrawMode((v) => !v)}
+            title={drawMode ? "Exit draw mode (chart interactive again)" : "Draw on chart"}
+            aria-label={drawMode ? "Exit draw mode" : "Draw on chart"}
+            className={`inline-flex items-center gap-1.5 rounded-md border backdrop-blur px-2 py-1.5 text-[10px] font-mono uppercase tracking-wider transition-colors ${
+              drawMode
+                ? "border-primary/50 bg-primary/15 text-primary hover:bg-primary/20"
+                : "border-border bg-background/80 hover:bg-background text-foreground/90 hover:text-foreground"
+            }`}
+          >
+            {drawMode ? <CloseIcon className="h-3.5 w-3.5" /> : <Pencil className="h-3.5 w-3.5" />}
+            <span className="hidden sm:inline">{drawMode ? "Done" : "Draw"}</span>
+          </button>
+        </div>
+      )}
+
     </div>
   );
 }
