@@ -399,7 +399,7 @@ function BrokerPage() {
       {status?.connected && (
         <div className="rounded-md border border-border bg-card p-5 mb-6">
           <div className="flex items-center gap-3 mb-3">
-            <div className="text-sm font-semibold">Place market order</div>
+            <div className="text-sm font-semibold">Order ticket</div>
             {status.marginAvailable != null && (
               <span className="ml-auto text-[11px] text-muted-foreground">
                 Free margin: <span className="font-mono text-foreground">{fmtMoney(status.marginAvailable, status.currency)}</span>
@@ -410,24 +410,31 @@ function BrokerPage() {
             <Field label="Symbol">
               <input value={symbol} onChange={(e) => setSymbol(e.target.value)} className="w-full px-2 py-1.5 rounded-md bg-background border border-border text-sm" />
             </Field>
-            <Field label="Side">
-              <select value={side} onChange={(e) => setSide(e.target.value as "long" | "short")} className="w-full px-2 py-1.5 rounded-md bg-background border border-border text-sm">
-                <option value="long">Buy</option>
-                <option value="short">Sell</option>
+            <Field label="Order type">
+              <select value={orderType} onChange={(e) => setOrderType(e.target.value as "market" | "limit" | "stop")} className="w-full px-2 py-1.5 rounded-md bg-background border border-border text-sm">
+                <option value="market">Market (now)</option>
+                <option value="limit">Limit (better price)</option>
+                <option value="stop">Stop (breakout)</option>
               </select>
             </Field>
             <Field label="Units">
               <input type="number" value={units} onChange={(e) => setUnits(Number(e.target.value))} className="w-full px-2 py-1.5 rounded-md bg-background border border-border text-sm" />
             </Field>
-            <div />
-            <Field label="Stop loss (optional)">
+            <Field label={orderType === "market" ? "Entry price (market)" : "Entry price"}>
+              <input
+                value={orderType === "market" ? "" : limitPrice}
+                onChange={(e) => setLimitPrice(e.target.value)}
+                disabled={orderType === "market"}
+                placeholder={orderType === "market" ? "at market" : "price"}
+                className="w-full px-2 py-1.5 rounded-md bg-background border border-border text-sm disabled:opacity-50"
+              />
+            </Field>
+            <Field label="Stop loss">
               <input value={stopLoss} onChange={(e) => setStopLoss(e.target.value)} placeholder="price" className="w-full px-2 py-1.5 rounded-md bg-background border border-border text-sm" />
             </Field>
-            <Field label="Take profit (optional)">
+            <Field label="Take profit">
               <input value={takeProfit} onChange={(e) => setTakeProfit(e.target.value)} placeholder="price" className="w-full px-2 py-1.5 rounded-md bg-background border border-border text-sm" />
             </Field>
-          </div>
-          <div className="mt-3 flex items-end gap-2">
             <Field label="Dollar risk (auto-size units)">
               <input
                 value={riskDollars}
@@ -436,31 +443,75 @@ function BrokerPage() {
                 className="w-full px-2 py-1.5 rounded-md bg-background border border-border text-sm"
               />
             </Field>
-            <button
-              onClick={sizeFromRisk}
-              className="px-3 py-1.5 rounded-md border border-border text-xs hover:bg-muted"
-            >
-              Size from risk
-            </button>
+            <div className="flex items-end">
+              <button
+                onClick={sizeFromRisk}
+                className="w-full px-3 py-1.5 rounded-md border border-border text-xs hover:bg-muted"
+              >
+                Size from risk
+              </button>
+            </div>
           </div>
           {status.marginAvailable != null && status.marginAvailable <= 0 && (
             <div className="mt-3 text-xs text-red-300">
               Free margin is 0. This order will be rejected by OANDA. Deposit or close positions first.
             </div>
           )}
-          <button
-            onClick={submitOrder}
-            disabled={placing || !symbol || units <= 0 || (status.marginAvailable != null && status.marginAvailable <= 0)}
-            className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 disabled:opacity-50"
-          >
-            {placing ? "Placing..." : `Send ${side === "long" ? "BUY" : "SELL"} ${units.toLocaleString()} ${symbol}`}
-          </button>
+          {orderType !== "market" && !Number(limitPrice) && (
+            <div className="mt-3 text-xs text-amber-300">
+              Enter an entry price for a {orderType} order. Buy stop sits above price, buy limit below.
+            </div>
+          )}
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => { setSide("long"); submitOrder("long"); }}
+              disabled={placing || !symbol || units <= 0 || (orderType !== "market" && !Number(limitPrice)) || (status.marginAvailable != null && status.marginAvailable <= 0)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-bull/15 border border-bull/40 text-bull text-sm font-semibold hover:bg-bull/25 disabled:opacity-50"
+            >
+              <ArrowUpRight className="h-4 w-4" />
+              {placing ? "Sending..." : `BUY ${orderType === "market" ? "" : orderType.toUpperCase() + " "}${units.toLocaleString()}`}
+            </button>
+            <button
+              onClick={() => { setSide("short"); submitOrder("short"); }}
+              disabled={placing || !symbol || units <= 0 || (orderType !== "market" && !Number(limitPrice)) || (status.marginAvailable != null && status.marginAvailable <= 0)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-red-500/15 border border-red-500/40 text-red-300 text-sm font-semibold hover:bg-red-500/25 disabled:opacity-50"
+            >
+              <ArrowDownRight className="h-4 w-4" />
+              {placing ? "Sending..." : `SELL / SHORT ${orderType === "market" ? "" : orderType.toUpperCase() + " "}${units.toLocaleString()}`}
+            </button>
+          </div>
           <p className="text-xs text-muted-foreground mt-2">
-            Orders route to OANDA {status.env}. If OANDA rejects (insufficient margin, halted instrument), you will see the exact reason instead of a fake fill.
+            Selling on OANDA opens a short position, so SELL is your short button. Orders route to OANDA {status.env}. If OANDA rejects (insufficient margin, halted instrument) you see the exact reason instead of a fake fill.
           </p>
 
         </div>
       )}
+
+      {status?.connected && pending.length > 0 && (
+        <div className="rounded-md border border-border bg-card p-5 mb-6">
+          <div className="text-sm font-semibold mb-3">Working orders (not filled yet)</div>
+          <div className="space-y-2">
+            {pending.map((o) => (
+              <div key={o.id} className="flex flex-wrap items-center gap-3 rounded-md border border-border/60 px-3 py-2 text-sm">
+                <span className="font-mono text-xs text-muted-foreground w-16">{o.id}</span>
+                <span className="font-semibold">{o.instrument}</span>
+                <span className="text-[10px] uppercase tracking-wider rounded px-1.5 py-0.5 border border-border">{o.type}</span>
+                <span className={o.units > 0 ? "text-bull" : "text-red-300"}>
+                  {o.units > 0 ? "BUY" : "SELL"} {Math.abs(o.units)}
+                </span>
+                <span className="font-mono text-xs text-muted-foreground">@ {o.price ?? "-"}</span>
+                <span className="font-mono text-[11px] text-muted-foreground">
+                  SL {o.stopLoss ?? "-"} / TP {o.takeProfit ?? "-"}
+                </span>
+                <button onClick={() => handleCancelOrder(o.id)} className="ml-auto inline-flex items-center gap-1 rounded px-2 py-1 text-xs border border-border hover:bg-muted">
+                  <X className="h-3 w-3" /> Cancel
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
 
       {status?.connected && positions.length > 0 && (
         <div className="rounded-md border border-border bg-card p-5">
