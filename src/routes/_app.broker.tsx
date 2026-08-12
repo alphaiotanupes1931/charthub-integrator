@@ -58,23 +58,11 @@ function BrokerPage() {
   const cancelOrder = useServerFn(cancelBrokerOrder);
   const fetchPending = useServerFn(listBrokerPendingOrders);
   const placeOrder = useServerFn(placeBrokerOrder);
-  const saveCreds = useServerFn(saveOandaCredentials);
-  const deleteCreds = useServerFn(deleteOandaCredentials);
-  const setActiveEnv = useServerFn(setOandaActiveEnv);
-  const fetchMeta = useServerFn(getOandaCredentialsMeta);
 
   const [status, setStatus] = useState<Status | null>(null);
-  const [meta, setMeta] = useState<Meta | null>(null);
   const [positions, setPositions] = useState<Position[]>([]);
   const [loading, setLoading] = useState(true);
   const [placing, setPlacing] = useState(false);
-
-  // Credential form
-  const [showCredForm, setShowCredForm] = useState(false);
-  const [savingCreds, setSavingCreds] = useState(false);
-  const [apiKey, setApiKey] = useState("");
-  const [accountId, setAccountId] = useState("");
-  const [envSel, setEnvSel] = useState<"practice" | "live">("practice");
 
   // Order form
   const [symbol, setSymbol] = useState(search.symbol || "EUR/USD");
