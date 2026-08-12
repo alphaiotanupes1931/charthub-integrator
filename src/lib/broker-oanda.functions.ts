@@ -31,13 +31,15 @@ function hostFor(env: OandaEnv): OandaEndpoint {
     : { host: "api-fxpractice.oanda.com", env: "practice" };
 }
 
-// A user who explicitly saved a demo (practice) or live account trades only on
-// that environment. Project-level env credentials may fall back to the other.
-function endpointsFor(preferred: OandaEnv, pinned = false): OandaEndpoint[] {
-  if (pinned) return [hostFor(preferred)];
+// Always try the saved environment first, then the other one. OANDA issues
+// separate tokens on fxTrade (live) and fxTrade Practice (demo); a token pasted
+// into the wrong slot returns "Insufficient authorization" on that host only, so
+// checking both lets us connect anyway and tell the user which one it belongs to.
+function endpointsFor(preferred: OandaEnv, _pinned = false): OandaEndpoint[] {
   const other: OandaEnv = preferred === "live" ? "practice" : "live";
   return [hostFor(preferred), hostFor(other)];
 }
+
 
 async function loadUserOandaConfig(userId: string): Promise<OandaConfig | null> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
