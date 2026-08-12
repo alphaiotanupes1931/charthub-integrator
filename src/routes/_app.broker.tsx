@@ -409,6 +409,8 @@ function BrokerPage() {
 
       <IdentityPanel />
 
+      <TradeLockerPanel />
+
       {status && !status.connected && (
         <div className="rounded-md border border-red-500/30 bg-red-500/5 p-5 mb-6">
           <div className="font-semibold text-sm mb-1">Not connected</div>
