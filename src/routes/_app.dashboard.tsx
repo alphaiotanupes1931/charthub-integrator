@@ -30,6 +30,7 @@ import { Link } from "@tanstack/react-router";
 import { recordSignal, takeTrade } from "@/lib/signalHistory";
 import { formatJournalPerf } from "@/lib/journalStats";
 import { toast } from "sonner";
+import { AutoBacktestVerify } from "@/components/AutoBacktestVerify";
 
 // Scan context: the active strategy playbook is fed to the planner so the
 // Analysis grade is scored against the same rules the chat coach uses.
@@ -405,19 +406,13 @@ function ScanTicket({
             </button>
           )}
 
-          <Link
-            to="/backtest"
-            search={{
-              symbol: symbol.ticker,
-              tf: toBacktestTf(interval),
-              side: result.bias?.toLowerCase().includes("short") ? "short" : result.bias?.toLowerCase().includes("long") ? "long" : "both",
-              run: 1,
-            } as never}
-            className="inline-flex w-full items-center justify-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-accent/40 whitespace-nowrap"
-            title="Backtest this instrument, timeframe and direction over past price history"
-          >
-            <FlaskConical className="h-3 w-3" /> Backtest this setup
-          </Link>
+          <AutoBacktestVerify
+            symbol={symbol.ticker}
+            interval={interval}
+            side={result.bias?.toLowerCase().includes("short") ? "short" : result.bias?.toLowerCase().includes("long") ? "long" : "both"}
+            grade={result.grade}
+            className="w-full text-left"
+          />
 
         </div>
 
