@@ -80,13 +80,8 @@ function BrokerPage() {
   async function refresh(silent = false) {
     if (!silent) setLoading(true);
     try {
-      const [s, m] = await Promise.all([fetchStatus(), fetchMeta()]);
+      const s = await fetchStatus();
       setStatus(s);
-      setMeta(m);
-      if (m.configured) {
-        setAccountId(m.accountId ?? "");
-        setEnvSel(m.env);
-      }
       if (s.connected) {
         const [p, po] = await Promise.all([
           fetchPositions().catch(() => []),
