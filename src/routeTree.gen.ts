@@ -64,6 +64,7 @@ import { Route as AppAcademyRouteImport } from './routes/_app.academy'
 import { Route as AppStrategiesIndexRouteImport } from './routes/_app.strategies.index'
 import { Route as AppChatIndexRouteImport } from './routes/_app.chat.index'
 import { Route as AppAcademyIndexRouteImport } from './routes/_app.academy.index'
+import { Route as BrokerAlpacaCallbackRouteImport } from './routes/broker.alpaca.callback'
 import { Route as ApiTradelockerImportRouteImport } from './routes/api.tradelocker.import'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api.public.stripe-webhook'
 import { Route as ApiPublicBridgeRouteImport } from './routes/api.public.bridge'
@@ -360,6 +361,11 @@ const AppAcademyIndexRoute = AppAcademyIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppAcademyRoute,
 } as any)
+const BrokerAlpacaCallbackRoute = BrokerAlpacaCallbackRouteImport.update({
+  id: '/broker/alpaca/callback',
+  path: '/broker/alpaca/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiTradelockerImportRoute = ApiTradelockerImportRouteImport.update({
   id: '/api/tradelocker/import',
   path: '/api/tradelocker/import',
@@ -539,6 +545,7 @@ export interface FileRoutesByFullPath {
   '/api/public/bridge': typeof ApiPublicBridgeRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
+  '/broker/alpaca/callback': typeof BrokerAlpacaCallbackRoute
   '/academy/': typeof AppAcademyIndexRoute
   '/chat/': typeof AppChatIndexRoute
   '/strategies/': typeof AppStrategiesIndexRoute
@@ -612,6 +619,7 @@ export interface FileRoutesByTo {
   '/api/public/bridge': typeof ApiPublicBridgeRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
+  '/broker/alpaca/callback': typeof BrokerAlpacaCallbackRoute
   '/academy': typeof AppAcademyIndexRoute
   '/chat': typeof AppChatIndexRoute
   '/strategies': typeof AppStrategiesIndexRoute
@@ -691,6 +699,7 @@ export interface FileRoutesById {
   '/api/public/bridge': typeof ApiPublicBridgeRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
+  '/broker/alpaca/callback': typeof BrokerAlpacaCallbackRoute
   '/_app/academy/': typeof AppAcademyIndexRoute
   '/_app/chat/': typeof AppChatIndexRoute
   '/_app/strategies/': typeof AppStrategiesIndexRoute
@@ -770,6 +779,7 @@ export interface FileRouteTypes {
     | '/api/public/bridge'
     | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
+    | '/broker/alpaca/callback'
     | '/academy/'
     | '/chat/'
     | '/strategies/'
@@ -843,6 +853,7 @@ export interface FileRouteTypes {
     | '/api/public/bridge'
     | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
+    | '/broker/alpaca/callback'
     | '/academy'
     | '/chat'
     | '/strategies'
@@ -921,6 +932,7 @@ export interface FileRouteTypes {
     | '/api/public/bridge'
     | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
+    | '/broker/alpaca/callback'
     | '/_app/academy/'
     | '/_app/chat/'
     | '/_app/strategies/'
@@ -960,6 +972,7 @@ export interface RootRouteChildren {
   ApiPublicBridgeRoute: typeof ApiPublicBridgeRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
   ApiTradelockerImportRoute: typeof ApiTradelockerImportRoute
+  BrokerAlpacaCallbackRoute: typeof BrokerAlpacaCallbackRoute
   ApiPublicHooksAutopilotTickRoute: typeof ApiPublicHooksAutopilotTickRoute
   ApiPublicHooksPriceAlertsTickRoute: typeof ApiPublicHooksPriceAlertsTickRoute
   ApiPublicHooksReconcilePaperRoute: typeof ApiPublicHooksReconcilePaperRoute
@@ -1357,6 +1370,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAcademyIndexRouteImport
       parentRoute: typeof AppAcademyRoute
     }
+    '/broker/alpaca/callback': {
+      id: '/broker/alpaca/callback'
+      path: '/broker/alpaca/callback'
+      fullPath: '/broker/alpaca/callback'
+      preLoaderRoute: typeof BrokerAlpacaCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/tradelocker/import': {
       id: '/api/tradelocker/import'
       path: '/api/tradelocker/import'
@@ -1686,6 +1706,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicBridgeRoute: ApiPublicBridgeRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
   ApiTradelockerImportRoute: ApiTradelockerImportRoute,
+  BrokerAlpacaCallbackRoute: BrokerAlpacaCallbackRoute,
   ApiPublicHooksAutopilotTickRoute: ApiPublicHooksAutopilotTickRoute,
   ApiPublicHooksPriceAlertsTickRoute: ApiPublicHooksPriceAlertsTickRoute,
   ApiPublicHooksReconcilePaperRoute: ApiPublicHooksReconcilePaperRoute,
