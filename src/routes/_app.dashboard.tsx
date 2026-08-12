@@ -1212,7 +1212,7 @@ function Dashboard() {
           <div className="relative" ref={lensRef}>
             <button
               onClick={() => setLensOpen((o) => !o)}
-              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/50 px-2.5 py-1.5 text-xs font-medium hover:border-primary/50 transition"
+              className="inline-flex items-center gap-1.5 rounded-md border border-border h-7 bg-background/50 px-2.5 text-xs font-medium hover:border-primary/50 transition"
               title="Scan lens"
             >
               <Crosshair className="h-3.5 w-3.5 text-primary" />
@@ -1256,7 +1256,7 @@ function Dashboard() {
               <div className="relative" ref={coachRef}>
                 <button
                   onClick={() => setCoachOpen((o) => !o)}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/50 px-2.5 py-1.5 text-xs font-medium hover:border-primary/50 transition"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border h-7 bg-background/50 px-2.5 text-xs font-medium hover:border-primary/50 transition"
                   title="Change active AI coach"
                 >
                   <span className={`inline-flex h-5 w-5 items-center justify-center rounded-md ${meta.iconBg} ${meta.iconText} shrink-0`}>
@@ -1313,7 +1313,7 @@ function Dashboard() {
           <div className="relative" ref={strategyRef}>
             <button
               onClick={() => setStrategyOpen((o) => !o)}
-              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/50 px-2.5 py-1.5 text-xs font-medium hover:border-primary/50 transition"
+              className="inline-flex items-center gap-1.5 rounded-md border border-border h-7 bg-background/50 px-2.5 text-xs font-medium hover:border-primary/50 transition"
               title="Change the strategy playbook your scans are graded against"
             >
               <BookOpen className="h-3.5 w-3.5 text-primary" />
@@ -1367,43 +1367,45 @@ function Dashboard() {
 
       <StrategyPresetCard name={activeStrategy} />
 
-      {/* Row 2: Live / Setup tabs + compact View menu + fullscreen */}
-      <div className="shrink-0 flex items-center gap-3 px-3 py-1 border-b border-border/60 bg-card/30 text-xs">
-        <button
-          onClick={() => setChartTab("live")}
-          className={`inline-flex items-center gap-1.5 py-1 border-b-2 transition ${
-            chartTab === "live" ? "border-primary text-primary font-semibold" : "border-transparent text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          <Activity className="h-3.5 w-3.5" /> Live
-        </button>
-        <button
-          onClick={() => { setChartTab("setup"); setIntervalState("60"); }}
-          className={`inline-flex items-center gap-1.5 py-1 border-b-2 transition ${
-            chartTab === "setup" ? "border-primary text-primary font-semibold" : "border-transparent text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          <Crosshair className="h-3.5 w-3.5" /> Setup
-        </button>
+      {/* Row 2: Live / Setup segmented control + chart controls */}
+      <div className="shrink-0 flex flex-wrap items-center gap-x-2 gap-y-1 px-3 py-1.5 border-b border-border/60 bg-card/30 text-xs">
+        <div className="inline-flex items-center rounded-md border border-border bg-background/50 p-0.5">
+          <button
+            onClick={() => setChartTab("live")}
+            className={`inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-[11px] font-medium transition ${
+              chartTab === "live" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Activity className="h-3.5 w-3.5" /> Live
+          </button>
+          <button
+            onClick={() => { setChartTab("setup"); setIntervalState("60"); }}
+            className={`inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-[11px] font-medium transition ${
+              chartTab === "setup" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Crosshair className="h-3.5 w-3.5" /> Setup
+          </button>
+        </div>
 
         <button
           type="button"
           onClick={toggleChartFullscreen}
-          className="inline-flex items-center gap-1 rounded-md border border-border bg-background/50 px-2 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground hover:border-primary/40 transition"
+          className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border bg-background/50 text-muted-foreground hover:text-foreground hover:border-primary/40 transition"
           title={isChartFullscreen ? "Exit full screen" : "Full screen chart"}
           aria-label={isChartFullscreen ? "Exit full screen" : "Full screen chart"}
         >
-          {isChartFullscreen ? <Minimize className="h-3 w-3" /> : <Maximize className="h-3 w-3" />}
-          <span className="hidden sm:inline">{isChartFullscreen ? "Exit" : "Expand"}</span>
+          {isChartFullscreen ? <Minimize className="h-3.5 w-3.5" /> : <Maximize className="h-3.5 w-3.5" />}
         </button>
 
         <div className="flex-1" />
+
 
         {/* Single "View" popover holding candle style, sessions, and indicators */}
         <div className="relative" ref={viewMenuRef}>
           <button
             onClick={() => setViewMenuOpen((o) => !o)}
-            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/50 px-2 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground hover:border-primary/40 transition"
+            className="inline-flex h-7 items-center gap-1.5 rounded-md border border-border bg-background/50 px-2.5 text-[11px] font-medium text-muted-foreground hover:text-foreground hover:border-primary/40 transition"
             title="Chart levels"
           >
             <Settings2 className="h-3 w-3" />
@@ -1507,7 +1509,7 @@ function Dashboard() {
 
         <button
           onClick={scanning ? () => { chatRef.current?.stop(); voice.stop(); setScanning(false); } : () => runScan("analysis")}
-          className={`hidden lg:inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-semibold transition ${
+          className={`hidden lg:inline-flex h-7 items-center gap-1.5 rounded-md px-3 text-xs font-semibold transition ${
             scanning
               ? "border border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/15"
               : "bg-primary text-primary-foreground hover:opacity-90"
@@ -1521,7 +1523,7 @@ function Dashboard() {
 
         <button
           onClick={() => setRightOpen((v) => !v)}
-          className="hidden lg:inline-flex items-center gap-1.5 rounded-md border border-border bg-background/50 px-3 py-1 text-xs font-semibold text-foreground hover:border-primary/40 transition"
+          className="hidden lg:inline-flex h-7 items-center gap-1.5 rounded-md border border-border bg-background/50 px-3 text-xs font-semibold text-foreground hover:border-primary/40 transition"
           title={rightOpen ? "Hide chat panel" : "Open chat panel"}
         >
           {rightOpen ? <PanelRightClose className="h-3 w-3" /> : <PanelRightOpen className="h-3 w-3" />}
@@ -1694,14 +1696,28 @@ function Dashboard() {
                     <MessageSquare className="h-3.5 w-3.5" /> Chat
                   </button>
                 </div>
+                <div className="hidden xl:flex shrink-0 items-center gap-0.5 rounded-md border border-border/60 bg-background/40 p-0.5" title="Panel width">
+                  {(["narrow", "default", "wide"] as const).map((w) => (
+                    <button
+                      key={w}
+                      onClick={() => setPanelWidth(w)}
+                      className={`rounded px-1.5 py-0.5 text-[10px] font-medium capitalize transition ${
+                        panelWidth === w ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {w}
+                    </button>
+                  ))}
+                </div>
                 {activeModel && (
                   <span
-                    className="shrink-0 text-[9px] font-semibold uppercase tracking-wider text-primary px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20"
+                    className="hidden sm:inline shrink-0 text-[9px] font-semibold uppercase tracking-wider text-primary px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20"
                     title={`Powered by ${activeModel.label}`}
                   >
                     {activeModel.label}
                   </span>
                 )}
+
                 <button
                   onClick={() => setRightOpen(false)}
                   className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 shrink-0"
@@ -1796,24 +1812,6 @@ function Dashboard() {
                     </div>
                   )}
                 </div>
-              </div>
-            </div>
-            {/* Panel width footer */}
-            <div className="shrink-0 border-t border-border/60 px-3 py-1.5 flex items-center justify-between gap-2">
-
-              <span className="text-[9px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Width</span>
-              <div className="flex items-center gap-0.5 rounded-md border border-border/60 bg-background/40 p-0.5">
-                {(["narrow", "default", "wide"] as const).map((w) => (
-                  <button
-                    key={w}
-                    onClick={() => setPanelWidth(w)}
-                    className={`rounded px-2.5 py-0.5 text-[10px] font-medium capitalize transition ${
-                      panelWidth === w ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {w}
-                  </button>
-                ))}
               </div>
             </div>
           </aside>
