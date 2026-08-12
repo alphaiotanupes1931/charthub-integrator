@@ -1202,6 +1202,7 @@ export type Database = {
           created_at: string
           env: string
           id: string
+          is_active: boolean
           updated_at: string
           user_id: string
         }
@@ -1212,6 +1213,7 @@ export type Database = {
           created_at?: string
           env?: string
           id?: string
+          is_active?: boolean
           updated_at?: string
           user_id: string
         }
@@ -1222,6 +1224,7 @@ export type Database = {
           created_at?: string
           env?: string
           id?: string
+          is_active?: boolean
           updated_at?: string
           user_id?: string
         }
