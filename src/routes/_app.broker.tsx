@@ -158,20 +158,26 @@ function BrokerPage() {
     }
   }
 
-  async function submitOrder() {
+  async function submitOrder(overrideSide?: "long" | "short") {
+    const useSide = overrideSide ?? side;
     setPlacing(true);
     try {
       const res = await placeOrder({
         data: {
           symbol,
-          side,
+          side: useSide,
           units,
-          orderType: "market",
+          orderType,
+          price: orderType === "market" ? undefined : Number(limitPrice) || undefined,
           stopLoss: stopLoss ? Number(stopLoss) : undefined,
           takeProfit: takeProfit ? Number(takeProfit) : undefined,
         },
       });
-      toast.success(`Order filled${res.fillPrice ? ` at ${res.fillPrice}` : ""}`);
+      toast.success(
+        res.pending
+          ? `Working ${orderType.toUpperCase()} order placed at ${limitPrice}`
+          : `Order filled${res.fillPrice ? ` at ${res.fillPrice}` : ""}`,
+      );
       refresh();
     } catch (e) {
       toast.error((e as Error).message);
@@ -180,16 +186,44 @@ function BrokerPage() {
     }
   }
 
-  async function handleClose(id: string) {
-    if (!confirm("Close this trade at market?")) return;
+  async function handleClose(id: string, closeUnits?: number) {
+    if (!closeUnits && !confirm("Close this trade at market?")) return;
     try {
-      await closeTrade({ data: { tradeId: id } });
-      toast.success("Trade closed");
+      await closeUnitsFn({ data: { tradeId: id, units: closeUnits } });
+      toast.success(closeUnits ? `Closed ${closeUnits} units` : "Trade closed");
       refresh();
     } catch (e) {
       toast.error((e as Error).message);
     }
   }
+
+  async function saveProtection(id: string, sl: string, tp: string, trail: string) {
+    try {
+      await modifyTrade({
+        data: {
+          tradeId: id,
+          stopLoss: sl.trim() === "" ? null : Number(sl),
+          takeProfit: tp.trim() === "" ? null : Number(tp),
+          ...(trail.trim() === "" ? {} : { trailingStopDistance: Number(trail) }),
+        },
+      });
+      toast.success("Trade updated on OANDA");
+      refresh();
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
+  async function handleCancelOrder(id: string) {
+    try {
+      await cancelOrder({ data: { orderId: id } });
+      toast.success("Working order cancelled");
+      refresh();
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
 
   return (
     <div className="max-w-4xl mx-auto">
