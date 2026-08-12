@@ -44,6 +44,7 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
   const [stalled, setStalled] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const aliveRef = useRef(false);
+  const everAliveRef = useRef(false);
   const onStallRef = useRef(onStall);
   onStallRef.current = onStall;
 
