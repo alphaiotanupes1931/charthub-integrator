@@ -200,6 +200,10 @@ export const listBrokerPositions = createServerFn({ method: "GET" })
       price: Number(t.price ?? 0),
       unrealizedPL: Number(t.unrealizedPL ?? 0),
       openTime: String(t.openTime ?? ""),
+      stopLoss: (t.stopLossOrder as { price?: string } | undefined)?.price
+        ? Number((t.stopLossOrder as { price: string }).price) : null,
+      takeProfit: (t.takeProfitOrder as { price?: string } | undefined)?.price
+        ? Number((t.takeProfitOrder as { price: string }).price) : null,
     }));
   });
 
