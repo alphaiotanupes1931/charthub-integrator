@@ -113,8 +113,6 @@ function GhostButton({ children, ...props }: React.ButtonHTMLAttributes<HTMLButt
   );
 }
 
-type TLAccount = { id: string | number; accNum?: string | number; name?: string; balance?: number; currency?: string; status?: string };
-type TLTrade = { id: string; date: string; timeframe: string; symbol: string; side: "Long" | "Short"; entry: number; exit: number; stop: number; size: number; notes: string; createdAt: number };
 function SettingsPage() {
   const navigate = useNavigate();
   const { profile, refresh } = useProfile();
