@@ -206,6 +206,17 @@ export function markFirstWeekTask(id: string) {
   write({ ...s, completed });
 }
 
+export function toggleFirstWeekTask(id: string) {
+  const s = read();
+  const completed: Record<string, true> = { ...s.completed };
+  if (completed[id]) {
+    delete completed[id];
+  } else {
+    completed[id] = true;
+  }
+  write({ ...s, completed });
+}
+
 export function markFirstWeekEvent(event: string, value?: number) {
   const s = read();
   const completed: Record<string, true> = { ...s.completed };
