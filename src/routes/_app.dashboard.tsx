@@ -1696,14 +1696,28 @@ function Dashboard() {
                     <MessageSquare className="h-3.5 w-3.5" /> Chat
                   </button>
                 </div>
+                <div className="hidden xl:flex shrink-0 items-center gap-0.5 rounded-md border border-border/60 bg-background/40 p-0.5" title="Panel width">
+                  {(["narrow", "default", "wide"] as const).map((w) => (
+                    <button
+                      key={w}
+                      onClick={() => setPanelWidth(w)}
+                      className={`rounded px-1.5 py-0.5 text-[10px] font-medium capitalize transition ${
+                        panelWidth === w ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {w}
+                    </button>
+                  ))}
+                </div>
                 {activeModel && (
                   <span
-                    className="shrink-0 text-[9px] font-semibold uppercase tracking-wider text-primary px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20"
+                    className="hidden sm:inline shrink-0 text-[9px] font-semibold uppercase tracking-wider text-primary px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20"
                     title={`Powered by ${activeModel.label}`}
                   >
                     {activeModel.label}
                   </span>
                 )}
+
                 <button
                   onClick={() => setRightOpen(false)}
                   className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 shrink-0"
