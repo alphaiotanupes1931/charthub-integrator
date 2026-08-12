@@ -115,12 +115,8 @@ function GhostButton({ children, ...props }: React.ButtonHTMLAttributes<HTMLButt
 
 type TLAccount = { id: string | number; accNum?: string | number; name?: string; balance?: number; currency?: string; status?: string };
 type TLTrade = { id: string; date: string; timeframe: string; symbol: string; side: "Long" | "Short"; entry: number; exit: number; stop: number; size: number; notes: string; createdAt: number };
-const JOURNAL_KEY = "trademind.journal.trades.v1";
-const TL_CREDS_KEY = "trademind.tradelocker.creds.v1";
-
 function SettingsPage() {
   const navigate = useNavigate();
-  const [showPw, setShowPw] = useState(false);
   const { profile, refresh } = useProfile();
   const [name, setName] = useState("");
   const [savingName, setSavingName] = useState(false);
@@ -133,16 +129,6 @@ function SettingsPage() {
   const { colors: candleColors, update: updateCandleColors, reset: resetCandleColors, isHex } = useCandleColors();
   const { colors: chartBg, update: updateChartBg, setPreset: setChartBgPreset, reset: resetChartBg } = useChartBackground();
 
-  // TradeLocker integration state
-  const [tlEmail, setTlEmail] = useState("");
-  const [tlPassword, setTlPassword] = useState("");
-  const [tlServer, setTlServer] = useState("OSP-DEMO");
-  const [tlAccountType, setTlAccountType] = useState<"demo" | "live">("demo");
-  const [tlBusy, setTlBusy] = useState<"" | "test" | "import">("");
-  const [tlAccounts, setTlAccounts] = useState<TLAccount[]>([]);
-  const [tlAccountId, setTlAccountId] = useState<string>("");
-  const [tlConnected, setTlConnected] = useState(false);
-
   // Privacy / GDPR
   const [exporting, setExporting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -150,8 +136,6 @@ function SettingsPage() {
   const [deleting, setDeleting] = useState(false);
   const runExport = useServerFn(exportMyData);
   const runDelete = useServerFn(deleteMyAccount);
-
-  const recordBroker = useServerFn(recordBrokerConnection);
 
   // Recovery code
   const runSetRecovery = useServerFn(setRecoveryCode);
