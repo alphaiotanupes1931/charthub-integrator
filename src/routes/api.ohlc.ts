@@ -3,6 +3,7 @@ import { z } from "zod";
 import { corsHeadersFor, enforceOrigin, preflight } from "@/lib/api-security";
 
 
+export type OhlcBar = { time: number; open: number; high: number; low: number; close: number };
 export type OhlcSource = "oanda" | "binance" | "twelvedata";
 export type OhlcResponse = {
   source: OhlcSource | null;
