@@ -35,6 +35,7 @@ export const EmailChangeEmail = ({
     <Preview>Confirm your email change for {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
+        <Text style={brand}>TRADEMIND<span style={{ color: "#8a8a8a" }}> · Beta</span></Text>
         <Heading style={h1}>Confirm your email change</Heading>
         <Text style={text}>
           You requested to change your email address for {siteName} from{' '}
@@ -88,3 +89,11 @@ const button = {
   textDecoration: 'none',
 }
 const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
+const brand = {
+  fontSize: '12px',
+  fontWeight: 'bold' as const,
+  letterSpacing: '0.12em',
+  color: '#0a0a0a',
+  margin: '0 0 24px',
+  textTransform: 'uppercase' as const,
+}

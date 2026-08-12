@@ -30,6 +30,7 @@ export const SignupEmail = ({
     <Preview>Confirm your email for {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
+        <Text style={brand}>TRADEMIND<span style={{ color: "#8a8a8a" }}> · Beta</span></Text>
         <Heading style={h1}>Confirm your email</Heading>
         <Text style={text}>
           Thanks for signing up for{' '}
@@ -82,3 +83,11 @@ const button = {
   textDecoration: 'none',
 }
 const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
+const brand = {
+  fontSize: '12px',
+  fontWeight: 'bold' as const,
+  letterSpacing: '0.12em',
+  color: '#0a0a0a',
+  margin: '0 0 24px',
+  textTransform: 'uppercase' as const,
+}
