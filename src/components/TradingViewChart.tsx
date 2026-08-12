@@ -265,18 +265,11 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
   };
 
   const down = failed || stalled;
+  const showFallback = down && !!fallback;
 
-  // Backup chart: when the embed is blocked or black, swap our own feed into
-  // the same panel so the trader always has a working chart in this view.
-  // The embed is reloaded automatically in the background until it recovers.
-  if (down && fallback) {
-    return (
-      <div ref={hostRef} className="relative h-full w-full">
-        <div className="absolute inset-0">{fallback}</div>
-      </div>
-    );
-  }
-
+  // Backup chart: when the embed is blocked or black, our own feed is laid over
+  // the same panel so the trader always has a working chart. The embed stays
+  // mounted underneath and keeps reloading until it recovers on its own.
   return (
     <div ref={hostRef} className="relative h-full w-full">
       <iframe
@@ -289,6 +282,9 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
         onLoad={() => { setLoaded(true); setFailed(false); }}
         onError={() => setFailed(true)}
       />
+
+      {showFallback && <div className="absolute inset-0 z-20">{fallback}</div>}
+
 
 
 
