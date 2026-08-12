@@ -76,6 +76,8 @@ import { Route as AppAcademyExamRouteImport } from './routes/_app.academy.exam'
 import { Route as AppAcademyModuleIdRouteImport } from './routes/_app.academy.$moduleId'
 import { Route as AppAcademyModuleIdIndexRouteImport } from './routes/_app.academy.$moduleId.index'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api.public.telegram.webhook'
 import { Route as ApiPublicHooksWeeklyReviewRouteImport } from './routes/api.public.hooks.weekly-review'
 import { Route as ApiPublicHooksSendBriefingsRouteImport } from './routes/api.public.hooks.send-briefings'
@@ -423,6 +425,16 @@ const LovableEmailQueueProcessRoute =
     path: '/lovable/email/queue/process',
     getParentRoute: () => rootRouteImport,
   } as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicTelegramWebhookRoute =
   ApiPublicTelegramWebhookRouteImport.update({
     id: '/api/public/telegram/webhook',
@@ -559,6 +571,8 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
   '/api/public/hooks/weekly-review': typeof ApiPublicHooksWeeklyReviewRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/academy/$moduleId/': typeof AppAcademyModuleIdIndexRoute
 }
@@ -633,6 +647,8 @@ export interface FileRoutesByTo {
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
   '/api/public/hooks/weekly-review': typeof ApiPublicHooksWeeklyReviewRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/academy/$moduleId': typeof AppAcademyModuleIdIndexRoute
 }
@@ -713,6 +729,8 @@ export interface FileRoutesById {
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
   '/api/public/hooks/weekly-review': typeof ApiPublicHooksWeeklyReviewRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/_app/academy/$moduleId/': typeof AppAcademyModuleIdIndexRoute
 }
@@ -793,6 +811,8 @@ export interface FileRouteTypes {
     | '/api/public/hooks/send-briefings'
     | '/api/public/hooks/weekly-review'
     | '/api/public/telegram/webhook'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
     | '/academy/$moduleId/'
   fileRoutesByTo: FileRoutesByTo
@@ -867,6 +887,8 @@ export interface FileRouteTypes {
     | '/api/public/hooks/send-briefings'
     | '/api/public/hooks/weekly-review'
     | '/api/public/telegram/webhook'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
     | '/academy/$moduleId'
   id:
@@ -946,6 +968,8 @@ export interface FileRouteTypes {
     | '/api/public/hooks/send-briefings'
     | '/api/public/hooks/weekly-review'
     | '/api/public/telegram/webhook'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
     | '/_app/academy/$moduleId/'
   fileRoutesById: FileRoutesById
@@ -982,6 +1006,8 @@ export interface RootRouteChildren {
   ApiPublicHooksSendBriefingsRoute: typeof ApiPublicHooksSendBriefingsRoute
   ApiPublicHooksWeeklyReviewRoute: typeof ApiPublicHooksWeeklyReviewRoute
   ApiPublicTelegramWebhookRoute: typeof ApiPublicTelegramWebhookRoute
+  LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
+  LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
 }
 
@@ -1456,6 +1482,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/telegram/webhook': {
       id: '/api/public/telegram/webhook'
       path: '/api/public/telegram/webhook'
@@ -1715,8 +1755,20 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksSendBriefingsRoute: ApiPublicHooksSendBriefingsRoute,
   ApiPublicHooksWeeklyReviewRoute: ApiPublicHooksWeeklyReviewRoute,
   ApiPublicTelegramWebhookRoute: ApiPublicTelegramWebhookRoute,
+  LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
+  LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
