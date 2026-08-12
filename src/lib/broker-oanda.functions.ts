@@ -31,7 +31,10 @@ function hostFor(env: OandaEnv): OandaEndpoint {
     : { host: "api-fxpractice.oanda.com", env: "practice" };
 }
 
-function endpointsFor(preferred: OandaEnv): OandaEndpoint[] {
+// A user who explicitly saved a demo (practice) or live account trades only on
+// that environment. Project-level env credentials may fall back to the other.
+function endpointsFor(preferred: OandaEnv, pinned = false): OandaEndpoint[] {
+  if (pinned) return [hostFor(preferred)];
   const other: OandaEnv = preferred === "live" ? "practice" : "live";
   return [hostFor(preferred), hostFor(other)];
 }
@@ -40,19 +43,22 @@ async function loadUserOandaConfig(userId: string): Promise<OandaConfig | null> 
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data } = await supabaseAdmin
     .from("user_broker_credentials")
-    .select("api_key_ciphertext, account_id, env")
+    .select("api_key_ciphertext, account_id, env, is_active, updated_at")
     .eq("user_id", userId)
     .eq("broker", "oanda")
-    .maybeSingle();
-  if (!data) return null;
+    .order("is_active", { ascending: false })
+    .order("updated_at", { ascending: false });
+  const row = (data ?? [])[0];
+  if (!row) return null;
   const { decryptSecret } = await import("@/lib/broker-crypto.server");
   return {
-    apiKey: decryptSecret(data.api_key_ciphertext),
-    accountId: data.account_id?.trim() || undefined,
-    preferredEnv: (data.env as OandaEnv) ?? "practice",
+    apiKey: decryptSecret(row.api_key_ciphertext),
+    accountId: row.account_id?.trim() || undefined,
+    preferredEnv: (row.env as OandaEnv) ?? "practice",
     source: "user",
   };
 }
+
 
 function envOandaConfig(): OandaConfig | null {
   const apiKey = process.env.OANDA_API_KEY;
@@ -119,7 +125,7 @@ async function listOandaAccounts(endpoint: OandaEndpoint, apiKey: string) {
 
 async function resolveOandaAccount(userId: string): Promise<{ apiKey: string; accountId: string; configuredAccountId?: string; discovered: boolean; source: "user" | "env" } & OandaEndpoint> {
   const cfg = await loadOandaConfig(userId);
-  const endpoints = endpointsFor(cfg.preferredEnv);
+  const endpoints = endpointsFor(cfg.preferredEnv, cfg.source === "user");
   const failedMessages: string[] = [];
 
   if (cfg.accountId) {
