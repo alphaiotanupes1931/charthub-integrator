@@ -98,42 +98,21 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
 
   return (
     <div className="shrink-0 border-b border-border/60 bg-card/40">
-      {/* Header strip - always visible, kept as thin as possible */}
-      <div className="flex items-center gap-2 px-3 py-1 overflow-x-auto">
-
-        <span className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 ${biasBg}`}>
+      {/* Header strip - one clean line: what the setup is, then a single action. */}
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 px-3 py-1.5">
+        <span className={`inline-flex h-6 items-center gap-1 rounded-md border px-2 ${biasBg}`}>
           <BiasIcon className={`h-3 w-3 ${biasText}`} />
           <span className={`text-[10px] font-bold tracking-wider ${biasText}`}>{actionLabel}</span>
+          <span className={`text-[10px] font-bold ${biasText}`}>{grade.grade.toUpperCase()}</span>
         </span>
-        <span className="rounded border border-border/60 bg-background/60 px-1.5 py-0.5 text-[10px] font-bold text-foreground">
-          {grade.grade.toUpperCase()}
-        </span>
-        {/* Confidence percentage removed: the model pinned it near 100% and it
-            misled traders. The grade carries the conviction instead. */}
         {orderType && (
           <span
-            className={`rounded border px-1.5 py-0.5 text-[10px] font-bold tracking-wider ${biasBg} ${biasText}`}
+            className="inline-flex h-6 items-center rounded-md border border-border/60 bg-background/60 px-2 text-[10px] font-semibold tracking-wider text-muted-foreground"
             title={orderHelp}
           >
             {orderType}
           </span>
         )}
-        <span
-          className="rounded border border-border/60 bg-background/60 px-1.5 py-0.5 text-[9px] font-medium uppercase text-muted-foreground"
-          title={grade.dataFetchedAt ? `Fetched ${new Date(grade.dataFetchedAt).toLocaleString()}` : "Feed timestamp unavailable"}
-        >
-          {grade.dataSource ?? "feed unknown"} · {grade.candleCount ?? 0} bars
-        </span>
-
-        {/* Inline preview of key numbers */}
-        <div className="hidden sm:flex items-center gap-3 ml-1 text-[11px] font-mono">
-          {rows.map((r) => (
-            <span key={r.key} className="inline-flex items-baseline gap-1">
-              <span className="text-[9px] uppercase tracking-wider text-muted-foreground">{r.label}</span>
-              <span className={r.tone}>{fmt(r.value)}</span>
-            </span>
-          ))}
-        </div>
 
         <div className="flex-1" />
 
@@ -154,45 +133,17 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
                 risk: grade.weakness,
               })
             }
-            className="inline-flex h-6 items-center gap-1 rounded px-2 text-[10px] font-bold uppercase tracking-wider bg-primary text-primary-foreground hover:opacity-90"
+            className="inline-flex h-6 items-center gap-1 rounded-md px-2 text-[10px] font-bold uppercase tracking-wider bg-primary text-primary-foreground hover:opacity-90"
             title="Log this setup in your journal as a trade you are taking"
           >
             <BookOpen className="h-3 w-3" /> Take trade
           </button>
         )}
 
-        {(isLong || isShort) && (
-          <Link
-            to="/broker"
-            search={{
-              symbol: symbol ?? "",
-              side: isLong ? "long" : "short",
-              entry: grade.entry ?? "",
-              stop: grade.stop ?? "",
-              tp: grade.tp1 ?? "",
-            } as never}
-            className="inline-flex h-6 items-center gap-1 rounded px-2 text-[10px] font-bold uppercase tracking-wider border border-border text-foreground hover:bg-muted/60"
-            title="Send this setup to your broker"
-          >
-            <Zap className="h-3 w-3" /> Broker
-          </Link>
-        )}
-
-        <AutoBacktestVerify
-          symbol={symbol}
-          interval={interval}
-          side={isLong ? "long" : isShort ? "short" : "both"}
-          grade={grade.grade}
-          compact
-        />
-
-
-
-
         <button
           type="button"
           onClick={() => setExpanded((v) => !v)}
-          className="inline-flex h-6 items-center gap-1 rounded px-1.5 text-[10px] uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-muted/60"
+          className="inline-flex h-6 items-center gap-1 rounded-md px-1.5 text-[10px] uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-muted/60"
           title={expanded ? "Hide details" : "Show details"}
         >
           {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
@@ -202,7 +153,7 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
           <button
             type="button"
             onClick={onClear}
-            className="inline-flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted/60"
+            className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60"
             title="Clear signal"
             aria-label="Clear signal"
           >
@@ -234,8 +185,38 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
               <span className="font-semibold text-foreground">{orderType}:</span> {orderHelp}.
             </div>
           )}
+          <div className="col-span-2 sm:col-span-4 flex flex-wrap items-center gap-2 pt-1 border-t border-border/40">
+            <span className="text-[10px] text-muted-foreground">
+              {grade.dataSource ?? "feed unknown"} · {grade.candleCount ?? 0} bars
+            </span>
+            <div className="flex-1" />
+            <AutoBacktestVerify
+              symbol={symbol}
+              interval={interval}
+              side={isLong ? "long" : isShort ? "short" : "both"}
+              grade={grade.grade}
+              compact
+            />
+            {(isLong || isShort) && (
+              <Link
+                to="/broker"
+                search={{
+                  symbol: symbol ?? "",
+                  side: isLong ? "long" : "short",
+                  entry: grade.entry ?? "",
+                  stop: grade.stop ?? "",
+                  tp: grade.tp1 ?? "",
+                } as never}
+                className="inline-flex h-6 items-center gap-1 rounded-md px-2 text-[10px] font-bold uppercase tracking-wider border border-border text-foreground hover:bg-muted/60"
+                title="Send this setup to your broker"
+              >
+                <Zap className="h-3 w-3" /> Broker
+              </Link>
+            )}
+          </div>
         </div>
       )}
     </div>
   );
 }
+
