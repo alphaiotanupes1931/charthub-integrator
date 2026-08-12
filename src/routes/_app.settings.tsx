@@ -219,19 +219,6 @@ function SettingsPage() {
 
   useEffect(() => { if (profile?.display_name) setName(profile.display_name); }, [profile?.display_name]);
 
-  // Restore creds from localStorage (browser-only, never sent to our DB)
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(TL_CREDS_KEY);
-      if (!raw) return;
-      const c = JSON.parse(raw) as { email?: string; server?: string; accountType?: "demo" | "live"; accountId?: string };
-      if (c.email) setTlEmail(c.email);
-      if (c.server) setTlServer(c.server);
-      if (c.accountType) setTlAccountType(c.accountType);
-      if (c.accountId) setTlAccountId(c.accountId);
-    } catch { /* ignore */ }
-  }, []);
-
   async function saveName() {
     if (!profile) return;
     const trimmed = name.trim();
