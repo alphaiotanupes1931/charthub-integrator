@@ -282,6 +282,11 @@ export function useFirstWeek() {
     setState(read());
   }, []);
 
+  const toggle = useCallback((id: string) => {
+    toggleFirstWeekTask(id);
+    setState(read());
+  }, []);
+
   const markEvent = useCallback((event: string, value?: number) => {
     markFirstWeekEvent(event, value);
     setState(read());
