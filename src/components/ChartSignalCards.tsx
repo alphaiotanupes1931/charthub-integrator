@@ -3,6 +3,7 @@ import { ArrowUpRight, ArrowDownRight, Minus, Target, Shield, Flag, Clock, Chevr
 import { Link } from "@tanstack/react-router";
 import { takeTrade } from "@/lib/signalHistory";
 import type { ChartGrade } from "@/lib/chartAnnotations";
+import { AutoBacktestVerify } from "@/components/AutoBacktestVerify";
 
 type Props = {
   grade: ChartGrade | null;
@@ -177,19 +178,13 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
           </Link>
         )}
 
-        <Link
-          to="/backtest"
-          search={{
-            symbol: symbol ?? "",
-            tf: toBacktestTf(interval),
-            side: isLong ? "long" : isShort ? "short" : "both",
-            run: 1,
-          } as never}
-          className="inline-flex h-6 items-center gap-1 rounded px-2 text-[10px] font-bold uppercase tracking-wider border border-border text-foreground hover:bg-muted/60"
-          title="Backtest this instrument, timeframe and direction over past price history"
-        >
-          <FlaskConical className="h-3 w-3" /> Backtest
-        </Link>
+        <AutoBacktestVerify
+          symbol={symbol}
+          interval={interval}
+          side={isLong ? "long" : isShort ? "short" : "both"}
+          grade={grade.grade}
+          compact
+        />
 
 
 
