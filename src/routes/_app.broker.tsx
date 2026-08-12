@@ -17,6 +17,7 @@ import {
 import {
   saveOandaCredentials,
   deleteOandaCredentials,
+  setOandaActiveEnv,
   getOandaCredentialsMeta,
 } from "@/lib/broker-credentials.functions";
 
@@ -66,6 +67,7 @@ function BrokerPage() {
   const placeOrder = useServerFn(placeBrokerOrder);
   const saveCreds = useServerFn(saveOandaCredentials);
   const deleteCreds = useServerFn(deleteOandaCredentials);
+  const setActiveEnv = useServerFn(setOandaActiveEnv);
   const fetchMeta = useServerFn(getOandaCredentialsMeta);
 
   const [status, setStatus] = useState<Status | null>(null);
@@ -151,7 +153,7 @@ function BrokerPage() {
     }
     setSavingCreds(true);
     try {
-      await saveCreds({ data: { apiKey: apiKey.trim(), accountId: accountId.trim(), env: envSel } });
+      await saveCreds({ data: { apiKey: apiKey.trim(), accountId: accountId.trim(), env: envSel, makeActive: true } });
       toast.success("OANDA credentials saved securely");
       setApiKey("");
       setShowCredForm(false);
@@ -163,10 +165,20 @@ function BrokerPage() {
     }
   }
 
-  async function removeCreds() {
-    if (!confirm("Remove your saved OANDA credentials?")) return;
+  async function switchEnv(env: "practice" | "live") {
     try {
-      await deleteCreds();
+      await setActiveEnv({ data: { env } });
+      toast.success(env === "practice" ? "Trading on your OANDA demo account" : "Trading on your OANDA live account");
+      await refresh();
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
+  async function removeCreds() {
+    if (!confirm("Remove the saved credentials for this OANDA account?")) return;
+    try {
+      await deleteCreds({ data: { env: meta?.configured ? meta.activeEnv : undefined } });
       toast.success("Credentials removed");
       await refresh();
     } catch (e) {
@@ -299,10 +311,37 @@ function BrokerPage() {
         </div>
 
         {meta?.configured && !showCredForm && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
-            <Metric label="Account ID" value={meta.accountId ?? "(discovered from key)"} />
-            <Metric label="Environment" value={meta.env.toUpperCase()} />
-            <Metric label="Updated" value={new Date(meta.updatedAt).toLocaleString()} />
+          <div className="space-y-3">
+            <div>
+              <div className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Trade on</div>
+              <div className="flex flex-wrap gap-2">
+                {(["practice", "live"] as const).map((env) => {
+                  const acct = meta.accounts.find((a) => a.env === env);
+                  const isActive = meta.activeEnv === env;
+                  return (
+                    <button
+                      key={env}
+                      type="button"
+                      onClick={() => (acct ? switchEnv(env) : (setEnvSel(env), setShowCredForm(true)))}
+                      className={`rounded-md border px-3 py-1.5 text-xs font-semibold ${
+                        isActive ? "border-foreground bg-foreground text-background" : "border-border text-muted-foreground hover:bg-muted"
+                      }`}
+                    >
+                      {env === "practice" ? "Demo account" : "Live account"}
+                      {acct ? (isActive ? " · in use" : " · saved") : " · add token"}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Demo uses your OANDA practice token (fxTrade Practice) so orders, stops and targets execute with no real money. Live uses your fxTrade token. Each account keeps its own token, and every order on this page routes to the account marked in use.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+              <Metric label="Account ID" value={meta.accountId ?? "(discovered from key)"} />
+              <Metric label="Environment" value={meta.env === "practice" ? "DEMO" : "LIVE"} />
+              <Metric label="Updated" value={new Date(meta.updatedAt).toLocaleString()} />
+            </div>
           </div>
         )}
 
@@ -339,8 +378,8 @@ function BrokerPage() {
                   onChange={(e) => setEnvSel(e.target.value as "practice" | "live")}
                   className="w-full px-2 py-1.5 rounded-md bg-background border border-border text-sm"
                 >
-                  <option value="practice">Practice (demo)</option>
-                  <option value="live">Live</option>
+                  <option value="practice">Demo (fxTrade Practice)</option>
+                  <option value="live">Live (fxTrade)</option>
                 </select>
               </Field>
             </div>
@@ -379,7 +418,7 @@ function BrokerPage() {
           <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-muted-foreground mb-3">
             <Wallet className="h-3.5 w-3.5" /> Account
             <span className={`ml-auto rounded px-1.5 py-0.5 text-[10px] font-bold ${status.env === "live" ? "bg-red-500/15 text-red-300" : "bg-primary/15 text-primary"}`}>
-              {status.env.toUpperCase()}
+              {status.env === "practice" ? "DEMO" : "LIVE"}
             </span>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
