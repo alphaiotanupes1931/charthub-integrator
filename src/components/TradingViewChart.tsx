@@ -283,8 +283,7 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
     else redraw();
   };
 
-  const down = failed || stalled;
-  const showFallback = down && !!fallback;
+  const showFallback = downSticky && !!fallback;
 
   // Backup chart: when the embed is blocked or black, our own feed is laid over
   // the same panel so the trader always has a working chart. The embed stays
@@ -297,7 +296,9 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
         src={src}
         title="TradingView chart"
         className="h-full w-full border-0"
+        style={showFallback ? { pointerEvents: "none", visibility: "hidden" } : undefined}
         allow="fullscreen"
+
         onLoad={() => { setLoaded(true); setFailed(false); }}
         onError={() => setFailed(true)}
       />
