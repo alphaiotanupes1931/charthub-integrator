@@ -1212,7 +1212,7 @@ function Dashboard() {
           <div className="relative" ref={lensRef}>
             <button
               onClick={() => setLensOpen((o) => !o)}
-              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/50 px-2.5 py-1.5 text-xs font-medium hover:border-primary/50 transition"
+              className="inline-flex items-center gap-1.5 rounded-md border border-border h-7 bg-background/50 px-2.5 text-xs font-medium hover:border-primary/50 transition"
               title="Scan lens"
             >
               <Crosshair className="h-3.5 w-3.5 text-primary" />
@@ -1256,7 +1256,7 @@ function Dashboard() {
               <div className="relative" ref={coachRef}>
                 <button
                   onClick={() => setCoachOpen((o) => !o)}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/50 px-2.5 py-1.5 text-xs font-medium hover:border-primary/50 transition"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border h-7 bg-background/50 px-2.5 text-xs font-medium hover:border-primary/50 transition"
                   title="Change active AI coach"
                 >
                   <span className={`inline-flex h-5 w-5 items-center justify-center rounded-md ${meta.iconBg} ${meta.iconText} shrink-0`}>
@@ -1313,7 +1313,7 @@ function Dashboard() {
           <div className="relative" ref={strategyRef}>
             <button
               onClick={() => setStrategyOpen((o) => !o)}
-              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/50 px-2.5 py-1.5 text-xs font-medium hover:border-primary/50 transition"
+              className="inline-flex items-center gap-1.5 rounded-md border border-border h-7 bg-background/50 px-2.5 text-xs font-medium hover:border-primary/50 transition"
               title="Change the strategy playbook your scans are graded against"
             >
               <BookOpen className="h-3.5 w-3.5 text-primary" />
@@ -1405,7 +1405,7 @@ function Dashboard() {
         <div className="relative" ref={viewMenuRef}>
           <button
             onClick={() => setViewMenuOpen((o) => !o)}
-            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/50 px-2 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground hover:border-primary/40 transition"
+            className="inline-flex h-7 items-center gap-1.5 rounded-md border border-border bg-background/50 px-2.5 text-[11px] font-medium text-muted-foreground hover:text-foreground hover:border-primary/40 transition"
             title="Chart levels"
           >
             <Settings2 className="h-3 w-3" />
@@ -1509,7 +1509,7 @@ function Dashboard() {
 
         <button
           onClick={scanning ? () => { chatRef.current?.stop(); voice.stop(); setScanning(false); } : () => runScan("analysis")}
-          className={`hidden lg:inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-semibold transition ${
+          className={`hidden lg:inline-flex h-7 items-center gap-1.5 rounded-md px-3 text-xs font-semibold transition ${
             scanning
               ? "border border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/15"
               : "bg-primary text-primary-foreground hover:opacity-90"
@@ -1523,7 +1523,7 @@ function Dashboard() {
 
         <button
           onClick={() => setRightOpen((v) => !v)}
-          className="hidden lg:inline-flex items-center gap-1.5 rounded-md border border-border bg-background/50 px-3 py-1 text-xs font-semibold text-foreground hover:border-primary/40 transition"
+          className="hidden lg:inline-flex h-7 items-center gap-1.5 rounded-md border border-border bg-background/50 px-3 text-xs font-semibold text-foreground hover:border-primary/40 transition"
           title={rightOpen ? "Hide chat panel" : "Open chat panel"}
         >
           {rightOpen ? <PanelRightClose className="h-3 w-3" /> : <PanelRightOpen className="h-3 w-3" />}
