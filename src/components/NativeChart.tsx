@@ -16,6 +16,7 @@ import {
 import type { OhlcResponse } from "@/routes/api.ohlc";
 import { useTimeFormat, formatTime } from "@/hooks/useTimeFormat";
 import { useTimezone } from "@/hooks/useTimezone";
+import { ChartSourceBadge, feedLabel } from "@/components/ChartSourceBadge";
 
 export type LevelKey = "VWAP" | "POC" | "SR" | "ZONES" | "FVG" | "FIB" | "LIQ" | "OF" | "CISD";
 
@@ -380,7 +381,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     return { ...base, htfBias: detectHtfBias(candles) };
   }, [candles]);
   const isLive = hasLive;
-  const sourceLabel = liveOhlc?.source === "coingecko" ? "CoinGecko" : liveOhlc?.source === "twelvedata" ? "Twelve Data" : liveOhlc?.source === "yahoo" ? "Yahoo" : liveOhlc?.source === "oanda" ? "OANDA" : liveOhlc?.source === "stooq" ? "Stooq" : liveOhlc?.source === "backup" ? "Market Feed" : "";
+  const sourceLabel = isLive ? feedLabel(liveOhlc?.source) : "";
   const snapshotSource = isLive ? (liveOhlc?.source ?? "unknown") : "unavailable";
   const snapshotSourceLabel = isLive ? (sourceLabel || "Live") : "Unavailable";
 
@@ -1010,12 +1011,11 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
 
       <div className="absolute left-2 top-2 sm:left-3 sm:top-3 z-10 max-w-[55%] rounded-md border border-border bg-background/70 backdrop-blur px-1.5 py-1 sm:px-2 text-[9px] sm:text-[10px] font-mono text-muted-foreground uppercase tracking-wider flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
         <span className="truncate">{isLive ? "Live" : showLoader ? "Loading" : noLiveSource ? "Unavailable" : "Native"} · {ticker} · {interval}</span>
-        {isLive && (
-          <span className="inline-flex items-center gap-1 text-bull normal-case">
-            <span className="h-1.5 w-1.5 rounded-full bg-bull animate-pulse" />
-            <span className="hidden sm:inline">{sourceLabel}</span>
-          </span>
-        )}
+        <ChartSourceBadge
+          live={isLive}
+          label={isLive ? sourceLabel : showLoader ? "Connecting" : feedLabel(liveOhlc?.source)}
+          className="border-0 bg-transparent px-0 py-0"
+        />
         {enabled.OF && candles.length > 0 && (
           <span className={`inline-flex items-center gap-1 normal-case ${levels.delta >= 0 ? "text-bull" : "text-red-400"}`}>
             Δ {levels.delta >= 0 ? "+" : ""}{levels.delta.toFixed(1)}

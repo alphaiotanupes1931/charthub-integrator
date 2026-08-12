@@ -2,6 +2,8 @@ import type React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pencil, Minus as LineIcon, Square as RectIcon, ArrowUpRight, Undo2, Trash2, Eraser as EraserIcon, X as CloseIcon } from "lucide-react";
 import type { LevelKey } from "@/components/NativeChart";
+import { ChartSourceBadge } from "@/components/ChartSourceBadge";
+
 
 interface Props {
   symbol: string;
@@ -304,6 +306,12 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
       />
 
       {showFallback && <div className="absolute inset-0 z-20">{fallback}</div>}
+
+      {/* Always tell the trader which feed is drawing this chart. */}
+      {!showFallback && (
+        <ChartSourceBadge live={loaded && !stalled} label="TradingView" className="absolute right-2 bottom-2 z-30" />
+      )}
+
 
       {/* Drawing overlay (the backup chart brings its own tools, so ours steps aside) */}
       {!showFallback && (
