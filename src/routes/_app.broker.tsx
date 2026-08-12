@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Wallet, RefreshCw, X, ExternalLink, KeyRound, Trash2, ShieldCheck, ArrowUpRight, ArrowDownRight, SlidersHorizontal, Scissors } from "lucide-react";
+import { Wallet, RefreshCw, X, ExternalLink, ArrowUpRight, ArrowDownRight, SlidersHorizontal, Scissors } from "lucide-react";
 import {
   getBrokerStatus,
   listBrokerPositions,
@@ -13,14 +13,7 @@ import {
   listBrokerPendingOrders,
   cancelBrokerOrder,
   placeBrokerOrder,
-  verifyOandaIdentity,
 } from "@/lib/broker-oanda.functions";
-import {
-  saveOandaCredentials,
-  deleteOandaCredentials,
-  setOandaActiveEnv,
-  getOandaCredentialsMeta,
-} from "@/lib/broker-credentials.functions";
 
 type BrokerSearch = {
   symbol?: string;
@@ -30,8 +23,6 @@ type BrokerSearch = {
   tp?: number | string;
 };
 
-import { VenueRouter } from "@/components/VenueRouter";
-import { TradeLockerPanel } from "@/components/TradeLockerPanel";
 import { AlpacaPanel } from "@/components/AlpacaPanel";
 
 export const Route = createFileRoute("/_app/broker")({
@@ -44,10 +35,10 @@ export const Route = createFileRoute("/_app/broker")({
   }),
   head: () => ({
     meta: [
-      { title: "Broker (OANDA) — TradeMind" },
-      { name: "description", content: "Connect your OANDA account and place real trades from your scans." },
-      { property: "og:title", content: "Broker (OANDA) — TradeMind" },
-      { property: "og:description", content: "Place real trades on OANDA directly from TradeMind scans." },
+      { title: "Brokers — TradeMind" },
+      { name: "description", content: "Connect your Alpaca account and place real trades from your scans." },
+      { property: "og:title", content: "Brokers — TradeMind" },
+      { property: "og:description", content: "Connect your Alpaca account and place real trades from your scans." },
     ],
   }),
   component: BrokerPage,
@@ -55,7 +46,6 @@ export const Route = createFileRoute("/_app/broker")({
 
 type Status = Awaited<ReturnType<typeof getBrokerStatus>>;
 type Position = Awaited<ReturnType<typeof listBrokerPositions>>[number];
-type Meta = Awaited<ReturnType<typeof getOandaCredentialsMeta>>;
 type PendingOrder = Awaited<ReturnType<typeof listBrokerPendingOrders>>[number];
 
 function BrokerPage() {
