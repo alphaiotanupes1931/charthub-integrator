@@ -8,6 +8,10 @@ import {
   getBrokerStatus,
   listBrokerPositions,
   closeBrokerTrade,
+  closeBrokerTradeUnits,
+  modifyBrokerTrade,
+  listBrokerPendingOrders,
+  cancelBrokerOrder,
   placeBrokerOrder,
 } from "@/lib/broker-oanda.functions";
 import {
@@ -48,12 +52,17 @@ export const Route = createFileRoute("/_app/broker")({
 type Status = Awaited<ReturnType<typeof getBrokerStatus>>;
 type Position = Awaited<ReturnType<typeof listBrokerPositions>>[number];
 type Meta = Awaited<ReturnType<typeof getOandaCredentialsMeta>>;
+type PendingOrder = Awaited<ReturnType<typeof listBrokerPendingOrders>>[number];
 
 function BrokerPage() {
   const search = Route.useSearch();
   const fetchStatus = useServerFn(getBrokerStatus);
   const fetchPositions = useServerFn(listBrokerPositions);
   const closeTrade = useServerFn(closeBrokerTrade);
+  const closeUnitsFn = useServerFn(closeBrokerTradeUnits);
+  const modifyTrade = useServerFn(modifyBrokerTrade);
+  const cancelOrder = useServerFn(cancelBrokerOrder);
+  const fetchPending = useServerFn(listBrokerPendingOrders);
   const placeOrder = useServerFn(placeBrokerOrder);
   const saveCreds = useServerFn(saveOandaCredentials);
   const deleteCreds = useServerFn(deleteOandaCredentials);
@@ -76,6 +85,9 @@ function BrokerPage() {
   const [symbol, setSymbol] = useState(search.symbol || "EUR/USD");
   const [side, setSide] = useState<"long" | "short">(search.side ?? "long");
   const [units, setUnits] = useState(1000);
+  const [orderType, setOrderType] = useState<"market" | "limit" | "stop">("market");
+  const [limitPrice, setLimitPrice] = useState<string>(search.entry != null ? String(search.entry) : "");
+  const [pending, setPending] = useState<PendingOrder[]>([]);
   const [stopLoss, setStopLoss] = useState<string>(search.stop != null ? String(search.stop) : "");
   const [takeProfit, setTakeProfit] = useState<string>(search.tp != null ? String(search.tp) : "");
 
@@ -93,8 +105,12 @@ function BrokerPage() {
         setEnvSel(m.env);
       }
       if (s.connected) {
-        const p = await fetchPositions().catch(() => []);
+        const [p, po] = await Promise.all([
+          fetchPositions().catch(() => []),
+          fetchPending().catch(() => [] as PendingOrder[]),
+        ]);
         setPositions(p);
+        setPending(po);
       }
     } catch (e) {
       if (!silent) toast.error((e as Error).message);
