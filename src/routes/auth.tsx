@@ -356,11 +356,15 @@ function AuthPage() {
 
         <Link to="/" className="flex items-center justify-center gap-2.5 mb-8">
           <img src={logoAsset.url} alt="TradeMind" className="h-12 w-12 object-contain" />
-          <span className="font-display text-2xl font-semibold tracking-tight">
-            <span className="text-foreground">Trade</span>
-            <span className="text-gold-gradient">Mind</span>
+          <span className="flex flex-col leading-none">
+            <span className="font-display text-2xl font-semibold tracking-tight">
+              <span className="text-foreground">Trade</span>
+              <span className="text-gold-gradient">Mind</span>
+            </span>
+            <span className="mt-1 text-[9px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">Beta</span>
           </span>
         </Link>
+
 
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
           <h1 className="text-xl font-semibold text-foreground">
