@@ -1360,7 +1360,7 @@ function Dashboard() {
                     </button>
                   );
                 })}
-                <Link to="/strategies" className="block px-3 py-2 text-[11px] text-muted-foreground hover:text-foreground border-t border-border/60">
+                <Link to="/strategies" search={{}} className="block px-3 py-2 text-[11px] text-muted-foreground hover:text-foreground border-t border-border/60">
                   Manage all strategies →
                 </Link>
               </div>
@@ -1380,7 +1380,7 @@ function Dashboard() {
           <Activity className="h-3.5 w-3.5" /> Live
         </button>
         <button
-          onClick={() => setChartTab("setup")}
+          onClick={() => { setChartTab("setup"); setIntervalState("60"); }}
           className={`inline-flex items-center gap-1.5 py-1 border-b-2 transition ${
             chartTab === "setup" ? "border-primary text-primary font-semibold" : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
