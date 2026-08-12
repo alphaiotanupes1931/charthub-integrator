@@ -135,6 +135,16 @@ export const Route = createFileRoute("/_app")({
     if (!user) {
       throw redirect({ to: "/auth", search: { redirect: location.href, mode: "signin" } });
     }
+    // Temporary-password accounts must choose a new password before they can
+    // use the app.
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("must_change_password")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (profile?.must_change_password) {
+      throw redirect({ to: "/reset-password" });
+    }
     return { user };
   },
 

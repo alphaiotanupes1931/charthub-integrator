@@ -902,10 +902,12 @@ export type Database = {
           email: string | null
           id: string
           losses: number
+          must_change_password: boolean
           onboarded: boolean
           recovery_code_hash: string | null
           referral_source: string | null
           updated_at: string
+          username: string | null
           voice_enabled: boolean
           voice_id_override: string | null
           wins: number
@@ -920,10 +922,12 @@ export type Database = {
           email?: string | null
           id: string
           losses?: number
+          must_change_password?: boolean
           onboarded?: boolean
           recovery_code_hash?: string | null
           referral_source?: string | null
           updated_at?: string
+          username?: string | null
           voice_enabled?: boolean
           voice_id_override?: string | null
           wins?: number
@@ -938,10 +942,12 @@ export type Database = {
           email?: string | null
           id?: string
           losses?: number
+          must_change_password?: boolean
           onboarded?: boolean
           recovery_code_hash?: string | null
           referral_source?: string | null
           updated_at?: string
+          username?: string | null
           voice_enabled?: boolean
           voice_id_override?: string | null
           wins?: number

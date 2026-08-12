@@ -16,6 +16,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as HelpRouteImport } from './routes/help'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as CookiesRouteImport } from './routes/cookies'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -118,6 +119,11 @@ const OnboardingRoute = OnboardingRouteImport.update({
 const HelpRoute = HelpRouteImport.update({
   id: '/help',
   path: '/help',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FaqRoute = FaqRouteImport.update({
@@ -476,6 +482,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/cookies': typeof CookiesRoute
   '/faq': typeof FaqRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/help': typeof HelpRouteWithChildren
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
@@ -552,6 +559,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/cookies': typeof CookiesRoute
   '/faq': typeof FaqRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/help': typeof HelpRouteWithChildren
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
@@ -626,6 +634,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/cookies': typeof CookiesRoute
   '/faq': typeof FaqRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/help': typeof HelpRouteWithChildren
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
@@ -704,6 +713,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cookies'
     | '/faq'
+    | '/forgot-password'
     | '/help'
     | '/onboarding'
     | '/pricing'
@@ -780,6 +790,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cookies'
     | '/faq'
+    | '/forgot-password'
     | '/help'
     | '/onboarding'
     | '/pricing'
@@ -853,6 +864,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cookies'
     | '/faq'
+    | '/forgot-password'
     | '/help'
     | '/onboarding'
     | '/pricing'
@@ -931,6 +943,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CookiesRoute: typeof CookiesRoute
   FaqRoute: typeof FaqRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   HelpRoute: typeof HelpRouteWithChildren
   OnboardingRoute: typeof OnboardingRoute
   PricingRoute: typeof PricingRoute
@@ -1006,6 +1019,13 @@ declare module '@tanstack/react-router' {
       path: '/help'
       fullPath: '/help'
       preLoaderRoute: typeof HelpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/faq': {
@@ -1649,6 +1669,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CookiesRoute: CookiesRoute,
   FaqRoute: FaqRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   HelpRoute: HelpRouteWithChildren,
   OnboardingRoute: OnboardingRoute,
   PricingRoute: PricingRoute,
