@@ -42,11 +42,16 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
   // The embed can load its shell and still render an empty black panel with
   // O0 H0 L0 C0 when the data socket is blocked. We detect that separately.
   const [stalled, setStalled] = useState(false);
+  // Once the panel is known-bad we keep the backup feed pinned until the embed
+  // actually streams again. Without this the panel flickers between the backup
+  // chart and a black embed on every background retry.
+  const [downSticky, setDownSticky] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const aliveRef = useRef(false);
   const everAliveRef = useRef(false);
   const onStallRef = useRef(onStall);
   onStallRef.current = onStall;
+
 
 
   const [drawMode, setDrawMode] = useState(false);
