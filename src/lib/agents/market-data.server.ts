@@ -1,28 +1,20 @@
 // Layer 1 - Data. Unified market snapshot for the research agents.
-// Uses Yahoo Finance for FX/metals/indices and CoinGecko for crypto.
-// Deliberately independent from src/routes/api.ohlc.ts so this layer can be
-// swapped for OpenBB or another provider without touching the chart route.
+// Feed order matches the chart route exactly (OANDA -> Binance -> Twelve Data)
+// so a signal and the chart a trader is looking at are always the same prices.
 
 import type { Candle, MarketSnapshot, MtfContext, TimeframeRead } from "./types";
 import { computeOrderFlow } from "./order-flow.server";
 
-const YAHOO: Record<string, string> = {
-  "XAU/USD": "GC=F",
-  "XAG/USD": "SI=F",
-  "NAS100": "^NDX",
-  "SPX500": "^GSPC",
-  "US30": "^DJI",
-  "WTI Oil": "CL=F",
-  "EUR/USD": "EURUSD=X",
-  "GBP/USD": "GBPUSD=X",
-  "USD/JPY": "USDJPY=X",
-  "BTC/USD": "BTC-USD",
-  "ETH/USD": "ETH-USD",
-  "XRP/USD": "XRP-USD",
-};
+// Canonical instrument keys the app speaks. Provider-specific symbols live in
+// the OANDA / BINANCE / TWELVE_DATA maps below.
+const CANONICAL = new Set([
+  "XAU/USD", "XAG/USD", "XPT/USD", "NAS100", "SPX500", "US30", "GER40", "UK100", "JPN225",
+  "WTI Oil", "Brent Oil", "NATGAS", "EUR/USD", "GBP/USD", "USD/JPY",
+  "BTC/USD", "ETH/USD", "XRP/USD", "SOL/USD", "DOGE/USD",
+]);
 
 // Accepts the many ways a symbol can arrive (watchlists, chat, deep links)
-// and maps it onto the canonical key used by YAHOO / COINGECKO above.
+// and maps it onto a canonical key.
 const TICKER_ALIASES: Record<string, string> = {
   XAUUSD: "XAU/USD", GOLD: "XAU/USD", "GC=F": "XAU/USD",
   XAGUSD: "XAG/USD", SILVER: "XAG/USD", "SI=F": "XAG/USD",
@@ -39,16 +31,11 @@ const TICKER_ALIASES: Record<string, string> = {
 export function normalizeTicker(raw: string): string {
   const t = (raw ?? "").trim();
   if (!t) return t;
-  if (YAHOO[t] || COINGECKO_ID[t]) return t;
+  if (CANONICAL.has(t)) return t;
   const upper = t.toUpperCase().replace(/^OANDA:/, "").replace(/\s+/g, "");
   return TICKER_ALIASES[upper] ?? TICKER_ALIASES[t] ?? t;
 }
 
-const COINGECKO_ID: Record<string, string> = {
-  "BTC/USD": "bitcoin",
-  "ETH/USD": "ethereum",
-  "XRP/USD": "ripple",
-};
 
 
 async function fetchJson<T>(url: string, timeoutMs = 8_000): Promise<T> {
@@ -94,7 +81,7 @@ function oandaGranularity(interval: string): string {
 }
 
 async function fromOandaHost(host: string, key: string, ticker: string, interval: string): Promise<Candle[]> {
-  const instrument = OANDA[ticker];
+  const instrument = oandaInstrument(ticker);
   if (!instrument) throw new Error(`no oanda mapping for ${ticker}`);
   const url = `https://${host}/v3/instruments/${instrument}/candles?granularity=${oandaGranularity(interval)}&count=220&price=M`;
   const ctl = new AbortController();
@@ -118,7 +105,7 @@ async function fromOandaHost(host: string, key: string, ticker: string, interval
 
 async function fromOanda(ticker: string, interval: string): Promise<Candle[]> {
   const key = process.env.OANDA_API_KEY;
-  if (!key || !OANDA[ticker]) throw new Error("oanda not configured for ticker");
+  if (!key || !oandaInstrument(ticker)) throw new Error("oanda not configured for ticker");
   const practiceFirst = (process.env.OANDA_ENV ?? "live").toLowerCase() === "practice";
   const hosts = practiceFirst
     ? ["api-fxpractice.oanda.com", "api-fxtrade.oanda.com"]
