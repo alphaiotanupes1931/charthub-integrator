@@ -495,19 +495,6 @@ function AuthPage() {
               <Button type="submit" className="w-full" disabled={busy}>
                 {busy ? "Please wait..." : mode === "signin" ? "Sign in" : "Create account"}
               </Button>
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => {
-                  if (busy) return;
-                  try { sessionStorage.setItem("trademind.adminTesting", "1"); } catch { /* ignore */ }
-                  window.location.assign("/dashboard");
-                }}
-                className="w-full h-10 rounded-md border border-dashed border-border bg-background/40 px-3 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/50 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Admin testing → Open dashboard
-              </button>
-
             </form>
           )}
 
