@@ -122,46 +122,6 @@ function BrokerPage() {
   }
 
 
-  async function submitCreds() {
-    if (!apiKey.trim() || !accountId.trim()) {
-      toast.error("API key and Account ID are required");
-      return;
-    }
-    setSavingCreds(true);
-    try {
-      await saveCreds({ data: { apiKey: apiKey.trim(), accountId: accountId.trim(), env: envSel, makeActive: true } });
-      toast.success("OANDA credentials saved securely");
-      setApiKey("");
-      setShowCredForm(false);
-      await refresh();
-    } catch (e) {
-      toast.error((e as Error).message);
-    } finally {
-      setSavingCreds(false);
-    }
-  }
-
-  async function switchEnv(env: "practice" | "live") {
-    try {
-      await setActiveEnv({ data: { env } });
-      toast.success(env === "practice" ? "Trading on your OANDA demo account" : "Trading on your OANDA live account");
-      await refresh();
-    } catch (e) {
-      toast.error((e as Error).message);
-    }
-  }
-
-  async function removeCreds() {
-    if (!confirm("Remove the saved credentials for this OANDA account?")) return;
-    try {
-      await deleteCreds({ data: { env: meta?.configured ? meta.activeEnv : undefined } });
-      toast.success("Credentials removed");
-      await refresh();
-    } catch (e) {
-      toast.error((e as Error).message);
-    }
-  }
-
   async function submitOrder(overrideSide?: "long" | "short") {
     const useSide = overrideSide ?? side;
     setPlacing(true);
