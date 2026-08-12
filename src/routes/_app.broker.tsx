@@ -516,26 +516,22 @@ function BrokerPage() {
       {status?.connected && positions.length > 0 && (
         <div className="rounded-md border border-border bg-card p-5">
           <div className="text-sm font-semibold mb-3">Open positions</div>
+          <p className="text-xs text-muted-foreground mb-3">
+            Adjust stop loss, take profit, or a trailing stop and it is sent straight to OANDA. You can also close part of a position to bank partials.
+          </p>
           <div className="space-y-2">
             {positions.map((p) => (
-              <div key={p.id} className="flex items-center gap-3 rounded-md border border-border/60 px-3 py-2 text-sm">
-                <span className="font-mono text-xs text-muted-foreground w-16">{p.id}</span>
-                <span className="font-semibold">{p.instrument}</span>
-                <span className={p.currentUnits > 0 ? "text-bull" : "text-red-300"}>
-                  {p.currentUnits > 0 ? "LONG" : "SHORT"} {Math.abs(p.currentUnits)}
-                </span>
-                <span className="font-mono text-xs text-muted-foreground">@ {p.price}</span>
-                <span className={`ml-auto font-mono text-xs ${p.unrealizedPL >= 0 ? "text-bull" : "text-red-300"}`}>
-                  {p.unrealizedPL >= 0 ? "+" : ""}{p.unrealizedPL.toFixed(2)}
-                </span>
-                <button onClick={() => handleClose(p.id)} className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs border border-border hover:bg-muted">
-                  <X className="h-3 w-3" /> Close
-                </button>
-              </div>
+              <PositionRow
+                key={p.id}
+                position={p}
+                onClose={handleClose}
+                onSaveProtection={saveProtection}
+              />
             ))}
           </div>
         </div>
       )}
+
 
       <div className="mt-6">
         <VenueRouter
