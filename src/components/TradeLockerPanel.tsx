@@ -81,7 +81,7 @@ export function TradeLockerPanel() {
 
   async function signOut() {
     try {
-      await logout({ data: {} });
+      await logout();
       setStatus({ connected: false, reason: "No TradeLocker login saved yet." });
       toast.success("Logged out of TradeLocker");
     } catch (e) {
