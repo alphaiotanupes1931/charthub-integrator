@@ -1575,7 +1575,7 @@ function Dashboard() {
                 scanning={scanning}
                 onClear={aiGrade ? () => { setAiGrade(null); setAiAnnotationsRaw([]); } : undefined}
               />
-              <LivePerformancePanel />
+              
             </div>
           )}
 
