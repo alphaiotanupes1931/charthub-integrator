@@ -200,6 +200,46 @@ export const getBrokerStatus = createServerFn({ method: "GET" })
     }
   });
 
+// Identity check: OANDA has no OAuth login for retail traders, so "being logged
+// in" here means the saved token resolves to a real OANDA account. This lists
+// every account the token is authorized for, with the alias OANDA shows in its
+// own platform, so the trader can confirm it is really their account.
+export const verifyOandaIdentity = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    try {
+      const cfg = await loadOandaConfig(context.userId);
+      for (const endpoint of endpointsFor(cfg.preferredEnv)) {
+        const listed = await listOandaAccounts(endpoint, cfg.apiKey);
+        if (!listed.ok || listed.accounts.length === 0) continue;
+        const accounts = [];
+        for (const a of listed.accounts) {
+          if (!a.id) continue;
+          const s = await tryOandaFetch(endpoint, a.id, cfg.apiKey, "/summary", { method: "GET" });
+          const acc = ((s.body as Record<string, unknown>)?.account ?? {}) as Record<string, string>;
+          accounts.push({
+            id: a.id,
+            alias: acc.alias ?? null,
+            currency: acc.currency ?? null,
+            balance: acc.balance ? Number(acc.balance) : null,
+            openTradeCount: acc.openTradeCount ? Number(acc.openTradeCount) : 0,
+            active: a.id === cfg.accountId,
+          });
+        }
+        return {
+          verified: true as const,
+          env: endpoint.env,
+          tokenSource: cfg.source,
+          accounts,
+        };
+      }
+      return { verified: false as const, reason: "This token is not authorized on either OANDA server." };
+    } catch (e) {
+      return { verified: false as const, reason: (e as Error).message };
+    }
+  });
+
+
 export const listBrokerPositions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
