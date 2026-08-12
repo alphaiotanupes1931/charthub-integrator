@@ -253,15 +253,21 @@ export const placeBrokerOrder = createServerFn({ method: "POST" })
       throw new Error(`OANDA rejected the order: ${reason}. Check account balance, margin, and instrument availability.`);
     }
     const fill = resp.orderFillTransaction as Record<string, unknown> | undefined;
-    if (!fill || !fill.id) {
-      throw new Error("Order was not filled by OANDA. Verify balance and margin, then try again.");
+    const created = resp.orderCreateTransaction as Record<string, unknown> | undefined;
+    if (type === "MARKET") {
+      if (!fill || !fill.id) {
+        throw new Error("Order was not filled by OANDA. Verify balance and margin, then try again.");
+      }
+    } else if (!created?.id) {
+      throw new Error("OANDA did not create the working order. Check the price and try again.");
     }
     return {
       ok: true,
-      orderId: String(fill.id),
+      orderId: String(fill?.id ?? created?.id ?? ""),
+      pending: type !== "MARKET",
       instrument,
       units: signedUnits,
-      fillPrice: fill.price ? Number(fill.price) : null,
+      fillPrice: fill?.price ? Number(fill.price) : null,
     };
   });
 
