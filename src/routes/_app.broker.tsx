@@ -369,19 +369,6 @@ function BrokerPage() {
       )}
 
 
-      <div className="mt-6">
-        <VenueRouter
-          exclude={["oanda"]}
-          prefill={{
-            symbol: search.symbol ?? undefined,
-            side: side === "long" ? "buy" : "sell",
-            limitPrice: search.entry != null ? String(search.entry) : undefined,
-            stopLoss: stopLoss || undefined,
-            takeProfit: takeProfit || undefined,
-          }}
-        />
-      </div>
-
       <div className="mt-6 text-xs text-muted-foreground">
         <Link to="/dashboard" className="inline-flex items-center gap-1 hover:text-foreground">
           <ExternalLink className="h-3 w-3" /> Back to dashboard
