@@ -9,7 +9,6 @@ import {
   enforceOrigin,
   getOrCreateRequestId,
   preflight,
-  rateLimit,
 } from "@/lib/api-security";
 import type { Database, Json } from "@/integrations/supabase/types";
 
