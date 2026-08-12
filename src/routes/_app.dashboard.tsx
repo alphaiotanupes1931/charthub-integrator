@@ -13,7 +13,7 @@ import { useCoachVoice } from "@/hooks/useCoachVoice";
 import { DashboardChatPanel, type DashboardChatHandle } from "@/components/DashboardChatPanel";
 import { ChartConceptOverlay } from "@/components/ConceptDiagram";
 import { ChartSignalCards } from "@/components/ChartSignalCards";
-import { LivePerformancePanel } from "@/components/LivePerformancePanel";
+
 import { TodaysRecommendation } from "@/components/TodaysRecommendation";
 import { findStrategyByName, allStrategies } from "@/lib/customStrategies";
 import { StrategyPresetCard } from "@/components/StrategyPresetCard";
@@ -1575,7 +1575,7 @@ function Dashboard() {
                 scanning={scanning}
                 onClear={aiGrade ? () => { setAiGrade(null); setAiAnnotationsRaw([]); } : undefined}
               />
-              <LivePerformancePanel />
+              
             </div>
           )}
 
