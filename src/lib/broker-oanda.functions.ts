@@ -31,7 +31,10 @@ function hostFor(env: OandaEnv): OandaEndpoint {
     : { host: "api-fxpractice.oanda.com", env: "practice" };
 }
 
-function endpointsFor(preferred: OandaEnv): OandaEndpoint[] {
+// A user who explicitly saved a demo (practice) or live account trades only on
+// that environment. Project-level env credentials may fall back to the other.
+function endpointsFor(preferred: OandaEnv, pinned = false): OandaEndpoint[] {
+  if (pinned) return [hostFor(preferred)];
   const other: OandaEnv = preferred === "live" ? "practice" : "live";
   return [hostFor(preferred), hostFor(other)];
 }
@@ -122,7 +125,7 @@ async function listOandaAccounts(endpoint: OandaEndpoint, apiKey: string) {
 
 async function resolveOandaAccount(userId: string): Promise<{ apiKey: string; accountId: string; configuredAccountId?: string; discovered: boolean; source: "user" | "env" } & OandaEndpoint> {
   const cfg = await loadOandaConfig(userId);
-  const endpoints = endpointsFor(cfg.preferredEnv);
+  const endpoints = endpointsFor(cfg.preferredEnv, cfg.source === "user");
   const failedMessages: string[] = [];
 
   if (cfg.accountId) {

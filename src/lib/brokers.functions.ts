@@ -25,13 +25,14 @@ export const listBrokerConnections = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await supabaseAdmin
       .from("user_broker_credentials")
-      .select("broker, account_id, env, updated_at")
+      .select("broker, account_id, env, is_active, updated_at")
       .eq("user_id", context.userId);
     if (error) throw new Error(error.message);
     return (data ?? []).map((row) => ({
       broker: row.broker as string,
       accountId: (row.account_id as string | null) ?? null,
       env: (row.env as string | null) ?? "practice",
+      active: Boolean(row.is_active),
       updatedAt: row.updated_at as string,
     }));
   });
@@ -72,7 +73,7 @@ export const saveBrokerConnection = createServerFn({ method: "POST" })
         env: data.env,
         updated_at: new Date().toISOString(),
       },
-      { onConflict: "user_id,broker" },
+      { onConflict: "user_id,broker,env" },
     );
     if (error) throw new Error(error.message);
 
@@ -102,9 +103,12 @@ export const testBrokerConnection = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row, error } = await supabaseAdmin
       .from("user_broker_credentials")
-      .select("api_key_ciphertext, env")
+      .select("api_key_ciphertext, env, is_active, updated_at")
       .eq("user_id", context.userId)
       .eq("broker", data.broker)
+      .order("is_active", { ascending: false })
+      .order("updated_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!row) return { ok: false as const, detail: "No credentials saved for this broker." };
@@ -172,9 +176,12 @@ export const placeVenueOrder = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row, error } = await supabaseAdmin
       .from("user_broker_credentials")
-      .select("api_key_ciphertext, env")
+      .select("api_key_ciphertext, env, is_active, updated_at")
       .eq("user_id", context.userId)
       .eq("broker", data.broker)
+      .order("is_active", { ascending: false })
+      .order("updated_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!row) return { ok: false as const, detail: "Connect this venue before sending orders." };
