@@ -31,6 +31,7 @@ type BrokerSearch = {
 };
 
 import { VenueRouter } from "@/components/VenueRouter";
+import { TradeLockerPanel } from "@/components/TradeLockerPanel";
 
 export const Route = createFileRoute("/_app/broker")({
   validateSearch: (s: Record<string, unknown>): BrokerSearch => ({
@@ -408,6 +409,8 @@ function BrokerPage() {
       </div>
 
       <IdentityPanel />
+
+      <TradeLockerPanel />
 
       {status && !status.connected && (
         <div className="rounded-md border border-red-500/30 bg-red-500/5 p-5 mb-6">
