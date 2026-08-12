@@ -17,7 +17,7 @@ export const Route = createFileRoute("/_app/first-week")({
 });
 
 function FirstWeekPage() {
-  const { active, currentDay, completedCount, completed, progressPct, startedAt, dismiss } = useFirstWeek();
+  const { active, currentDay, completedCount, completed, progressPct, startedAt, dismiss, toggle } = useFirstWeek();
   const navigate = useNavigate();
 
   function handleStartTour() {
