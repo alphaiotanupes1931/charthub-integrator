@@ -32,6 +32,7 @@ type BrokerSearch = {
 
 import { VenueRouter } from "@/components/VenueRouter";
 import { TradeLockerPanel } from "@/components/TradeLockerPanel";
+import { AlpacaPanel } from "@/components/AlpacaPanel";
 
 export const Route = createFileRoute("/_app/broker")({
   validateSearch: (s: Record<string, unknown>): BrokerSearch => ({
@@ -409,6 +410,8 @@ function BrokerPage() {
       </div>
 
       <IdentityPanel />
+
+      <AlpacaPanel />
 
       <TradeLockerPanel />
 
