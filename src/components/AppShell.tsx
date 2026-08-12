@@ -88,7 +88,6 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { to: "/analytics",   label: "Analytics",      icon: BarChart3 },
       { to: "/scoreboard",  label: "Signal Scoreboard", icon: Target },
-      { to: "/backtest",    label: "Backtest",       icon: FlaskConical },
       { to: "/memory",      label: "Trading Memory", icon: Brain },
       { to: "/news",        label: "News",           icon: Newspaper },
       { to: "/leaderboard", label: "Leaderboard",    icon: Trophy },
