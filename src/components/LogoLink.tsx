@@ -56,17 +56,23 @@ export function LogoLink({
         img
       )}
       {showText && (
-        <span className={cn("font-display font-semibold tracking-tight truncate", SIZE_TEXT[size], textClassName)}>
-          {variant === "brand" ? (
-            <>
-              <span className="text-foreground">Trade</span>
-              <span className="text-gold-gradient">Mind</span>
-            </>
-          ) : (
-            "TradeMind"
-          )}
+        <span className="min-w-0 flex flex-col leading-none">
+          <span className={cn("font-display font-semibold tracking-tight truncate", SIZE_TEXT[size], textClassName)}>
+            {variant === "brand" ? (
+              <>
+                <span className="text-foreground">Trade</span>
+                <span className="text-gold-gradient">Mind</span>
+              </>
+            ) : (
+              "TradeMind"
+            )}
+          </span>
+          <span className="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">
+            Beta
+          </span>
         </span>
       )}
+
     </Link>
   );
 }

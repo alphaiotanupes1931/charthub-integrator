@@ -15,7 +15,7 @@ export const PAGE_INSTRUCTIONS: Record<string, { title: string; steps: string[] 
       "Pick an instrument and a timeframe above the chart, then turn on the levels you trade.",
       "Press Run scan to grade the current setup, or attach a chart screenshot to grade that instead.",
       "Read the grade card: entry, stop, TP1, TP2 and risk to reward. A grade of NO ENTRY means stand down.",
-      "Press I am taking this trade to log it in the journal, or Backtest to test the same rules on past price history.",
+      "Press I am taking this trade to log it in the journal. Every signal is checked against past price history automatically.",
       "Ask the coach follow-up questions in the Chat tab; it sees the same scan you are looking at.",
     ],
   },
@@ -28,17 +28,6 @@ export const PAGE_INSTRUCTIONS: Record<string, { title: string; steps: string[] 
       "Hit rate only counts signals that reached a stop or target. Expired means the signal ran out of time without touching either.",
       "Compare the breakdowns: if one instrument or timeframe has negative average R over enough signals, trade it smaller or drop it.",
       "Taken versus skipped shows whether your own filtering helps. If skipped beats taken, your selection is cutting the good ones.",
-    ],
-  },
-  "/backtest": {
-    title: "How to use the backtest",
-    steps: [
-      "Choose instrument, timeframe and lookback, then set risk per trade, target in R and stop in ATR multiples.",
-      "Minimum grade filters which signals are allowed to trade. Sessions left empty means all sessions.",
-      "Press Run backtest. Entries fill at the next bar's open and exits walk forward bar by bar, so no future data is used.",
-      "Read expectancy first, then max drawdown and worst losing streak. Win rate on its own is misleading.",
-      "Runs are saved on this device. Reopen one from Saved runs, or export the trade log as CSV or JSON.",
-      "Use the comparison table to run one setting set across several instruments and rank them by expectancy.",
     ],
   },
   "/autopilot": {
