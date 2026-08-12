@@ -9,7 +9,7 @@ const errorMiddleware = createMiddleware().server(async ({ next, request }) => {
   if (url.pathname.startsWith("/lovable/")) {
     return next();
   }
-  try
+  try {
     return await next();
   } catch (error) {
     if (error != null && typeof error === "object" && "statusCode" in error) {
