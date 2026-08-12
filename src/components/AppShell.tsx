@@ -146,6 +146,22 @@ const MOBILE_TABS: { to: string; label: string; icon: typeof LayoutDashboard }[]
   { to: "/coaches",   label: "Coaches",   icon: Users },
 ];
 
+// Phone build is deliberately the limited core app: chart, signals, journal,
+// alerts, risk, coaches, analytics, settings. Everything else (academy,
+// leaderboard, memory, strategies, scoreboard, discord, admin) stays on
+// desktop so the phone screen does not get crowded.
+const MOBILE_NAV: NavItem[] = [
+  { to: "/dashboard",  label: "Chart",           icon: LayoutDashboard },
+  { to: "/signals",    label: "AI Signals",      icon: Radar },
+  { to: "/journal",    label: "Trade Journal",   icon: NotebookPen },
+  { to: "/alerts",     label: "Price Alerts",    icon: Bell },
+  { to: "/calculator", label: "Risk Calculator", icon: Calculator },
+  { to: "/coaches",    label: "AI Coaches",      icon: Users },
+  { to: "/analytics",  label: "Analytics",       icon: BarChart3 },
+  { to: "/settings",   label: "Settings",        icon: SettingsIcon },
+];
+
+
 
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -320,8 +336,41 @@ export function AppShell({ children }: { children: ReactNode }) {
             className="md:hidden fixed inset-0 z-40 bg-background/70 backdrop-blur-sm animate-in fade-in"
           />
           <aside className="md:hidden fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] border-r border-border/60 bg-background flex flex-col animate-in slide-in-from-left duration-200">
-            {SidebarContent}
+            <div className="flex items-center justify-between gap-2.5 px-4 py-5">
+              <LogoLink to="/dashboard" size="lg" variant="brand" glow textClassName="text-xl" className="gap-2.5" />
+              <button
+                onClick={() => setMobileOpen(false)}
+                className="h-8 w-8 rounded-md text-muted-foreground hover:text-foreground"
+                aria-label="Close menu"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <nav className="flex-1 px-2 py-2 space-y-0.5 overflow-y-auto">
+              {MOBILE_NAV.map((item) => (
+                <NavLinkRow key={item.to} item={item} pathname={pathname} />
+              ))}
+              {isAdmin && (
+                <NavLinkRow
+                  item={{ to: "/admin", label: "Admin", icon: ShieldCheck, accent: true }}
+                  pathname={pathname}
+                />
+              )}
+            </nav>
+            <div className="px-3 pb-4 pt-3 border-t border-border/60 space-y-2">
+              <p className="text-[11px] leading-snug text-muted-foreground">
+                Phone shows the core app. Academy, strategies, memory, leaderboard and the rest are on desktop.
+              </p>
+              <button
+                onClick={handleSignOut}
+                className="w-full flex items-center gap-2 text-sm text-foreground/80 hover:text-foreground px-1"
+              >
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </button>
+            </div>
           </aside>
+
         </>
       )}
 
