@@ -146,6 +146,22 @@ const MOBILE_TABS: { to: string; label: string; icon: typeof LayoutDashboard }[]
   { to: "/coaches",   label: "Coaches",   icon: Users },
 ];
 
+// Phone build is deliberately the limited core app: chart, signals, journal,
+// alerts, risk, coaches, analytics, settings. Everything else (academy,
+// leaderboard, memory, strategies, scoreboard, discord, admin) stays on
+// desktop so the phone screen does not get crowded.
+const MOBILE_NAV: NavItem[] = [
+  { to: "/dashboard",  label: "Chart",           icon: LayoutDashboard },
+  { to: "/signals",    label: "AI Signals",      icon: Radar },
+  { to: "/journal",    label: "Trade Journal",   icon: NotebookPen },
+  { to: "/alerts",     label: "Price Alerts",    icon: Bell },
+  { to: "/calculator", label: "Risk Calculator", icon: Calculator },
+  { to: "/coaches",    label: "AI Coaches",      icon: Users },
+  { to: "/analytics",  label: "Analytics",       icon: BarChart3 },
+  { to: "/settings",   label: "Settings",        icon: SettingsIcon },
+];
+
+
 
 
 export function AppShell({ children }: { children: ReactNode }) {
