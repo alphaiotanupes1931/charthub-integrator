@@ -304,6 +304,7 @@ function JournalPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [formDate, setFormDate] = useState<string>(todayYmd());
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [dayView, setDayView] = useState<string | null>(null);
 
   // Load once, and only write back on renders that happen after the load.
   // Saving during the first commit would persist the empty initial state and
@@ -465,11 +466,11 @@ function JournalPage() {
               return (
                 <button
                   key={i}
-                  onClick={() => openNew(dateStr)}
+                  onClick={() => (day ? setDayView(dateStr) : openNew(dateStr))}
                   className={`group relative aspect-[5/4] border-b border-r border-border/40 p-1.5 sm:p-2 text-left transition hover:bg-accent/40 ${
                     isToday ? "bg-primary/5" : ""
                   }`}
-                  title={`Add trade on ${formatYmdHuman(dateStr)}`}
+                  title={day ? `View trades on ${formatYmdHuman(dateStr)}` : `Add trade on ${formatYmdHuman(dateStr)}`}
                 >
                   <div className={`text-xs sm:text-sm ${isToday ? "text-primary font-semibold" : "text-foreground/80"}`}>
                     {d}
@@ -527,6 +528,53 @@ function JournalPage() {
       {tab === "mental" && (
         <MentalStatePanel />
       )}
+
+      {dayView && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-background/80 backdrop-blur-sm"
+          onClick={() => setDayView(null)}
+        >
+          <div
+            className="w-full sm:max-w-2xl max-h-[90vh] overflow-auto rounded-t-2xl sm:rounded-2xl border border-border bg-card"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-4 border-b border-border">
+              <div>
+                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Trades logged</div>
+                <div className="text-lg font-semibold">{formatYmdHuman(dayView)}</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => { const d = dayView; setDayView(null); openNew(d); }}
+                  className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90"
+                >
+                  <Plus className="h-4 w-4" /> Log trade
+                </button>
+                <button
+                  onClick={() => setDayView(null)}
+                  className="h-9 w-9 rounded-md hover:bg-accent flex items-center justify-center"
+                  aria-label="Close"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+            <div className="divide-y divide-border/60">
+              {sortedTrades.filter((t) => t.date === dayView).map((t) => (
+                <TradeRow
+                  key={t.id}
+                  t={t}
+                  onEdit={(tr) => { setDayView(null); openEdit(tr); }}
+                  onDelete={handleDelete}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {formOpen && (
         <TradeFormModal
