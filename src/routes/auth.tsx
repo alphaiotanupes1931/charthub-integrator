@@ -238,7 +238,7 @@ function AuthPage() {
 
     try {
       if (mode === "signin") {
-        let signInData: Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>["data"];
+        let signInData: { user: { id: string } | null; session: { expires_at?: number } | null };
         if (parsed.data.email.includes("@")) {
           const res = await supabase.auth.signInWithPassword(parsed.data);
           if (res.error) throw res.error;
