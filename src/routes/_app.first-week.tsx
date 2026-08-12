@@ -98,9 +98,14 @@ function FirstWeekPage() {
           const done = Boolean(completed[task.id]);
           return (
             <div key={task.id} className={`rounded-md border border-border bg-card p-4 flex items-start gap-4 ${done ? "opacity-70" : ""}`}>
-              <div className="mt-0.5 shrink-0">
+              <button
+                onClick={() => toggle(task.id)}
+                className="mt-0.5 shrink-0 hover:opacity-80 focus:outline-none"
+                aria-label={done ? "Mark not done" : "Mark done"}
+                title={done ? "Click to uncheck" : "Click to check off"}
+              >
                 {done ? <CheckCircle2 className="h-5 w-5 text-emerald-500" /> : <Circle className="h-5 w-5 text-muted-foreground" />}
-              </div>
+              </button>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground">Day {task.day}</span>
