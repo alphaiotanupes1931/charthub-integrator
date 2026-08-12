@@ -1800,24 +1800,6 @@ function Dashboard() {
                 </div>
               </div>
             </div>
-            {/* Panel width footer */}
-            <div className="shrink-0 border-t border-border/60 px-3 py-1.5 flex items-center justify-between gap-2">
-
-              <span className="text-[9px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Width</span>
-              <div className="flex items-center gap-0.5 rounded-md border border-border/60 bg-background/40 p-0.5">
-                {(["narrow", "default", "wide"] as const).map((w) => (
-                  <button
-                    key={w}
-                    onClick={() => setPanelWidth(w)}
-                    className={`rounded px-2.5 py-0.5 text-[10px] font-medium capitalize transition ${
-                      panelWidth === w ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {w}
-                  </button>
-                ))}
-              </div>
-            </div>
           </aside>
         )}
 
