@@ -3,33 +3,7 @@ import { z } from "zod";
 import { corsHeadersFor, enforceOrigin, preflight } from "@/lib/api-security";
 
 
-// ----- CoinGecko (crypto, no key) -----
-const COIN_IDS: Record<string, string> = {
-  BTC: "bitcoin",
-  ETH: "ethereum",
-};
-
-function daysForInterval(interval: string): number {
-  switch (interval) {
-    case "1":
-    case "5":
-    case "15":
-      return 1;
-    case "60":
-    case "240":
-      return 14;
-    case "D":
-      return 90;
-    case "W":
-    case "M":
-      return 365;
-    default:
-      return 14;
-  }
-}
-
-export type OhlcBar = { time: number; open: number; high: number; low: number; close: number };
-export type OhlcSource = "coingecko" | "oanda" | "twelvedata" | "yahoo" | "binance" | "stooq" | "backup";
+export type OhlcSource = "oanda" | "binance" | "twelvedata";
 export type OhlcResponse = {
   source: OhlcSource | null;
   bars: OhlcBar[];
@@ -50,47 +24,6 @@ async function fetchJsonWithTimeout<T>(url: string, timeoutMs = 8_000, headers?:
           "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
         ...(headers ?? {}),
       },
-      signal: controller.signal,
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return (await res.json()) as T;
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
-async function fetchTextWithTimeout(url: string, timeoutMs = 8_000): Promise<string> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const res = await fetch(url, {
-      headers: {
-        accept: "text/csv,text/plain,*/*",
-        "user-agent":
-          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
-      },
-      signal: controller.signal,
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.text();
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
-async function postJsonWithTimeout<T>(url: string, body: unknown, timeoutMs = 8_000): Promise<T> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        accept: "application/json",
-        "content-type": "application/json",
-        "user-agent":
-          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
-      },
-      body: JSON.stringify(body),
       signal: controller.signal,
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
