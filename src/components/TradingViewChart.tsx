@@ -365,22 +365,25 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
         </div>
       )}
 
-      <div className="absolute right-2 bottom-2 sm:right-3 sm:bottom-3 z-40">
-        <button
-          type="button"
-          onClick={() => setDrawMode((v) => !v)}
-          title={drawMode ? "Exit draw mode (chart interactive again)" : "Draw on chart"}
-          aria-label={drawMode ? "Exit draw mode" : "Draw on chart"}
-          className={`inline-flex items-center gap-1.5 rounded-md border backdrop-blur px-2 py-1.5 text-[10px] font-mono uppercase tracking-wider transition-colors ${
-            drawMode
-              ? "border-primary/50 bg-primary/15 text-primary hover:bg-primary/20"
-              : "border-border bg-background/80 hover:bg-background text-foreground/90 hover:text-foreground"
-          }`}
-        >
-          {drawMode ? <CloseIcon className="h-3.5 w-3.5" /> : <Pencil className="h-3.5 w-3.5" />}
-          <span className="hidden sm:inline">{drawMode ? "Done" : "Draw"}</span>
-        </button>
-      </div>
+      {!showFallback && (
+        <div className="absolute right-2 bottom-2 sm:right-3 sm:bottom-3 z-40">
+          <button
+            type="button"
+            onClick={() => setDrawMode((v) => !v)}
+            title={drawMode ? "Exit draw mode (chart interactive again)" : "Draw on chart"}
+            aria-label={drawMode ? "Exit draw mode" : "Draw on chart"}
+            className={`inline-flex items-center gap-1.5 rounded-md border backdrop-blur px-2 py-1.5 text-[10px] font-mono uppercase tracking-wider transition-colors ${
+              drawMode
+                ? "border-primary/50 bg-primary/15 text-primary hover:bg-primary/20"
+                : "border-border bg-background/80 hover:bg-background text-foreground/90 hover:text-foreground"
+            }`}
+          >
+            {drawMode ? <CloseIcon className="h-3.5 w-3.5" /> : <Pencil className="h-3.5 w-3.5" />}
+            <span className="hidden sm:inline">{drawMode ? "Done" : "Draw"}</span>
+          </button>
+        </div>
+      )}
+
     </div>
   );
 }
