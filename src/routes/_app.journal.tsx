@@ -465,11 +465,11 @@ function JournalPage() {
               return (
                 <button
                   key={i}
-                  onClick={() => openNew(dateStr)}
+                  onClick={() => (day ? setDayView(dateStr) : openNew(dateStr))}
                   className={`group relative aspect-[5/4] border-b border-r border-border/40 p-1.5 sm:p-2 text-left transition hover:bg-accent/40 ${
                     isToday ? "bg-primary/5" : ""
                   }`}
-                  title={`Add trade on ${formatYmdHuman(dateStr)}`}
+                  title={day ? `View trades on ${formatYmdHuman(dateStr)}` : `Add trade on ${formatYmdHuman(dateStr)}`}
                 >
                   <div className={`text-xs sm:text-sm ${isToday ? "text-primary font-semibold" : "text-foreground/80"}`}>
                     {d}
