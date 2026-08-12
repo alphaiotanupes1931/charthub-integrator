@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Wallet, RefreshCw, X, ExternalLink, KeyRound, Trash2, ShieldCheck } from "lucide-react";
+import { Wallet, RefreshCw, X, ExternalLink, KeyRound, Trash2, ShieldCheck, ArrowUpRight, ArrowDownRight, SlidersHorizontal, Scissors } from "lucide-react";
 import {
   getBrokerStatus,
   listBrokerPositions,
@@ -576,4 +576,93 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function fmtMoney(v: number | null, ccy: string | null): string {
   if (v == null) return "-";
   return `${v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${ccy ?? ""}`.trim();
+}
+
+function PositionRow({
+  position,
+  onClose,
+  onSaveProtection,
+}: {
+  position: Position;
+  onClose: (id: string, units?: number) => void;
+  onSaveProtection: (id: string, sl: string, tp: string, trail: string) => Promise<void>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [sl, setSl] = useState(position.stopLoss != null ? String(position.stopLoss) : "");
+  const [tp, setTp] = useState(position.takeProfit != null ? String(position.takeProfit) : "");
+  const [trail, setTrail] = useState("");
+  const [partial, setPartial] = useState(String(Math.max(1, Math.floor(Math.abs(position.currentUnits) / 2))));
+  const [saving, setSaving] = useState(false);
+
+  return (
+    <div className="rounded-md border border-border/60">
+      <div className="flex flex-wrap items-center gap-3 px-3 py-2 text-sm">
+        <span className="font-mono text-xs text-muted-foreground w-16">{position.id}</span>
+        <span className="font-semibold">{position.instrument}</span>
+        <span className={position.currentUnits > 0 ? "text-bull" : "text-red-300"}>
+          {position.currentUnits > 0 ? "LONG" : "SHORT"} {Math.abs(position.currentUnits)}
+        </span>
+        <span className="font-mono text-xs text-muted-foreground">@ {position.price}</span>
+        <span className="font-mono text-[11px] text-muted-foreground">
+          SL {position.stopLoss ?? "-"} / TP {position.takeProfit ?? "-"}
+        </span>
+        <span className={`ml-auto font-mono text-xs ${position.unrealizedPL >= 0 ? "text-bull" : "text-red-300"}`}>
+          {position.unrealizedPL >= 0 ? "+" : ""}{position.unrealizedPL.toFixed(2)}
+        </span>
+        <button
+          onClick={() => setOpen((o) => !o)}
+          className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs border border-border hover:bg-muted"
+        >
+          <SlidersHorizontal className="h-3 w-3" /> Adjust
+        </button>
+        <button onClick={() => onClose(position.id)} className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs border border-border hover:bg-muted">
+          <X className="h-3 w-3" /> Close
+        </button>
+      </div>
+
+      {open && (
+        <div className="border-t border-border/60 px-3 py-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <Field label="Stop loss">
+              <input value={sl} onChange={(e) => setSl(e.target.value)} placeholder="blank = remove" className="w-full px-2 py-1.5 rounded-md bg-background border border-border text-sm" />
+            </Field>
+            <Field label="Take profit">
+              <input value={tp} onChange={(e) => setTp(e.target.value)} placeholder="blank = remove" className="w-full px-2 py-1.5 rounded-md bg-background border border-border text-sm" />
+            </Field>
+            <Field label="Trailing stop distance">
+              <input value={trail} onChange={(e) => setTrail(e.target.value)} placeholder="e.g. 0.0050" className="w-full px-2 py-1.5 rounded-md bg-background border border-border text-sm" />
+            </Field>
+            <Field label="Partial close units">
+              <input value={partial} onChange={(e) => setPartial(e.target.value)} className="w-full px-2 py-1.5 rounded-md bg-background border border-border text-sm" />
+            </Field>
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <button
+              onClick={async () => { setSaving(true); await onSaveProtection(position.id, sl, tp, trail); setSaving(false); }}
+              disabled={saving}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 disabled:opacity-50"
+            >
+              {saving ? "Saving..." : "Save changes to OANDA"}
+            </button>
+            <button
+              onClick={() => {
+                const u = Number(partial);
+                if (!u || u <= 0) return;
+                onClose(position.id, Math.min(u, Math.abs(position.currentUnits)));
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border text-xs hover:bg-muted"
+            >
+              <Scissors className="h-3 w-3" /> Close partial
+            </button>
+            <button
+              onClick={() => { setSl(String(position.price)); }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border text-xs hover:bg-muted"
+            >
+              Move stop to breakeven
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
