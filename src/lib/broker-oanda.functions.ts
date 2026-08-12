@@ -129,6 +129,7 @@ async function resolveOandaAccount(userId: string): Promise<{ apiKey: string; ac
   const cfg = await loadOandaConfig(userId);
   const endpoints = endpointsFor(cfg.preferredEnv, cfg.source === "user");
   const failedMessages: string[] = [];
+  const note = (m: string) => { if (!failedMessages.includes(m)) failedMessages.push(m); };
 
   if (cfg.accountId) {
     for (const endpoint of endpoints) {
@@ -136,26 +137,29 @@ async function resolveOandaAccount(userId: string): Promise<{ apiKey: string; ac
       if (summary.res.ok) {
         return { apiKey: cfg.apiKey, accountId: cfg.accountId, configuredAccountId: cfg.accountId, source: cfg.source, ...endpoint, discovered: false };
       }
-      failedMessages.push(`${endpoint.env}: ${oandaErrorMessage(summary.body, summary.res.status)}`);
+      note(`${endpoint.env}: ${oandaErrorMessage(summary.body, summary.res.status)}`);
     }
   }
 
   for (const endpoint of endpoints) {
     const listed = await listOandaAccounts(endpoint, cfg.apiKey);
     if (!listed.ok) {
-      failedMessages.push(`${endpoint.env}: ${oandaErrorMessage(listed.body, listed.status)}`);
+      note(`${endpoint.env}: ${oandaErrorMessage(listed.body, listed.status)}`);
       continue;
     }
     const discoveredId = listed.accounts.find((a) => typeof a.id === "string" && a.id.trim().length > 0)?.id;
     if (discoveredId) {
       return { apiKey: cfg.apiKey, accountId: discoveredId, configuredAccountId: cfg.accountId, source: cfg.source, ...endpoint, discovered: true };
     }
-    failedMessages.push(`${endpoint.env}: no accounts available for this API key`);
+    note(`${endpoint.env}: this API key has no accounts`);
   }
 
-  const suffix = failedMessages.length > 0 ? ` ${failedMessages.join("; ")}` : "";
-  throw new Error(`The saved OANDA key is not authorized for any account.${suffix}`);
+  const suffix = failedMessages.length > 0 ? ` Details - ${failedMessages.join("; ")}.` : "";
+  throw new Error(
+    `OANDA rejected this API key on both the demo and live servers.${suffix} Generate a fresh personal access token from the account you want to trade: demo tokens come from the fxTrade Practice site (Manage API Access), live tokens from fxTrade. Paste the token into the matching slot here, and leave Account ID blank to auto-detect.`,
+  );
 }
+
 
 async function oandaFetch(userId: string, path: string, init: RequestInit = {}): Promise<Record<string, unknown> & { __env?: OandaEnv; __accountId?: string; __discovered?: boolean; __configuredAccountId?: string }> {
   const config = await resolveOandaAccount(userId);
