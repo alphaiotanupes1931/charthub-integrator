@@ -31,9 +31,9 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "market-view-villa"
+const SITE_NAME = "TradeMind"
 const SENDER_DOMAIN = "notify.reeddigitalgroup.com"
-const ROOT_DOMAIN = "reeddigitalgroup.com"
+const ROOT_DOMAIN = "trademindaicoach.com"
 const FROM_DOMAIN = "notify.reeddigitalgroup.com"
 
 function redactEmail(email: string | null | undefined): string {
