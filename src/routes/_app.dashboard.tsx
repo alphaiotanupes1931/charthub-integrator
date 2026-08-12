@@ -1367,37 +1367,39 @@ function Dashboard() {
 
       <StrategyPresetCard name={activeStrategy} />
 
-      {/* Row 2: Live / Setup tabs + compact View menu + fullscreen */}
-      <div className="shrink-0 flex items-center gap-3 px-3 py-1 border-b border-border/60 bg-card/30 text-xs">
-        <button
-          onClick={() => setChartTab("live")}
-          className={`inline-flex items-center gap-1.5 py-1 border-b-2 transition ${
-            chartTab === "live" ? "border-primary text-primary font-semibold" : "border-transparent text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          <Activity className="h-3.5 w-3.5" /> Live
-        </button>
-        <button
-          onClick={() => { setChartTab("setup"); setIntervalState("60"); }}
-          className={`inline-flex items-center gap-1.5 py-1 border-b-2 transition ${
-            chartTab === "setup" ? "border-primary text-primary font-semibold" : "border-transparent text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          <Crosshair className="h-3.5 w-3.5" /> Setup
-        </button>
+      {/* Row 2: Live / Setup segmented control + chart controls */}
+      <div className="shrink-0 flex flex-wrap items-center gap-x-2 gap-y-1 px-3 py-1.5 border-b border-border/60 bg-card/30 text-xs">
+        <div className="inline-flex items-center rounded-md border border-border bg-background/50 p-0.5">
+          <button
+            onClick={() => setChartTab("live")}
+            className={`inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-[11px] font-medium transition ${
+              chartTab === "live" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Activity className="h-3.5 w-3.5" /> Live
+          </button>
+          <button
+            onClick={() => { setChartTab("setup"); setIntervalState("60"); }}
+            className={`inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-[11px] font-medium transition ${
+              chartTab === "setup" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Crosshair className="h-3.5 w-3.5" /> Setup
+          </button>
+        </div>
 
         <button
           type="button"
           onClick={toggleChartFullscreen}
-          className="inline-flex items-center gap-1 rounded-md border border-border bg-background/50 px-2 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground hover:border-primary/40 transition"
+          className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border bg-background/50 text-muted-foreground hover:text-foreground hover:border-primary/40 transition"
           title={isChartFullscreen ? "Exit full screen" : "Full screen chart"}
           aria-label={isChartFullscreen ? "Exit full screen" : "Full screen chart"}
         >
-          {isChartFullscreen ? <Minimize className="h-3 w-3" /> : <Maximize className="h-3 w-3" />}
-          <span className="hidden sm:inline">{isChartFullscreen ? "Exit" : "Expand"}</span>
+          {isChartFullscreen ? <Minimize className="h-3.5 w-3.5" /> : <Maximize className="h-3.5 w-3.5" />}
         </button>
 
         <div className="flex-1" />
+
 
         {/* Single "View" popover holding candle style, sessions, and indicators */}
         <div className="relative" ref={viewMenuRef}>
