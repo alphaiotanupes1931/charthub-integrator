@@ -1,28 +1,20 @@
 // Layer 1 - Data. Unified market snapshot for the research agents.
-// Uses Yahoo Finance for FX/metals/indices and CoinGecko for crypto.
-// Deliberately independent from src/routes/api.ohlc.ts so this layer can be
-// swapped for OpenBB or another provider without touching the chart route.
+// Feed order matches the chart route exactly (OANDA -> Binance -> Twelve Data)
+// so a signal and the chart a trader is looking at are always the same prices.
 
 import type { Candle, MarketSnapshot, MtfContext, TimeframeRead } from "./types";
 import { computeOrderFlow } from "./order-flow.server";
 
-const YAHOO: Record<string, string> = {
-  "XAU/USD": "GC=F",
-  "XAG/USD": "SI=F",
-  "NAS100": "^NDX",
-  "SPX500": "^GSPC",
-  "US30": "^DJI",
-  "WTI Oil": "CL=F",
-  "EUR/USD": "EURUSD=X",
-  "GBP/USD": "GBPUSD=X",
-  "USD/JPY": "USDJPY=X",
-  "BTC/USD": "BTC-USD",
-  "ETH/USD": "ETH-USD",
-  "XRP/USD": "XRP-USD",
-};
+// Canonical instrument keys the app speaks. Provider-specific symbols live in
+// the OANDA / BINANCE / TWELVE_DATA maps below.
+const CANONICAL = new Set([
+  "XAU/USD", "XAG/USD", "XPT/USD", "NAS100", "SPX500", "US30", "GER40", "UK100", "JPN225",
+  "WTI Oil", "Brent Oil", "NATGAS", "EUR/USD", "GBP/USD", "USD/JPY",
+  "BTC/USD", "ETH/USD", "XRP/USD", "SOL/USD", "DOGE/USD",
+]);
 
 // Accepts the many ways a symbol can arrive (watchlists, chat, deep links)
-// and maps it onto the canonical key used by YAHOO / COINGECKO above.
+// and maps it onto a canonical key.
 const TICKER_ALIASES: Record<string, string> = {
   XAUUSD: "XAU/USD", GOLD: "XAU/USD", "GC=F": "XAU/USD",
   XAGUSD: "XAG/USD", SILVER: "XAG/USD", "SI=F": "XAG/USD",
@@ -39,31 +31,12 @@ const TICKER_ALIASES: Record<string, string> = {
 export function normalizeTicker(raw: string): string {
   const t = (raw ?? "").trim();
   if (!t) return t;
-  if (YAHOO[t] || COINGECKO_ID[t]) return t;
+  if (CANONICAL.has(t)) return t;
   const upper = t.toUpperCase().replace(/^OANDA:/, "").replace(/\s+/g, "");
   return TICKER_ALIASES[upper] ?? TICKER_ALIASES[t] ?? t;
 }
 
-const COINGECKO_ID: Record<string, string> = {
-  "BTC/USD": "bitcoin",
-  "ETH/USD": "ethereum",
-  "XRP/USD": "ripple",
-};
 
-
-function yahooRange(interval: string): { interval: string; range: string } {
-  switch (interval) {
-    case "1":   return { interval: "1m",  range: "1d" };
-    case "5":   return { interval: "5m",  range: "5d" };
-    case "15":  return { interval: "15m", range: "5d" };
-    case "60":  return { interval: "1h",  range: "1mo" };
-    case "240": return { interval: "1h",  range: "3mo" };
-    case "D":   return { interval: "1d",  range: "6mo" };
-    case "W":   return { interval: "1wk", range: "2y" };
-    case "M":   return { interval: "1mo", range: "5y" };
-    default:    return { interval: "1h",  range: "1mo" };
-  }
-}
 
 async function fetchJson<T>(url: string, timeoutMs = 8_000): Promise<T> {
   const ctl = new AbortController();
@@ -81,59 +54,34 @@ async function fetchJson<T>(url: string, timeoutMs = 8_000): Promise<T> {
   } finally { clearTimeout(t); }
 }
 
-async function fromYahoo(ticker: string, interval: string): Promise<Candle[]> {
-  const sym = YAHOO[ticker];
-  if (!sym) throw new Error(`no yahoo mapping for ${ticker}`);
-  const iv = yahooRange(interval);
-  let json: {
-    chart?: { result?: Array<{ timestamp?: number[]; indicators?: { quote?: Array<{ open?: (number|null)[]; high?: (number|null)[]; low?: (number|null)[]; close?: (number|null)[]; volume?: (number|null)[] }> } }> };
-  } | undefined;
-  let lastError: unknown;
-  // Yahoo throws bursty 429s from a single edge. Two rounds across both public
-  // hosts with a short backoff turns almost all of those into a success.
-  outer: for (const round of [0, 1]) {
-    for (const host of ["query1.finance.yahoo.com", "query2.finance.yahoo.com"]) {
-      try {
-        json = await fetchJson(`https://${host}/v8/finance/chart/${sym}?interval=${iv.interval}&range=${iv.range}&includePrePost=true`);
-        break outer;
-      } catch (error) {
-        lastError = error;
-      }
-    }
-    if (round === 0) await new Promise((r) => setTimeout(r, 700));
-  }
-  if (!json) throw lastError instanceof Error ? lastError : new Error("yahoo unavailable");
-  const r = json.chart?.result?.[0];
-  const q = r?.indicators?.quote?.[0];
-  if (!r?.timestamp || !q) throw new Error("yahoo empty");
-  const bars: Candle[] = [];
-  for (let i = 0; i < r.timestamp.length; i++) {
-    const o = q.open?.[i], h = q.high?.[i], l = q.low?.[i], c = q.close?.[i];
-    if (o == null || h == null || l == null || c == null) continue;
-    const v = q.volume?.[i];
-    bars.push({ time: r.timestamp[i], open: o, high: h, low: l, close: c, volume: v == null ? undefined : v });
-  }
-  return bars.slice(-220);
-}
-
 const OANDA: Record<string, string> = {
   "XAU/USD": "XAU_USD",
   "XAG/USD": "XAG_USD",
+  "XPT/USD": "XPT_USD",
   "NAS100": "NAS100_USD",
   "SPX500": "SPX500_USD",
   "US30": "US30_USD",
+  "GER40": "DE30_EUR",
+  "UK100": "UK100_GBP",
+  "JPN225": "JP225_USD",
   "WTI Oil": "WTICO_USD",
-  "EUR/USD": "EUR_USD",
-  "GBP/USD": "GBP_USD",
-  "USD/JPY": "USD_JPY",
+  "Brent Oil": "BCO_USD",
+  "NATGAS": "NATGAS_USD",
 };
+
+function oandaInstrument(ticker: string): string | null {
+  if (OANDA[ticker]) return OANDA[ticker];
+  // Any plain FX pair OANDA quotes, e.g. "EUR/USD" -> "EUR_USD".
+  if (/^[A-Z]{3}\/[A-Z]{3}$/.test(ticker.toUpperCase())) return ticker.toUpperCase().replace("/", "_");
+  return null;
+}
 
 function oandaGranularity(interval: string): string {
   return ({ "1": "M1", "5": "M5", "15": "M15", "60": "H1", "240": "H4", D: "D", W: "W", M: "M" } as Record<string, string>)[interval] ?? "H1";
 }
 
 async function fromOandaHost(host: string, key: string, ticker: string, interval: string): Promise<Candle[]> {
-  const instrument = OANDA[ticker];
+  const instrument = oandaInstrument(ticker);
   if (!instrument) throw new Error(`no oanda mapping for ${ticker}`);
   const url = `https://${host}/v3/instruments/${instrument}/candles?granularity=${oandaGranularity(interval)}&count=220&price=M`;
   const ctl = new AbortController();
@@ -157,7 +105,7 @@ async function fromOandaHost(host: string, key: string, ticker: string, interval
 
 async function fromOanda(ticker: string, interval: string): Promise<Candle[]> {
   const key = process.env.OANDA_API_KEY;
-  if (!key || !OANDA[ticker]) throw new Error("oanda not configured for ticker");
+  if (!key || !oandaInstrument(ticker)) throw new Error("oanda not configured for ticker");
   const practiceFirst = (process.env.OANDA_ENV ?? "live").toLowerCase() === "practice";
   const hosts = practiceFirst
     ? ["api-fxpractice.oanda.com", "api-fxtrade.oanda.com"]
@@ -168,15 +116,6 @@ async function fromOanda(ticker: string, interval: string): Promise<Candle[]> {
     catch (error) { lastError = error; }
   }
   throw lastError instanceof Error ? lastError : new Error("oanda unavailable");
-}
-
-async function fromCoinGecko(ticker: string, interval: string): Promise<Candle[]> {
-  const id = COINGECKO_ID[ticker];
-  if (!id) throw new Error(`no cg mapping for ${ticker}`);
-  const days = interval === "1" || interval === "5" || interval === "15" ? 1 : interval === "60" || interval === "240" ? 14 : 90;
-  const url = `https://api.coingecko.com/api/v3/coins/${id}/ohlc?vs_currency=usd&days=${days}`;
-  const raw = await fetchJson<Array<[number, number, number, number, number]>>(url);
-  return raw.map(([ms, o, h, l, c]) => ({ time: Math.floor(ms / 1000), open: o, high: h, low: l, close: c }));
 }
 
 // Optional paid provider. Enabled automatically when TWELVE_DATA_API_KEY is set.
@@ -224,6 +163,8 @@ async function fromTwelveData(ticker: string, interval: string): Promise<Candle[
 // XAU/USD spot closely, so it is a usable last-resort history source for gold.
 const BINANCE: Record<string, string> = {
   "XAU/USD": "PAXGUSDT",
+  "SOL/USD": "SOLUSDT",
+  "DOGE/USD": "DOGEUSDT",
   "BTC/USD": "BTCUSDT",
   "ETH/USD": "ETHUSDT",
   "XRP/USD": "XRPUSDT",
@@ -234,7 +175,8 @@ function binanceInterval(interval: string): string {
 }
 
 async function fromBinance(ticker: string, interval: string): Promise<Candle[]> {
-  const sym = BINANCE[ticker];
+  const crypto = ticker.toUpperCase().match(/^([A-Z]{2,6})\/(USD|USDT)$/);
+  const sym = BINANCE[ticker] ?? (crypto ? `${crypto[1]}USDT` : undefined);
   if (!sym) throw new Error(`no binance mapping for ${ticker}`);
   const url = `https://api.binance.com/api/v3/klines?symbol=${sym}&interval=${binanceInterval(interval)}&limit=220`;
   const raw = await fetchJson<Array<[number, string, string, string, string, string]>>(url);
@@ -490,9 +432,11 @@ function computeAlignment(mtf: Omit<MtfContext, "alignment">): MtfContext["align
 }
 
 async function loadCandlesSafe(ticker: string, interval: string): Promise<Candle[]> {
-  const loaders = COINGECKO_ID[ticker]
-    ? [() => fromCoinGecko(ticker, interval), () => fromYahoo(ticker, interval), () => fromBinance(ticker, interval)]
-    : [() => fromOanda(ticker, interval), () => fromTwelveData(ticker, interval), () => fromYahoo(ticker, interval), () => fromBinance(ticker, interval)];
+  const loaders = [
+    () => fromOanda(ticker, interval),
+    () => fromBinance(ticker, interval),
+    () => fromTwelveData(ticker, interval),
+  ];
   for (const load of loaders) {
     try {
       const candles = await load();
@@ -589,18 +533,12 @@ export async function getSnapshot(rawTicker: string, interval: string): Promise<
   let candles: Candle[] = [];
 
   let source: MarketSnapshot["source"] = "unavailable";
-  const loaders: Array<{ source: Exclude<MarketSnapshot["source"], "backup" | "unavailable">; load: () => Promise<Candle[]> }> = COINGECKO_ID[ticker]
-    ? [
-        { source: "coingecko", load: () => fromCoinGecko(ticker, interval) },
-        { source: "yahoo", load: () => fromYahoo(ticker, interval) },
-        { source: "binance", load: () => fromBinance(ticker, interval) },
-      ]
-    : [
-        { source: "oanda", load: () => fromOanda(ticker, interval) },
-        { source: "twelvedata", load: () => fromTwelveData(ticker, interval) },
-        { source: "yahoo", load: () => fromYahoo(ticker, interval) },
-        { source: "binance", load: () => fromBinance(ticker, interval) },
-      ];
+  // Same feed order as the charts so a signal and its chart never disagree.
+  const loaders: Array<{ source: Exclude<MarketSnapshot["source"], "backup" | "unavailable" | "cached">; load: () => Promise<Candle[]> }> = [
+    { source: "oanda", load: () => fromOanda(ticker, interval) },
+    { source: "binance", load: () => fromBinance(ticker, interval) },
+    { source: "twelvedata", load: () => fromTwelveData(ticker, interval) },
+  ];
   for (const provider of loaders) {
     try {
       const next = await provider.load();

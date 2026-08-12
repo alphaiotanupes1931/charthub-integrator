@@ -29,7 +29,7 @@ const DEFAULT_WATCHLIST = [
 ];
 
 const Input = z.object({
-  tickers: z.array(z.string().min(1).max(20)).max(20).optional(),
+  tickers: z.array(z.string().min(1).max(20)).optional(),
   interval: z.string().default("60"),
 });
 

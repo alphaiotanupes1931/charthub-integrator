@@ -9,7 +9,6 @@ import {
   enforceOrigin,
   getOrCreateRequestId,
   preflight,
-  rateLimit,
 } from "@/lib/api-security";
 import type { Database, Json } from "@/integrations/supabase/types";
 
@@ -575,8 +574,6 @@ export const Route = createFileRoute("/api/chat")({
         if (originBlock) return originBlock;
         const tooBig = enforceMaxBody(request, 8 * 1024 * 1024); // 8 MB cap (allows compressed screenshot attachments)
         if (tooBig) return tooBig;
-        const limited = rateLimit(request, { key: "chat", limit: 20, windowMs: 60_000 });
-        if (limited) return limited;
 
         const cors = { ...corsHeadersFor(request), "X-Request-Id": reqId };
         console.log(`[chat] req=${reqId} start`);

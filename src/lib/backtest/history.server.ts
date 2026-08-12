@@ -45,20 +45,6 @@ const BINANCE_SYMBOL: Record<string, string> = {
   "XRP/USD": "XRPUSDT",
 };
 
-const YAHOO_SYMBOL: Record<string, string> = {
-  "XAU/USD": "GC=F",
-  "XAG/USD": "SI=F",
-  NAS100: "^NDX",
-  SPX500: "^GSPC",
-  US30: "^DJI",
-  "WTI Oil": "CL=F",
-  "EUR/USD": "EURUSD=X",
-  "GBP/USD": "GBPUSD=X",
-  "USD/JPY": "USDJPY=X",
-  "BTC/USD": "BTC-USD",
-  "ETH/USD": "ETH-USD",
-  "XRP/USD": "XRP-USD",
-};
 
 const MIN_BARS = 120;
 
@@ -209,85 +195,17 @@ async function fromBinance(symbol: string, tf: BacktestTimeframe, lookback: stri
 
 // ---------------------------------------------------------------- Yahoo
 
-function yahooRequest(tf: BacktestTimeframe, lookback: string): { interval: string; range: string } {
-  if (tf === "15") return { interval: "15m", range: "60d" };
-  if (tf === "60" || tf === "240") return { interval: "1h", range: "730d" };
-  return { interval: "1d", range: lookback === "1y" ? "1y" : lookback === "2y" ? "2y" : "5y" };
-}
-
-type YahooChart = {
-  chart?: {
-    result?: {
-      timestamp?: number[];
-      indicators?: {
-        quote?: {
-          open?: (number | null)[];
-          high?: (number | null)[];
-          low?: (number | null)[];
-          close?: (number | null)[];
-          volume?: (number | null)[];
-        }[];
-      };
-    }[];
-    error?: { description?: string } | null;
-  };
-};
-
-async function fromYahoo(symbol: string, tf: BacktestTimeframe, lookback: string): Promise<BtBar[]> {
-  const mapped = YAHOO_SYMBOL[symbol];
-  if (!mapped) throw new Error("yahoo has no mapping");
-  const { interval, range } = yahooRequest(tf, lookback);
-  let lastError = "";
-  for (const host of ["query1.finance.yahoo.com", "query2.finance.yahoo.com"]) {
-    const url = `https://${host}/v8/finance/chart/${encodeURIComponent(mapped)}?interval=${interval}&range=${range}&includePrePost=false`;
-    try {
-      const json = await getJson<YahooChart>(url, {
-        headers: {
-          accept: "application/json",
-          "user-agent":
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
-        },
-      });
-      const result = json.chart?.result?.[0];
-      const quote = result?.indicators?.quote?.[0];
-      const stamps = result?.timestamp ?? [];
-      if (!quote || stamps.length === 0) {
-        lastError = json.chart?.error?.description ?? "empty series";
-        continue;
-      }
-      const bars: BtBar[] = [];
-      for (let i = 0; i < stamps.length; i++) {
-        const o = quote.open?.[i];
-        const h = quote.high?.[i];
-        const l = quote.low?.[i];
-        const c = quote.close?.[i];
-        if (o == null || h == null || l == null || c == null) continue;
-        const v = quote.volume?.[i];
-        bars.push({ time: stamps[i], open: o, high: h, low: l, close: c, volume: v == null ? undefined : v });
-      }
-      const clean = sortDedupe(bars);
-      if (clean.length > 0) return clean;
-      lastError = "no usable bars";
-    } catch (e) {
-      lastError = (e as Error).message;
-    }
-  }
-  throw new Error(lastError || "yahoo unavailable");
-}
-
-// ---------------------------------------------------------------- chain
-
 type Provider = {
   name: string;
   native4h: boolean;
   load: (symbol: string, tf: BacktestTimeframe, lookback: string) => Promise<BtBar[]>;
 };
 
+// Same order as the charts and the scanner: one feed story across the app.
 const PROVIDERS: Provider[] = [
   { name: "oanda", native4h: true, load: fromOanda },
-  { name: "twelvedata", native4h: true, load: fromTwelveData },
   { name: "binance", native4h: true, load: fromBinance },
-  { name: "yahoo", native4h: false, load: fromYahoo },
+  { name: "twelvedata", native4h: true, load: fromTwelveData },
 ];
 
 export async function getHistory(
