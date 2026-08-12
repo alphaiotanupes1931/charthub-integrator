@@ -260,9 +260,9 @@ function BrokerPage() {
     <div className="max-w-4xl mx-auto">
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl md:text-3xl font-semibold mb-2">Broker: OANDA</h1>
+          <h1 className="font-display text-2xl md:text-3xl font-semibold mb-2">Brokers</h1>
           <p className="text-sm text-muted-foreground">
-            Connect your own OANDA account to place real orders. Your API key is encrypted on the server and never exposed to the browser.
+            Sign in with Alpaca in one click, or connect OANDA / TradeLocker with your own credentials. Everything is encrypted on the server and never exposed to the browser.
           </p>
         </div>
         <button
@@ -274,6 +274,8 @@ function BrokerPage() {
         </button>
       </div>
       <PageInstructions className="mb-6" />
+
+      <AlpacaPanel />
 
       {/* Credentials card */}
       <div className="rounded-md border border-border bg-card p-5 mb-6">
@@ -410,8 +412,6 @@ function BrokerPage() {
       </div>
 
       <IdentityPanel />
-
-      <AlpacaPanel />
 
       <TradeLockerPanel />
 
