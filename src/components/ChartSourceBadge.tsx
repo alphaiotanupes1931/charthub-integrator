@@ -40,6 +40,10 @@ export function feedLabel(source: string | null | undefined): string {
       return "Yahoo Finance";
     case "oanda":
       return "OANDA";
+    case "binance":
+      return "Binance";
+    case "cached":
+      return "Cached history";
     case "stooq":
       return "Stooq";
     case "backup":
