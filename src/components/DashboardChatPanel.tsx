@@ -37,6 +37,42 @@ import { ConceptDiagram } from "@/components/ConceptDiagram";
 import { buildLearningPromptBlock } from "@/lib/signalLearning";
 import { takeTrade } from "@/lib/signalHistory";
 import { AiCreditNotice } from "@/components/AiCreditNotice";
+import { NativeChart, type LevelKey } from "@/components/NativeChart";
+
+const NO_LEVELS = {
+  VWAP: false, POC: false, SR: false, ZONES: false, FVG: false,
+  FIB: false, LIQ: false, OF: false, CISD: false,
+} as Record<LevelKey, boolean>;
+
+/** The analysis chart, inline in the reply, so the drawn setup is visible in chat. */
+function InlineAnalysisChart({
+  chart,
+  annotations,
+}: {
+  chart: ChartContext;
+  annotations: ChartAnnotation[];
+}) {
+  if (!chart.tvSymbol) return null;
+  return (
+    <div className="overflow-hidden rounded-2xl border border-border/50 bg-card">
+      <div className="flex items-center justify-between border-b border-border/60 px-3 py-1.5 text-[10px] font-semibold tracking-tight text-muted-foreground">
+        <span className="text-foreground/80">{chart.ticker}</span>
+        <span>{chart.intervalLabel}</span>
+      </div>
+      <div className="h-56">
+        <NativeChart
+          symbol={chart.tvSymbol}
+          ticker={chart.ticker}
+          interval={chart.interval ?? "60"}
+          enabled={NO_LEVELS}
+          annotations={annotations}
+          className="h-full"
+        />
+      </div>
+    </div>
+  );
+}
+
 
 export type DashboardChatHandle = {
   scan: (prompt: string, targetThreadId?: string | null) => void;
