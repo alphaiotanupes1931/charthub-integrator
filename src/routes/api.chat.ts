@@ -810,13 +810,14 @@ export const Route = createFileRoute("/api/chat")({
         }
 
         const staticSystem = staticSystemPrompt();
-        const liveSystem = dynamicSystemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens), learningCtx, newsCtx, scoreCtx);
+        const forceDraw = shouldForceChartDraw(messages);
+        const liveSystem = dynamicSystemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens), learningCtx, newsCtx, scoreCtx, forceDraw);
 
         const useClaude = !!anthropicKey;
         // Model routing: a plain setup grade or a short factual question runs on
         // the cheap model; open-ended coaching, teaching, psychology, and
         // screenshot reads stay on the top model.
-        const routed = routeChatModel(messages);
+        const routed = routeChatModel(messages, coach);
         const claudeId = routed === "cheap" ? CLAUDE_CHEAP : CLAUDE_SMART;
         const gatewayId = routed === "cheap" ? "google/gemini-2.5-flash" : "google/gemini-2.5-flash";
         const claudeModel = useClaude
