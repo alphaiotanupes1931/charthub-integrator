@@ -79,6 +79,7 @@ import { Route as AppAcademyMasterCertificateRouteImport } from './routes/_app.a
 import { Route as AppAcademyExamRouteImport } from './routes/_app.academy.exam'
 import { Route as AppAcademyModuleIdRouteImport } from './routes/_app.academy.$moduleId'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as AppAcademyModuleIdIndexRouteImport } from './routes/_app.academy.$moduleId.index'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -448,6 +449,11 @@ const Char91DotmcpChar93InvokeToolToolRoute =
     path: '/.mcp/invoke-tool/$tool',
     getParentRoute: () => rootRouteImport,
   } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppAcademyModuleIdIndexRoute = AppAcademyModuleIdIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -590,6 +596,7 @@ export interface FileRoutesByFullPath {
   '/api/version': typeof ApiVersionRoute
   '/help/$slug': typeof HelpSlugRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/academy/$moduleId': typeof AppAcademyModuleIdRouteWithChildren
   '/academy/exam': typeof AppAcademyExamRoute
@@ -673,6 +680,7 @@ export interface FileRoutesByTo {
   '/api/version': typeof ApiVersionRoute
   '/help/$slug': typeof HelpSlugRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/academy/exam': typeof AppAcademyExamRoute
   '/academy/master-certificate': typeof AppAcademyMasterCertificateRoute
@@ -760,6 +768,7 @@ export interface FileRoutesById {
   '/api/version': typeof ApiVersionRoute
   '/help/$slug': typeof HelpSlugRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_app/academy/$moduleId': typeof AppAcademyModuleIdRouteWithChildren
   '/_app/academy/exam': typeof AppAcademyExamRoute
@@ -848,6 +857,7 @@ export interface FileRouteTypes {
     | '/api/version'
     | '/help/$slug'
     | '/invite/$code'
+    | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/academy/$moduleId'
     | '/academy/exam'
@@ -931,6 +941,7 @@ export interface FileRouteTypes {
     | '/api/version'
     | '/help/$slug'
     | '/invite/$code'
+    | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/academy/exam'
     | '/academy/master-certificate'
@@ -1017,6 +1028,7 @@ export interface FileRouteTypes {
     | '/api/version'
     | '/help/$slug'
     | '/invite/$code'
+    | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/_app/academy/$moduleId'
     | '/_app/academy/exam'
@@ -1072,6 +1084,7 @@ export interface RootRouteChildren {
   ApiTtsRoute: typeof ApiTtsRoute
   ApiVersionRoute: typeof ApiVersionRoute
   InviteCodeRoute: typeof InviteCodeRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicBridgeRoute: typeof ApiPublicBridgeRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
@@ -1583,6 +1596,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app/academy/$moduleId/': {
       id: '/_app/academy/$moduleId/'
       path: '/'
@@ -1871,6 +1891,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiTtsRoute: ApiTtsRoute,
   ApiVersionRoute: ApiVersionRoute,
   InviteCodeRoute: InviteCodeRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicBridgeRoute: ApiPublicBridgeRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
