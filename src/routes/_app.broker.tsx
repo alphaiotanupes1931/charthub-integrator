@@ -37,9 +37,9 @@ export const Route = createFileRoute("/_app/broker")({
   head: () => ({
     meta: [
       { title: "Brokers — TradeMind" },
-      { name: "description", content: "Connect your Alpaca account and place real trades from your scans." },
+      { name: "description", content: "Sign in to OANDA and place real trades straight from your scans." },
       { property: "og:title", content: "Brokers — TradeMind" },
-      { property: "og:description", content: "Connect your Alpaca account and place real trades from your scans." },
+      { property: "og:description", content: "Sign in to OANDA and place real trades straight from your scans." },
     ],
   }),
   component: BrokerPage,
