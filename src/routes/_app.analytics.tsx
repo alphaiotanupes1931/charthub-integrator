@@ -262,14 +262,14 @@ function AnalyticsPage() {
     return (
       <div className="p-4 md:p-8 max-w-[1400px] mx-auto">
         <PageHeader title="Analytics" description="Your trading performance at a glance" />
-        <div className="rounded-md border border-border bg-card p-12 text-center space-y-4">
+        <div className="rounded-xl border border-border/60 bg-card p-12 text-center space-y-4">
 
           <BarChart3 className="h-10 w-10 mx-auto text-muted-foreground" />
           <h3 className="text-lg font-semibold">No data yet</h3>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
             Log your first trade in the journal, run a paper trade, or let Autopilot execute a signal to start seeing performance analytics.
           </p>
-          <Link to="/journal" className="inline-flex rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Go to Journal</Link>
+          <Link to="/journal" className="inline-flex rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Go to Journal</Link>
         </div>
       </div>
     );
@@ -304,7 +304,7 @@ function AnalyticsPage() {
         {kpis.map((k) => {
           const Icon = k.icon;
           return (
-            <div key={k.label} className="rounded-md border border-border bg-card p-4">
+            <div key={k.label} className="rounded-xl border border-border/60 bg-card p-4">
               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
                 <Icon className="h-3.5 w-3.5" /> {k.label}
               </div>
@@ -315,7 +315,7 @@ function AnalyticsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 rounded-md border border-border bg-card p-6">
+        <div className="lg:col-span-2 rounded-xl border border-border/60 bg-card p-6">
           <h2 className="text-sm font-semibold mb-4">Equity Curve</h2>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -336,13 +336,13 @@ function AnalyticsPage() {
           </div>
         </div>
 
-        <div className="rounded-md border border-border bg-card p-6 space-y-4">
+        <div className="rounded-xl border border-border/60 bg-card p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold">Weekly Reports</h2>
             <button
               onClick={handleGenerateReport}
               disabled={reportMutation.isPending}
-              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-[11px] font-medium hover:border-primary/40 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-border/60 bg-background px-2.5 py-1.5 text-[11px] font-medium hover:border-primary/40 disabled:opacity-50"
             >
               <Sparkles className="h-3 w-3" />
               {reportMutation.isPending ? "Saving…" : "Generate this week"}
@@ -353,7 +353,7 @@ function AnalyticsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="rounded-md border border-border bg-card p-6">
+        <div className="rounded-xl border border-border/60 bg-card p-6">
           <h2 className="text-sm font-semibold mb-4">P&L by Instrument</h2>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -372,7 +372,7 @@ function AnalyticsPage() {
           </div>
         </div>
 
-        <div className="rounded-md border border-border bg-card p-6">
+        <div className="rounded-xl border border-border/60 bg-card p-6">
           <h2 className="flex items-center gap-2 text-sm font-semibold mb-4"><Calendar className="h-4 w-4" /> P&L by Day of Week</h2>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -399,7 +399,7 @@ function AnalyticsPage() {
       </div>
 
       {stats?.mentalScatter.length && stats.mentalScatter.length > 0 ? (
-        <div className="rounded-md border border-border bg-card p-6">
+        <div className="rounded-xl border border-border/60 bg-card p-6">
           <h2 className="flex items-center gap-2 text-sm font-semibold mb-1"><HeartPulse className="h-4 w-4" /> Mental State vs P&L</h2>
           <p className="text-xs text-muted-foreground mb-4">Each dot is a trade. X = your mental score that day (1 low, 5 great). Y = trade P&L.</p>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -421,7 +421,7 @@ function AnalyticsPage() {
             </div>
             <div className="space-y-1">
               {stats.perMentalScore.map((m) => (
-                <div key={m.score} className="flex items-center justify-between rounded-md border border-border/60 px-3 py-2 text-sm">
+                <div key={m.score} className="flex items-center justify-between rounded-xl border border-border/60 px-3 py-2 text-sm">
                   <div className="font-medium">Score {m.score}</div>
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
                     <span>{m.n} trades</span>
@@ -437,10 +437,10 @@ function AnalyticsPage() {
         </div>
       ) : null}
 
-      <div className="rounded-md border border-border bg-card p-6">
+      <div className="rounded-xl border border-border/60 bg-card p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold">Instrument Breakdown</h2>
-          <div className="inline-flex rounded-md border border-border p-0.5">
+          <div className="inline-flex rounded-xl border border-border/60 p-0.5">
             {(["journal", "paper", "autopilot"] as const).map((tab) => (
               <button
                 key={tab}
@@ -454,7 +454,7 @@ function AnalyticsPage() {
         </div>
         <div className="space-y-2 max-h-64 overflow-auto">
           {serverTab === "autopilot" && (analytics.data?.proposals ?? []).map((p) => (
-            <div key={p.id} className="flex items-center justify-between rounded-md border border-border/60 px-3 py-2 text-sm">
+            <div key={p.id} className="flex items-center justify-between rounded-xl border border-border/60 px-3 py-2 text-sm">
               <div className="font-medium">{p.symbol} <span className="text-xs text-muted-foreground">{p.side} · {p.grade ?? "no grade"}</span></div>
               <div className="flex items-center gap-4 text-xs text-muted-foreground">
                 <span>{p.status}</span>
@@ -465,7 +465,7 @@ function AnalyticsPage() {
             </div>
           ))}
           {serverTab !== "autopilot" && stats?.perSymbol.map((s) => (
-            <div key={s.symbol} className="flex items-center justify-between rounded-md border border-border/60 px-3 py-2 text-sm">
+            <div key={s.symbol} className="flex items-center justify-between rounded-xl border border-border/60 px-3 py-2 text-sm">
               <div className="font-medium">{s.symbol}</div>
               <div className="flex items-center gap-4 text-xs text-muted-foreground">
                 <span>{s.n} trades</span>
@@ -486,12 +486,12 @@ function AnalyticsPage() {
       </div>
 
       {(stats?.proposalCount ?? 0) > 0 && (
-        <div className="rounded-md border border-border bg-card p-6">
+        <div className="rounded-xl border border-border/60 bg-card p-6">
           <h2 className="text-sm font-semibold mb-4">Autopilot Summary</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {proposalKpis.map((k) => (
-              <div key={k.label} className="rounded-md border border-border p-3">
-                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{k.label}</div>
+              <div key={k.label} className="rounded-xl border border-border/60 p-3">
+                <div className="text-[10px] tracking-tight text-muted-foreground">{k.label}</div>
                 <div className="text-lg font-semibold">{k.value}</div>
               </div>
             ))}
@@ -499,7 +499,7 @@ function AnalyticsPage() {
         </div>
       )}
 
-      <div className="rounded-md border border-border bg-card p-6">
+      <div className="rounded-xl border border-border/60 bg-card p-6">
         <h2 className="flex items-center gap-2 text-sm font-semibold mb-4">
           <MessageSquare className="h-4 w-4" /> Ask AI About Your Performance
         </h2>
@@ -508,7 +508,7 @@ function AnalyticsPage() {
             <button
               key={q}
               onClick={() => ask(q)}
-              className="rounded-md border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs text-primary hover:bg-primary/10"
+              className="rounded-xl border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs text-primary hover:bg-primary/10"
             >
               <Bot className="h-3 w-3 inline mr-1" />{q}
             </button>
@@ -530,7 +530,7 @@ function WeeklyReportsList({ reports, onDelete }: { reports: WeeklyReportRow[]; 
   return (
     <div className="space-y-2 max-h-64 overflow-auto">
       {reports.map((r) => (
-        <div key={r.id} className="rounded-md border border-border/60 p-3 text-sm">
+        <div key={r.id} className="rounded-xl border border-border/60 p-3 text-sm">
           <div className="flex items-center justify-between">
             <span className="font-medium">Week ending {r.weekEnding}</span>
             <button

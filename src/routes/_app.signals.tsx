@@ -86,8 +86,8 @@ function SignalsPage() {
         description="Scans a watchlist through the 3-layer research stack and returns BUY/SELL/HOLD calls with entries, stops and targets."
       />
 
-      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card p-4">
-        <div className="flex items-center gap-1 rounded-md border border-border p-1">
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border/60 bg-card p-4">
+        <div className="flex items-center gap-1 rounded-xl border border-border/60 p-1">
           {TF_OPTIONS.map((o) => (
             <button
               key={o.v}
@@ -99,7 +99,7 @@ function SignalsPage() {
         <button
           onClick={() => mut.mutate()}
           disabled={mut.isPending}
-          className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+          className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
         >
           {mut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
           {mut.isPending ? "Scanning 8 markets…" : "Run Scan"}
@@ -114,7 +114,7 @@ function SignalsPage() {
       )}
 
       {signals.length === 0 && !mut.isPending && (
-        <div className="rounded-xl border border-border bg-card p-12 text-center space-y-4">
+        <div className="rounded-xl border border-border/60 bg-card p-12 text-center space-y-4">
           <Radar className="h-10 w-10 mx-auto text-muted-foreground" />
           <h3 className="text-lg font-semibold">Ready to scan</h3>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
@@ -147,8 +147,8 @@ function SignalsPage() {
 
 function SignalHistory({ records, onOpen }: { records: SignalRecord[]; onOpen: (ticker: string) => void }) {
   return (
-    <div className="rounded-xl border border-border bg-card">
-      <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
+    <div className="rounded-xl border border-border/60 bg-card">
+      <div className="flex items-center justify-between gap-3 border-b border-border/60 px-4 py-3">
         <div className="flex items-center gap-2 text-sm font-semibold">
           <History className="h-4 w-4" /> Signal history
           <span className="font-normal text-muted-foreground">({records.length})</span>
@@ -177,8 +177,8 @@ function SignalHistory({ records, onOpen }: { records: SignalRecord[]; onOpen: (
                 <button onClick={() => onOpen(r.symbol)} className="font-semibold text-sm hover:underline">
                   {r.symbol}
                 </button>
-                <span className="rounded border border-border px-1.5 py-0.5 font-semibold">{r.grade}</span>
-                <span className={`font-semibold uppercase tracking-wider ${dir}`}>{r.bias}</span>
+                <span className="rounded border border-border/60 px-1.5 py-0.5 font-semibold">{r.grade}</span>
+                <span className={`font-semibold tracking-tight ${dir}`}>{r.bias}</span>
                 <span className="text-muted-foreground">
                   {when.toLocaleDateString()} {when.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                 </span>
@@ -194,7 +194,7 @@ function SignalHistory({ records, onOpen }: { records: SignalRecord[]; onOpen: (
                         key={o}
                         onClick={() => setSignalOutcome(r.id, r.outcome === o ? null : o)}
                         className={`rounded border px-1.5 py-0.5 capitalize ${
-                          r.outcome === o ? "border-primary bg-primary/15 text-primary" : "border-border text-muted-foreground hover:text-foreground"
+                          r.outcome === o ? "border-primary bg-primary/15 text-primary" : "border-border/60 text-muted-foreground hover:text-foreground"
                         }`}
                       >
                         {o}
@@ -205,7 +205,7 @@ function SignalHistory({ records, onOpen }: { records: SignalRecord[]; onOpen: (
                   r.bias !== "Neutral" && (
                     <button
                       onClick={() => takeTrade(r)}
-                      className="inline-flex items-center gap-1 rounded-md bg-primary px-2 py-1 font-semibold text-primary-foreground hover:opacity-90"
+                      className="inline-flex items-center gap-1 rounded-xl bg-primary px-2 py-1 font-semibold text-primary-foreground hover:opacity-90"
                     >
                       <BookOpen className="h-3 w-3" /> Take trade
                     </button>
@@ -232,14 +232,14 @@ function SignalColumn({ title, tone, signals, onClick }: { title: string; tone: 
   const Icon = tone === "buy" ? TrendingUp : tone === "sell" ? TrendingDown : Minus;
   const color = tone === "buy" ? "text-bull" : tone === "sell" ? "text-red-500" : "text-muted-foreground";
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
+    <div className="rounded-xl border border-border/60 bg-card p-4">
       <div className={`flex items-center gap-2 text-sm font-semibold mb-3 ${color}`}>
         <Icon className="h-4 w-4" /> {title} <span className="text-muted-foreground font-normal">({signals.length})</span>
       </div>
       <div className="space-y-2">
         {signals.length === 0 && <div className="text-xs text-muted-foreground py-4 text-center">No {title.toLowerCase()} signals</div>}
         {signals.map((s) => (
-          <button key={s.ticker} onClick={() => onClick(s.ticker)} className="w-full text-left rounded-md border border-border/60 p-3 hover:bg-muted/40 transition">
+          <button key={s.ticker} onClick={() => onClick(s.ticker)} className="w-full text-left rounded-xl border border-border/60 p-3 hover:bg-muted/40 transition">
             <div className="flex items-center justify-between">
               <div className="font-semibold text-sm">{s.ticker}</div>
               <div className="text-xs px-1.5 py-0.5 rounded bg-muted">{s.grade}</div>
