@@ -47,7 +47,7 @@ export async function pushAll(trades: SyncTrade[]): Promise<void> {
     .map((t) => ({
       id: t.id,
       user_id: userId,
-      data: t as unknown as Record<string, unknown>,
+      data: JSON.parse(JSON.stringify(t)),
       trade_date: typeof t.date === "string" ? t.date : null,
     }));
 
