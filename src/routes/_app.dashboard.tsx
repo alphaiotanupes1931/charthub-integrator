@@ -55,7 +55,7 @@ function activeStrategyDesc(): string | undefined {
 
 
 
-type DashboardSearch = { ask?: string; symbol?: string };
+type DashboardSearch = { ask?: string; symbol?: string; thread?: string };
 
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({
@@ -67,6 +67,7 @@ export const Route = createFileRoute("/_app/dashboard")({
   validateSearch: (s: Record<string, unknown>): DashboardSearch => ({
     ask: typeof s.ask === "string" ? s.ask : undefined,
     symbol: typeof s.symbol === "string" ? s.symbol : undefined,
+    thread: typeof s.thread === "string" ? s.thread : undefined,
   }),
   component: Dashboard,
 });
