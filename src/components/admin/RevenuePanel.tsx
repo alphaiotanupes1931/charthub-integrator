@@ -140,7 +140,7 @@ export function RevenuePanel({ onMrrChange }: { onMrrChange?: (mrrCents: number)
             ) : (
               <div key={r.id} className="flex items-center gap-3 px-5 py-3.5">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold">
-                  {r.name.slice(0, 2).toUpperCase()}
+                  {(r.name ?? "?").slice(0, 2).toUpperCase()}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-medium">{r.name}</div>
