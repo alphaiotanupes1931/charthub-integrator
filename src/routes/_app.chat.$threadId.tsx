@@ -271,24 +271,6 @@ function ChatThreadInner({
             return (
               <Message key={m.id} from={m.role}>
                 <div className="flex flex-col gap-2 w-full">
-                  {ctx.chart?.tvSymbol && (parsed.annotations.length > 0 || parsed.grade) && (
-                    <div className="overflow-hidden rounded-2xl border border-border/50 bg-card">
-                      <div className="flex items-center justify-between border-b border-border/60 px-3 py-1.5 text-[10px] font-semibold tracking-tight text-muted-foreground">
-                        <span className="text-foreground/80">{ctx.chart.ticker}</span>
-                        <span>{ctx.chart.intervalLabel}</span>
-                      </div>
-                      <div className="h-56">
-                        <NativeChart
-                          symbol={ctx.chart.tvSymbol}
-                          ticker={ctx.chart.ticker}
-                          interval={ctx.chart.interval ?? "60"}
-                          enabled={NO_LEVELS}
-                          annotations={parsed.annotations}
-                          className="h-full"
-                        />
-                      </div>
-                    </div>
-                  )}
                   {parsed.grade && <ThreadGradeCard grade={parsed.grade} />}
                   <MessageResponse>{parsed.cleanText || text}</MessageResponse>
                 </div>

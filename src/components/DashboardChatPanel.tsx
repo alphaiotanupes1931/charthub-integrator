@@ -800,9 +800,6 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                         <span className="font-medium text-foreground/80">{activeCoach}</span>
                         <span className="text-muted-foreground/60">· {coachMeta.tagline}</span>
                       </div>
-                      {chart && (parsed.annotations.length > 0 || g) && (
-                        <InlineAnalysisChart chart={chart} annotations={parsed.annotations} />
-                      )}
                       {g && <GradeCard grade={g} lastPrice={chart?.snapshot?.lastPrice} symbol={chart?.ticker} />}
                       {summary && (
                         <div className="text-sm text-foreground/90 leading-snug">{summary}</div>
