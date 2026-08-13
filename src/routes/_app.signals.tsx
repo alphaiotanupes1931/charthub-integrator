@@ -207,7 +207,7 @@ function SignalHistory({ records, onOpen }: { records: SignalRecord[]; onOpen: (
                       onClick={() => takeTrade(r)}
                       className="inline-flex items-center gap-1 rounded-xl bg-primary px-2 py-1 font-semibold text-primary-foreground hover:opacity-90"
                     >
-                      <BookOpen className="h-3 w-3" /> Take trade
+                      <BookOpen className="h-3 w-3" /> Log this trade
                     </button>
                   )
                 )}
