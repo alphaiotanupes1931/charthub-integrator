@@ -116,3 +116,64 @@ export const createTestNotification = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+/**
+ * Account and system notices raised by the app itself (backup AI model in use,
+ * broker connection lost, a scan that failed). Only a fixed set of reasons is
+ * accepted so the client cannot write arbitrary inbox rows, and each reason is
+ * deduped to once per day.
+ */
+const SYSTEM_NOTICES = {
+  ai_backup_model: {
+    title: "AI coach is on the backup model",
+    body: "Claude credits ran out, so your coach is answering on Google Gemini. Replies still work; contact admin to top up.",
+    url: "/dashboard",
+    perHours: 24,
+  },
+  ai_unavailable: {
+    title: "AI coach is temporarily unavailable",
+    body: "The chat could not reach a model. Try again in a few minutes; if it keeps failing, contact admin.",
+    url: "/dashboard",
+    perHours: 6,
+  },
+  broker_disconnected: {
+    title: "Broker connection needs attention",
+    body: "Your broker link expired or was rejected. Reconnect it to keep live prices and order routing working.",
+    url: "/settings",
+    perHours: 24,
+  },
+  scan_failed: {
+    title: "A scan could not complete",
+    body: "The scanner could not finish the last run. This is usually a temporary data feed hiccup - run it again.",
+    url: "/dashboard",
+    perHours: 6,
+  },
+} as const;
+
+export const reportSystemNotice = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) =>
+    z.object({
+      reason: z.enum(["ai_backup_model", "ai_unavailable", "broker_disconnected", "scan_failed"]),
+      detail: z.string().max(300).optional(),
+    }).parse(raw),
+  )
+  .handler(async ({ data, context }) => {
+    const { userId } = context as Ctx;
+    const notice = SYSTEM_NOTICES[data.reason];
+    const { createNotificationOnce } = await import("@/lib/notifications.server");
+    const day = new Date().toISOString().slice(0, 10);
+    const id = await createNotificationOnce(
+      `system:${data.reason}:${day}`,
+      {
+        userId,
+        kind: "system",
+        title: notice.title,
+        body: data.detail ? `${notice.body} (${data.detail})` : notice.body,
+        url: notice.url,
+        meta: { reason: data.reason },
+      },
+      notice.perHours,
+    );
+    return { created: !!id };
+  });
