@@ -9,6 +9,15 @@ import { HelpCircle, ChevronDown } from "lucide-react";
  * repeat its own instructions.
  */
 export const PAGE_INSTRUCTIONS: Record<string, { title: string; steps: string[] }> = {
+  "/contact": {
+    title: "How to reach the team",
+    steps: [
+      "Pick Support ticket if something is broken or blocking you, or Feedback for an idea or a comment.",
+      "Leave the reply email you actually check. It defaults to the email on your account.",
+      "Write a clear subject, then say what happened, what you expected and which page you were on.",
+      "Press submit. It lands in the team inbox straight away and a copy is filed under Your submissions.",
+    ],
+  },
   "/dashboard": {
     title: "How to use the dashboard",
     steps: [
