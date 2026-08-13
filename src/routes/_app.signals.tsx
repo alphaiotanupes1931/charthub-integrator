@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { PageHeader } from "@/components/PageHeader";
-import { Radar, TrendingUp, TrendingDown, Minus, Loader2, RefreshCw, BookOpen, History, Trash2 } from "lucide-react";
+import { Radar, TrendingUp, TrendingDown, Minus, Loader2, RefreshCw, BookOpen, History, Trash2, Zap } from "lucide-react";
 import { runSignalScan, type Signal } from "@/lib/agents/signal-engine.functions";
 import {
   listSignals,
