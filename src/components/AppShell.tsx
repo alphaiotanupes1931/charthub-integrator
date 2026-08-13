@@ -414,7 +414,6 @@ export function AppShell({ children }: { children: ReactNode }) {
 
           <NewsMarquee />
           <div className="flex-1 md:hidden" />
-          <TestingBanner />
 
           <NotificationBell />
           {/* Mobile logo */}
