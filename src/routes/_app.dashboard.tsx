@@ -967,9 +967,14 @@ function Dashboard() {
         { kind: "hline", price: tp1, label: "TP1", color: "var(--bull)", dashed: true },
         { kind: "hline", price: tp2, label: "TP2", color: "var(--bull)", dashed: true },
       ]);
+      // TradingView (Live) can't render our markers, so a scan always drops the
+      // chart onto the Setup view where entry/stop/TP lines are drawn. Without
+      // this, desktop stayed on Live and the marked-up chart never appeared.
+      setChartTab("setup");
     } else {
       setAiAnnotationsRaw([]);
     }
+
     // Record every scan so the signal history shows previous signals.
     recordSignal({
       symbol: symbol.ticker,
