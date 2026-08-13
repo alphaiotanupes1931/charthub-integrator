@@ -168,8 +168,8 @@ function ConnectionsPage() {
             key={g}
             type="button"
             onClick={() => setFilter(g as "all" | BrokerDef["group"])}
-            className={`rounded-md border px-3 py-1.5 text-xs ${
-              filter === g ? "border-foreground bg-foreground text-background" : "border-border text-muted-foreground"
+            className={`rounded-xl border px-3 py-1.5 text-xs ${
+              filter === g ? "border-foreground bg-foreground text-background" : "border-border/60 text-muted-foreground"
             }`}
           >
             {g === "all" ? "All brokers" : g}
@@ -197,19 +197,19 @@ function ConnectionsPage() {
                     layout
                     whileHover={{ y: -2 }}
                     transition={{ type: "spring", stiffness: 300, damping: 24 }}
-                    className="rounded-md border border-border bg-card p-4"
+                    className="rounded-xl border border-border/60 bg-card p-4"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-medium">{def.name}</span>
                           {conn ? (
-                            <span className="inline-flex items-center gap-1 rounded-md border border-border px-1.5 py-0.5 text-[10px] uppercase text-muted-foreground">
+                            <span className="inline-flex items-center gap-1 rounded-xl border border-border/60 px-1.5 py-0.5 text-[10px] uppercase text-muted-foreground">
                               <Check className="h-3 w-3" /> {conn.env === "live" ? "Live" : "Demo"}
                             </span>
                           ) : null}
                           {def.trading ? (
-                            <span className="rounded-md border border-border px-1.5 py-0.5 text-[10px] uppercase text-muted-foreground">
+                            <span className="rounded-xl border border-border/60 px-1.5 py-0.5 text-[10px] uppercase text-muted-foreground">
                               Order routing
                             </span>
                           ) : null}
@@ -230,7 +230,7 @@ function ConnectionsPage() {
                     <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{def.notes}</p>
 
                     {isOpen ? (
-                      <div className="mt-4 space-y-3 border-t border-border pt-4">
+                      <div className="mt-4 space-y-3 border-t border-border/60 pt-4">
                         {def.envs ? (
                           <div className="flex gap-2">
                             {def.envs.map((e) => (
@@ -238,10 +238,10 @@ function ConnectionsPage() {
                                 key={e.value}
                                 type="button"
                                 onClick={() => setEnv(e.value)}
-                                className={`rounded-md border px-2.5 py-1 text-xs ${
+                                className={`rounded-xl border px-2.5 py-1 text-xs ${
                                   env === e.value
                                     ? "border-foreground bg-foreground text-background"
-                                    : "border-border text-muted-foreground"
+                                    : "border-border/60 text-muted-foreground"
                                 }`}
                               >
                                 {e.label}
@@ -260,7 +260,7 @@ function ConnectionsPage() {
                               autoComplete="off"
                               value={form[f.key] ?? ""}
                               onChange={(ev) => setForm((p) => ({ ...p, [f.key]: ev.target.value }))}
-                              className="mt-1 w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-sm outline-none focus:border-foreground"
+                              className="mt-1 w-full rounded-xl border border-border/60 bg-background px-2.5 py-1.5 text-sm outline-none focus:border-foreground"
                             />
                           </label>
                         ))}
@@ -269,7 +269,7 @@ function ConnectionsPage() {
                             type="button"
                             disabled={busy === def.id}
                             onClick={() => void onSave(def)}
-                            className="inline-flex items-center gap-2 rounded-md border border-foreground bg-foreground px-3 py-1.5 text-xs text-background disabled:opacity-60"
+                            className="inline-flex items-center gap-2 rounded-xl border border-foreground bg-foreground px-3 py-1.5 text-xs text-background disabled:opacity-60"
                           >
                             {busy === def.id ? (
                               <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -281,7 +281,7 @@ function ConnectionsPage() {
                           <button
                             type="button"
                             onClick={() => setOpenId(null)}
-                            className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground"
+                            className="inline-flex items-center gap-2 rounded-xl border border-border/60 px-3 py-1.5 text-xs text-muted-foreground"
                           >
                             <X className="h-3.5 w-3.5" /> Cancel
                           </button>
@@ -292,7 +292,7 @@ function ConnectionsPage() {
                         <button
                           type="button"
                           onClick={() => openForm(def)}
-                          className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-xs"
+                          className="inline-flex items-center gap-2 rounded-xl border border-border/60 px-3 py-1.5 text-xs"
                         >
                           <Plug className="h-3.5 w-3.5" /> {conn ? "Replace keys" : "Connect"}
                         </button>
@@ -302,7 +302,7 @@ function ConnectionsPage() {
                               type="button"
                               disabled={busy === def.id}
                               onClick={() => void onTest(def)}
-                              className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-xs disabled:opacity-60"
+                              className="inline-flex items-center gap-2 rounded-xl border border-border/60 px-3 py-1.5 text-xs disabled:opacity-60"
                             >
                               {busy === def.id ? (
                                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -315,7 +315,7 @@ function ConnectionsPage() {
                               type="button"
                               disabled={busy === def.id}
                               onClick={() => void onRemove(def)}
-                              className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground disabled:opacity-60"
+                              className="inline-flex items-center gap-2 rounded-xl border border-border/60 px-3 py-1.5 text-xs text-muted-foreground disabled:opacity-60"
                             >
                               <Trash2 className="h-3.5 w-3.5" /> Disconnect
                             </button>
@@ -323,7 +323,7 @@ function ConnectionsPage() {
                               <button
                                 type="button"
                                 onClick={() => setTicketId(ticketId === def.id ? null : def.id)}
-                                className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-xs"
+                                className="inline-flex items-center gap-2 rounded-xl border border-border/60 px-3 py-1.5 text-xs"
                               >
                                 <Send className="h-3.5 w-3.5" />
                                 {ticketId === def.id ? "Hide ticket" : "Send order"}

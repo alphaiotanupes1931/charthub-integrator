@@ -73,7 +73,7 @@ function ChatEmpty() {
       <button
         onClick={startNew}
         disabled={busy}
-        className="mt-6 inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
+        className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
       >
         <Plus className="h-4 w-4" /> {busy ? "Starting..." : "Start new conversation"}
       </button>

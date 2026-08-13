@@ -58,9 +58,9 @@ function ThreadGradeCard({ grade }: { grade: ChartGrade }) {
     ["TP2", grade.tp2],
   ];
   return (
-    <div className="rounded-md border border-border bg-card/50 w-full">
+    <div className="rounded-xl border border-border/60 bg-card/50 w-full">
       <div className="flex items-center gap-2 px-3 py-1.5 border-b border-border/60">
-        <span className={`text-[10px] font-bold uppercase tracking-wider ${tone}`}>{bias}</span>
+        <span className={`text-[10px] font-bold tracking-tight ${tone}`}>{bias}</span>
         <span className="rounded border border-border/60 bg-background/60 px-1.5 py-0.5 text-[10px] font-bold">
           {grade.grade.toUpperCase()}
         </span>
@@ -68,7 +68,7 @@ function ThreadGradeCard({ grade }: { grade: ChartGrade }) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2">
         {rows.map(([label, value]) => (
           <div key={label} className="rounded border border-border/50 bg-background/40 px-2 py-1">
-            <div className="text-[9px] uppercase tracking-wider text-muted-foreground">{label}</div>
+            <div className="text-[9px] tracking-tight text-muted-foreground">{label}</div>
             <div className="font-mono text-[11px] text-foreground">{num(value)}</div>
           </div>
         ))}
@@ -228,17 +228,17 @@ function ChatThreadInner({
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-sm font-semibold text-foreground truncate">{readActiveCoach()}</span>
           {ctx.chart?.ticker && (
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-foreground px-1.5 py-0.5 rounded bg-muted border border-border truncate max-w-[180px]" title={`${ctx.chart.ticker} · ${ctx.chart.intervalLabel}`}>
+            <span className="text-[10px] font-semibold tracking-tight text-foreground px-1.5 py-0.5 rounded bg-muted border border-border/60 truncate max-w-[180px]" title={`${ctx.chart.ticker} · ${ctx.chart.intervalLabel}`}>
               {ctx.chart.ticker} · {ctx.chart.intervalLabel}
             </span>
           )}
           {ctx.strategy && (
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-1.5 py-0.5 rounded border border-border truncate max-w-[160px]" title={`Strategy: ${ctx.strategy}`}>
+            <span className="text-[10px] font-semibold tracking-tight text-muted-foreground px-1.5 py-0.5 rounded border border-border/60 truncate max-w-[160px]" title={`Strategy: ${ctx.strategy}`}>
               {ctx.strategy}
             </span>
           )}
         </div>
-        <span className="text-[9px] font-semibold uppercase tracking-wider text-primary px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20 shrink-0">
+        <span className="text-[9px] font-semibold tracking-tight text-primary px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20 shrink-0">
           {activeModel?.label ?? "AI"}
         </span>
       </div>
@@ -279,7 +279,7 @@ function ChatThreadInner({
         <ConversationScrollButton />
       </Conversation>
 
-      <div className="border-t border-border bg-background/80 backdrop-blur p-3 md:p-4">
+      <div className="border-t border-border/60 bg-background/80 backdrop-blur p-3 md:p-4">
         <div className="max-w-3xl mx-auto w-full">
           <PromptInput onSubmit={handleSubmit}>
             <PromptInputTextarea
@@ -297,7 +297,7 @@ function ChatThreadInner({
                   voice.setEnabled(next);
                   if (next) voice.resumeAudio(); else voice.pauseAudio();
                 }}
-                className={`h-9 w-9 inline-flex items-center justify-center rounded-md transition ${voice.enabled ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-muted/60"}`}
+                className={`h-9 w-9 inline-flex items-center justify-center rounded-xl transition ${voice.enabled ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-muted/60"}`}
                 title={voice.enabled ? "Mute coach voice" : "Hear coach replies aloud"}
                 aria-label={voice.enabled ? "Mute voice" : "Enable voice"}
               >

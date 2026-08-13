@@ -160,7 +160,7 @@ function VoiceCoachPage() {
       {/* Active coach selector */}
       <div className="relative rounded-xl border border-primary/40 bg-primary/[0.03] p-4 mb-6">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center">
+          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
             <Mic className="h-5 w-5 text-primary" />
           </div>
           <div className="flex-1">
@@ -174,7 +174,7 @@ function VoiceCoachPage() {
           </div>
         </div>
         {dropdown && (
-          <div className="absolute left-4 right-4 top-full mt-1 z-20 rounded-md border border-border bg-popover shadow-lg overflow-hidden">
+          <div className="absolute left-4 right-4 top-full mt-1 z-20 rounded-xl border border-border/60 bg-popover shadow-lg overflow-hidden">
             {COACH_NAMES.map((n) => (
               <button
                 key={n}
@@ -206,7 +206,7 @@ function VoiceCoachPage() {
       </div>
 
       {/* Quick prompts */}
-      <div className="rounded-xl border border-border bg-card p-5 mb-6">
+      <div className="rounded-xl border border-border/60 bg-card p-5 mb-6">
         <h3 className="font-display text-lg font-semibold mb-1">Quick prompts</h3>
         <p className="text-xs text-muted-foreground mb-4">Tap to hear it spoken in the active coach's voice.</p>
         <div className="flex flex-wrap gap-2">
@@ -215,7 +215,7 @@ function VoiceCoachPage() {
               key={p}
               onClick={() => { setStatus(`You: ${p}`); askCoach(p); }}
               disabled={replying || listening}
-              className="rounded-full border border-border bg-background px-3 py-1.5 text-xs hover:border-primary/40 hover:text-primary transition disabled:opacity-50"
+              className="rounded-full border border-border/60 bg-background px-3 py-1.5 text-xs hover:border-primary/40 hover:text-primary transition disabled:opacity-50"
             >
               {p}
             </button>
@@ -224,7 +224,7 @@ function VoiceCoachPage() {
       </div>
 
       {/* Voice settings */}
-      <div className="rounded-xl border border-border bg-card p-5 mb-6">
+      <div className="rounded-xl border border-border/60 bg-card p-5 mb-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-display text-lg font-semibold">Voice Settings</h3>
           <div className="flex items-center gap-2">
@@ -267,7 +267,7 @@ function VoiceCoachPage() {
       </div>
 
       {/* Coach voices */}
-      <div className="rounded-xl border border-border bg-card p-5">
+      <div className="rounded-xl border border-border/60 bg-card p-5">
         <h3 className="font-display text-lg font-semibold mb-1">Coach Voices</h3>
         <p className="text-xs text-muted-foreground mb-4">Each coach has a unique voice. Preview them below.</p>
         <div className="space-y-2">
@@ -275,7 +275,7 @@ function VoiceCoachPage() {
             const meta = COACH_META[n];
             const isPrev = previewing === n;
             return (
-              <div key={n} className="flex items-center justify-between gap-3 rounded-md border border-border bg-background/50 p-3">
+              <div key={n} className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-background/50 p-3">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="h-9 w-9 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
                     <Volume2 className="h-4 w-4" />
@@ -290,7 +290,7 @@ function VoiceCoachPage() {
                 <button
                   onClick={() => previewVoice(n)}
                   disabled={true}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 text-primary px-3 py-1.5 text-xs font-medium opacity-50 cursor-not-allowed"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-primary/40 bg-primary/10 text-primary px-3 py-1.5 text-xs font-medium opacity-50 cursor-not-allowed"
                 >
                   Preview
                 </button>

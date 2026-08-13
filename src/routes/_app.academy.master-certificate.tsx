@@ -39,7 +39,7 @@ function MasterCertificatePage() {
         <Link to="/academy" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground mb-4">
           <ArrowLeft className="h-3.5 w-3.5" /> Back to Academy
         </Link>
-        <div className="rounded-md border border-border bg-card p-8 text-center">
+        <div className="rounded-xl border border-border/60 bg-card p-8 text-center">
           <Award className="h-8 w-8 text-primary mx-auto mb-3" />
           <div className="font-semibold mb-1">Not eligible yet</div>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
@@ -47,7 +47,7 @@ function MasterCertificatePage() {
           </p>
           <Link
             to="/academy/exam"
-            className="mt-5 inline-flex items-center rounded-md border border-border bg-background px-4 py-2 text-sm font-medium"
+            className="mt-5 inline-flex items-center rounded-xl border border-border/60 bg-background px-4 py-2 text-sm font-medium"
           >
             Go to final exam
           </Link>
@@ -66,16 +66,16 @@ function MasterCertificatePage() {
         </Link>
         <button
           onClick={() => window.print()}
-          className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-2 text-xs font-medium"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-border/60 bg-card px-3 py-2 text-xs font-medium"
         >
           <Printer className="h-3.5 w-3.5" /> Print / Save PDF
         </button>
       </div>
 
-      <div className="rounded-md border border-border bg-card p-8 sm:p-14 text-center relative">
-        <div className="absolute inset-4 border border-border rounded-sm pointer-events-none" />
+      <div className="rounded-xl border border-border/60 bg-card p-8 sm:p-14 text-center relative">
+        <div className="absolute inset-4 border border-border/60 rounded-lg pointer-events-none" />
         <div className="relative">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">TradeMind Academy</div>
+          <div className="text-[10px] tracking-tight text-muted-foreground font-semibold">TradeMind Academy</div>
           <div className="font-display text-2xl sm:text-3xl mt-1">Master Certificate</div>
 
           <div className="mt-10 text-sm text-muted-foreground">This certifies that</div>
@@ -88,20 +88,20 @@ function MasterCertificatePage() {
 
           <div className="mt-12 grid grid-cols-3 gap-6 text-xs">
             <div>
-              <div className="uppercase tracking-widest text-muted-foreground mb-1">Modules</div>
+              <div className="tracking-tight text-muted-foreground mb-1">Modules</div>
               <div className="font-mono text-foreground">{ACADEMY.length} / {ACADEMY.length}</div>
             </div>
             <div>
-              <div className="uppercase tracking-widest text-muted-foreground mb-1">Final exam</div>
+              <div className="tracking-tight text-muted-foreground mb-1">Final exam</div>
               <div className="font-mono text-foreground">{finalExam!.score} / {finalExam!.total} ({pct}%)</div>
             </div>
             <div>
-              <div className="uppercase tracking-widest text-muted-foreground mb-1">Issued</div>
+              <div className="tracking-tight text-muted-foreground mb-1">Issued</div>
               <div className="font-mono text-foreground">{dateStr}</div>
             </div>
           </div>
 
-          <div className="mt-10 pt-6 border-t border-border text-[10px] uppercase tracking-widest text-muted-foreground">
+          <div className="mt-10 pt-6 border-t border-border/60 text-[10px] tracking-tight text-muted-foreground">
             TradeMind, educational content, not financial advice
           </div>
         </div>
