@@ -117,28 +117,45 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
         <div className="flex-1" />
 
         {(isLong || isShort) && (
-          <button
-            type="button"
-            onClick={() =>
-              takeTrade({
+          <div className="flex flex-col gap-1">
+            <button
+              type="button"
+              onClick={() =>
+                takeTrade({
+                  symbol: symbol ?? "",
+                  bias: isLong ? "Long" : "Short",
+                  interval,
+                  grade: grade.grade,
+                  entry: grade.entry,
+                  stop: grade.stop,
+                  tp1: grade.tp1,
+                  tp2: grade.tp2,
+                  why: grade.strength,
+                  risk: grade.weakness,
+                })
+              }
+              className="inline-flex h-8 items-center gap-1.5 rounded-2xl px-3 text-[10px] font-bold tracking-tight bg-primary text-primary-foreground hover:opacity-90"
+              title="Log this setup in your trade journal"
+            >
+              <BookOpen className="h-3 w-3" /> Log this trade
+            </button>
+            <Link
+              to="/broker"
+              search={{
                 symbol: symbol ?? "",
-                bias: isLong ? "Long" : "Short",
-                interval,
-                grade: grade.grade,
-                entry: grade.entry,
-                stop: grade.stop,
-                tp1: grade.tp1,
-                tp2: grade.tp2,
-                why: grade.strength,
-                risk: grade.weakness,
-              })
-            }
-            className="inline-flex h-8 items-center gap-1.5 rounded-2xl px-3 text-[10px] font-bold tracking-tight bg-primary text-primary-foreground hover:opacity-90"
-            title="Log this setup in your trade journal"
-          >
-            <BookOpen className="h-3 w-3" /> Log this trade
-          </button>
+                side: isLong ? "long" : "short",
+                entry: grade.entry ?? "",
+                stop: grade.stop ?? "",
+                tp: grade.tp1 ?? "",
+              } as never}
+              className="inline-flex h-8 items-center justify-center gap-1.5 rounded-2xl border border-border/60 px-3 text-[10px] font-bold tracking-tight text-foreground hover:bg-muted/60"
+              title="Sign in to your OANDA account and place this trade"
+            >
+              <Zap className="h-3 w-3" /> Take this trade
+            </Link>
+          </div>
         )}
+
 
         <button
           type="button"
