@@ -20,6 +20,10 @@ import { ChartSourceBadge, feedLabel } from "@/components/ChartSourceBadge";
 
 export type LevelKey = "VWAP" | "POC" | "SR" | "ZONES" | "FVG" | "FIB" | "LIQ" | "OF" | "CISD";
 
+/** lightweight-charts parses colors itself and cannot read CSS variables. */
+const BULL_COLOR = "#2dd4bf";
+
+
 export const LEVEL_META: Record<LevelKey, { label: string; color: string; tone: string }> = {
   VWAP:  { label: "VWAP",  color: "#fbbf24", tone: "bg-amber-500/10 text-amber-300 border-amber-500/30" },
   POC:   { label: "POC",   color: "#c084fc", tone: "bg-purple-500/10 text-purple-300 border-purple-500/30" },
