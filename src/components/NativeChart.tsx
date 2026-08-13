@@ -451,58 +451,67 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
         hour: "2-digit", minute: "2-digit", hour12, timeZone: tz,
       });
     };
-    const chart = createChart(containerRef.current, {
-      autoSize: true,
-      layout: {
-        background: { color: chartBg.bg },
-        textColor: chartBg.text,
-        fontFamily: "'Trebuchet MS', Roboto, Ubuntu, sans-serif",
-        fontSize: 12,
-        attributionLogo: false,
-      },
-      grid: {
-        vertLines: { color: chartBg.grid, style: LineStyle.Solid },
-        horzLines: { color: chartBg.grid, style: LineStyle.Solid },
-      },
-      crosshair: {
-        mode: CrosshairMode.Normal,
-        vertLine: { color: "#758696", width: 1, style: LineStyle.Dashed, labelBackgroundColor: "#2962ff" },
-        horzLine: { color: "#758696", width: 1, style: LineStyle.Dashed, labelBackgroundColor: "#2962ff" },
-      },
-      rightPriceScale: {
-        borderColor: chartBg.border,
-        borderVisible: true,
-        scaleMargins: { top: 0.1, bottom: 0.1 },
-      },
-      timeScale: {
-        borderColor: chartBg.border,
-        borderVisible: true,
-        timeVisible: true,
-        secondsVisible: false,
-        rightOffset: 12,
-        barSpacing: 6,
-        tickMarkFormatter: (time: number) => fmtTime(time),
-      },
-      localization: {
-        timeFormatter: (time: number) => fmtDateTime(time),
-      },
-    });
-    const series = chart.addSeries(CandlestickSeries, {
-      upColor: candleColors.up, downColor: candleColors.down,
-      borderUpColor: candleColors.borderUp, borderDownColor: candleColors.borderDown,
-      wickUpColor: candleColors.wickUp, wickDownColor: candleColors.wickDown,
-    });
+    let chart: IChartApi;
+    let series: ISeriesApi<"Candlestick">;
+    try {
+      chart = createChart(containerRef.current, {
+        autoSize: true,
+        layout: {
+          background: { color: chartBg.bg },
+          textColor: chartBg.text,
+          fontFamily: "'Trebuchet MS', Roboto, Ubuntu, sans-serif",
+          fontSize: 12,
+          attributionLogo: false,
+        },
+        grid: {
+          vertLines: { color: chartBg.grid, style: LineStyle.Solid },
+          horzLines: { color: chartBg.grid, style: LineStyle.Solid },
+        },
+        crosshair: {
+          mode: CrosshairMode.Normal,
+          vertLine: { color: "#758696", width: 1, style: LineStyle.Dashed, labelBackgroundColor: "#2962ff" },
+          horzLine: { color: "#758696", width: 1, style: LineStyle.Dashed, labelBackgroundColor: "#2962ff" },
+        },
+        rightPriceScale: {
+          borderColor: chartBg.border,
+          borderVisible: true,
+          scaleMargins: { top: 0.1, bottom: 0.1 },
+        },
+        timeScale: {
+          borderColor: chartBg.border,
+          borderVisible: true,
+          timeVisible: true,
+          secondsVisible: false,
+          rightOffset: 12,
+          barSpacing: 6,
+          tickMarkFormatter: (time: number) => fmtTime(time),
+        },
+        localization: {
+          timeFormatter: (time: number) => fmtDateTime(time),
+        },
+      });
+      series = chart.addSeries(CandlestickSeries, {
+        upColor: candleColors.up, downColor: candleColors.down,
+        borderUpColor: candleColors.borderUp, borderDownColor: candleColors.borderDown,
+        wickUpColor: candleColors.wickUp, wickDownColor: candleColors.wickDown,
+      });
+    } catch (err) {
+      // Never leave a blank panel: fall back to the lightweight SVG renderer.
+      setInitError(err instanceof Error ? err.message : "Chart engine failed to start");
+      setReady(false);
+      return;
+    }
     chartRef.current = chart;
     seriesRef.current = series;
     setReady(true);
     return () => {
       linesRef.current = [];
-      chart.remove();
+      try { chart.remove(); } catch { /* ignore */ }
       chartRef.current = null;
       seriesRef.current = null;
       setReady(false);
     };
-  }, [resolvedTimezone, timeFormat]);
+  }, [resolvedTimezone, timeFormat, initAttempt]);
 
   // Apply live candle-color updates without recreating the chart
   useEffect(() => {
