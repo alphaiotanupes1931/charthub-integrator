@@ -393,23 +393,24 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="sticky top-0 z-30 flex items-center gap-2 px-4 md:px-6 py-3 border-b border-border/60 bg-background/80 backdrop-blur-xl">
+        <header className="sticky top-0 z-30 flex items-center gap-2 px-4 md:px-6 py-3 border-b border-border/50 bg-background/85 backdrop-blur-xl">
           {/* Mobile menu */}
           <button
             onClick={() => setMobileOpen(true)}
-            className="md:hidden h-9 w-9 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:text-foreground shrink-0"
+            className="md:hidden h-9 w-9 rounded-full flex items-center justify-center text-muted-foreground hover:bg-accent/60 hover:text-foreground transition shrink-0"
             aria-label="Open menu"
           >
-            <Menu className="h-4 w-4" />
+            <Menu className="h-[18px] w-[18px]" />
           </button>
           {/* Desktop collapse */}
           <button
             onClick={() => setCollapsed((c) => !c)}
-            className="hidden md:flex h-9 w-9 rounded-md border border-border items-center justify-center text-muted-foreground hover:text-foreground shrink-0"
+            className="hidden md:flex h-9 w-9 rounded-full items-center justify-center text-muted-foreground hover:bg-accent/60 hover:text-foreground transition shrink-0"
             aria-label="Toggle sidebar"
           >
-            {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+            {collapsed ? <PanelLeftOpen className="h-[18px] w-[18px]" /> : <PanelLeftClose className="h-[18px] w-[18px]" />}
           </button>
+
           <NewsMarquee />
           <div className="flex-1 md:hidden" />
           <TestingBanner />
