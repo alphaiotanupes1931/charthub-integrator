@@ -613,20 +613,3 @@ function GradeChip({
     </div>
   );
 }
-
-function BrowserFrame({ url, children }: { url: string; children: React.ReactNode }) {
-  return (
-    <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-border/60">
-        <div className="flex gap-1.5">
-          <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
-          <span className="h-3 w-3 rounded-full bg-[#febc2e]" />
-          <span className="h-3 w-3 rounded-full bg-[#28c840]" />
-        </div>
-        <div className="flex-1 text-center text-xs text-muted-foreground font-mono">{url}</div>
-        <div className="w-12" />
-      </div>
-      {children}
-    </div>
-  );
-}
