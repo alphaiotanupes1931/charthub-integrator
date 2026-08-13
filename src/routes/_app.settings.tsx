@@ -39,7 +39,7 @@ export const Route = createFileRoute("/_app/settings")({
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-4 my-8">
-      <span className="text-[11px] font-medium tracking-[0.2em] text-muted-foreground uppercase">
+      <span className="text-[11px] font-medium tracking-[0.2em] text-muted-foreground">
         {children}
       </span>
       <div className="flex-1 h-px bg-border/60" />
@@ -423,7 +423,7 @@ function SettingsPage() {
                   if (isHex(v)) updateCandleColors({ [key]: v } as Partial<CandleColors>);
                 }}
                 spellCheck={false}
-                className="w-24 rounded border border-border/60 bg-background px-2 py-1 font-mono text-xs uppercase text-foreground/90 focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-24 rounded border border-border/60 bg-background px-2 py-1 font-mono text-xs text-foreground/90 focus:outline-none focus:ring-1 focus:ring-primary"
                 aria-label={`${label} hex code`}
               />
             </div>
@@ -489,7 +489,7 @@ function SettingsPage() {
                   if (isHex(v)) updateChartBg({ [key]: v } as Partial<ChartBackground>);
                 }}
                 spellCheck={false}
-                className="w-24 rounded border border-border/60 bg-background px-2 py-1 font-mono text-xs uppercase text-foreground/90 focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-24 rounded border border-border/60 bg-background px-2 py-1 font-mono text-xs text-foreground/90 focus:outline-none focus:ring-1 focus:ring-primary"
                 aria-label={`${label} hex code`}
               />
             </div>

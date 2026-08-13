@@ -108,7 +108,7 @@ export function TradeLockerPanel() {
             <ShieldCheck className="h-4 w-4 text-primary" />
             Signed in as <span className="font-semibold">{status.email}</span> on server{" "}
             <span className="font-mono">{status.server}</span>
-            <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-bold uppercase">
+            <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-bold">
               {status.env === "live" ? "Live" : "Demo"}
             </span>
           </div>

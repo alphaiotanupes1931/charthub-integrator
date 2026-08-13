@@ -106,7 +106,7 @@ export function AlpacaPanel() {
                 <div key={p.symbol} className="flex items-center justify-between px-3 py-2 text-sm">
                   <div className="flex items-center gap-3">
                     <span className="font-semibold">{p.symbol}</span>
-                    <span className="text-xs uppercase text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">
                       {p.side} {p.qty}
                     </span>
                     <span className="text-xs text-muted-foreground">@ {p.avgPrice}</span>

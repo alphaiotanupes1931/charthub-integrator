@@ -373,7 +373,7 @@ function FaceCard({ side, label, body }: { side: "front" | "back"; label: string
         transform: isBack ? "rotateY(180deg)" : undefined,
       }}
     >
-      <div className={`text-[10px] uppercase tracking-[0.2em] mb-4 ${isBack ? "text-primary" : "text-muted-foreground"}`}>
+      <div className={`text-[10px] tracking-[0.2em] mb-4 ${isBack ? "text-primary" : "text-muted-foreground"}`}>
         {label}
       </div>
       <div className={`text-lg sm:text-2xl leading-relaxed font-medium ${isBack ? "text-foreground" : "text-foreground"}`}>

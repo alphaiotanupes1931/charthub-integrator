@@ -320,7 +320,7 @@ function GradeCard({ grade, lastPrice, symbol, interval }: { grade: ChartGrade; 
           <span className="text-[10px] tracking-tight text-muted-foreground">Grade</span>
         </div>
         {grade.bias && (
-          <span className={`text-xs font-semibold uppercase ${biasTone}`}>{grade.bias}</span>
+          <span className={`text-xs font-semibold ${biasTone}`}>{grade.bias}</span>
         )}
       </div>
       {orderType && (

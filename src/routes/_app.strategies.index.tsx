@@ -296,7 +296,7 @@ function StrategyBuilderModal({
       >
         <div className="flex items-center justify-between p-5 border-b border-border/60">
           <div>
-            <div className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">{editing ? "Edit strategy" : "Build a strategy"}</div>
+            <div className="text-[11px] tracking-[0.2em] text-muted-foreground">{editing ? "Edit strategy" : "Build a strategy"}</div>
             <h2 className="font-display text-xl font-semibold">Your playbook</h2>
           </div>
           <button onClick={onClose} aria-label="Close" className="h-8 w-8 rounded-xl text-muted-foreground hover:text-foreground hover:bg-accent/40 flex items-center justify-center">
@@ -397,7 +397,7 @@ function StrategyBuilderModal({
 function BuilderField({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1.5">{label}</div>
+      <div className="text-[10px] tracking-[0.2em] text-muted-foreground mb-1.5">{label}</div>
       {children}
     </label>
   );

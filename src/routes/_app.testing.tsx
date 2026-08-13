@@ -168,7 +168,7 @@ function TestingPage() {
         ) : (
           <div className="overflow-x-auto rounded border border-border/60">
             <table className="w-full text-sm">
-              <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
+              <thead className="bg-muted/40 text-xs tracking-wide text-muted-foreground">
                 <tr>
                   <th className="text-left p-2">Symbol</th><th className="text-left p-2">Side</th><th className="text-right p-2">Size</th>
                   <th className="text-right p-2">Entry</th><th className="text-right p-2">Stop</th><th className="text-right p-2">TP</th>
@@ -205,7 +205,7 @@ function TestingPage() {
         ) : (
           <div className="overflow-x-auto rounded border border-border/60">
             <table className="w-full text-sm">
-              <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
+              <thead className="bg-muted/40 text-xs tracking-wide text-muted-foreground">
                 <tr>
                   <th className="text-left p-2">Closed</th><th className="text-left p-2">Symbol</th><th className="text-left p-2">Side</th>
                   <th className="text-right p-2">Entry</th><th className="text-right p-2">Exit</th>
@@ -223,7 +223,7 @@ function TestingPage() {
                       <td className="p-2 text-right">{t.entry}</td>
                       <td className="p-2 text-right">{t.exit}</td>
                       <td className={`p-2 text-right ${pnl >= 0 ? "text-emerald-500" : "text-red-500"}`}>{fmtMoney(pnl)}</td>
-                      <td className="p-2 uppercase text-xs">{t.reason}</td>
+                      <td className="p-2 text-xs">{t.reason}</td>
                     </tr>
                   );
                 })}
@@ -240,7 +240,7 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: "po
   const cls = tone === "pos" ? "text-emerald-500" : tone === "neg" ? "text-red-500" : "text-foreground";
   return (
     <div className="rounded-2xl border border-border/60 bg-card/40 p-3">
-      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="text-[11px] tracking-wide text-muted-foreground">{label}</div>
       <div className={`text-lg font-semibold ${cls}`}>{value}</div>
     </div>
   );

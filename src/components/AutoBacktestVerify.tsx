@@ -103,7 +103,7 @@ export function AutoBacktestVerify({ symbol, interval, side = "both", grade, com
 
   return (
     <div className={`rounded-xl border border-border/60 bg-muted/20 px-2.5 py-2 ${className ?? ""}`}>
-      <div className={`flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] ${tone}`}>
+      <div className={`flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.18em] ${tone}`}>
         <Icon className="h-3 w-3" />
         {good ? "Verified on history" : "Weak on history"}
       </div>

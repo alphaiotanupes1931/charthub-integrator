@@ -52,7 +52,7 @@ export default function BridgePanel() {
 
   return (
     <section className="mb-8">
-      <h2 className="mb-3 text-xs uppercase tracking-wide text-muted-foreground">Desktop bridge</h2>
+      <h2 className="mb-3 text-xs tracking-wide text-muted-foreground">Desktop bridge</h2>
       <div className="rounded-xl border border-border/60 bg-card p-4">
         <div className="flex items-start gap-2">
           <Terminal className="mt-0.5 h-4 w-4 text-muted-foreground" />
@@ -103,7 +103,7 @@ export default function BridgePanel() {
 
         <div className="mt-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs uppercase tracking-wide text-muted-foreground">Order queue</h3>
+            <h3 className="text-xs tracking-wide text-muted-foreground">Order queue</h3>
             <Button size="sm" variant="ghost" onClick={() => void refresh()}>
               {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
             </Button>

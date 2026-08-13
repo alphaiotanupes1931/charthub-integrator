@@ -131,7 +131,7 @@ function MentorPage() {
 
         {invites.length > 0 && (
           <div className="mt-5 space-y-2">
-            <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">Your invite links</div>
+            <div className="text-[11px] font-medium tracking-[0.2em] text-muted-foreground">Your invite links</div>
             {invites.map((inv) => (
               <div key={inv.id} className="flex flex-wrap items-center gap-2 rounded-xl border border-border/60 bg-background/40 px-3 py-2">
                 <code className="flex-1 min-w-0 text-xs font-mono truncate text-foreground/90">{inviteUrl(inv.code)}</code>

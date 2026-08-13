@@ -70,7 +70,7 @@ export default function JournalReviewPanel({
 
           {review.mistakes.length > 0 && (
             <div>
-              <h3 className="text-xs uppercase tracking-wide text-muted-foreground">Repeating mistakes</h3>
+              <h3 className="text-xs tracking-wide text-muted-foreground">Repeating mistakes</h3>
               <ul className="mt-2 space-y-1 text-sm">
                 {review.mistakes.map((m) => (
                   <li key={m} className="border-l border-border/60 pl-3">{m}</li>
@@ -81,7 +81,7 @@ export default function JournalReviewPanel({
 
           {review.strengths.length > 0 && (
             <div>
-              <h3 className="text-xs uppercase tracking-wide text-muted-foreground">What is working</h3>
+              <h3 className="text-xs tracking-wide text-muted-foreground">What is working</h3>
               <ul className="mt-2 space-y-1 text-sm">
                 {review.strengths.map((s) => (
                   <li key={s} className="border-l border-border/60 pl-3">{s}</li>
@@ -92,7 +92,7 @@ export default function JournalReviewPanel({
 
           {review.correlations.byMentalScore.length > 0 && (
             <div>
-              <h3 className="text-xs uppercase tracking-wide text-muted-foreground">Mental state against results</h3>
+              <h3 className="text-xs tracking-wide text-muted-foreground">Mental state against results</h3>
               <table className="mt-2 w-full text-xs">
                 <thead className="text-muted-foreground">
                   <tr className="border-b border-border/60">

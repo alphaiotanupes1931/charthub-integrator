@@ -710,7 +710,7 @@ function TestingBanner() {
   return (
     <Link
       to="/testing"
-      className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-amber-500 hover:bg-amber-500/20"
+      className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-[11px] font-semibold tracking-wide text-amber-500 hover:bg-amber-500/20"
       title="You are in paper trading mode. Click to manage the test account."
     >
       <FlaskConical className="h-3.5 w-3.5" />
