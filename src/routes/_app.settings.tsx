@@ -23,6 +23,8 @@ import {
   Trash2,
   Palette,
   RotateCcw,
+  Mail,
+
 } from "lucide-react";
 import { isWelcomeBackMuted, setWelcomeBackMuted } from "@/lib/welcomeBack";
 import { useCandleColors, type CandleColors } from "@/hooks/useCandleColors";
@@ -52,6 +54,78 @@ function Card({ children, className = "" }: { children: React.ReactNode; classNa
     </div>
   );
 }
+
+/** Legacy username accounts got a placeholder address; those users must add a real one. */
+const PLACEHOLDER_EMAIL_DOMAIN = "@trademindaicoach.com";
+
+function EmailCard({ currentEmail }: { currentEmail: string | null }) {
+  const needsRealEmail = !currentEmail || currentEmail.toLowerCase().endsWith(PLACEHOLDER_EMAIL_DOMAIN);
+  const [value, setValue] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  async function save() {
+    const email = value.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+      toast.error("Enter a valid email address");
+      return;
+    }
+    if (email.endsWith(PLACEHOLDER_EMAIL_DOMAIN)) {
+      toast.error("Use your own email address");
+      return;
+    }
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ email });
+      if (error) throw new Error(error.message);
+      setSent(true);
+      toast.success("Confirmation link sent. Check that inbox to finish.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not update your email");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Card className={needsRealEmail ? "border-primary/50" : ""}>
+      <h2 className="flex items-center gap-2 text-lg font-semibold mb-2">
+        <Mail className="size-5 text-primary" />
+        Email address
+      </h2>
+      {needsRealEmail ? (
+        <p className="text-sm text-muted-foreground mb-4">
+          Your account was created with a username. Add your real email so you can reset your
+          password and receive account notices. We send a confirmation link before the change takes effect.
+        </p>
+      ) : (
+        <p className="text-sm text-muted-foreground mb-4">
+          Sign-in email: <span className="text-foreground">{currentEmail}</span>. Changing it sends a
+          confirmation link to the new address.
+        </p>
+      )}
+      {sent ? (
+        <p className="text-sm text-primary">Confirmation link sent. Click it to finish the change.</p>
+      ) : (
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Input
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            placeholder="you@email.com"
+            type="email"
+            autoCapitalize="none"
+            spellCheck={false}
+            maxLength={255}
+          />
+          <PrimaryButton onClick={save} disabled={busy} className="shrink-0">
+            <Save className="size-4" /> {busy ? "Sending..." : needsRealEmail ? "Add email" : "Change email"}
+          </PrimaryButton>
+        </div>
+      )}
+    </Card>
+  );
+}
+
 
 function FieldLabel({ icon, children }: { icon?: React.ReactNode; children: React.ReactNode }) {
   return (
