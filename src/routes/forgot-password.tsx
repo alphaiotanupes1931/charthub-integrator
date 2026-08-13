@@ -93,7 +93,7 @@ function ForgotPasswordPage() {
                 spellCheck={false}
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                placeholder="Email or username"
+                placeholder="you@email.com"
                 className="w-full h-11 rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:border-primary/50"
                 required
               />
