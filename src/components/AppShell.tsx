@@ -297,7 +297,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </span>
             <div className="min-w-0 flex-1">
               <div className="text-[13px] font-semibold text-foreground truncate">
-                {profile?.username ?? "Account"}
+                {profile?.display_name ?? "Account"}
               </div>
               {profile?.email && (
                 <div className="text-[11px] text-muted-foreground truncate" title={profile.email}>
