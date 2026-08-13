@@ -1796,10 +1796,7 @@ function Dashboard() {
                   </div>
                   {chatPanelView === "conversation" ? (
                     <div className="flex-1 min-h-0 flex flex-col">
-                      {/* Chart preview inside the chat so the setup being discussed stays visible */}
-                      <div className="shrink-0 h-[190px] border-b border-border/60 bg-card">
-                        <NativeChart symbol={symbol.tv} ticker={symbol.ticker} interval={interval} enabled={levels} sessions={sessionsOn} annotations={aiAnnotations} candleType={candleType} />
-                      </div>
+
 
                       <DashboardChatPanel
                         ref={isDesktop ? chatRef : null}
@@ -1909,10 +1906,7 @@ function Dashboard() {
             </div>
             {chatPanelView === "conversation" ? (
               <div className="flex-1 min-h-0 flex flex-col">
-                {/* Chart preview inside the chat so the setup being discussed stays visible */}
-                <div className="shrink-0 h-[190px] border-b border-border/60 bg-card">
-                  <NativeChart symbol={symbol.tv} ticker={symbol.ticker} interval={interval} enabled={levels} sessions={sessionsOn} annotations={aiAnnotations} candleType={candleType} />
-                </div>
+
 
                 <DashboardChatPanel
                   ref={!isDesktop ? chatRef : null}
