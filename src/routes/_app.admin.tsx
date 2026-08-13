@@ -9,6 +9,8 @@ import { adminReferralStats, adminUsersOverview, adminSetPlatformStatus } from "
 import { aiCostSummary } from "@/lib/ai-cost.functions";
 import { aiCreditsStatus, setAiBudget } from "@/lib/ai-credits.functions";
 import { adminListSupportRequests } from "@/lib/support.functions";
+import { RevenuePanel } from "@/components/admin/RevenuePanel";
+
 
 
 export const Route = createFileRoute("/_app/admin")({
@@ -36,6 +38,13 @@ function AdminPage() {
   const [users, setUsers] = useState<UserRow[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [mrrCents, setMrrCents] = useState(0);
+  const [aiSpend30, setAiSpend30] = useState<number | null>(null);
+  const [aiPerUser, setAiPerUser] = useState<
+    Array<{ user_id: string; email: string | null; calls: number; graded_setups: number; cost_usd: number; cost_per_setup: number }>
+  >([]);
+
+
 
 
   const toggleBan = async (u: UserRow) => {
@@ -62,6 +71,12 @@ function AdminPage() {
         setErr(e instanceof Error ? e.message : "Failed to load");
       }
     })();
+    aiCostSummary({ data: { days: 30 } })
+      .then((res) => {
+        setAiSpend30(res.byKind.reduce((s, r) => s + Number(r.cost_usd), 0));
+        setAiPerUser(res.byUser);
+      })
+      .catch(() => setAiSpend30(null));
   }, []);
 
 
@@ -79,40 +94,64 @@ function AdminPage() {
   const totalUsers = users?.length ?? 0;
   const totalReferrals = stats?.reduce((a, r) => a + Number(r.count), 0) ?? 0;
   const maxCount = stats?.reduce((a, r) => Math.max(a, Number(r.count)), 0) ?? 0;
+  const mrrUsd = mrrCents / 100;
+  const usd = (n: number) => `$${n.toLocaleString(undefined, { minimumFractionDigits: n < 10 && n !== 0 ? 2 : 0, maximumFractionDigits: 2 })}`;
+  const aiByUser = new Map(aiPerUser.map((r) => [r.user_id, r]));
 
   return (
-    <div className="p-4 md:p-8 max-w-[1100px] mx-auto space-y-8">
-      <PageHeader title="Admin" description="User insights and acquisition stats." />
+    <div className="p-4 md:p-8 max-w-[1100px] mx-auto space-y-6">
+      <PageHeader title="Admin" description="Users, AI usage, cost, and revenue in one place." />
+
+      {err && (
+        <div className="rounded-xl border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">{err}</div>
+      )}
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="rounded-2xl border border-border/60 bg-card p-5">
+          <div className="flex items-center gap-2 text-xs tracking-tight text-muted-foreground">
+            <Users className="h-3.5 w-3.5" /> Total users
+          </div>
+          <div className="mt-2 text-2xl md:text-3xl font-semibold tabular-nums">{totalUsers}</div>
+        </div>
+        <div className="rounded-2xl border border-border/60 bg-card p-5">
+          <div className="flex items-center gap-2 text-xs tracking-tight text-muted-foreground">
+            <DollarSign className="h-3.5 w-3.5" /> MRR
+          </div>
+          <div className="mt-2 text-2xl md:text-3xl font-semibold tabular-nums">{usd(mrrUsd)}</div>
+          <div className="mt-1 text-[11px] text-muted-foreground">Manual entries</div>
+        </div>
+        <div className="rounded-2xl border border-border/60 bg-card p-5">
+          <div className="flex items-center gap-2 text-xs tracking-tight text-muted-foreground">
+            <BarChart3 className="h-3.5 w-3.5" /> AI cost, 30d
+          </div>
+          <div className="mt-2 text-2xl md:text-3xl font-semibold tabular-nums">
+            {aiSpend30 === null ? "-" : usd(aiSpend30)}
+          </div>
+        </div>
+        <div className="rounded-2xl border border-border/60 bg-card p-5">
+          <div className="flex items-center gap-2 text-xs tracking-tight text-muted-foreground">
+            <DollarSign className="h-3.5 w-3.5" /> Net, 30d
+          </div>
+          <div className={`mt-2 text-2xl md:text-3xl font-semibold tabular-nums ${mrrUsd - (aiSpend30 ?? 0) < 0 ? "text-destructive" : ""}`}>
+            {usd(mrrUsd - (aiSpend30 ?? 0))}
+          </div>
+          <div className="mt-1 text-[11px] text-muted-foreground">MRR minus AI spend</div>
+        </div>
+      </div>
+
+      <RevenuePanel onMrrChange={setMrrCents} />
 
       <PlatformStatusEditor />
 
       <div>
         <a
           href="/admin/subscribers"
-          className="inline-flex items-center gap-2 rounded-2xl border border-border/60 px-3 py-2 text-sm hover:bg-muted"
+          className="inline-flex items-center gap-2 rounded-full border border-border/60 px-3.5 py-1.5 text-xs font-semibold hover:bg-muted"
         >
-          View Stripe subscribers →
+          View Stripe subscribers
         </a>
       </div>
 
-      {err && (
-        <div className="rounded-xl border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">{err}</div>
-      )}
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="rounded-xl border border-border/60 bg-card p-5">
-          <div className="flex items-center gap-2 text-xs tracking-tight text-muted-foreground">
-            <Users className="h-3.5 w-3.5" /> Total users
-          </div>
-          <div className="mt-2 text-3xl font-semibold">{totalUsers}</div>
-        </div>
-        <div className="rounded-xl border border-border/60 bg-card p-5">
-          <div className="flex items-center gap-2 text-xs tracking-tight text-muted-foreground">
-            <BarChart3 className="h-3.5 w-3.5" /> Sources tracked
-          </div>
-          <div className="mt-2 text-3xl font-semibold">{stats?.length ?? 0}</div>
-        </div>
-      </div>
 
       <section>
         <h2 className="text-sm font-semibold tracking-tight text-muted-foreground mb-3">How did you find us</h2>
@@ -142,15 +181,16 @@ function AdminPage() {
       </section>
 
       <section>
-        <h2 className="text-sm font-semibold tracking-tight text-muted-foreground mb-3">Users</h2>
-        <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
+        <h2 className="text-sm font-semibold tracking-tight text-muted-foreground mb-3">Users and AI usage, last 30 days</h2>
+        <div className="rounded-2xl border border-border/60 bg-card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-muted/40 text-xs tracking-tight text-muted-foreground">
                 <tr>
                   <th className="text-left px-4 py-2 font-medium">Name</th>
                   <th className="text-left px-4 py-2 font-medium">Email</th>
-                  <th className="text-left px-4 py-2 font-medium">Source</th>
+                  <th className="text-right px-4 py-2 font-medium">AI calls</th>
+                  <th className="text-right px-4 py-2 font-medium">AI cost</th>
                   <th className="text-left px-4 py-2 font-medium">Broker</th>
                   <th className="text-left px-4 py-2 font-medium">Status</th>
                   <th className="text-left px-4 py-2 font-medium">Joined</th>
@@ -159,14 +199,17 @@ function AdminPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {users === null ? (
-                  <tr><td colSpan={7} className="p-6 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Loading…</td></tr>
+                  <tr><td colSpan={8} className="p-6 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Loading…</td></tr>
                 ) : users.length === 0 ? (
-                  <tr><td colSpan={7} className="p-6 text-muted-foreground">No users yet.</td></tr>
+                  <tr><td colSpan={8} className="p-6 text-muted-foreground">No users yet.</td></tr>
                 ) : users.map((u) => (
                   <tr key={u.id} className={u.banned ? "bg-destructive/5" : ""}>
                     <td className="px-4 py-2.5">{u.display_name ?? <span className="text-muted-foreground">-</span>}</td>
                     <td className="px-4 py-2.5 text-muted-foreground">{u.email}</td>
-                    <td className="px-4 py-2.5 text-muted-foreground">{u.referral_source ?? <span className="opacity-60">-</span>}</td>
+                    <td className="px-4 py-2.5 text-right tabular-nums text-muted-foreground">{aiByUser.get(u.id)?.calls ?? 0}</td>
+                    <td className="px-4 py-2.5 text-right tabular-nums font-medium">
+                      {aiByUser.get(u.id) ? `$${Number(aiByUser.get(u.id)!.cost_usd).toFixed(2)}` : "$0.00"}
+                    </td>
                     <td className="px-4 py-2.5">
                       {u.broker_connected ? (
                         <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${u.broker_account_type === "live" ? "bg-bull/10 text-bull border border-bull/20" : "bg-amber-500/10 text-amber-400 border border-amber-500/20"}`}>
@@ -191,6 +234,7 @@ function AdminPage() {
                       )}
                     </td>
                     <td className="px-4 py-2.5 text-muted-foreground tabular-nums">{new Date(u.created_at).toLocaleDateString()}</td>
+
                     <td className="px-4 py-2.5 text-right">
                       <button
                         onClick={() => toggleBan(u)}
