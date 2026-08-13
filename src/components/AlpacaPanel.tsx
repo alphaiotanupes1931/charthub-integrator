@@ -89,7 +89,6 @@ export function AlpacaPanel() {
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
             <Stat label="Account" value={status.accountNumber ?? status.accountId.slice(0, 8)} />
-            <Stat label="Mode" value={status.env === "live" ? "Live" : "Paper"} />
             <Stat label="Equity" value={money(status.equity, status.currency)} />
             <Stat label="Buying power" value={money(status.buyingPower, status.currency)} />
           </div>
@@ -157,7 +156,7 @@ export function AlpacaPanel() {
         <>
           <p className="text-sm text-muted-foreground mb-3">
             No API keys to copy. Click below, log in on Alpaca's own page, approve access, and you land
-            back here connected. Works with both paper and live accounts.
+            back here connected.
           </p>
           <button
             onClick={() => void signIn()}
