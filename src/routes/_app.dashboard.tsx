@@ -919,6 +919,21 @@ function Dashboard() {
     navigate({ to: "/dashboard", search: (prev: DashboardSearch) => ({ ...prev, symbol: undefined }), replace: true });
   }, [search.symbol, navigate]);
 
+  // Honor ?thread= deep links (e.g. "AI chat" button on a journal trade)
+  const threadAppliedRef = useRef<string | null>(null);
+  useEffect(() => {
+    const id = search.thread?.trim();
+    if (!id || threadAppliedRef.current === id) return;
+    threadAppliedRef.current = id;
+    setActiveThreadId(id);
+    setChatPanelView("conversation");
+    setRightTab("chat");
+    setRightOpen(true);
+    setMobileView("chat");
+    navigate({ to: "/dashboard", search: (prev: DashboardSearch) => ({ ...prev, thread: undefined }), replace: true });
+  }, [search.thread, navigate]);
+
+
   const applyPlanToSignalCards = (plan: ScanResult) => {
     const num = (s: string): number | undefined => {
       if (!s || s === "-") return undefined;
