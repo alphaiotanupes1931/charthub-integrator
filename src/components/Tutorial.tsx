@@ -3,6 +3,7 @@ import {
   X, ArrowRight, ArrowLeft, Sparkles, LayoutDashboard, NotebookPen, Users,
   BarChart3, Library, Brain, Activity, MessageSquare, Volume2, Lightbulb,
 } from "lucide-react";
+import { shouldShowTour, markTourSeen } from "@/lib/tourFlag";
 
 const STORAGE_KEY = "trademind.tutorial.completed";
 
