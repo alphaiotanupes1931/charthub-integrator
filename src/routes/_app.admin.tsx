@@ -403,9 +403,10 @@ function AiCostPanel() {
                 </tr>
               </thead>
               <tbody>
-                {data!.byUser.map((r) => (
-                  <tr key={r.user_id} className="border-b border-border/60">
-                    <td className="px-3 py-2 truncate max-w-[180px]">{r.email ?? r.user_id.slice(0, 8)}</td>
+                {data!.byUser.map((r, i) => (
+                  <tr key={r.user_id ?? `anon-${i}`} className="border-b border-border/60">
+                    <td className="px-3 py-2 truncate max-w-[180px]">{r.email ?? (r.user_id ? r.user_id.slice(0, 8) : "System")}</td>
+
                     <td className="px-3 py-2 text-right">{r.graded_setups}</td>
                     <td className="px-3 py-2 text-right">{usd(Number(r.cost_usd))}</td>
                     <td className="px-3 py-2 text-right">{Number(r.cost_per_setup) > 0 ? usd(Number(r.cost_per_setup)) : "-"}</td>
