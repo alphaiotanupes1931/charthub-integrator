@@ -41,7 +41,9 @@ function read(): GateLogEntry[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = sessionStorage.getItem(KEY);
-    return raw ? (JSON.parse(raw) as GateLogEntry[]) : [];
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as GateLogEntry[] | null;
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
   }
