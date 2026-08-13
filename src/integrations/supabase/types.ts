@@ -44,6 +44,39 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_budget: {
+        Row: {
+          checked_at: string | null
+          created_at: string
+          id: boolean
+          low_threshold_pct: number
+          monthly_budget_usd: number
+          provider_message: string | null
+          provider_status: string
+          updated_at: string
+        }
+        Insert: {
+          checked_at?: string | null
+          created_at?: string
+          id?: boolean
+          low_threshold_pct?: number
+          monthly_budget_usd?: number
+          provider_message?: string | null
+          provider_status?: string
+          updated_at?: string
+        }
+        Update: {
+          checked_at?: string | null
+          created_at?: string
+          id?: boolean
+          low_threshold_pct?: number
+          monthly_budget_usd?: number
+          provider_message?: string | null
+          provider_status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ai_cost_log: {
         Row: {
           cache_write_tokens: number
@@ -1233,6 +1266,42 @@ export type Database = {
           trial_end?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      support_tickets: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          message: string
+          reply_email: string
+          status: string
+          subject: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind?: string
+          message: string
+          reply_email: string
+          status?: string
+          subject: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          message?: string
+          reply_email?: string
+          status?: string
+          subject?: string
+          updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
