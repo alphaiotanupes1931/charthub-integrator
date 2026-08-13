@@ -313,7 +313,7 @@ function GradeCard({ grade, lastPrice, symbol, interval }: { grade: ChartGrade; 
   const fmt = (n?: number) => formatPrice(n, lastPrice ?? grade.entry);
   const orderType = orderTypeFor(grade, lastPrice);
   return (
-    <div className="rounded-lg border border-border bg-card/60 overflow-hidden">
+    <div className="rounded-2xl border border-border/50 bg-card overflow-hidden">
       <div className={`flex items-center justify-between px-3 py-2 border-b border-border/60 ${tone.split(" ").filter((c) => c.startsWith("bg-")).join(" ")}`}>
         <div className="flex items-baseline gap-2">
           <span className={`text-lg font-bold leading-none ${tone.split(" ").filter((c) => c.startsWith("text-")).join(" ")}`}>{g}</span>
@@ -647,7 +647,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
 
     return (
       <div
-        className="flex flex-col h-full min-h-0 bg-card overflow-hidden sm:rounded-xl border-y sm:border border-border shadow-2xl sm:shadow-xl relative"
+        className="flex flex-col h-full min-h-0 bg-background overflow-hidden sm:rounded-2xl border-y sm:border border-border/50 relative"
         onPaste={(e) => {
           const items = e.clipboardData?.items;
           if (!items) return;
@@ -700,7 +700,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
           <div className="flex items-center gap-0.5 shrink-0">
             {activeModel && (
               <span
-                className="hidden sm:inline-flex text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-1.5 py-0.5 rounded bg-muted/60 border border-border/60"
+                className="hidden sm:inline text-[10px] font-medium text-muted-foreground truncate max-w-[120px]"
                 title={`Powered by ${activeModel.label}`}
               >
                 {activeModel.label}
@@ -708,7 +708,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
             )}
             <Link
               to="/chat"
-              className="hidden sm:inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60"
+              className="hidden sm:inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-accent/60 transition"
               title="Open full chat"
               aria-label="Open full chat"
             >
@@ -717,7 +717,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
             {onClose && (
               <button
                 onClick={onClose}
-                className="h-9 w-9 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                className="h-9 w-9 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-accent/60 transition"
                 title="Close coach"
                 aria-label="Close coach"
               >
@@ -765,14 +765,14 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                       )}
                       {parsed.concept && <ConceptDiagram concept={parsed.concept} />}
                       {parsed.annotations.length > 0 && (
-                        <div className="text-[10px] uppercase tracking-wider text-primary/80">
+                        <div className="text-[11px] font-medium text-muted-foreground">
                           Drawn on chart · {parsed.annotations.length} marker{parsed.annotations.length === 1 ? "" : "s"}
                         </div>
                       )}
                       {parsed.cleanText && (
                         g ? (
                           <details
-                            className="group rounded-lg border border-border bg-card/40"
+                            className="group rounded-2xl border border-border/50 bg-card"
                             onToggle={(e) => {
                               const el = e.currentTarget as HTMLDetailsElement;
                               if (el.open) {
@@ -785,7 +785,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                               }
                             }}
                           >
-                            <summary className="cursor-pointer select-none px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground flex items-center justify-between gap-2">
+                            <summary className="cursor-pointer select-none px-3.5 py-2.5 text-xs font-semibold text-muted-foreground hover:text-foreground flex items-center justify-between gap-2">
                               <span>Details</span>
                               <span className="flex items-center gap-2">
                                 <button
@@ -872,12 +872,12 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
         </Conversation>
 
         <div
-          className="border-t border-border bg-background/80 backdrop-blur p-2"
+          className="border-t border-border/50 bg-background p-2.5"
           style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
         >
           {pendingImage && (
-            <div className="mb-2 flex items-center gap-2 rounded-md border border-border bg-muted/40 p-1.5">
-              <img src={pendingImage.url} alt="attachment preview" className="h-12 w-12 rounded object-cover border border-border/60" />
+            <div className="mb-2 flex items-center gap-2 rounded-2xl border border-border/50 bg-card p-2">
+              <img src={pendingImage.url} alt="attachment preview" className="h-12 w-12 rounded-xl object-cover border border-border/50" />
               <div className="flex-1 min-w-0">
                 <div className="text-xs font-medium truncate">{pendingImage.name}</div>
                 <div className="text-[10px] text-muted-foreground">Ready to scan - press send</div>
@@ -885,7 +885,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               <button
                 type="button"
                 onClick={() => setPendingImage(null)}
-                className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
+                className="h-7 w-7 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-accent/60 transition"
                 aria-label="Remove attachment"
               >
                 <X className="h-3.5 w-3.5" />
@@ -929,7 +929,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-medium hover:border-primary/50 transition"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-accent/60 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent transition"
                   title="Attach a screenshot"
                   aria-label="Attach screenshot"
                 >
@@ -940,7 +940,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                   <button
                     type="button"
                     onClick={stopScan}
-                    className="inline-flex items-center gap-1.5 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/15 transition"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-destructive/12 px-3.5 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/20 transition"
                   >
                     <Square className="h-3 w-3" /> Stop scan
                   </button>
@@ -949,7 +949,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                     type="button"
                     onClick={onRunScan}
                     disabled={!onRunScan}
-                    className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium hover:border-primary/50 transition disabled:opacity-40"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-accent/60 px-3.5 py-1.5 text-xs font-medium text-foreground hover:bg-accent transition disabled:opacity-40"
                   >
                     <Crosshair className="h-3 w-3" /> Run scan
                   </button>
@@ -963,7 +963,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                       duration: 8000,
                     })
                   }
-                  className="inline-flex items-center gap-1.5 rounded-md border border-primary/30 bg-primary/10 px-2.5 py-1.5 text-xs font-medium text-primary hover:bg-primary/15 transition"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-accent/60 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition"
                   title='Type "show me" in chat to have the coach mark up the chart'
                   aria-label="Learn about Show Me"
                 >
@@ -1056,7 +1056,7 @@ function QuickPrompts({
 
   return (
     <div className="mb-2 -mx-0.5 flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-      <span className="shrink-0 self-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground pr-1">
+      <span className="shrink-0 self-center text-[11px] font-medium text-muted-foreground pr-1">
         Ask
       </span>
       {all.map((p) => (
@@ -1065,9 +1065,9 @@ function QuickPrompts({
           type="button"
           disabled={disabled}
           onClick={() => onPick(p.text)}
-          className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-border bg-background/60 text-xs text-foreground/90 hover:border-primary/40 hover:text-primary hover:bg-primary/5 transition disabled:opacity-40 disabled:cursor-not-allowed"
+          className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent/50 text-xs font-medium text-foreground/90 hover:bg-accent transition disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          <span className="text-primary/80 text-[11px] leading-none">{p.icon}</span>
+          <span className="text-muted-foreground text-[11px] leading-none">{p.icon}</span>
           {p.label}
         </button>
       ))}

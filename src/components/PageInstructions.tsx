@@ -251,7 +251,7 @@ export function PageInstructions({
   if (!entry) return null;
 
   return (
-    <div className={`rounded-md border border-border bg-card ${className}`}>
+    <div className={`rounded-2xl border border-border/50 bg-card ${className}`}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -259,7 +259,7 @@ export function PageInstructions({
         aria-expanded={open}
       >
         <HelpCircle className="h-4 w-4 text-primary shrink-0" />
-        <span className="text-xs font-semibold uppercase tracking-wider text-foreground">{entry.title}</span>
+        <span className="text-[13px] font-semibold text-foreground">{entry.title}</span>
         <motion.span
           className="ml-auto text-muted-foreground"
           animate={{ rotate: open ? 180 : 0 }}
