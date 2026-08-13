@@ -78,6 +78,8 @@ export const submitSupportRequest = createServerFn({ method: "POST" })
           text,
           purpose: "transactional",
           idempotency_key: `support:${ticket.id}`,
+          unsubscribe_token: `support-inbox:${SUPPORT_INBOX}`,
+
           label: `support_${data.kind}`,
           queued_at: new Date().toISOString(),
 
