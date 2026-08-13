@@ -299,7 +299,7 @@ function ScreenshotAttach({ onPick }: { onPick: (file: File) => void }) {
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
-        className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-sm font-medium hover:border-primary/50 transition"
+        className="inline-flex items-center gap-1.5 rounded-full bg-accent/60 px-4 py-2.5 text-sm font-semibold hover:bg-accent transition"
         title="Upload or paste a chart screenshot for the AI to scan"
       >
         <Paperclip className="h-3.5 w-3.5" /> Scan a screenshot
@@ -366,7 +366,7 @@ function ScanTicket({
           {voiceSpeaking && (
             <button
               onClick={onStopVoice}
-              className="inline-flex items-center gap-1.5 rounded-md border border-destructive/40 bg-destructive/10 px-2.5 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/15"
+              className="inline-flex items-center gap-1.5 rounded-full bg-destructive/12 px-3.5 py-2 text-xs font-semibold text-destructive hover:bg-destructive/20 transition"
               title="Stop voice"
             >
               <Square className="h-3 w-3" /> Stop
@@ -374,7 +374,7 @@ function ScanTicket({
           )}
           <button
             onClick={onRescan}
-            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90 transition whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90 transition whitespace-nowrap"
             title="Run a new scan on the current chart"
           >
             <Crosshair className="h-3 w-3" /> New scan
@@ -400,7 +400,7 @@ function ScanTicket({
                   risk: result.details,
                 });
               }}
-              className="inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-primary/15 border border-primary/40 px-2.5 py-1.5 text-xs font-semibold text-primary hover:bg-primary/25 whitespace-nowrap"
+              className="inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-accent/70 px-3.5 py-2 text-xs font-semibold text-foreground hover:bg-accent transition whitespace-nowrap"
               title="Log this setup in your trade journal as a trade you are taking"
             >
               <BookOpen className="h-3 w-3" /> I am taking this trade
@@ -430,7 +430,7 @@ function ScanTicket({
       )}
 
       {!isNoEntry && (
-        <div className="flex items-baseline justify-between rounded-lg border border-border/60 bg-background/30 px-3 py-2.5 text-[11px]">
+        <div className="flex items-baseline justify-between rounded-2xl bg-card border border-border/50 px-3.5 py-3 text-[11px]">
           <span className="text-muted-foreground uppercase tracking-wider text-[10px]">Risk / reward</span>
           <span className="font-mono font-semibold text-foreground">{result.rr}</span>
         </div>
@@ -515,15 +515,15 @@ function ScanTicket({
 }
 
 function MetricBlock({ title, tag, tone = "neutral", children }: { title: string; tag: string; tone?: "good" | "bad" | "neutral" | "muted"; children: React.ReactNode }) {
-  const tagColor = tone === "good" ? "text-bull border-bull/40 bg-bull/10"
-    : tone === "bad" ? "text-red-400 border-red-500/40 bg-red-500/10"
-    : tone === "muted" ? "text-muted-foreground border-border bg-muted/20"
-    : "text-primary border-primary/40 bg-primary/10";
+  const tagColor = tone === "good" ? "text-bull bg-bull/12"
+    : tone === "bad" ? "text-destructive bg-destructive/12"
+    : tone === "muted" ? "text-muted-foreground bg-accent/60"
+    : "text-foreground/80 bg-accent/60";
   return (
-    <div className="rounded-lg border border-border/60 bg-background/30 p-3 space-y-2">
+    <div className="rounded-2xl bg-card border border-border/50 p-4 space-y-2.5">
       <div className="flex items-center justify-between gap-2">
         <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-semibold">{title}</span>
-        <span className={`text-[10px] font-semibold uppercase tracking-wider rounded border px-1.5 py-0.5 ${tagColor}`}>{tag}</span>
+        <span className={`text-[10px] font-semibold uppercase tracking-wider rounded-full px-2 py-0.5 ${tagColor}`}>{tag}</span>
       </div>
       <div className="space-y-1">{children}</div>
     </div>
@@ -544,7 +544,7 @@ function MetricRow({ label, value, hidden }: { label: string; value: string; hid
 function TicketCell({ label, value, tone }: { label: string; value: string; tone?: "good" | "bad" }) {
   const color = tone === "good" ? "text-bull" : tone === "bad" ? "text-destructive" : "text-foreground";
   return (
-    <div className="rounded-lg border border-border/60 bg-background/30 px-3 py-2.5">
+    <div className="rounded-2xl bg-card border border-border/50 px-3.5 py-3">
       <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">{label}</div>
       <div className={`font-mono text-sm font-semibold ${color}`}>{value}</div>
     </div>
@@ -1674,38 +1674,38 @@ function Dashboard() {
         </div>
 
         {rightOpen && !isChartFullscreen && (
-          <aside className={`hidden lg:flex shrink-0 border-l border-border bg-card flex-col ${
+          <aside className={`hidden lg:flex shrink-0 border-l border-border/50 bg-background flex-col ${
             panelWidth === "narrow" ? "w-[280px]" : panelWidth === "wide" ? "w-[560px]" : "w-[400px]"
           }`}>
             {/* Header: tabs row + width controls row */}
-            <div className="border-b border-border/60">
-              <div className="flex items-center gap-1 px-2 py-1.5">
+            <div className="border-b border-border/50">
+              <div className="flex items-center gap-2 px-3 py-2.5">
 
                 <div className="flex items-center gap-0.5 flex-1 min-w-0 overflow-x-auto no-scrollbar">
                   <button
                     onClick={() => setRightTab("analysis")}
-                    className={`shrink-0 inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
-                      rightTab === "analysis" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                    className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                      rightTab === "analysis" ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                     }`}
                   >
                     <BarChart3 className="h-3.5 w-3.5" /> Analysis
                   </button>
                   <button
                     onClick={() => { setRightTab("chat"); setChatPanelView("conversation"); }}
-                    className={`shrink-0 inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
-                      rightTab === "chat" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                    className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                      rightTab === "chat" ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                     }`}
                   >
                     <MessageSquare className="h-3.5 w-3.5" /> Chat
                   </button>
                 </div>
-                <div className="hidden xl:flex shrink-0 items-center gap-0.5 rounded-md border border-border/60 bg-background/40 p-0.5" title="Panel width">
+                <div className="hidden xl:flex shrink-0 items-center gap-0.5 rounded-full bg-accent/60 p-1" title="Panel width">
                   {(["narrow", "default", "wide"] as const).map((w) => (
                     <button
                       key={w}
                       onClick={() => setPanelWidth(w)}
-                      className={`rounded px-1.5 py-0.5 text-[10px] font-medium capitalize transition ${
-                        panelWidth === w ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-medium capitalize transition ${
+                        panelWidth === w ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                       }`}
                     >
                       {w}
@@ -1714,7 +1714,7 @@ function Dashboard() {
                 </div>
                 {activeModel && (
                   <span
-                    className="hidden sm:inline shrink-0 text-[9px] font-semibold uppercase tracking-wider text-primary px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20"
+                    className="hidden sm:inline shrink-0 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground px-2 py-0.5 rounded-full bg-accent/60"
                     title={`Powered by ${activeModel.label}`}
                   >
                     {activeModel.label}
@@ -1723,7 +1723,7 @@ function Dashboard() {
 
                 <button
                   onClick={() => setRightOpen(false)}
-                  className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 shrink-0"
+                  className="h-8 w-8 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-accent/60 transition shrink-0"
                   title="Close panel"
                   aria-label="Close panel"
                 >
@@ -1767,17 +1767,17 @@ function Dashboard() {
             </div>
               <div className={`absolute inset-0 ${rightTab === "chat" ? "" : "hidden"}`}>
                 <div className="flex h-full min-h-0 flex-col">
-                  <div className="shrink-0 flex items-center gap-1 border-b border-border/60 px-2 py-1.5">
+                  <div className="shrink-0 flex items-center gap-2 border-b border-border/50 px-3 py-2.5">
                     <button
                       onClick={startNewChat}
-                      className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-medium hover:border-primary/50 transition"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-accent/60 px-3.5 py-1.5 text-xs font-semibold hover:bg-accent transition"
                     >
                       New
                     </button>
                     <button
                       onClick={() => setChatPanelView("history")}
-                      className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
-                        chatPanelView === "history" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                      className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                        chatPanelView === "history" ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                       }`}
                     >
                       <Clock className="h-3.5 w-3.5" /> History
@@ -1829,16 +1829,16 @@ function Dashboard() {
         <div className="shrink-0 flex items-center gap-0.5 border-b border-border/60 px-2 py-2 overflow-x-auto no-scrollbar">
           <button
             onClick={() => setRightTab("analysis")}
-            className={`shrink-0 inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
-              rightTab === "analysis" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+            className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+              rightTab === "analysis" ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
             }`}
           >
             <BarChart3 className="h-3.5 w-3.5" /> Analysis
           </button>
           <button
             onClick={() => { setRightTab("chat"); setChatPanelView("conversation"); }}
-            className={`shrink-0 inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
-              rightTab === "chat" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+            className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+              rightTab === "chat" ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
             }`}
           >
             <MessageSquare className="h-3.5 w-3.5" /> Chat
@@ -1875,17 +1875,17 @@ function Dashboard() {
         )}
         <div className={`flex-1 min-h-0 ${rightTab === "chat" ? "" : "hidden"}`}>
           <div className="flex h-full min-h-0 flex-col">
-            <div className="shrink-0 flex items-center gap-1 border-b border-border/60 px-2 py-1.5">
+            <div className="shrink-0 flex items-center gap-2 border-b border-border/50 px-3 py-2.5">
               <button
                 onClick={startNewChat}
-                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-medium hover:border-primary/50 transition"
+                className="inline-flex items-center gap-1.5 rounded-full bg-accent/60 px-3.5 py-1.5 text-xs font-semibold hover:bg-accent transition"
               >
                 New
               </button>
               <button
                 onClick={() => setChatPanelView("history")}
-                className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
-                  chatPanelView === "history" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                  chatPanelView === "history" ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                 }`}
               >
                 <Clock className="h-3.5 w-3.5" /> History
@@ -1957,7 +1957,7 @@ function ScanBody({
         <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
           <button
             onClick={runScan}
-            className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 transition"
+            className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90 transition"
           >
             Run scan
           </button>
