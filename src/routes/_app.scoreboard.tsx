@@ -30,7 +30,7 @@ export const Route = createFileRoute("/_app/scoreboard")({
 
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="rounded-md border border-border p-4">
+    <div className="rounded-xl border border-border/60 p-4">
       <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
       <div className="mt-1 text-2xl font-semibold">{value}</div>
       {sub && <div className="mt-0.5 text-xs text-muted-foreground">{sub}</div>}
@@ -40,7 +40,7 @@ function Stat({ label, value, sub }: { label: string; value: string; sub?: strin
 
 function BucketTable({ title, buckets, empty }: { title: string; buckets: ScoreBucket[]; empty: string }) {
   return (
-    <section className="rounded-md border border-border bg-card p-5">
+    <section className="rounded-xl border border-border/60 bg-card p-5">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{title}</h2>
       {buckets.length === 0 ? (
         <p className="mt-3 text-sm text-muted-foreground">{empty}</p>
@@ -116,7 +116,7 @@ function ScoreboardPage() {
           type="button"
           onClick={() => resolveMutation.mutate()}
           disabled={resolveMutation.isPending}
-          className="flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-xs disabled:opacity-60"
+          className="flex items-center gap-2 rounded-xl border border-border/60 px-3 py-1.5 text-xs disabled:opacity-60"
         >
           <RefreshCw className={`h-3 w-3 ${resolveMutation.isPending ? "animate-spin" : ""}`} />
           {resolveMutation.isPending ? "Checking open signals" : "Check open signals now"}
@@ -156,7 +156,7 @@ function ScoreboardPage() {
           </div>
 
           {board.notes.length > 0 && (
-            <section className="mt-4 rounded-md border border-border bg-card p-5">
+            <section className="mt-4 rounded-xl border border-border/60 bg-card p-5">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">What this says</h2>
               <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
                 {board.notes.map((n) => (
@@ -178,17 +178,17 @@ function ScoreboardPage() {
             />
           </div>
 
-          <section className="mt-4 rounded-md border border-border bg-card p-5">
+          <section className="mt-4 rounded-xl border border-border/60 bg-card p-5">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Recent signals</h2>
             <ul className="mt-3 divide-y divide-border">
               {rows.slice(0, 40).map((r) => (
                 <li key={r.id} className="flex flex-wrap items-center gap-2 py-2 text-xs">
                   <span className="w-20 font-semibold">{r.symbol}</span>
                   <span className="uppercase text-muted-foreground">{r.bias}</span>
-                  <span className="rounded-md border border-border px-2 py-0.5">{r.grade}</span>
+                  <span className="rounded-xl border border-border/60 px-2 py-0.5">{r.grade}</span>
                   <span className="text-muted-foreground">{tfLabel(r.timeframe)}</span>
                   <span className="font-mono text-muted-foreground">@ {r.entry}</span>
-                  {r.taken && <span className="rounded-md border border-border px-2 py-0.5 text-[10px] uppercase">Taken</span>}
+                  {r.taken && <span className="rounded-xl border border-border/60 px-2 py-0.5 text-[10px] uppercase">Taken</span>}
                   <span className="flex items-center gap-1">
                     {r.status === "target" && (
                       <>

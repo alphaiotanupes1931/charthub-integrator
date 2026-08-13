@@ -60,11 +60,11 @@ function LessonError({ error, reset }: { error: Error; reset: () => void }) {
             router.invalidate();
             reset();
           }}
-          className="rounded-md border border-border bg-card px-4 py-2 text-sm font-medium"
+          className="rounded-xl border border-border/60 bg-card px-4 py-2 text-sm font-medium"
         >
           Try again
         </button>
-        <Link to="/academy" className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
+        <Link to="/academy" className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
           Back to Academy
         </Link>
       </div>
@@ -106,7 +106,7 @@ function LessonView() {
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: mod.accent }}>
+          <span className="text-[10px] tracking-tight font-semibold" style={{ color: mod.accent }}>
             Lesson {index + 1} of {mod.lessons.length}
           </span>
           <span className="text-[10px] font-mono text-muted-foreground">· {lesson.id}</span>
@@ -116,7 +116,7 @@ function LessonView() {
         <p className="mt-2 text-sm text-muted-foreground">{lesson.summary}</p>
       </div>
 
-      <div className="mb-6 rounded-md border border-border bg-card p-3">
+      <div className="mb-6 rounded-xl border border-border/60 bg-card p-3">
         <div className="mb-3 flex items-center justify-between gap-3 text-xs">
           <span className="font-semibold">Module lessons</span>
           <span className="font-mono text-muted-foreground">{index + 1}/{mod.lessons.length}</span>
@@ -131,8 +131,8 @@ function LessonView() {
                 to="/academy/$moduleId/$lessonId"
                 params={{ moduleId: String(mod.id), lessonId: item.id }}
                 aria-current={current ? "page" : undefined}
-                className={`flex items-center gap-2 rounded-md border px-3 py-2 text-xs transition-colors ${
-                  current ? "border-primary bg-primary/10 text-foreground" : "border-border bg-background hover:border-primary/40"
+                className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs transition-colors ${
+                  current ? "border-primary bg-primary/10 text-foreground" : "border-border/60 bg-background hover:border-primary/40"
                 }`}
               >
                 {itemDone ? <CheckCircle2 className="h-3.5 w-3.5 text-primary" /> : <Circle className="h-3.5 w-3.5 text-muted-foreground" />}
@@ -150,13 +150,13 @@ function LessonView() {
       </div>
 
       {/* Completion + navigation */}
-      <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5">
+      <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-border/60 pt-5">
         <div className="flex items-center gap-2">
           {prev ? (
             <Link
               to="/academy/$moduleId/$lessonId"
               params={{ moduleId: String(mod.id), lessonId: prev.id }}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium border border-border bg-card hover:border-primary/40"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border border-border/60 bg-card hover:border-primary/40"
             >
               <ArrowLeft className="h-3.5 w-3.5" /> Previous
             </Link>
@@ -164,17 +164,17 @@ function LessonView() {
             <Link
               to="/academy/$moduleId"
               params={{ moduleId: String(mod.id) }}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium border border-border bg-card hover:border-primary/40"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border border-border/60 bg-card hover:border-primary/40"
             >
               <ArrowLeft className="h-3.5 w-3.5" /> Module
             </Link>
           )}
           <button
             onClick={() => done ? clear(lesson.id) : markDone(lesson.id)}
-            className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium border transition ${
+            className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border transition ${
               done
                 ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
-                : "border-border bg-card text-muted-foreground hover:text-foreground"
+                : "border-border/60 bg-card text-muted-foreground hover:text-foreground"
             }`}
           >
             {done ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
@@ -184,7 +184,7 @@ function LessonView() {
 
         <button
           onClick={completeAndAdvance}
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90"
         >
           {next ? "Next lesson" : "Finish module"} <ArrowRight className="h-4 w-4" />
         </button>
@@ -246,7 +246,7 @@ function BlockRenderer({ block }: { block: LessonBlock }) {
 
     case "steps":
       return (
-        <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
+        <div className="rounded-xl border border-border/60 bg-card p-4 sm:p-5">
           <div className="flex items-center gap-2 mb-3 text-primary">
             <ListChecks className="h-4 w-4" />
             <span className="text-[10px] uppercase tracking-[0.18em] font-bold">{block.title}</span>
@@ -264,7 +264,7 @@ function BlockRenderer({ block }: { block: LessonBlock }) {
 
     case "takeaway":
       return (
-        <div className="rounded-md border border-primary/30 bg-primary/5 p-4 sm:p-5">
+        <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 sm:p-5">
           <div className="flex items-center gap-2 mb-2 text-primary">
             <Sparkles className="h-4 w-4" />
             <span className="text-[10px] uppercase tracking-[0.18em] font-bold">Key Takeaway</span>

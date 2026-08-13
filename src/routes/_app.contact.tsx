@@ -60,7 +60,7 @@ function ContactPage() {
     <div className="mx-auto w-full max-w-3xl px-4 py-6">
       <PageHeader title="Contact and support" description="Report an issue or send feedback straight to the team." />
 
-      <div className="rounded-lg border border-border p-5">
+      <div className="rounded-2xl border border-border/60 p-5">
         <div className="flex gap-2">
           {([
             { id: "ticket" as Kind, label: "Support ticket", icon: LifeBuoy, hint: "Something is broken or blocked" },
@@ -73,8 +73,8 @@ function ContactPage() {
                 key={opt.id}
                 type="button"
                 onClick={() => setKind(opt.id)}
-                className={`flex-1 rounded-lg border px-4 py-3 text-left transition ${
-                  active ? "border-foreground/40 bg-muted" : "border-border hover:bg-muted/50"
+                className={`flex-1 rounded-2xl border px-4 py-3 text-left transition ${
+                  active ? "border-foreground/40 bg-muted" : "border-border/60 hover:bg-muted/50"
                 }`}
               >
                 <div className="flex items-center gap-2 text-sm font-medium">
@@ -95,7 +95,7 @@ function ContactPage() {
               onChange={(e) => setReplyEmail(e.target.value)}
               placeholder="you@example.com"
               maxLength={255}
-              className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-foreground/40"
+              className="mt-1 w-full rounded-2xl border border-border/60 bg-background px-3 py-2.5 text-sm outline-none focus:border-foreground/40"
             />
           </label>
 
@@ -106,7 +106,7 @@ function ContactPage() {
               onChange={(e) => setSubject(e.target.value)}
               placeholder={kind === "ticket" ? "Scan is not returning a grade" : "Idea for the journal"}
               maxLength={140}
-              className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-foreground/40"
+              className="mt-1 w-full rounded-2xl border border-border/60 bg-background px-3 py-2.5 text-sm outline-none focus:border-foreground/40"
             />
           </label>
 
@@ -118,7 +118,7 @@ function ContactPage() {
               rows={6}
               maxLength={4000}
               placeholder="What happened, what you expected, and which page you were on."
-              className="mt-1 w-full resize-y rounded-lg border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-foreground/40"
+              className="mt-1 w-full resize-y rounded-2xl border border-border/60 bg-background px-3 py-2.5 text-sm outline-none focus:border-foreground/40"
             />
             <span className="mt-1 block text-right text-[11px] text-muted-foreground">{message.length}/4000</span>
           </label>
@@ -127,7 +127,7 @@ function ContactPage() {
             type="button"
             disabled={!valid || submit.isPending}
             onClick={() => submit.mutate()}
-            className="inline-flex h-10 items-center gap-2 rounded-lg bg-foreground px-4 text-sm font-medium text-background disabled:opacity-50"
+            className="inline-flex h-10 items-center gap-2 rounded-2xl bg-foreground px-4 text-sm font-medium text-background disabled:opacity-50"
           >
             {submit.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             {kind === "ticket" ? "Submit ticket" : "Send feedback"}
@@ -138,12 +138,12 @@ function ContactPage() {
       {(history?.length ?? 0) > 0 && (
         <section className="mt-8">
           <h2 className="mb-3 text-sm font-medium">Your submissions</h2>
-          <div className="divide-y divide-border rounded-lg border border-border">
+          <div className="divide-y divide-border rounded-2xl border border-border/60">
             {history!.map((row) => (
               <div key={row.id} className="px-4 py-3">
                 <div className="flex items-center justify-between gap-3">
                   <div className="text-sm font-medium">{row.subject}</div>
-                  <span className="rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground">
+                  <span className="rounded-full border border-border/60 px-2 py-0.5 text-[11px] text-muted-foreground">
                     {row.status.replace("_", " ")}
                   </span>
                 </div>

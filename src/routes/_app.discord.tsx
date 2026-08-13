@@ -69,10 +69,10 @@ function DiscordPage() {
       />
 
       {/* Hero / Join card */}
-      <section className="rounded-md border border-border bg-card p-6 sm:p-8">
+      <section className="rounded-xl border border-border/60 bg-card p-6 sm:p-8">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
           <div className="flex-1 min-w-0">
-            <div className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2 py-1 text-[10px] uppercase tracking-widest font-semibold text-muted-foreground mb-3">
+            <div className="inline-flex items-center gap-1.5 rounded-xl border border-border/60 bg-background px-2 py-1 text-[10px] tracking-tight font-semibold text-muted-foreground mb-3">
               <Users className="h-3 w-3" /> Members-only
             </div>
             <h2 className="font-display text-xl sm:text-2xl font-semibold mb-2">
@@ -89,7 +89,7 @@ function DiscordPage() {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => emitFirstWeekEvent("discord-joined")}
-            className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground border border-primary shrink-0 w-full sm:w-auto"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground border border-primary shrink-0 w-full sm:w-auto"
           >
             Join the Discord
             <ArrowRight className="h-4 w-4" />
@@ -105,9 +105,9 @@ function DiscordPage() {
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {FEATURES.map((f) => (
-            <div key={f.title} className="rounded-md border border-border bg-card p-4">
+            <div key={f.title} className="rounded-xl border border-border/60 bg-card p-4">
               <div className="flex items-center gap-2 mb-2">
-                <div className="h-8 w-8 rounded-md border border-border bg-background text-primary flex items-center justify-center">
+                <div className="h-8 w-8 rounded-xl border border-border/60 bg-background text-primary flex items-center justify-center">
                   {f.icon}
                 </div>
                 <div className="font-semibold text-sm">{f.title}</div>
@@ -119,32 +119,32 @@ function DiscordPage() {
       </section>
 
       {/* How to join */}
-      <section className="rounded-md border border-border bg-card p-5 sm:p-6">
+      <section className="rounded-xl border border-border/60 bg-card p-5 sm:p-6">
         <h2 className="font-semibold mb-3">How to join, step by step</h2>
         <ol className="space-y-2.5 text-sm">
           <li className="flex gap-3">
-            <span className="shrink-0 h-6 w-6 rounded-md border border-border bg-background text-xs font-semibold flex items-center justify-center">1</span>
+            <span className="shrink-0 h-6 w-6 rounded-xl border border-border/60 bg-background text-xs font-semibold flex items-center justify-center">1</span>
             <span>
               Click <span className="font-medium">Join the Discord</span> above. It opens Discord in a new tab.
             </span>
           </li>
           <li className="flex gap-3">
-            <span className="shrink-0 h-6 w-6 rounded-md border border-border bg-background text-xs font-semibold flex items-center justify-center">2</span>
+            <span className="shrink-0 h-6 w-6 rounded-xl border border-border/60 bg-background text-xs font-semibold flex items-center justify-center">2</span>
             <span>
               If you don&apos;t have Discord, create a free account. It takes about a minute.
               You can use Discord in your web browser, no download needed.
             </span>
           </li>
           <li className="flex gap-3">
-            <span className="shrink-0 h-6 w-6 rounded-md border border-border bg-background text-xs font-semibold flex items-center justify-center">3</span>
+            <span className="shrink-0 h-6 w-6 rounded-xl border border-border/60 bg-background text-xs font-semibold flex items-center justify-center">3</span>
             <span>
               Accept the invite, read the pinned welcome post, and head to
-              <span className="font-mono text-xs mx-1 rounded border border-border px-1 py-0.5">#signals</span>
+              <span className="font-mono text-xs mx-1 rounded border border-border/60 px-1 py-0.5">#signals</span>
               to see today&apos;s posts.
             </span>
           </li>
           <li className="flex gap-3">
-            <span className="shrink-0 h-6 w-6 rounded-md border border-border bg-background text-xs font-semibold flex items-center justify-center">4</span>
+            <span className="shrink-0 h-6 w-6 rounded-xl border border-border/60 bg-background text-xs font-semibold flex items-center justify-center">4</span>
             <span>
               Turn on notifications for the channels you care about, so you don&apos;t miss the next A/A+ signal.
             </span>

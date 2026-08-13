@@ -26,11 +26,11 @@ function ModuleError({ error, reset }: { error: Error; reset: () => void }) {
             router.invalidate();
             reset();
           }}
-          className="rounded-md border border-border bg-card px-4 py-2 text-sm font-medium"
+          className="rounded-xl border border-border/60 bg-card px-4 py-2 text-sm font-medium"
         >
           Try again
         </button>
-        <Link to="/academy" className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
+        <Link to="/academy" className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
           Back to Academy
         </Link>
       </div>
@@ -73,23 +73,23 @@ function ModuleDetail() {
 
       <div className="flex items-center gap-4 mb-2">
         <div
-          className="h-14 w-14 rounded-md border border-border bg-background flex items-center justify-center font-bold text-2xl text-primary"
+          className="h-14 w-14 rounded-xl border border-border/60 bg-background flex items-center justify-center font-bold text-2xl text-primary"
         >
           {mod.id}
         </div>
         <div>
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Module {mod.id}</div>
+          <div className="text-[10px] tracking-tight text-muted-foreground font-semibold">Module {mod.id}</div>
           <h1 className="font-display text-2xl sm:text-3xl font-semibold tracking-tight">{mod.title}</h1>
         </div>
       </div>
       <p className="text-sm text-muted-foreground mb-5 ml-[4.5rem]">{mod.subtitle}</p>
 
-      <div className="mb-6 rounded-md border border-border bg-card p-4">
+      <div className="mb-6 rounded-xl border border-border/60 bg-card p-4">
         <div className="flex items-center justify-between mb-2 text-xs">
           <span className="font-semibold">{done}/{total} lessons complete</span>
           <span className="font-mono text-primary">{pct}%</span>
         </div>
-        <div className="h-1.5 rounded-md bg-background overflow-hidden">
+        <div className="h-1.5 rounded-xl bg-background overflow-hidden">
           <div className="h-full transition-all bg-primary" style={{ width: `${pct}%` }} />
         </div>
       </div>
@@ -102,7 +102,7 @@ function ModuleDetail() {
               key={lesson.id}
               to="/academy/$moduleId/$lessonId"
               params={{ moduleId: String(mod.id), lessonId: lesson.id }}
-              className="group flex items-start gap-3 rounded-md border border-border bg-card p-3 sm:p-4 hover:border-primary/40 transition-colors"
+              className="group flex items-start gap-3 rounded-xl border border-border/60 bg-card p-3 sm:p-4 hover:border-primary/40 transition-colors"
             >
               <div className="mt-0.5">
                 {done
@@ -113,7 +113,7 @@ function ModuleDetail() {
                 <div className="flex items-center gap-2 mb-0.5">
                   <span className="text-[10px] font-mono text-muted-foreground">{lesson.id}</span>
                   <span className="text-xs text-muted-foreground/60">·</span>
-                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Lesson {i + 1}</span>
+                  <span className="text-[10px] tracking-tight text-muted-foreground font-semibold">Lesson {i + 1}</span>
                 </div>
                 <div className="font-semibold text-sm truncate">{lesson.title}</div>
                 <div className="text-xs text-muted-foreground line-clamp-2">{lesson.summary}</div>
