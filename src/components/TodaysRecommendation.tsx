@@ -24,7 +24,7 @@ export function TodaysRecommendation() {
   const rec = useMemo(() => buildRecommendation(trades), [trades]);
 
   return (
-    <div className="rounded-xl border border-primary/30 bg-gradient-to-br from-primary/[0.06] to-transparent p-5 mb-5">
+    <div className="rounded-xl border border-primary/30 bg-primary/[0.06] p-5 mb-5">
       <div className="flex items-start gap-3">
         <div className="h-9 w-9 rounded-2xl bg-primary/15 ring-1 ring-primary/30 flex items-center justify-center shrink-0">
           <Lightbulb className="h-4 w-4 text-primary" />

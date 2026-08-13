@@ -366,7 +366,7 @@ function FaceCard({ side, label, body }: { side: "front" | "back"; label: string
   const isBack = side === "back";
   return (
     <div
-      className={`absolute inset-0 rounded-2xl border ${isBack ? "border-primary/40 bg-gradient-to-br from-primary/10 via-card to-card" : "border-border/60 bg-card"} shadow-lg flex flex-col items-center justify-center p-6 sm:p-10 text-center`}
+      className={`absolute inset-0 rounded-2xl border ${isBack ? "border-primary/40 bg-primary/[0.06]" : "border-border/60 bg-card"} shadow-lg flex flex-col items-center justify-center p-6 sm:p-10 text-center`}
       style={{
         backfaceVisibility: "hidden",
         WebkitBackfaceVisibility: "hidden",
