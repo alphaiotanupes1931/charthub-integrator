@@ -23,6 +23,49 @@ const CLAUDE_CHEAP = "claude-haiku-4-5-20251001";
 const GRADE_INTENT = /\b(scan|grade|rate|score|setup|entry|entries|plan|trade idea|is this a good|long or short|buy or sell|levels?)\b/i;
 const DEEP_INTENT = /\b(why|explain|teach|walk me|help me understand|how do|how does|what is|what are|difference|psychology|mindset|tilt|revenge|discipline|journal review|mistake|habit|routine|review my|lesson|history|compare|strategy for|should i change)\b/i;
 
+// Anthropic health gate. When the Anthropic account is out of credits or the key
+// is rejected, every reply used to fail with a bare "An error occurred" and the
+// trader saw no response at all. We probe once, cache the verdict, and fall back
+// to the Lovable gateway model so the coach keeps answering.
+let anthropicBlockedUntil = 0;
+let anthropicProbe: Promise<boolean> | null = null;
+const ANTHROPIC_COOLDOWN_MS = 10 * 60 * 1000;
+
+async function anthropicUsable(key: string): Promise<boolean> {
+  if (Date.now() < anthropicBlockedUntil) return false;
+  if (anthropicProbe) return anthropicProbe;
+  anthropicProbe = (async () => {
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-api-key": key,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: CLAUDE_CHEAP,
+          max_tokens: 1,
+          messages: [{ role: "user", content: "ok" }],
+        }),
+      });
+      if (res.ok) return true;
+      const body = await res.text();
+      console.warn(`[chat] anthropic_unavailable status=${res.status} ${body.slice(0, 200)}`);
+      anthropicBlockedUntil = Date.now() + ANTHROPIC_COOLDOWN_MS;
+      return false;
+    } catch (e) {
+      console.warn(`[chat] anthropic_probe_failed ${(e as Error).message}`);
+      anthropicBlockedUntil = Date.now() + ANTHROPIC_COOLDOWN_MS;
+      return false;
+    } finally {
+      // Allow a fresh probe after the cooldown (or immediately on success).
+      setTimeout(() => { anthropicProbe = null; }, 5_000);
+    }
+  })();
+  return anthropicProbe;
+}
+
 function lastUserText(messages: UIMessage[]): { text: string; hasImage: boolean } {
   for (let i = messages.length - 1; i >= 0; i--) {
     const m = messages[i];
@@ -35,16 +78,37 @@ function lastUserText(messages: UIMessage[]): { text: string; hasImage: boolean 
   return { text: "", hasImage: false };
 }
 
+/** Coaches with a strongly stylized voice always need the stronger model, or
+ *  the cheap model flattens them all into the same neutral analyst tone. */
+const STYLIZED_COACHES = new Set([
+  "The Disciplinarian",
+  "The Mentor",
+  "The Minimalist",
+  "The Psychologist",
+]);
+
 /** "cheap" = mechanical grading or a short factual ask. "smart" = coaching. */
-function routeChatModel(messages: UIMessage[]): "cheap" | "smart" {
+function routeChatModel(messages: UIMessage[], coach?: string): "cheap" | "smart" {
   const { text, hasImage } = lastUserText(messages);
   if (hasImage) return "smart";          // screenshot reads need the stronger vision model
+  if (coach && STYLIZED_COACHES.has(coach)) return "smart"; // voice fidelity over cost
   if (!text) return "smart";
   if (DEEP_INTENT.test(text)) return "smart";
   if (GRADE_INTENT.test(text)) return "cheap";
   if (text.length <= 90 && text.split(/\s+/).length <= 14) return "cheap";
   return "smart";
 }
+
+/** Questions that should always end up drawn on the live chart, not just described. */
+const DRAW_INTENT =
+  /\b(show|draw|mark|plot|chart it|on the chart|where|level|levels|support|resistance|entry|entries|stop|stop loss|sl\b|take profit|tp\d?|target|targets|zone|zones|fvg|order block|ob\b|liquidity|sweep|supply|demand|range|trendline|fib|retrace|breakout|structure|grade|scan|setup|is this a good trade)\b/i;
+
+function shouldForceChartDraw(messages: UIMessage[]): boolean {
+  const { text, hasImage } = lastUserText(messages);
+  if (hasImage) return false; // annotations pin to the live chart, not an uploaded image
+  return !!text && DRAW_INTENT.test(text);
+}
+
 
 
 const stripReasoningTransform: StreamTextTransform<ToolSet> = () =>
@@ -460,6 +524,7 @@ NUMBER RULES (STRICT - the client rejects violations):
 - Match the same decimal precision as lastPrice (e.g. lastPrice 1.0842 → 4 decimals; 21453.25 → 2 decimals). Never round to whole numbers when lastPrice has decimals.
 - Directional consistency: LONG requires stop < entry < tp1 < tp2. SHORT requires stop > entry > tp1 > tp2. Never violate this.
 - Entry must sit near lastPrice (within ~0.5%) unless you are explicitly proposing a pending order at a level shown on the chart.
+- NO-DATA RULE: if there is no LIVE CHART block with a "Last price" above, you must NOT state any price, level, zone, or range from memory - not even approximately. Say the chart isn't loaded, tell them to select the instrument, and offer the concept/process answer instead. Inventing levels is the single worst thing you can do here.
 
 2) Concept diagram - when the concept doesn't cleanly map to current price or the user asked "what is X":
 \`\`\`concept-diagram
@@ -494,7 +559,7 @@ SCREENSHOT ANALYSIS RULES (when the user attaches an image):
 }
 
 // The per-request half: coach voice plus every live context block.
-function dynamicSystemPrompt(coach: string | undefined, journalContext: string, chartCtx: string, strategyCtx: string, lensCtx: string, learningCtx: string, newsCtx?: string, scoreCtx?: string) {
+function dynamicSystemPrompt(coach: string | undefined, journalContext: string, chartCtx: string, strategyCtx: string, lensCtx: string, learningCtx: string, newsCtx?: string, scoreCtx?: string, forceDraw?: boolean) {
   return `# COACH PERSONA
 ${coachPersona(coach)}
 
@@ -554,11 +619,18 @@ Rules for using them:
 
 LENGTH: keep replies tight. Default to 3 to 6 sentences, or up to 6 short bullets, plus the fenced blocks when they apply. Lead with the call or answer, then only the reasoning that changed it. No recaps, no restating the inputs, no summary paragraph at the end. Only go longer when the trader explicitly asks you to teach or explain in depth.
 === END INPUTS ===
-
+${forceDraw ? `
+=== DRAW-ON-CHART MANDATE (this message qualifies) ===
+The trader's current message asks about something that lives ON the chart (a level, zone, entry, stop, target, structure, or a grade/scan). You MUST append a \`\`\`chart-annotations block in this reply so the answer is drawn on their live chart, following the NUMBER RULES exactly. Mark every level you name in prose: entry, stop, TP1/TP2 when a plan exists, or the specific line/zone they asked about otherwise.
+If, and only if, no live last price is available for this instrument, skip chart-annotations and emit a \`\`\`concept-diagram block instead so they still get a visual. Never answer this kind of question with prose alone.
+=== END DRAW-ON-CHART MANDATE ===
+` : ""}
 === FINAL VOICE OVERRIDE (read this last, it wins) ===
 You are writing as ${coach ?? "The Analyst"}. This voice outranks every generic style rule above. Where the general rules and your coach rules disagree (length, whether to ask a question back, whether to lead with numbers or feelings), follow your coach rules.
 ${coachVoiceRules(coach)}
+IDENTITY LINE: the trader picked ${coach ?? "The Analyst"} on purpose and is comparing you against the other coaches. Two different coaches answering this exact message must not produce interchangeable replies. Your first sentence must be unmistakably yours.
 Before you send, run this check: does the reply contain your signature opener, your length shape, and your required sign-off, and does it avoid every banned item on your list? If not, rewrite it. A reader must be able to name which coach wrote this from the first sentence alone.
+Never name your own persona in the prose ("As The Disciplinarian..."). Show the voice, do not announce it.
 === END FINAL VOICE OVERRIDE ===`;
 
 
@@ -782,13 +854,14 @@ export const Route = createFileRoute("/api/chat")({
         }
 
         const staticSystem = staticSystemPrompt();
-        const liveSystem = dynamicSystemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens), learningCtx, newsCtx, scoreCtx);
+        const forceDraw = shouldForceChartDraw(messages);
+        const liveSystem = dynamicSystemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens), learningCtx, newsCtx, scoreCtx, forceDraw);
 
-        const useClaude = !!anthropicKey;
+        const useClaude = !!anthropicKey && (await anthropicUsable(anthropicKey));
         // Model routing: a plain setup grade or a short factual question runs on
         // the cheap model; open-ended coaching, teaching, psychology, and
         // screenshot reads stay on the top model.
-        const routed = routeChatModel(messages);
+        const routed = routeChatModel(messages, coach);
         const claudeId = routed === "cheap" ? CLAUDE_CHEAP : CLAUDE_SMART;
         const gatewayId = routed === "cheap" ? "google/gemini-2.5-flash" : "google/gemini-2.5-flash";
         const claudeModel = useClaude
@@ -818,7 +891,9 @@ export const Route = createFileRoute("/api/chat")({
           model: primaryModel,
           messages: modelMessages,
           maxOutputTokens: useClaude ? 8192 : 4096,
-          temperature: useClaude ? 0.7 : undefined,
+          // Lower than default: persona rules are followed far more literally at
+          // low temperature, which is what makes the coaches read differently.
+          temperature: useClaude ? 0.45 : undefined,
           abortSignal: request.signal,
           ...(useClaude ? {} : { providerOptions: { lovable: { service_tier: "priority" } } }),
           experimental_transform: stripReasoningTransform,

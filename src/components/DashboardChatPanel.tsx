@@ -747,6 +747,15 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                 return (
                   <Message key={m.id} from={m.role}>
                     <div className="flex flex-col gap-2 max-w-full">
+                      {/* Who is speaking. Traders switch coaches to hear a different
+                          voice, so every reply is attributed on screen. */}
+                      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                        <span className={`inline-flex h-4 w-4 items-center justify-center rounded-full ${coachMeta.iconBg} ${coachMeta.iconText}`}>
+                          <CoachIcon className="h-2.5 w-2.5" />
+                        </span>
+                        <span className="font-medium text-foreground/80">{activeCoach}</span>
+                        <span className="text-muted-foreground/60">· {coachMeta.tagline}</span>
+                      </div>
                       {g && <GradeCard grade={g} lastPrice={chart?.snapshot?.lastPrice} symbol={chart?.ticker} />}
                       {summary && (
                         <div className="text-sm text-foreground/90 leading-snug">{summary}</div>
