@@ -23,7 +23,7 @@ function CoachDashboard() {
       <div className="grid gap-3 sm:grid-cols-3">
         <Link
           to="/coaches"
-          className="rounded-xl border border-border bg-card hover:border-primary/50 transition p-5"
+          className="rounded-xl border border-border/60 bg-card hover:border-primary/50 transition p-5"
         >
           <Users className="h-5 w-5 text-primary" />
           <div className="mt-3 font-semibold">Coach Library</div>
@@ -31,7 +31,7 @@ function CoachDashboard() {
         </Link>
         <Link
           to="/voice-coach"
-          className="rounded-xl border border-border bg-card hover:border-primary/50 transition p-5"
+          className="rounded-xl border border-border/60 bg-card hover:border-primary/50 transition p-5"
         >
           <Mic className="h-5 w-5 text-primary" />
           <div className="mt-3 font-semibold">Voice Coach</div>
@@ -39,7 +39,7 @@ function CoachDashboard() {
         </Link>
         <Link
           to="/dashboard"
-          className="rounded-xl border border-border bg-card hover:border-primary/50 transition p-5"
+          className="rounded-xl border border-border/60 bg-card hover:border-primary/50 transition p-5"
         >
           <MessageSquare className="h-5 w-5 text-primary" />
           <div className="mt-3 font-semibold">Open Chat</div>

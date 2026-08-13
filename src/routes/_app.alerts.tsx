@@ -90,7 +90,7 @@ function AlertsPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 md:px-6">
       <header className="flex items-center gap-3 mb-6">
-        <div className="rounded-lg bg-primary/10 p-2 text-primary"><Bell className="h-5 w-5" /></div>
+        <div className="rounded-2xl bg-primary/10 p-2 text-primary"><Bell className="h-5 w-5" /></div>
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Price Alerts</h1>
           <p className="text-sm text-muted-foreground">Get notified the moment a symbol crosses your target. Checked every minute.</p>
@@ -98,15 +98,15 @@ function AlertsPage() {
       </header>
       <PageInstructions className="mb-6" />
 
-      <form onSubmit={submit} className="rounded-2xl border border-border bg-card p-4 md:p-5 mb-8 space-y-3">
+      <form onSubmit={submit} className="rounded-2xl border border-border/60 bg-card p-4 md:p-5 mb-8 space-y-3">
         <div className="grid grid-cols-1 md:grid-cols-[1fr_120px_1fr] gap-3">
           <div>
-            <label className="text-xs uppercase tracking-wide text-muted-foreground">Symbol</label>
+            <label className="text-xs tracking-wide text-muted-foreground">Symbol</label>
             <input
               value={symbol}
               onChange={(e) => setSymbol(e.target.value)}
               list="symbol-suggestions"
-              className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+              className="mt-1 w-full h-10 rounded-xl border border-input bg-background px-3 text-sm"
               placeholder="XAU/USD"
             />
             <datalist id="symbol-suggestions">
@@ -114,34 +114,34 @@ function AlertsPage() {
             </datalist>
           </div>
           <div>
-            <label className="text-xs uppercase tracking-wide text-muted-foreground">When price is</label>
+            <label className="text-xs tracking-wide text-muted-foreground">When price is</label>
             <select
               value={side}
               onChange={(e) => setSide(e.target.value as "above" | "below")}
-              className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+              className="mt-1 w-full h-10 rounded-xl border border-input bg-background px-3 text-sm"
             >
               <option value="above">Above</option>
               <option value="below">Below</option>
             </select>
           </div>
           <div>
-            <label className="text-xs uppercase tracking-wide text-muted-foreground">Price</label>
+            <label className="text-xs tracking-wide text-muted-foreground">Price</label>
             <input
               value={price}
               onChange={(e) => setPrice(e.target.value)}
               type="number"
               step="any"
-              className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+              className="mt-1 w-full h-10 rounded-xl border border-input bg-background px-3 text-sm"
               placeholder="2400.00"
             />
           </div>
         </div>
         <div>
-          <label className="text-xs uppercase tracking-wide text-muted-foreground">Note (optional)</label>
+          <label className="text-xs tracking-wide text-muted-foreground">Note (optional)</label>
           <input
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+            className="mt-1 w-full h-10 rounded-xl border border-input bg-background px-3 text-sm"
             placeholder="Breakout of Asia range"
           />
         </div>
@@ -153,7 +153,7 @@ function AlertsPage() {
           <button
             type="submit"
             disabled={mCreate.isPending}
-            className="inline-flex h-10 items-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"
+            className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"
           >
             <Plus className="h-4 w-4" />
             {mCreate.isPending ? "Adding…" : "Add alert"}
@@ -162,11 +162,11 @@ function AlertsPage() {
       </form>
 
       <section className="mb-8">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3">Active ({active.length})</h2>
+        <h2 className="text-sm font-semibold tracking-wide text-muted-foreground mb-3">Active ({active.length})</h2>
         {isLoading ? (
           <div className="text-sm text-muted-foreground">Loading…</div>
         ) : active.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+          <div className="rounded-xl border border-dashed border-border/60 p-6 text-center text-sm text-muted-foreground">
             No active alerts. Add one above.
           </div>
         ) : (
@@ -178,7 +178,7 @@ function AlertsPage() {
 
       {done.length > 0 && (
         <section>
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3">Recently fired / paused</h2>
+          <h2 className="text-sm font-semibold tracking-wide text-muted-foreground mb-3">Recently fired / paused</h2>
           <ul className="space-y-2">
             {done.map((row) => <AlertItem key={row.id} row={row} onDelete={() => mDelete.mutate(row.id)} onToggle={() => mToggle.mutate({ id: row.id, active: true })} muted />)}
           </ul>
@@ -205,8 +205,8 @@ function AlertItem({ row, onDelete, onToggle, muted }: { row: PriceAlertRow; onD
     navigate({ to: "/journal" });
   };
   return (
-    <li className={`flex items-center gap-3 rounded-xl border border-border bg-card p-3 ${muted ? "opacity-70" : ""}`}>
-      <div className={`rounded-md p-2 ${row.side === "above" ? "bg-bull/10 text-bull" : "bg-amber-500/10 text-amber-500"}`}>
+    <li className={`flex items-center gap-3 rounded-xl border border-border/60 bg-card p-3 ${muted ? "opacity-70" : ""}`}>
+      <div className={`rounded-xl p-2 ${row.side === "above" ? "bg-bull/10 text-bull" : "bg-amber-500/10 text-amber-500"}`}>
         <Icon className="h-4 w-4" />
       </div>
       <div className="flex-1 min-w-0">
@@ -222,7 +222,7 @@ function AlertItem({ row, onDelete, onToggle, muted }: { row: PriceAlertRow; onD
         <button
           onClick={logAsTrade}
           title="Log as trade"
-          className="inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/10 text-primary px-2.5 py-1.5 text-xs font-medium hover:bg-primary/20"
+          className="inline-flex items-center gap-1 rounded-xl border border-primary/30 bg-primary/10 text-primary px-2.5 py-1.5 text-xs font-medium hover:bg-primary/20"
         >
           <BookOpen className="h-3.5 w-3.5" /> Log trade
         </button>
@@ -230,14 +230,14 @@ function AlertItem({ row, onDelete, onToggle, muted }: { row: PriceAlertRow; onD
       <button
         onClick={onToggle}
         title={row.active ? "Pause" : "Reactivate"}
-        className="rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
+        className="rounded-xl p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
       >
         {row.active ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
       </button>
       <button
         onClick={onDelete}
         title="Delete"
-        className="rounded-md p-2 text-muted-foreground hover:bg-rose-500/10 hover:text-rose-500"
+        className="rounded-xl p-2 text-muted-foreground hover:bg-rose-500/10 hover:text-rose-500"
       >
         <Trash2 className="h-4 w-4" />
       </button>

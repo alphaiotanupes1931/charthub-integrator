@@ -52,7 +52,7 @@ export function AiCreditNotice({ className = "" }: { className?: string }) {
 
   return (
     <div
-      className={`flex items-start gap-2.5 border-b border-border bg-muted/40 px-3 py-2 ${className}`}
+      className={`flex items-start gap-2.5 border-b border-border/60 bg-muted/40 px-3 py-2 ${className}`}
       role="status"
     >
       <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />

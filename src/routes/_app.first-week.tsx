@@ -42,9 +42,9 @@ function FirstWeekPage() {
       <PageInstructions className="mb-6" />
 
       {!active && (
-        <div className="rounded-md border border-border bg-card p-5 mb-6">
+        <div className="rounded-xl border border-border/60 bg-card p-5 mb-6">
           <div className="flex items-start gap-4">
-            <div className="h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center text-primary shrink-0">
+            <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
               <Sparkles className="h-5 w-5" />
             </div>
             <div className="flex-1">
@@ -54,7 +54,7 @@ function FirstWeekPage() {
               </p>
               <button
                 onClick={handleStartTour}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90"
               >
                 Start tour <ArrowRight className="h-3.5 w-3.5" />
               </button>
@@ -64,10 +64,10 @@ function FirstWeekPage() {
       )}
 
       {active && (
-        <div className="rounded-md border border-border bg-card p-5 mb-6">
+        <div className="rounded-xl border border-border/60 bg-card p-5 mb-6">
           <div className="flex items-start justify-between gap-4 mb-4">
             <div>
-              <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-semibold text-muted-foreground mb-1">
+              <div className="flex items-center gap-2 text-[10px] tracking-tight font-semibold text-muted-foreground mb-1">
                 <Calendar className="h-3.5 w-3.5" />
                 Day {currentDay} of 7
               </div>
@@ -87,7 +87,7 @@ function FirstWeekPage() {
             <span className="text-muted-foreground">{progressPct}% complete</span>
             <span className="font-semibold text-primary">{completedCount} / {FIRST_WEEK_TASKS.length}</span>
           </div>
-          <div className="h-2 rounded-md bg-background overflow-hidden">
+          <div className="h-2 rounded-xl bg-background overflow-hidden">
             <div className="h-full bg-primary transition-all" style={{ width: `${progressPct}%` }} />
           </div>
         </div>
@@ -97,7 +97,7 @@ function FirstWeekPage() {
         {FIRST_WEEK_TASKS.map((task) => {
           const done = Boolean(completed[task.id]);
           return (
-            <div key={task.id} className={`rounded-md border border-border bg-card p-4 flex items-start gap-4 ${done ? "opacity-70" : ""}`}>
+            <div key={task.id} className={`rounded-xl border border-border/60 bg-card p-4 flex items-start gap-4 ${done ? "opacity-70" : ""}`}>
               <button
                 onClick={() => toggle(task.id)}
                 className="mt-0.5 shrink-0 hover:opacity-80 focus:outline-none"
@@ -108,7 +108,7 @@ function FirstWeekPage() {
               </button>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground">Day {task.day}</span>
+                  <span className="text-[10px] tracking-tight font-semibold text-muted-foreground">Day {task.day}</span>
                   {done && <span className="text-[10px] text-emerald-500 font-medium">Done</span>}
                 </div>
                 <h3 className={`font-semibold text-sm ${done ? "text-muted-foreground line-through" : ""}`}>{task.label}</h3>
@@ -116,7 +116,7 @@ function FirstWeekPage() {
               </div>
               <Link
                 to={task.route}
-                className="shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-semibold border border-border bg-background hover:border-primary/40"
+                className="shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold border border-border/60 bg-background hover:border-primary/40"
               >
                 {task.cta} <ArrowRight className="h-3 w-3" />
               </Link>
@@ -126,7 +126,7 @@ function FirstWeekPage() {
       </div>
 
       {active && (
-        <div className="mt-6 rounded-md border border-border bg-card p-4">
+        <div className="mt-6 rounded-xl border border-border/60 bg-card p-4">
           <div className="flex items-center justify-between gap-3">
             <div className="text-sm text-muted-foreground">
               Need to restart? Clicking reset will clear your first-week progress and start the tour again.
@@ -137,7 +137,7 @@ function FirstWeekPage() {
                 try { localStorage.removeItem("trademind.tour.v1.done"); } catch { /* noop */ }
                 window.location.reload();
               }}
-              className="inline-flex items-center gap-1 px-3 py-2 rounded-md text-xs font-medium border border-border bg-background hover:border-primary/40"
+              className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-medium border border-border/60 bg-background hover:border-primary/40"
             >
               <RotateCcw className="h-3.5 w-3.5" /> Reset
             </button>

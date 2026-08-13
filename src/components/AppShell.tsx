@@ -357,7 +357,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <LogoLink to="/dashboard" size="lg" variant="brand" glow textClassName="text-xl" className="gap-2.5" />
               <button
                 onClick={() => setMobileOpen(false)}
-                className="h-8 w-8 rounded-md text-muted-foreground hover:text-foreground"
+                className="h-8 w-8 rounded-xl text-muted-foreground hover:text-foreground"
                 aria-label="Close menu"
               >
                 <X className="h-5 w-5" />
@@ -565,7 +565,7 @@ function ComplianceGate() {
   };
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl">
+      <div className="w-full max-w-md rounded-2xl border border-border/60 bg-card p-6 shadow-2xl">
         <div className="text-lg font-semibold mb-2">Welcome to TradeMind</div>
         <p className="text-sm text-muted-foreground mb-4">
           TradeMind provides educational analysis and coaching tools only. Nothing here is financial,
@@ -574,7 +574,7 @@ function ComplianceGate() {
         </p>
         <button
           onClick={accept}
-          className="w-full h-10 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90"
+          className="w-full h-10 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90"
         >
           I understand
         </button>
@@ -642,13 +642,13 @@ function SidebarSearch({ nav }: { nav: NavItem[] }) {
           else if (e.key === "Enter") { e.preventDefault(); const r = results[active]; if (r) go(r.to); }
         }}
         placeholder="Search"
-        className="w-full h-10 rounded-full border border-transparent bg-accent/60 pl-9 pr-3 md:pr-12 text-sm placeholder:text-muted-foreground focus:outline-none focus:bg-accent focus:border-border"
+        className="w-full h-10 rounded-full border border-transparent bg-accent/60 pl-9 pr-3 md:pr-12 text-sm placeholder:text-muted-foreground focus:outline-none focus:bg-accent focus:border-border/60"
       />
       <kbd className="hidden md:block absolute right-3 top-1/2 -translate-y-1/2 rounded px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground pointer-events-none">
         ⌘K
       </kbd>
       {open && results.length > 0 && (
-        <div className="absolute left-0 right-0 mt-2 rounded-2xl border border-border bg-card shadow-xl z-50 overflow-hidden">
+        <div className="absolute left-0 right-0 mt-2 rounded-2xl border border-border/60 bg-card shadow-xl z-50 overflow-hidden">
 
           {results.map((r, i) => {
             const Icon = r.icon;
@@ -670,7 +670,7 @@ function SidebarSearch({ nav }: { nav: NavItem[] }) {
         </div>
       )}
       {open && results.length === 0 && (
-        <div className="absolute left-0 right-0 mt-1.5 rounded-lg border border-border bg-card shadow-xl z-50 px-3 py-2.5 text-xs text-muted-foreground">
+        <div className="absolute left-0 right-0 mt-1.5 rounded-2xl border border-border/60 bg-card shadow-xl z-50 px-3 py-2.5 text-xs text-muted-foreground">
           No pages match "{q}".
         </div>
       )}
@@ -710,7 +710,7 @@ function TestingBanner() {
   return (
     <Link
       to="/testing"
-      className="hidden sm:inline-flex items-center gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-amber-500 hover:bg-amber-500/20"
+      className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-[11px] font-semibold tracking-wide text-amber-500 hover:bg-amber-500/20"
       title="You are in paper trading mode. Click to manage the test account."
     >
       <FlaskConical className="h-3.5 w-3.5" />

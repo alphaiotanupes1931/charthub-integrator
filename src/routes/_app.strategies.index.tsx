@@ -90,7 +90,7 @@ function StrategiesPage() {
         action={
           <button
             onClick={() => { setEditing(null); setBuilderOpen(true); }}
-            className="flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/20"
+            className="flex items-center gap-1.5 rounded-xl border border-primary/40 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/20"
           >
             <Plus className="h-4 w-4" /> Create Your Own
           </button>
@@ -120,11 +120,11 @@ function StrategiesPage() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search strategies..."
-            className="w-full h-10 rounded-md border border-border bg-card pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/40"
+            className="w-full h-10 rounded-xl border border-border/60 bg-card pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/40"
           />
         </div>
         {["All Assets", "All Styles", "All Levels", "Name A-Z"].map((label) => (
-          <button key={label} className="flex items-center gap-2 h-10 rounded-md border border-border bg-card px-3 text-sm text-muted-foreground min-w-[140px] justify-between">
+          <button key={label} className="flex items-center gap-2 h-10 rounded-xl border border-border/60 bg-card px-3 text-sm text-muted-foreground min-w-[140px] justify-between">
             {label} <ChevronDown className="h-3.5 w-3.5" />
           </button>
         ))}
@@ -139,7 +139,7 @@ function StrategiesPage() {
             <div
               key={isCustom ? (s as CustomStrategy).id : s.name}
               className={`rounded-xl border bg-card p-5 flex flex-col gap-3 transition-colors ${
-                isActive ? "border-primary/60 ring-1 ring-primary/30" : "border-border hover:border-primary/40"
+                isActive ? "border-primary/60 ring-1 ring-primary/30" : "border-border/60 hover:border-primary/40"
               }`}
             >
               <div className="flex items-start justify-between gap-2">
@@ -147,7 +147,7 @@ function StrategiesPage() {
                   <span className="truncate">{s.name}</span>
                   {isActive && <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />}
                   {isCustom && (
-                    <span className="inline-flex items-center gap-1 rounded border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold text-primary uppercase tracking-wider shrink-0">
+                    <span className="inline-flex items-center gap-1 rounded border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold text-primary tracking-tight shrink-0">
                       <Sparkles className="h-2.5 w-2.5" /> Custom
                     </span>
                   )}
@@ -158,11 +158,11 @@ function StrategiesPage() {
               </div>
 
               <div className="flex flex-wrap gap-1.5">
-                <span className="inline-flex items-center gap-1 rounded border border-border bg-background px-2 py-0.5 text-[11px] text-muted-foreground">
+                <span className="inline-flex items-center gap-1 rounded border border-border/60 bg-background px-2 py-0.5 text-[11px] text-muted-foreground">
                   <StyleIcon className="h-3 w-3" /> {s.style}
                 </span>
                 {s.markets.map((m) => (
-                  <span key={m} className="inline-flex rounded border border-border bg-background px-2 py-0.5 text-[11px] text-muted-foreground">{m}</span>
+                  <span key={m} className="inline-flex rounded border border-border/60 bg-background px-2 py-0.5 text-[11px] text-muted-foreground">{m}</span>
                 ))}
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4">{s.description}</p>
@@ -184,7 +184,7 @@ function StrategiesPage() {
                   type="button"
                   onClick={() => { if (!isActive) select(s.name); }}
                   disabled={isActive}
-                  className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-semibold transition ${
+                  className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold transition ${
                     isActive
                       ? "bg-primary/15 text-primary border border-primary/40 cursor-default"
                       : "bg-primary text-primary-foreground hover:opacity-90"
@@ -195,7 +195,7 @@ function StrategiesPage() {
                 <Link
                   to="/strategies/$strategyId"
                   params={{ strategyId: s.slug }}
-                  className="rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-primary/40"
+                  className="rounded-xl border border-border/60 bg-background px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-primary/40"
                 >
                   Details
                 </Link>
@@ -204,7 +204,7 @@ function StrategiesPage() {
                     <button
                       type="button"
                       onClick={() => { setEditing(s as CustomStrategy); setBuilderOpen(true); }}
-                      className="h-9 w-9 rounded-md border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent/40 flex items-center justify-center shrink-0"
+                      className="h-9 w-9 rounded-xl border border-border/60 bg-card text-muted-foreground hover:text-foreground hover:bg-accent/40 flex items-center justify-center shrink-0"
                       aria-label="Edit custom strategy"
                     >
                       <Pencil className="h-3.5 w-3.5" />
@@ -212,7 +212,7 @@ function StrategiesPage() {
                     <button
                       type="button"
                       onClick={() => { if (confirm(`Delete "${s.name}"?`)) removeCustom(s as CustomStrategy); }}
-                      className="h-9 w-9 rounded-md border border-destructive/30 bg-card text-destructive hover:bg-destructive/10 flex items-center justify-center shrink-0"
+                      className="h-9 w-9 rounded-xl border border-destructive/30 bg-card text-destructive hover:bg-destructive/10 flex items-center justify-center shrink-0"
                       aria-label="Delete custom strategy"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -292,14 +292,14 @@ function StrategyBuilderModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full sm:max-w-2xl max-h-[95vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl border border-border bg-card shadow-2xl"
+        className="w-full sm:max-w-2xl max-h-[95vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl border border-border/60 bg-card shadow-2xl"
       >
         <div className="flex items-center justify-between p-5 border-b border-border/60">
           <div>
-            <div className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">{editing ? "Edit strategy" : "Build a strategy"}</div>
+            <div className="text-[11px] tracking-[0.2em] text-muted-foreground">{editing ? "Edit strategy" : "Build a strategy"}</div>
             <h2 className="font-display text-xl font-semibold">Your playbook</h2>
           </div>
-          <button onClick={onClose} aria-label="Close" className="h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/40 flex items-center justify-center">
+          <button onClick={onClose} aria-label="Close" className="h-8 w-8 rounded-xl text-muted-foreground hover:text-foreground hover:bg-accent/40 flex items-center justify-center">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -310,18 +310,18 @@ function StrategyBuilderModal({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. London Reversal"
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:border-primary/50"
+              className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm focus:outline-none focus:border-primary/50"
             />
           </BuilderField>
 
           <div className="grid grid-cols-2 gap-3">
             <BuilderField label="Level">
-              <select value={level} onChange={(e) => setLevel(e.target.value as Level)} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm">
+              <select value={level} onChange={(e) => setLevel(e.target.value as Level)} className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm">
                 {LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
               </select>
             </BuilderField>
             <BuilderField label="Style">
-              <select value={style} onChange={(e) => setStyle(e.target.value as Style)} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm">
+              <select value={style} onChange={(e) => setStyle(e.target.value as Style)} className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm">
                 {STYLES.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
             </BuilderField>
@@ -339,7 +339,7 @@ function StrategyBuilderModal({
                     className={`rounded border px-2.5 py-1 text-xs transition ${
                       on
                         ? "border-primary/50 bg-primary/15 text-primary"
-                        : "border-border bg-background text-muted-foreground hover:text-foreground"
+                        : "border-border/60 bg-background text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     {m}
@@ -355,7 +355,7 @@ function StrategyBuilderModal({
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
               placeholder="One-paragraph summary of the setup and edge."
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:border-primary/50"
+              className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:border-primary/50"
             />
           </BuilderField>
 
@@ -365,26 +365,26 @@ function StrategyBuilderModal({
               onChange={(e) => setRules(e.target.value)}
               rows={6}
               placeholder={`Entry: ...\nStop: ...\nTake profit: ...\nSessions: ...\nFilters: ...`}
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm font-mono resize-none focus:outline-none focus:border-primary/50"
+              className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm font-mono resize-none focus:outline-none focus:border-primary/50"
             />
           </BuilderField>
 
           <div className="grid grid-cols-2 gap-3">
             <BuilderField label="Baseline win rate (%)">
-              <input inputMode="decimal" value={winRate} onChange={(e) => setWinRate(e.target.value)} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              <input inputMode="decimal" value={winRate} onChange={(e) => setWinRate(e.target.value)} className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm" />
             </BuilderField>
             <BuilderField label="Baseline R:R">
-              <input inputMode="decimal" value={rr} onChange={(e) => setRr(e.target.value)} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              <input inputMode="decimal" value={rr} onChange={(e) => setRr(e.target.value)} className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm" />
             </BuilderField>
           </div>
         </div>
 
         <div className="flex items-center justify-end gap-2 p-5 border-t border-border/60">
-          <button onClick={onClose} className="rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground">Cancel</button>
+          <button onClick={onClose} className="rounded-xl px-3 py-2 text-sm text-muted-foreground hover:text-foreground">Cancel</button>
           <button
             disabled={!canSave}
             onClick={submit}
-            className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {editing ? "Save changes" : "Save strategy"}
           </button>
@@ -397,7 +397,7 @@ function StrategyBuilderModal({
 function BuilderField({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1.5">{label}</div>
+      <div className="text-[10px] tracking-[0.2em] text-muted-foreground mb-1.5">{label}</div>
       {children}
     </label>
   );

@@ -90,13 +90,13 @@ export function TradeLockerPanel() {
   }
 
   return (
-    <div className="rounded-md border border-border bg-card p-5 mb-6">
-      <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-muted-foreground mb-3">
+    <div className="rounded-xl border border-border/60 bg-card p-5 mb-6">
+      <div className="flex items-center gap-2 text-xs tracking-tight text-muted-foreground mb-3">
         <LogIn className="h-3.5 w-3.5" /> TradeLocker login
         <button
           onClick={refresh}
           disabled={loading}
-          className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-border px-2 py-1 text-[10px] font-semibold normal-case tracking-normal hover:bg-muted disabled:opacity-50"
+          className="ml-auto inline-flex items-center gap-1.5 rounded-xl border border-border/60 px-2 py-1 text-[10px] font-semibold normal-case tracking-normal hover:bg-muted disabled:opacity-50"
         >
           <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} /> Refresh
         </button>
@@ -108,7 +108,7 @@ export function TradeLockerPanel() {
             <ShieldCheck className="h-4 w-4 text-primary" />
             Signed in as <span className="font-semibold">{status.email}</span> on server{" "}
             <span className="font-mono">{status.server}</span>
-            <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-bold uppercase">
+            <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-bold">
               {status.env === "live" ? "Live" : "Demo"}
             </span>
           </div>
@@ -120,8 +120,8 @@ export function TradeLockerPanel() {
                 <button
                   key={a.id}
                   onClick={() => (active ? undefined : choose(a.id))}
-                  className={`flex w-full flex-wrap items-center gap-x-4 gap-y-1 rounded-md border px-3 py-2 text-left text-sm ${
-                    active ? "border-primary bg-primary/5" : "border-border hover:bg-muted"
+                  className={`flex w-full flex-wrap items-center gap-x-4 gap-y-1 rounded-xl border px-3 py-2 text-left text-sm ${
+                    active ? "border-primary bg-primary/5" : "border-border/60 hover:bg-muted"
                   }`}
                 >
                   <span className="font-mono">{a.accNum ?? a.id}</span>
@@ -141,13 +141,13 @@ export function TradeLockerPanel() {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setShowForm((v) => !v)}
-              className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs hover:bg-muted"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-border/60 px-3 py-1.5 text-xs hover:bg-muted"
             >
               <LogIn className="h-3 w-3" /> Log in to another account
             </button>
             <button
               onClick={signOut}
-              className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs hover:bg-muted"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-border/60 px-3 py-1.5 text-xs hover:bg-muted"
             >
               <Trash2 className="h-3 w-3" /> Log out
             </button>
@@ -165,7 +165,7 @@ export function TradeLockerPanel() {
           {!showForm && (
             <button
               onClick={() => setShowForm(true)}
-              className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90"
             >
               <LogIn className="h-3 w-3" /> Log in with TradeLocker
             </button>
@@ -174,14 +174,14 @@ export function TradeLockerPanel() {
       )}
 
       {showForm && (
-        <div className="mt-4 grid gap-3 border-t border-border pt-4 sm:grid-cols-2">
+        <div className="mt-4 grid gap-3 border-t border-border/60 pt-4 sm:grid-cols-2">
           <label className="text-xs text-muted-foreground">
             Email
             <input
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="username"
-              className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+              className="mt-1 w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm text-foreground"
               placeholder="you@example.com"
             />
           </label>
@@ -192,7 +192,7 @@ export function TradeLockerPanel() {
               onChange={(e) => setPassword(e.target.value)}
               type="password"
               autoComplete="current-password"
-              className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+              className="mt-1 w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm text-foreground"
               placeholder="TradeLocker password"
             />
           </label>
@@ -201,7 +201,7 @@ export function TradeLockerPanel() {
             <input
               value={server}
               onChange={(e) => setServer(e.target.value)}
-              className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+              className="mt-1 w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm text-foreground"
               placeholder="e.g. OSP-DEMO"
             />
           </label>
@@ -210,7 +210,7 @@ export function TradeLockerPanel() {
             <select
               value={env}
               onChange={(e) => setEnv(e.target.value as "demo" | "live")}
-              className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+              className="mt-1 w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm text-foreground"
             >
               <option value="demo">Demo</option>
               <option value="live">Live</option>
@@ -220,14 +220,14 @@ export function TradeLockerPanel() {
             <button
               onClick={submit}
               disabled={signingIn}
-              className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"
             >
               {signingIn ? <RefreshCw className="h-3 w-3 animate-spin" /> : <LogIn className="h-3 w-3" />}
               {signingIn ? "Signing in..." : "Sign in"}
             </button>
             <button
               onClick={() => setShowForm(false)}
-              className="rounded-md border border-border px-3 py-2 text-xs hover:bg-muted"
+              className="rounded-xl border border-border/60 px-3 py-2 text-xs hover:bg-muted"
             >
               Cancel
             </button>

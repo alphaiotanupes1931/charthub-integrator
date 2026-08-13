@@ -75,7 +75,7 @@ function FAQPage() {
           </Link>
           <Link
             to="/"
-            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-4 py-2 text-xs sm:text-sm font-medium hover:bg-card transition"
+            className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card/60 px-4 py-2 text-xs sm:text-sm font-medium hover:bg-card transition"
           >
             <ArrowLeft className="size-4" />
             Back home
@@ -91,7 +91,7 @@ function FAQPage() {
             transition={{ duration: 0.5 }}
             className="text-center mb-10 sm:mb-14"
           >
-            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-3.5 py-1.5 text-xs mb-6">
+            <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/60 px-3.5 py-1.5 text-xs mb-6">
               <HelpCircle className="size-3.5 text-primary" />
               <span className="text-muted-foreground">Got questions?</span>
             </div>
@@ -107,7 +107,7 @@ function FAQPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="rounded-2xl border border-border bg-card/40 p-2 sm:p-4"
+            className="rounded-2xl border border-border/60 bg-card/40 p-2 sm:p-4"
           >
             <Accordion type="single" collapsible className="w-full">
               {FAQS.map((item, i) => (

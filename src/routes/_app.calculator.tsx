@@ -157,10 +157,10 @@ function CalculatorPage() {
           <button
             key={a}
             onClick={() => pickAsset(a)}
-            className={`px-4 py-2 rounded-md text-sm font-medium border transition ${
+            className={`px-4 py-2 rounded-xl text-sm font-medium border transition ${
               assetClass === a
                 ? "bg-primary/15 text-primary border-primary/40"
-                : "bg-card text-muted-foreground border-border hover:border-primary/30 hover:text-foreground"
+                : "bg-card text-muted-foreground border-border/60 hover:border-primary/30 hover:text-foreground"
             }`}
           >
             {a === "cfd" ? "CFD / Indices" : a === "futures" ? "Futures" : "Forex"}
@@ -172,14 +172,14 @@ function CalculatorPage() {
         {/* Left column - inputs */}
         <div className="space-y-4">
           {/* Instrument + leverage */}
-          <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+          <div className="rounded-xl border border-border/60 bg-card p-4 space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Instrument</label>
+                <label className="text-[10px] tracking-tight text-muted-foreground font-semibold">Instrument</label>
                 <select
                   value={instrument.symbol}
                   onChange={(e) => pickInstrument(e.target.value)}
-                  className="mt-1 w-full px-3 py-2 rounded-md border border-border bg-background text-sm focus:outline-none focus:border-primary/50"
+                  className="mt-1 w-full px-3 py-2 rounded-xl border border-border/60 bg-background text-sm focus:outline-none focus:border-primary/50"
                 >
                   {INSTRUMENTS[assetClass].map((i) => (
                     <option key={i.symbol} value={i.symbol}>{i.symbol} — {i.name}</option>
@@ -187,11 +187,11 @@ function CalculatorPage() {
                 </select>
               </div>
               <div>
-                <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Leverage</label>
+                <label className="text-[10px] tracking-tight text-muted-foreground font-semibold">Leverage</label>
                 <select
                   value={leverage}
                   onChange={(e) => setLeverage(parseFloat(e.target.value))}
-                  className="mt-1 w-full px-3 py-2 rounded-md border border-border bg-background text-sm focus:outline-none focus:border-primary/50"
+                  className="mt-1 w-full px-3 py-2 rounded-xl border border-border/60 bg-background text-sm focus:outline-none focus:border-primary/50"
                 >
                   {LEVERAGE.map((l) => (
                     <option key={l.label} value={l.mult}>{l.label}</option>
@@ -205,10 +205,10 @@ function CalculatorPage() {
                 <button
                   key={i.symbol}
                   onClick={() => pickInstrument(i.symbol)}
-                  className={`px-2.5 py-1 rounded-md text-xs font-medium border transition ${
+                  className={`px-2.5 py-1 rounded-xl text-xs font-medium border transition ${
                     instrument.symbol === i.symbol
                       ? "bg-primary/15 text-primary border-primary/40"
-                      : "bg-background text-muted-foreground border-border hover:border-primary/30 hover:text-foreground"
+                      : "bg-background text-muted-foreground border-border/60 hover:border-primary/30 hover:text-foreground"
                   }`}
                 >
                   {i.symbol}
@@ -218,14 +218,14 @@ function CalculatorPage() {
           </div>
 
           {/* Mode tabs */}
-          <div className="grid grid-cols-4 gap-1.5 rounded-xl border border-border bg-card p-1.5">
+          <div className="grid grid-cols-4 gap-1.5 rounded-xl border border-border/60 bg-card p-1.5">
             {MODES.map((m) => {
               const Icon = m.icon;
               return (
                 <button
                   key={m.key}
                   onClick={() => setMode(m.key)}
-                  className={`inline-flex items-center justify-center gap-1.5 px-2 py-2 rounded-md text-xs font-medium transition ${
+                  className={`inline-flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-xs font-medium transition ${
                     mode === m.key
                       ? "bg-primary/15 text-primary"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -245,24 +245,24 @@ function CalculatorPage() {
           </div>
 
           {/* Account & Risk */}
-          <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+          <div className="rounded-xl border border-border/60 bg-card p-4 space-y-3">
             <div className="text-sm font-semibold">Account & Risk</div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Account Balance</label>
+                <label className="text-[10px] tracking-tight text-muted-foreground font-semibold">Account Balance</label>
                 <div className="relative mt-1">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
                   <input
                     inputMode="decimal"
                     value={balance}
                     onChange={(e) => setBalance(e.target.value.replace(/[^0-9.]/g, ""))}
-                    className="w-full pl-7 pr-3 py-2 rounded-md border border-border bg-background text-sm focus:outline-none focus:border-primary/50"
+                    className="w-full pl-7 pr-3 py-2 rounded-xl border border-border/60 bg-background text-sm focus:outline-none focus:border-primary/50"
                     placeholder="10000"
                   />
                 </div>
               </div>
               <div>
-                <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center justify-between">
+                <label className="text-[10px] tracking-tight text-muted-foreground font-semibold flex items-center justify-between">
                   <span>Risk Percentage</span>
                   <span className="text-primary font-bold">{riskPct || "0"}%</span>
                 </label>
@@ -272,7 +272,7 @@ function CalculatorPage() {
                     inputMode="decimal"
                     value={riskPct}
                     onChange={(e) => setRiskPct(e.target.value.replace(/[^0-9.]/g, ""))}
-                    className="w-full pl-3 pr-8 py-2 rounded-md border border-border bg-background text-sm focus:outline-none focus:border-primary/50"
+                    className="w-full pl-3 pr-8 py-2 rounded-xl border border-border/60 bg-background text-sm focus:outline-none focus:border-primary/50"
                     placeholder="2"
                   />
                 </div>
@@ -284,7 +284,7 @@ function CalculatorPage() {
                       className={`flex-1 px-2 py-1 rounded text-[11px] font-medium border transition ${
                         riskPct === v
                           ? "bg-primary/15 text-primary border-primary/40"
-                          : "bg-background text-muted-foreground border-border hover:text-foreground"
+                          : "bg-background text-muted-foreground border-border/60 hover:text-foreground"
                       }`}
                     >
                       {v}%
@@ -293,14 +293,14 @@ function CalculatorPage() {
                 </div>
               </div>
             </div>
-            <div className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2 flex items-center justify-between">
+            <div className="rounded-xl border border-primary/30 bg-primary/5 px-3 py-2 flex items-center justify-between">
               <span className="text-xs text-muted-foreground">Dollar Risk</span>
               <span className="text-lg font-bold text-primary font-mono">${dollarRisk.toFixed(2)}</span>
             </div>
           </div>
 
           {/* Entry & Exit */}
-          <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+          <div className="rounded-xl border border-border/60 bg-card p-4 space-y-3">
             <div className="flex items-center justify-between">
               <div className="text-sm font-semibold">Entry & Exit Prices</div>
               <button
@@ -320,8 +320,8 @@ function CalculatorPage() {
 
         {/* Right column - results */}
         <div className="space-y-3 lg:sticky lg:top-4 lg:self-start">
-          <div className="rounded-xl border border-primary/30 bg-gradient-to-br from-primary/10 via-card to-card p-4 space-y-3">
-            <div className="text-[10px] uppercase tracking-[0.2em] text-primary font-bold">Results</div>
+          <div className="rounded-xl border border-primary/30 bg-primary/[0.06] p-4 space-y-3">
+            <div className="text-[10px] tracking-[0.2em] text-primary font-bold">Results</div>
 
             {(mode === "size" || mode === "full") && (
               <ResultRow
@@ -358,7 +358,7 @@ function CalculatorPage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-border bg-card p-3 text-[11px] text-muted-foreground leading-relaxed">
+          <div className="rounded-xl border border-border/60 bg-card p-3 text-[11px] text-muted-foreground leading-relaxed">
             <div className="font-semibold text-foreground mb-1">Rule of thumb</div>
             Risk 1-2% per trade. Ten straight losses at 2% still leaves you with 82% of your account. Ten straight losses at 10% leaves you with 35%.
           </div>
@@ -388,7 +388,7 @@ function PriceField({
   const ring = tone === "stop" ? "focus:border-red-500/50" : tone === "tp" ? "focus:border-bull/50" : "focus:border-primary/50";
   return (
     <div>
-      <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center justify-between">
+      <label className="text-[10px] tracking-tight text-muted-foreground font-semibold flex items-center justify-between">
         <span>{label}</span>
         {optional && <span className="normal-case text-[9px] text-muted-foreground/70">optional</span>}
       </label>
@@ -398,7 +398,7 @@ function PriceField({
         onChange={(e) => onChange(e.target.value.replace(/[^0-9.]/g, ""))}
         step={step}
         placeholder={hint}
-        className={`mt-1 w-full px-3 py-2 rounded-md border border-border bg-background text-sm font-mono focus:outline-none ${ring}`}
+        className={`mt-1 w-full px-3 py-2 rounded-xl border border-border/60 bg-background text-sm font-mono focus:outline-none ${ring}`}
       />
     </div>
   );
@@ -424,7 +424,7 @@ function ResultRow({
     "text-foreground";
   return (
     <div>
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{label}</div>
+      <div className="text-[10px] tracking-tight text-muted-foreground font-semibold">{label}</div>
       <div className={`${big ? "text-2xl" : "text-lg"} font-bold font-mono ${color}`}>{value}</div>
       {sub && <div className="text-[10px] text-muted-foreground mt-0.5">{sub}</div>}
     </div>

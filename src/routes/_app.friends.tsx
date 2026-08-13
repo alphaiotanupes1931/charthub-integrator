@@ -131,7 +131,7 @@ function FriendsPage() {
           <Share2 className="h-4 w-4 text-primary" /> Your invite link
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
-          <div className="flex-1 truncate rounded-md border border-border bg-background/60 px-3 py-2 font-mono text-xs text-muted-foreground">
+          <div className="flex-1 truncate rounded-xl border border-border/60 bg-background/60 px-3 py-2 font-mono text-xs text-muted-foreground">
             {loading ? "Generating…" : link || "-"}
           </div>
           <div className="flex gap-2">
@@ -157,7 +157,7 @@ function FriendsPage() {
       </Card>
 
       <div>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        <h2 className="mb-3 text-sm font-semibold tracking-wide text-muted-foreground">
           Connected ({friends.length})
         </h2>
         {loading ? (

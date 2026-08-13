@@ -52,7 +52,7 @@ function ScanLensPage() {
               className={`w-full text-left rounded-xl border p-4 transition flex items-start gap-3 ${
                 isActive
                   ? "border-primary/60 bg-primary/10"
-                  : "border-border bg-card/40 hover:border-border/80"
+                  : "border-border/60 bg-card/40 hover:border-border/80"
               }`}
             >
               <div className="flex-1">

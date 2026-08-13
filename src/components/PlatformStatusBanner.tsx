@@ -13,7 +13,7 @@ const STYLES = {
     icon: CheckCircle2,
     label: "All systems operational",
     ring: "border-bull/30",
-    bg: "bg-gradient-to-r from-bull/10 via-bull/5 to-transparent",
+    bg: "bg-bull/10",
     dot: "bg-bull shadow-[0_0_12px_2px_rgba(16,185,129,0.55)]",
     text: "text-bull",
   },
@@ -21,7 +21,7 @@ const STYLES = {
     icon: AlertTriangle,
     label: "Partial degradation",
     ring: "border-amber-500/30",
-    bg: "bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent",
+    bg: "bg-amber-500/10",
     dot: "bg-amber-500 shadow-[0_0_12px_2px_rgba(245,158,11,0.55)]",
     text: "text-amber-400",
   },
@@ -29,7 +29,7 @@ const STYLES = {
     icon: XCircle,
     label: "Service disruption",
     ring: "border-red-500/30",
-    bg: "bg-gradient-to-r from-red-500/10 via-red-500/5 to-transparent",
+    bg: "bg-red-500/10",
     dot: "bg-red-500 shadow-[0_0_12px_2px_rgba(239,68,68,0.55)]",
     text: "text-red-400",
   },
@@ -63,7 +63,7 @@ export function PlatformStatusBanner() {
         <Icon className={`h-4 w-4 shrink-0 ${s.text}`} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline gap-x-2">
-            <span className={`text-xs font-semibold uppercase tracking-wider ${s.text}`}>
+            <span className={`text-xs font-semibold tracking-tight ${s.text}`}>
               TradeMind Status
             </span>
             <span className="text-xs text-muted-foreground">·</span>

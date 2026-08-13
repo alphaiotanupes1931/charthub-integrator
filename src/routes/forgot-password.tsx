@@ -56,9 +56,9 @@ function ForgotPasswordPage() {
           </span>
         </Link>
 
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-sm">
           <div className="flex flex-col items-center text-center">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-border">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-border/60">
               {sent ? <MailCheck className="h-8 w-8 text-primary" /> : <KeyRound className="h-8 w-8 text-foreground" />}
             </div>
             <h1 className="mt-4 text-base font-semibold text-foreground">
@@ -94,7 +94,7 @@ function ForgotPasswordPage() {
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 placeholder="you@email.com"
-                className="w-full h-11 rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:border-primary/50"
+                className="w-full h-11 rounded-xl border border-border/60 bg-background px-3 text-sm focus:outline-none focus:border-primary/50"
                 required
               />
               <Button type="submit" className="w-full" disabled={busy || !identifier.trim()}>
@@ -128,7 +128,7 @@ function ForgotPasswordPage() {
 
         <Link
           to="/auth"
-          className="mt-4 flex h-11 items-center justify-center rounded-2xl border border-border bg-card text-sm font-semibold text-foreground"
+          className="mt-4 flex h-11 items-center justify-center rounded-2xl border border-border/60 bg-card text-sm font-semibold text-foreground"
         >
           Back to sign in
         </Link>

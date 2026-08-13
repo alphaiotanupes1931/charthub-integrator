@@ -57,7 +57,7 @@ export default function StrategyEdgePanel() {
   };
 
   return (
-    <div className="rounded-md border border-border bg-card p-4">
+    <div className="rounded-xl border border-border/60 bg-card p-4">
       <div className="flex items-start gap-2">
         <LineChart className="mt-0.5 h-4 w-4 text-muted-foreground" />
         <div>
@@ -111,7 +111,7 @@ export default function StrategyEdgePanel() {
         <div className="mt-4 overflow-x-auto">
           <table className="w-full text-xs">
             <thead className="text-muted-foreground">
-              <tr className="border-b border-border">
+              <tr className="border-b border-border/60">
                 <th className="py-2 text-left font-normal">Strategy</th>
                 <th className="py-2 text-left font-normal">Instrument</th>
                 <th className="py-2 text-left font-normal">TF</th>

@@ -146,8 +146,8 @@ export function BacktestReplay({ bars, result }: Props) {
   }, [trade]);
 
   return (
-    <div className="rounded-xl border border-border bg-card">
-      <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3">
+    <div className="rounded-xl border border-border/60 bg-card">
+      <div className="flex flex-wrap items-center gap-2 border-b border-border/60 px-4 py-3">
         <PlayCircle className="h-4 w-4" />
         <span className="text-sm font-semibold">Trade replay</span>
         <span className="text-xs text-muted-foreground">
@@ -179,9 +179,9 @@ export function BacktestReplay({ bars, result }: Props) {
       </div>
 
       {trade && (
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border px-4 py-2 text-xs">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border/60 px-4 py-2 text-xs">
           <span className="font-semibold">{trade.side}</span>
-          <span className="rounded border border-border px-1">{trade.grade}</span>
+          <span className="rounded border border-border/60 px-1">{trade.grade}</span>
           <span className="text-muted-foreground">{trade.session}</span>
           <span className="font-mono text-muted-foreground">
             in {trade.entry} at {fmt(trade.entryTime)} · out {trade.exit} at {fmt(trade.exitTime)} · {trade.holdBars} bars
@@ -195,7 +195,7 @@ export function BacktestReplay({ bars, result }: Props) {
 
       <div ref={holder} className="h-[420px] w-full" />
 
-      <div className="border-t border-border px-4 py-2 text-xs text-muted-foreground">
+      <div className="border-t border-border/60 px-4 py-2 text-xs text-muted-foreground">
         Arrows mark the fill on the bar after the signal formed; circles mark the exit and its R result. Use the
         stepper to walk trade by trade with entry, stop and target drawn.
       </div>

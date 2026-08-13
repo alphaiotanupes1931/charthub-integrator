@@ -49,9 +49,9 @@ export function NewsMarquee() {
     <Link
       to="/news"
       aria-label="Open the news page"
-      className="group hidden md:flex min-w-0 flex-1 items-center gap-3 overflow-hidden rounded-md border border-border px-3 py-1.5"
+      className="group hidden md:flex min-w-0 flex-1 items-center gap-3 overflow-hidden rounded-xl border border-border/60 px-3 py-1.5"
     >
-      <span className="flex shrink-0 items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <span className="flex shrink-0 items-center gap-1.5 text-[10px] font-semibold tracking-tight text-muted-foreground">
         <Newspaper className="h-3.5 w-3.5" />
         News
       </span>

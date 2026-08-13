@@ -39,7 +39,7 @@ export const Route = createFileRoute("/_app/settings")({
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-4 my-8">
-      <span className="text-[11px] font-medium tracking-[0.2em] text-muted-foreground uppercase">
+      <span className="text-[11px] font-medium tracking-[0.2em] text-muted-foreground">
         {children}
       </span>
       <div className="flex-1 h-px bg-border/60" />
@@ -49,7 +49,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`rounded-xl border border-border bg-card/40 p-6 ${className}`}>
+    <div className={`rounded-xl border border-border/60 bg-card/40 p-6 ${className}`}>
       {children}
     </div>
   );
@@ -140,7 +140,7 @@ function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       {...props}
-      className={`w-full h-11 rounded-lg bg-background/60 border border-border px-3.5 text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary/50 ${props.className ?? ""}`}
+      className={`w-full h-11 rounded-2xl bg-background/60 border border-border/60 px-3.5 text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary/50 ${props.className ?? ""}`}
     />
   );
 }
@@ -149,7 +149,7 @@ function Select({ children, ...props }: React.SelectHTMLAttributes<HTMLSelectEle
   return (
     <select
       {...props}
-      className={`w-full h-11 rounded-lg bg-background/60 border border-border px-3.5 text-sm focus:outline-none focus:border-primary/50 appearance-none bg-no-repeat bg-[right_0.75rem_center] ${props.className ?? ""}`}
+      className={`w-full h-11 rounded-2xl bg-background/60 border border-border/60 px-3.5 text-sm focus:outline-none focus:border-primary/50 appearance-none bg-no-repeat bg-[right_0.75rem_center] ${props.className ?? ""}`}
       style={{
         backgroundImage:
           "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>\")",
@@ -164,7 +164,7 @@ function PrimaryButton({ children, ...props }: React.ButtonHTMLAttributes<HTMLBu
   return (
     <button
       {...props}
-      className={`inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition ${props.className ?? ""}`}
+      className={`inline-flex items-center gap-2 h-10 px-4 rounded-2xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition ${props.className ?? ""}`}
     >
       {children}
     </button>
@@ -175,7 +175,7 @@ function GhostButton({ children, ...props }: React.ButtonHTMLAttributes<HTMLButt
   return (
     <button
       {...props}
-      className={`inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-background/60 border border-border text-sm font-medium hover:border-primary/40 transition ${props.className ?? ""}`}
+      className={`inline-flex items-center gap-2 h-10 px-4 rounded-2xl bg-background/60 border border-border/60 text-sm font-medium hover:border-primary/40 transition ${props.className ?? ""}`}
     >
       {children}
     </button>
@@ -308,10 +308,10 @@ function SettingsPage() {
               <button
                 key={f}
                 onClick={() => setTimeFormat(f)}
-                className={`px-4 h-10 rounded-lg border text-sm font-medium transition ${
+                className={`px-4 h-10 rounded-2xl border text-sm font-medium transition ${
                   active
                     ? "border-primary/60 bg-primary/10 text-primary"
-                    : "border-border bg-background/40 text-muted-foreground hover:text-foreground"
+                    : "border-border/60 bg-background/40 text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {f === "12h" ? "12-hour (AM/PM)" : "24-hour (military)"}
@@ -406,13 +406,13 @@ function SettingsPage() {
             { key: "borderUp", label: "Bullish border" },
             { key: "borderDown", label: "Bearish border" },
           ] as Array<{ key: keyof CandleColors; label: string }>).map(({ key, label }) => (
-            <div key={key} className="flex items-center gap-2 rounded-md border border-border bg-background/40 px-3 py-2">
+            <div key={key} className="flex items-center gap-2 rounded-xl border border-border/60 bg-background/40 px-3 py-2">
               <label className="flex-1 text-sm text-foreground/80">{label}</label>
               <input
                 type="color"
                 value={candleColors[key]}
                 onChange={(e) => updateCandleColors({ [key]: e.target.value } as Partial<CandleColors>)}
-                className="h-8 w-9 cursor-pointer rounded border border-border bg-transparent p-0"
+                className="h-8 w-9 cursor-pointer rounded border border-border/60 bg-transparent p-0"
                 aria-label={`${label} color picker`}
               />
               <input
@@ -423,7 +423,7 @@ function SettingsPage() {
                   if (isHex(v)) updateCandleColors({ [key]: v } as Partial<CandleColors>);
                 }}
                 spellCheck={false}
-                className="w-24 rounded border border-border bg-background px-2 py-1 font-mono text-xs uppercase text-foreground/90 focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-24 rounded border border-border/60 bg-background px-2 py-1 font-mono text-xs text-foreground/90 focus:outline-none focus:ring-1 focus:ring-primary"
                 aria-label={`${label} hex code`}
               />
             </div>
@@ -433,7 +433,7 @@ function SettingsPage() {
           <button
             type="button"
             onClick={resetCandleColors}
-            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background hover:bg-muted px-3 py-1.5 text-xs font-medium text-foreground/80"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-border/60 bg-background hover:bg-muted px-3 py-1.5 text-xs font-medium text-foreground/80"
           >
             <RotateCcw className="h-3.5 w-3.5" /> Reset to defaults
           </button>
@@ -457,9 +457,9 @@ function SettingsPage() {
                 key={name}
                 type="button"
                 onClick={() => setChartBgPreset(name)}
-                className={`inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${active ? "border-primary bg-primary/10 text-primary" : "border-border bg-background hover:bg-muted text-foreground/80"}`}
+                className={`inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-medium transition-colors ${active ? "border-primary bg-primary/10 text-primary" : "border-border/60 bg-background hover:bg-muted text-foreground/80"}`}
               >
-                <span className="inline-block h-4 w-4 rounded border border-border" style={{ background: preset.bg }} />
+                <span className="inline-block h-4 w-4 rounded border border-border/60" style={{ background: preset.bg }} />
                 {name}
               </button>
             );
@@ -472,13 +472,13 @@ function SettingsPage() {
             { key: "text", label: "Axis text" },
             { key: "border", label: "Border" },
           ] as Array<{ key: keyof ChartBackground; label: string }>).map(({ key, label }) => (
-            <div key={key} className="flex items-center gap-2 rounded-md border border-border bg-background/40 px-3 py-2">
+            <div key={key} className="flex items-center gap-2 rounded-xl border border-border/60 bg-background/40 px-3 py-2">
               <label className="flex-1 text-sm text-foreground/80">{label}</label>
               <input
                 type="color"
                 value={chartBg[key]}
                 onChange={(e) => updateChartBg({ [key]: e.target.value } as Partial<ChartBackground>)}
-                className="h-8 w-9 cursor-pointer rounded border border-border bg-transparent p-0"
+                className="h-8 w-9 cursor-pointer rounded border border-border/60 bg-transparent p-0"
                 aria-label={`${label} color picker`}
               />
               <input
@@ -489,7 +489,7 @@ function SettingsPage() {
                   if (isHex(v)) updateChartBg({ [key]: v } as Partial<ChartBackground>);
                 }}
                 spellCheck={false}
-                className="w-24 rounded border border-border bg-background px-2 py-1 font-mono text-xs uppercase text-foreground/90 focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-24 rounded border border-border/60 bg-background px-2 py-1 font-mono text-xs text-foreground/90 focus:outline-none focus:ring-1 focus:ring-primary"
                 aria-label={`${label} hex code`}
               />
             </div>
@@ -499,7 +499,7 @@ function SettingsPage() {
           <button
             type="button"
             onClick={resetChartBg}
-            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background hover:bg-muted px-3 py-1.5 text-xs font-medium text-foreground/80"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-border/60 bg-background hover:bg-muted px-3 py-1.5 text-xs font-medium text-foreground/80"
           >
             <RotateCcw className="h-3.5 w-3.5" /> Reset to defaults
           </button>
@@ -545,14 +545,14 @@ function SettingsPage() {
           <button
             type="button"
             onClick={() => setConfirmDelete(true)}
-            className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-destructive/10 border border-destructive/40 text-destructive text-sm font-medium hover:bg-destructive/20 transition"
+            className="inline-flex items-center gap-2 h-10 px-4 rounded-2xl bg-destructive/10 border border-destructive/40 text-destructive text-sm font-medium hover:bg-destructive/20 transition"
           >
             <Trash2 className="size-4" /> Delete my account
           </button>
         ) : (
           <div className="space-y-3">
             <p className="text-sm">
-              Type <code className="px-1.5 py-0.5 rounded bg-background/60 border border-border font-mono">DELETE</code> to confirm.
+              Type <code className="px-1.5 py-0.5 rounded bg-background/60 border border-border/60 font-mono">DELETE</code> to confirm.
             </p>
             <Input
               value={deleteText}
@@ -565,7 +565,7 @@ function SettingsPage() {
                 type="button"
                 onClick={handleDelete}
                 disabled={deleting || deleteText !== "DELETE"}
-                className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-destructive text-destructive-foreground text-sm font-medium hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-2 h-10 px-4 rounded-2xl bg-destructive text-destructive-foreground text-sm font-medium hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <Trash2 className="size-4" />
                 {deleting ? "Deleting…" : "Permanently delete"}
@@ -631,7 +631,7 @@ function BillingCard() {
         Subscription
       </h2>
       <div className="text-sm text-muted-foreground mb-2">Status</div>
-      <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md mb-5 ${
+      <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-xl mb-5 ${
         active
           ? "bg-primary text-primary-foreground"
           : "bg-muted text-muted-foreground"

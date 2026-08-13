@@ -83,7 +83,7 @@ function TestingPage() {
               toggle.mutate({ data: { enabled: willEnable } });
               if (willEnable) emitFirstWeekEvent("testing-enabled");
             }}
-            className={`inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium ${s.account.testing_mode ? "bg-emerald-600 text-white" : "bg-muted text-foreground"}`}
+            className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium ${s.account.testing_mode ? "bg-emerald-600 text-white" : "bg-muted text-foreground"}`}
           >
             {s.account.testing_mode ? <><Play className="size-4" /> Testing ON</> : <><Square className="size-4" /> Testing OFF</>}
           </button>
@@ -92,12 +92,12 @@ function TestingPage() {
       <PageInstructions className="mb-6" />
 
       {s.account.status === "paused_for_review" && (
-        <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 flex items-start gap-3">
+        <div className="rounded-2xl border border-destructive/40 bg-destructive/10 p-4 flex items-start gap-3">
           <AlertTriangle className="size-5 text-destructive shrink-0 mt-0.5" />
           <div className="flex-1">
             <div className="font-medium text-destructive">Trading paused — kill switch triggered</div>
             <p className="text-sm text-muted-foreground mt-1">{s.account.paused_reason}</p>
-            <button onClick={() => resume.mutate({})} disabled={resume.isPending} className="mt-3 rounded-md bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground">
+            <button onClick={() => resume.mutate({})} disabled={resume.isPending} className="mt-3 rounded-xl bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground">
               I've reviewed. Resume trading
             </button>
           </div>
@@ -116,29 +116,29 @@ function TestingPage() {
       </div>
 
       <div className="flex items-center gap-2">
-        <button onClick={() => setShowNew((v) => !v)} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">
+        <button onClick={() => setShowNew((v) => !v)} className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">
           {showNew ? "Cancel" : "New paper trade"}
         </button>
-        <button onClick={() => { if (confirm("Reset paper account to $10,000? Wipes trades and equity history.")) reset.mutate({ data: {} }); }} className="inline-flex items-center gap-2 rounded-md border border-border px-4 py-2 text-sm">
+        <button onClick={() => { if (confirm("Reset paper account to $10,000? Wipes trades and equity history.")) reset.mutate({ data: {} }); }} className="inline-flex items-center gap-2 rounded-xl border border-border/60 px-4 py-2 text-sm">
           <RotateCcw className="size-4" /> Reset to $10,000
         </button>
       </div>
 
       {showNew && (
-        <div className="rounded-lg border border-border bg-card/40 p-4 space-y-3">
+        <div className="rounded-2xl border border-border/60 bg-card/40 p-4 space-y-3">
           <p className="text-xs text-muted-foreground">
             Leave <span className="font-medium text-foreground">Entry</span> blank to open at the current market price. Stop and Take Profit are optional.
           </p>
           <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
-            <input className="rounded border border-border bg-background px-2 py-1.5 text-sm" placeholder="Symbol" value={form.symbol} onChange={(e) => setForm({ ...form, symbol: e.target.value })} />
-            <select className="rounded border border-border bg-background px-2 py-1.5 text-sm" value={form.side} onChange={(e) => setForm({ ...form, side: e.target.value as "long" | "short" })}>
+            <input className="rounded border border-border/60 bg-background px-2 py-1.5 text-sm" placeholder="Symbol" value={form.symbol} onChange={(e) => setForm({ ...form, symbol: e.target.value })} />
+            <select className="rounded border border-border/60 bg-background px-2 py-1.5 text-sm" value={form.side} onChange={(e) => setForm({ ...form, side: e.target.value as "long" | "short" })}>
               <option value="long">Long</option>
               <option value="short">Short</option>
             </select>
-            <input className="rounded border border-border bg-background px-2 py-1.5 text-sm" placeholder="Size" value={form.size} onChange={(e) => setForm({ ...form, size: e.target.value })} />
-            <input className="rounded border border-border bg-background px-2 py-1.5 text-sm" placeholder="Entry (market)" value={form.entry} onChange={(e) => setForm({ ...form, entry: e.target.value })} />
-            <input className="rounded border border-border bg-background px-2 py-1.5 text-sm" placeholder="Stop (optional)" value={form.stop} onChange={(e) => setForm({ ...form, stop: e.target.value })} />
-            <input className="rounded border border-border bg-background px-2 py-1.5 text-sm" placeholder="Take Profit (optional)" value={form.takeProfit} onChange={(e) => setForm({ ...form, takeProfit: e.target.value })} />
+            <input className="rounded border border-border/60 bg-background px-2 py-1.5 text-sm" placeholder="Size" value={form.size} onChange={(e) => setForm({ ...form, size: e.target.value })} />
+            <input className="rounded border border-border/60 bg-background px-2 py-1.5 text-sm" placeholder="Entry (market)" value={form.entry} onChange={(e) => setForm({ ...form, entry: e.target.value })} />
+            <input className="rounded border border-border/60 bg-background px-2 py-1.5 text-sm" placeholder="Stop (optional)" value={form.stop} onChange={(e) => setForm({ ...form, stop: e.target.value })} />
+            <input className="rounded border border-border/60 bg-background px-2 py-1.5 text-sm" placeholder="Take Profit (optional)" value={form.takeProfit} onChange={(e) => setForm({ ...form, takeProfit: e.target.value })} />
           </div>
           <button
             onClick={() => {
@@ -154,7 +154,7 @@ function TestingPage() {
               openPos.mutate({ data: { symbol: form.symbol.trim(), side: form.side, size, entry, stop, takeProfit } });
             }}
             disabled={openPos.isPending}
-            className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+            className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
           >
             {openPos.isPending ? "Opening…" : form.entry.trim() ? "Open position" : "Open at market"}
           </button>
@@ -166,9 +166,9 @@ function TestingPage() {
         {s.positions.length === 0 ? (
           <p className="text-sm text-muted-foreground">No open positions.</p>
         ) : (
-          <div className="overflow-x-auto rounded border border-border">
+          <div className="overflow-x-auto rounded border border-border/60">
             <table className="w-full text-sm">
-              <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
+              <thead className="bg-muted/40 text-xs tracking-wide text-muted-foreground">
                 <tr>
                   <th className="text-left p-2">Symbol</th><th className="text-left p-2">Side</th><th className="text-right p-2">Size</th>
                   <th className="text-right p-2">Entry</th><th className="text-right p-2">Stop</th><th className="text-right p-2">TP</th>
@@ -177,7 +177,7 @@ function TestingPage() {
               </thead>
               <tbody>
                 {s.positions.map((p: any) => (
-                  <tr key={p.id} className="border-t border-border">
+                  <tr key={p.id} className="border-t border-border/60">
                     <td className="p-2">{p.symbol}</td>
                     <td className="p-2 capitalize">{p.side}</td>
                     <td className="p-2 text-right">{p.size}</td>
@@ -186,7 +186,7 @@ function TestingPage() {
                     <td className="p-2 text-right">{p.take_profit ?? "—"}</td>
                     <td className="p-2">{p.grade ?? "—"}</td>
                     <td className="p-2 text-right">
-                      <button onClick={() => closePos.mutate({ data: { id: p.id } })} className="inline-flex items-center gap-1 rounded border border-border px-2 py-1 text-xs">
+                      <button onClick={() => closePos.mutate({ data: { id: p.id } })} className="inline-flex items-center gap-1 rounded border border-border/60 px-2 py-1 text-xs">
                         <X className="size-3" /> Close
                       </button>
                     </td>
@@ -203,9 +203,9 @@ function TestingPage() {
         {s.trades.length === 0 ? (
           <p className="text-sm text-muted-foreground">No trades yet.</p>
         ) : (
-          <div className="overflow-x-auto rounded border border-border">
+          <div className="overflow-x-auto rounded border border-border/60">
             <table className="w-full text-sm">
-              <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
+              <thead className="bg-muted/40 text-xs tracking-wide text-muted-foreground">
                 <tr>
                   <th className="text-left p-2">Closed</th><th className="text-left p-2">Symbol</th><th className="text-left p-2">Side</th>
                   <th className="text-right p-2">Entry</th><th className="text-right p-2">Exit</th>
@@ -216,14 +216,14 @@ function TestingPage() {
                 {s.trades.map((t: any) => {
                   const pnl = Number(t.pnl);
                   return (
-                    <tr key={t.id} className="border-t border-border">
+                    <tr key={t.id} className="border-t border-border/60">
                       <td className="p-2 text-xs text-muted-foreground">{new Date(t.closed_at).toLocaleString()}</td>
                       <td className="p-2">{t.symbol}</td>
                       <td className="p-2 capitalize">{t.side}</td>
                       <td className="p-2 text-right">{t.entry}</td>
                       <td className="p-2 text-right">{t.exit}</td>
                       <td className={`p-2 text-right ${pnl >= 0 ? "text-emerald-500" : "text-red-500"}`}>{fmtMoney(pnl)}</td>
-                      <td className="p-2 uppercase text-xs">{t.reason}</td>
+                      <td className="p-2 text-xs">{t.reason}</td>
                     </tr>
                   );
                 })}
@@ -239,8 +239,8 @@ function TestingPage() {
 function Stat({ label, value, tone }: { label: string; value: string; tone?: "pos" | "neg" | "neutral" }) {
   const cls = tone === "pos" ? "text-emerald-500" : tone === "neg" ? "text-red-500" : "text-foreground";
   return (
-    <div className="rounded-lg border border-border bg-card/40 p-3">
-      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div>
+    <div className="rounded-2xl border border-border/60 bg-card/40 p-3">
+      <div className="text-[11px] tracking-wide text-muted-foreground">{label}</div>
       <div className={`text-lg font-semibold ${cls}`}>{value}</div>
     </div>
   );

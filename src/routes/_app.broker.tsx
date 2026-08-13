@@ -201,7 +201,7 @@ function BrokerPage() {
         <button
           onClick={() => refresh()}
           disabled={loading}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md border border-border text-sm hover:bg-muted disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border/60 text-sm hover:bg-muted disabled:opacity-50"
         >
           <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh
         </button>
@@ -211,8 +211,8 @@ function BrokerPage() {
       <AlpacaPanel />
 
       {status?.connected && (
-        <div className="rounded-md border border-border bg-card p-5 mb-6">
-          <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-muted-foreground mb-3">
+        <div className="rounded-xl border border-border/60 bg-card p-5 mb-6">
+          <div className="flex items-center gap-2 text-xs tracking-tight text-muted-foreground mb-3">
             <Wallet className="h-3.5 w-3.5" /> Account
             <span className={`ml-auto rounded px-1.5 py-0.5 text-[10px] font-bold ${status.env === "live" ? "bg-red-500/15 text-red-300" : "bg-primary/15 text-primary"}`}>
               {status.env === "practice" ? "DEMO" : "LIVE"}
@@ -233,7 +233,7 @@ function BrokerPage() {
       )}
 
       {status?.connected && (
-        <div className="rounded-md border border-border bg-card p-5 mb-6">
+        <div className="rounded-xl border border-border/60 bg-card p-5 mb-6">
           <div className="flex items-center gap-3 mb-3">
             <div className="text-sm font-semibold">Order ticket</div>
             {status.marginAvailable != null && (
@@ -244,17 +244,17 @@ function BrokerPage() {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <Field label="Symbol">
-              <input value={symbol} onChange={(e) => setSymbol(e.target.value)} className="w-full px-2 py-1.5 rounded-md bg-background border border-border text-sm" />
+              <input value={symbol} onChange={(e) => setSymbol(e.target.value)} className="w-full px-2 py-1.5 rounded-xl bg-background border border-border/60 text-sm" />
             </Field>
             <Field label="Order type">
-              <select value={orderType} onChange={(e) => setOrderType(e.target.value as "market" | "limit" | "stop")} className="w-full px-2 py-1.5 rounded-md bg-background border border-border text-sm">
+              <select value={orderType} onChange={(e) => setOrderType(e.target.value as "market" | "limit" | "stop")} className="w-full px-2 py-1.5 rounded-xl bg-background border border-border/60 text-sm">
                 <option value="market">Market (now)</option>
                 <option value="limit">Limit (better price)</option>
                 <option value="stop">Stop (breakout)</option>
               </select>
             </Field>
             <Field label="Units">
-              <input type="number" value={units} onChange={(e) => setUnits(Number(e.target.value))} className="w-full px-2 py-1.5 rounded-md bg-background border border-border text-sm" />
+              <input type="number" value={units} onChange={(e) => setUnits(Number(e.target.value))} className="w-full px-2 py-1.5 rounded-xl bg-background border border-border/60 text-sm" />
             </Field>
             <Field label={orderType === "market" ? "Entry price (market)" : "Entry price"}>
               <input
@@ -262,27 +262,27 @@ function BrokerPage() {
                 onChange={(e) => setLimitPrice(e.target.value)}
                 disabled={orderType === "market"}
                 placeholder={orderType === "market" ? "at market" : "price"}
-                className="w-full px-2 py-1.5 rounded-md bg-background border border-border text-sm disabled:opacity-50"
+                className="w-full px-2 py-1.5 rounded-xl bg-background border border-border/60 text-sm disabled:opacity-50"
               />
             </Field>
             <Field label="Stop loss">
-              <input value={stopLoss} onChange={(e) => setStopLoss(e.target.value)} placeholder="price" className="w-full px-2 py-1.5 rounded-md bg-background border border-border text-sm" />
+              <input value={stopLoss} onChange={(e) => setStopLoss(e.target.value)} placeholder="price" className="w-full px-2 py-1.5 rounded-xl bg-background border border-border/60 text-sm" />
             </Field>
             <Field label="Take profit">
-              <input value={takeProfit} onChange={(e) => setTakeProfit(e.target.value)} placeholder="price" className="w-full px-2 py-1.5 rounded-md bg-background border border-border text-sm" />
+              <input value={takeProfit} onChange={(e) => setTakeProfit(e.target.value)} placeholder="price" className="w-full px-2 py-1.5 rounded-xl bg-background border border-border/60 text-sm" />
             </Field>
             <Field label="Dollar risk (auto-size units)">
               <input
                 value={riskDollars}
                 onChange={(e) => setRiskDollars(e.target.value)}
                 placeholder="e.g. 100"
-                className="w-full px-2 py-1.5 rounded-md bg-background border border-border text-sm"
+                className="w-full px-2 py-1.5 rounded-xl bg-background border border-border/60 text-sm"
               />
             </Field>
             <div className="flex items-end">
               <button
                 onClick={sizeFromRisk}
-                className="w-full px-3 py-1.5 rounded-md border border-border text-xs hover:bg-muted"
+                className="w-full px-3 py-1.5 rounded-xl border border-border/60 text-xs hover:bg-muted"
               >
                 Size from risk
               </button>
@@ -302,7 +302,7 @@ function BrokerPage() {
             <button
               onClick={() => { setSide("long"); submitOrder("long"); }}
               disabled={placing || !symbol || units <= 0 || (orderType !== "market" && !Number(limitPrice)) || (status.marginAvailable != null && status.marginAvailable <= 0)}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-bull/15 border border-bull/40 text-bull text-sm font-semibold hover:bg-bull/25 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-bull/15 border border-bull/40 text-bull text-sm font-semibold hover:bg-bull/25 disabled:opacity-50"
             >
               <ArrowUpRight className="h-4 w-4" />
               {placing ? "Sending..." : `BUY ${orderType === "market" ? "" : orderType.toUpperCase() + " "}${units.toLocaleString()}`}
@@ -310,7 +310,7 @@ function BrokerPage() {
             <button
               onClick={() => { setSide("short"); submitOrder("short"); }}
               disabled={placing || !symbol || units <= 0 || (orderType !== "market" && !Number(limitPrice)) || (status.marginAvailable != null && status.marginAvailable <= 0)}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-red-500/15 border border-red-500/40 text-red-300 text-sm font-semibold hover:bg-red-500/25 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-500/15 border border-red-500/40 text-red-300 text-sm font-semibold hover:bg-red-500/25 disabled:opacity-50"
             >
               <ArrowDownRight className="h-4 w-4" />
               {placing ? "Sending..." : `SELL / SHORT ${orderType === "market" ? "" : orderType.toUpperCase() + " "}${units.toLocaleString()}`}
@@ -324,14 +324,14 @@ function BrokerPage() {
       )}
 
       {status?.connected && pending.length > 0 && (
-        <div className="rounded-md border border-border bg-card p-5 mb-6">
+        <div className="rounded-xl border border-border/60 bg-card p-5 mb-6">
           <div className="text-sm font-semibold mb-3">Working orders (not filled yet)</div>
           <div className="space-y-2">
             {pending.map((o) => (
-              <div key={o.id} className="flex flex-wrap items-center gap-3 rounded-md border border-border/60 px-3 py-2 text-sm">
+              <div key={o.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-border/60 px-3 py-2 text-sm">
                 <span className="font-mono text-xs text-muted-foreground w-16">{o.id}</span>
                 <span className="font-semibold">{o.instrument}</span>
-                <span className="text-[10px] uppercase tracking-wider rounded px-1.5 py-0.5 border border-border">{o.type}</span>
+                <span className="text-[10px] tracking-tight rounded px-1.5 py-0.5 border border-border/60">{o.type}</span>
                 <span className={o.units > 0 ? "text-bull" : "text-red-300"}>
                   {o.units > 0 ? "BUY" : "SELL"} {Math.abs(o.units)}
                 </span>
@@ -339,7 +339,7 @@ function BrokerPage() {
                 <span className="font-mono text-[11px] text-muted-foreground">
                   SL {o.stopLoss ?? "-"} / TP {o.takeProfit ?? "-"}
                 </span>
-                <button onClick={() => handleCancelOrder(o.id)} className="ml-auto inline-flex items-center gap-1 rounded px-2 py-1 text-xs border border-border hover:bg-muted">
+                <button onClick={() => handleCancelOrder(o.id)} className="ml-auto inline-flex items-center gap-1 rounded px-2 py-1 text-xs border border-border/60 hover:bg-muted">
                   <X className="h-3 w-3" /> Cancel
                 </button>
               </div>
@@ -350,7 +350,7 @@ function BrokerPage() {
 
 
       {status?.connected && positions.length > 0 && (
-        <div className="rounded-md border border-border bg-card p-5">
+        <div className="rounded-xl border border-border/60 bg-card p-5">
           <div className="text-sm font-semibold mb-3">Open positions</div>
           <p className="text-xs text-muted-foreground mb-3">
             Adjust stop loss, take profit, or a trailing stop and it is sent straight to OANDA. You can also close part of a position to bank partials.
@@ -380,8 +380,8 @@ function BrokerPage() {
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md border border-border/60 bg-background/40 px-3 py-2">
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+    <div className="rounded-xl border border-border/60 bg-background/40 px-3 py-2">
+      <div className="text-[10px] tracking-tight text-muted-foreground">{label}</div>
       <div className="font-mono text-sm mt-0.5 break-all">{value}</div>
     </div>
   );
@@ -390,7 +390,7 @@ function Metric({ label, value }: { label: string; value: string }) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{label}</div>
+      <div className="text-[10px] tracking-tight text-muted-foreground mb-1">{label}</div>
       {children}
     </label>
   );
@@ -418,7 +418,7 @@ function PositionRow({
   const [saving, setSaving] = useState(false);
 
   return (
-    <div className="rounded-md border border-border/60">
+    <div className="rounded-xl border border-border/60">
       <div className="flex flex-wrap items-center gap-3 px-3 py-2 text-sm">
         <span className="font-mono text-xs text-muted-foreground w-16">{position.id}</span>
         <span className="font-semibold">{position.instrument}</span>
@@ -434,11 +434,11 @@ function PositionRow({
         </span>
         <button
           onClick={() => setOpen((o) => !o)}
-          className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs border border-border hover:bg-muted"
+          className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs border border-border/60 hover:bg-muted"
         >
           <SlidersHorizontal className="h-3 w-3" /> Adjust
         </button>
-        <button onClick={() => onClose(position.id)} className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs border border-border hover:bg-muted">
+        <button onClick={() => onClose(position.id)} className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs border border-border/60 hover:bg-muted">
           <X className="h-3 w-3" /> Close
         </button>
       </div>
@@ -447,23 +447,23 @@ function PositionRow({
         <div className="border-t border-border/60 px-3 py-3">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <Field label="Stop loss">
-              <input value={sl} onChange={(e) => setSl(e.target.value)} placeholder="blank = remove" className="w-full px-2 py-1.5 rounded-md bg-background border border-border text-sm" />
+              <input value={sl} onChange={(e) => setSl(e.target.value)} placeholder="blank = remove" className="w-full px-2 py-1.5 rounded-xl bg-background border border-border/60 text-sm" />
             </Field>
             <Field label="Take profit">
-              <input value={tp} onChange={(e) => setTp(e.target.value)} placeholder="blank = remove" className="w-full px-2 py-1.5 rounded-md bg-background border border-border text-sm" />
+              <input value={tp} onChange={(e) => setTp(e.target.value)} placeholder="blank = remove" className="w-full px-2 py-1.5 rounded-xl bg-background border border-border/60 text-sm" />
             </Field>
             <Field label="Trailing stop distance">
-              <input value={trail} onChange={(e) => setTrail(e.target.value)} placeholder="e.g. 0.0050" className="w-full px-2 py-1.5 rounded-md bg-background border border-border text-sm" />
+              <input value={trail} onChange={(e) => setTrail(e.target.value)} placeholder="e.g. 0.0050" className="w-full px-2 py-1.5 rounded-xl bg-background border border-border/60 text-sm" />
             </Field>
             <Field label="Partial close units">
-              <input value={partial} onChange={(e) => setPartial(e.target.value)} className="w-full px-2 py-1.5 rounded-md bg-background border border-border text-sm" />
+              <input value={partial} onChange={(e) => setPartial(e.target.value)} className="w-full px-2 py-1.5 rounded-xl bg-background border border-border/60 text-sm" />
             </Field>
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <button
               onClick={async () => { setSaving(true); await onSaveProtection(position.id, sl, tp, trail); setSaving(false); }}
               disabled={saving}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 disabled:opacity-50"
             >
               {saving ? "Saving..." : "Save changes to OANDA"}
             </button>
@@ -473,13 +473,13 @@ function PositionRow({
                 if (!u || u <= 0) return;
                 onClose(position.id, Math.min(u, Math.abs(position.currentUnits)));
               }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border text-xs hover:bg-muted"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border/60 text-xs hover:bg-muted"
             >
               <Scissors className="h-3 w-3" /> Close partial
             </button>
             <button
               onClick={() => { setSl(String(position.price)); }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border text-xs hover:bg-muted"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border/60 text-xs hover:bg-muted"
             >
               Move stop to breakeven
             </button>

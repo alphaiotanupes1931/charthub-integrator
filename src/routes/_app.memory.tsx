@@ -56,7 +56,7 @@ function MemoryPage() {
         />
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-6">
+      <div className="rounded-xl border border-border/60 bg-card p-6">
         <h2 className="flex items-center gap-2 font-semibold mb-2">
           <Sparkles className="h-4 w-4 text-primary" /> AI calls, scored by your feedback
         </h2>
@@ -105,7 +105,7 @@ function HermesMemoryPanel() {
   });
 
   return (
-    <div className="rounded-xl border border-border bg-card p-6 mb-6">
+    <div className="rounded-xl border border-border/60 bg-card p-6 mb-6">
       <div className="flex items-start justify-between gap-4 mb-2">
         <div>
           <h2 className="flex items-center gap-2 font-semibold">
@@ -115,7 +115,7 @@ function HermesMemoryPanel() {
             Lessons distilled from your feedback. Higher weight = applied more strongly. Prune anything that's outdated or wrong - it's dropped from every future scan immediately.
           </p>
         </div>
-        <span className="shrink-0 rounded-md border border-border bg-background/60 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <span className="shrink-0 rounded-xl border border-border/60 bg-background/60 px-2 py-1 text-[10px] font-semibold tracking-tight text-muted-foreground">
           {lessons.length} {lessons.length === 1 ? "lesson" : "lessons"}
         </span>
       </div>
@@ -141,12 +141,12 @@ function HermesMemoryPanel() {
           {lessons.map((l) => (
             <li key={l.id} className="flex items-start gap-3 py-3">
               <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  <span className="inline-flex items-center gap-1 rounded border border-border bg-background/60 px-1.5 py-0.5">
+                <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-semibold tracking-tight text-muted-foreground">
+                  <span className="inline-flex items-center gap-1 rounded border border-border/60 bg-background/60 px-1.5 py-0.5">
                     {l.scope === "global" ? <Globe2 className="h-3 w-3" /> : <User2 className="h-3 w-3" />}
                     {l.scope}
                   </span>
-                  <span className="inline-flex items-center rounded border border-border bg-background/60 px-1.5 py-0.5 text-foreground/80">
+                  <span className="inline-flex items-center rounded border border-border/60 bg-background/60 px-1.5 py-0.5 text-foreground/80">
                     {l.topic}
                   </span>
                   <span className="inline-flex items-center rounded border border-primary/40 bg-primary/10 px-1.5 py-0.5 text-primary">
@@ -164,7 +164,7 @@ function HermesMemoryPanel() {
                   if (confirm("Forget this lesson? It won't be applied to future scans.")) del.mutate(l.id);
                 }}
                 disabled={del.isPending || l.scope === "global"}
-                className="shrink-0 inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-background/60 text-muted-foreground hover:text-destructive hover:border-destructive/60 disabled:opacity-40 disabled:hover:text-muted-foreground disabled:hover:border-border transition"
+                className="shrink-0 inline-flex h-8 w-8 items-center justify-center rounded-xl border border-border/60 bg-background/60 text-muted-foreground hover:text-destructive hover:border-destructive/60 disabled:opacity-40 disabled:hover:text-muted-foreground disabled:hover:border-border/60 transition"
                 title={l.scope === "global" ? "Global lessons are curated and can't be pruned here" : "Forget this lesson"}
                 aria-label="Forget lesson"
               >
@@ -185,8 +185,8 @@ function isAuthHeaderError(error: unknown) {
 
 function StatCard({ icon, label, value, hint }: { icon: React.ReactNode; label: string; value: string; hint: string }) {
   return (
-    <div className="rounded-xl border border-border bg-card p-5">
-      <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
+    <div className="rounded-xl border border-border/60 bg-card p-5">
+      <div className="flex items-center gap-2 text-xs tracking-tight text-muted-foreground">
         {icon}
         {label}
       </div>
