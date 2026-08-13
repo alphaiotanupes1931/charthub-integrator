@@ -727,6 +727,8 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
           </div>
         </div>
 
+        <AiCreditNotice />
+
         <Conversation className="flex-1 min-h-0">
           <ConversationContent className="px-3 py-4">
             {messages.length === 0 && (
