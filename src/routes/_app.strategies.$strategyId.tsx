@@ -97,13 +97,13 @@ function StrategyDetailPage() {
                 <Link
                   to="/strategies"
                   search={{ edit: custom.id }}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/40"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-border/60 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/40"
                 >
                   <Pencil className="h-4 w-4" /> Edit
                 </Link>
                 <button
                   onClick={remove}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-destructive/30 px-3 py-2 text-sm text-destructive hover:bg-destructive/10"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-destructive/30 px-3 py-2 text-sm text-destructive hover:bg-destructive/10"
                 >
                   <Trash2 className="h-4 w-4" /> Delete
                 </button>
@@ -112,7 +112,7 @@ function StrategyDetailPage() {
             <button
               onClick={select}
               disabled={isActive}
-              className={`inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold ${
+              className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold ${
                 isActive ? "bg-primary/10 text-primary cursor-default" : "bg-primary text-primary-foreground hover:opacity-90"
               }`}
             >
@@ -126,11 +126,11 @@ function StrategyDetailPage() {
         <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${levelColor[strategy.level]}`}>
           {strategy.level}
         </span>
-        <span className="inline-flex items-center gap-1 rounded border border-border bg-card px-2 py-0.5 text-[11px] text-muted-foreground">
+        <span className="inline-flex items-center gap-1 rounded border border-border/60 bg-card px-2 py-0.5 text-[11px] text-muted-foreground">
           <StyleIcon className="h-3 w-3" /> {strategy.style}
         </span>
         {strategy.markets.map((m) => (
-          <span key={m} className="inline-flex rounded border border-border bg-card px-2 py-0.5 text-[11px] text-muted-foreground">
+          <span key={m} className="inline-flex rounded border border-border/60 bg-card px-2 py-0.5 text-[11px] text-muted-foreground">
             {m}
           </span>
         ))}
@@ -138,7 +138,7 @@ function StrategyDetailPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
         <div className="space-y-6">
-          <section className="rounded-xl border border-border bg-card p-6">
+          <section className="rounded-xl border border-border/60 bg-card p-6">
             <h2 className="text-lg font-semibold mb-3">How it works</h2>
             <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
               {(strategy.longDescription ?? strategy.description)
@@ -150,9 +150,9 @@ function StrategyDetailPage() {
           </section>
 
           {(strategy as CustomStrategy).custom && (strategy as CustomStrategy).rules && (
-            <section className="rounded-xl border border-border bg-card p-6">
+            <section className="rounded-xl border border-border/60 bg-card p-6">
               <h2 className="text-lg font-semibold mb-3">Custom rules</h2>
-              <pre className="whitespace-pre-wrap text-sm text-muted-foreground bg-background/50 border border-border rounded-lg p-4 font-mono leading-relaxed">
+              <pre className="whitespace-pre-wrap text-sm text-muted-foreground bg-background/50 border border-border/60 rounded-2xl p-4 font-mono leading-relaxed">
                 {(strategy as CustomStrategy).rules}
               </pre>
             </section>
@@ -163,7 +163,7 @@ function StrategyDetailPage() {
               <h2 className="text-lg font-semibold mb-4">Complete playbook & rules</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {playbook.map((section) => (
-                  <div key={section.title} className="rounded-xl border border-border bg-card p-5">
+                  <div key={section.title} className="rounded-xl border border-border/60 bg-card p-5">
                     <div className="flex items-center gap-2 mb-3">
                       <span className="text-primary">{SECTION_ICON[section.title] ?? <BookOpen className="h-4 w-4" />}</span>
                       <h3 className="text-sm font-semibold">{section.title}</h3>
@@ -184,26 +184,26 @@ function StrategyDetailPage() {
         </div>
 
         <aside className="space-y-4">
-          <div className="rounded-xl border border-border bg-card p-5">
-            <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Win Rate</div>
+          <div className="rounded-xl border border-border/60 bg-card p-5">
+            <div className="text-[11px] tracking-tight text-muted-foreground mb-1">Win Rate</div>
             <div className="font-mono text-3xl font-semibold text-bull">{strategy.winRate}%</div>
           </div>
-          <div className="rounded-xl border border-border bg-card p-5">
-            <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Average R:R</div>
+          <div className="rounded-xl border border-border/60 bg-card p-5">
+            <div className="text-[11px] tracking-tight text-muted-foreground mb-1">Average R:R</div>
             <div className="font-mono text-3xl font-semibold text-primary">{strategy.rr}R</div>
           </div>
-          <div className="rounded-xl border border-border bg-card p-5">
-            <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-3">Best markets</div>
+          <div className="rounded-xl border border-border/60 bg-card p-5">
+            <div className="text-[11px] tracking-tight text-muted-foreground mb-3">Best markets</div>
             <div className="flex flex-wrap gap-1.5">
               {strategy.markets.map((m) => (
-                <span key={m} className="inline-flex rounded border border-border bg-background px-2 py-1 text-xs text-muted-foreground">
+                <span key={m} className="inline-flex rounded border border-border/60 bg-background px-2 py-1 text-xs text-muted-foreground">
                   {m}
                 </span>
               ))}
             </div>
           </div>
-          <div className="rounded-xl border border-border bg-card p-5">
-            <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-3">Style</div>
+          <div className="rounded-xl border border-border/60 bg-card p-5">
+            <div className="text-[11px] tracking-tight text-muted-foreground mb-3">Style</div>
             <div className="text-sm text-foreground flex items-center gap-2">
               <StyleIcon className="h-4 w-4 text-primary" /> {strategy.style} trading
             </div>

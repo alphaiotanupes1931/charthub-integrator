@@ -408,7 +408,7 @@ function JournalPage() {
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition ${
+                className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm transition ${
                   active
                     ? "bg-primary/15 text-primary border border-primary/30"
                     : "text-muted-foreground hover:text-foreground border border-transparent"
@@ -421,18 +421,18 @@ function JournalPage() {
         </div>
         <button
           onClick={() => openNew(todayYmd())}
-          className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+          className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
         >
           <Plus className="h-4 w-4" /> Log trade
         </button>
       </div>
 
       {tab === "calendar" && (
-        <div className="rounded-xl border border-border bg-card p-4">
+        <div className="rounded-xl border border-border/60 bg-card p-4">
           <div className="flex items-center justify-between px-2 sm:px-4 py-2 mb-2">
             <button
               onClick={() => setCursor(new Date(year, month - 1, 1))}
-              className="h-8 w-8 rounded-md hover:bg-accent flex items-center justify-center"
+              className="h-8 w-8 rounded-xl hover:bg-accent flex items-center justify-center"
               aria-label="Previous month"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -442,13 +442,13 @@ function JournalPage() {
             </div>
             <button
               onClick={() => setCursor(new Date(year, month + 1, 1))}
-              className="h-8 w-8 rounded-md hover:bg-accent flex items-center justify-center"
+              className="h-8 w-8 rounded-xl hover:bg-accent flex items-center justify-center"
               aria-label="Next month"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>
-          <div className="grid grid-cols-7 text-[10px] sm:text-xs text-muted-foreground font-mono border-b border-border">
+          <div className="grid grid-cols-7 text-[10px] sm:text-xs text-muted-foreground font-mono border-b border-border/60">
             {["S","M","T","W","T","F","S"].map((d, i) => (
               <div key={i} className="text-center py-2">{d}</div>
             ))}
@@ -537,24 +537,24 @@ function JournalPage() {
           onClick={() => setDayView(null)}
         >
           <div
-            className="w-full sm:max-w-2xl max-h-[90vh] overflow-auto rounded-t-2xl sm:rounded-2xl border border-border bg-card"
+            className="w-full sm:max-w-2xl max-h-[90vh] overflow-auto rounded-t-2xl sm:rounded-2xl border border-border/60 bg-card"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between p-4 border-b border-border">
+            <div className="flex items-center justify-between p-4 border-b border-border/60">
               <div>
-                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Trades logged</div>
+                <div className="text-[10px] tracking-tight text-muted-foreground">Trades logged</div>
                 <div className="text-lg font-semibold">{formatYmdHuman(dayView)}</div>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => { const d = dayView; setDayView(null); openNew(d); }}
-                  className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90"
+                  className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90"
                 >
                   <Plus className="h-4 w-4" /> Log trade
                 </button>
                 <button
                   onClick={() => setDayView(null)}
-                  className="h-9 w-9 rounded-md hover:bg-accent flex items-center justify-center"
+                  className="h-9 w-9 rounded-xl hover:bg-accent flex items-center justify-center"
                   aria-label="Close"
                 >
                   <X className="h-4 w-4" />
@@ -609,7 +609,7 @@ function TradesList({
     }
   };
   return (
-    <div className="rounded-xl border border-border bg-card overflow-hidden">
+    <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
       <div className="flex items-center justify-between gap-2 p-3 border-b border-border/60 bg-card/60">
         <div className="text-xs text-muted-foreground">
           {trades.length} {trades.length === 1 ? "trade" : "trades"}
@@ -618,19 +618,19 @@ function TradesList({
           <button
             onClick={() => exportTradesCsv(trades)}
             disabled={trades.length === 0}
-            className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-foreground/80 hover:bg-accent/40 transition disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-border/60 px-2.5 py-1.5 text-xs font-medium text-foreground/80 hover:bg-accent/40 transition disabled:opacity-40"
           >
             <Download className="h-3.5 w-3.5" /> Export CSV
           </button>
           <button
             onClick={() => exportBackupJson(trades)}
-            className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-foreground/80 hover:bg-accent/40 transition"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-border/60 px-2.5 py-1.5 text-xs font-medium text-foreground/80 hover:bg-accent/40 transition"
           >
             <DatabaseBackup className="h-3.5 w-3.5" /> Backup (JSON)
           </button>
           <button
             onClick={() => restoreInputRef.current?.click()}
-            className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-foreground/80 hover:bg-accent/40 transition"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-border/60 px-2.5 py-1.5 text-xs font-medium text-foreground/80 hover:bg-accent/40 transition"
           >
             <Upload className="h-3.5 w-3.5" /> Restore
           </button>
@@ -674,7 +674,7 @@ function TradeRow({ t, onEdit, onDelete }: { t: Trade; onEdit: (t: Trade) => voi
             {t.side === "Long" ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
             {t.side}
           </span>
-          <span className="text-[11px] uppercase tracking-wider text-muted-foreground border border-border rounded px-1.5 py-0.5">
+          <span className="text-[11px] tracking-tight text-muted-foreground border border-border/60 rounded px-1.5 py-0.5">
             {t.timeframe}
           </span>
           <span className="text-xs text-muted-foreground">{formatYmdHuman(t.date)}</span>
@@ -710,7 +710,7 @@ function TradeRow({ t, onEdit, onDelete }: { t: Trade; onEdit: (t: Trade) => voi
       </div>
       <button
         onClick={() => onDelete(t.id)}
-        className="h-8 w-8 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 flex items-center justify-center"
+        className="h-8 w-8 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 flex items-center justify-center"
         aria-label="Delete trade"
       >
         <Trash2 className="h-4 w-4" />
@@ -728,7 +728,7 @@ function WinsLossesReview({ wins, losses, onEdit }: { wins: Trade[]; losses: Tra
       <div className="rounded-xl border border-bull/30 bg-bull/5 overflow-hidden">
         <div className="p-4 border-b border-bull/20 flex items-center justify-between">
           <div>
-            <div className="text-[10px] uppercase tracking-widest text-bull/80">Winning trades</div>
+            <div className="text-[10px] tracking-tight text-bull/80">Winning trades</div>
             <div className="text-2xl font-semibold text-bull">+{winsPnl.toFixed(2)}</div>
           </div>
           <div className="text-xs text-muted-foreground">{wins.length}</div>
@@ -745,7 +745,7 @@ function WinsLossesReview({ wins, losses, onEdit }: { wins: Trade[]; losses: Tra
       <div className="rounded-xl border border-destructive/30 bg-destructive/5 overflow-hidden">
         <div className="p-4 border-b border-destructive/20 flex items-center justify-between">
           <div>
-            <div className="text-[10px] uppercase tracking-widest text-destructive/80">Losing trades</div>
+            <div className="text-[10px] tracking-tight text-destructive/80">Losing trades</div>
             <div className="text-2xl font-semibold text-destructive">{lossesPnl.toFixed(2)}</div>
           </div>
           <div className="text-xs text-muted-foreground">{losses.length}</div>
@@ -812,35 +812,35 @@ function FilterBar({
     onChange({ ...filter, symbols: Array.from(cur) });
   };
   return (
-    <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+    <div className="rounded-xl border border-border/60 bg-card p-4 space-y-3">
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-2 text-sm font-semibold"><FilterIcon className="h-4 w-4 text-primary" /> Filters</div>
         <div className="text-xs text-muted-foreground">Showing {filtered} of {total} trades</div>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <label className="block">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">From</div>
+          <div className="text-[10px] tracking-tight text-muted-foreground mb-1">From</div>
           <input type="date" value={filter.from ?? ""} onChange={(e) => onChange({ ...filter, from: e.target.value || undefined })}
-            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs" />
+            className="w-full rounded-xl border border-border/60 bg-background px-2 py-1.5 text-xs" />
         </label>
         <label className="block">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">To</div>
+          <div className="text-[10px] tracking-tight text-muted-foreground mb-1">To</div>
           <input type="date" value={filter.to ?? ""} onChange={(e) => onChange({ ...filter, to: e.target.value || undefined })}
-            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs" />
+            className="w-full rounded-xl border border-border/60 bg-background px-2 py-1.5 text-xs" />
         </label>
         <label className="block">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Side</div>
+          <div className="text-[10px] tracking-tight text-muted-foreground mb-1">Side</div>
           <select value={filter.side ?? "all"} onChange={(e) => onChange({ ...filter, side: e.target.value as InsightsFilter["side"] })}
-            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs">
+            className="w-full rounded-xl border border-border/60 bg-background px-2 py-1.5 text-xs">
             <option value="all">All</option>
             <option value="Long">Long</option>
             <option value="Short">Short</option>
           </select>
         </label>
         <label className="block">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Rule break</div>
+          <div className="text-[10px] tracking-tight text-muted-foreground mb-1">Rule break</div>
           <select value={filter.ruleBroken ?? "all"} onChange={(e) => onChange({ ...filter, ruleBroken: e.target.value as InsightsFilter["ruleBroken"] })}
-            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs">
+            className="w-full rounded-xl border border-border/60 bg-background px-2 py-1.5 text-xs">
             <option value="all">All</option>
             <option value="yes">Only rule breaks</option>
             <option value="no">Only disciplined</option>
@@ -848,20 +848,20 @@ function FilterBar({
         </label>
       </div>
       <label className="block">
-        <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Setup contains</div>
+        <div className="text-[10px] tracking-tight text-muted-foreground mb-1">Setup contains</div>
         <input value={filter.setup ?? ""} onChange={(e) => onChange({ ...filter, setup: e.target.value || undefined })}
           placeholder="e.g. UTAD"
-          className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs" />
+          className="w-full rounded-xl border border-border/60 bg-background px-2 py-1.5 text-xs" />
       </label>
       {allSymbols.length > 0 && (
         <div>
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Symbols</div>
+          <div className="text-[10px] tracking-tight text-muted-foreground mb-1">Symbols</div>
           <div className="flex flex-wrap gap-1">
             {allSymbols.map((s) => {
               const active = (filter.symbols ?? []).includes(s);
               return (
                 <button key={s} onClick={() => toggleSymbol(s)}
-                  className={`text-[11px] rounded px-2 py-1 border ${active ? "border-primary bg-primary/15 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}>
+                  className={`text-[11px] rounded px-2 py-1 border ${active ? "border-primary bg-primary/15 text-primary" : "border-border/60 text-muted-foreground hover:text-foreground"}`}>
                   {s}
                 </button>
               );
@@ -871,19 +871,19 @@ function FilterBar({
       )}
       <div className="flex items-center gap-2 pt-1 flex-wrap">
         <input value={viewName} onChange={(e) => onViewName(e.target.value)} placeholder="Name this view"
-          className="flex-1 min-w-[140px] rounded-md border border-border bg-background px-2 py-1.5 text-xs" />
+          className="flex-1 min-w-[140px] rounded-xl border border-border/60 bg-background px-2 py-1.5 text-xs" />
         <button onClick={onSaveView} disabled={!viewName.trim()}
-          className="inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/10 text-primary px-2.5 py-1.5 text-xs disabled:opacity-40">
+          className="inline-flex items-center gap-1 rounded-xl border border-primary/30 bg-primary/10 text-primary px-2.5 py-1.5 text-xs disabled:opacity-40">
           <SaveIcon className="h-3 w-3" /> Save view
         </button>
-        <button onClick={onClear} className="rounded-md border border-border px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground">
+        <button onClick={onClear} className="rounded-xl border border-border/60 px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground">
           Clear
         </button>
       </div>
       {views.length > 0 && (
         <div className="flex flex-wrap gap-1 pt-1">
           {views.map((v) => (
-            <div key={v.id} className="inline-flex items-center rounded border border-border">
+            <div key={v.id} className="inline-flex items-center rounded border border-border/60">
               <button onClick={() => onLoadView(v)} className="inline-flex items-center gap-1 px-2 py-1 text-[11px] hover:bg-accent/40">
                 <Bookmark className="h-3 w-3" /> {v.name}
               </button>
@@ -1028,7 +1028,7 @@ function InsightsPanel({ trades: allTrades }: { trades: Trade[] }) {
     return (
       <div className="space-y-4">
         {filterBar}
-        <div className="rounded-xl border border-border bg-card p-10 text-center text-sm text-muted-foreground">
+        <div className="rounded-xl border border-border/60 bg-card p-10 text-center text-sm text-muted-foreground">
           {allTrades.length === 0 ? "Log a few trades to unlock pattern insights." : "No trades match this filter."}
         </div>
       </div>
@@ -1052,13 +1052,13 @@ function InsightsPanel({ trades: allTrades }: { trades: Trade[] }) {
         <StatCard label="Disciplined P&L" value={`${stats.disciplinedPnl >= 0 ? "+" : ""}${stats.disciplinedPnl.toFixed(2)}`} positive={stats.disciplinedPnl >= 0} sub={`${stats.disciplinedCount} trades`} />
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-4">
+      <div className="rounded-xl border border-border/60 bg-card p-4">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> Auto-detected patterns</h3>
           <Link
             to="/dashboard"
             search={{ ask: decodeURIComponent(aiPrompt) } as never}
-            className="text-xs rounded-md border border-primary/30 bg-primary/10 text-primary px-2.5 py-1.5 hover:bg-primary/20"
+            className="text-xs rounded-xl border border-primary/30 bg-primary/10 text-primary px-2.5 py-1.5 hover:bg-primary/20"
           >
             Ask AI to analyze
           </Link>
@@ -1073,7 +1073,7 @@ function InsightsPanel({ trades: allTrades }: { trades: Trade[] }) {
         </ul>
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-4">
+      <div className="rounded-xl border border-border/60 bg-card p-4">
         <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
           <AlertTriangle className="h-4 w-4 text-destructive" /> Losses by cause
         </h3>
@@ -1114,8 +1114,8 @@ function InsightsPanel({ trades: allTrades }: { trades: Trade[] }) {
 
 function StatCard({ label, value, positive, sub }: { label: string; value: string; positive: boolean; sub?: string }) {
   return (
-    <div className="rounded-xl border border-border bg-card p-3">
-      <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
+    <div className="rounded-xl border border-border/60 bg-card p-3">
+      <div className="text-[10px] tracking-tight text-muted-foreground">{label}</div>
       <div className={`text-lg font-semibold ${positive ? "text-bull" : "text-destructive"}`}>{value}</div>
       {sub && <div className="text-[10px] text-muted-foreground">{sub}</div>}
     </div>
@@ -1124,7 +1124,7 @@ function StatCard({ label, value, positive, sub }: { label: string; value: strin
 
 function BreakdownList({ title, rows }: { title: string; rows: { label: string; pnl: number; winRate: number; count: number }[] }) {
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
+    <div className="rounded-xl border border-border/60 bg-card p-4">
       <h3 className="text-sm font-semibold mb-3">{title}</h3>
       <div className="space-y-1.5">
         {rows.map((r) => (
@@ -1306,7 +1306,7 @@ function TradeFormModal({
       onClick={onClose}
     >
       <div
-        className="w-full sm:max-w-lg max-h-[92vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl border border-border bg-card shadow-2xl"
+        className="w-full sm:max-w-lg max-h-[92vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl border border-border/60 bg-card shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-5 border-b border-border/60">
@@ -1316,7 +1316,7 @@ function TradeFormModal({
             </div>
             <h2 className="font-display text-xl font-semibold">{formatYmdHuman(date)}</h2>
           </div>
-          <button onClick={onClose} aria-label="Close" className="h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/40 flex items-center justify-center">
+          <button onClick={onClose} aria-label="Close" className="h-8 w-8 rounded-xl text-muted-foreground hover:text-foreground hover:bg-accent/40 flex items-center justify-center">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -1328,14 +1328,14 @@ function TradeFormModal({
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:border-primary/50"
+                className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm focus:outline-none focus:border-primary/50"
               />
             </Field>
             <Field label="Timeframe">
               <select
                 value={timeframe}
                 onChange={(e) => setTimeframe(e.target.value as Timeframe)}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:border-primary/50"
+                className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm focus:outline-none focus:border-primary/50"
               >
                 {TIMEFRAMES.map((tf) => <option key={tf} value={tf}>{tf}</option>)}
               </select>
@@ -1348,11 +1348,11 @@ function TradeFormModal({
                 value={symbol}
                 onChange={(e) => setSymbol(e.target.value)}
                 placeholder="XAU/USD"
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:border-primary/50"
+                className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm focus:outline-none focus:border-primary/50"
               />
             </Field>
             <Field label="Side">
-              <div className="grid grid-cols-2 gap-1 rounded-md border border-border p-1">
+              <div className="grid grid-cols-2 gap-1 rounded-xl border border-border/60 p-1">
                 {(["Long","Short"] as Side[]).map((s) => (
                   <button
                     key={s}
@@ -1373,45 +1373,45 @@ function TradeFormModal({
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <Field label="Entry">
-              <input inputMode="decimal" value={entry} onChange={(e) => setEntry(e.target.value)} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              <input inputMode="decimal" value={entry} onChange={(e) => setEntry(e.target.value)} className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm" />
             </Field>
             <Field label="Stop">
-              <input inputMode="decimal" value={stop} onChange={(e) => setStop(e.target.value)} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              <input inputMode="decimal" value={stop} onChange={(e) => setStop(e.target.value)} className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm" />
             </Field>
             <Field label="Take profit">
-              <input inputMode="decimal" value={takeProfit} onChange={(e) => setTakeProfit(e.target.value)} placeholder="planned" className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              <input inputMode="decimal" value={takeProfit} onChange={(e) => setTakeProfit(e.target.value)} placeholder="planned" className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm" />
             </Field>
             <Field label="Exit (leave blank if still open)">
-              <input inputMode="decimal" value={exit} onChange={(e) => setExit(e.target.value)} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              <input inputMode="decimal" value={exit} onChange={(e) => setExit(e.target.value)} className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm" />
             </Field>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <Field label="Size (units / contracts)">
-              <input inputMode="decimal" value={size} onChange={(e) => setSize(e.target.value)} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              <input inputMode="decimal" value={size} onChange={(e) => setSize(e.target.value)} className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm" />
             </Field>
             <Field label="Setup / pattern (optional)">
-              <input value={setup} onChange={(e) => setSetup(e.target.value)} placeholder="e.g. UTAD, Breakout" className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              <input value={setup} onChange={(e) => setSetup(e.target.value)} placeholder="e.g. UTAD, Breakout" className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm" />
             </Field>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <Field label="Point value ($/unit, optional)">
-              <input inputMode="decimal" value={pointValue} onChange={(e) => setPointValue(e.target.value)} placeholder="1 = raw price" className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              <input inputMode="decimal" value={pointValue} onChange={(e) => setPointValue(e.target.value)} placeholder="1 = raw price" className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm" />
             </Field>
             <Field label="Fees / commission ($)">
-              <input inputMode="decimal" value={fees} onChange={(e) => setFees(e.target.value)} placeholder="0" className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              <input inputMode="decimal" value={fees} onChange={(e) => setFees(e.target.value)} placeholder="0" className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm" />
             </Field>
           </div>
 
 
-          <div className="rounded-lg border border-border p-3 space-y-3">
+          <div className="rounded-2xl border border-border/60 p-3 space-y-3">
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
                 checked={ruleBroken}
                 onChange={(e) => setRuleBroken(e.target.checked)}
-                className="h-4 w-4 rounded border-border"
+                className="h-4 w-4 rounded border-border/60"
               />
               <span>I broke one of my trading rules on this trade</span>
             </label>
@@ -1420,7 +1420,7 @@ function TradeFormModal({
                 value={ruleBrokenNote}
                 onChange={(e) => setRuleBrokenNote(e.target.value)}
                 placeholder="Which rule? (e.g. traded outside plan hours)"
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm"
               />
             )}
           </div>
@@ -1430,7 +1430,7 @@ function TradeFormModal({
               <select
                 value={lossCategory}
                 onChange={(e) => setLossCategory(e.target.value as LossCategory | "")}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm"
               >
                 <option value="">Uncategorized</option>
                 {LOSS_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -1438,7 +1438,7 @@ function TradeFormModal({
             </Field>
           )}
 
-          <div className="rounded-lg border border-border p-3 space-y-3">
+          <div className="rounded-2xl border border-border/60 p-3 space-y-3">
             <div className="text-sm font-semibold">Trade review checklist</div>
             <div className="flex items-center gap-3">
               <label className="flex items-center gap-2 text-sm">
@@ -1446,7 +1446,7 @@ function TradeFormModal({
                   type="checkbox"
                   checked={followedPlan}
                   onChange={(e) => setFollowedPlan(e.target.checked)}
-                  className="h-4 w-4 rounded border-border"
+                  className="h-4 w-4 rounded border-border/60"
                 />
                 <span>I followed my plan</span>
               </label>
@@ -1457,10 +1457,10 @@ function TradeFormModal({
                   key={g}
                   type="button"
                   onClick={() => setGradeMatch(g)}
-                  className={`rounded-md border px-2 py-1.5 text-xs font-medium transition ${
+                  className={`rounded-xl border px-2 py-1.5 text-xs font-medium transition ${
                     gradeMatch === g
                       ? "border-primary bg-primary/10 text-primary"
-                      : "border-border text-muted-foreground hover:text-foreground"
+                      : "border-border/60 text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   Grade match: {g}
@@ -1471,7 +1471,7 @@ function TradeFormModal({
               value={takeaway}
               onChange={(e) => setTakeaway(e.target.value)}
               placeholder="One takeaway from this trade (e.g. 'wait for confirmation')"
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm"
             />
           </div>
 
@@ -1481,7 +1481,7 @@ function TradeFormModal({
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
               placeholder="What was the setup? What did you see?"
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:border-primary/50"
+              className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:border-primary/50"
             />
           </Field>
 
@@ -1494,20 +1494,20 @@ function TradeFormModal({
               onChange={(e) => { void handlePickFile(e.target.files?.[0]); e.target.value = ""; }}
             />
             {imageUrl ? (
-              <div className="relative rounded-md border border-border overflow-hidden bg-background">
+              <div className="relative rounded-xl border border-border/60 overflow-hidden bg-background">
                 <img src={imageUrl} alt="Trade screenshot" className="w-full max-h-72 object-contain" />
                 <div className="absolute top-2 right-2 flex gap-1">
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="rounded bg-background/80 backdrop-blur px-2 py-1 text-[10px] font-medium border border-border hover:bg-accent"
+                    className="rounded bg-background/80 backdrop-blur px-2 py-1 text-[10px] font-medium border border-border/60 hover:bg-accent"
                   >
                     Replace
                   </button>
                   <button
                     type="button"
                     onClick={clearImage}
-                    className="rounded bg-background/80 backdrop-blur px-2 py-1 text-[10px] font-medium border border-border text-destructive hover:bg-destructive/10"
+                    className="rounded bg-background/80 backdrop-blur px-2 py-1 text-[10px] font-medium border border-border/60 text-destructive hover:bg-destructive/10"
                   >
                     Remove
                   </button>
@@ -1517,7 +1517,7 @@ function TradeFormModal({
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full rounded-md border border-dashed border-border bg-background/40 px-3 py-6 text-sm text-muted-foreground hover:border-primary/40 hover:text-foreground transition flex flex-col items-center gap-1.5"
+                className="w-full rounded-xl border border-dashed border-border/60 bg-background/40 px-3 py-6 text-sm text-muted-foreground hover:border-primary/40 hover:text-foreground transition flex flex-col items-center gap-1.5"
               >
                 <Upload className="h-4 w-4" />
                 <span>Upload screenshot or paste from clipboard</span>
@@ -1526,7 +1526,7 @@ function TradeFormModal({
             )}
           </Field>
 
-          <div className="rounded-lg border border-border bg-card/60 p-4">
+          <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
             <div className="flex items-center gap-2 mb-2">
               <HeartPulse className="h-4 w-4 text-primary" />
               <div className="text-sm font-semibold">Mental state for this day</div>
@@ -1541,7 +1541,7 @@ function TradeFormModal({
                     key={n}
                     type="button"
                     onClick={() => setMentalScore(active ? null : n)}
-                    className={`rounded-lg border p-2 text-center transition ${active ? "border-primary bg-primary/10" : "border-border hover:border-primary/40"}`}
+                    className={`rounded-2xl border p-2 text-center transition ${active ? "border-primary bg-primary/10" : "border-border/60 hover:border-primary/40"}`}
                   >
                     <div className={`text-lg font-bold ${meta.color}`}>{n}</div>
                     <div className="text-[10px] text-muted-foreground">{meta.label}</div>
@@ -1554,13 +1554,13 @@ function TradeFormModal({
                 value={mentalMood}
                 onChange={(e) => setMentalMood(e.target.value)}
                 placeholder="Mood in a word (focused, tired, anxious...)"
-                className="mt-3 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                className="mt-3 w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm"
               />
             )}
           </div>
 
 
-          <div className="rounded-lg border border-border bg-background/50 p-3 grid grid-cols-3 gap-3 text-sm">
+          <div className="rounded-2xl border border-border/60 bg-background/50 p-3 grid grid-cols-3 gap-3 text-sm">
             <div>
               <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">P&amp;L</div>
               <div className={`font-semibold ${previewPnl > 0 ? "text-bull" : previewPnl < 0 ? "text-destructive" : ""}`}>
@@ -1579,11 +1579,11 @@ function TradeFormModal({
         </div>
 
         <div className="flex items-center justify-end gap-2 p-5 border-t border-border/60">
-          <button onClick={onClose} className="rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground">Cancel</button>
+          <button onClick={onClose} className="rounded-xl px-3 py-2 text-sm text-muted-foreground hover:text-foreground">Cancel</button>
           <button
             disabled={!canSave}
             onClick={submit}
-            className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {editing ? "Save changes" : "Log trade"}
           </button>
@@ -1616,7 +1616,7 @@ function TradeThumb({ tradeId }: { tradeId: string }) {
   }, [tradeId]);
   if (!url) {
     return (
-      <div className="h-12 w-16 rounded border border-border bg-background/40 flex items-center justify-center text-muted-foreground shrink-0">
+      <div className="h-12 w-16 rounded border border-border/60 bg-background/40 flex items-center justify-center text-muted-foreground shrink-0">
         <ImageIcon className="h-4 w-4" />
       </div>
     );
@@ -1625,7 +1625,7 @@ function TradeThumb({ tradeId }: { tradeId: string }) {
     <img
       src={url}
       alt="Trade screenshot"
-      className="h-12 w-16 rounded border border-border object-cover shrink-0"
+      className="h-12 w-16 rounded border border-border/60 object-cover shrink-0"
     />
   );
 }
