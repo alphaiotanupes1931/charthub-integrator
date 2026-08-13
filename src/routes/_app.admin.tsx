@@ -181,15 +181,16 @@ function AdminPage() {
       </section>
 
       <section>
-        <h2 className="text-sm font-semibold tracking-tight text-muted-foreground mb-3">Users</h2>
-        <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
+        <h2 className="text-sm font-semibold tracking-tight text-muted-foreground mb-3">Users and AI usage, last 30 days</h2>
+        <div className="rounded-2xl border border-border/60 bg-card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-muted/40 text-xs tracking-tight text-muted-foreground">
                 <tr>
                   <th className="text-left px-4 py-2 font-medium">Name</th>
                   <th className="text-left px-4 py-2 font-medium">Email</th>
-                  <th className="text-left px-4 py-2 font-medium">Source</th>
+                  <th className="text-right px-4 py-2 font-medium">AI calls</th>
+                  <th className="text-right px-4 py-2 font-medium">AI cost</th>
                   <th className="text-left px-4 py-2 font-medium">Broker</th>
                   <th className="text-left px-4 py-2 font-medium">Status</th>
                   <th className="text-left px-4 py-2 font-medium">Joined</th>
@@ -198,14 +199,17 @@ function AdminPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {users === null ? (
-                  <tr><td colSpan={7} className="p-6 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Loading…</td></tr>
+                  <tr><td colSpan={8} className="p-6 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Loading…</td></tr>
                 ) : users.length === 0 ? (
-                  <tr><td colSpan={7} className="p-6 text-muted-foreground">No users yet.</td></tr>
+                  <tr><td colSpan={8} className="p-6 text-muted-foreground">No users yet.</td></tr>
                 ) : users.map((u) => (
                   <tr key={u.id} className={u.banned ? "bg-destructive/5" : ""}>
                     <td className="px-4 py-2.5">{u.display_name ?? <span className="text-muted-foreground">-</span>}</td>
                     <td className="px-4 py-2.5 text-muted-foreground">{u.email}</td>
-                    <td className="px-4 py-2.5 text-muted-foreground">{u.referral_source ?? <span className="opacity-60">-</span>}</td>
+                    <td className="px-4 py-2.5 text-right tabular-nums text-muted-foreground">{aiByUser.get(u.id)?.calls ?? 0}</td>
+                    <td className="px-4 py-2.5 text-right tabular-nums font-medium">
+                      {aiByUser.get(u.id) ? `$${Number(aiByUser.get(u.id)!.cost_usd).toFixed(2)}` : "$0.00"}
+                    </td>
                     <td className="px-4 py-2.5">
                       {u.broker_connected ? (
                         <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${u.broker_account_type === "live" ? "bg-bull/10 text-bull border border-bull/20" : "bg-amber-500/10 text-amber-400 border border-amber-500/20"}`}>
@@ -230,6 +234,7 @@ function AdminPage() {
                       )}
                     </td>
                     <td className="px-4 py-2.5 text-muted-foreground tabular-nums">{new Date(u.created_at).toLocaleDateString()}</td>
+
                     <td className="px-4 py-2.5 text-right">
                       <button
                         onClick={() => toggleBan(u)}
