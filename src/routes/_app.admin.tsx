@@ -30,7 +30,9 @@ type UserRow = {
   broker_name: string | null;
   broker_account_type: string | null;
   banned: boolean;
+  role?: string | null;
 };
+
 
 function AdminPage() {
   const { isAdmin, loading: profileLoading } = useProfile();
@@ -47,6 +49,16 @@ function AdminPage() {
 
 
 
+  const changeRole = async (u: UserRow, role: "user" | "admin") => {
+    if (role === (u.role ?? "user")) return;
+    setBusyId(u.id);
+    const { error } = await supabase.rpc("admin_set_user_role" as never, { _user_id: u.id, _role: role } as never);
+    setBusyId(null);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`${u.email ?? "User"} is now ${role}`);
+    setUsers((prev) => prev?.map((x) => (x.id === u.id ? { ...x, role } : x)) ?? prev);
+  };
+
   const toggleBan = async (u: UserRow) => {
     const next = !u.banned;
     if (next && !confirm(`Ban ${u.email}? They will be signed out and blocked from the app.`)) return;
@@ -57,6 +69,8 @@ function AdminPage() {
     toast.success(next ? "User banned" : "User unbanned");
     setUsers((prev) => prev?.map((x) => x.id === u.id ? { ...x, banned: next } : x) ?? prev);
   };
+
+
 
   useEffect(() => {
     (async () => {
@@ -191,7 +205,9 @@ function AdminPage() {
                   <th className="text-left px-4 py-2 font-medium">Email</th>
                   <th className="text-right px-4 py-2 font-medium">AI calls</th>
                   <th className="text-right px-4 py-2 font-medium">AI cost</th>
+                  <th className="text-left px-4 py-2 font-medium">Role</th>
                   <th className="text-left px-4 py-2 font-medium">Broker</th>
+
                   <th className="text-left px-4 py-2 font-medium">Status</th>
                   <th className="text-left px-4 py-2 font-medium">Joined</th>
                   <th className="text-right px-4 py-2 font-medium">Actions</th>
@@ -199,9 +215,10 @@ function AdminPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {users === null ? (
-                  <tr><td colSpan={8} className="p-6 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Loading…</td></tr>
+                  <tr><td colSpan={9} className="p-6 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Loading…</td></tr>
                 ) : users.length === 0 ? (
-                  <tr><td colSpan={8} className="p-6 text-muted-foreground">No users yet.</td></tr>
+                  <tr><td colSpan={9} className="p-6 text-muted-foreground">No users yet.</td></tr>
+
                 ) : users.map((u) => (
                   <tr key={u.id} className={u.banned ? "bg-destructive/5" : ""}>
                     <td className="px-4 py-2.5">{u.display_name ?? <span className="text-muted-foreground">-</span>}</td>
@@ -210,6 +227,18 @@ function AdminPage() {
                     <td className="px-4 py-2.5 text-right tabular-nums font-medium">
                       {aiByUser.get(u.id) ? `$${Number(aiByUser.get(u.id)!.cost_usd).toFixed(2)}` : "$0.00"}
                     </td>
+                    <td className="px-4 py-2.5">
+                      <select
+                        value={(u.role ?? "user") as string}
+                        onChange={(e) => changeRole(u, e.target.value as "user" | "admin")}
+                        disabled={busyId === u.id}
+                        className="rounded-xl border border-border/60 bg-background px-2 py-1 text-xs font-medium disabled:opacity-50"
+                      >
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    </td>
+
                     <td className="px-4 py-2.5">
                       {u.broker_connected ? (
                         <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${u.broker_account_type === "live" ? "bg-bull/10 text-bull border border-bull/20" : "bg-amber-500/10 text-amber-400 border border-amber-500/20"}`}>
