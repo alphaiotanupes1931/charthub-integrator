@@ -139,9 +139,16 @@ export const Route = createFileRoute("/_app")({
     // use the app.
     const { data: profile } = await supabase
       .from("profiles")
-      .select("must_change_password")
+      .select("must_change_password,email")
       .eq("id", user.id)
       .maybeSingle();
+    // Keep the profile email in step with the confirmed auth email. Legacy
+    // username accounts were created with a placeholder address, and username
+    // sign-in resolves through this column, so a stale value would lock them out
+    // after they add their real email in settings.
+    if (user.email && profile && profile.email?.toLowerCase() !== user.email.toLowerCase()) {
+      await supabase.from("profiles").update({ email: user.email }).eq("id", user.id);
+    }
     if (profile?.must_change_password) {
       throw redirect({ to: "/reset-password" });
     }
