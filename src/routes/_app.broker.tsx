@@ -210,7 +210,10 @@ function BrokerPage() {
       </div>
       <PageInstructions className="mb-6" />
 
+      <OandaConnectPanel onChange={() => refresh()} />
+
       <AlpacaPanel />
+
 
       {status?.connected && (
         <div className="rounded-xl border border-border/60 bg-card p-5 mb-6">
