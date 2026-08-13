@@ -1684,16 +1684,10 @@ function Dashboard() {
               ) : (
                 <div className="flex items-center gap-1.5 text-muted-foreground min-w-0">
                   <Plug className="h-3.5 w-3.5 shrink-0" />
-                  <span className="truncate">Chart-only mode. <Link to="/settings" className="text-primary hover:underline">Connect broker</Link></span>
+                  <span className="truncate">Chart-only mode. <Link to="/broker" className="text-primary hover:underline">Connect broker</Link></span>
                 </div>
               )}
-              <button
-                onClick={openTradingFloor}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground hover:opacity-90 shrink-0"
-                title="Open TradingView trading floor"
-              >
-                <Maximize2 className="h-3 w-3" /> Trade
-              </button>
+
             </div>
           )}
 
