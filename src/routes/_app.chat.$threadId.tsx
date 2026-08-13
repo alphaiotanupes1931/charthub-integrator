@@ -141,6 +141,23 @@ function ChatThreadInner({
     getModel().then(setActiveModel).catch(() => setActiveModel(null));
   }, [getModel]);
 
+  // Coach switches must show up immediately in this header and on the next reply.
+  const [activeCoach, setActiveCoach] = useState<string>(() => readActiveCoach());
+  useEffect(() => {
+    const sync = () => setActiveCoach(readActiveCoach());
+    sync();
+    window.addEventListener("trademind:coach", sync);
+    window.addEventListener("storage", sync);
+    window.addEventListener("focus", sync);
+    return () => {
+      window.removeEventListener("trademind:coach", sync);
+      window.removeEventListener("storage", sync);
+      window.removeEventListener("focus", sync);
+    };
+  }, []);
+  const lastSentCoachRef = useRef<string | null>(null);
+
+
   // Live snapshot of instrument + strategy so the header always reflects context.
   const [ctx, setCtx] = useState<{ chart: LastChart | null; strategy: string | null }>(() => ({
     chart: readLastChart(),
