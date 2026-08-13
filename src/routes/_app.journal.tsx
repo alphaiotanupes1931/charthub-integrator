@@ -23,6 +23,7 @@ import {
   Bookmark,
   DatabaseBackup,
   HeartPulse,
+  MessageSquare,
 } from "lucide-react";
 import { MentalStatePanel, upsertMentalEntry, SCORE_META, loadMental, type MentalEntry } from "@/components/MentalStatePanel";
 import JournalReviewPanel from "@/components/JournalReviewPanel";
