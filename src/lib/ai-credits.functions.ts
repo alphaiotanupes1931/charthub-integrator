@@ -7,12 +7,15 @@ type Ctx = { supabase: SupabaseClient; userId: string };
 
 async function assertAdmin(context: unknown) {
   const { supabase, userId } = context as Ctx;
-  const { data, error } = await supabase.rpc("has_role" as never, {
-    _user_id: userId,
-    _role: "admin",
-  } as never);
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("role", "admin")
+    .maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Forbidden");
+
 }
 
 /** Admin panel: current AI credit / budget snapshot. */
