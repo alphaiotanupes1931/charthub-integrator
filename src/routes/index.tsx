@@ -142,7 +142,7 @@ function Landing() {
 
             <motion.h1
               variants={heroItem}
-              className="h-display-xl mt-6 text-[clamp(2.1rem,5.2vw,3.9rem)]"
+              className="h-display-xl mt-6 text-[2rem] sm:text-[2.5rem] lg:text-[2.9rem] xl:text-[3.2rem]"
             >
               Grade the setup.
               <br />
