@@ -110,7 +110,7 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
       if (!iframeRef.current?.contentDocument && !loaded) {
         setFailed(true);
       }
-    }, 15_000);
+    }, 9_000);
     return () => window.clearTimeout(timer);
   }, [src, reloadKey, loaded]);
 
@@ -133,7 +133,7 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
         setStalled(true);
         onStallRef.current?.();
       }
-    }, 25_000);
+    }, 9_000);
     return () => {
       window.removeEventListener("message", onMessage);
       window.clearTimeout(timer);
