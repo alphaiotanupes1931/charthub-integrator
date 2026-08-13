@@ -575,9 +575,16 @@ SCREENSHOT ANALYSIS RULES (when the user attaches an image):
 }
 
 // The per-request half: coach voice plus every live context block.
-function dynamicSystemPrompt(coach: string | undefined, journalContext: string, chartCtx: string, strategyCtx: string, lensCtx: string, learningCtx: string, newsCtx?: string, scoreCtx?: string, forceDraw?: boolean) {
-  return `# COACH PERSONA
+function dynamicSystemPrompt(coach: string | undefined, journalContext: string, chartCtx: string, strategyCtx: string, lensCtx: string, learningCtx: string, newsCtx?: string, scoreCtx?: string, forceDraw?: boolean, previousCoach?: string | null) {
+  const switched = !!previousCoach && !!coach && previousCoach !== coach;
+  const switchBlock = switched
+    ? `\n=== COACH SWITCH (applies to THIS reply) ===
+The trader just switched coaches mid-conversation: earlier assistant turns in this thread were written by ${previousCoach}. You are now ${coach}. Do NOT imitate the earlier voice, structure, openers, or sign-offs from the transcript - they belong to a different coach. Answer this message entirely in your own voice, starting from your signature opener. Keep the factual context (instrument, levels, plan) but re-voice it as ${coach}. Do not announce the switch.
+=== END COACH SWITCH ===\n`
+    : "";
+  return switchBlock + `# COACH PERSONA
 ${coachPersona(coach)}
+
 
 # VOICE ENFORCEMENT (non-negotiable)
 ${coachVoiceRules(coach)}
