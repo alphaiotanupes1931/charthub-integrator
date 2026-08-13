@@ -530,16 +530,27 @@ function Footer({ dashboardHref }: { dashboardHref: string }) {
     },
   ];
   return (
-    <footer className="px-5 sm:px-6 py-16 bg-card">
-      <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
+    <footer className="px-5 sm:px-6 pt-14 pb-10 bg-card">
+      <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-10">
         <div className="col-span-2 md:col-span-1">
-          <p className="text-sm text-muted-foreground max-w-[240px] leading-relaxed">
+          <div className="flex items-center gap-2">
+            <img src={logoAsset.url} alt="TradeMind" className="h-7 w-7 rounded-full" loading="lazy" />
+            <span className="font-display text-base font-semibold tracking-[-0.02em]">TradeMind</span>
+          </div>
+          <p className="mt-4 text-sm text-muted-foreground max-w-[240px] leading-relaxed">
             Setup grading and trade review for active day, swing, and prop traders.
           </p>
+          <a
+            href={dashboardHref}
+            className="mt-5 inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-2.5 text-sm font-semibold hover:opacity-90 transition-opacity"
+          >
+            Open dashboard
+            <ArrowRight className="size-4" />
+          </a>
         </div>
         {cols.map((c) => (
           <div key={c.title}>
-            <div className="text-[11px] font-semibold tracking-tight text-muted-foreground mb-4">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground mb-4">
               {c.title}
             </div>
             <ul className="space-y-2.5">
@@ -560,10 +571,16 @@ function Footer({ dashboardHref }: { dashboardHref: string }) {
           </div>
         ))}
       </div>
-      <div className="max-w-7xl mx-auto mt-14 pt-6 border-t border-border/60 text-xs text-muted-foreground">
-        © {year ?? "2026"} TradeMind. Educational analysis only. Not financial advice.
+      <div className="max-w-6xl mx-auto mt-12 pt-6 border-t border-border/60 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
+        <span>© {year ?? "2026"} TradeMind. Educational analysis only. Not financial advice.</span>
+        <span className="flex items-center gap-4">
+          <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+          <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
+          <Link to="/status" className="hover:text-foreground transition-colors">Status</Link>
+        </span>
       </div>
     </footer>
+
   );
 }
 
