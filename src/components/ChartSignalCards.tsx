@@ -99,15 +99,15 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
   return (
     <div className="shrink-0 border-b border-border/60 bg-card/40">
       {/* Header strip - one clean line: what the setup is, then a single action. */}
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 px-3 py-1.5">
-        <span className={`inline-flex h-6 items-center gap-1 rounded-md border px-2 ${biasBg}`}>
+      <div className="flex flex-wrap items-center gap-2 px-4 py-2.5">
+        <span className={`inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 ${biasBg}`}>
           <BiasIcon className={`h-3 w-3 ${biasText}`} />
           <span className={`text-[10px] font-bold tracking-wider ${biasText}`}>{actionLabel}</span>
           <span className={`text-[10px] font-bold ${biasText}`}>{grade.grade.toUpperCase()}</span>
         </span>
         {orderType && (
           <span
-            className="inline-flex h-6 items-center rounded-md border border-border/60 bg-background/60 px-2 text-[10px] font-semibold tracking-wider text-muted-foreground"
+            className="inline-flex h-8 items-center rounded-lg border border-border/60 bg-background/60 px-2.5 text-[10px] font-semibold tracking-wider text-muted-foreground"
             title={orderHelp}
           >
             {orderType}
@@ -133,7 +133,7 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
                 risk: grade.weakness,
               })
             }
-            className="inline-flex h-6 items-center gap-1 rounded-md px-2 text-[10px] font-bold uppercase tracking-wider bg-primary text-primary-foreground hover:opacity-90"
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-[10px] font-bold uppercase tracking-wider bg-primary text-primary-foreground hover:opacity-90"
             title="Log this setup in your journal as a trade you are taking"
           >
             <BookOpen className="h-3 w-3" /> Take trade
@@ -143,7 +143,7 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
         <button
           type="button"
           onClick={() => setExpanded((v) => !v)}
-          className="inline-flex h-6 items-center gap-1 rounded-md px-1.5 text-[10px] uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-muted/60"
+          className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[10px] uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-muted/60"
           title={expanded ? "Hide details" : "Show details"}
         >
           {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
@@ -153,7 +153,7 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
           <button
             type="button"
             onClick={onClear}
-            className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60"
             title="Clear signal"
             aria-label="Clear signal"
           >
@@ -163,7 +163,7 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
       </div>
 
       {expanded && (
-        <div className="border-t border-border/40 px-3 py-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="border-t border-border/40 px-4 py-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
           {rows.map((r) => {
             const Icon = r.icon;
             const delta = pct(r.from, r.value);
