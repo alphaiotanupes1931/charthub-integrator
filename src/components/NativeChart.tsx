@@ -334,6 +334,9 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
   const linesRef = useRef<IPriceLine[]>([]);
   const annLinesRef = useRef<IPriceLine[]>([]);
   const [ready, setReady] = useState(false);
+  const [initError, setInitError] = useState<string | null>(null);
+  const [initAttempt, setInitAttempt] = useState(0);
+  const [notPainted, setNotPainted] = useState(false);
   // Session band positions {key,color,label,left,width} in pixels for the overlay
   const [bands, setBands] = useState<Array<{ key: string; color: string; label: string; left: number; width: number; top: number; height: number; high: number; low: number; idx: number; vwap: Array<{ x: number; y: number }>; meanY: number | null; regX1: number; regY1: number; regX2: number; regY2: number }>>([]);
   // AI annotation zones projected into pixel coords for a shaded overlay
@@ -437,6 +440,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
   // Init / teardown chart. Re-init when timezone changes so axis + crosshair labels re-render in the new zone.
   useEffect(() => {
     if (!containerRef.current) return;
+    setInitError(null);
     const hour12 = timeFormat === "12h";
     const tz = resolvedTimezone; // undefined => browser local
     const fmtTime = (t: number) => {
@@ -450,58 +454,67 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
         hour: "2-digit", minute: "2-digit", hour12, timeZone: tz,
       });
     };
-    const chart = createChart(containerRef.current, {
-      autoSize: true,
-      layout: {
-        background: { color: chartBg.bg },
-        textColor: chartBg.text,
-        fontFamily: "'Trebuchet MS', Roboto, Ubuntu, sans-serif",
-        fontSize: 12,
-        attributionLogo: false,
-      },
-      grid: {
-        vertLines: { color: chartBg.grid, style: LineStyle.Solid },
-        horzLines: { color: chartBg.grid, style: LineStyle.Solid },
-      },
-      crosshair: {
-        mode: CrosshairMode.Normal,
-        vertLine: { color: "#758696", width: 1, style: LineStyle.Dashed, labelBackgroundColor: "#2962ff" },
-        horzLine: { color: "#758696", width: 1, style: LineStyle.Dashed, labelBackgroundColor: "#2962ff" },
-      },
-      rightPriceScale: {
-        borderColor: chartBg.border,
-        borderVisible: true,
-        scaleMargins: { top: 0.1, bottom: 0.1 },
-      },
-      timeScale: {
-        borderColor: chartBg.border,
-        borderVisible: true,
-        timeVisible: true,
-        secondsVisible: false,
-        rightOffset: 12,
-        barSpacing: 6,
-        tickMarkFormatter: (time: number) => fmtTime(time),
-      },
-      localization: {
-        timeFormatter: (time: number) => fmtDateTime(time),
-      },
-    });
-    const series = chart.addSeries(CandlestickSeries, {
-      upColor: candleColors.up, downColor: candleColors.down,
-      borderUpColor: candleColors.borderUp, borderDownColor: candleColors.borderDown,
-      wickUpColor: candleColors.wickUp, wickDownColor: candleColors.wickDown,
-    });
+    let chart: IChartApi;
+    let series: ISeriesApi<"Candlestick">;
+    try {
+      chart = createChart(containerRef.current, {
+        autoSize: true,
+        layout: {
+          background: { color: chartBg.bg },
+          textColor: chartBg.text,
+          fontFamily: "'Trebuchet MS', Roboto, Ubuntu, sans-serif",
+          fontSize: 12,
+          attributionLogo: false,
+        },
+        grid: {
+          vertLines: { color: chartBg.grid, style: LineStyle.Solid },
+          horzLines: { color: chartBg.grid, style: LineStyle.Solid },
+        },
+        crosshair: {
+          mode: CrosshairMode.Normal,
+          vertLine: { color: "#758696", width: 1, style: LineStyle.Dashed, labelBackgroundColor: "#2962ff" },
+          horzLine: { color: "#758696", width: 1, style: LineStyle.Dashed, labelBackgroundColor: "#2962ff" },
+        },
+        rightPriceScale: {
+          borderColor: chartBg.border,
+          borderVisible: true,
+          scaleMargins: { top: 0.1, bottom: 0.1 },
+        },
+        timeScale: {
+          borderColor: chartBg.border,
+          borderVisible: true,
+          timeVisible: true,
+          secondsVisible: false,
+          rightOffset: 12,
+          barSpacing: 6,
+          tickMarkFormatter: (time: number) => fmtTime(time),
+        },
+        localization: {
+          timeFormatter: (time: number) => fmtDateTime(time),
+        },
+      });
+      series = chart.addSeries(CandlestickSeries, {
+        upColor: candleColors.up, downColor: candleColors.down,
+        borderUpColor: candleColors.borderUp, borderDownColor: candleColors.borderDown,
+        wickUpColor: candleColors.wickUp, wickDownColor: candleColors.wickDown,
+      });
+    } catch (err) {
+      // Never leave a blank panel: fall back to the lightweight SVG renderer.
+      setInitError(err instanceof Error ? err.message : "Chart engine failed to start");
+      setReady(false);
+      return;
+    }
     chartRef.current = chart;
     seriesRef.current = series;
     setReady(true);
     return () => {
       linesRef.current = [];
-      chart.remove();
+      try { chart.remove(); } catch { /* ignore */ }
       chartRef.current = null;
       seriesRef.current = null;
       setReady(false);
     };
-  }, [resolvedTimezone, timeFormat]);
+  }, [resolvedTimezone, timeFormat, initAttempt]);
 
   // Apply live candle-color updates without recreating the chart
   useEffect(() => {
@@ -546,9 +559,40 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
   // Push candle data
   useEffect(() => {
     if (!ready || !seriesRef.current || !chartRef.current) return;
-    seriesRef.current.setData(displayCandles);
-    chartRef.current.timeScale().fitContent();
+    try {
+      seriesRef.current.setData(displayCandles);
+      chartRef.current.timeScale().fitContent();
+    } catch (err) {
+      setInitError(err instanceof Error ? err.message : "Chart data could not be drawn");
+    }
   }, [displayCandles, ready]);
+
+  // Blank-panel guard: if we have candles but the canvas never got real pixels
+  // (hidden container at mount, zero-size layout, engine hiccup), fall back to
+  // the SVG renderer instead of showing an empty box.
+  useEffect(() => {
+    if (displayCandles.length === 0) { setNotPainted(false); return; }
+    let cancelled = false;
+    const check = () => {
+      if (cancelled) return;
+      const host = containerRef.current;
+      const canvas = host?.querySelector("canvas") as HTMLCanvasElement | null;
+      const w = host?.clientWidth ?? 0;
+      const h = host?.clientHeight ?? 0;
+      const blank = !ready || !canvas || canvas.width < 2 || canvas.height < 2 || w < 2 || h < 2;
+      setNotPainted(blank);
+      if (blank && chartRef.current && w > 2 && h > 2) {
+        // Nudge the engine to re-measure and redraw.
+        try {
+          chartRef.current.applyOptions({ autoSize: true });
+          chartRef.current.timeScale().fitContent();
+        } catch { /* ignore */ }
+      }
+    };
+    const t1 = window.setTimeout(check, 900);
+    const t2 = window.setTimeout(check, 2500);
+    return () => { cancelled = true; window.clearTimeout(t1); window.clearTimeout(t2); };
+  }, [displayCandles, ready, initAttempt]);
 
   // Sync overlays from `enabled` toggles
   useEffect(() => {
@@ -944,6 +988,18 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
   return (
     <div className={`relative h-full w-full ${className ?? ""}`}>
       <div ref={containerRef} className="absolute inset-0" />
+      {(initError || notPainted) && displayCandles.length > 0 && (
+        <>
+          <FallbackCandlestickLayer candles={displayCandles} />
+          <button
+            type="button"
+            onClick={() => { setInitError(null); setNotPainted(false); setInitAttempt((n) => n + 1); }}
+            className="absolute right-2 bottom-10 z-20 rounded-full border border-border/60 bg-background/80 px-2.5 py-1 text-[10px] font-medium text-muted-foreground backdrop-blur hover:text-foreground"
+          >
+            Reload chart
+          </button>
+        </>
+      )}
       {/* Session bands overlay */}
       {sessions && bands.length > 0 && (
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
