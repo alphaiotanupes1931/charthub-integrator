@@ -167,7 +167,7 @@ export function NotificationBell() {
             Notification.requestPermission().catch(() => {});
           }
         }}
-        className="relative h-9 w-9 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/40 transition shrink-0"
+        className="relative h-9 w-9 rounded-xl border border-border/60 flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/40 transition shrink-0"
         aria-label={`Notifications${unread ? ` (${unread} unread)` : ""}`}
         title="Notifications"
       >
@@ -184,16 +184,16 @@ export function NotificationBell() {
           {/* Translucent backdrop keeps the page visible behind the overlay. */}
           <div className="absolute inset-0 bg-background/50 backdrop-blur-[2px]" onClick={() => setOpen(false)} />
           <aside
-            className="absolute inset-x-2 bottom-2 top-16 sm:inset-x-auto sm:bottom-auto sm:right-3 sm:top-14 sm:w-[400px] sm:max-h-[calc(100vh-5rem)] bg-card border border-border rounded-xl shadow-xl overflow-hidden flex flex-col animate-in fade-in slide-in-from-top-2 duration-150"
+            className="absolute inset-x-2 bottom-2 top-16 sm:inset-x-auto sm:bottom-auto sm:right-3 sm:top-14 sm:w-[400px] sm:max-h-[calc(100vh-5rem)] bg-card border border-border/60 rounded-xl shadow-xl overflow-hidden flex flex-col animate-in fade-in slide-in-from-top-2 duration-150"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="shrink-0 px-4 py-3 border-b border-border">
+            <div className="shrink-0 px-4 py-3 border-b border-border/60">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-semibold leading-tight">Notifications</h2>
                 <button
                   onClick={() => setOpen(false)}
-                  className="h-7 w-7 rounded-md hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition"
+                  className="h-7 w-7 rounded-xl hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition"
                   aria-label="Close"
                 >
                   <X className="h-4 w-4" />
@@ -221,7 +221,7 @@ export function NotificationBell() {
 
 
             {/* Action bar */}
-            <div className="shrink-0 flex items-center gap-3 px-4 py-2 border-b border-border text-xs">
+            <div className="shrink-0 flex items-center gap-3 px-4 py-2 border-b border-border/60 text-xs">
               <button
                 onClick={() => mAll.mutate()}
                 disabled={unread === 0 || mAll.isPending}
@@ -299,7 +299,7 @@ export function NotificationBell() {
                               {isUnread && (
                                 <button
                                   onClick={() => mRead.mutate(n.id)}
-                                  className="h-7 w-7 rounded-md hover:bg-background flex items-center justify-center text-muted-foreground hover:text-foreground transition"
+                                  className="h-7 w-7 rounded-xl hover:bg-background flex items-center justify-center text-muted-foreground hover:text-foreground transition"
                                   title="Mark read"
                                 >
                                   <Check className="h-3.5 w-3.5" />
@@ -307,7 +307,7 @@ export function NotificationBell() {
                               )}
                               <button
                                 onClick={() => mDel.mutate(n.id)}
-                                className="h-7 w-7 rounded-md hover:bg-background flex items-center justify-center text-muted-foreground hover:text-destructive transition"
+                                className="h-7 w-7 rounded-xl hover:bg-background flex items-center justify-center text-muted-foreground hover:text-destructive transition"
                                 title="Delete"
                               >
                                 <Trash2 className="h-3.5 w-3.5" />

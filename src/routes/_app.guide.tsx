@@ -279,7 +279,7 @@ function GuidePage() {
         action={
           <button
             onClick={restartTutorial}
-            className="inline-flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/20"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-primary/40 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/20"
           >
             <PlayCircle className="h-4 w-4" /> Replay tour
           </button>
@@ -294,7 +294,7 @@ function GuidePage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search the docs…"
-            className="w-full rounded-lg border border-border bg-card/70 pl-9 pr-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full rounded-2xl border border-border/60 bg-card/70 pl-9 pr-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
       </div>
@@ -309,7 +309,7 @@ function GuidePage() {
               className={`text-xs font-medium rounded-full px-3 py-1.5 border transition ${
                 activeGroup === g
                   ? "bg-primary/15 border-primary/50 text-primary"
-                  : "bg-card/40 border-border text-muted-foreground hover:text-foreground hover:border-border/80"
+                  : "bg-card/40 border-border/60 text-muted-foreground hover:text-foreground hover:border-border/80"
               }`}
             >
               {g}
@@ -323,13 +323,13 @@ function GuidePage() {
         <aside className="hidden md:block sticky top-20 self-start max-h-[calc(100vh-6rem)] overflow-y-auto pr-2">
           {(query.trim() ? groups : groups.filter(([g]) => g === activeGroup)).map(([group, sections]) => (
             <div key={group} className="mb-5">
-              <div className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-2">{group}</div>
+              <div className="text-[11px] font-mono tracking-tight text-muted-foreground mb-2">{group}</div>
               <ul className="space-y-1">
                 {sections.map((s) => (
                   <li key={s.id}>
                     <a
                       href={`#${s.id}`}
-                      className={`flex items-center justify-between gap-2 text-sm rounded-md px-2 py-1 transition-colors ${
+                      className={`flex items-center justify-between gap-2 text-sm rounded-xl px-2 py-1 transition-colors ${
                         active === s.id
                           ? "bg-primary/10 text-primary font-medium"
                           : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
@@ -345,7 +345,7 @@ function GuidePage() {
           ))}
           <button
             onClick={scrollToTop}
-            className="mt-2 w-full text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground py-2 border-t border-border/60"
+            className="mt-2 w-full text-[11px] tracking-tight text-muted-foreground hover:text-foreground py-2 border-t border-border/60"
             aria-label="Back to top"
           >
             ↑
@@ -355,7 +355,7 @@ function GuidePage() {
         {/* Main content */}
         <main className="min-w-0">
           {filtered.length === 0 && (
-            <div className="text-sm text-muted-foreground border border-dashed border-border rounded-lg p-6 text-center">
+            <div className="text-sm text-muted-foreground border border-dashed border-border/60 rounded-2xl p-6 text-center">
               No results for "{query}".
             </div>
           )}
@@ -368,13 +368,13 @@ function GuidePage() {
                   <h2 className="text-xl md:text-2xl font-semibold">{section.title}</h2>
                   <button
                     onClick={() => expandAll(section)}
-                    className="shrink-0 text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground border border-border rounded-md px-2 py-1"
+                    className="shrink-0 text-[11px] tracking-tight text-muted-foreground hover:text-foreground border border-border/60 rounded-xl px-2 py-1"
                   >
                     {allOpen ? "Collapse all" : "Expand all"}
                   </button>
                 </div>
                 {section.blurb && <p className="text-sm text-muted-foreground mb-4">{section.blurb}</p>}
-                <div className="rounded-xl border border-border bg-card divide-y divide-border overflow-hidden">
+                <div className="rounded-xl border border-border/60 bg-card divide-y divide-border overflow-hidden">
                   {section.items.map((item) => {
                     const key = `${section.id}::${item.q}`;
                     const open = !!openItems[key];
@@ -403,7 +403,7 @@ function GuidePage() {
             );
           })}
 
-          <div className="border-t border-border pt-6 mt-8 flex items-center justify-between gap-4 flex-wrap text-sm text-muted-foreground">
+          <div className="border-t border-border/60 pt-6 mt-8 flex items-center justify-between gap-4 flex-wrap text-sm text-muted-foreground">
             <div>
               Need help? Email{" "}
               <a href="mailto:support@trademindaicoach.com" className="text-primary hover:underline">
@@ -414,7 +414,7 @@ function GuidePage() {
             <button
               onClick={scrollToTop}
               aria-label="Back to top"
-              className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:border-primary/50 hover:text-foreground"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-border/60 px-3 py-1.5 text-xs font-medium hover:border-primary/50 hover:text-foreground"
             >
               <ArrowUp className="h-3.5 w-3.5" />
             </button>

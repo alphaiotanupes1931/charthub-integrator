@@ -277,7 +277,7 @@ export function PageInstructions({
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <ol className="list-decimal space-y-1.5 border-t border-border px-3 py-3 pl-8 text-xs leading-relaxed text-muted-foreground">
+            <ol className="list-decimal space-y-1.5 border-t border-border/60 px-3 py-3 pl-8 text-xs leading-relaxed text-muted-foreground">
               {entry.steps.map((s, i) => (
                 <li key={i}>{s}</li>
               ))}

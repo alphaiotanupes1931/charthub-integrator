@@ -258,7 +258,7 @@ function LevelsPage() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search levels (VWAP, POC, order block…)"
-            className="w-full pl-9 pr-3 py-2 rounded-md border border-border bg-background text-sm focus:outline-none focus:border-primary/50"
+            className="w-full pl-9 pr-3 py-2 rounded-xl border border-border/60 bg-background text-sm focus:outline-none focus:border-primary/50"
           />
         </div>
         <div className="flex flex-wrap gap-1.5">
@@ -266,10 +266,10 @@ function LevelsPage() {
             <button
               key={c}
               onClick={() => setCat(c)}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium border transition ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition ${
                 cat === c
                   ? "bg-primary/15 text-primary border-primary/40"
-                  : "bg-background text-muted-foreground border-border hover:border-primary/30 hover:text-foreground"
+                  : "bg-background text-muted-foreground border-border/60 hover:border-primary/30 hover:text-foreground"
               }`}
             >
               {c}
@@ -285,13 +285,13 @@ function LevelsPage() {
             <button
               key={l.key}
               onClick={() => setOpen(l)}
-              className="text-left rounded-xl border border-border bg-card hover:border-primary/40 hover:bg-primary/5 transition p-4 flex flex-col gap-2 group"
+              className="text-left rounded-xl border border-border/60 bg-card hover:border-primary/40 hover:bg-primary/5 transition p-4 flex flex-col gap-2 group"
             >
               <div className="flex items-start justify-between gap-2">
-                <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+                <div className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-primary/10 text-primary shrink-0">
                   <Icon className="h-4 w-4" />
                 </div>
-                <span className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded border ${categoryColor[l.category]}`}>
+                <span className={`text-[10px] tracking-tight px-2 py-0.5 rounded border ${categoryColor[l.category]}`}>
                   {l.category}
                 </span>
               </div>
@@ -323,18 +323,18 @@ function LevelDetail({ level, onClose }: { level: LevelDef; onClose: () => void 
       onClick={onClose}
     >
       <div
-        className="w-full sm:max-w-2xl max-h-[92vh] overflow-y-auto bg-card border border-border rounded-t-2xl sm:rounded-2xl shadow-2xl"
+        className="w-full sm:max-w-2xl max-h-[92vh] overflow-y-auto bg-card border border-border/60 rounded-t-2xl sm:rounded-2xl shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 bg-card/95 backdrop-blur border-b border-border px-5 py-4 flex items-start justify-between gap-3">
+        <div className="sticky top-0 bg-card/95 backdrop-blur border-b border-border/60 px-5 py-4 flex items-start justify-between gap-3">
           <div className="flex items-start gap-3">
-            <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
               <Icon className="h-5 w-5" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-lg font-semibold">{level.name}</h2>
-                <span className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded border ${categoryColor[level.category]}`}>
+                <span className={`text-[10px] tracking-tight px-2 py-0.5 rounded border ${categoryColor[level.category]}`}>
                   {level.category}
                 </span>
               </div>
@@ -357,7 +357,7 @@ function LevelDetail({ level, onClose }: { level: LevelDef; onClose: () => void 
           <Section title="How to trade it">{level.entry}</Section>
           <Section title="Invalidation">{level.invalidation}</Section>
           <div>
-            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Examples</div>
+            <div className="text-xs font-semibold tracking-tight text-muted-foreground mb-2">Examples</div>
             <ul className="space-y-1.5">
               {level.examples.map((e, i) => (
                 <li key={i} className="flex gap-2 text-foreground/90">
@@ -376,7 +376,7 @@ function LevelDetail({ level, onClose }: { level: LevelDef; onClose: () => void 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">{title}</div>
+      <div className="text-xs font-semibold tracking-tight text-muted-foreground mb-1.5">{title}</div>
       <p className="text-foreground/90 leading-relaxed">{children}</p>
     </div>
   );

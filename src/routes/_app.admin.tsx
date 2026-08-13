@@ -89,25 +89,25 @@ function AdminPage() {
       <div>
         <a
           href="/admin/subscribers"
-          className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted"
+          className="inline-flex items-center gap-2 rounded-2xl border border-border/60 px-3 py-2 text-sm hover:bg-muted"
         >
           View Stripe subscribers →
         </a>
       </div>
 
       {err && (
-        <div className="rounded-md border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">{err}</div>
+        <div className="rounded-xl border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">{err}</div>
       )}
 
       <div className="grid grid-cols-2 gap-4">
-        <div className="rounded-xl border border-border bg-card p-5">
-          <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
+        <div className="rounded-xl border border-border/60 bg-card p-5">
+          <div className="flex items-center gap-2 text-xs tracking-tight text-muted-foreground">
             <Users className="h-3.5 w-3.5" /> Total users
           </div>
           <div className="mt-2 text-3xl font-semibold">{totalUsers}</div>
         </div>
-        <div className="rounded-xl border border-border bg-card p-5">
-          <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
+        <div className="rounded-xl border border-border/60 bg-card p-5">
+          <div className="flex items-center gap-2 text-xs tracking-tight text-muted-foreground">
             <BarChart3 className="h-3.5 w-3.5" /> Sources tracked
           </div>
           <div className="mt-2 text-3xl font-semibold">{stats?.length ?? 0}</div>
@@ -115,8 +115,8 @@ function AdminPage() {
       </div>
 
       <section>
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">How did you find us</h2>
-        <div className="rounded-xl border border-border bg-card divide-y divide-border">
+        <h2 className="text-sm font-semibold tracking-tight text-muted-foreground mb-3">How did you find us</h2>
+        <div className="rounded-xl border border-border/60 bg-card divide-y divide-border">
           {stats === null ? (
             <div className="p-6 text-sm text-muted-foreground flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Loading…</div>
           ) : stats.length === 0 ? (
@@ -142,11 +142,11 @@ function AdminPage() {
       </section>
 
       <section>
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">Users</h2>
-        <div className="rounded-xl border border-border bg-card overflow-hidden">
+        <h2 className="text-sm font-semibold tracking-tight text-muted-foreground mb-3">Users</h2>
+        <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
+              <thead className="bg-muted/40 text-xs tracking-tight text-muted-foreground">
                 <tr>
                   <th className="text-left px-4 py-2 font-medium">Name</th>
                   <th className="text-left px-4 py-2 font-medium">Email</th>
@@ -174,7 +174,7 @@ function AdminPage() {
                           {u.broker_account_type === "live" ? "Live" : u.broker_account_type === "demo" ? "Demo" : u.broker_name ?? "Connected"}
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium text-muted-foreground bg-muted border border-border">
+                        <span className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium text-muted-foreground bg-muted border border-border/60">
                           <CircleOff className="h-3 w-3" /> Not connected
                         </span>
                       )}
@@ -195,7 +195,7 @@ function AdminPage() {
                       <button
                         onClick={() => toggleBan(u)}
                         disabled={busyId === u.id}
-                        className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors disabled:opacity-50 ${u.banned ? "border-bull/30 text-bull hover:bg-bull/10" : "border-destructive/30 text-destructive hover:bg-destructive/10"}`}
+                        className={`inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1 text-xs font-medium transition-colors disabled:opacity-50 ${u.banned ? "border-bull/30 text-bull hover:bg-bull/10" : "border-destructive/30 text-destructive hover:bg-destructive/10"}`}
                       >
                         {busyId === u.id ? <Loader2 className="h-3 w-3 animate-spin" /> : u.banned ? <ShieldCheck className="h-3 w-3" /> : <Ban className="h-3 w-3" />}
                         {u.banned ? "Unban" : "Ban"}
@@ -253,7 +253,7 @@ function AiCostPanel() {
             <button
               key={d}
               onClick={() => setDays(d)}
-              className={`rounded-md border px-2 py-1 text-[11px] ${d === days ? "border-foreground/40 bg-muted" : "border-border text-muted-foreground"}`}
+              className={`rounded-xl border px-2 py-1 text-[11px] ${d === days ? "border-foreground/40 bg-muted" : "border-border/60 text-muted-foreground"}`}
             >
               {d}d
             </button>
@@ -262,19 +262,19 @@ function AiCostPanel() {
       </div>
 
       {error && (
-        <div className="rounded-md border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">{error}</div>
+        <div className="rounded-xl border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">{error}</div>
       )}
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-md border border-border p-4">
+        <div className="rounded-xl border border-border/60 p-4">
           <div className="text-xs text-muted-foreground">Total spend, last {days} days</div>
           <div className="mt-2 text-2xl font-semibold">{usd(total)}</div>
         </div>
-        <div className="rounded-md border border-border p-4">
+        <div className="rounded-xl border border-border/60 p-4">
           <div className="text-xs text-muted-foreground">Cache hit rate on input</div>
           <div className="mt-2 text-2xl font-semibold">{cacheHitPct}%</div>
         </div>
-        <div className="rounded-md border border-border p-4">
+        <div className="rounded-xl border border-border/60 p-4">
           <div className="text-xs text-muted-foreground">Logged calls</div>
           <div className="mt-2 text-2xl font-semibold">
             {(data?.byKind ?? []).reduce((s, r) => s + Number(r.calls), 0)}
@@ -283,8 +283,8 @@ function AiCostPanel() {
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <div className="rounded-md border border-border overflow-hidden">
-          <div className="border-b border-border px-4 py-2 text-xs text-muted-foreground">By call type and model</div>
+        <div className="rounded-xl border border-border/60 overflow-hidden">
+          <div className="border-b border-border/60 px-4 py-2 text-xs text-muted-foreground">By call type and model</div>
           {loading ? (
             <div className="p-4 text-sm text-muted-foreground flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Loading</div>
           ) : (data?.byKind.length ?? 0) === 0 ? (
@@ -292,7 +292,7 @@ function AiCostPanel() {
           ) : (
             <table className="w-full text-xs">
               <thead className="text-muted-foreground">
-                <tr className="border-b border-border">
+                <tr className="border-b border-border/60">
                   <th className="text-left px-3 py-2">Kind</th>
                   <th className="text-left px-3 py-2">Model</th>
                   <th className="text-right px-3 py-2">Calls</th>
@@ -313,8 +313,8 @@ function AiCostPanel() {
           )}
         </div>
 
-        <div className="rounded-md border border-border overflow-hidden">
-          <div className="border-b border-border px-4 py-2 text-xs text-muted-foreground">Per user, cost per graded setup</div>
+        <div className="rounded-xl border border-border/60 overflow-hidden">
+          <div className="border-b border-border/60 px-4 py-2 text-xs text-muted-foreground">Per user, cost per graded setup</div>
           {loading ? (
             <div className="p-4 text-sm text-muted-foreground flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Loading</div>
           ) : (data?.byUser.length ?? 0) === 0 ? (
@@ -322,7 +322,7 @@ function AiCostPanel() {
           ) : (
             <table className="w-full text-xs">
               <thead className="text-muted-foreground">
-                <tr className="border-b border-border">
+                <tr className="border-b border-border/60">
                   <th className="text-left px-3 py-2">User</th>
                   <th className="text-right px-3 py-2">Setups</th>
                   <th className="text-right px-3 py-2">Spend</th>
@@ -393,10 +393,10 @@ function PlatformStatusEditor() {
   };
 
   return (
-    <section className="rounded-xl border border-border bg-card p-5 space-y-4">
+    <section className="rounded-xl border border-border/60 bg-card p-5 space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Platform status</h2>
+          <h2 className="text-sm font-semibold tracking-tight text-muted-foreground">Platform status</h2>
           <p className="text-xs text-muted-foreground mt-1">Shown as a banner above every user's dashboard.</p>
         </div>
         {updatedAt && (
@@ -415,7 +415,7 @@ function PlatformStatusEditor() {
                 type="button"
                 onClick={() => setLevel(o.value)}
                 className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition ${
-                  level === o.value ? o.cls : "border-border text-muted-foreground hover:bg-muted"
+                  level === o.value ? o.cls : "border-border/60 text-muted-foreground hover:bg-muted"
                 }`}
               >
                 {o.label}
@@ -426,14 +426,14 @@ function PlatformStatusEditor() {
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             rows={3}
-            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full rounded-2xl border border-border/60 bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/40"
             placeholder="Message shown to all users…"
           />
           <div className="flex justify-end">
             <button
               onClick={save}
               disabled={saving || !message.trim()}
-              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-2xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
             >
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
               Save status
@@ -506,14 +506,14 @@ function AiCreditsPanel() {
         </h2>
         <button
           onClick={() => void load()}
-          className="rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground"
+          className="rounded-xl border border-border/60 px-2 py-1 text-[11px] text-muted-foreground"
         >
           Re-check now
         </button>
       </div>
 
       {err && (
-        <div className="rounded-md border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">{err}</div>
+        <div className="rounded-xl border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">{err}</div>
       )}
 
       {loading && !snap ? (
@@ -523,9 +523,9 @@ function AiCreditsPanel() {
       ) : snap ? (
         <>
           <div
-            className={`rounded-md border px-4 py-3 text-sm ${
+            className={`rounded-xl border px-4 py-3 text-sm ${
               status === "ok"
-                ? "border-border text-muted-foreground"
+                ? "border-border/60 text-muted-foreground"
                 : "border-destructive/40 bg-destructive/5 text-destructive"
             }`}
           >
@@ -534,33 +534,33 @@ function AiCreditsPanel() {
           </div>
 
           <div className="mt-3 grid gap-3 sm:grid-cols-4">
-            <div className="rounded-md border border-border p-4">
+            <div className="rounded-xl border border-border/60 p-4">
               <div className="text-xs text-muted-foreground">Credits left this month</div>
               <div className={`mt-2 text-2xl font-semibold ${low ? "text-destructive" : ""}`}>{usd(snap.remainingUsd)}</div>
               <div className="mt-1 text-[11px] text-muted-foreground">{snap.remainingPct}% of budget</div>
             </div>
-            <div className="rounded-md border border-border p-4">
+            <div className="rounded-xl border border-border/60 p-4">
               <div className="text-xs text-muted-foreground">Spent month to date</div>
               <div className="mt-2 text-2xl font-semibold">{usd(snap.monthToDateUsd)}</div>
             </div>
-            <div className="rounded-md border border-border p-4">
+            <div className="rounded-xl border border-border/60 p-4">
               <div className="text-xs text-muted-foreground">Last 24 hours</div>
               <div className="mt-2 text-2xl font-semibold">{usd(snap.todayUsd)}</div>
             </div>
-            <div className="rounded-md border border-border p-4">
+            <div className="rounded-xl border border-border/60 p-4">
               <div className="text-xs text-muted-foreground">Last 7 days</div>
               <div className="mt-2 text-2xl font-semibold">{usd(snap.last7dUsd)}</div>
             </div>
           </div>
 
-          <div className="mt-3 flex flex-wrap items-end gap-3 rounded-md border border-border p-4">
+          <div className="mt-3 flex flex-wrap items-end gap-3 rounded-xl border border-border/60 p-4">
             <label className="block">
               <span className="text-xs text-muted-foreground">Monthly budget, USD</span>
               <input
                 value={budget}
                 onChange={(e) => setBudget(e.target.value)}
                 inputMode="decimal"
-                className="mt-1 w-32 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-foreground/40"
+                className="mt-1 w-32 rounded-2xl border border-border/60 bg-background px-3 py-2 text-sm outline-none focus:border-foreground/40"
               />
             </label>
             <label className="block">
@@ -569,13 +569,13 @@ function AiCreditsPanel() {
                 value={threshold}
                 onChange={(e) => setThreshold(e.target.value)}
                 inputMode="numeric"
-                className="mt-1 w-28 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-foreground/40"
+                className="mt-1 w-28 rounded-2xl border border-border/60 bg-background px-3 py-2 text-sm outline-none focus:border-foreground/40"
               />
             </label>
             <button
               onClick={() => void save()}
               disabled={saving}
-              className="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+              className="inline-flex h-10 items-center gap-2 rounded-2xl bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-60"
             >
               {saving && <Loader2 className="h-4 w-4 animate-spin" />} Save budget
             </button>
@@ -609,9 +609,9 @@ function SupportTicketsPanel() {
     <section className="mt-8">
       <h2 className="mb-3 text-sm font-medium">Tickets and feedback</h2>
       {err && (
-        <div className="rounded-md border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">{err}</div>
+        <div className="rounded-xl border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">{err}</div>
       )}
-      <div className="divide-y divide-border rounded-md border border-border">
+      <div className="divide-y divide-border rounded-xl border border-border/60">
         {rows === null ? (
           <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" /> Loading
@@ -627,7 +627,7 @@ function SupportTicketsPanel() {
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="text-sm font-medium">{r.subject}</div>
-                <span className="rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground">
+                <span className="rounded-full border border-border/60 px-2 py-0.5 text-[11px] text-muted-foreground">
                   {r.kind === "ticket" ? "Ticket" : "Feedback"}
                 </span>
               </div>

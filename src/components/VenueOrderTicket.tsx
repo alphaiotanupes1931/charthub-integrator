@@ -67,10 +67,10 @@ export function VenueOrderTicket({
     }
   }
 
-  const field = "mt-1 w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-sm outline-none focus:border-foreground";
+  const field = "mt-1 w-full rounded-xl border border-border/60 bg-background px-2.5 py-1.5 text-sm outline-none focus:border-foreground";
 
   return (
-    <div className="mt-4 space-y-3 border-t border-border pt-4">
+    <div className="mt-4 space-y-3 border-t border-border/60 pt-4">
       <p className="text-xs text-muted-foreground">
         Send a live order to {venueName}. Use the venue's own symbol format.
       </p>
@@ -90,8 +90,8 @@ export function VenueOrderTicket({
             key={s}
             type="button"
             onClick={() => setSide(s)}
-            className={`rounded-md border px-2.5 py-1 text-xs uppercase ${
-              side === s ? "border-foreground bg-foreground text-background" : "border-border text-muted-foreground"
+            className={`rounded-xl border px-2.5 py-1 text-xs ${
+              side === s ? "border-foreground bg-foreground text-background" : "border-border/60 text-muted-foreground"
             }`}
           >
             {s}
@@ -103,8 +103,8 @@ export function VenueOrderTicket({
             key={t}
             type="button"
             onClick={() => setType(t)}
-            className={`rounded-md border px-2.5 py-1 text-xs uppercase ${
-              type === t ? "border-foreground bg-foreground text-background" : "border-border text-muted-foreground"
+            className={`rounded-xl border px-2.5 py-1 text-xs ${
+              type === t ? "border-foreground bg-foreground text-background" : "border-border/60 text-muted-foreground"
             }`}
           >
             {t}
@@ -131,7 +131,7 @@ export function VenueOrderTicket({
         type="button"
         disabled={busy}
         onClick={() => void submit()}
-        className="inline-flex items-center gap-2 rounded-md border border-foreground bg-foreground px-3 py-1.5 text-xs text-background disabled:opacity-60"
+        className="inline-flex items-center gap-2 rounded-xl border border-foreground bg-foreground px-3 py-1.5 text-xs text-background disabled:opacity-60"
       >
         {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
         Send order

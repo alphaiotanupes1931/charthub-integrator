@@ -87,24 +87,24 @@ function LeaderboardPage() {
         <button
           onClick={refresh}
           disabled={loading}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md border border-border text-sm hover:bg-muted disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border/60 text-sm hover:bg-muted disabled:opacity-50"
         >
           <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh
         </button>
       </div>
       <PageInstructions className="mb-6" />
 
-      <div className="rounded-md border border-border bg-card p-5 mb-6">
+      <div className="rounded-xl border border-border/60 bg-card p-5 mb-6">
         <div className="text-sm font-semibold mb-3">Your visibility</div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <label className="block sm:col-span-2">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Display handle</div>
+            <div className="text-[10px] tracking-tight text-muted-foreground mb-1">Display handle</div>
             <input
               value={handle}
               onChange={(e) => setHandle(e.target.value)}
               placeholder="e.g. calm_trader"
               maxLength={24}
-              className="w-full px-2 py-1.5 rounded-md bg-background border border-border text-sm font-mono"
+              className="w-full px-2 py-1.5 rounded-xl bg-background border border-border/60 text-sm font-mono"
             />
           </label>
           <label className="flex items-end gap-2 pb-1.5">
@@ -120,7 +120,7 @@ function LeaderboardPage() {
         <button
           onClick={save}
           disabled={saving}
-          className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 disabled:opacity-50"
+          className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 disabled:opacity-50"
         >
           {saving ? "Saving…" : mine ? "Update" : "Join leaderboard"}
         </button>
@@ -129,8 +129,8 @@ function LeaderboardPage() {
         </p>
       </div>
 
-      <div className="rounded-md border border-border bg-card overflow-hidden">
-        <div className="grid grid-cols-[3rem_1fr_5rem_5rem_5rem_5rem] gap-3 px-4 py-2.5 text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border">
+      <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
+        <div className="grid grid-cols-[3rem_1fr_5rem_5rem_5rem_5rem] gap-3 px-4 py-2.5 text-[10px] tracking-tight text-muted-foreground border-b border-border/60">
           <span>#</span>
           <span>Trader</span>
           <span className="text-right">P/L%</span>

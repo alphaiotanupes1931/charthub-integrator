@@ -24,13 +24,13 @@ export function TodaysRecommendation() {
   const rec = useMemo(() => buildRecommendation(trades), [trades]);
 
   return (
-    <div className="rounded-xl border border-primary/30 bg-gradient-to-br from-primary/[0.06] to-transparent p-5 mb-5">
+    <div className="rounded-xl border border-primary/30 bg-primary/[0.06] p-5 mb-5">
       <div className="flex items-start gap-3">
-        <div className="h-9 w-9 rounded-lg bg-primary/15 ring-1 ring-primary/30 flex items-center justify-center shrink-0">
+        <div className="h-9 w-9 rounded-2xl bg-primary/15 ring-1 ring-primary/30 flex items-center justify-center shrink-0">
           <Lightbulb className="h-4 w-4 text-primary" />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground mb-1">
+          <div className="text-[11px] font-medium tracking-[0.2em] text-muted-foreground mb-1">
             Today's recommendation
           </div>
           <div className="font-display text-lg font-semibold mb-1">{rec.headline}</div>

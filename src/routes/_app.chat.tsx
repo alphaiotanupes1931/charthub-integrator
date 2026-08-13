@@ -63,8 +63,8 @@ function ChatLayout() {
   return (
     <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
       {/* Thread sidebar */}
-      <aside className="w-72 shrink-0 border-r border-border bg-card/40 flex flex-col">
-        <div className="p-3 border-b border-border">
+      <aside className="w-72 shrink-0 border-r border-border/60 bg-card/40 flex flex-col">
+        <div className="p-3 border-b border-border/60">
           <Button onClick={handleNew} className="w-full justify-start gap-2" variant="default">
             <Plus className="h-4 w-4" /> New conversation
           </Button>
@@ -81,7 +81,7 @@ function ChatLayout() {
             return (
               <div
                 key={t.id}
-                className={`group flex items-center gap-2 rounded-md px-2 py-2 text-sm cursor-pointer transition ${
+                className={`group flex items-center gap-2 rounded-xl px-2 py-2 text-sm cursor-pointer transition ${
                   active ? "bg-primary/15 text-primary" : "hover:bg-accent/40 text-foreground/80"
                 }`}
               >

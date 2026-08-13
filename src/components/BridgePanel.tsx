@@ -52,8 +52,8 @@ export default function BridgePanel() {
 
   return (
     <section className="mb-8">
-      <h2 className="mb-3 text-xs uppercase tracking-wide text-muted-foreground">Desktop bridge</h2>
-      <div className="rounded-md border border-border bg-card p-4">
+      <h2 className="mb-3 text-xs tracking-wide text-muted-foreground">Desktop bridge</h2>
+      <div className="rounded-xl border border-border/60 bg-card p-4">
         <div className="flex items-start gap-2">
           <Terminal className="mt-0.5 h-4 w-4 text-muted-foreground" />
           <div>
@@ -69,11 +69,11 @@ export default function BridgePanel() {
         <div className="mt-4 space-y-2 text-xs">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-muted-foreground">Endpoint</span>
-            <code className="rounded border border-border px-2 py-1">{endpoint}</code>
+            <code className="rounded border border-border/60 px-2 py-1">{endpoint}</code>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-muted-foreground">Bridge token</span>
-            <code className="rounded border border-border px-2 py-1">
+            <code className="rounded border border-border/60 px-2 py-1">
               {busy ? "loading" : token ? `${token.slice(0, 8)}${"\u2022".repeat(12)}` : "none"}
             </code>
             <Button
@@ -103,7 +103,7 @@ export default function BridgePanel() {
 
         <div className="mt-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs uppercase tracking-wide text-muted-foreground">Order queue</h3>
+            <h3 className="text-xs tracking-wide text-muted-foreground">Order queue</h3>
             <Button size="sm" variant="ghost" onClick={() => void refresh()}>
               {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
             </Button>
@@ -114,7 +114,7 @@ export default function BridgePanel() {
             <div className="mt-2 overflow-x-auto">
               <table className="w-full text-xs">
                 <thead className="text-muted-foreground">
-                  <tr className="border-b border-border">
+                  <tr className="border-b border-border/60">
                     <th className="py-2 text-left font-normal">Venue</th>
                     <th className="py-2 text-left font-normal">Symbol</th>
                     <th className="py-2 text-left font-normal">Side</th>

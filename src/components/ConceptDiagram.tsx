@@ -27,10 +27,10 @@ function Candle({ x, top, bot, open, close, w = 10 }: { x: number; top: number; 
 
 function Frame({ children, title, note }: { children: React.ReactNode; title: string; note?: string }) {
   return (
-    <div className="rounded-lg border border-border bg-background/60 p-3">
+    <div className="rounded-2xl border border-border/60 bg-background/60 p-3">
       <div className="mb-2 flex items-baseline justify-between gap-2">
         <div className="text-xs font-semibold text-foreground">{title}</div>
-        {note && <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{note}</div>}
+        {note && <div className="text-[10px] tracking-tight text-muted-foreground">{note}</div>}
       </div>
       <div className="w-full overflow-hidden rounded bg-muted/30 p-2">
         <svg viewBox="0 0 260 140" className="w-full h-auto">
@@ -189,15 +189,15 @@ export function ConceptDiagram({ concept }: { concept: ConceptRef }) {
 
 export function ChartConceptOverlay({ concept, onClose }: { concept: ConceptRef; onClose: () => void }) {
   return (
-    <div className="absolute right-3 bottom-3 z-30 w-[280px] max-w-[80%] rounded-xl border border-border bg-background/95 backdrop-blur shadow-2xl">
+    <div className="absolute right-3 bottom-3 z-30 w-[280px] max-w-[80%] rounded-xl border border-border/60 bg-background/95 backdrop-blur shadow-2xl">
       <div className="flex items-center justify-between px-3 py-1.5 border-b border-border/60">
-        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+        <div className="text-[10px] tracking-tight text-muted-foreground">
           Concept · {CONCEPT_LABELS[concept.id] ?? concept.id}
         </div>
         <button
           type="button"
           onClick={onClose}
-          className="h-6 w-6 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60"
+          className="h-6 w-6 inline-flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60"
           aria-label="Close concept diagram"
         >
           <X className="h-3.5 w-3.5" />

@@ -206,7 +206,7 @@ export function Tutorial() {
 
       {/* Card */}
       <div
-        className={`fixed rounded-2xl border border-border bg-card shadow-2xl animate-in fade-in zoom-in-95 duration-200 pointer-events-auto ${
+        className={`fixed rounded-2xl border border-border/60 bg-card shadow-2xl animate-in fade-in zoom-in-95 duration-200 pointer-events-auto ${
           hasSpotlight ? "" : "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(420px,calc(100vw-2rem))]"
         }`}
         style={hasSpotlight ? cardStyle : undefined}
@@ -214,17 +214,17 @@ export function Tutorial() {
         <button
           onClick={() => close(false)}
           aria-label="Skip tutorial"
-          className="absolute right-3 top-3 h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/40 flex items-center justify-center transition"
+          className="absolute right-3 top-3 h-8 w-8 rounded-xl text-muted-foreground hover:text-foreground hover:bg-accent/40 flex items-center justify-center transition"
         >
           <X className="h-4 w-4" />
         </button>
 
         <div className="p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-primary/10 ring-1 ring-primary/30">
+            <div className="flex items-center justify-center h-10 w-10 rounded-2xl bg-primary/10 ring-1 ring-primary/30">
               <Icon className="h-5 w-5 text-primary" />
             </div>
-            <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
+            <div className="text-[11px] font-medium tracking-[0.2em] text-muted-foreground">
               Step {step + 1} of {STEPS.length}
             </div>
           </div>
@@ -253,7 +253,7 @@ export function Tutorial() {
               {!isFirst && (
                 <button
                   onClick={() => setStep((s) => s - 1)}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-sm font-medium hover:border-primary/50 transition"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-border/60 bg-background px-3 py-2 text-sm font-medium hover:border-primary/50 transition"
                 >
                   <ArrowLeft className="h-3.5 w-3.5" /> Back
                 </button>
@@ -261,14 +261,14 @@ export function Tutorial() {
               {isLast ? (
                 <button
                   onClick={() => close(true)}
-                  className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 transition"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 transition"
                 >
                   Get started
                 </button>
               ) : (
                 <button
                   onClick={() => setStep((s) => s + 1)}
-                  className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 transition"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 transition"
                 >
                   Continue <ArrowRight className="h-3.5 w-3.5" />
                 </button>

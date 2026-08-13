@@ -35,8 +35,8 @@ function impactClass(impact: string) {
   const i = impact.toLowerCase();
   if (i.includes("high")) return "border-destructive/60 text-destructive";
   if (i.includes("medium")) return "border-primary/60 text-primary";
-  if (i.includes("holiday")) return "border-border text-muted-foreground";
-  return "border-border text-muted-foreground";
+  if (i.includes("holiday")) return "border-border/60 text-muted-foreground";
+  return "border-border/60 text-muted-foreground";
 }
 
 /** Plain language read of an actual print against its forecast. */
@@ -106,14 +106,14 @@ function NewsPage() {
         <button
           onClick={() => news.refetch()}
           disabled={news.isFetching}
-          className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-sm disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-xl border border-border/60 px-3 py-1.5 text-sm disabled:opacity-50"
         >
           <RefreshCw className={`size-4 ${news.isFetching ? "animate-spin" : ""}`} /> Refresh
         </button>
       </header>
       <PageInstructions className="mb-6" />
 
-      <section className="rounded-md border border-border bg-card/40 p-4">
+      <section className="rounded-xl border border-border/60 bg-card/40 p-4">
         <h2 className="mb-2 font-semibold">Session read</h2>
         {news.isLoading ? (
           <p className="text-sm text-muted-foreground">Reading the calendar...</p>
@@ -126,7 +126,7 @@ function NewsPage() {
         )}
       </section>
 
-      <section className="rounded-md border border-border bg-card/40 p-4 space-y-3">
+      <section className="rounded-xl border border-border/60 bg-card/40 p-4 space-y-3">
         <div className="flex items-center justify-between gap-2">
           <h2 className="font-semibold">Releases</h2>
           <div className="flex items-center gap-1 text-xs">
@@ -134,7 +134,7 @@ function NewsPage() {
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`rounded-md border px-2 py-1 capitalize ${filter === f ? "border-primary text-primary" : "border-border text-muted-foreground"}`}
+                className={`rounded-xl border px-2 py-1 capitalize ${filter === f ? "border-primary text-primary" : "border-border/60 text-muted-foreground"}`}
               >
                 {f === "medium" ? "high + medium" : f}
               </button>
@@ -158,14 +158,14 @@ function NewsPage() {
                   <button
                     type="button"
                     onClick={() => setOpenKey(open ? null : key)}
-                    className="flex w-full items-start gap-3 py-1.5 text-left hover:bg-muted/40 rounded-md px-1"
+                    className="flex w-full items-start gap-3 py-1.5 text-left hover:bg-muted/40 rounded-xl px-1"
                     aria-expanded={open}
                   >
                     <span className="w-32 shrink-0 text-xs text-muted-foreground">
                       {fmtTime(e.date)}
                     </span>
                     <span
-                      className={`shrink-0 rounded border px-1.5 py-0.5 text-[10px] uppercase ${impactClass(e.impact)}`}
+                      className={`shrink-0 rounded border px-1.5 py-0.5 text-[10px] ${impactClass(e.impact)}`}
                     >
                       {e.impact}
                     </span>
@@ -186,7 +186,7 @@ function NewsPage() {
                   </button>
 
                   {open && (
-                    <div className="ml-32 mr-1 mb-2 space-y-2 rounded-md border border-border bg-background/60 p-3 text-xs">
+                    <div className="ml-32 mr-1 mb-2 space-y-2 rounded-xl border border-border/60 bg-background/60 p-3 text-xs">
                       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                         {[
                           ["Country", e.country],
@@ -197,7 +197,7 @@ function NewsPage() {
                           ["Release time", fmtTime(e.date)],
                         ].map(([label, value]) => (
                           <div key={label as string}>
-                            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                            <div className="text-[10px] tracking-tight text-muted-foreground">
                               {label}
                             </div>
                             <div className="text-foreground">{value}</div>
@@ -212,7 +212,7 @@ function NewsPage() {
                       <Link
                         to="/dashboard"
                         search={{ ask: `How should I trade around ${e.country} ${e.title}?` } as never}
-                        className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs hover:border-primary/60"
+                        className="inline-flex items-center gap-1 rounded-xl border border-border/60 px-2 py-1 text-xs hover:border-primary/60"
                       >
                         Ask the coach about this release
                       </Link>

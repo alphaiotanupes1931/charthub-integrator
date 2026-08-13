@@ -954,7 +954,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
                 style={{ left: b.left, width: b.width, top: b.top, height: Math.max(2, b.height), background: fill, border: `1px solid ${border}`, borderRadius: 2, boxShadow: `inset 0 0 0 9999px ${fill}` }}
               >
                 <span
-                  className="absolute left-1 text-[9px] font-mono uppercase tracking-wider whitespace-nowrap"
+                  className="absolute left-1 text-[9px] font-mono tracking-tight whitespace-nowrap"
                   style={{ top: labelTop, color: border }}
                 >
                   {b.label} · H {b.high.toFixed(2)} · L {b.low.toFixed(2)}
@@ -998,7 +998,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
             >
               {z.label && (
                 <span
-                  className="absolute -top-4 left-1 text-[9px] font-mono uppercase tracking-wider whitespace-nowrap"
+                  className="absolute -top-4 left-1 text-[9px] font-mono tracking-tight whitespace-nowrap"
                   style={{ color: z.color }}
                 >
                   {z.label}
@@ -1009,7 +1009,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
         </div>
       )}
 
-      <div className="absolute left-2 top-2 sm:left-3 sm:top-3 z-10 max-w-[55%] rounded-md border border-border bg-background/70 backdrop-blur px-1.5 py-1 sm:px-2 text-[9px] sm:text-[10px] font-mono text-muted-foreground uppercase tracking-wider flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+      <div className="absolute left-2 top-2 sm:left-3 sm:top-3 z-10 max-w-[55%] rounded-xl border border-border/60 bg-background/70 backdrop-blur px-1.5 py-1 sm:px-2 text-[9px] sm:text-[10px] font-mono text-muted-foreground tracking-tight flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
         <span className="truncate">{isLive ? "Live" : showLoader ? "Loading" : noLiveSource ? "Unavailable" : "Native"} · {ticker} · {interval}</span>
         <ChartSourceBadge
           live={isLive}
@@ -1044,7 +1044,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
         </div>
       )}
       {/* Live clock: local + UTC, honours 12h/24h preference */}
-      <div className="absolute right-2 top-2 sm:right-3 sm:top-3 z-10 max-w-[42%] rounded-md border border-border bg-background/70 backdrop-blur px-1.5 py-1 sm:px-2 text-[9px] sm:text-[10px] font-mono text-muted-foreground flex flex-wrap items-center justify-end gap-x-1.5 gap-y-0.5">
+      <div className="absolute right-2 top-2 sm:right-3 sm:top-3 z-10 max-w-[42%] rounded-xl border border-border/60 bg-background/70 backdrop-blur px-1.5 py-1 sm:px-2 text-[9px] sm:text-[10px] font-mono text-muted-foreground flex flex-wrap items-center justify-end gap-x-1.5 gap-y-0.5">
         <span className="text-foreground/90">{now.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: timeFormat === "12h", timeZone: resolvedTimezone })}</span>
         <span className="hidden sm:inline opacity-60">·</span>
         <span className="hidden sm:inline">{formatTime(now, timeFormat, { seconds: false, utc: true })} UTC</span>
@@ -1072,7 +1072,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
 
       {/* Draw toolbar (visible when drawMode is on) */}
       {drawMode && (
-        <div className="absolute right-2 bottom-11 sm:right-3 sm:bottom-12 z-40 flex flex-wrap items-center gap-1 rounded-md border border-border bg-background/90 backdrop-blur px-1.5 py-1 shadow-lg">
+        <div className="absolute right-2 bottom-11 sm:right-3 sm:bottom-12 z-40 flex flex-wrap items-center gap-1 rounded-xl border border-border/60 bg-background/90 backdrop-blur px-1.5 py-1 shadow-lg">
           {([
             { k: "pen", Icon: Pencil, label: "Pen" },
             { k: "line", Icon: LineIcon, label: "Line" },
@@ -1099,7 +1099,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
               onClick={() => setDrawColor(c)}
               title={c}
               aria-label={`Color ${c}`}
-              className={`h-4 w-4 rounded-sm border ${drawColor === c ? "border-foreground scale-110" : "border-border/60"} transition`}
+              className={`h-4 w-4 rounded-lg border ${drawColor === c ? "border-foreground scale-110" : "border-border/60"} transition`}
               style={{ background: c }}
             />
           ))}
@@ -1119,10 +1119,10 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
           onClick={() => setDrawMode((v) => !v)}
           title={drawMode ? "Exit draw mode" : "Draw on chart"}
           aria-label={drawMode ? "Exit draw mode" : "Draw on chart"}
-          className={`inline-flex items-center gap-1.5 rounded-md border backdrop-blur px-2 py-1.5 text-[10px] font-mono uppercase tracking-wider transition-colors ${
+          className={`inline-flex items-center gap-1.5 rounded-xl border backdrop-blur px-2 py-1.5 text-[10px] font-mono tracking-tight transition-colors ${
             drawMode
               ? "border-primary/50 bg-primary/15 text-primary hover:bg-primary/20"
-              : "border-border bg-background/80 hover:bg-background text-foreground/90 hover:text-foreground"
+              : "border-border/60 bg-background/80 hover:bg-background text-foreground/90 hover:text-foreground"
           }`}
         >
           {drawMode ? <CloseIcon className="h-3.5 w-3.5" /> : <Pencil className="h-3.5 w-3.5" />}
@@ -1133,26 +1133,26 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
           onClick={handleScreenshot}
           title="Save chart screenshot"
           aria-label="Save chart screenshot"
-          className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background/80 hover:bg-background backdrop-blur px-2 py-1.5 text-[10px] font-mono uppercase tracking-wider text-foreground/90 hover:text-foreground transition-colors"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-border/60 bg-background/80 hover:bg-background backdrop-blur px-2 py-1.5 text-[10px] font-mono tracking-tight text-foreground/90 hover:text-foreground transition-colors"
         >
           <Camera className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">Save</span>
         </button>
       </div>
       {sessions && (
-        <div className="absolute right-2 top-11 sm:right-3 sm:top-12 z-10 max-w-[60%] rounded-md border border-border bg-background/70 backdrop-blur px-1.5 py-1 sm:px-2 text-[9px] sm:text-[10px] font-mono text-muted-foreground flex flex-wrap items-center justify-end gap-x-1.5 gap-y-0.5">
+        <div className="absolute right-2 top-11 sm:right-3 sm:top-12 z-10 max-w-[60%] rounded-xl border border-border/60 bg-background/70 backdrop-blur px-1.5 py-1 sm:px-2 text-[9px] sm:text-[10px] font-mono text-muted-foreground flex flex-wrap items-center justify-end gap-x-1.5 gap-y-0.5">
           {getSessions(ticker).map((s) => (
             <span key={s.key} className="inline-flex items-center gap-1">
-              <span className="h-2 w-2 rounded-sm shrink-0" style={{ background: s.color.replace("0.10", "0.7") }} />
+              <span className="h-2 w-2 rounded-lg shrink-0" style={{ background: s.color.replace("0.10", "0.7") }} />
               {s.label}
             </span>
           ))}
         </div>
       )}
       {enabled.OF && candles.length > 0 && (
-        <div className="absolute left-2 bottom-2 sm:left-3 sm:bottom-3 z-10 max-w-[min(34rem,calc(100%-1rem))] rounded-md border border-border bg-background/80 backdrop-blur px-2 py-1.5 text-[10px] font-mono text-muted-foreground">
+        <div className="absolute left-2 bottom-2 sm:left-3 sm:bottom-3 z-10 max-w-[min(34rem,calc(100%-1rem))] rounded-xl border border-border/60 bg-background/80 backdrop-blur px-2 py-1.5 text-[10px] font-mono text-muted-foreground">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <span className="font-semibold uppercase tracking-wider text-foreground/90">Order flow</span>
+            <span className="font-semibold tracking-tight text-foreground/90">Order flow</span>
             <span className={levels.delta >= 0 ? "text-bull" : "text-red-300"}>
               Delta {levels.delta >= 0 ? "+" : ""}{levels.delta.toFixed(1)}
             </span>

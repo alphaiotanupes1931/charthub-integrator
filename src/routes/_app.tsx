@@ -8,7 +8,7 @@ const GATE_STEP_TIMEOUT_MS = 12_000;
 function GatePending() {
   return (
     <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-4">
-      <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 text-center shadow-sm">
+      <div className="w-full max-w-sm rounded-2xl border border-border/60 bg-card p-6 text-center shadow-sm">
         <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         <h1 className="mt-4 text-lg font-semibold">Opening your dashboard</h1>
         <p className="mt-2 text-sm text-muted-foreground">Checking your session and access.</p>
@@ -37,7 +37,7 @@ function GateError({ error }: { error: Error }) {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-4">
-      <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 text-center shadow-sm">
+      <div className="w-full max-w-sm rounded-2xl border border-border/60 bg-card p-6 text-center shadow-sm">
         <h1 className="text-lg font-semibold">
           {isChunkError ? "Updating to the latest version…" : "Dashboard access did not load"}
         </h1>
@@ -48,11 +48,11 @@ function GateError({ error }: { error: Error }) {
         </p>
         <div className="mt-5 flex flex-col gap-2">
           {!isChunkError && (
-            <a className="inline-flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" href="/auth?mode=signin&redirect=%2Fdashboard">
+            <a className="inline-flex h-10 items-center justify-center rounded-2xl bg-primary px-4 text-sm font-semibold text-primary-foreground" href="/auth?mode=signin&redirect=%2Fdashboard">
               Sign in again
             </a>
           )}
-          <button className="inline-flex h-10 items-center justify-center rounded-lg border border-border px-4 text-sm font-medium" onClick={() => window.location.reload()}>
+          <button className="inline-flex h-10 items-center justify-center rounded-2xl border border-border/60 px-4 text-sm font-medium" onClick={() => window.location.reload()}>
             Refresh
           </button>
         </div>

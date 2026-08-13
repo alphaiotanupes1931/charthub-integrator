@@ -164,7 +164,7 @@ function OnboardingPage() {
       <div className="w-full max-w-md">
 
         <LogoLink to="/" size="lg" variant="brand" textClassName="text-2xl" className="justify-center mb-8" />
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-sm">
           {step === "profile" && (
             <>
               <h1 className="text-xl font-semibold">Let's get you set up</h1>
@@ -177,7 +177,7 @@ function OnboardingPage() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="First and last"
-                    className="mt-1 w-full h-10 rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:border-primary/50"
+                    className="mt-1 w-full h-10 rounded-xl border border-border/60 bg-background px-3 text-sm focus:outline-none focus:border-primary/50"
                     maxLength={80}
                     required
                   />
@@ -192,8 +192,8 @@ function OnboardingPage() {
                           type="button"
                           key={s}
                           onClick={() => setSource(s)}
-                          className={`h-10 rounded-md border px-3 text-sm font-medium transition text-left ${
-                            active ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                          className={`h-10 rounded-xl border px-3 text-sm font-medium transition text-left ${
+                            active ? "border-primary bg-primary/10 text-primary" : "border-border/60 text-muted-foreground hover:border-primary/40 hover:text-foreground"
                           }`}
                         >
                           {s}
@@ -215,7 +215,7 @@ function OnboardingPage() {
               </p>
 
               <div className="mt-5 rounded-xl border-2 border-primary/40 bg-primary/5 p-4">
-                <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Recovery code</div>
+                <div className="text-[10px] tracking-tight text-muted-foreground font-medium">Recovery code</div>
                 <div className="mt-2 font-mono text-xl sm:text-2xl tracking-widest text-foreground select-all break-all">
                   {recoveryCode}
                 </div>
@@ -231,7 +231,7 @@ function OnboardingPage() {
                 </Button>
               </div>
 
-              <div className="mt-5 rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-foreground/80">
+              <div className="mt-5 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-foreground/80">
                 <strong className="text-amber-500">Important:</strong> we don't store this in a way we can show you again. If you lose it and forget your password, you'll need to contact support.
               </div>
 
@@ -267,8 +267,8 @@ function OnboardingPage() {
                 Without your recovery code, the only way back into your account is the password reset email. We recommend emailing it to yourself so it's safe in your inbox.
               </p>
 
-              <div className="mt-5 rounded-xl border border-border bg-muted/30 p-4">
-                <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Recovery code</div>
+              <div className="mt-5 rounded-xl border border-border/60 bg-muted/30 p-4">
+                <div className="text-[10px] tracking-tight text-muted-foreground font-medium">Recovery code</div>
                 <div className="mt-2 font-mono text-lg tracking-widest text-foreground select-all break-all">
                   {recoveryCode}
                 </div>

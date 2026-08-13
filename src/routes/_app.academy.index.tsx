@@ -49,7 +49,7 @@ function AcademyIndex() {
       />
 
       <div className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="sm:col-span-2 rounded-md border border-border bg-card p-4">
+        <div className="sm:col-span-2 rounded-xl border border-border/60 bg-card p-4">
           <div className="flex items-center justify-between mb-2">
             <div>
               <div className="text-sm font-semibold">Your progress</div>
@@ -57,11 +57,11 @@ function AcademyIndex() {
             </div>
             <div className="text-2xl font-semibold font-mono text-primary">{pct}%</div>
           </div>
-          <div className="h-1.5 rounded-md bg-background overflow-hidden">
+          <div className="h-1.5 rounded-xl bg-background overflow-hidden">
             <div className="h-full bg-primary transition-all" style={{ width: `${pct}%` }} />
           </div>
         </div>
-        <div className="rounded-md border border-border bg-card p-4">
+        <div className="rounded-xl border border-border/60 bg-card p-4">
           <div className="flex items-center gap-2 mb-1 text-sm font-semibold">
             <Flame className={`h-4 w-4 ${studiedToday ? "text-primary" : "text-muted-foreground"}`} />
             Study streak
@@ -81,13 +81,13 @@ function AcademyIndex() {
           <Link
             to="/academy/$moduleId/$lessonId"
             params={{ moduleId: String(resume.mod.id), lessonId: resume.lesson.id }}
-            className="group flex items-center gap-4 rounded-md border border-primary bg-card p-4"
+            className="group flex items-center gap-4 rounded-xl border border-primary bg-card p-4"
           >
-            <div className="h-10 w-10 rounded-md border border-border bg-background text-primary flex items-center justify-center shrink-0">
+            <div className="h-10 w-10 rounded-xl border border-border/60 bg-background text-primary flex items-center justify-center shrink-0">
               <PlayCircle className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-[10px] uppercase tracking-widest font-semibold text-primary">Resume where you left off</div>
+              <div className="text-[10px] tracking-tight font-semibold text-primary">Resume where you left off</div>
               <div className="font-semibold text-sm truncate">
                 Module {resume.mod.id}, Lesson {resume.index + 1}, {resume.lesson.title}
               </div>
@@ -99,13 +99,13 @@ function AcademyIndex() {
           <Link
             to="/academy/$moduleId"
             params={{ moduleId: "1" }}
-            className="group flex items-center gap-4 rounded-md border border-border bg-card p-4"
+            className="group flex items-center gap-4 rounded-xl border border-border/60 bg-card p-4"
           >
-            <div className="h-10 w-10 rounded-md border border-border bg-background text-primary flex items-center justify-center shrink-0">
+            <div className="h-10 w-10 rounded-xl border border-border/60 bg-background text-primary flex items-center justify-center shrink-0">
               <PlayCircle className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground">Start here</div>
+              <div className="text-[10px] tracking-tight font-semibold text-muted-foreground">Start here</div>
               <div className="font-semibold text-sm truncate">Module 1, Reading the chart</div>
               <div className="text-xs text-muted-foreground truncate">The first lesson every trader should get right.</div>
             </div>
@@ -115,13 +115,13 @@ function AcademyIndex() {
 
         <Link
           to="/academy/review"
-          className="group flex items-center gap-4 rounded-md border border-border bg-card p-4"
+          className="group flex items-center gap-4 rounded-xl border border-border/60 bg-card p-4"
         >
-          <div className="h-10 w-10 rounded-md border border-border bg-background text-primary flex items-center justify-center shrink-0">
+          <div className="h-10 w-10 rounded-xl border border-border/60 bg-background text-primary flex items-center justify-center shrink-0">
             <Target className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground">Practice missed questions</div>
+            <div className="text-[10px] tracking-tight font-semibold text-muted-foreground">Practice missed questions</div>
             <div className="font-semibold text-sm truncate">
               {reviewCount === 0 ? "Nothing to review yet" : `${reviewCount} question${reviewCount === 1 ? "" : "s"} to review`}
             </div>
@@ -136,13 +136,13 @@ function AcademyIndex() {
       <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-3">
         <Link
           to="/academy/exam"
-          className={`group flex items-center gap-4 rounded-md border p-4 ${allComplete ? "border-primary bg-card" : "border-border bg-card opacity-80"}`}
+          className={`group flex items-center gap-4 rounded-xl border p-4 ${allComplete ? "border-primary bg-card" : "border-border/60 bg-card opacity-80"}`}
         >
-          <div className="h-10 w-10 rounded-md border border-border bg-background text-primary flex items-center justify-center shrink-0">
+          <div className="h-10 w-10 rounded-xl border border-border/60 bg-background text-primary flex items-center justify-center shrink-0">
             <GraduationCap className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-[10px] uppercase tracking-widest font-semibold text-primary">Final exam</div>
+            <div className="text-[10px] tracking-tight font-semibold text-primary">Final exam</div>
             <div className="font-semibold text-sm truncate">
               {allComplete ? (finalPassed ? "Passed, retake anytime" : finalExam ? `Best ${finalExam.score}/${finalExam.total}, retry to pass` : "Take the comprehensive final") : "Unlocks after all 12 modules"}
             </div>
@@ -153,13 +153,13 @@ function AcademyIndex() {
 
         <Link
           to="/academy/master-certificate"
-          className={`group flex items-center gap-4 rounded-md border p-4 ${finalPassed ? "border-primary bg-card" : "border-border bg-card opacity-80"}`}
+          className={`group flex items-center gap-4 rounded-xl border p-4 ${finalPassed ? "border-primary bg-card" : "border-border/60 bg-card opacity-80"}`}
         >
-          <div className="h-10 w-10 rounded-md border border-border bg-background text-primary flex items-center justify-center shrink-0">
+          <div className="h-10 w-10 rounded-xl border border-border/60 bg-background text-primary flex items-center justify-center shrink-0">
             <Award className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground">Master certificate</div>
+            <div className="text-[10px] tracking-tight font-semibold text-muted-foreground">Master certificate</div>
             <div className="font-semibold text-sm truncate">
               {finalPassed ? "Available, print or save PDF" : "Locked"}
             </div>
@@ -183,7 +183,7 @@ function AcademyIndex() {
             <div
               key={m.id}
               id={`module-${m.id}`}
-              className="rounded-md border border-border bg-card p-4 flex flex-col"
+              className="rounded-xl border border-border/60 bg-card p-4 flex flex-col"
             >
               <Link
                 to="/academy/$moduleId"
@@ -191,13 +191,13 @@ function AcademyIndex() {
                 className="flex items-center gap-3 mb-2 group"
               >
                 <div
-                  className="h-10 w-10 rounded-md border border-border flex items-center justify-center font-semibold text-lg bg-background"
+                  className="h-10 w-10 rounded-xl border border-border/60 flex items-center justify-center font-semibold text-lg bg-background"
                   style={{ color: m.accent }}
                 >
                   {m.id}
                 </div>
                 <div className="min-w-0">
-                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Module {m.id}</div>
+                  <div className="text-[10px] tracking-tight text-muted-foreground font-semibold">Module {m.id}</div>
                   <div className="font-semibold truncate">{m.title}</div>
                 </div>
               </Link>
@@ -212,7 +212,7 @@ function AcademyIndex() {
                   </span>
                 )}
               </div>
-              <div className="h-1 rounded-md bg-background overflow-hidden mb-3">
+              <div className="h-1 rounded-xl bg-background overflow-hidden mb-3">
                 <div className="h-full transition-all bg-primary" style={{ width: `${pct}%` }} />
               </div>
 

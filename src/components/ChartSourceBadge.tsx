@@ -16,7 +16,7 @@ export function ChartSourceBadge({
   return (
     <span
       title={`Price data provider: ${label}`}
-      className={`inline-flex items-center gap-1 rounded-md border border-border bg-background/80 backdrop-blur px-1.5 py-0.5 text-[9px] sm:text-[10px] font-mono uppercase tracking-wider text-muted-foreground ${className}`}
+      className={`inline-flex items-center gap-1 rounded-xl border border-border/60 bg-background/80 backdrop-blur px-1.5 py-0.5 text-[9px] sm:text-[10px] font-mono tracking-tight text-muted-foreground ${className}`}
     >
       {live ? (
         <span className="h-1.5 w-1.5 rounded-full bg-bull animate-pulse" />

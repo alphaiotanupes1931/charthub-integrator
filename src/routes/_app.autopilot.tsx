@@ -68,9 +68,9 @@ function StatusPill({ status }: { status: string }) {
         ? "border-amber-600/40 text-amber-400"
         : status === "blocked" || status === "failed"
           ? "border-red-600/40 text-red-400"
-          : "border-border text-muted-foreground";
+          : "border-border/60 text-muted-foreground";
   return (
-    <span className={`rounded-md border px-2 py-0.5 text-[11px] uppercase tracking-wide ${tone}`}>{status}</span>
+    <span className={`rounded-xl border px-2 py-0.5 text-[11px] tracking-wide ${tone}`}>{status}</span>
   );
 }
 
@@ -200,8 +200,8 @@ function AutopilotPage() {
       />
 
       <section
-        className={`mt-6 rounded-md border p-4 ${
-          settings.pausedReason ? "border-red-600/50 bg-red-950/20" : "border-border bg-card"
+        className={`mt-6 rounded-xl border p-4 ${
+          settings.pausedReason ? "border-red-600/50 bg-red-950/20" : "border-border/60 bg-card"
         }`}
       >
         <div className="flex flex-wrap items-center gap-3">
@@ -222,7 +222,7 @@ function AutopilotPage() {
               type="button"
               onClick={() => pauseMutation.mutate(false)}
               disabled={pauseMutation.isPending}
-              className="flex items-center gap-2 rounded-md border border-emerald-600/50 px-3 py-1.5 text-xs text-emerald-400 disabled:opacity-60"
+              className="flex items-center gap-2 rounded-xl border border-emerald-600/50 px-3 py-1.5 text-xs text-emerald-400 disabled:opacity-60"
             >
               <Play className="h-3 w-3" /> Resume autopilot
             </button>
@@ -231,7 +231,7 @@ function AutopilotPage() {
               type="button"
               onClick={() => pauseMutation.mutate(true)}
               disabled={pauseMutation.isPending}
-              className="flex items-center gap-2 rounded-md border border-red-600/50 px-3 py-1.5 text-xs text-red-400 disabled:opacity-60"
+              className="flex items-center gap-2 rounded-xl border border-red-600/50 px-3 py-1.5 text-xs text-red-400 disabled:opacity-60"
             >
               <Pause className="h-3 w-3" /> Pause everything
             </button>
@@ -239,8 +239,8 @@ function AutopilotPage() {
         </div>
       </section>
 
-      <section className="mt-4 rounded-md border border-border bg-card p-5">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Automation level</h2>
+      <section className="mt-4 rounded-xl border border-border/60 bg-card p-5">
+        <h2 className="text-sm font-semibold tracking-wide text-muted-foreground">Automation level</h2>
         <div className="mt-3 grid gap-3 md:grid-cols-3">
           {(Object.keys(MODE_COPY) as AutopilotMode[]).map((mode) => {
             const active = settings.mode === mode;
@@ -249,8 +249,8 @@ function AutopilotPage() {
                 key={mode}
                 type="button"
                 onClick={() => setMode(mode)}
-                className={`rounded-md border p-4 text-left transition-colors ${
-                  active ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/50"
+                className={`rounded-xl border p-4 text-left transition-colors ${
+                  active ? "border-primary bg-primary/5" : "border-border/60 hover:border-muted-foreground/50"
                 }`}
               >
                 <div className="flex items-center gap-2 text-sm font-semibold">
@@ -264,8 +264,8 @@ function AutopilotPage() {
         </div>
       </section>
 
-      <section className="mt-4 rounded-md border border-border bg-card p-5">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Account</h2>
+      <section className="mt-4 rounded-xl border border-border/60 bg-card p-5">
+        <h2 className="text-sm font-semibold tracking-wide text-muted-foreground">Account</h2>
         <div className="mt-3 flex flex-wrap items-center gap-3">
           {(["paper", "live"] as const).map((target) => (
             <button
@@ -278,8 +278,8 @@ function AutopilotPage() {
                 }
                 save.mutate({ accountTarget: target });
               }}
-              className={`rounded-md border px-4 py-2 text-sm ${
-                settings.accountTarget === target ? "border-primary bg-primary/5" : "border-border"
+              className={`rounded-xl border px-4 py-2 text-sm ${
+                settings.accountTarget === target ? "border-primary bg-primary/5" : "border-border/60"
               }`}
             >
               {target === "paper" ? "Paper account" : "Live broker account"}
@@ -293,7 +293,7 @@ function AutopilotPage() {
         </div>
 
         {liveConfirmOpen && (
-          <div className="mt-4 rounded-md border border-red-600/40 bg-red-950/20 p-4">
+          <div className="mt-4 rounded-xl border border-red-600/40 bg-red-950/20 p-4">
             <div className="flex items-center gap-2 text-sm font-semibold text-red-400">
               <ShieldAlert className="h-4 w-4" />
               Before you switch to live
@@ -310,14 +310,14 @@ function AutopilotPage() {
                   save.mutate({ acknowledgeLive: true, accountTarget: "live" });
                   setLiveConfirmOpen(false);
                 }}
-                className="rounded-md border border-red-600/50 px-3 py-1.5 text-xs text-red-300"
+                className="rounded-xl border border-red-600/50 px-3 py-1.5 text-xs text-red-300"
               >
                 I understand, use my live account
               </button>
               <button
                 type="button"
                 onClick={() => setLiveConfirmOpen(false)}
-                className="rounded-md border border-border px-3 py-1.5 text-xs"
+                className="rounded-xl border border-border/60 px-3 py-1.5 text-xs"
               >
                 Cancel
               </button>
@@ -326,8 +326,8 @@ function AutopilotPage() {
         )}
       </section>
 
-      <section className="mt-4 rounded-md border border-border bg-card p-5">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Risk rails</h2>
+      <section className="mt-4 rounded-xl border border-border/60 bg-card p-5">
+        <h2 className="text-sm font-semibold tracking-wide text-muted-foreground">Risk rails</h2>
         <p className="mt-1 text-xs text-muted-foreground">
           A proposal that breaks any of these is blocked before it ever reaches your broker.
         </p>
@@ -337,7 +337,7 @@ function AutopilotPage() {
             <select
               value={settings.minGrade}
               onChange={(e) => save.mutate({ minGrade: e.target.value as AutopilotSettings["minGrade"] })}
-              className="mt-1 w-full rounded-md border border-border bg-background px-2 py-2 text-sm"
+              className="mt-1 w-full rounded-xl border border-border/60 bg-background px-2 py-2 text-sm"
             >
               <option value="A+">A+ only</option>
               <option value="A">A and above</option>
@@ -353,7 +353,7 @@ function AutopilotPage() {
               max="5"
               defaultValue={settings.riskPct}
               onBlur={(e) => save.mutate({ riskPct: Number(e.target.value) })}
-              className="mt-1 w-full rounded-md border border-border bg-background px-2 py-2 text-sm"
+              className="mt-1 w-full rounded-xl border border-border/60 bg-background px-2 py-2 text-sm"
             />
           </label>
           <label className="text-xs">
@@ -364,7 +364,7 @@ function AutopilotPage() {
               max="20"
               defaultValue={settings.maxOpenPositions}
               onBlur={(e) => save.mutate({ maxOpenPositions: Number(e.target.value) })}
-              className="mt-1 w-full rounded-md border border-border bg-background px-2 py-2 text-sm"
+              className="mt-1 w-full rounded-xl border border-border/60 bg-background px-2 py-2 text-sm"
             />
           </label>
           <label className="text-xs">
@@ -376,7 +376,7 @@ function AutopilotPage() {
               max="20"
               defaultValue={settings.maxDailyLossPct}
               onBlur={(e) => save.mutate({ maxDailyLossPct: Number(e.target.value) })}
-              className="mt-1 w-full rounded-md border border-border bg-background px-2 py-2 text-sm"
+              className="mt-1 w-full rounded-xl border border-border/60 bg-background px-2 py-2 text-sm"
             />
           </label>
         </div>
@@ -391,8 +391,8 @@ function AutopilotPage() {
                   key={symbol}
                   type="button"
                   onClick={() => toggleSymbol(symbol)}
-                  className={`rounded-md border px-3 py-1.5 text-xs ${
-                    on ? "border-primary bg-primary/5" : "border-border text-muted-foreground"
+                  className={`rounded-xl border px-3 py-1.5 text-xs ${
+                    on ? "border-primary bg-primary/5" : "border-border/60 text-muted-foreground"
                   }`}
                 >
                   {symbol}
@@ -403,16 +403,16 @@ function AutopilotPage() {
         </div>
       </section>
 
-      <section className="mt-4 rounded-md border border-border bg-card p-5">
+      <section className="mt-4 rounded-xl border border-border/60 bg-card p-5">
         <div className="flex flex-wrap items-center gap-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          <h2 className="text-sm font-semibold tracking-wide text-muted-foreground">
             Waiting for you ({pending.length})
           </h2>
           <button
             type="button"
             onClick={() => scanMutation.mutate()}
             disabled={scanMutation.isPending}
-            className="ml-auto flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-xs disabled:opacity-60"
+            className="ml-auto flex items-center gap-2 rounded-xl border border-border/60 px-3 py-1.5 text-xs disabled:opacity-60"
           >
             <RefreshCw className={`h-3 w-3 ${scanMutation.isPending ? "animate-spin" : ""}`} />
             {scanMutation.isPending ? "Scanning your instruments" : "Scan for setups"}
@@ -426,13 +426,13 @@ function AutopilotPage() {
         ) : (
           <ul className="mt-3 space-y-3">
             {pending.map((p) => (
-              <li key={p.id} className="rounded-md border border-border p-4">
+              <li key={p.id} className="rounded-xl border border-border/60 p-4">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-sm font-semibold">{p.symbol}</span>
-                  <span className="text-xs uppercase text-muted-foreground">
+                  <span className="text-xs text-muted-foreground">
                     {p.side} {p.timeframe ? `· ${p.timeframe}` : ""}
                   </span>
-                  {p.grade && <span className="rounded-md border border-border px-2 py-0.5 text-[11px]">{p.grade}</span>}
+                  {p.grade && <span className="rounded-xl border border-border/60 px-2 py-0.5 text-[11px]">{p.grade}</span>}
                   <span className="ml-auto flex items-center gap-1 text-[11px] text-muted-foreground">
                     <Clock className="h-3 w-3" />
                     expires {new Date(p.expiresAt).toLocaleTimeString()}
@@ -461,7 +461,7 @@ function AutopilotPage() {
                   </div>
                   <div>
                     <div className="text-muted-foreground">Account</div>
-                    <div className="font-mono uppercase">{p.accountTarget}</div>
+                    <div className="font-mono">{p.accountTarget}</div>
                   </div>
                 </div>
                 {p.reasoning && <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{p.reasoning}</p>}
@@ -470,7 +470,7 @@ function AutopilotPage() {
                     type="button"
                     disabled={decideMutation.isPending}
                     onClick={() => decideMutation.mutate({ id: p.id, decision: "approve" })}
-                    className="flex items-center gap-1 rounded-md border border-emerald-600/50 px-3 py-1.5 text-xs text-emerald-400"
+                    className="flex items-center gap-1 rounded-xl border border-emerald-600/50 px-3 py-1.5 text-xs text-emerald-400"
                   >
                     <Check className="h-3 w-3" />
                     {settings.accountTarget === "paper" ? "Approve and fill on paper" : "Approve and send to broker"}
@@ -479,7 +479,7 @@ function AutopilotPage() {
                     type="button"
                     disabled={decideMutation.isPending}
                     onClick={() => decideMutation.mutate({ id: p.id, decision: "reject" })}
-                    className="flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs"
+                    className="flex items-center gap-1 rounded-xl border border-border/60 px-3 py-1.5 text-xs"
                   >
                     <X className="h-3 w-3" /> Reject
                   </button>
@@ -490,8 +490,8 @@ function AutopilotPage() {
         )}
       </section>
 
-      <section className="mt-4 rounded-md border border-border bg-card p-5">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Decision feed</h2>
+      <section className="mt-4 rounded-xl border border-border/60 bg-card p-5">
+        <h2 className="text-sm font-semibold tracking-wide text-muted-foreground">Decision feed</h2>
         {history.length === 0 ? (
           <p className="mt-3 text-sm text-muted-foreground">Nothing recorded yet.</p>
         ) : (
@@ -499,7 +499,7 @@ function AutopilotPage() {
             {history.map((p) => (
               <li key={p.id} className="flex flex-wrap items-center gap-2 py-3 text-xs">
                 <span className="w-20 font-semibold">{p.symbol}</span>
-                <span className="uppercase text-muted-foreground">{p.side}</span>
+                <span className="text-muted-foreground">{p.side}</span>
                 <span className="font-mono text-muted-foreground">@ {p.entry}</span>
                 <StatusPill status={p.status} />
                 {p.rejectionReason && <span className="text-muted-foreground">{p.rejectionReason}</span>}
@@ -510,8 +510,8 @@ function AutopilotPage() {
         )}
       </section>
 
-      <section className="mt-4 rounded-md border border-border bg-card p-5">
-        <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+      <section className="mt-4 rounded-xl border border-border/60 bg-card p-5">
+        <h2 className="flex items-center gap-2 text-sm font-semibold tracking-wide text-muted-foreground">
           <ScrollText className="h-4 w-4" /> Activity log
         </h2>
         <p className="mt-1 text-xs text-muted-foreground">
@@ -523,7 +523,7 @@ function AutopilotPage() {
           <ul className="mt-3 divide-y divide-border">
             {(eventsQuery.data ?? []).map((e) => (
               <li key={e.id} className="flex flex-wrap items-baseline gap-2 py-2 text-xs">
-                <span className="w-20 shrink-0 rounded-md border border-border px-2 py-0.5 text-center text-[10px] uppercase tracking-wide text-muted-foreground">
+                <span className="w-20 shrink-0 rounded-xl border border-border/60 px-2 py-0.5 text-center text-[10px] tracking-wide text-muted-foreground">
                   {e.kind}
                 </span>
                 <span className="flex-1">{e.message}</span>

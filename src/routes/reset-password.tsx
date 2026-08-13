@@ -90,7 +90,7 @@ function ResetPasswordPage() {
           </span>
         </Link>
 
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-sm">
           <h1 className="text-xl font-semibold text-foreground">Choose a new password</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {recovery || ready
@@ -108,7 +108,7 @@ function ResetPasswordPage() {
                   autoComplete="new-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full h-10 rounded-md border border-border bg-background px-3 pr-10 text-sm focus:outline-none focus:border-primary/50"
+                  className="w-full h-10 rounded-xl border border-border/60 bg-background px-3 pr-10 text-sm focus:outline-none focus:border-primary/50"
                   minLength={12}
                   maxLength={72}
                   required
@@ -135,14 +135,14 @@ function ResetPasswordPage() {
                 autoComplete="new-password"
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
-                className="mt-1 w-full h-10 rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:border-primary/50"
+                className="mt-1 w-full h-10 rounded-xl border border-border/60 bg-background px-3 text-sm focus:outline-none focus:border-primary/50"
                 minLength={12}
                 maxLength={72}
                 required
               />
             </div>
             {errorMsg && (
-              <div role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+              <div role="alert" className="rounded-xl border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
                 {errorMsg}
               </div>
             )}

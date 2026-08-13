@@ -43,7 +43,7 @@ function ReviewPage() {
           description="Questions you missed on module quizzes show up here. Answer them right to clear them out."
           icon={<Target className="h-6 w-6 text-primary" />}
         />
-        <div className="rounded-md border border-border bg-card p-8 text-center">
+        <div className="rounded-xl border border-border/60 bg-card p-8 text-center">
           <CheckCircle2 className="h-8 w-8 text-primary mx-auto mb-3" />
           <div className="font-semibold mb-1">Nothing to review</div>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
@@ -93,7 +93,7 @@ function ReviewPage() {
         icon={<Target className="h-6 w-6 text-primary" />}
       />
 
-      <div className="rounded-md border border-border bg-card p-5 sm:p-6">
+      <div className="rounded-xl border border-border/60 bg-card p-5 sm:p-6">
         <div className="flex items-center justify-between text-xs text-muted-foreground mb-4">
           <span>
             Module {current.mod.id} · <span className="text-foreground/80">{current.mod.title}</span>
@@ -107,11 +107,11 @@ function ReviewPage() {
           {q.choices.map((c, j) => {
             const isPicked = picked === j;
             const isRight = q.answer === j;
-            let cls = "border-border bg-background hover:border-primary/40";
+            let cls = "border-border/60 bg-background hover:border-primary/40";
             if (revealed) {
               if (isRight) cls = "border-primary bg-primary/10 text-foreground";
               else if (isPicked) cls = "border-destructive bg-destructive/10";
-              else cls = "border-border bg-background opacity-60";
+              else cls = "border-border/60 bg-background opacity-60";
             } else if (isPicked) {
               cls = "border-primary bg-primary/5";
             }
@@ -121,7 +121,7 @@ function ReviewPage() {
                 type="button"
                 disabled={revealed}
                 onClick={() => setPicked(j)}
-                className={`text-left text-sm px-3 py-2.5 rounded-md border transition-colors ${cls}`}
+                className={`text-left text-sm px-3 py-2.5 rounded-xl border transition-colors ${cls}`}
               >
                 {c}
               </button>
@@ -153,14 +153,14 @@ function ReviewPage() {
             <button
               onClick={reveal}
               disabled={picked === null}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-semibold bg-primary text-primary-foreground border border-primary disabled:opacity-40 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold bg-primary text-primary-foreground border border-primary disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Check answer
             </button>
           ) : (
             <button
               onClick={next}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-semibold border border-border bg-card"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold border border-border/60 bg-card"
             >
               <RotateCcw className="h-3.5 w-3.5" /> Next question
             </button>
