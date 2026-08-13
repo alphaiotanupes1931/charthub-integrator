@@ -24,6 +24,8 @@ type BrokerSearch = {
 };
 
 import { AlpacaPanel } from "@/components/AlpacaPanel";
+import { OandaConnectPanel } from "@/components/OandaConnectPanel";
+
 
 export const Route = createFileRoute("/_app/broker")({
   validateSearch: (s: Record<string, unknown>): BrokerSearch => ({
