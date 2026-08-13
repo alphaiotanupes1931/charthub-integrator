@@ -246,10 +246,10 @@ function Landing() {
       </div>
 
       {/* HOW IT WORKS */}
-      <section id="product" className="px-5 sm:px-6 py-20 sm:py-28 border-b border-border/60 scroll-mt-24">
+      <section id="product" className="px-5 sm:px-6 py-16 sm:py-24 border-b border-border/60 scroll-mt-24">
         <div className="max-w-6xl mx-auto">
           <SectionEyebrow>How it works</SectionEyebrow>
-          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl text-center leading-tight">
+          <h2 className="font-display font-semibold tracking-[-0.03em] text-[1.75rem] sm:text-4xl md:text-[2.75rem] text-center leading-tight">
             Three steps, chart to decision.
           </h2>
           <p className="text-center text-sm sm:text-base text-muted-foreground mt-4 max-w-xl mx-auto">
@@ -278,7 +278,7 @@ function Landing() {
                 key={s.step}
                 className="rounded-xl border border-border/60 bg-card p-6 sm:p-8"
               >
-                <div className="font-mono text-xs tracking-tight text-primary">Step {s.step}</div>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Step {s.step}</div>
                 <h3 className="font-display text-xl sm:text-2xl mt-4">{s.title}</h3>
                 <p className="text-sm text-muted-foreground mt-3 leading-relaxed">{s.body}</p>
               </div>
@@ -288,11 +288,11 @@ function Landing() {
       </section>
 
       {/* GRADING SECTION */}
-      <section className="px-5 sm:px-6 py-20 sm:py-28 border-b border-border/60">
+      <section className="px-5 sm:px-6 py-16 sm:py-24 border-b border-border/60">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div>
             <SectionEyebrow align="left">Signal grading</SectionEyebrow>
-            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl leading-tight tracking-tight">
+            <h2 className="font-display font-semibold tracking-[-0.03em] text-[1.75rem] sm:text-4xl md:text-[2.75rem] leading-tight tracking-tight">
               Score every setup on six dimensions.
             </h2>
             <p className="text-sm sm:text-base text-muted-foreground mt-5 leading-relaxed max-w-md">
@@ -318,10 +318,10 @@ function Landing() {
       </section>
 
       {/* PRICING */}
-      <section id="pricing" className="px-5 sm:px-6 py-20 sm:py-28 border-b border-border/60 scroll-mt-24">
+      <section id="pricing" className="px-5 sm:px-6 py-16 sm:py-24 border-b border-border/60 scroll-mt-24">
         <div className="max-w-6xl mx-auto">
           <SectionEyebrow>Pricing</SectionEyebrow>
-          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl text-center leading-tight">
+          <h2 className="font-display font-semibold tracking-[-0.03em] text-[1.75rem] sm:text-4xl md:text-[2.75rem] text-center leading-tight">
             Plans that scale with your trading.
           </h2>
           <p className="text-center text-sm sm:text-base text-muted-foreground mt-4">
@@ -337,7 +337,7 @@ function Landing() {
                 }`}
               >
                 {p.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center rounded-xl border border-primary bg-background px-2 py-1 text-[10px] font-medium tracking-tight text-primary">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center rounded-full border border-primary bg-background px-2.5 py-1 text-[10px] font-medium tracking-tight text-primary">
                     Most popular
                   </div>
                 )}
@@ -349,7 +349,7 @@ function Landing() {
                 </div>
                 <a
                   href={isAuthed ? "/dashboard" : signupHref}
-                  className={`mt-6 block text-center rounded-xl px-5 py-3 text-sm font-semibold border ${
+                  className={`mt-6 block text-center rounded-full px-5 py-3 text-sm font-semibold border ${
                     p.popular
                       ? "bg-primary text-primary-foreground border-primary"
                       : "bg-foreground text-background border-foreground"
@@ -372,11 +372,11 @@ function Landing() {
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="px-5 sm:px-6 py-20 sm:py-28 border-b border-border/60 scroll-mt-24">
+      <section id="faq" className="px-5 sm:px-6 py-16 sm:py-24 border-b border-border/60 scroll-mt-24">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
             <SectionEyebrow>FAQ</SectionEyebrow>
-            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl leading-tight">
+            <h2 className="font-display font-semibold tracking-[-0.03em] text-[1.75rem] sm:text-4xl md:text-[2.75rem] leading-tight">
               Common questions.
             </h2>
           </div>
@@ -403,7 +403,7 @@ function Landing() {
           <div className="mt-10 text-center">
             <Link
               to="/faq"
-              className="inline-flex items-center gap-2 rounded-xl border border-border/60 bg-card px-5 py-2.5 text-sm font-medium"
+              className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card px-5 py-2.5 text-sm font-medium hover:bg-muted/60 transition-colors"
             >
               View all FAQ
               <ArrowRight className="size-4" />
@@ -413,16 +413,16 @@ function Landing() {
       </section>
 
       {/* FINAL CTA */}
-      <section className="px-5 sm:px-6 py-24 sm:py-32 border-b border-border/60">
+      <section className="px-5 sm:px-6 py-20 sm:py-28 border-b border-border/60">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="font-display text-3xl sm:text-4xl md:text-6xl leading-tight">
+          <h2 className="font-display font-semibold tracking-[-0.03em] text-[2rem] sm:text-4xl md:text-[3rem] leading-tight">
             Grade the next trade.
           </h2>
           <p className="text-sm sm:text-base text-muted-foreground mt-5">Free for 7 days. Cancel anytime.</p>
           <div className="mt-10">
             <a
               href={dashboardHref}
-              className="inline-flex items-center gap-2 rounded-xl bg-primary text-primary-foreground px-7 py-3.5 text-sm font-semibold border border-primary"
+              className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-7 py-3.5 text-sm font-semibold hover:opacity-90 transition-opacity"
             >
               Open dashboard
               <ArrowRight className="size-4" />
@@ -455,7 +455,7 @@ function Nav({ isAuthed }: { isAuthed: boolean }) {
           <Sheet>
             <SheetTrigger asChild>
               <button
-                className="sm:hidden inline-flex items-center justify-center rounded-xl border border-border/60 bg-card p-2"
+                className="sm:hidden inline-flex items-center justify-center rounded-full border border-border/60 bg-card p-2"
                 aria-label="Open menu"
               >
                 <Menu className="size-5" />
@@ -478,7 +478,7 @@ function Nav({ isAuthed }: { isAuthed: boolean }) {
                 <SheetClose asChild>
                   <a
                     href={dashboardHref}
-                    className="mt-4 inline-flex items-center justify-center rounded-xl bg-primary text-primary-foreground px-5 py-3 text-sm font-semibold border border-primary"
+                    className="mt-4 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground px-5 py-3 text-sm font-semibold"
                   >
                     Open dashboard
                   </a>
@@ -488,7 +488,7 @@ function Nav({ isAuthed }: { isAuthed: boolean }) {
           </Sheet>
           <a
             href={dashboardHref}
-            className="hidden sm:inline-flex rounded-xl bg-primary text-primary-foreground px-4 py-2 text-sm font-semibold border border-primary"
+            className="hidden sm:inline-flex rounded-full bg-primary text-primary-foreground px-4 py-2 text-sm font-semibold hover:opacity-90 transition-opacity"
           >
             Open dashboard
           </a>
@@ -530,16 +530,27 @@ function Footer({ dashboardHref }: { dashboardHref: string }) {
     },
   ];
   return (
-    <footer className="px-5 sm:px-6 py-16 bg-card">
-      <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
+    <footer className="px-5 sm:px-6 pt-14 pb-10 bg-card">
+      <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-10">
         <div className="col-span-2 md:col-span-1">
-          <p className="text-sm text-muted-foreground max-w-[240px] leading-relaxed">
+          <div className="flex items-center gap-2">
+            <img src={logoAsset.url} alt="TradeMind" className="h-7 w-7 rounded-full" loading="lazy" />
+            <span className="font-display text-base font-semibold tracking-[-0.02em]">TradeMind</span>
+          </div>
+          <p className="mt-4 text-sm text-muted-foreground max-w-[240px] leading-relaxed">
             Setup grading and trade review for active day, swing, and prop traders.
           </p>
+          <a
+            href={dashboardHref}
+            className="mt-5 inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-2.5 text-sm font-semibold hover:opacity-90 transition-opacity"
+          >
+            Open dashboard
+            <ArrowRight className="size-4" />
+          </a>
         </div>
         {cols.map((c) => (
           <div key={c.title}>
-            <div className="text-[11px] font-semibold tracking-tight text-muted-foreground mb-4">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground mb-4">
               {c.title}
             </div>
             <ul className="space-y-2.5">
@@ -560,20 +571,29 @@ function Footer({ dashboardHref }: { dashboardHref: string }) {
           </div>
         ))}
       </div>
-      <div className="max-w-7xl mx-auto mt-14 pt-6 border-t border-border/60 text-xs text-muted-foreground">
-        © {year ?? "2026"} TradeMind. Educational analysis only. Not financial advice.
+      <div className="max-w-6xl mx-auto mt-12 pt-6 border-t border-border/60 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
+        <span>© {year ?? "2026"} TradeMind. Educational analysis only. Not financial advice.</span>
+        <span className="flex items-center gap-4">
+          <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+          <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
+          <Link to="/status" className="hover:text-foreground transition-colors">Status</Link>
+        </span>
       </div>
     </footer>
+
   );
 }
 
 function SectionEyebrow({ children, align = "center" }: { children: React.ReactNode; align?: "center" | "left" }) {
   return (
-    <div className={`font-mono text-[11px] tracking-tight text-primary mb-6 ${align === "center" ? "text-center" : ""}`}>
-      {children}
+    <div className={`mb-6 flex ${align === "center" ? "justify-center" : "justify-start"}`}>
+      <span className="inline-flex items-center rounded-full border border-border/60 bg-card px-3 py-1 text-[11px] font-semibold tracking-tight text-muted-foreground">
+        {children}
+      </span>
     </div>
   );
 }
+
 
 function Bullet({ children }: { children: React.ReactNode }) {
   return (
@@ -609,7 +629,7 @@ function GradeChip({
   return (
     <div className={`rounded-xl border ${border} p-4 text-center bg-card`}>
       <div className={`font-display text-3xl ${color}`}>{grade}</div>
-      <div className="font-mono text-[10px] tracking-tight text-muted-foreground mt-2">{label}</div>
+      <div className="text-[10px] font-medium tracking-tight text-muted-foreground mt-2">{label}</div>
     </div>
   );
 }
