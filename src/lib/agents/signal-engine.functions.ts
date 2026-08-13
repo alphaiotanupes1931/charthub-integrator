@@ -24,9 +24,12 @@ export type Signal = {
 };
 
 const DEFAULT_WATCHLIST = [
-  "XAU/USD", "EUR/USD", "GBP/USD", "USD/JPY",
-  "BTC/USD", "ETH/USD", "NAS100", "SPX500",
+  "XAU/USD", "XAG/USD", "WTI Oil",
+  "NAS100", "SPX500", "US30",
+  "EUR/USD", "GBP/USD", "USD/JPY",
+  "BTC/USD", "ETH/USD",
 ];
+
 
 const Input = z.object({
   tickers: z.array(z.string().min(1).max(20)).optional(),
