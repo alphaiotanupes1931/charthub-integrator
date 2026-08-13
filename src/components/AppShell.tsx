@@ -14,6 +14,7 @@ import {
   Bell,
   MessageSquare,
   Settings as SettingsIcon,
+  LifeBuoy,
   UserCog,
   ShieldCheck,
   Search,
@@ -119,6 +120,7 @@ const NAV_GROUPS: NavGroup[] = [
     icon: Plug,
     items: [
       { to: "/discord", label: "Discord", icon: MessageSquare },
+      { to: "/contact", label: "Contact & Support", icon: LifeBuoy },
     ],
   },
 ];
@@ -159,6 +161,7 @@ const MOBILE_NAV: NavItem[] = [
   { to: "/coaches",    label: "AI Coaches",      icon: Users },
   { to: "/analytics",  label: "Analytics",       icon: BarChart3 },
   { to: "/settings",   label: "Settings",        icon: SettingsIcon },
+  { to: "/contact",    label: "Contact & Support", icon: LifeBuoy },
 ];
 
 
