@@ -36,6 +36,7 @@ import { coalesceUiMessageStream, textFromUiMessageParts } from "@/lib/chat-stre
 import { ConceptDiagram } from "@/components/ConceptDiagram";
 import { buildLearningPromptBlock } from "@/lib/signalLearning";
 import { takeTrade } from "@/lib/signalHistory";
+import { AiCreditNotice } from "@/components/AiCreditNotice";
 
 export type DashboardChatHandle = {
   scan: (prompt: string, targetThreadId?: string | null) => void;
