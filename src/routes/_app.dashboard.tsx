@@ -1829,6 +1829,8 @@ function Dashboard() {
                         chart={{
                           ticker: symbolLabel(symbol),
                           intervalLabel,
+                          tvSymbol: symbol.tv,
+                          interval,
                           enabledLevels: ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none",
                           snapshot: snapshot ?? undefined,
                         }}
