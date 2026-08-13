@@ -782,16 +782,6 @@ function Dashboard() {
     return () => query.removeEventListener("change", update);
   }, []);
 
-  const openTradingFloor = () => {
-    const url = `https://www.tradingview.com/chart/?symbol=${encodeURIComponent(symbol.tv)}`;
-    const width = Math.min(1100, Math.round(window.screen.availWidth * 0.6));
-    const height = Math.round(window.screen.availHeight * 0.92);
-    const left = Math.max(0, window.screen.availWidth - width);
-    const features = `popup=yes,width=${width},height=${height},left=${left},top=0`;
-    const w = window.open(url, "trademind_tv_floor", features);
-    if (!w) { toast.error("Popup blocked - allow popups to open the trading floor."); return; }
-    w.focus();
-  };
 
 
   useEffect(() => {
