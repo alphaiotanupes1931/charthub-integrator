@@ -559,9 +559,40 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
   // Push candle data
   useEffect(() => {
     if (!ready || !seriesRef.current || !chartRef.current) return;
-    seriesRef.current.setData(displayCandles);
-    chartRef.current.timeScale().fitContent();
+    try {
+      seriesRef.current.setData(displayCandles);
+      chartRef.current.timeScale().fitContent();
+    } catch (err) {
+      setInitError(err instanceof Error ? err.message : "Chart data could not be drawn");
+    }
   }, [displayCandles, ready]);
+
+  // Blank-panel guard: if we have candles but the canvas never got real pixels
+  // (hidden container at mount, zero-size layout, engine hiccup), fall back to
+  // the SVG renderer instead of showing an empty box.
+  useEffect(() => {
+    if (displayCandles.length === 0) { setNotPainted(false); return; }
+    let cancelled = false;
+    const check = () => {
+      if (cancelled) return;
+      const host = containerRef.current;
+      const canvas = host?.querySelector("canvas") as HTMLCanvasElement | null;
+      const w = host?.clientWidth ?? 0;
+      const h = host?.clientHeight ?? 0;
+      const blank = !ready || !canvas || canvas.width < 2 || canvas.height < 2 || w < 2 || h < 2;
+      setNotPainted(blank);
+      if (blank && chartRef.current && w > 2 && h > 2) {
+        // Nudge the engine to re-measure and redraw.
+        try {
+          chartRef.current.applyOptions({ autoSize: true });
+          chartRef.current.timeScale().fitContent();
+        } catch { /* ignore */ }
+      }
+    };
+    const t1 = window.setTimeout(check, 900);
+    const t2 = window.setTimeout(check, 2500);
+    return () => { cancelled = true; window.clearTimeout(t1); window.clearTimeout(t2); };
+  }, [displayCandles, ready, initAttempt]);
 
   // Sync overlays from `enabled` toggles
   useEffect(() => {
