@@ -524,6 +524,7 @@ NUMBER RULES (STRICT - the client rejects violations):
 - Match the same decimal precision as lastPrice (e.g. lastPrice 1.0842 → 4 decimals; 21453.25 → 2 decimals). Never round to whole numbers when lastPrice has decimals.
 - Directional consistency: LONG requires stop < entry < tp1 < tp2. SHORT requires stop > entry > tp1 > tp2. Never violate this.
 - Entry must sit near lastPrice (within ~0.5%) unless you are explicitly proposing a pending order at a level shown on the chart.
+- NO-DATA RULE: if there is no LIVE CHART block with a "Last price" above, you must NOT state any price, level, zone, or range from memory - not even approximately. Say the chart isn't loaded, tell them to select the instrument, and offer the concept/process answer instead. Inventing levels is the single worst thing you can do here.
 
 2) Concept diagram - when the concept doesn't cleanly map to current price or the user asked "what is X":
 \`\`\`concept-diagram
