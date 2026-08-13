@@ -36,6 +36,7 @@ import { coalesceUiMessageStream, textFromUiMessageParts } from "@/lib/chat-stre
 import { ConceptDiagram } from "@/components/ConceptDiagram";
 import { buildLearningPromptBlock } from "@/lib/signalLearning";
 import { takeTrade } from "@/lib/signalHistory";
+import { AiCreditNotice } from "@/components/AiCreditNotice";
 
 export type DashboardChatHandle = {
   scan: (prompt: string, targetThreadId?: string | null) => void;
@@ -725,6 +726,8 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
             )}
           </div>
         </div>
+
+        <AiCreditNotice />
 
         <Conversation className="flex-1 min-h-0">
           <ConversationContent className="px-3 py-4">

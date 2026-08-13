@@ -640,6 +640,20 @@ export const Route = createFileRoute("/api/chat")({
   server: {
     handlers: {
       OPTIONS: async ({ request }) => preflight(request) ?? new Response(null, { status: 204 }),
+      // Lightweight health probe so the UI can tell the trader when the Claude
+      // account is out of credits (replies still work on the fallback model).
+      GET: async ({ request }) => {
+        const cors = corsHeadersFor(request);
+        const anthropicKey = process.env.ANTHROPIC_API_KEY;
+        const claudeOk = !!anthropicKey && (await anthropicUsable(anthropicKey));
+        return Response.json(
+          {
+            claude: !anthropicKey ? "not_configured" : claudeOk ? "ok" : "out_of_credits",
+            fallbackActive: !claudeOk,
+          },
+          { headers: cors },
+        );
+      },
       POST: async ({ request }) => {
         const reqId = getOrCreateRequestId(request);
         const originBlock = enforceOrigin(request);
