@@ -22,6 +22,7 @@ import { SCAN_LENSES, readActiveLensId, writeActiveLensId, findLens, type ScanLe
 import { clearLastThreadId, readActiveCoach, writeActiveCoach, COACH_KEY, writeLastChart, readLastThreadId, writeLastThreadId } from "@/lib/chat-client";
 import { voiceForCoach } from "@/lib/coachVoices";
 import { COACH_ICON_META, DEFAULT_COACH_ICON } from "@/lib/coachMeta";
+import { reportSystemNotice } from "@/lib/notifications.functions";
 import { runResearchPlan } from "@/lib/agents/research.functions";
 import { recordHermesFeedback } from "@/lib/agents/hermes.functions";
 import { listChatThreads, createChatThread, deleteChatThread, getActiveModel, type ActiveModelInfo } from "@/lib/chat.functions";
@@ -842,6 +843,7 @@ function Dashboard() {
   }, [symbol.ticker, interval]);
 
   const runPlan = useServerFn(runResearchPlan);
+  const reportSystemNoticeFn = useServerFn(reportSystemNotice);
   const createChatThreadFn = useServerFn(createChatThread);
 
   const sendToChat = (prompt: string, opts?: { focusChat?: boolean; targetThreadId?: string | null }) => {
