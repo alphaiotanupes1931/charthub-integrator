@@ -77,8 +77,10 @@ export const submitSupportRequest = createServerFn({ method: "POST" })
           html,
           text,
           purpose: "transactional",
+          idempotency_key: `support:${ticket.id}`,
           label: `support_${data.kind}`,
           queued_at: new Date().toISOString(),
+
         },
       } as never);
       if (qErr) throw new Error(qErr.message);
