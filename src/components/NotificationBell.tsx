@@ -235,33 +235,32 @@ export function NotificationBell() {
 
 
             {/* Action bar */}
-            <div className="shrink-0 flex items-center gap-1 px-3 py-2 border-b border-border/60 text-xs bg-card">
+            <div className="shrink-0 flex items-center gap-3 px-4 py-2 border-b border-border text-xs">
               <button
                 onClick={() => mAll.mutate()}
                 disabled={unread === 0 || mAll.isPending}
-                className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition"
+                className="font-medium text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed transition"
               >
-                <CheckCheck className="h-3.5 w-3.5" />
                 Mark all read
               </button>
               <button
                 onClick={() => mClr.mutate()}
                 disabled={!hasRead || mClr.isPending}
-                className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition"
+                className="font-medium text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed transition"
               >
-                <Trash2 className="h-3.5 w-3.5" />
                 Clear read
               </button>
               <div className="flex-1" />
               <button
                 onClick={() => mTest.mutate()}
                 disabled={mTest.isPending}
-                className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-muted-foreground/70 hover:text-foreground hover:bg-muted transition"
+                className="font-medium text-muted-foreground/70 hover:text-foreground transition"
                 title="Create a test notification"
               >
                 Test
               </button>
             </div>
+
 
             {/* List */}
             <div className="flex-1 overflow-y-auto">
