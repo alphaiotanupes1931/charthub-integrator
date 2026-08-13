@@ -53,6 +53,27 @@ export const acceptInvite = createServerFn({ method: "POST" })
     const { data: inviterId, error } = await supabaseAdmin.rpc("redeem_invite", { _user_id: context.userId, _code: code });
     if (error) throw new Error(error.message);
     if (!inviterId) throw new Error("Invite not found");
+
+    // Tell the inviter their invite landed.
+    try {
+      const { createNotificationOnce } = await import("@/lib/notifications.server");
+      const { data: profile } = await supabaseAdmin
+        .from("profiles")
+        .select("display_name, email")
+        .eq("id", context.userId)
+        .maybeSingle();
+      const who = profile?.display_name || profile?.email || "A new trader";
+      await createNotificationOnce(`invite:accepted:${code}`, {
+        userId: inviterId as string,
+        kind: "info",
+        title: "Your invite was accepted",
+        body: `${who} joined TradeMind with your invite code.`,
+        url: "/friends",
+      });
+    } catch (e) {
+      console.warn("[social] invite_notify_failed", (e as Error).message);
+    }
+
     return { ok: true, inviterId: inviterId as string };
   });
 

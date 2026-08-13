@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Trophy, RefreshCw, Medal } from "lucide-react";
-import { getLeaderboard, getMyOptIn, setMyOptIn, type LeaderboardRow } from "@/lib/leaderboard.functions";
+import { getLeaderboard, getMyOptIn, setMyOptIn, checkMyLeaderboardRank, type LeaderboardRow } from "@/lib/leaderboard.functions";
 
 export const Route = createFileRoute("/_app/leaderboard")({
   head: () => ({
@@ -24,6 +24,7 @@ function LeaderboardPage() {
   const fetchBoard = useServerFn(getLeaderboard);
   const fetchOptIn = useServerFn(getMyOptIn);
   const saveOptIn = useServerFn(setMyOptIn);
+  const checkRank = useServerFn(checkMyLeaderboardRank);
 
   const [rows, setRows] = useState<LeaderboardRow[]>([]);
   const [mine, setMine] = useState<OptIn>(null);
@@ -47,6 +48,13 @@ function LeaderboardPage() {
   }
 
   useEffect(() => { refresh(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+
+  // Drop an inbox notification when the trader's rank has moved since we last
+  // told them. Deduped server-side, so a refresh cannot spam the inbox.
+  useEffect(() => {
+    void checkRank().catch(() => { /* silent: notifications are best-effort */ });
+    /* eslint-disable-next-line react-hooks/exhaustive-deps */
+  }, []);
 
   async function save() {
     if (!/^[A-Za-z0-9_-]{2,24}$/.test(handle)) {
