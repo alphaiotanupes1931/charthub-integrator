@@ -713,8 +713,8 @@ function TradeRow({ t, onEdit, onDelete }: { t: Trade; onEdit: (t: Trade) => voi
       </div>
       {t.threadId && (
         <Link
-          to="/dashboard"
-          search={{ thread: t.threadId } as never}
+          to="/chat/$threadId"
+          params={{ threadId: t.threadId }}
           className="shrink-0 inline-flex items-center gap-1 rounded-xl border border-border/60 px-2 py-1 text-[10px] font-semibold text-muted-foreground hover:text-foreground hover:bg-accent/40"
           title="Open the AI chat this trade came from"
         >
