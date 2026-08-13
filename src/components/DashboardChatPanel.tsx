@@ -519,11 +519,15 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
           const stratName = readActiveStrategy();
           const strategy = stratName ? findStrategyByName(stratName) ?? { name: stratName } : null;
           const lens = findLens(readActiveLensId());
+          const coach = readActiveCoach();
+          const previousCoach = lastSentCoachRef.current;
+          lastSentCoachRef.current = coach;
           return {
             body: {
               messages,
               threadId: id,
-              coach: readActiveCoach(),
+              coach,
+              previousCoach,
               journal: readJournal(),
               chart: chartRef.current,
               strategy,
@@ -532,6 +536,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
             },
           };
         },
+
       }),
       onError: (err) => {
         console.error(err);
