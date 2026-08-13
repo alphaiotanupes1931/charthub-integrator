@@ -116,35 +116,21 @@ function Landing() {
     <div className="min-h-screen w-full text-foreground">
       <Nav isAuthed={isAuthed} />
 
-      {/* HERO — single staggered entrance */}
-      <section className="relative overflow-hidden px-5 sm:px-6 pt-16 sm:pt-24 pb-12 sm:pb-16 border-b border-border">
-        {/* Background video */}
-        <div className="pointer-events-none absolute inset-0 -z-10">
-          <iframe
-            className="absolute left-1/2 top-1/2 h-[300%] w-[300%] sm:h-[200%] sm:w-[200%] -translate-x-1/2 -translate-y-1/2"
-            src="https://www.youtube.com/embed/U8b3l__Av_A?autoplay=1&mute=1&loop=1&playlist=U8b3l__Av_A&controls=0&showinfo=0&modestbranding=1&rel=0&iv_load_policy=3&playsinline=1&disablekb=1"
-            title="Hero background"
-            frameBorder={0}
-            allow="autoplay; encrypted-media; picture-in-picture"
-            aria-hidden="true"
-            tabIndex={-1}
-          />
-          <div className="absolute inset-0 bg-background/70 backdrop-blur-sm" />
-        </div>
-
+      {/* COVER — quiet, centered, type-led. No background video, no chrome. */}
+      <section className="px-5 sm:px-6 pt-20 sm:pt-32 pb-16 sm:pb-24 border-b border-border">
         <motion.div
           variants={heroContainer}
           initial="hidden"
           animate="show"
-          className="relative max-w-4xl mx-auto text-center"
+          className="max-w-3xl mx-auto text-center"
         >
-          <motion.div
+          <motion.img
             variants={heroItem}
-            className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1 text-xs text-muted-foreground"
-          >
-            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-            Public beta
-          </motion.div>
+            src={logoAsset.url}
+            alt="TradeMind"
+            className="mx-auto h-12 w-12 rounded-xl border border-border"
+            loading="eager"
+          />
 
           <motion.h1 variants={heroItem} className="h-display-xl mt-8">
             Grade the setup.
@@ -154,38 +140,38 @@ function Landing() {
 
           <motion.p
             variants={heroItem}
-            className="mt-6 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed"
+            className="mt-6 text-base sm:text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed"
           >
-            TradeMind scores every setup on structure, risk, and confluence. You see the grade before you enter, so you take the ones that meet your rules and skip the rest.
+            TradeMind scores every setup on structure, risk, and confluence, so you take the
+            ones that meet your rules and skip the rest.
           </motion.p>
 
-          <motion.div variants={heroItem} className="mt-10 flex flex-col items-center gap-4">
-            <div className="flex flex-col sm:flex-row items-center gap-3">
-              <a
-                href={dashboardHref}
-                className="inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground px-6 py-3 text-sm font-semibold border border-primary"
+          <motion.div variants={heroItem} className="mt-10 flex flex-col items-center gap-5">
+            <a
+              href={dashboardHref}
+              className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground px-7 py-3 text-sm font-semibold"
+            >
+              Open dashboard
+              <ArrowRight className="size-4" />
+            </a>
+            {!isAuthed && (
+              <Link
+                to="/auth"
+                search={{ mode: "signin" }}
+                className="text-sm text-muted-foreground hover:text-foreground"
               >
-                Open dashboard
-                <ArrowRight className="size-4" />
-              </a>
-              {!isAuthed && (
-                <Link
-                  to="/auth"
-                  search={{ mode: "signin" }}
-                  className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-6 py-3 text-sm font-medium"
-                >
-                  Log in
-                </Link>
-              )}
-            </div>
-            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
+                Already have an account? <span className="text-primary font-medium">Log in</span>
+              </Link>
+            )}
+            <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
               <Bullet>7-day free trial</Bullet>
               <Bullet>Cancel anytime</Bullet>
-              <Bullet>SOC2 compliant</Bullet>
+              <Bullet>Public beta</Bullet>
             </div>
           </motion.div>
         </motion.div>
       </section>
+
 
 
       {/* LIVE CHART PREVIEW */}
