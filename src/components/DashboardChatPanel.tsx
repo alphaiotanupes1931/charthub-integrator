@@ -379,9 +379,10 @@ function GradeCard({ grade, lastPrice, symbol, interval }: { grade: ChartGrade; 
               tp: grade.tp1 ?? "",
             } as never}
             className="inline-flex h-7 items-center gap-1 rounded border border-border/60 px-2 text-[10px] font-bold tracking-tight text-foreground hover:bg-muted/60"
-            title="Send this setup to your broker"
+            title="Sign in to your OANDA account and place this trade"
           >
-            <Zap className="h-3 w-3" /> Broker
+            <Zap className="h-3 w-3" /> Take this trade
+
           </Link>
         </div>
       )}
