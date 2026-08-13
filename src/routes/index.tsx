@@ -182,15 +182,19 @@ function Landing() {
             >
               <div className="flex items-center gap-2">
                 <div className="flex -space-x-2">
-                  {["JD", "MK", "AR", "TP"].map((i) => (
-                    <span
-                      key={i}
-                      className="inline-flex h-7 w-7 items-center justify-center rounded-full border-2 border-background bg-muted text-[9px] font-semibold text-muted-foreground"
-                    >
-                      {i}
-                    </span>
+                  {TRADER_AVATARS.map((src, i) => (
+                    <img
+                      key={src}
+                      src={src}
+                      alt={`TradeMind trader ${i + 1}`}
+                      width={512}
+                      height={512}
+                      loading="lazy"
+                      className="h-7 w-7 rounded-full border-2 border-background object-cover bg-muted"
+                    />
                   ))}
                 </div>
+
                 <span className="text-xs text-muted-foreground">
                   Traders grading setups daily
                 </span>
