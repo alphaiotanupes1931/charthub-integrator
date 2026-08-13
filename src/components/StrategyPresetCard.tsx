@@ -18,14 +18,12 @@ export function StrategyPresetCard({ name, className = "" }: { name: string | nu
   if ("winRate" in s && s.winRate != null) meta.push(`${s.winRate}% baseline win rate`);
 
   return (
-    <div className={`border-b border-border/60 bg-card/30 px-3 py-2 text-xs ${className}`}>
-      <div className="flex w-full items-center gap-2 text-left">
-        <BookOpen className="h-3.5 w-3.5 text-primary shrink-0" />
-        <span className="font-semibold">Strategy in use: {s.name}</span>
-        {meta.length > 0 && (
-          <span className="hidden sm:inline text-muted-foreground truncate">{meta.join(" · ")}</span>
-        )}
-      </div>
+    <div className={`flex min-w-0 items-center gap-2 text-[11px] ${className}`}>
+      <BookOpen className="h-3.5 w-3.5 shrink-0 text-primary" />
+      <span className="truncate font-medium text-foreground/80">{s.name}</span>
+      {meta.length > 0 && (
+        <span className="hidden xl:inline truncate text-muted-foreground">{meta.join(" · ")}</span>
+      )}
     </div>
   );
 }
