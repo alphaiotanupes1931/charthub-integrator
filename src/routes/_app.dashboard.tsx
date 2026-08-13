@@ -1155,22 +1155,22 @@ function Dashboard() {
   return (
     <div className="h-full flex flex-col overflow-hidden">
       {/* Row 1: symbol + timeframes + right-side pickers */}
-      <div className="shrink-0 flex items-center gap-4 px-4 py-2.5 border-b border-border/60 bg-card/40">
+      <div className="shrink-0 flex items-center gap-4 px-5 py-3 border-b border-border/50 bg-background">
 
 
         <div className="relative shrink-0" ref={pickerRef} data-tour="symbol-picker">
           <button
             onClick={() => setPickerOpen((o) => !o)}
-            className="inline-flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm hover:bg-accent/40 transition"
+            className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm hover:bg-accent/60 transition"
             aria-haspopup="listbox"
             aria-expanded={pickerOpen}
           >
-            <span className="h-2 w-2 rounded-full bg-primary shadow-[0_0_8px_var(--primary)]" />
+            <span className="h-2 w-2 rounded-full bg-bull" />
             <span className="font-display text-base font-semibold tracking-tight uppercase">{symbol.ticker.replace("/", "").replace("XAUUSD", "GOLD")}</span>
             <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${pickerOpen ? "rotate-180" : ""}`} />
           </button>
           {pickerOpen && (
-            <div role="listbox" className="absolute left-0 mt-2 w-[min(18rem,calc(100vw-2rem))] max-h-80 overflow-y-auto rounded-lg border border-border bg-card shadow-xl z-50">
+            <div role="listbox" className="absolute left-0 mt-2 w-[min(18rem,calc(100vw-2rem))] max-h-80 overflow-y-auto rounded-2xl border border-border bg-card shadow-xl z-50">
               {SYMBOLS.map((s) => {
                 const active = s.tv === symbol.tv;
                 return (
@@ -1196,12 +1196,12 @@ function Dashboard() {
         </div>
 
         {/* Timeframe pills */}
-        <div className="flex items-center gap-0.5 overflow-x-auto min-w-0 rounded-lg bg-muted/40 p-0.5">
+        <div className="flex items-center gap-0.5 overflow-x-auto min-w-0 rounded-full bg-accent/60 p-1">
           {INTERVALS.map((i) => (
             <button
               key={i.value}
               onClick={() => setIntervalState(i.value)}
-              className={`shrink-0 rounded-md px-2.5 py-1 text-[11px] font-medium transition ${
+              className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-semibold transition ${
                 interval === i.value ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -1218,7 +1218,7 @@ function Dashboard() {
           <div className="relative" ref={lensRef}>
             <button
               onClick={() => setLensOpen((o) => !o)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-border h-8 bg-background/50 px-3 text-xs font-medium hover:border-primary/50 transition"
+              className="inline-flex items-center gap-1.5 rounded-full h-9 bg-accent/60 px-3.5 text-xs font-medium text-foreground hover:bg-accent transition"
               title="Scan lens"
             >
               <Crosshair className="h-3.5 w-3.5 text-primary" />
@@ -1226,7 +1226,7 @@ function Dashboard() {
               <ChevronDown className={`h-3 w-3 transition-transform ${lensOpen ? "rotate-180" : ""}`} />
             </button>
             {lensOpen && (
-              <div role="listbox" className="absolute right-0 mt-2 w-72 max-h-96 overflow-y-auto rounded-lg border border-border bg-card shadow-xl z-50">
+              <div role="listbox" className="absolute right-0 mt-2 w-72 max-h-96 overflow-y-auto rounded-2xl border border-border bg-card shadow-xl z-50">
                 {SCAN_LENSES.map((l) => {
                   const isActive = l.id === lensId;
                   return (
@@ -1262,7 +1262,7 @@ function Dashboard() {
               <div className="relative" ref={coachRef}>
                 <button
                   onClick={() => setCoachOpen((o) => !o)}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-border h-8 bg-background/50 px-3 text-xs font-medium hover:border-primary/50 transition"
+                  className="inline-flex items-center gap-1.5 rounded-full h-9 bg-accent/60 px-3.5 text-xs font-medium text-foreground hover:bg-accent transition"
                   title="Change active AI coach"
                 >
                   <span className={`inline-flex h-5 w-5 items-center justify-center rounded-md ${meta.iconBg} ${meta.iconText} shrink-0`}>
@@ -1272,7 +1272,7 @@ function Dashboard() {
                   <ChevronDown className={`h-3 w-3 transition-transform ${coachOpen ? "rotate-180" : ""}`} />
                 </button>
                 {coachOpen && (
-                  <div role="listbox" className="absolute right-0 mt-2 w-72 max-h-96 overflow-y-auto rounded-lg border border-border bg-card shadow-xl z-50">
+                  <div role="listbox" className="absolute right-0 mt-2 w-72 max-h-96 overflow-y-auto rounded-2xl border border-border bg-card shadow-xl z-50">
                     {coachNames.map((name) => {
                       const m = COACH_ICON_META[name] ?? DEFAULT_COACH_ICON;
                       const CIcon = m.icon;
@@ -1319,7 +1319,7 @@ function Dashboard() {
           <div className="relative" ref={strategyRef}>
             <button
               onClick={() => setStrategyOpen((o) => !o)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-border h-8 bg-background/50 px-3 text-xs font-medium hover:border-primary/50 transition"
+              className="inline-flex items-center gap-1.5 rounded-full h-9 bg-accent/60 px-3.5 text-xs font-medium text-foreground hover:bg-accent transition"
               title="Change the strategy playbook your scans are graded against"
             >
               <BookOpen className="h-3.5 w-3.5 text-primary" />
@@ -1327,7 +1327,7 @@ function Dashboard() {
               <ChevronDown className={`h-3 w-3 transition-transform ${strategyOpen ? "rotate-180" : ""}`} />
             </button>
             {strategyOpen && (
-              <div role="listbox" className="absolute right-0 mt-2 w-72 max-h-96 overflow-y-auto rounded-lg border border-border bg-card shadow-xl z-50">
+              <div role="listbox" className="absolute right-0 mt-2 w-72 max-h-96 overflow-y-auto rounded-2xl border border-border bg-card shadow-xl z-50">
                 <button
                   role="option"
                   aria-selected={!activeStrategy}
@@ -1372,11 +1372,11 @@ function Dashboard() {
       </div>
 
       {/* Row 2: Live / Setup segmented control + chart controls */}
-      <div className="shrink-0 flex items-center gap-3 px-4 py-2.5 border-b border-border/60 bg-card/30 text-xs">
-        <div className="inline-flex items-center rounded-lg bg-muted/40 p-0.5">
+      <div className="shrink-0 flex items-center gap-3 px-5 py-3 border-b border-border/50 bg-background text-xs">
+        <div className="inline-flex items-center rounded-full bg-accent/60 p-1">
           <button
             onClick={() => setChartTab("live")}
-            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[11px] font-medium transition ${
+            className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[11px] font-semibold transition ${
               chartTab === "live" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -1384,7 +1384,7 @@ function Dashboard() {
           </button>
           <button
             onClick={() => { setChartTab("setup"); setIntervalState("60"); }}
-            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[11px] font-medium transition ${
+            className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[11px] font-semibold transition ${
               chartTab === "setup" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -1395,7 +1395,7 @@ function Dashboard() {
         <button
           type="button"
           onClick={toggleChartFullscreen}
-          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-background/50 text-muted-foreground hover:text-foreground hover:border-primary/40 transition"
+          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-accent/60 hover:text-foreground transition"
           title={isChartFullscreen ? "Exit full screen" : "Full screen chart"}
           aria-label={isChartFullscreen ? "Exit full screen" : "Full screen chart"}
         >
@@ -1408,7 +1408,7 @@ function Dashboard() {
         <div className="relative" ref={viewMenuRef}>
           <button
             onClick={() => setViewMenuOpen((o) => !o)}
-            className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-background/50 px-3 text-[11px] font-medium text-muted-foreground hover:text-foreground hover:border-primary/40 transition"
+            className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-accent/60 px-3.5 text-[11px] font-medium text-foreground/80 hover:bg-accent hover:text-foreground transition"
             title="Chart levels"
           >
             <Settings2 className="h-3 w-3" />
@@ -1419,7 +1419,7 @@ function Dashboard() {
             <ChevronDown className={`h-3 w-3 transition-transform ${viewMenuOpen ? "rotate-180" : ""}`} />
           </button>
           {viewMenuOpen && (
-            <div className="absolute right-0 mt-2 w-72 rounded-lg border border-border bg-card shadow-xl z-50 p-3 space-y-3">
+            <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-border bg-card shadow-xl z-50 p-3 space-y-3">
               <div className="text-[10px] text-muted-foreground italic border-b border-border/40 pb-2">
                 Levels apply to Live where supported and fully on Setup.
               </div>
@@ -1512,7 +1512,7 @@ function Dashboard() {
 
         <button
           onClick={scanning ? () => { chatRef.current?.stop(); voice.stop(); setScanning(false); } : () => runScan("analysis")}
-          className={`hidden lg:inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-3.5 text-xs font-semibold transition ${
+          className={`hidden lg:inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-4 text-xs font-semibold transition ${
             scanning
               ? "border border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/15"
               : "bg-primary text-primary-foreground hover:opacity-90"
@@ -1526,7 +1526,7 @@ function Dashboard() {
 
         <button
           onClick={() => setRightOpen((v) => !v)}
-          className="hidden lg:inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-background/50 px-3.5 text-xs font-semibold text-foreground hover:border-primary/40 transition"
+          className="hidden lg:inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-accent/60 px-4 text-xs font-semibold text-foreground hover:bg-accent transition"
           title={rightOpen ? "Hide chat panel" : "Open chat panel"}
         >
           {rightOpen ? <PanelRightClose className="h-3 w-3" /> : <PanelRightOpen className="h-3 w-3" />}
@@ -1549,8 +1549,8 @@ function Dashboard() {
             <button
               key={id}
               onClick={() => { setMobileView(id); if (id !== "chart") setRightTab(id === "scan" ? "analysis" : "chat"); }}
-              className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded-md px-2 py-2 text-xs font-semibold transition ${
-                active ? "bg-primary/15 text-primary ring-1 ring-primary/40" : "text-muted-foreground hover:text-foreground hover:bg-accent/40"
+              className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded-full px-2 py-2 text-xs font-semibold transition ${
+                active ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
               }`}
             >
               <Icon className="h-3.5 w-3.5" /> {label}
