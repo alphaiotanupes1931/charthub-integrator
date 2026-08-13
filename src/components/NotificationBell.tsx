@@ -195,28 +195,19 @@ export function NotificationBell() {
 
       {open && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[100]" role="dialog" aria-modal="true" aria-label="Notifications">
-          <div className="absolute inset-0 bg-background" onClick={() => setOpen(false)} />
-          <aside className="absolute right-0 top-0 h-full w-full sm:w-[440px] bg-card border-l border-border shadow-2xl flex flex-col animate-in slide-in-from-right duration-200">
+          {/* Translucent backdrop keeps the page visible behind the overlay. */}
+          <div className="absolute inset-0 bg-background/50 backdrop-blur-[2px]" onClick={() => setOpen(false)} />
+          <aside
+            className="absolute inset-x-2 bottom-2 top-16 sm:inset-x-auto sm:bottom-auto sm:right-3 sm:top-14 sm:w-[400px] sm:max-h-[calc(100vh-5rem)] bg-card border border-border rounded-xl shadow-xl overflow-hidden flex flex-col animate-in fade-in slide-in-from-top-2 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Header */}
-            <div className="relative shrink-0 px-5 pt-5 pb-4 border-b border-border/60 bg-gradient-to-b from-primary/[0.06] to-transparent">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="relative h-10 w-10 rounded-full bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center">
-                    <Bell className="h-5 w-5 text-primary" />
-                    {unread > 0 && (
-                      <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-primary ring-2 ring-card animate-pulse" />
-                    )}
-                  </div>
-                  <div>
-                    <h2 className="text-base font-semibold leading-tight">Notifications</h2>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {unread > 0 ? `${unread} new ${unread === 1 ? "update" : "updates"}` : "You're all caught up"}
-                    </p>
-                  </div>
-                </div>
+            <div className="shrink-0 px-4 py-3 border-b border-border">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-semibold leading-tight">Notifications</h2>
                 <button
                   onClick={() => setOpen(false)}
-                  className="h-8 w-8 rounded-md hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition"
+                  className="h-7 w-7 rounded-md hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition"
                   aria-label="Close"
                 >
                   <X className="h-4 w-4" />
@@ -224,27 +215,24 @@ export function NotificationBell() {
               </div>
 
               {/* Filter tabs */}
-              <div className="mt-4 inline-flex items-center gap-1 rounded-lg bg-muted/60 p-1">
+              <div className="mt-3 flex items-center gap-4 text-xs">
                 {(["all", "unread"] as const).map((f) => (
                   <button
                     key={f}
                     onClick={() => setFilter(f)}
-                    className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition ${
+                    className={`relative -mb-3 pb-2 font-medium capitalize transition ${
                       filter === f
-                        ? "bg-background text-foreground shadow-sm"
+                        ? "text-foreground after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-foreground"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
-                    <span className="capitalize">{f}</span>
-                    {f === "unread" && unread > 0 && (
-                      <span className="inline-flex min-w-[16px] h-4 px-1 items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-semibold">
-                        {unread}
-                      </span>
-                    )}
+                    {f}
+                    {f === "unread" && unread > 0 && <span className="ml-1 text-muted-foreground">{unread}</span>}
                   </button>
                 ))}
               </div>
             </div>
+
 
             {/* Action bar */}
             <div className="shrink-0 flex items-center gap-1 px-3 py-2 border-b border-border/60 text-xs bg-card">
