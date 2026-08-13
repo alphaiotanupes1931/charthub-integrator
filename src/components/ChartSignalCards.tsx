@@ -134,9 +134,9 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
               })
             }
             className="inline-flex h-8 items-center gap-1.5 rounded-2xl px-3 text-[10px] font-bold tracking-tight bg-primary text-primary-foreground hover:opacity-90"
-            title="Log this setup in your journal as a trade you are taking"
+            title="Log this setup in your trade journal"
           >
-            <BookOpen className="h-3 w-3" /> Take trade
+            <BookOpen className="h-3 w-3" /> Log this trade
           </button>
         )}
 
