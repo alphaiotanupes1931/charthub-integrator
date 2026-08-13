@@ -23,6 +23,7 @@ import {
   Bookmark,
   DatabaseBackup,
   HeartPulse,
+  MessageSquare,
 } from "lucide-react";
 import { MentalStatePanel, upsertMentalEntry, SCORE_META, loadMental, type MentalEntry } from "@/components/MentalStatePanel";
 import JournalReviewPanel from "@/components/JournalReviewPanel";
@@ -90,6 +91,8 @@ type Trade = {
   followedPlan?: boolean;
   gradeMatch?: "yes" | "no" | "partial";
   takeaway?: string;
+  /** AI chat thread that produced this setup, so the trade links back to it. */
+  threadId?: string;
   createdAt: number;
 };
 
@@ -708,6 +711,17 @@ function TradeRow({ t, onEdit, onDelete }: { t: Trade; onEdit: (t: Trade) => voi
           R:R {rr == null ? "-" : `${rr.toFixed(2)}`}
         </div>
       </div>
+      {t.threadId && (
+        <Link
+          to="/dashboard"
+          search={{ thread: t.threadId } as never}
+          className="shrink-0 inline-flex items-center gap-1 rounded-xl border border-border/60 px-2 py-1 text-[10px] font-semibold text-muted-foreground hover:text-foreground hover:bg-accent/40"
+          title="Open the AI chat this trade came from"
+        >
+          <MessageSquare className="h-3 w-3" /> AI chat
+        </Link>
+      )}
+
       <button
         onClick={() => onDelete(t.id)}
         className="h-8 w-8 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 flex items-center justify-center"
@@ -1153,7 +1167,7 @@ function TradeFormModal({
 }: {
   initialDate: string;
   editing: Trade | null;
-  prefill?: { symbol?: string; timeframe?: string; notes?: string; entry?: number; stop?: number; tp1?: number; tp2?: number; side?: Side; setup?: string } | null;
+  prefill?: { symbol?: string; timeframe?: string; notes?: string; entry?: number; stop?: number; tp1?: number; tp2?: number; side?: Side; setup?: string; threadId?: string } | null;
   onClose: () => void;
   onSave: (t: Trade) => void;
 }) {
@@ -1266,6 +1280,7 @@ function TradeFormModal({
     followedPlan: followedPlan || undefined,
     gradeMatch: gradeMatch || undefined,
     takeaway: takeaway.trim() || undefined,
+    threadId: editing?.threadId ?? prefill?.threadId,
     createdAt: editing?.createdAt ?? Date.now(),
   };
   const previewPnl = tradePnl(preview);

@@ -55,7 +55,7 @@ function activeStrategyDesc(): string | undefined {
 
 
 
-type DashboardSearch = { ask?: string; symbol?: string };
+type DashboardSearch = { ask?: string; symbol?: string; thread?: string };
 
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({
@@ -67,6 +67,7 @@ export const Route = createFileRoute("/_app/dashboard")({
   validateSearch: (s: Record<string, unknown>): DashboardSearch => ({
     ask: typeof s.ask === "string" ? s.ask : undefined,
     symbol: typeof s.symbol === "string" ? s.symbol : undefined,
+    thread: typeof s.thread === "string" ? s.thread : undefined,
   }),
   component: Dashboard,
 });
@@ -917,6 +918,21 @@ function Dashboard() {
     }
     navigate({ to: "/dashboard", search: (prev: DashboardSearch) => ({ ...prev, symbol: undefined }), replace: true });
   }, [search.symbol, navigate]);
+
+  // Honor ?thread= deep links (e.g. "AI chat" button on a journal trade)
+  const threadAppliedRef = useRef<string | null>(null);
+  useEffect(() => {
+    const id = search.thread?.trim();
+    if (!id || threadAppliedRef.current === id) return;
+    threadAppliedRef.current = id;
+    setActiveThreadId(id);
+    setChatPanelView("conversation");
+    setRightTab("chat");
+    setRightOpen(true);
+    setMobileView("chat");
+    navigate({ to: "/dashboard", search: (prev: DashboardSearch) => ({ ...prev, thread: undefined }), replace: true });
+  }, [search.thread, navigate]);
+
 
   const applyPlanToSignalCards = (plan: ScanResult) => {
     const num = (s: string): number | undefined => {
@@ -1795,7 +1811,12 @@ function Dashboard() {
                     </button>
                   </div>
                   {chatPanelView === "conversation" ? (
-                    <div className="flex-1 min-h-0">
+                    <div className="flex-1 min-h-0 flex flex-col">
+                      {/* Chart preview inside the chat so the setup being discussed stays visible */}
+                      <div className="shrink-0 h-[190px] border-b border-border/60 bg-card">
+                        <NativeChart symbol={symbol.tv} ticker={symbol.ticker} interval={interval} enabled={levels} sessions={sessionsOn} annotations={aiAnnotations} candleType={candleType} />
+                      </div>
+
                       <DashboardChatPanel
                         ref={isDesktop ? chatRef : null}
                         onRunScan={() => runScan("chat")}
@@ -1903,7 +1924,12 @@ function Dashboard() {
               </button>
             </div>
             {chatPanelView === "conversation" ? (
-              <div className="flex-1 min-h-0">
+              <div className="flex-1 min-h-0 flex flex-col">
+                {/* Chart preview inside the chat so the setup being discussed stays visible */}
+                <div className="shrink-0 h-[190px] border-b border-border/60 bg-card">
+                  <NativeChart symbol={symbol.tv} ticker={symbol.ticker} interval={interval} enabled={levels} sessions={sessionsOn} annotations={aiAnnotations} candleType={candleType} />
+                </div>
+
                 <DashboardChatPanel
                   ref={!isDesktop ? chatRef : null}
                   onRunScan={() => runScan("chat")}

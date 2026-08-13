@@ -1,3 +1,4 @@
+import { readLastThreadId } from "@/lib/chat-client";
 // Local signal history. Every scan the trader runs is recorded here so the
 // history list can show previous signals, whether they were taken, and how
 // they turned out. Device-local (localStorage), no server cost.
@@ -166,6 +167,8 @@ export function takeTrade(rec: {
     tp2: rec.tp2,
     setup: rec.grade ? `Scan ${rec.grade}` : "Scan",
     notes,
+    // Links the journal entry back to the AI chat that produced the setup.
+    threadId: readLastThreadId() ?? undefined,
   };
   try {
     localStorage.setItem("trademind.journal.prefill.v1", JSON.stringify(prefill));
