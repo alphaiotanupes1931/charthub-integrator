@@ -277,7 +277,7 @@ export function NotificationBell() {
                   </p>
                 </div>
               ) : (
-                <ul className="p-2 space-y-1.5">
+                <ul className="divide-y divide-border/60">
                   {visibleRows.map((n) => {
                     const isUnread = !n.read_at;
                     const style = kindStyle(n.kind);
@@ -285,14 +285,10 @@ export function NotificationBell() {
                     return (
                       <li
                         key={n.id}
-                        className={`group relative rounded-lg border transition-all ${
-                          isUnread
-                            ? "bg-primary/[0.04] border-primary/20 hover:border-primary/40 hover:bg-primary/[0.07]"
-                            : "bg-transparent border-transparent hover:bg-muted/40 hover:border-border/60"
-                        }`}
+                        className={`group relative transition-colors ${isUnread ? "bg-muted/40" : ""} hover:bg-muted/60`}
                       >
-                        <div className="flex items-start gap-3 p-3">
-                          <div className={`shrink-0 h-9 w-9 rounded-lg ring-1 ${style.ring} ${style.bg} flex items-center justify-center`}>
+                        <div className="flex items-start gap-3 px-4 py-3">
+                          <div className="shrink-0 h-9 w-9 rounded-full bg-muted flex items-center justify-center">
                             <Icon className={`h-4 w-4 ${style.fg}`} />
                           </div>
                           <button
@@ -306,43 +302,42 @@ export function NotificationBell() {
                               }
                             }}
                           >
-                            <div className="flex items-center gap-2">
-                              <span className={`text-[10px] uppercase tracking-wide font-semibold ${style.fg}`}>
-                                {style.label}
-                              </span>
-                              {isUnread && (
-                                <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-label="Unread" />
-                              )}
-                              <span className="ml-auto text-[10px] text-muted-foreground shrink-0">
-                                {timeAgo(n.created_at)}
-                              </span>
-                            </div>
-                            <p className={`mt-1 text-sm leading-snug ${isUnread ? "font-semibold text-foreground" : "font-medium text-foreground/80"}`}>
+                            <p className="text-sm leading-snug text-foreground">
+                              <span className="font-semibold">{style.label}</span>
+                              <span className="text-muted-foreground"> · {timeAgo(n.created_at)}</span>
+                            </p>
+                            <p className={`mt-0.5 text-sm leading-snug ${isUnread ? "font-medium text-foreground" : "text-foreground/80"}`}>
                               {n.title}
                             </p>
                             {n.body && (
-                              <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">{n.body}</p>
+                              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">{n.body}</p>
                             )}
                           </button>
-                          <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                          <div className="flex items-center gap-1 shrink-0">
                             {isUnread && (
-                              <button
-                                onClick={() => mRead.mutate(n.id)}
-                                className="h-7 w-7 rounded-md hover:bg-background border border-transparent hover:border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition"
-                                title="Mark read"
-                              >
-                                <Check className="h-3.5 w-3.5" />
-                              </button>
+                              <span className="h-2 w-2 rounded-full bg-primary mt-1.5 sm:group-hover:hidden" aria-label="Unread" />
                             )}
-                            <button
-                              onClick={() => mDel.mutate(n.id)}
-                              className="h-7 w-7 rounded-md hover:bg-background border border-transparent hover:border-destructive/30 flex items-center justify-center text-muted-foreground hover:text-destructive transition"
-                              title="Delete"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
+                            <div className="hidden sm:group-hover:flex items-center gap-1">
+                              {isUnread && (
+                                <button
+                                  onClick={() => mRead.mutate(n.id)}
+                                  className="h-7 w-7 rounded-md hover:bg-background flex items-center justify-center text-muted-foreground hover:text-foreground transition"
+                                  title="Mark read"
+                                >
+                                  <Check className="h-3.5 w-3.5" />
+                                </button>
+                              )}
+                              <button
+                                onClick={() => mDel.mutate(n.id)}
+                                className="h-7 w-7 rounded-md hover:bg-background flex items-center justify-center text-muted-foreground hover:text-destructive transition"
+                                title="Delete"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
                           </div>
                         </div>
+
                       </li>
                     );
                   })}
