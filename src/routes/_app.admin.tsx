@@ -36,6 +36,13 @@ function AdminPage() {
   const [users, setUsers] = useState<UserRow[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [mrrCents, setMrrCents] = useState(0);
+  const [aiSpend30, setAiSpend30] = useState<number | null>(null);
+  const [aiPerUser, setAiPerUser] = useState<
+    Array<{ user_id: string; email: string | null; calls: number; graded_setups: number; cost_usd: number; cost_per_setup: number }>
+  >([]);
+
+
 
 
   const toggleBan = async (u: UserRow) => {
