@@ -249,7 +249,7 @@ function ChatThreadInner({
     <div className="flex flex-col h-full min-h-0">
       <div className="flex items-center justify-between gap-3 px-4 md:px-8 py-2 max-w-3xl mx-auto w-full border-b border-border/60 bg-background/80">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-sm font-semibold text-foreground truncate">{readActiveCoach()}</span>
+          <span className="text-sm font-semibold text-foreground truncate">{activeCoach}</span>
           {ctx.chart?.ticker && (
             <span className="text-[10px] font-semibold tracking-tight text-foreground px-1.5 py-0.5 rounded bg-muted border border-border/60 truncate max-w-[180px]" title={`${ctx.chart.ticker} · ${ctx.chart.intervalLabel}`}>
               {ctx.chart.ticker} · {ctx.chart.intervalLabel}
