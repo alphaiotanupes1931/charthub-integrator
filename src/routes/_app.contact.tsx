@@ -58,7 +58,7 @@ function ContactPage() {
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-6">
-      <PageHeader title="Contact and support" subtitle="Report an issue or send feedback straight to the team." />
+      <PageHeader title="Contact and support" description="Report an issue or send feedback straight to the team." />
 
       <div className="rounded-lg border border-border p-5">
         <div className="flex gap-2">
