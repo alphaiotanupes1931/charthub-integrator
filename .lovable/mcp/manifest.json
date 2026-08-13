@@ -1,0 +1,137 @@
+{
+  "version": 1,
+  "sdk_version": "0.26.2",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://omowvuuurppkozaeuxcr.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "trademind-integrator",
+      "version": "0.1.0",
+      "title": "ChartHub Integrator"
+    },
+    "tools": [
+      {
+        "name": "get_market_price",
+        "title": "Get live market price",
+        "description": "Get the live OANDA price and key technical stats (ATR, 20-bar range) for a symbol on a timeframe.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "symbol": {
+              "type": "string",
+              "description": "Symbol, for example GOLD, XAU/USD, US30, NAS100, EUR/USD, BTC/USD."
+            },
+            "interval": {
+              "description": "Timeframe such as 15m, 1h, 4h, 1d. Defaults to 1h.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "symbol"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_signals",
+        "title": "List recent AI signals",
+        "description": "List the most recent graded trade signals from the TradeMind signal engine, newest first. Optionally filter by symbol or minimum grade.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "symbol": {
+              "description": "Optional symbol filter, for example GOLD, US30, EUR/USD.",
+              "type": "string"
+            },
+            "limit": {
+              "description": "How many signals to return. Default 10, max 50.",
+              "type": "number"
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_price_alerts",
+        "title": "List price alerts",
+        "description": "List the signed-in trader's TradeMind price alerts, newest first.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "activeOnly": {
+              "description": "Only return alerts that have not fired yet. Default true.",
+              "type": "boolean"
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "create_price_alert",
+        "title": "Create a price alert",
+        "description": "Create a price alert on the signed-in trader's TradeMind account that fires when a symbol crosses above or below a price.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "symbol": {
+              "type": "string",
+              "description": "Symbol, for example GOLD, US30, EUR/USD."
+            },
+            "side": {
+              "type": "string",
+              "enum": [
+                "above",
+                "below"
+              ],
+              "description": "Fire when price goes above or below the level."
+            },
+            "price": {
+              "type": "number",
+              "description": "Price level to watch."
+            },
+            "note": {
+              "description": "Optional note shown with the alert.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "symbol",
+            "side",
+            "price"
+          ]
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
