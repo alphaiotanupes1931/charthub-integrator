@@ -1749,14 +1749,6 @@ function Dashboard() {
                     </button>
                   ))}
                 </div>
-                {activeModel && (
-                  <span
-                    className="shrink-0 text-[10px] font-medium text-muted-foreground truncate"
-                    title={`Powered by ${activeModel.label}`}
-                  >
-                    {activeModel.label}
-                  </span>
-                )}
               </div>
             </div>
 
