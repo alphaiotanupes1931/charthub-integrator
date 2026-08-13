@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BookOpen, ChevronDown } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import { findStrategyByName } from "@/lib/customStrategies";
 
 /**
