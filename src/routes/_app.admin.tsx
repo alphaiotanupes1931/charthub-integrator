@@ -215,9 +215,10 @@ function AdminPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {users === null ? (
-                  <tr><td colSpan={8} className="p-6 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Loading…</td></tr>
+                  <tr><td colSpan={9} className="p-6 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Loading…</td></tr>
                 ) : users.length === 0 ? (
-                  <tr><td colSpan={8} className="p-6 text-muted-foreground">No users yet.</td></tr>
+                  <tr><td colSpan={9} className="p-6 text-muted-foreground">No users yet.</td></tr>
+
                 ) : users.map((u) => (
                   <tr key={u.id} className={u.banned ? "bg-destructive/5" : ""}>
                     <td className="px-4 py-2.5">{u.display_name ?? <span className="text-muted-foreground">-</span>}</td>
