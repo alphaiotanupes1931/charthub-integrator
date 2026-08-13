@@ -9,7 +9,6 @@ import {
   Bell,
   BellRing,
   Check,
-  CheckCheck,
   Trash2,
   X,
   Activity,
@@ -195,28 +194,19 @@ export function NotificationBell() {
 
       {open && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[100]" role="dialog" aria-modal="true" aria-label="Notifications">
-          <div className="absolute inset-0 bg-background" onClick={() => setOpen(false)} />
-          <aside className="absolute right-0 top-0 h-full w-full sm:w-[440px] bg-card border-l border-border shadow-2xl flex flex-col animate-in slide-in-from-right duration-200">
+          {/* Translucent backdrop keeps the page visible behind the overlay. */}
+          <div className="absolute inset-0 bg-background/50 backdrop-blur-[2px]" onClick={() => setOpen(false)} />
+          <aside
+            className="absolute inset-x-2 bottom-2 top-16 sm:inset-x-auto sm:bottom-auto sm:right-3 sm:top-14 sm:w-[400px] sm:max-h-[calc(100vh-5rem)] bg-card border border-border rounded-xl shadow-xl overflow-hidden flex flex-col animate-in fade-in slide-in-from-top-2 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Header */}
-            <div className="relative shrink-0 px-5 pt-5 pb-4 border-b border-border/60 bg-gradient-to-b from-primary/[0.06] to-transparent">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="relative h-10 w-10 rounded-full bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center">
-                    <Bell className="h-5 w-5 text-primary" />
-                    {unread > 0 && (
-                      <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-primary ring-2 ring-card animate-pulse" />
-                    )}
-                  </div>
-                  <div>
-                    <h2 className="text-base font-semibold leading-tight">Notifications</h2>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {unread > 0 ? `${unread} new ${unread === 1 ? "update" : "updates"}` : "You're all caught up"}
-                    </p>
-                  </div>
-                </div>
+            <div className="shrink-0 px-4 py-3 border-b border-border">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-semibold leading-tight">Notifications</h2>
                 <button
                   onClick={() => setOpen(false)}
-                  className="h-8 w-8 rounded-md hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition"
+                  className="h-7 w-7 rounded-md hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition"
                   aria-label="Close"
                 >
                   <X className="h-4 w-4" />
@@ -224,56 +214,52 @@ export function NotificationBell() {
               </div>
 
               {/* Filter tabs */}
-              <div className="mt-4 inline-flex items-center gap-1 rounded-lg bg-muted/60 p-1">
+              <div className="mt-3 flex items-center gap-4 text-xs">
                 {(["all", "unread"] as const).map((f) => (
                   <button
                     key={f}
                     onClick={() => setFilter(f)}
-                    className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition ${
+                    className={`relative -mb-3 pb-2 font-medium capitalize transition ${
                       filter === f
-                        ? "bg-background text-foreground shadow-sm"
+                        ? "text-foreground after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-foreground"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
-                    <span className="capitalize">{f}</span>
-                    {f === "unread" && unread > 0 && (
-                      <span className="inline-flex min-w-[16px] h-4 px-1 items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-semibold">
-                        {unread}
-                      </span>
-                    )}
+                    {f}
+                    {f === "unread" && unread > 0 && <span className="ml-1 text-muted-foreground">{unread}</span>}
                   </button>
                 ))}
               </div>
             </div>
 
+
             {/* Action bar */}
-            <div className="shrink-0 flex items-center gap-1 px-3 py-2 border-b border-border/60 text-xs bg-card">
+            <div className="shrink-0 flex items-center gap-3 px-4 py-2 border-b border-border text-xs">
               <button
                 onClick={() => mAll.mutate()}
                 disabled={unread === 0 || mAll.isPending}
-                className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition"
+                className="font-medium text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed transition"
               >
-                <CheckCheck className="h-3.5 w-3.5" />
                 Mark all read
               </button>
               <button
                 onClick={() => mClr.mutate()}
                 disabled={!hasRead || mClr.isPending}
-                className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition"
+                className="font-medium text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed transition"
               >
-                <Trash2 className="h-3.5 w-3.5" />
                 Clear read
               </button>
               <div className="flex-1" />
               <button
                 onClick={() => mTest.mutate()}
                 disabled={mTest.isPending}
-                className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-muted-foreground/70 hover:text-foreground hover:bg-muted transition"
+                className="font-medium text-muted-foreground/70 hover:text-foreground transition"
                 title="Create a test notification"
               >
                 Test
               </button>
             </div>
+
 
             {/* List */}
             <div className="flex-1 overflow-y-auto">
@@ -290,7 +276,7 @@ export function NotificationBell() {
                   </p>
                 </div>
               ) : (
-                <ul className="p-2 space-y-1.5">
+                <ul className="divide-y divide-border/60">
                   {visibleRows.map((n) => {
                     const isUnread = !n.read_at;
                     const style = kindStyle(n.kind);
@@ -298,14 +284,10 @@ export function NotificationBell() {
                     return (
                       <li
                         key={n.id}
-                        className={`group relative rounded-lg border transition-all ${
-                          isUnread
-                            ? "bg-primary/[0.04] border-primary/20 hover:border-primary/40 hover:bg-primary/[0.07]"
-                            : "bg-transparent border-transparent hover:bg-muted/40 hover:border-border/60"
-                        }`}
+                        className={`group relative transition-colors ${isUnread ? "bg-muted/40" : ""} hover:bg-muted/60`}
                       >
-                        <div className="flex items-start gap-3 p-3">
-                          <div className={`shrink-0 h-9 w-9 rounded-lg ring-1 ${style.ring} ${style.bg} flex items-center justify-center`}>
+                        <div className="flex items-start gap-3 px-4 py-3">
+                          <div className="shrink-0 h-9 w-9 rounded-full bg-muted flex items-center justify-center">
                             <Icon className={`h-4 w-4 ${style.fg}`} />
                           </div>
                           <button
@@ -319,43 +301,42 @@ export function NotificationBell() {
                               }
                             }}
                           >
-                            <div className="flex items-center gap-2">
-                              <span className={`text-[10px] uppercase tracking-wide font-semibold ${style.fg}`}>
-                                {style.label}
-                              </span>
-                              {isUnread && (
-                                <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-label="Unread" />
-                              )}
-                              <span className="ml-auto text-[10px] text-muted-foreground shrink-0">
-                                {timeAgo(n.created_at)}
-                              </span>
-                            </div>
-                            <p className={`mt-1 text-sm leading-snug ${isUnread ? "font-semibold text-foreground" : "font-medium text-foreground/80"}`}>
+                            <p className="text-sm leading-snug text-foreground">
+                              <span className="font-semibold">{style.label}</span>
+                              <span className="text-muted-foreground"> · {timeAgo(n.created_at)}</span>
+                            </p>
+                            <p className={`mt-0.5 text-sm leading-snug ${isUnread ? "font-medium text-foreground" : "text-foreground/80"}`}>
                               {n.title}
                             </p>
                             {n.body && (
-                              <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">{n.body}</p>
+                              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">{n.body}</p>
                             )}
                           </button>
-                          <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                          <div className="flex items-center gap-1 shrink-0">
                             {isUnread && (
-                              <button
-                                onClick={() => mRead.mutate(n.id)}
-                                className="h-7 w-7 rounded-md hover:bg-background border border-transparent hover:border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition"
-                                title="Mark read"
-                              >
-                                <Check className="h-3.5 w-3.5" />
-                              </button>
+                              <span className="h-2 w-2 rounded-full bg-primary mt-1.5 sm:group-hover:hidden" aria-label="Unread" />
                             )}
-                            <button
-                              onClick={() => mDel.mutate(n.id)}
-                              className="h-7 w-7 rounded-md hover:bg-background border border-transparent hover:border-destructive/30 flex items-center justify-center text-muted-foreground hover:text-destructive transition"
-                              title="Delete"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
+                            <div className="hidden sm:group-hover:flex items-center gap-1">
+                              {isUnread && (
+                                <button
+                                  onClick={() => mRead.mutate(n.id)}
+                                  className="h-7 w-7 rounded-md hover:bg-background flex items-center justify-center text-muted-foreground hover:text-foreground transition"
+                                  title="Mark read"
+                                >
+                                  <Check className="h-3.5 w-3.5" />
+                                </button>
+                              )}
+                              <button
+                                onClick={() => mDel.mutate(n.id)}
+                                className="h-7 w-7 rounded-md hover:bg-background flex items-center justify-center text-muted-foreground hover:text-destructive transition"
+                                title="Delete"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
                           </div>
                         </div>
+
                       </li>
                     );
                   })}
