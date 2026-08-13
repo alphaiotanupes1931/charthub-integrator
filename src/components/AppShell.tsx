@@ -232,21 +232,22 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
   }, [mobileOpen]);
 
+  const initial = (profile?.email ?? "?").trim().charAt(0).toUpperCase();
+
   const SidebarContent = (
     <>
-      <div className="flex items-center justify-between gap-2.5 px-4 py-5">
+      <div className="flex items-center justify-between gap-2.5 px-5 py-6">
         <LogoLink
           to="/dashboard"
           size="lg"
           variant="brand"
-          glow
           showText={!collapsed}
-          textClassName="text-xl"
+          textClassName="text-[19px] tracking-tight"
           className="gap-2.5"
         />
         <button
           onClick={() => setMobileOpen(false)}
-          className="md:hidden h-8 w-8 rounded-md text-muted-foreground hover:text-foreground"
+          className="md:hidden h-9 w-9 rounded-full text-muted-foreground hover:bg-accent/60 hover:text-foreground flex items-center justify-center transition"
           aria-label="Close menu"
         >
           <X className="h-5 w-5" />
@@ -254,12 +255,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
 
       {!collapsed && (
-        <div className="px-3 pb-2">
+        <div className="px-4 pb-3">
           <SidebarSearch nav={nav} />
         </div>
       )}
 
-      <nav className="flex-1 px-2 py-2 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 px-3 py-1 space-y-1 overflow-y-auto">
         {collapsed ? (
           // Collapsed rail: flat icon list, no group headers.
           nav.map((item) => (
@@ -279,7 +280,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 onToggle={() => toggleGroup(group.id)}
               />
             ))}
-            <div className="pt-2 mt-2 border-t border-border/60 space-y-0.5">
+            <div className="pt-2 mt-2 border-t border-border/50 space-y-1">
               {BOTTOM_NAV.filter((n) => n.to !== "/admin" || isAdmin).map((item) => (
                 <NavLinkRow key={item.to} item={item} pathname={pathname} />
               ))}
@@ -289,25 +290,36 @@ export function AppShell({ children }: { children: ReactNode }) {
       </nav>
 
       {!collapsed ? (
-        <div className="px-3 pb-3 space-y-2 border-t border-border/60 pt-3">
-          {profile?.email && (
-            <div className="text-[11px] text-muted-foreground truncate px-1" title={profile.email}>
-              {profile.email}
+        <div className="px-3 pb-4 pt-3 border-t border-border/50">
+          <div className="flex items-center gap-3 rounded-2xl px-2 py-2">
+            <span className="h-9 w-9 shrink-0 rounded-full bg-accent/70 text-[13px] font-semibold text-foreground/80 flex items-center justify-center">
+              {initial}
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="text-[13px] font-semibold text-foreground truncate">
+                {profile?.username ?? "Account"}
+              </div>
+              {profile?.email && (
+                <div className="text-[11px] text-muted-foreground truncate" title={profile.email}>
+                  {profile.email}
+                </div>
+              )}
             </div>
-          )}
-          <button
-            onClick={handleSignOut}
-            className="w-full flex items-center gap-2 text-sm text-foreground/80 hover:text-foreground px-1"
-          >
-            <LogOut className="h-4 w-4" />
-            Sign Out
-          </button>
+            <button
+              onClick={handleSignOut}
+              className="h-8 w-8 rounded-full text-muted-foreground hover:bg-accent/60 hover:text-foreground flex items-center justify-center transition"
+              aria-label="Sign out"
+              title="Sign out"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       ) : (
-        <div className="px-2 pb-3 pt-3 border-t border-border/60 flex flex-col items-center gap-2">
+        <div className="px-2 pb-4 pt-3 border-t border-border/50 flex flex-col items-center gap-2">
           <button
             onClick={handleSignOut}
-            className="h-9 w-9 rounded-md text-muted-foreground hover:text-foreground flex items-center justify-center"
+            className="h-9 w-9 rounded-full text-muted-foreground hover:bg-accent/60 hover:text-foreground flex items-center justify-center transition"
             aria-label="Sign out"
             title="Sign out"
           >
@@ -317,6 +329,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       )}
     </>
   );
+
 
 
   return (
