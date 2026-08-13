@@ -50,8 +50,12 @@ export type ChartContext = {
   ticker: string;
   intervalLabel: string;
   enabledLevels: string;
+  /** TradingView-style symbol + raw interval so chat can render its own mini chart. */
+  tvSymbol?: string;
+  interval?: string;
   snapshot?: import("@/components/NativeChart").ChartSnapshot;
 };
+
 
 type Props = { chart?: ChartContext; onClose?: () => void; onMinimize?: () => void; onRunScan?: () => void; onStopScan?: () => void; scanning?: boolean; threadIdOverride?: string | null; onAnnotations?: (a: ChartAnnotation[]) => void; onConcept?: (c: ConceptRef | null) => void; onGrade?: (g: import("@/lib/chartAnnotations").ChartGrade | null) => void; onShowMe?: () => void; };
 
