@@ -49,6 +49,16 @@ function AdminPage() {
 
 
 
+  const changeRole = async (u: UserRow, role: "user" | "admin") => {
+    if (role === (u.role ?? "user")) return;
+    setBusyId(u.id);
+    const { error } = await supabase.rpc("admin_set_user_role" as never, { _user_id: u.id, _role: role } as never);
+    setBusyId(null);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`${u.email ?? "User"} is now ${role}`);
+    setUsers((prev) => prev?.map((x) => (x.id === u.id ? { ...x, role } : x)) ?? prev);
+  };
+
   const toggleBan = async (u: UserRow) => {
     const next = !u.banned;
     if (next && !confirm(`Ban ${u.email}? They will be signed out and blocked from the app.`)) return;
@@ -59,6 +69,8 @@ function AdminPage() {
     toast.success(next ? "User banned" : "User unbanned");
     setUsers((prev) => prev?.map((x) => x.id === u.id ? { ...x, banned: next } : x) ?? prev);
   };
+
+
 
   useEffect(() => {
     (async () => {
