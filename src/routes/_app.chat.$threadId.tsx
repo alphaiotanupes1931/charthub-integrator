@@ -32,6 +32,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { buildLearningPromptBlock } from "@/lib/signalLearning";
 import { parseAiPayload, type ChartGrade } from "@/lib/chartAnnotations";
+import { NativeChart, type LevelKey } from "@/components/NativeChart";
+
+const NO_LEVELS = {
+  VWAP: false, POC: false, SR: false, ZONES: false, FVG: false,
+  FIB: false, LIQ: false, OF: false, CISD: false,
+} as Record<LevelKey, boolean>;
+
 
 export const Route = createFileRoute("/_app/chat/$threadId")({
   component: ChatThread,
