@@ -1680,11 +1680,10 @@ function Dashboard() {
           <aside className={`hidden lg:flex shrink-0 border-l border-border/50 bg-background flex-col ${
             panelWidth === "narrow" ? "w-[280px]" : panelWidth === "wide" ? "w-[560px]" : "w-[400px]"
           }`}>
-            {/* Header: tabs row + width controls row */}
+            {/* Header: tabs row, then a quiet meta row for width + model */}
             <div className="border-b border-border/50">
               <div className="flex items-center gap-2 px-3 py-2.5">
-
-                <div className="flex items-center gap-0.5 flex-1 min-w-0 overflow-x-auto no-scrollbar">
+                <div className="flex items-center gap-1 flex-1 min-w-0">
                   <button
                     onClick={() => setRightTab("analysis")}
                     className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
@@ -1702,12 +1701,22 @@ function Dashboard() {
                     <MessageSquare className="h-3.5 w-3.5" /> Chat
                   </button>
                 </div>
-                <div className="hidden xl:flex shrink-0 items-center gap-0.5 rounded-full bg-accent/60 p-1" title="Panel width">
+                <button
+                  onClick={() => setRightOpen(false)}
+                  className="h-8 w-8 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-accent/60 transition shrink-0"
+                  title="Close panel"
+                  aria-label="Close panel"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="flex items-center justify-between gap-2 px-3 pb-2.5">
+                <div className="flex shrink-0 items-center gap-0.5 rounded-full bg-accent/50 p-0.5" title="Panel width">
                   {(["narrow", "default", "wide"] as const).map((w) => (
                     <button
                       key={w}
                       onClick={() => setPanelWidth(w)}
-                      className={`rounded-full px-2 py-0.5 text-[10px] font-medium capitalize transition ${
+                      className={`rounded-full px-2.5 py-0.5 text-[10px] font-medium capitalize transition ${
                         panelWidth === w ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                       }`}
                     >
@@ -1717,23 +1726,15 @@ function Dashboard() {
                 </div>
                 {activeModel && (
                   <span
-                    className="hidden sm:inline shrink-0 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground px-2 py-0.5 rounded-full bg-accent/60"
+                    className="shrink-0 text-[10px] font-medium text-muted-foreground truncate"
                     title={`Powered by ${activeModel.label}`}
                   >
                     {activeModel.label}
                   </span>
                 )}
-
-                <button
-                  onClick={() => setRightOpen(false)}
-                  className="h-8 w-8 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-accent/60 transition shrink-0"
-                  title="Close panel"
-                  aria-label="Close panel"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
               </div>
             </div>
+
 
 
             <div className="flex-1 min-h-0 overflow-hidden relative">
