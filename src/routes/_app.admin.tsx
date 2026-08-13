@@ -7,6 +7,8 @@ import { Loader2, ShieldAlert, Users, BarChart3, CircleDot, CircleOff, CircleDas
 import { toast } from "sonner";
 import { adminReferralStats, adminUsersOverview, adminSetPlatformStatus } from "@/lib/admin.functions";
 import { aiCostSummary } from "@/lib/ai-cost.functions";
+import { aiCreditsStatus, setAiBudget } from "@/lib/ai-credits.functions";
+import { adminListSupportRequests } from "@/lib/support.functions";
 
 
 export const Route = createFileRoute("/_app/admin")({
@@ -206,6 +208,10 @@ function AdminPage() {
           </div>
         </div>
       </section>
+
+      <AiCreditsPanel />
+
+      <SupportTicketsPanel />
 
       <AiCostPanel />
     </div>
@@ -435,6 +441,206 @@ function PlatformStatusEditor() {
           </div>
         </>
       )}
+    </section>
+  );
+}
+
+type CreditSnapshot = Awaited<ReturnType<typeof aiCreditsStatus>>;
+
+function AiCreditsPanel() {
+  const [snap, setSnap] = useState<CreditSnapshot | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [budget, setBudget] = useState("");
+  const [threshold, setThreshold] = useState("");
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const res = await aiCreditsStatus();
+      setSnap(res);
+      setBudget(String(res.monthlyBudgetUsd));
+      setThreshold(String(res.lowThresholdPct));
+      setErr(null);
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { void load(); }, []);
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      const res = await setAiBudget({
+        data: { monthlyBudgetUsd: Number(budget), lowThresholdPct: Number(threshold) },
+      });
+      setSnap(res);
+      toast.success("Budget saved");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const usd = (n: number) => `$${n.toFixed(n < 1 ? 4 : 2)}`;
+  const status = snap?.providerStatus ?? "unknown";
+  const statusLabel: Record<string, string> = {
+    ok: "Claude is accepting calls",
+    out_of_credits: "Claude is out of credits, coach is on Google Gemini",
+    not_configured: "Claude key is not configured",
+    error: "Claude is erroring",
+    unknown: "Not checked yet",
+  };
+  const low = (snap?.remainingPct ?? 100) <= (snap?.lowThresholdPct ?? 20);
+
+  return (
+    <section className="mt-8">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h2 className="flex items-center gap-2 text-sm font-medium">
+          <DollarSign className="h-4 w-4 text-muted-foreground" /> AI credits and provider health
+        </h2>
+        <button
+          onClick={() => void load()}
+          className="rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground"
+        >
+          Re-check now
+        </button>
+      </div>
+
+      {err && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">{err}</div>
+      )}
+
+      {loading && !snap ? (
+        <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" /> Checking Claude and month-to-date spend
+        </div>
+      ) : snap ? (
+        <>
+          <div
+            className={`rounded-md border px-4 py-3 text-sm ${
+              status === "ok"
+                ? "border-border text-muted-foreground"
+                : "border-destructive/40 bg-destructive/5 text-destructive"
+            }`}
+          >
+            {statusLabel[status] ?? status}
+            {snap.providerMessage ? ` — ${snap.providerMessage}` : ""}
+          </div>
+
+          <div className="mt-3 grid gap-3 sm:grid-cols-4">
+            <div className="rounded-md border border-border p-4">
+              <div className="text-xs text-muted-foreground">Credits left this month</div>
+              <div className={`mt-2 text-2xl font-semibold ${low ? "text-destructive" : ""}`}>{usd(snap.remainingUsd)}</div>
+              <div className="mt-1 text-[11px] text-muted-foreground">{snap.remainingPct}% of budget</div>
+            </div>
+            <div className="rounded-md border border-border p-4">
+              <div className="text-xs text-muted-foreground">Spent month to date</div>
+              <div className="mt-2 text-2xl font-semibold">{usd(snap.monthToDateUsd)}</div>
+            </div>
+            <div className="rounded-md border border-border p-4">
+              <div className="text-xs text-muted-foreground">Last 24 hours</div>
+              <div className="mt-2 text-2xl font-semibold">{usd(snap.todayUsd)}</div>
+            </div>
+            <div className="rounded-md border border-border p-4">
+              <div className="text-xs text-muted-foreground">Last 7 days</div>
+              <div className="mt-2 text-2xl font-semibold">{usd(snap.last7dUsd)}</div>
+            </div>
+          </div>
+
+          <div className="mt-3 flex flex-wrap items-end gap-3 rounded-md border border-border p-4">
+            <label className="block">
+              <span className="text-xs text-muted-foreground">Monthly budget, USD</span>
+              <input
+                value={budget}
+                onChange={(e) => setBudget(e.target.value)}
+                inputMode="decimal"
+                className="mt-1 w-32 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-foreground/40"
+              />
+            </label>
+            <label className="block">
+              <span className="text-xs text-muted-foreground">Warn at, percent left</span>
+              <input
+                value={threshold}
+                onChange={(e) => setThreshold(e.target.value)}
+                inputMode="numeric"
+                className="mt-1 w-28 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-foreground/40"
+              />
+            </label>
+            <button
+              onClick={() => void save()}
+              disabled={saving}
+              className="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+            >
+              {saving && <Loader2 className="h-4 w-4 animate-spin" />} Save budget
+            </button>
+            <div className="text-[11px] text-muted-foreground">
+              Checked {snap.checkedAt ? new Date(snap.checkedAt).toLocaleString() : "never"}. Admins get a notification
+              when credits run low or Claude stops responding.
+            </div>
+          </div>
+        </>
+      ) : null}
+    </section>
+  );
+}
+
+type TicketRow = Awaited<ReturnType<typeof adminListSupportRequests>>[number];
+
+function SupportTicketsPanel() {
+  const [rows, setRows] = useState<TicketRow[] | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    adminListSupportRequests()
+      .then((r) => { if (!cancelled) setRows(r); })
+      .catch((e: Error) => { if (!cancelled) setErr(e.message); });
+    return () => { cancelled = true; };
+  }, []);
+
+  return (
+    <section className="mt-8">
+      <h2 className="mb-3 text-sm font-medium">Tickets and feedback</h2>
+      {err && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">{err}</div>
+      )}
+      <div className="divide-y divide-border rounded-md border border-border">
+        {rows === null ? (
+          <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" /> Loading
+          </div>
+        ) : rows.length === 0 ? (
+          <div className="p-4 text-sm text-muted-foreground">Nothing submitted yet.</div>
+        ) : (
+          rows.map((r) => (
+            <button
+              key={r.id}
+              onClick={() => setOpenId(openId === r.id ? null : r.id)}
+              className="block w-full px-4 py-3 text-left hover:bg-muted/50"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-sm font-medium">{r.subject}</div>
+                <span className="rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground">
+                  {r.kind === "ticket" ? "Ticket" : "Feedback"}
+                </span>
+              </div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                {r.reply_email} · {new Date(r.created_at).toLocaleString()} · {r.status.replace("_", " ")}
+              </div>
+              {openId === r.id && (
+                <div className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{r.message}</div>
+              )}
+            </button>
+          ))
+        )}
+      </div>
     </section>
   );
 }
