@@ -69,6 +69,12 @@ function AdminPage() {
         setErr(e instanceof Error ? e.message : "Failed to load");
       }
     })();
+    aiCostSummary({ data: { days: 30 } })
+      .then((res) => {
+        setAiSpend30(res.byKind.reduce((s, r) => s + Number(r.cost_usd), 0));
+        setAiPerUser(res.byUser);
+      })
+      .catch(() => setAiSpend30(null));
   }, []);
 
 
@@ -86,40 +92,64 @@ function AdminPage() {
   const totalUsers = users?.length ?? 0;
   const totalReferrals = stats?.reduce((a, r) => a + Number(r.count), 0) ?? 0;
   const maxCount = stats?.reduce((a, r) => Math.max(a, Number(r.count)), 0) ?? 0;
+  const mrrUsd = mrrCents / 100;
+  const usd = (n: number) => `$${n.toLocaleString(undefined, { minimumFractionDigits: n < 10 && n !== 0 ? 2 : 0, maximumFractionDigits: 2 })}`;
+  const aiByUser = new Map(aiPerUser.map((r) => [r.user_id, r]));
 
   return (
-    <div className="p-4 md:p-8 max-w-[1100px] mx-auto space-y-8">
-      <PageHeader title="Admin" description="User insights and acquisition stats." />
+    <div className="p-4 md:p-8 max-w-[1100px] mx-auto space-y-6">
+      <PageHeader title="Admin" description="Users, AI usage, cost, and revenue in one place." />
+
+      {err && (
+        <div className="rounded-xl border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">{err}</div>
+      )}
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="rounded-2xl border border-border/60 bg-card p-5">
+          <div className="flex items-center gap-2 text-xs tracking-tight text-muted-foreground">
+            <Users className="h-3.5 w-3.5" /> Total users
+          </div>
+          <div className="mt-2 text-2xl md:text-3xl font-semibold tabular-nums">{totalUsers}</div>
+        </div>
+        <div className="rounded-2xl border border-border/60 bg-card p-5">
+          <div className="flex items-center gap-2 text-xs tracking-tight text-muted-foreground">
+            <DollarSign className="h-3.5 w-3.5" /> MRR
+          </div>
+          <div className="mt-2 text-2xl md:text-3xl font-semibold tabular-nums">{usd(mrrUsd)}</div>
+          <div className="mt-1 text-[11px] text-muted-foreground">Manual entries</div>
+        </div>
+        <div className="rounded-2xl border border-border/60 bg-card p-5">
+          <div className="flex items-center gap-2 text-xs tracking-tight text-muted-foreground">
+            <BarChart3 className="h-3.5 w-3.5" /> AI cost, 30d
+          </div>
+          <div className="mt-2 text-2xl md:text-3xl font-semibold tabular-nums">
+            {aiSpend30 === null ? "-" : usd(aiSpend30)}
+          </div>
+        </div>
+        <div className="rounded-2xl border border-border/60 bg-card p-5">
+          <div className="flex items-center gap-2 text-xs tracking-tight text-muted-foreground">
+            <DollarSign className="h-3.5 w-3.5" /> Net, 30d
+          </div>
+          <div className={`mt-2 text-2xl md:text-3xl font-semibold tabular-nums ${mrrUsd - (aiSpend30 ?? 0) < 0 ? "text-destructive" : ""}`}>
+            {usd(mrrUsd - (aiSpend30 ?? 0))}
+          </div>
+          <div className="mt-1 text-[11px] text-muted-foreground">MRR minus AI spend</div>
+        </div>
+      </div>
+
+      <RevenuePanel onMrrChange={setMrrCents} />
 
       <PlatformStatusEditor />
 
       <div>
         <a
           href="/admin/subscribers"
-          className="inline-flex items-center gap-2 rounded-2xl border border-border/60 px-3 py-2 text-sm hover:bg-muted"
+          className="inline-flex items-center gap-2 rounded-full border border-border/60 px-3.5 py-1.5 text-xs font-semibold hover:bg-muted"
         >
-          View Stripe subscribers →
+          View Stripe subscribers
         </a>
       </div>
 
-      {err && (
-        <div className="rounded-xl border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">{err}</div>
-      )}
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="rounded-xl border border-border/60 bg-card p-5">
-          <div className="flex items-center gap-2 text-xs tracking-tight text-muted-foreground">
-            <Users className="h-3.5 w-3.5" /> Total users
-          </div>
-          <div className="mt-2 text-3xl font-semibold">{totalUsers}</div>
-        </div>
-        <div className="rounded-xl border border-border/60 bg-card p-5">
-          <div className="flex items-center gap-2 text-xs tracking-tight text-muted-foreground">
-            <BarChart3 className="h-3.5 w-3.5" /> Sources tracked
-          </div>
-          <div className="mt-2 text-3xl font-semibold">{stats?.length ?? 0}</div>
-        </div>
-      </div>
 
       <section>
         <h2 className="text-sm font-semibold tracking-tight text-muted-foreground mb-3">How did you find us</h2>
