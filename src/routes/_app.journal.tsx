@@ -29,6 +29,7 @@ import { MentalStatePanel, upsertMentalEntry, SCORE_META, loadMental, type Menta
 import JournalReviewPanel from "@/components/JournalReviewPanel";
 
 import { exportMyData } from "@/lib/privacy.functions";
+import { pullAndMerge, pushAll, type SyncTrade } from "@/lib/journal-sync";
 import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
 
 import {
@@ -312,8 +313,22 @@ function JournalPage() {
   // Load once, and only write back on renders that happen after the load.
   // Saving during the first commit would persist the empty initial state and
   // erase a log that is already on disk.
-  useEffect(() => { setTrades(loadTrades()); setHydrated(true); }, []);
-  useEffect(() => { if (hydrated) saveTrades(trades); }, [hydrated, trades]);
+  useEffect(() => {
+    const local = loadTrades();
+    setTrades(local);
+    setHydrated(true);
+    // Then reconcile with the account copy so a fresh login / new device sees
+    // the same journal instead of an empty calendar.
+    void pullAndMerge(local as unknown as SyncTrade[])
+      .then((merged) => setTrades(merged as unknown as Trade[]))
+      .catch(() => undefined);
+  }, []);
+  useEffect(() => {
+    if (!hydrated) return;
+    saveTrades(trades);
+    const timer = setTimeout(() => { void pushAll(trades as unknown as SyncTrade[]).catch(() => undefined); }, 400);
+    return () => clearTimeout(timer);
+  }, [hydrated, trades]);
 
 
 

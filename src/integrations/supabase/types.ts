@@ -729,6 +729,33 @@ export type Database = {
         }
         Relationships: []
       }
+      journal_trades: {
+        Row: {
+          created_at: string
+          data: Json
+          id: string
+          trade_date: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json
+          id: string
+          trade_date?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          id?: string
+          trade_date?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       leaderboard_opt_in: {
         Row: {
           created_at: string
