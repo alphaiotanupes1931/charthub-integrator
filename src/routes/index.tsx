@@ -15,6 +15,13 @@ import { supabase } from "@/integrations/supabase/client";
 import logoAsset from "@/assets/logo.png.asset.json";
 import dashboardPreview from "@/assets/dashboard-preview.png.asset.json";
 import gradeCard from "@/assets/grade-card.png.asset.json";
+import trader1 from "@/assets/trader-1.jpg";
+import trader2 from "@/assets/trader-2.jpg";
+import trader3 from "@/assets/trader-3.jpg";
+import trader4 from "@/assets/trader-4.jpg";
+
+const TRADER_AVATARS: string[] = [trader1, trader2, trader3, trader4];
+
 
 
 export const Route = createFileRoute("/")({
