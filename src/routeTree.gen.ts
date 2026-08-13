@@ -15,6 +15,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as FaqRouteImport } from './routes/faq'
@@ -61,6 +62,8 @@ import { Route as AppAnalyticsRouteImport } from './routes/_app.analytics'
 import { Route as AppAlertsRouteImport } from './routes/_app.alerts'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
 import { Route as AppAcademyRouteImport } from './routes/_app.academy'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as AppStrategiesIndexRouteImport } from './routes/_app.strategies.index'
 import { Route as AppChatIndexRouteImport } from './routes/_app.chat.index'
 import { Route as AppAcademyIndexRouteImport } from './routes/_app.academy.index'
@@ -75,6 +78,7 @@ import { Route as AppAcademyReviewRouteImport } from './routes/_app.academy.revi
 import { Route as AppAcademyMasterCertificateRouteImport } from './routes/_app.academy.master-certificate'
 import { Route as AppAcademyExamRouteImport } from './routes/_app.academy.exam'
 import { Route as AppAcademyModuleIdRouteImport } from './routes/_app.academy.$moduleId'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as AppAcademyModuleIdIndexRouteImport } from './routes/_app.academy.$moduleId.index'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -119,6 +123,11 @@ const PricingRoute = PricingRouteImport.update({
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HelpRoute = HelpRouteImport.update({
@@ -350,6 +359,18 @@ const AppAcademyRoute = AppAcademyRouteImport.update({
   path: '/academy',
   getParentRoute: () => AppRoute,
 } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AppStrategiesIndexRoute = AppStrategiesIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -421,6 +442,12 @@ const AppAcademyModuleIdRoute = AppAcademyModuleIdRouteImport.update({
   path: '/$moduleId',
   getParentRoute: () => AppAcademyRoute,
 } as any)
+const Char91DotmcpChar93InvokeToolToolRoute =
+  Char91DotmcpChar93InvokeToolToolRouteImport.update({
+    id: '/.mcp/invoke-tool/$tool',
+    path: '/.mcp/invoke-tool/$tool',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AppAcademyModuleIdIndexRoute = AppAcademyModuleIdIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -515,12 +542,15 @@ export interface FileRoutesByFullPath {
   '/faq': typeof FaqRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/help': typeof HelpRouteWithChildren
+  '/mcp': typeof McpRoute
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/academy': typeof AppAcademyRouteWithChildren
   '/admin': typeof AppAdminRouteWithChildren
   '/alerts': typeof AppAlertsRoute
@@ -560,6 +590,7 @@ export interface FileRoutesByFullPath {
   '/api/version': typeof ApiVersionRoute
   '/help/$slug': typeof HelpSlugRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/academy/$moduleId': typeof AppAcademyModuleIdRouteWithChildren
   '/academy/exam': typeof AppAcademyExamRoute
   '/academy/master-certificate': typeof AppAcademyMasterCertificateRoute
@@ -597,12 +628,15 @@ export interface FileRoutesByTo {
   '/faq': typeof FaqRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/help': typeof HelpRouteWithChildren
+  '/mcp': typeof McpRoute
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AppAdminRouteWithChildren
   '/alerts': typeof AppAlertsRoute
   '/analytics': typeof AppAnalyticsRoute
@@ -639,6 +673,7 @@ export interface FileRoutesByTo {
   '/api/version': typeof ApiVersionRoute
   '/help/$slug': typeof HelpSlugRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/academy/exam': typeof AppAcademyExamRoute
   '/academy/master-certificate': typeof AppAcademyMasterCertificateRoute
   '/academy/review': typeof AppAcademyReviewRoute
@@ -677,12 +712,15 @@ export interface FileRoutesById {
   '/faq': typeof FaqRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/help': typeof HelpRouteWithChildren
+  '/mcp': typeof McpRoute
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_app/academy': typeof AppAcademyRouteWithChildren
   '/_app/admin': typeof AppAdminRouteWithChildren
   '/_app/alerts': typeof AppAlertsRoute
@@ -722,6 +760,7 @@ export interface FileRoutesById {
   '/api/version': typeof ApiVersionRoute
   '/help/$slug': typeof HelpSlugRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_app/academy/$moduleId': typeof AppAcademyModuleIdRouteWithChildren
   '/_app/academy/exam': typeof AppAcademyExamRoute
   '/_app/academy/master-certificate': typeof AppAcademyMasterCertificateRoute
@@ -761,12 +800,15 @@ export interface FileRouteTypes {
     | '/faq'
     | '/forgot-password'
     | '/help'
+    | '/mcp'
     | '/onboarding'
     | '/pricing'
     | '/privacy'
     | '/reset-password'
     | '/status'
     | '/terms'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/academy'
     | '/admin'
     | '/alerts'
@@ -806,6 +848,7 @@ export interface FileRouteTypes {
     | '/api/version'
     | '/help/$slug'
     | '/invite/$code'
+    | '/.mcp/invoke-tool/$tool'
     | '/academy/$moduleId'
     | '/academy/exam'
     | '/academy/master-certificate'
@@ -843,12 +886,15 @@ export interface FileRouteTypes {
     | '/faq'
     | '/forgot-password'
     | '/help'
+    | '/mcp'
     | '/onboarding'
     | '/pricing'
     | '/privacy'
     | '/reset-password'
     | '/status'
     | '/terms'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/admin'
     | '/alerts'
     | '/analytics'
@@ -885,6 +931,7 @@ export interface FileRouteTypes {
     | '/api/version'
     | '/help/$slug'
     | '/invite/$code'
+    | '/.mcp/invoke-tool/$tool'
     | '/academy/exam'
     | '/academy/master-certificate'
     | '/academy/review'
@@ -922,12 +969,15 @@ export interface FileRouteTypes {
     | '/faq'
     | '/forgot-password'
     | '/help'
+    | '/mcp'
     | '/onboarding'
     | '/pricing'
     | '/privacy'
     | '/reset-password'
     | '/status'
     | '/terms'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/_app/academy'
     | '/_app/admin'
     | '/_app/alerts'
@@ -967,6 +1017,7 @@ export interface FileRouteTypes {
     | '/api/version'
     | '/help/$slug'
     | '/invite/$code'
+    | '/.mcp/invoke-tool/$tool'
     | '/_app/academy/$moduleId'
     | '/_app/academy/exam'
     | '/_app/academy/master-certificate'
@@ -1006,18 +1057,22 @@ export interface RootRouteChildren {
   FaqRoute: typeof FaqRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   HelpRoute: typeof HelpRouteWithChildren
+  McpRoute: typeof McpRoute
   OnboardingRoute: typeof OnboardingRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   StatusRoute: typeof StatusRoute
   TermsRoute: typeof TermsRoute
+  Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiHealthRoute: typeof ApiHealthRoute
   ApiOhlcRoute: typeof ApiOhlcRoute
   ApiTtsRoute: typeof ApiTtsRoute
   ApiVersionRoute: typeof ApiVersionRoute
   InviteCodeRoute: typeof InviteCodeRoute
+  Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicBridgeRoute: typeof ApiPublicBridgeRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
   ApiTradelockerImportRoute: typeof ApiTradelockerImportRoute
@@ -1078,6 +1133,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/help': {
@@ -1402,6 +1464,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAcademyRouteImport
       parentRoute: typeof AppRoute
     }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/list-tools': {
+      id: '/.mcp/list-tools'
+      path: '/.mcp/list-tools'
+      fullPath: '/.mcp/list-tools'
+      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app/strategies/': {
       id: '/_app/strategies/'
       path: '/'
@@ -1499,6 +1575,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/academy/$moduleId'
       preLoaderRoute: typeof AppAcademyModuleIdRouteImport
       parentRoute: typeof AppAcademyRoute
+    }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_app/academy/$moduleId/': {
       id: '/_app/academy/$moduleId/'
@@ -1772,18 +1855,23 @@ const rootRouteChildren: RootRouteChildren = {
   FaqRoute: FaqRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   HelpRoute: HelpRouteWithChildren,
+  McpRoute: McpRoute,
   OnboardingRoute: OnboardingRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   StatusRoute: StatusRoute,
   TermsRoute: TermsRoute,
+  Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ApiChatRoute: ApiChatRoute,
   ApiHealthRoute: ApiHealthRoute,
   ApiOhlcRoute: ApiOhlcRoute,
   ApiTtsRoute: ApiTtsRoute,
   ApiVersionRoute: ApiVersionRoute,
   InviteCodeRoute: InviteCodeRoute,
+  Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicBridgeRoute: ApiPublicBridgeRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
   ApiTradelockerImportRoute: ApiTradelockerImportRoute,
