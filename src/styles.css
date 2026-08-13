@@ -134,10 +134,10 @@
   }
   .font-mono { font-family: var(--font-mono); }
 
-  /* Global radius flattening: no more rounded-3xl. Ships across every route. */
-  .rounded-3xl { border-radius: 0.5rem !important; }
-  .rounded-2xl { border-radius: 0.5rem !important; }
-  .rounded-xl  { border-radius: 0.375rem !important; }
+  /* Global radius normalization: soft, consistent corners across every route. */
+  .rounded-3xl { border-radius: 0.875rem !important; }
+  .rounded-2xl { border-radius: 0.75rem !important; }
+  .rounded-xl  { border-radius: 0.625rem !important; }
 
   /* Kill scale-on-hover globally; framer-motion handles motion now. */
   .hover\:scale-105:hover,
