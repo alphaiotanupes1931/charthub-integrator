@@ -6,7 +6,7 @@ import { TradingViewChart } from "@/components/TradingViewChart";
 import { NativeChart, LEVEL_META, type LevelKey, type ChartSnapshot } from "@/components/NativeChart";
 
 import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
-import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Clock, MessageSquare, X, Plug, Square, Paperclip, ChevronUp, PanelRightClose, PanelRightOpen, BarChart3, ThumbsUp, ThumbsDown, Brain, LineChart, Settings2, Maximize, Minimize, BookOpen, FlaskConical } from "lucide-react";
+import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Clock, MessageSquare, X, Plug, Square, Paperclip, ChevronUp, PanelRightClose, PanelRightOpen, BarChart3, ThumbsUp, ThumbsDown, Brain, LineChart, Settings2, Maximize, Minimize, BookOpen, FlaskConical, Zap } from "lucide-react";
 
 
 import { useCoachVoice } from "@/hooks/useCoachVoice";
@@ -407,10 +407,27 @@ function ScanTicket({
                 });
               }}
               className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-accent/70 px-4 py-2.5 text-xs font-semibold text-foreground hover:bg-accent transition"
-              title="Log this setup in your trade journal as a trade you are taking"
+              title="Log this setup in your trade journal"
             >
-              <BookOpen className="h-3.5 w-3.5" /> I am taking this trade
+              <BookOpen className="h-3.5 w-3.5" /> Log this trade
             </button>
+          )}
+
+          {!isNoEntry && (
+            <Link
+              to="/broker"
+              search={{
+                symbol: symbol.ticker,
+                side: result.bias?.toLowerCase().includes("short") ? "short" : "long",
+                entry: result.entry ?? "",
+                stop: result.stop ?? "",
+                tp: result.tp1 ?? "",
+              } as never}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-xs font-semibold text-primary-foreground hover:opacity-90 transition"
+              title="Sign in to your OANDA account and place this trade"
+            >
+              <Zap className="h-3.5 w-3.5" /> Take this trade
+            </Link>
           )}
 
           <AutoBacktestVerify
