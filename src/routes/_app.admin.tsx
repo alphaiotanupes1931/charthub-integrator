@@ -30,7 +30,9 @@ type UserRow = {
   broker_name: string | null;
   broker_account_type: string | null;
   banned: boolean;
+  role?: string | null;
 };
+
 
 function AdminPage() {
   const { isAdmin, loading: profileLoading } = useProfile();
