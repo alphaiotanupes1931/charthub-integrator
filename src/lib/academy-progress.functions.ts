@@ -52,5 +52,47 @@ export const saveAcademyProgress = createServerFn({ method: "POST" })
       .from("academy_progress")
       .upsert(row, { onConflict: "user_id" });
     if (error) throw new Error(error.message);
+
+    // Progress notifications: fire once per milestone (module finished,
+    // certificate ready, whole academy done). Never blocks the save.
+    if (data.completed) {
+      try {
+        await notifyAcademyMilestones(context.userId, data.completed);
+      } catch (e) {
+        console.warn("[academy] milestone_notify_failed", (e as Error).message);
+      }
+    }
     return { ok: true };
   });
+
+async function notifyAcademyMilestones(userId: string, completed: Record<string, true>) {
+  const [{ ACADEMY }, { createNotificationOnce }] = await Promise.all([
+    import("@/lib/academy-content"),
+    import("@/lib/notifications.server"),
+  ]);
+
+  let modulesDone = 0;
+  for (const mod of ACADEMY) {
+    const lessons = mod.lessons.map((l) => l.id);
+    const done = lessons.every((id) => completed[id]);
+    if (!done) continue;
+    modulesDone += 1;
+    await createNotificationOnce(`academy:module:${mod.id}`, {
+      userId,
+      kind: "info",
+      title: `Module ${mod.id} complete: ${mod.title}`,
+      body: "Your certificate for this module is ready to view.",
+      url: `/academy/certificate/${mod.id}`,
+    });
+  }
+
+  if (modulesDone === ACADEMY.length && ACADEMY.length > 0) {
+    await createNotificationOnce("academy:master", {
+      userId,
+      kind: "info",
+      title: "Academy complete",
+      body: "Every module is finished. Your master certificate is ready.",
+      url: "/academy/master-certificate",
+    });
+  }
+}
