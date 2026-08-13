@@ -194,11 +194,15 @@ function ChatThreadInner({
         const strategy = stratName ? findStrategyByName(stratName) ?? { name: stratName } : null;
         const lens = findLens(readActiveLensId());
         const lastChart = readLastChart();
+        const coach = readActiveCoach();
+        const previousCoach = lastSentCoachRef.current;
+        lastSentCoachRef.current = coach;
         return {
           body: {
             messages,
             threadId: id,
-            coach: readActiveCoach(),
+            coach,
+            previousCoach,
             journal: readJournal(),
             chart: lastChart ?? undefined,
             strategy,
@@ -207,6 +211,7 @@ function ChatThreadInner({
           },
         };
       },
+
     }),
     onError: (err) => {
       console.error(err);
