@@ -77,7 +77,6 @@ export function NotificationBell() {
   const markAllFn = useServerFn(markAllNotificationsRead);
   const deleteFn = useServerFn(deleteNotification);
   const clearReadFn = useServerFn(clearReadNotifications);
-  const createTestFn = useServerFn(createTestNotification);
 
   const [hasSession, setHasSession] = useState(false);
   useEffect(() => {
