@@ -49,6 +49,7 @@ import { Route as AppFlashcardsRouteImport } from './routes/_app.flashcards'
 import { Route as AppFirstWeekRouteImport } from './routes/_app.first-week'
 import { Route as AppDiscordRouteImport } from './routes/_app.discord'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
+import { Route as AppContactRouteImport } from './routes/_app.contact'
 import { Route as AppConnectionsRouteImport } from './routes/_app.connections'
 import { Route as AppCoachesRouteImport } from './routes/_app.coaches'
 import { Route as AppCoachDashboardRouteImport } from './routes/_app.coach-dashboard'
@@ -289,6 +290,11 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AppRoute,
 } as any)
+const AppContactRoute = AppContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppConnectionsRoute = AppConnectionsRouteImport.update({
   id: '/connections',
   path: '/connections',
@@ -526,6 +532,7 @@ export interface FileRoutesByFullPath {
   '/coach-dashboard': typeof AppCoachDashboardRoute
   '/coaches': typeof AppCoachesRoute
   '/connections': typeof AppConnectionsRoute
+  '/contact': typeof AppContactRoute
   '/dashboard': typeof AppDashboardRoute
   '/discord': typeof AppDiscordRoute
   '/first-week': typeof AppFirstWeekRoute
@@ -605,6 +612,7 @@ export interface FileRoutesByTo {
   '/coach-dashboard': typeof AppCoachDashboardRoute
   '/coaches': typeof AppCoachesRoute
   '/connections': typeof AppConnectionsRoute
+  '/contact': typeof AppContactRoute
   '/dashboard': typeof AppDashboardRoute
   '/discord': typeof AppDiscordRoute
   '/first-week': typeof AppFirstWeekRoute
@@ -686,6 +694,7 @@ export interface FileRoutesById {
   '/_app/coach-dashboard': typeof AppCoachDashboardRoute
   '/_app/coaches': typeof AppCoachesRoute
   '/_app/connections': typeof AppConnectionsRoute
+  '/_app/contact': typeof AppContactRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/discord': typeof AppDiscordRoute
   '/_app/first-week': typeof AppFirstWeekRoute
@@ -769,6 +778,7 @@ export interface FileRouteTypes {
     | '/coach-dashboard'
     | '/coaches'
     | '/connections'
+    | '/contact'
     | '/dashboard'
     | '/discord'
     | '/first-week'
@@ -848,6 +858,7 @@ export interface FileRouteTypes {
     | '/coach-dashboard'
     | '/coaches'
     | '/connections'
+    | '/contact'
     | '/dashboard'
     | '/discord'
     | '/first-week'
@@ -928,6 +939,7 @@ export interface FileRouteTypes {
     | '/_app/coach-dashboard'
     | '/_app/coaches'
     | '/_app/connections'
+    | '/_app/contact'
     | '/_app/dashboard'
     | '/_app/discord'
     | '/_app/first-week'
@@ -1306,6 +1318,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/contact': {
+      id: '/_app/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof AppContactRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/connections': {
       id: '/_app/connections'
       path: '/connections'
@@ -1675,6 +1694,7 @@ interface AppRouteChildren {
   AppCoachDashboardRoute: typeof AppCoachDashboardRoute
   AppCoachesRoute: typeof AppCoachesRoute
   AppConnectionsRoute: typeof AppConnectionsRoute
+  AppContactRoute: typeof AppContactRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDiscordRoute: typeof AppDiscordRoute
   AppFirstWeekRoute: typeof AppFirstWeekRoute
@@ -1709,6 +1729,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppCoachDashboardRoute: AppCoachDashboardRoute,
   AppCoachesRoute: AppCoachesRoute,
   AppConnectionsRoute: AppConnectionsRoute,
+  AppContactRoute: AppContactRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDiscordRoute: AppDiscordRoute,
   AppFirstWeekRoute: AppFirstWeekRoute,
