@@ -456,7 +456,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   active ? "text-primary" : "text-muted-foreground"
                 }`}
               >
-                <Icon className={`h-5 w-5 ${active ? "drop-shadow-[0_0_6px_color-mix(in_oklab,var(--gold)_60%,transparent)]" : ""}`} />
+                <Icon className="h-[22px] w-[22px]" strokeWidth={active ? 2.4 : 1.8} />
                 {t.label}
               </Link>
             );
@@ -641,14 +641,15 @@ function SidebarSearch({ nav }: { nav: NavItem[] }) {
           else if (e.key === "ArrowUp") { e.preventDefault(); setActive((i) => Math.max(i - 1, 0)); }
           else if (e.key === "Enter") { e.preventDefault(); const r = results[active]; if (r) go(r.to); }
         }}
-        placeholder="Search pages…"
-        className="w-full h-9 rounded-lg border border-border bg-card/50 pl-9 pr-3 md:pr-12 text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/40"
+        placeholder="Search"
+        className="w-full h-10 rounded-full border border-transparent bg-accent/60 pl-9 pr-3 md:pr-12 text-sm placeholder:text-muted-foreground focus:outline-none focus:bg-accent focus:border-border"
       />
-      <kbd className="hidden md:block absolute right-3 top-1/2 -translate-y-1/2 rounded border border-border bg-background px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground pointer-events-none">
+      <kbd className="hidden md:block absolute right-3 top-1/2 -translate-y-1/2 rounded px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground pointer-events-none">
         ⌘K
       </kbd>
       {open && results.length > 0 && (
-        <div className="absolute left-0 right-0 mt-1.5 rounded-lg border border-border bg-card shadow-xl z-50 overflow-hidden">
+        <div className="absolute left-0 right-0 mt-2 rounded-2xl border border-border bg-card shadow-xl z-50 overflow-hidden">
+
           {results.map((r, i) => {
             const Icon = r.icon;
             return (
