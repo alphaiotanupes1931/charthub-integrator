@@ -176,6 +176,7 @@ type ChatRequestBody = {
   messages?: UIMessage[];
   threadId?: string;
   coach?: string;
+  previousCoach?: string | null;
   journal?: Trade[];
   chart?: ChartCtx;
   strategy?: StrategyCtx | null;
@@ -695,7 +696,7 @@ export const Route = createFileRoute("/api/chat")({
         } catch {
           return new Response("Invalid JSON", { status: 400, headers: cors });
         }
-        const { messages, threadId, coach, journal, chart, strategy, lens, signalLearning } = body;
+        const { messages, threadId, coach, previousCoach, journal, chart, strategy, lens, signalLearning } = body;
         if (!Array.isArray(messages) || !threadId) {
           return new Response("messages, threadId required", { status: 400, headers: cors });
         }
@@ -893,7 +894,7 @@ export const Route = createFileRoute("/api/chat")({
 
         const staticSystem = staticSystemPrompt();
         const forceDraw = shouldForceChartDraw(messages);
-        const liveSystem = dynamicSystemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens), learningCtx, newsCtx, scoreCtx, forceDraw);
+        const liveSystem = dynamicSystemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens), learningCtx, newsCtx, scoreCtx, forceDraw, previousCoach);
 
         const useClaude = !!anthropicKey && (await anthropicUsable(anthropicKey));
         // Model routing: a plain setup grade or a short factual question runs on
