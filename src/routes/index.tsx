@@ -116,77 +116,128 @@ function Landing() {
     <div className="min-h-screen w-full text-foreground">
       <Nav isAuthed={isAuthed} />
 
-      {/* COVER — quiet, centered, type-led. No background video, no chrome. */}
-      <section className="px-5 sm:px-6 pt-20 sm:pt-32 pb-16 sm:pb-24 border-b border-border/60">
+      {/* COVER — Instagram-style: compact split, product shot on the right, pill actions. */}
+      <section className="px-5 sm:px-6 pt-14 sm:pt-20 pb-14 sm:pb-20 border-b border-border/60">
         <motion.div
           variants={heroContainer}
           initial="hidden"
           animate="show"
-          className="max-w-3xl mx-auto text-center"
+          className="max-w-6xl mx-auto grid lg:grid-cols-[1fr_minmax(0,1.05fr)] gap-12 lg:gap-16 items-center"
         >
-          <motion.img
-            variants={heroItem}
-            src={logoAsset.url}
-            alt="TradeMind"
-            className="mx-auto h-12 w-12 rounded-xl border border-border/60"
-            loading="eager"
-          />
-
-          <motion.h1 variants={heroItem} className="h-display-xl mt-8">
-            Grade the setup.
-            <br />
-            Take the trade.
-          </motion.h1>
-
-          <motion.p
-            variants={heroItem}
-            className="mt-6 text-base sm:text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed"
-          >
-            TradeMind scores every setup on structure, risk, and confluence, so you take the
-            ones that meet your rules and skip the rest.
-          </motion.p>
-
-          <motion.div variants={heroItem} className="mt-10 flex flex-col items-center gap-5">
-            <a
-              href={dashboardHref}
-              className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-2xl bg-primary text-primary-foreground px-7 py-3 text-sm font-semibold"
+          <div className="text-center lg:text-left">
+            <motion.div
+              variants={heroItem}
+              className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card px-3 py-1.5"
             >
-              Open dashboard
-              <ArrowRight className="size-4" />
-            </a>
-            {!isAuthed && (
-              <Link
-                to="/auth"
-                search={{ mode: "signin" }}
-                className="text-sm text-muted-foreground hover:text-foreground"
+              <img
+                src={logoAsset.url}
+                alt="TradeMind"
+                className="h-5 w-5 rounded-full"
+                loading="eager"
+              />
+              <span className="text-[11px] font-semibold tracking-tight">TradeMind</span>
+              <span className="h-1 w-1 rounded-full bg-border" />
+              <span className="text-[11px] text-muted-foreground">Public beta</span>
+            </motion.div>
+
+            <motion.h1
+              variants={heroItem}
+              className="h-display-xl mt-6 text-[clamp(2.1rem,5.2vw,3.9rem)]"
+            >
+              Grade the setup.
+              <br />
+              Take the trade.
+            </motion.h1>
+
+            <motion.p
+              variants={heroItem}
+              className="mt-5 text-base sm:text-[17px] text-muted-foreground max-w-md mx-auto lg:mx-0 leading-relaxed"
+            >
+              TradeMind scores every setup on structure, risk, and confluence, so you take the
+              ones that meet your rules and skip the rest.
+            </motion.p>
+
+            <motion.div
+              variants={heroItem}
+              className="mt-8 flex flex-col sm:flex-row items-center lg:justify-start justify-center gap-3"
+            >
+              <a
+                href={dashboardHref}
+                className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3 text-sm font-semibold hover:opacity-90 transition-opacity"
               >
-                Already have an account? <span className="text-primary font-medium">Log in</span>
-              </Link>
+                Open dashboard
+                <ArrowRight className="size-4" />
+              </a>
+              <a
+                href={signupHref}
+                className="inline-flex w-full sm:w-auto items-center justify-center rounded-full border border-border/60 bg-card px-6 py-3 text-sm font-semibold hover:bg-muted/60 transition-colors"
+              >
+                Start free trial
+              </a>
+            </motion.div>
+
+            <motion.div
+              variants={heroItem}
+              className="mt-6 flex flex-col sm:flex-row items-center lg:justify-start justify-center gap-x-4 gap-y-3"
+            >
+              <div className="flex items-center gap-2">
+                <div className="flex -space-x-2">
+                  {["JD", "MK", "AR", "TP"].map((i) => (
+                    <span
+                      key={i}
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-full border-2 border-background bg-muted text-[9px] font-semibold text-muted-foreground"
+                    >
+                      {i}
+                    </span>
+                  ))}
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  Traders grading setups daily
+                </span>
+              </div>
+            </motion.div>
+
+            {!isAuthed && (
+              <motion.div variants={heroItem} className="mt-5 text-sm text-muted-foreground">
+                Already have an account?{" "}
+                <Link
+                  to="/auth"
+                  search={{ mode: "signin" }}
+                  className="text-primary font-semibold hover:underline"
+                >
+                  Log in
+                </Link>
+              </motion.div>
             )}
-            <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
+
+            <motion.div
+              variants={heroItem}
+              className="mt-6 flex flex-wrap items-center lg:justify-start justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground"
+            >
               <Bullet>7-day free trial</Bullet>
               <Bullet>Cancel anytime</Bullet>
-              <Bullet>Public beta</Bullet>
+              <Bullet>No card to browse</Bullet>
+            </motion.div>
+          </div>
+
+          <motion.div variants={heroItem} className="relative">
+            <div className="rounded-2xl border border-border/60 bg-card overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/60">
+                <img src={logoAsset.url} alt="" className="h-5 w-5 rounded-full" loading="lazy" />
+                <span className="text-xs font-semibold tracking-tight">Dashboard</span>
+                <span className="ml-auto text-[10px] text-muted-foreground">Live</span>
+              </div>
+              <img
+                src={dashboardPreview.url}
+                alt="TradeMind dashboard preview showing the gold chart, timeframes, and sidebar navigation"
+                className="block w-full h-auto"
+                loading="lazy"
+              />
             </div>
           </motion.div>
         </motion.div>
       </section>
 
-
-
-      {/* LIVE CHART PREVIEW */}
-      <section className="px-4 sm:px-6 py-12 sm:py-16 border-b border-border/60">
-        <div className="max-w-6xl mx-auto">
-          <BrowserFrame url="trademind.app/dashboard">
-            <img
-              src={dashboardPreview.url}
-              alt="TradeMind dashboard preview showing the gold chart, timeframes, and sidebar navigation"
-              className="block w-full h-auto"
-              loading="lazy"
-            />
-          </BrowserFrame>
-        </div>
-      </section>
 
 
       {/* TICKER */}
