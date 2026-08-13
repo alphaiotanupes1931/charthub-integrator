@@ -54,7 +54,24 @@ export const runSignalScan = createServerFn({ method: "POST" })
     const results = await Promise.all(tickers.map(async (ticker): Promise<Signal | null> => {
       try {
         const snap = await getSnapshot(ticker, data.interval);
-        if (snap.source === "unavailable" || snap.candles.length < 20) return null;
+        if (snap.source === "unavailable" || snap.candles.length < 20) {
+          // Keep the instrument visible instead of dropping it silently, so a
+          // feed hiccup on US30 / Silver / Oil is obvious rather than looking
+          // like the scanner skipped them.
+          return {
+            ticker,
+            action: "HOLD",
+            grade: "NO ENTRY",
+            confidence: 0,
+            entry: "-",
+            stop: "-",
+            tp1: "-",
+            rr: "-",
+            notes: "Price feed unavailable for this instrument right now. Re-run the scan in a moment.",
+            generatedAt: new Date().toISOString(),
+          };
+        }
+
         const memo = await runResearch(apiKey, snap);
         const plan = await runPlanner(apiKey, snap, memo);
         return {
