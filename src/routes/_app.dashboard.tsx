@@ -844,8 +844,9 @@ function Dashboard() {
   // knows what the trader is looking at even without a live chart panel.
   useEffect(() => {
     const enabledLevels = ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none";
-    writeLastChart({ ticker: symbolLabel(symbol), intervalLabel, enabledLevels });
-  }, [symbol, intervalLabel, levels]);
+    writeLastChart({ ticker: symbolLabel(symbol), intervalLabel, enabledLevels, tvSymbol: symbol.tv, interval });
+  }, [symbol, intervalLabel, interval, levels]);
+
 
   // Invalidate any in-flight scan as soon as the chart context changes. A
   // slower response for the previous instrument/timeframe must never replace

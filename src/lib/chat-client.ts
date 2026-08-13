@@ -50,7 +50,7 @@ export function writeActiveStrategy(name: string | null) {
 }
 
 const LAST_CHART_KEY = "trademind.lastChart.v1";
-export type LastChart = { ticker: string; intervalLabel: string; enabledLevels?: string };
+export type LastChart = { ticker: string; intervalLabel: string; enabledLevels?: string; tvSymbol?: string; interval?: string };
 export function readLastChart(): LastChart | null {
   if (typeof window === "undefined") return null;
   try {
