@@ -847,7 +847,9 @@ export const Route = createFileRoute("/api/chat")({
           model: primaryModel,
           messages: modelMessages,
           maxOutputTokens: useClaude ? 8192 : 4096,
-          temperature: useClaude ? 0.7 : undefined,
+          // Lower than default: persona rules are followed far more literally at
+          // low temperature, which is what makes the coaches read differently.
+          temperature: useClaude ? 0.45 : undefined,
           abortSignal: request.signal,
           ...(useClaude ? {} : { providerOptions: { lovable: { service_tier: "priority" } } }),
           experimental_transform: stripReasoningTransform,
