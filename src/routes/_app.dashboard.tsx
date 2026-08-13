@@ -1122,6 +1122,10 @@ function Dashboard() {
       })
       .catch(() => {
         if (requestId !== activeScanRequestRef.current) return;
+        // Log a system notice so the trader can see the failure in their inbox
+        // later (deduped server-side to once every few hours).
+        void reportSystemNoticeFn({ data: { reason: "scan_failed", detail: `${scanSymbol.ticker} ${scanInterval}` } })
+          .catch(() => { /* best-effort */ });
         setResult({
           grade: "NO ENTRY", bias: "Neutral", confidence: 0,
           notes: "Research service is temporarily unavailable. Please try again in a moment.",
