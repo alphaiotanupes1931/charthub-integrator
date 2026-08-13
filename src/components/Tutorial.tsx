@@ -103,13 +103,18 @@ export function Tutorial() {
   const [rect, setRect] = useState<DOMRect | null>(null);
 
   useEffect(() => {
-    try {
-      if (window.location.pathname !== "/dashboard") return;
-      if (!localStorage.getItem(STORAGE_KEY)) {
-        const t = window.setTimeout(() => setOpen(true), 400);
-        return () => window.clearTimeout(t);
-      }
-    } catch { /* ignore */ }
+    if (typeof window === "undefined") return;
+    if (window.location.pathname !== "/dashboard") return;
+    let cancelled = false;
+    let timer = 0;
+    void shouldShowTour([STORAGE_KEY]).then((show) => {
+      if (cancelled || !show) return;
+      timer = window.setTimeout(() => setOpen(true), 400);
+    });
+    return () => {
+      cancelled = true;
+      if (timer) window.clearTimeout(timer);
+    };
   }, []);
 
   useEffect(() => {
