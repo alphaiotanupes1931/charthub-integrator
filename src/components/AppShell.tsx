@@ -118,7 +118,8 @@ const NAV_GROUPS: NavGroup[] = [
     id: "accounts",
     label: "Accounts",
     icon: Plug,
-    items: [
+     items: [
+      { to: "/broker",  label: "Broker (OANDA)", icon: Plug },
       { to: "/discord", label: "Discord", icon: MessageSquare },
       { to: "/contact", label: "Contact & Support", icon: LifeBuoy },
     ],
