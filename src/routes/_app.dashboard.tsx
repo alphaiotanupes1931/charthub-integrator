@@ -25,7 +25,7 @@ import { COACH_ICON_META, DEFAULT_COACH_ICON } from "@/lib/coachMeta";
 import { reportSystemNotice } from "@/lib/notifications.functions";
 import { runResearchPlan } from "@/lib/agents/research.functions";
 import { recordHermesFeedback } from "@/lib/agents/hermes.functions";
-import { listChatThreads, createChatThread, deleteChatThread, getActiveModel, type ActiveModelInfo } from "@/lib/chat.functions";
+import { listChatThreads, createChatThread, deleteChatThread } from "@/lib/chat.functions";
 import type { ResearchMemo, OrderFlow } from "@/lib/agents/types";
 import { Link } from "@tanstack/react-router";
 import { recordSignal, takeTrade } from "@/lib/signalHistory";
@@ -679,11 +679,6 @@ function Dashboard() {
   }, [lastUpdatedAt]);
 
   const [rightTab, setRightTab] = useState<"analysis" | "chat">("analysis");
-  const [activeModel, setActiveModel] = useState<ActiveModelInfo | null>(null);
-  const getModel = useServerFn(getActiveModel);
-  useEffect(() => {
-    getModel().then(setActiveModel).catch(() => setActiveModel(null));
-  }, [getModel]);
   const [chatPanelView, setChatPanelView] = useState<"conversation" | "history">("conversation");
   const [activeThreadId, setActiveThreadId] = useState<string | null>(() => readLastThreadId());
   const [rightOpen, setRightOpen] = useState(true);
@@ -1749,14 +1744,6 @@ function Dashboard() {
                     </button>
                   ))}
                 </div>
-                {activeModel && (
-                  <span
-                    className="shrink-0 text-[10px] font-medium text-muted-foreground truncate"
-                    title={`Powered by ${activeModel.label}`}
-                  >
-                    {activeModel.label}
-                  </span>
-                )}
               </div>
             </div>
 
