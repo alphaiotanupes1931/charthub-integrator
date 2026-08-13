@@ -110,12 +110,15 @@ export const adminListSupportRequests = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context as Ctx;
-    const { data: isAdmin, error: roleErr } = await supabase.rpc("has_role" as never, {
-      _user_id: userId,
-      _role: "admin",
-    } as never);
+    const { data: roleRow, error: roleErr } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
     if (roleErr) throw new Error(roleErr.message);
-    if (!isAdmin) throw new Error("Forbidden");
+    if (!roleRow) throw new Error("Forbidden");
+
     const { data, error } = await supabase
       .from("support_tickets")
       .select("id, kind, subject, message, reply_email, status, created_at")
