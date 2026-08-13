@@ -142,7 +142,7 @@ function Landing() {
 
             <motion.h1
               variants={heroItem}
-              className="h-display-xl mt-6 text-[2rem] sm:text-[2.5rem] lg:text-[2.9rem] xl:text-[3.2rem]"
+              className="font-display font-semibold tracking-[-0.03em] leading-[1.05] mt-6 text-[2rem] sm:text-[2.5rem] lg:text-[2.9rem] xl:text-[3.2rem]"
             >
               Grade the setup.
               <br />
