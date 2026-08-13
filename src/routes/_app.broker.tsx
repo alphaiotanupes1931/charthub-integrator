@@ -23,7 +23,6 @@ type BrokerSearch = {
   tp?: number | string;
 };
 
-import { AlpacaPanel } from "@/components/AlpacaPanel";
 import { OandaConnectPanel } from "@/components/OandaConnectPanel";
 
 
