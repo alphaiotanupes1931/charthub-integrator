@@ -988,6 +988,18 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
   return (
     <div className={`relative h-full w-full ${className ?? ""}`}>
       <div ref={containerRef} className="absolute inset-0" />
+      {(initError || notPainted) && displayCandles.length > 0 && (
+        <>
+          <FallbackCandlestickLayer candles={displayCandles} />
+          <button
+            type="button"
+            onClick={() => { setInitError(null); setNotPainted(false); setInitAttempt((n) => n + 1); }}
+            className="absolute right-2 bottom-10 z-20 rounded-full border border-border/60 bg-background/80 px-2.5 py-1 text-[10px] font-medium text-muted-foreground backdrop-blur hover:text-foreground"
+          >
+            Reload chart
+          </button>
+        </>
+      )}
       {/* Session bands overlay */}
       {sessions && bands.length > 0 && (
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
