@@ -856,7 +856,7 @@ export const Route = createFileRoute("/api/chat")({
         const forceDraw = shouldForceChartDraw(messages);
         const liveSystem = dynamicSystemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens), learningCtx, newsCtx, scoreCtx, forceDraw);
 
-        const useClaude = !!anthropicKey;
+        const useClaude = !!anthropicKey && (await anthropicUsable(anthropicKey));
         // Model routing: a plain setup grade or a short factual question runs on
         // the cheap model; open-ended coaching, teaching, psychology, and
         // screenshot reads stay on the top model.
