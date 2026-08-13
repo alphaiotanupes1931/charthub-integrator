@@ -20,12 +20,16 @@ import { ChartSourceBadge, feedLabel } from "@/components/ChartSourceBadge";
 
 export type LevelKey = "VWAP" | "POC" | "SR" | "ZONES" | "FVG" | "FIB" | "LIQ" | "OF" | "CISD";
 
+/** lightweight-charts parses colors itself and cannot read CSS variables. */
+const BULL_COLOR = "#2dd4bf";
+
+
 export const LEVEL_META: Record<LevelKey, { label: string; color: string; tone: string }> = {
   VWAP:  { label: "VWAP",  color: "#fbbf24", tone: "bg-amber-500/10 text-amber-300 border-amber-500/30" },
   POC:   { label: "POC",   color: "#c084fc", tone: "bg-purple-500/10 text-purple-300 border-purple-500/30" },
   SR:    { label: "S/R",   color: "#38bdf8", tone: "bg-sky-500/10 text-sky-300 border-sky-500/30" },
   ZONES: { label: "Zones", color: "#60a5fa", tone: "bg-blue-500/10 text-blue-300 border-blue-500/30" },
-  FVG:   { label: "FVG",   color: "var(--bull)", tone: "bg-bull/10 text-bull border-bull/30" },
+  FVG:   { label: "FVG",   color: BULL_COLOR, tone: "bg-bull/10 text-bull border-bull/30" },
   FIB:   { label: "Fib",   color: "#f472b6", tone: "bg-pink-500/10 text-pink-300 border-pink-500/30" },
   LIQ:   { label: "Liq",   color: "#f87171", tone: "bg-red-500/10 text-red-300 border-red-500/30" },
   OF:    { label: "Order Flow", color: "#22d3ee", tone: "bg-cyan-500/10 text-cyan-300 border-cyan-500/30" },
@@ -146,7 +150,7 @@ function FallbackCandlestickLayer({ candles }: { candles: Candle[] }) {
         const highY = y(c.high);
         const lowY = y(c.low);
         const up = c.close >= c.open;
-        const color = up ? "var(--bull)" : "#f87171";
+        const color = up ? BULL_COLOR : "#f87171";
         return (
           <g key={`${Number(c.time)}-${i}`}>
             <line x1={cx} x2={cx} y1={highY} y2={lowY} stroke={color} strokeWidth="1.5" vectorEffect="non-scaling-stroke" opacity="0.9" />
@@ -713,7 +717,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       } else if (a.kind === "label") {
         push(a.price, a.color || "#c084fc", a.text, true);
       } else if (a.kind === "zone") {
-        const color = a.color || "var(--bull)";
+        const color = a.color || BULL_COLOR;
         push(a.top, color, `${a.label || "Zone"} ↑`, true);
         push(a.bottom, color, `${a.label || "Zone"} ↓`, true);
       }
@@ -731,7 +735,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
         if (yTop == null || yBot == null) return;
         const top = Math.min(yTop, yBot);
         const height = Math.max(2, Math.abs(yBot - yTop));
-        out.push({ key: `ann-${i}`, top, height, color: a.color || "var(--bull)", label: a.label });
+        out.push({ key: `ann-${i}`, top, height, color: a.color || BULL_COLOR, label: a.label });
       });
       setAnnZones(out);
     };
