@@ -141,6 +141,23 @@ function ChatThreadInner({
     getModel().then(setActiveModel).catch(() => setActiveModel(null));
   }, [getModel]);
 
+  // Coach switches must show up immediately in this header and on the next reply.
+  const [activeCoach, setActiveCoach] = useState<string>(() => readActiveCoach());
+  useEffect(() => {
+    const sync = () => setActiveCoach(readActiveCoach());
+    sync();
+    window.addEventListener("trademind:coach", sync);
+    window.addEventListener("storage", sync);
+    window.addEventListener("focus", sync);
+    return () => {
+      window.removeEventListener("trademind:coach", sync);
+      window.removeEventListener("storage", sync);
+      window.removeEventListener("focus", sync);
+    };
+  }, []);
+  const lastSentCoachRef = useRef<string | null>(null);
+
+
   // Live snapshot of instrument + strategy so the header always reflects context.
   const [ctx, setCtx] = useState<{ chart: LastChart | null; strategy: string | null }>(() => ({
     chart: readLastChart(),
@@ -177,11 +194,15 @@ function ChatThreadInner({
         const strategy = stratName ? findStrategyByName(stratName) ?? { name: stratName } : null;
         const lens = findLens(readActiveLensId());
         const lastChart = readLastChart();
+        const coach = readActiveCoach();
+        const previousCoach = lastSentCoachRef.current;
+        lastSentCoachRef.current = coach;
         return {
           body: {
             messages,
             threadId: id,
-            coach: readActiveCoach(),
+            coach,
+            previousCoach,
             journal: readJournal(),
             chart: lastChart ?? undefined,
             strategy,
@@ -190,6 +211,7 @@ function ChatThreadInner({
           },
         };
       },
+
     }),
     onError: (err) => {
       console.error(err);
@@ -227,7 +249,7 @@ function ChatThreadInner({
     <div className="flex flex-col h-full min-h-0">
       <div className="flex items-center justify-between gap-3 px-4 md:px-8 py-2 max-w-3xl mx-auto w-full border-b border-border/60 bg-background/80">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-sm font-semibold text-foreground truncate">{readActiveCoach()}</span>
+          <span className="text-sm font-semibold text-foreground truncate">{activeCoach}</span>
           {ctx.chart?.ticker && (
             <span className="text-[10px] font-semibold tracking-tight text-foreground px-1.5 py-0.5 rounded bg-muted border border-border/60 truncate max-w-[180px]" title={`${ctx.chart.ticker} · ${ctx.chart.intervalLabel}`}>
               {ctx.chart.ticker} · {ctx.chart.intervalLabel}
