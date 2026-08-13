@@ -437,6 +437,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
   // Init / teardown chart. Re-init when timezone changes so axis + crosshair labels re-render in the new zone.
   useEffect(() => {
     if (!containerRef.current) return;
+    setInitError(null);
     const hour12 = timeFormat === "12h";
     const tz = resolvedTimezone; // undefined => browser local
     const fmtTime = (t: number) => {
