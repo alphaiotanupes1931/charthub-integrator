@@ -24,6 +24,8 @@ type BrokerSearch = {
 };
 
 import { AlpacaPanel } from "@/components/AlpacaPanel";
+import { OandaConnectPanel } from "@/components/OandaConnectPanel";
+
 
 export const Route = createFileRoute("/_app/broker")({
   validateSearch: (s: Record<string, unknown>): BrokerSearch => ({
@@ -195,8 +197,10 @@ function BrokerPage() {
         <div>
           <h1 className="font-display text-2xl md:text-3xl font-semibold mb-2">Brokers</h1>
           <p className="text-sm text-muted-foreground">
-            Sign in with Alpaca in one click. Everything is encrypted on the server and never exposed to the browser.
+            Sign in to OANDA (demo or live) or Alpaca to place trades from your scans. Credentials are encrypted on the
+            server and never exposed to the browser.
           </p>
+
         </div>
         <button
           onClick={() => refresh()}
@@ -208,7 +212,10 @@ function BrokerPage() {
       </div>
       <PageInstructions className="mb-6" />
 
+      <OandaConnectPanel onChange={() => refresh()} />
+
       <AlpacaPanel />
+
 
       {status?.connected && (
         <div className="rounded-xl border border-border/60 bg-card p-5 mb-6">

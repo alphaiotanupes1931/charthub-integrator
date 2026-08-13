@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { PageHeader } from "@/components/PageHeader";
-import { Radar, TrendingUp, TrendingDown, Minus, Loader2, RefreshCw, BookOpen, History, Trash2 } from "lucide-react";
+import { Radar, TrendingUp, TrendingDown, Minus, Loader2, RefreshCw, BookOpen, History, Trash2, Zap } from "lucide-react";
 import { runSignalScan, type Signal } from "@/lib/agents/signal-engine.functions";
 import {
   listSignals,
@@ -203,13 +203,30 @@ function SignalHistory({ records, onOpen }: { records: SignalRecord[]; onOpen: (
                   </div>
                 ) : (
                   r.bias !== "Neutral" && (
-                    <button
-                      onClick={() => takeTrade(r)}
-                      className="inline-flex items-center gap-1 rounded-xl bg-primary px-2 py-1 font-semibold text-primary-foreground hover:opacity-90"
-                    >
-                      <BookOpen className="h-3 w-3" /> Log this trade
-                    </button>
+                    <div className="flex flex-col items-stretch gap-1">
+                      <button
+                        onClick={() => takeTrade(r)}
+                        className="inline-flex items-center justify-center gap-1 rounded-xl bg-primary px-2 py-1 font-semibold text-primary-foreground hover:opacity-90"
+                      >
+                        <BookOpen className="h-3 w-3" /> Log this trade
+                      </button>
+                      <Link
+                        to="/broker"
+                        search={{
+                          symbol: r.symbol,
+                          side: r.bias.toLowerCase().startsWith("s") ? "short" : "long",
+                          entry: r.entry ?? "",
+                          stop: r.stop ?? "",
+                          tp: r.tp1 ?? "",
+                        } as never}
+                        className="inline-flex items-center justify-center gap-1 rounded-xl border border-border/60 px-2 py-1 font-semibold text-foreground hover:bg-muted/60"
+                        title="Sign in to your OANDA account and place this trade"
+                      >
+                        <Zap className="h-3 w-3" /> Take this trade
+                      </Link>
+                    </div>
                   )
+
                 )}
                 <button
                   onClick={() => deleteSignal(r.id)}
