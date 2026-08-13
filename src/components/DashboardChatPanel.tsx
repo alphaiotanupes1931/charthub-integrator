@@ -220,7 +220,7 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
 
   if (!threadId || initial === null) {
     return (
-      <div className="flex h-full min-h-0 flex-col items-center justify-center gap-2 bg-card text-xs text-muted-foreground sm:rounded-xl border-y sm:border border-border">
+      <div className="flex h-full min-h-0 flex-col items-center justify-center gap-2 bg-card text-xs text-muted-foreground sm:rounded-xl border-y sm:border border-border/60">
         <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
         Loading chat history…
       </div>
@@ -317,21 +317,21 @@ function GradeCard({ grade, lastPrice, symbol, interval }: { grade: ChartGrade; 
       <div className={`flex items-center justify-between px-3 py-2 border-b border-border/60 ${tone.split(" ").filter((c) => c.startsWith("bg-")).join(" ")}`}>
         <div className="flex items-baseline gap-2">
           <span className={`text-lg font-bold leading-none ${tone.split(" ").filter((c) => c.startsWith("text-")).join(" ")}`}>{g}</span>
-          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Grade</span>
+          <span className="text-[10px] tracking-tight text-muted-foreground">Grade</span>
         </div>
         {grade.bias && (
           <span className={`text-xs font-semibold uppercase ${biasTone}`}>{grade.bias}</span>
         )}
       </div>
       {orderType && (
-        <div className="border-b border-border/60 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="border-b border-border/60 px-3 py-1 text-[10px] font-semibold tracking-tight text-muted-foreground">
           Order type: <span className={biasTone}>{orderType}</span>
         </div>
       )}
       <div className="grid grid-cols-4 divide-x divide-border/60 text-center">
         {(["entry","stop","tp1","tp2"] as const).map((k) => (
           <div key={k} className="p-2">
-            <div className="text-[9px] uppercase tracking-wider text-muted-foreground">{k}</div>
+            <div className="text-[9px] tracking-tight text-muted-foreground">{k}</div>
             <div className="text-xs font-mono text-foreground">{fmt(grade[k])}</div>
           </div>
         ))}
@@ -364,7 +364,7 @@ function GradeCard({ grade, lastPrice, symbol, interval }: { grade: ChartGrade; 
                 risk: grade.weakness,
               })
             }
-            className="inline-flex h-7 items-center gap-1 rounded px-2 text-[10px] font-bold uppercase tracking-wider bg-primary text-primary-foreground hover:opacity-90"
+            className="inline-flex h-7 items-center gap-1 rounded px-2 text-[10px] font-bold tracking-tight bg-primary text-primary-foreground hover:opacity-90"
             title="Log this setup in your journal as a trade you are taking"
           >
             <BookOpen className="h-3 w-3" /> Take trade
@@ -378,7 +378,7 @@ function GradeCard({ grade, lastPrice, symbol, interval }: { grade: ChartGrade; 
               stop: grade.stop ?? "",
               tp: grade.tp1 ?? "",
             } as never}
-            className="inline-flex h-7 items-center gap-1 rounded border border-border px-2 text-[10px] font-bold uppercase tracking-wider text-foreground hover:bg-muted/60"
+            className="inline-flex h-7 items-center gap-1 rounded border border-border/60 px-2 text-[10px] font-bold tracking-tight text-foreground hover:bg-muted/60"
             title="Send this setup to your broker"
           >
             <Zap className="h-3 w-3" /> Broker
@@ -805,7 +805,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                                       setSpeakingMsgId(null);
                                     }
                                   }}
-                                  className={`inline-flex h-7 w-7 items-center justify-center rounded border ${voiceUnmutedIds.has(m.id) ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-muted/60 text-muted-foreground animate-pulse"}`}
+                                  className={`inline-flex h-7 w-7 items-center justify-center rounded border ${voiceUnmutedIds.has(m.id) ? "border-primary/40 bg-primary/10 text-primary" : "border-border/60 bg-muted/60 text-muted-foreground animate-pulse"}`}
                                   title={voiceUnmutedIds.has(m.id) ? "Mute voice" : "Muted - tap to hear"}
                                   aria-label={voiceUnmutedIds.has(m.id) ? "Mute voice" : "Muted - tap to hear"}
                                 >
@@ -827,12 +827,12 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                       )}
                       {(parsed.cleanText || g) && (
                         <div className="flex items-center gap-1.5 pt-1 opacity-90">
-                          <span className="text-[10px] uppercase tracking-wider text-muted-foreground mr-1">Was this helpful?</span>
+                          <span className="text-[10px] tracking-tight text-muted-foreground mr-1">Was this helpful?</span>
                           <button
                             type="button"
                             disabled={!!feedbackByMsg[m.id]}
                             onClick={() => void sendFeedback(m.id, 1, g ?? null)}
-                            className={`inline-flex h-7 w-7 items-center justify-center rounded border transition ${feedbackByMsg[m.id] === 1 ? "border-bull/50 bg-bull/15 text-bull" : "border-border bg-muted/50 text-muted-foreground hover:text-bull hover:border-bull/40"}`}
+                            className={`inline-flex h-7 w-7 items-center justify-center rounded border transition ${feedbackByMsg[m.id] === 1 ? "border-bull/50 bg-bull/15 text-bull" : "border-border/60 bg-muted/50 text-muted-foreground hover:text-bull hover:border-bull/40"}`}
                             title="Helpful - teach Hermes"
                             aria-label="Helpful"
                           >
@@ -842,7 +842,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                             type="button"
                             disabled={!!feedbackByMsg[m.id]}
                             onClick={() => void sendFeedback(m.id, -1, g ?? null)}
-                            className={`inline-flex h-7 w-7 items-center justify-center rounded border transition ${feedbackByMsg[m.id] === -1 ? "border-red-500/50 bg-red-500/15 text-red-300" : "border-border bg-muted/50 text-muted-foreground hover:text-red-300 hover:border-red-500/40"}`}
+                            className={`inline-flex h-7 w-7 items-center justify-center rounded border transition ${feedbackByMsg[m.id] === -1 ? "border-red-500/50 bg-red-500/15 text-red-300" : "border-border/60 bg-muted/50 text-muted-foreground hover:text-red-300 hover:border-red-500/40"}`}
                             title="Not helpful - teach Hermes"
                             aria-label="Not helpful"
                           >

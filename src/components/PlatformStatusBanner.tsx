@@ -63,7 +63,7 @@ export function PlatformStatusBanner() {
         <Icon className={`h-4 w-4 shrink-0 ${s.text}`} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline gap-x-2">
-            <span className={`text-xs font-semibold uppercase tracking-wider ${s.text}`}>
+            <span className={`text-xs font-semibold tracking-tight ${s.text}`}>
               TradeMind Status
             </span>
             <span className="text-xs text-muted-foreground">·</span>

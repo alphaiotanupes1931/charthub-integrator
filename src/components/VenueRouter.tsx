@@ -49,7 +49,7 @@ export function VenueRouter({ prefill, exclude = [] }: { prefill?: Prefill; excl
 
   if (loading) {
     return (
-      <div className="rounded-md border border-border bg-card p-5 text-sm text-muted-foreground">
+      <div className="rounded-xl border border-border/60 bg-card p-5 text-sm text-muted-foreground">
         <Loader2 className="mr-2 inline h-3.5 w-3.5 animate-spin" /> Checking your connected venues
       </div>
     );
@@ -57,14 +57,14 @@ export function VenueRouter({ prefill, exclude = [] }: { prefill?: Prefill; excl
 
   if (venues.length === 0) {
     return (
-      <div className="rounded-md border border-border bg-card p-5">
+      <div className="rounded-xl border border-border/60 bg-card p-5">
         <div className="text-sm font-semibold">Route to another venue</div>
         <p className="mt-2 text-xs text-muted-foreground">
           Alpaca, Tradier, Coinbase and Binance can execute orders from a setup once connected.
         </p>
         <Link
           to="/connections"
-          className="mt-3 inline-flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-xs"
+          className="mt-3 inline-flex items-center gap-2 rounded-xl border border-border/60 px-3 py-1.5 text-xs"
         >
           <Plug className="h-3.5 w-3.5" /> Connect a venue
         </Link>
@@ -73,7 +73,7 @@ export function VenueRouter({ prefill, exclude = [] }: { prefill?: Prefill; excl
   }
 
   return (
-    <div className="rounded-md border border-border bg-card p-5">
+    <div className="rounded-xl border border-border/60 bg-card p-5">
       <div className="text-sm font-semibold">Route to another connected venue</div>
       <div className="mt-3 flex flex-wrap gap-2">
         {venues.map((v) => {
@@ -83,10 +83,10 @@ export function VenueRouter({ prefill, exclude = [] }: { prefill?: Prefill; excl
               key={v.broker}
               type="button"
               onClick={() => setActive(v.broker)}
-              className={`rounded-md border px-2.5 py-1 text-xs ${
+              className={`rounded-xl border px-2.5 py-1 text-xs ${
                 active === v.broker
                   ? "border-foreground bg-foreground text-background"
-                  : "border-border text-muted-foreground"
+                  : "border-border/60 text-muted-foreground"
               }`}
             >
               {def?.name ?? v.broker} · {v.env === "live" ? "Live" : "Demo"}

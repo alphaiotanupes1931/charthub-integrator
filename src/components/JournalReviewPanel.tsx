@@ -44,7 +44,7 @@ export default function JournalReviewPanel({
   };
 
   return (
-    <div className="rounded-md border border-border bg-card p-4">
+    <div className="rounded-xl border border-border/60 bg-card p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-2">
           <Brain className="mt-0.5 h-4 w-4 text-muted-foreground" />
@@ -73,7 +73,7 @@ export default function JournalReviewPanel({
               <h3 className="text-xs uppercase tracking-wide text-muted-foreground">Repeating mistakes</h3>
               <ul className="mt-2 space-y-1 text-sm">
                 {review.mistakes.map((m) => (
-                  <li key={m} className="border-l border-border pl-3">{m}</li>
+                  <li key={m} className="border-l border-border/60 pl-3">{m}</li>
                 ))}
               </ul>
             </div>
@@ -84,7 +84,7 @@ export default function JournalReviewPanel({
               <h3 className="text-xs uppercase tracking-wide text-muted-foreground">What is working</h3>
               <ul className="mt-2 space-y-1 text-sm">
                 {review.strengths.map((s) => (
-                  <li key={s} className="border-l border-border pl-3">{s}</li>
+                  <li key={s} className="border-l border-border/60 pl-3">{s}</li>
                 ))}
               </ul>
             </div>
@@ -95,7 +95,7 @@ export default function JournalReviewPanel({
               <h3 className="text-xs uppercase tracking-wide text-muted-foreground">Mental state against results</h3>
               <table className="mt-2 w-full text-xs">
                 <thead className="text-muted-foreground">
-                  <tr className="border-b border-border">
+                  <tr className="border-b border-border/60">
                     <th className="py-2 text-left font-normal">Score</th>
                     <th className="py-2 text-right font-normal">Trades</th>
                     <th className="py-2 text-right font-normal">Net P&amp;L</th>

@@ -8,10 +8,10 @@ export function FirstWeekPanel() {
   if (!active || dismissed) return null;
 
   return (
-    <div className="rounded-md border border-border bg-card p-4 mb-4">
+    <div className="rounded-xl border border-border/60 bg-card p-4 mb-4">
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="min-w-0">
-          <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-semibold text-muted-foreground mb-1">
+          <div className="flex items-center gap-2 text-[10px] tracking-tight font-semibold text-muted-foreground mb-1">
             <Calendar className="h-3.5 w-3.5" />
             Day {currentDay} of 7
           </div>
@@ -23,7 +23,7 @@ export function FirstWeekPanel() {
         <button
           onClick={dismiss}
           aria-label="Hide first-week checklist"
-          className="shrink-0 h-7 w-7 rounded-md border border-border bg-background text-muted-foreground hover:text-foreground flex items-center justify-center"
+          className="shrink-0 h-7 w-7 rounded-xl border border-border/60 bg-background text-muted-foreground hover:text-foreground flex items-center justify-center"
           title="Hide"
         >
           <X className="h-3.5 w-3.5" />
@@ -37,14 +37,14 @@ export function FirstWeekPanel() {
             {completedCount} / {FIRST_WEEK_TASKS.length}
           </span>
         </div>
-        <div className="h-1.5 rounded-md bg-background overflow-hidden">
+        <div className="h-1.5 rounded-xl bg-background overflow-hidden">
           <div className="h-full bg-primary transition-all" style={{ width: `${progressPct}%` }} />
         </div>
       </div>
 
       {nextTask && (
-        <div className="rounded-md border border-primary/30 bg-primary/5 p-3 mb-3">
-          <div className="text-[10px] uppercase tracking-widest font-semibold text-primary mb-1">Next step</div>
+        <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 mb-3">
+          <div className="text-[10px] tracking-tight font-semibold text-primary mb-1">Next step</div>
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="font-semibold text-sm">{nextTask.label}</div>
@@ -52,7 +52,7 @@ export function FirstWeekPanel() {
             </div>
             <Link
               to={nextTask.route}
-              className="shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90"
+              className="shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90"
             >
               {nextTask.cta} <ArrowRight className="h-3 w-3" />
             </Link>
@@ -62,7 +62,7 @@ export function FirstWeekPanel() {
 
       {upcoming.length > 0 && (
         <div className="space-y-1.5">
-          <div className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground">Coming up</div>
+          <div className="text-[10px] tracking-tight font-semibold text-muted-foreground">Coming up</div>
           {upcoming.map((t) => (
             <div key={t.id} className="flex items-center gap-2.5 text-sm">
               <Circle className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
@@ -89,7 +89,7 @@ export function FirstWeekMiniPill({ onClick }: { onClick?: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="inline-flex items-center gap-2 rounded-md border border-primary/30 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary hover:bg-primary/15"
+      className="inline-flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary hover:bg-primary/15"
     >
       <Calendar className="h-3 w-3" />
       Day {currentDay} · {progressPct}%

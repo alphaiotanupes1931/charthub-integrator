@@ -74,7 +74,7 @@ export function AutoBacktestVerify({ symbol, interval, side = "both", grade, com
 
   if (state !== "done" || !verdict) {
     return (
-      <div className={`inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground ${className ?? ""}`}>
+      <div className={`inline-flex items-center gap-1.5 text-[10px] tracking-tight text-muted-foreground ${className ?? ""}`}>
         <Loader2 className="h-3 w-3 animate-spin" /> Verifying on history
       </div>
     );
@@ -82,7 +82,7 @@ export function AutoBacktestVerify({ symbol, interval, side = "both", grade, com
 
   if (verdict.trades < 5) {
     return (
-      <div className={`inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground ${className ?? ""}`}>
+      <div className={`inline-flex items-center gap-1.5 text-[10px] tracking-tight text-muted-foreground ${className ?? ""}`}>
         <ShieldAlert className="h-3 w-3" /> Not enough history to verify
       </div>
     );
@@ -94,7 +94,7 @@ export function AutoBacktestVerify({ symbol, interval, side = "both", grade, com
 
   if (compact) {
     return (
-      <div className={`inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider ${tone} ${className ?? ""}`}>
+      <div className={`inline-flex items-center gap-1.5 text-[10px] font-semibold tracking-tight ${tone} ${className ?? ""}`}>
         <Icon className="h-3 w-3" />
         {verdict.winRate}% WR · {verdict.expectancyR > 0 ? "+" : ""}{verdict.expectancyR}R
       </div>
@@ -102,7 +102,7 @@ export function AutoBacktestVerify({ symbol, interval, side = "both", grade, com
   }
 
   return (
-    <div className={`rounded-md border border-border/60 bg-muted/20 px-2.5 py-2 ${className ?? ""}`}>
+    <div className={`rounded-xl border border-border/60 bg-muted/20 px-2.5 py-2 ${className ?? ""}`}>
       <div className={`flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] ${tone}`}>
         <Icon className="h-3 w-3" />
         {good ? "Verified on history" : "Weak on history"}

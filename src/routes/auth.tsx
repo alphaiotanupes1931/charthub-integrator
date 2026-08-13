@@ -366,7 +366,7 @@ function AuthPage() {
         </Link>
 
 
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-sm">
           <h1 className="text-xl font-semibold text-foreground">
             {recoveryMode
               ? "Use your recovery code"
@@ -393,7 +393,7 @@ function AuthPage() {
                   autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1 w-full h-10 rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:border-primary/50"
+                  className="mt-1 w-full h-10 rounded-xl border border-border/60 bg-background px-3 text-sm focus:outline-none focus:border-primary/50"
                   required
                 />
               </div>
@@ -407,12 +407,12 @@ function AuthPage() {
                   value={recoveryCode}
                   onChange={(e) => setRecoveryCodeInput(e.target.value.toUpperCase())}
                   placeholder="XXXX-XXXX-XXXX-XXXX"
-                  className="mt-1 w-full h-10 rounded-md border border-border bg-background px-3 font-mono text-sm tracking-widest focus:outline-none focus:border-primary/50"
+                  className="mt-1 w-full h-10 rounded-xl border border-border/60 bg-background px-3 font-mono text-sm tracking-widest focus:outline-none focus:border-primary/50"
                   required
                 />
               </div>
               {errorMsg && (
-                <div role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                <div role="alert" className="rounded-xl border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
                   {errorMsg}
                 </div>
               )}
@@ -451,7 +451,7 @@ function AuthPage() {
                   autoComplete={mode === "signin" ? "username" : "email"}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1 w-full h-10 rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:border-primary/50"
+                  className="mt-1 w-full h-10 rounded-xl border border-border/60 bg-background px-3 text-sm focus:outline-none focus:border-primary/50"
                   required
                 />
                 {mode === "signin" && (
@@ -477,7 +477,7 @@ function AuthPage() {
                     autoComplete={mode === "signin" ? "current-password" : "new-password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full h-10 rounded-md border border-border bg-background px-3 pr-10 text-sm focus:outline-none focus:border-primary/50"
+                    className="w-full h-10 rounded-xl border border-border/60 bg-background px-3 pr-10 text-sm focus:outline-none focus:border-primary/50"
                     minLength={mode === "signup" ? 12 : 1}
                     maxLength={72}
                     required
@@ -499,7 +499,7 @@ function AuthPage() {
                 )}
               </div>
               {errorMsg && (
-                <div role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                <div role="alert" className="rounded-xl border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
                   {errorMsg}
                 </div>
               )}

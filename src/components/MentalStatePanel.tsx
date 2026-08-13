@@ -195,7 +195,7 @@ export function MentalStatePanel() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-border bg-card p-4 md:p-5">
+      <div className="rounded-2xl border border-border/60 bg-card p-4 md:p-5">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2 text-sm">
             {reminder.enabled ? <BellRing className="h-4 w-4 text-primary" /> : <BellOff className="h-4 w-4 text-muted-foreground" />}
@@ -207,7 +207,7 @@ export function MentalStatePanel() {
               type="time"
               value={reminder.time}
               onChange={(e) => { const n = { ...reminder, time: e.target.value }; setReminder(n); saveReminder(n); }}
-              className="rounded-md border border-border bg-background px-2 py-1 text-xs"
+              className="rounded-xl border border-border/60 bg-background px-2 py-1 text-xs"
             />
             <button
               onClick={() => {
@@ -215,7 +215,7 @@ export function MentalStatePanel() {
                 setReminder(n); saveReminder(n);
                 if (n.enabled && notifPermission === "default") void requestNotif();
               }}
-              className={`rounded-md px-3 py-1.5 text-xs font-medium border ${reminder.enabled ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}
+              className={`rounded-xl px-3 py-1.5 text-xs font-medium border ${reminder.enabled ? "border-primary bg-primary/10 text-primary" : "border-border/60 text-muted-foreground hover:text-foreground"}`}
             >
               {reminder.enabled ? "On" : "Off"}
             </button>
@@ -231,7 +231,7 @@ export function MentalStatePanel() {
         )}
       </div>
 
-      <div className="rounded-2xl border border-border bg-card p-6">
+      <div className="rounded-2xl border border-border/60 bg-card p-6">
         <div className="flex items-center gap-2 mb-3">
           <HeartPulse className="h-4 w-4 text-primary" />
           <h2 className="text-sm font-semibold">Today, {todayYmd()}</h2>
@@ -246,7 +246,7 @@ export function MentalStatePanel() {
                 key={n}
                 onClick={() => setScore(n)}
                 className={`rounded-xl border p-3 text-center transition ${
-                  active ? "border-primary bg-primary/10" : "border-border hover:border-primary/40"
+                  active ? "border-primary bg-primary/10" : "border-border/60 hover:border-primary/40"
                 }`}
               >
                 <div className={`text-2xl font-bold ${meta.color}`}>{n}</div>
@@ -263,30 +263,30 @@ export function MentalStatePanel() {
         {score != null && (
           <div className="mt-6 space-y-4">
             {lowScore && (
-              <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-amber-500">
+              <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-amber-500">
                 A low score today, let's dig in a little so patterns show up. What might be off?
               </div>
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <label className="block">
-                <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1.5">Hours of sleep</div>
+                <div className="text-[10px] tracking-tight text-muted-foreground mb-1.5">Hours of sleep</div>
                 <input
                   inputMode="decimal"
                   value={sleepHours}
                   onChange={(e) => setSleepHours(e.target.value)}
                   placeholder={lowScore ? "how much did you actually get?" : "e.g. 7.5"}
-                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm"
                 />
               </label>
               <div>
-                <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1.5">Stress level</div>
+                <div className="text-[10px] tracking-tight text-muted-foreground mb-1.5">Stress level</div>
                 <div className="grid grid-cols-5 gap-1">
                   {([1, 2, 3, 4, 5] as const).map((n) => (
                     <button
                       key={n}
                       onClick={() => setStress(n)}
-                      className={`rounded border text-xs py-1.5 ${stress === n ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"}`}
+                      className={`rounded border text-xs py-1.5 ${stress === n ? "border-primary bg-primary/10 text-primary" : "border-border/60 text-muted-foreground"}`}
                     >
                       {n}
                     </button>
@@ -297,51 +297,51 @@ export function MentalStatePanel() {
 
             {lowScore && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <label className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm cursor-pointer">
+                <label className="flex items-center gap-2 rounded-xl border border-border/60 bg-background px-3 py-2 text-sm cursor-pointer">
                   <input type="checkbox" checked={exercised} onChange={(e) => setExercised(e.target.checked)} className="h-4 w-4" />
                   <span>Did you exercise / move?</span>
                 </label>
-                <label className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm cursor-pointer">
+                <label className="flex items-center gap-2 rounded-xl border border-border/60 bg-background px-3 py-2 text-sm cursor-pointer">
                   <input type="checkbox" checked={ateWell} onChange={(e) => setAteWell(e.target.checked)} className="h-4 w-4" />
                   <span>Ate a real meal before trading?</span>
                 </label>
                 <label className="block md:col-span-2">
-                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1.5">Caffeine (cups)</div>
+                  <div className="text-[10px] tracking-tight text-muted-foreground mb-1.5">Caffeine (cups)</div>
                   <input
                     inputMode="decimal"
                     value={caffeine}
                     onChange={(e) => setCaffeine(e.target.value)}
                     placeholder="0"
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                    className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm"
                   />
                 </label>
               </div>
             )}
 
             <label className="block">
-              <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1.5">Mood in a word</div>
+              <div className="text-[10px] tracking-tight text-muted-foreground mb-1.5">Mood in a word</div>
               <input
                 value={mood}
                 onChange={(e) => setMood(e.target.value)}
                 placeholder="focused / anxious / tired / patient..."
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm"
               />
             </label>
 
             <label className="block">
-              <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1.5">Notes</div>
+              <div className="text-[10px] tracking-tight text-muted-foreground mb-1.5">Notes</div>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
                 placeholder="Anything else going on today?"
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm resize-none"
+                className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm resize-none"
               />
             </label>
 
             <button
               onClick={saveToday}
-              className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
             >
               <Save className="h-4 w-4" /> Save today's log
             </button>
@@ -350,7 +350,7 @@ export function MentalStatePanel() {
       </div>
 
       {rows.length > 0 && (
-        <div className="rounded-2xl border border-border bg-card p-6">
+        <div className="rounded-2xl border border-border/60 bg-card p-6">
           <h2 className="text-sm font-semibold mb-4">Performance by mental state</h2>
           <p className="text-xs text-muted-foreground mb-3">
             Trading P&amp;L broken down by the score you gave yourself that day.
@@ -360,7 +360,7 @@ export function MentalStatePanel() {
               const b = byScore[n];
               const winRate = b.n > 0 ? (b.wins / b.n) * 100 : 0;
               return (
-                <div key={n} className="rounded-lg border border-border p-3 text-center">
+                <div key={n} className="rounded-2xl border border-border/60 p-3 text-center">
                   <div className={`text-lg font-bold ${SCORE_META[n].color}`}>{n}</div>
                   <div className="text-[10px] text-muted-foreground">{SCORE_META[n].label}</div>
                   <div className={`mt-2 text-sm font-semibold ${b.pnl >= 0 ? "text-bull" : "text-destructive"}`}>
@@ -375,12 +375,12 @@ export function MentalStatePanel() {
       )}
 
       {rows.length > 0 && (
-        <div className="rounded-2xl border border-border bg-card overflow-hidden">
+        <div className="rounded-2xl border border-border/60 bg-card overflow-hidden">
           <div className="p-4 border-b border-border/60 text-sm font-semibold">History</div>
           <div className="divide-y divide-border/60">
             {rows.map((r) => (
               <div key={r.date} className="flex items-center gap-4 p-3">
-                <div className={`h-8 w-8 rounded-full flex items-center justify-center text-sm font-bold ${SCORE_META[r.score].color} bg-background border border-border`}>
+                <div className={`h-8 w-8 rounded-full flex items-center justify-center text-sm font-bold ${SCORE_META[r.score].color} bg-background border border-border/60`}>
                   {r.score}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -398,7 +398,7 @@ export function MentalStatePanel() {
                 </div>
                 <button
                   onClick={() => deleteEntry(r.date)}
-                  className="h-8 w-8 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 flex items-center justify-center"
+                  className="h-8 w-8 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 flex items-center justify-center"
                   aria-label="Delete"
                 >
                   <Trash2 className="h-4 w-4" />

@@ -117,7 +117,7 @@ function Landing() {
       <Nav isAuthed={isAuthed} />
 
       {/* COVER — quiet, centered, type-led. No background video, no chrome. */}
-      <section className="px-5 sm:px-6 pt-20 sm:pt-32 pb-16 sm:pb-24 border-b border-border">
+      <section className="px-5 sm:px-6 pt-20 sm:pt-32 pb-16 sm:pb-24 border-b border-border/60">
         <motion.div
           variants={heroContainer}
           initial="hidden"
@@ -128,7 +128,7 @@ function Landing() {
             variants={heroItem}
             src={logoAsset.url}
             alt="TradeMind"
-            className="mx-auto h-12 w-12 rounded-xl border border-border"
+            className="mx-auto h-12 w-12 rounded-xl border border-border/60"
             loading="eager"
           />
 
@@ -149,7 +149,7 @@ function Landing() {
           <motion.div variants={heroItem} className="mt-10 flex flex-col items-center gap-5">
             <a
               href={dashboardHref}
-              className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground px-7 py-3 text-sm font-semibold"
+              className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-2xl bg-primary text-primary-foreground px-7 py-3 text-sm font-semibold"
             >
               Open dashboard
               <ArrowRight className="size-4" />
@@ -175,7 +175,7 @@ function Landing() {
 
 
       {/* LIVE CHART PREVIEW */}
-      <section className="px-4 sm:px-6 py-12 sm:py-16 border-b border-border">
+      <section className="px-4 sm:px-6 py-12 sm:py-16 border-b border-border/60">
         <div className="max-w-6xl mx-auto">
           <BrowserFrame url="trademind.app/dashboard">
             <img
@@ -190,12 +190,12 @@ function Landing() {
 
 
       {/* TICKER */}
-      <div className="border-b border-border bg-card">
+      <div className="border-b border-border/60 bg-card">
         <TickerTape symbols={TICKER} />
       </div>
 
       {/* HOW IT WORKS */}
-      <section id="product" className="px-5 sm:px-6 py-20 sm:py-28 border-b border-border scroll-mt-24">
+      <section id="product" className="px-5 sm:px-6 py-20 sm:py-28 border-b border-border/60 scroll-mt-24">
         <div className="max-w-6xl mx-auto">
           <SectionEyebrow>How it works</SectionEyebrow>
           <h2 className="font-display text-3xl sm:text-4xl md:text-5xl text-center leading-tight">
@@ -225,9 +225,9 @@ function Landing() {
             ].map((s) => (
               <div
                 key={s.step}
-                className="rounded-md border border-border bg-card p-6 sm:p-8"
+                className="rounded-xl border border-border/60 bg-card p-6 sm:p-8"
               >
-                <div className="font-mono text-xs uppercase tracking-widest text-primary">Step {s.step}</div>
+                <div className="font-mono text-xs tracking-tight text-primary">Step {s.step}</div>
                 <h3 className="font-display text-xl sm:text-2xl mt-4">{s.title}</h3>
                 <p className="text-sm text-muted-foreground mt-3 leading-relaxed">{s.body}</p>
               </div>
@@ -237,7 +237,7 @@ function Landing() {
       </section>
 
       {/* GRADING SECTION */}
-      <section className="px-5 sm:px-6 py-20 sm:py-28 border-b border-border">
+      <section className="px-5 sm:px-6 py-20 sm:py-28 border-b border-border/60">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div>
             <SectionEyebrow align="left">Signal grading</SectionEyebrow>
@@ -249,17 +249,17 @@ function Landing() {
             </p>
             <div className="grid grid-cols-4 gap-3 mt-10 max-w-md">
               <GradeChip grade="A+" color="text-primary" border="border-primary" label="Take it" />
-              <GradeChip grade="A" color="text-bull" border="border-border" label="Strong" />
-              <GradeChip grade="B" color="text-foreground/80" border="border-border" label="Optional" />
-              <GradeChip grade="C" color="text-destructive" border="border-border" label="Skip" />
+              <GradeChip grade="A" color="text-bull" border="border-border/60" label="Strong" />
+              <GradeChip grade="B" color="text-foreground/80" border="border-border/60" label="Optional" />
+              <GradeChip grade="C" color="text-destructive" border="border-border/60" label="Skip" />
             </div>
           </div>
 
-          <div className="rounded-md border border-border bg-card p-2 sm:p-3">
+          <div className="rounded-xl border border-border/60 bg-card p-2 sm:p-3">
             <img
               src={gradeCard.url}
               alt="TradeMind grade card showing a B grade XAU/USD long setup with entry, stop, TP1, TP2, confidence, trend, volume, order flow, and volatility readings"
-              className="block w-full h-auto rounded-sm"
+              className="block w-full h-auto rounded-lg"
               loading="lazy"
             />
           </div>
@@ -267,7 +267,7 @@ function Landing() {
       </section>
 
       {/* PRICING */}
-      <section id="pricing" className="px-5 sm:px-6 py-20 sm:py-28 border-b border-border scroll-mt-24">
+      <section id="pricing" className="px-5 sm:px-6 py-20 sm:py-28 border-b border-border/60 scroll-mt-24">
         <div className="max-w-6xl mx-auto">
           <SectionEyebrow>Pricing</SectionEyebrow>
           <h2 className="font-display text-3xl sm:text-4xl md:text-5xl text-center leading-tight">
@@ -281,12 +281,12 @@ function Landing() {
             {PRICING.map((p) => (
               <div
                 key={p.name}
-                className={`relative rounded-md border p-6 sm:p-8 bg-card ${
-                  p.popular ? "border-primary" : "border-border"
+                className={`relative rounded-xl border p-6 sm:p-8 bg-card ${
+                  p.popular ? "border-primary" : "border-border/60"
                 }`}
               >
                 {p.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center rounded-md border border-primary bg-background px-2 py-1 text-[10px] font-medium uppercase tracking-widest text-primary">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center rounded-xl border border-primary bg-background px-2 py-1 text-[10px] font-medium tracking-tight text-primary">
                     Most popular
                   </div>
                 )}
@@ -298,7 +298,7 @@ function Landing() {
                 </div>
                 <a
                   href={isAuthed ? "/dashboard" : signupHref}
-                  className={`mt-6 block text-center rounded-md px-5 py-3 text-sm font-semibold border ${
+                  className={`mt-6 block text-center rounded-xl px-5 py-3 text-sm font-semibold border ${
                     p.popular
                       ? "bg-primary text-primary-foreground border-primary"
                       : "bg-foreground text-background border-foreground"
@@ -306,7 +306,7 @@ function Landing() {
                 >
                   Start free trial
                 </a>
-                <ul className="mt-6 space-y-3 pt-5 border-t border-border">
+                <ul className="mt-6 space-y-3 pt-5 border-t border-border/60">
                   {p.features.map((f) => (
                     <li key={f} className="flex items-center gap-2.5 text-sm">
                       <Check className="size-4 text-bull shrink-0" />
@@ -321,7 +321,7 @@ function Landing() {
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="px-5 sm:px-6 py-20 sm:py-28 border-b border-border scroll-mt-24">
+      <section id="faq" className="px-5 sm:px-6 py-20 sm:py-28 border-b border-border/60 scroll-mt-24">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
             <SectionEyebrow>FAQ</SectionEyebrow>
@@ -330,13 +330,13 @@ function Landing() {
             </h2>
           </div>
 
-          <div className="rounded-md border border-border bg-card p-2 sm:p-4">
+          <div className="rounded-xl border border-border/60 bg-card p-2 sm:p-4">
             <Accordion type="single" collapsible className="w-full">
               {FAQS.map((item, i) => (
                 <AccordionItem
                   key={i}
                   value={`faq-${i}`}
-                  className="border-border px-2 sm:px-4"
+                  className="border-border/60 px-2 sm:px-4"
                 >
                   <AccordionTrigger className="text-sm sm:text-base font-medium py-4 hover:no-underline">
                     {item.q}
@@ -352,7 +352,7 @@ function Landing() {
           <div className="mt-10 text-center">
             <Link
               to="/faq"
-              className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-5 py-2.5 text-sm font-medium"
+              className="inline-flex items-center gap-2 rounded-xl border border-border/60 bg-card px-5 py-2.5 text-sm font-medium"
             >
               View all FAQ
               <ArrowRight className="size-4" />
@@ -362,7 +362,7 @@ function Landing() {
       </section>
 
       {/* FINAL CTA */}
-      <section className="px-5 sm:px-6 py-24 sm:py-32 border-b border-border">
+      <section className="px-5 sm:px-6 py-24 sm:py-32 border-b border-border/60">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="font-display text-3xl sm:text-4xl md:text-6xl leading-tight">
             Grade the next trade.
@@ -371,7 +371,7 @@ function Landing() {
           <div className="mt-10">
             <a
               href={dashboardHref}
-              className="inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground px-7 py-3.5 text-sm font-semibold border border-primary"
+              className="inline-flex items-center gap-2 rounded-xl bg-primary text-primary-foreground px-7 py-3.5 text-sm font-semibold border border-primary"
             >
               Open dashboard
               <ArrowRight className="size-4" />
@@ -388,7 +388,7 @@ function Landing() {
 function Nav({ isAuthed }: { isAuthed: boolean }) {
   const dashboardHref = isAuthed ? "/dashboard" : "/auth?mode=signin&redirect=%2Fdashboard";
   return (
-    <header className="sticky top-0 z-40 bg-background border-b border-border">
+    <header className="sticky top-0 z-40 bg-background border-b border-border/60">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
         <Link to="/" className="flex items-center gap-2 min-w-0">
           <img src={logoAsset.url} alt="TradeMind" className="h-8 w-8 object-contain shrink-0" />
@@ -404,13 +404,13 @@ function Nav({ isAuthed }: { isAuthed: boolean }) {
           <Sheet>
             <SheetTrigger asChild>
               <button
-                className="sm:hidden inline-flex items-center justify-center rounded-md border border-border bg-card p-2"
+                className="sm:hidden inline-flex items-center justify-center rounded-xl border border-border/60 bg-card p-2"
                 aria-label="Open menu"
               >
                 <Menu className="size-5" />
               </button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[280px] bg-background border-border p-6">
+            <SheetContent side="right" className="w-[280px] bg-background border-border/60 p-6">
               <div className="flex flex-col gap-6 mt-10">
                 <SheetClose asChild>
                   <a href="#product" className="text-lg font-medium">Product</a>
@@ -427,7 +427,7 @@ function Nav({ isAuthed }: { isAuthed: boolean }) {
                 <SheetClose asChild>
                   <a
                     href={dashboardHref}
-                    className="mt-4 inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground px-5 py-3 text-sm font-semibold border border-primary"
+                    className="mt-4 inline-flex items-center justify-center rounded-xl bg-primary text-primary-foreground px-5 py-3 text-sm font-semibold border border-primary"
                   >
                     Open dashboard
                   </a>
@@ -437,7 +437,7 @@ function Nav({ isAuthed }: { isAuthed: boolean }) {
           </Sheet>
           <a
             href={dashboardHref}
-            className="hidden sm:inline-flex rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-semibold border border-primary"
+            className="hidden sm:inline-flex rounded-xl bg-primary text-primary-foreground px-4 py-2 text-sm font-semibold border border-primary"
           >
             Open dashboard
           </a>
@@ -488,7 +488,7 @@ function Footer({ dashboardHref }: { dashboardHref: string }) {
         </div>
         {cols.map((c) => (
           <div key={c.title}>
-            <div className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-4">
+            <div className="text-[11px] font-semibold tracking-tight text-muted-foreground mb-4">
               {c.title}
             </div>
             <ul className="space-y-2.5">
@@ -509,7 +509,7 @@ function Footer({ dashboardHref }: { dashboardHref: string }) {
           </div>
         ))}
       </div>
-      <div className="max-w-7xl mx-auto mt-14 pt-6 border-t border-border text-xs text-muted-foreground">
+      <div className="max-w-7xl mx-auto mt-14 pt-6 border-t border-border/60 text-xs text-muted-foreground">
         © {year ?? "2026"} TradeMind. Educational analysis only. Not financial advice.
       </div>
     </footer>
@@ -518,7 +518,7 @@ function Footer({ dashboardHref }: { dashboardHref: string }) {
 
 function SectionEyebrow({ children, align = "center" }: { children: React.ReactNode; align?: "center" | "left" }) {
   return (
-    <div className={`font-mono text-[11px] uppercase tracking-widest text-primary mb-6 ${align === "center" ? "text-center" : ""}`}>
+    <div className={`font-mono text-[11px] tracking-tight text-primary mb-6 ${align === "center" ? "text-center" : ""}`}>
       {children}
     </div>
   );
@@ -535,7 +535,7 @@ function Bullet({ children }: { children: React.ReactNode }) {
 
 function WatchRow({ symbol, label }: { symbol: string; label: string }) {
   return (
-    <div className="flex items-center justify-between gap-2 rounded-md border border-border bg-background p-2">
+    <div className="flex items-center justify-between gap-2 rounded-xl border border-border/60 bg-background p-2">
       <span className="text-xs font-medium w-16 shrink-0">{label}</span>
       <div className="flex-1 min-w-0">
         <MiniChart symbol={symbol} height={36} dateRange="1D" />
@@ -556,17 +556,17 @@ function GradeChip({
   label: string;
 }) {
   return (
-    <div className={`rounded-md border ${border} p-4 text-center bg-card`}>
+    <div className={`rounded-xl border ${border} p-4 text-center bg-card`}>
       <div className={`font-display text-3xl ${color}`}>{grade}</div>
-      <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mt-2">{label}</div>
+      <div className="font-mono text-[10px] tracking-tight text-muted-foreground mt-2">{label}</div>
     </div>
   );
 }
 
 function BrowserFrame({ url, children }: { url: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-md border border-border bg-card overflow-hidden">
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
+    <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-border/60">
         <div className="flex gap-1.5">
           <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
           <span className="h-3 w-3 rounded-full bg-[#febc2e]" />
