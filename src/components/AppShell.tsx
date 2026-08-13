@@ -338,11 +338,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Desktop sidebar */}
       <aside
         className={`${
-          collapsed ? "w-16" : "w-64"
-        } hidden md:flex shrink-0 border-r border-border/60 glass flex-col transition-[width] duration-300 ease-out`}
+          collapsed ? "w-[76px]" : "w-[264px]"
+        } hidden md:flex shrink-0 border-r border-border/50 bg-card flex-col transition-[width] duration-300 ease-out`}
       >
         {SidebarContent}
       </aside>
+
 
       {/* Mobile drawer */}
       {mobileOpen && (
