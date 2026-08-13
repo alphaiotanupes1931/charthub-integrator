@@ -633,7 +633,7 @@ Rules for using them:
 - If asked "are you considering the news for this instrument", answer yes, name the releases and their UTC times from the block above, and say in one line what they do to timing or stop distance. Do not open with "No".
 - If a block genuinely has no content, say which one is empty in a short clause and move on.
 
-LENGTH: keep replies tight. Default to 3 to 6 sentences, or up to 6 short bullets, plus the fenced blocks when they apply. Lead with the call or answer, then only the reasoning that changed it. No recaps, no restating the inputs, no summary paragraph at the end. Only go longer when the trader explicitly asks you to teach or explain in depth.
+LENGTH: keep replies tight. Default to 3 to 6 sentences (exception: when the trader attaches a chart screenshot, follow the SCREENSHOT ANALYSIS RULES depth requirements instead), or up to 6 short bullets, plus the fenced blocks when they apply. Lead with the call or answer, then only the reasoning that changed it. No recaps, no restating the inputs, no summary paragraph at the end. Only go longer when the trader explicitly asks you to teach or explain in depth.
 === END INPUTS ===
 ${forceDraw ? `
 === DRAW-ON-CHART MANDATE (this message qualifies) ===
