@@ -228,6 +228,18 @@ function AdminPage() {
                       {aiByUser.get(u.id) ? `$${Number(aiByUser.get(u.id)!.cost_usd).toFixed(2)}` : "$0.00"}
                     </td>
                     <td className="px-4 py-2.5">
+                      <select
+                        value={(u.role ?? "user") as string}
+                        onChange={(e) => changeRole(u, e.target.value as "user" | "admin")}
+                        disabled={busyId === u.id}
+                        className="rounded-xl border border-border/60 bg-background px-2 py-1 text-xs font-medium disabled:opacity-50"
+                      >
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    </td>
+
+                    <td className="px-4 py-2.5">
                       {u.broker_connected ? (
                         <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${u.broker_account_type === "live" ? "bg-bull/10 text-bull border border-bull/20" : "bg-amber-500/10 text-amber-400 border border-amber-500/20"}`}>
                           {u.broker_account_type === "live" ? <CircleDot className="h-3 w-3" /> : <CircleDashed className="h-3 w-3" />}
