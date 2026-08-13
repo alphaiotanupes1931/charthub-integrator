@@ -90,6 +90,8 @@ type Trade = {
   followedPlan?: boolean;
   gradeMatch?: "yes" | "no" | "partial";
   takeaway?: string;
+  /** AI chat thread that produced this setup, so the trade links back to it. */
+  threadId?: string;
   createdAt: number;
 };
 
@@ -1153,7 +1155,7 @@ function TradeFormModal({
 }: {
   initialDate: string;
   editing: Trade | null;
-  prefill?: { symbol?: string; timeframe?: string; notes?: string; entry?: number; stop?: number; tp1?: number; tp2?: number; side?: Side; setup?: string } | null;
+  prefill?: { symbol?: string; timeframe?: string; notes?: string; entry?: number; stop?: number; tp1?: number; tp2?: number; side?: Side; setup?: string; threadId?: string } | null;
   onClose: () => void;
   onSave: (t: Trade) => void;
 }) {
@@ -1266,6 +1268,7 @@ function TradeFormModal({
     followedPlan: followedPlan || undefined,
     gradeMatch: gradeMatch || undefined,
     takeaway: takeaway.trim() || undefined,
+    threadId: editing?.threadId ?? prefill?.threadId,
     createdAt: editing?.createdAt ?? Date.now(),
   };
   const previewPnl = tradePnl(preview);
