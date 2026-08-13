@@ -1578,6 +1578,13 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      admin_set_user_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: undefined
+      }
       admin_users_overview: {
         Args: never
         Returns: {
@@ -1591,6 +1598,7 @@ export type Database = {
           id: string
           onboarded: boolean
           referral_source: string
+          role: string
         }[]
       }
       bump_ai_usage: {
