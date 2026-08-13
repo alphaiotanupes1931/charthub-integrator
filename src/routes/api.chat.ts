@@ -20,6 +20,12 @@ const DAILY_AI_CAP = 100; // requests per user per UTC day
 const CLAUDE_SMART = "claude-sonnet-4-5-20250929";
 const CLAUDE_CHEAP = "claude-haiku-4-5-20251001";
 
+// Fallback model used whenever Anthropic is unavailable (no key, rejected key,
+// or out of credits). Kept in one place so the UI notice and the coach's own
+// self-description always name the same model.
+const FALLBACK_MODEL = "google/gemini-2.5-flash";
+const FALLBACK_LABEL = "Google Gemini";
+
 const GRADE_INTENT = /\b(scan|grade|rate|score|setup|entry|entries|plan|trade idea|is this a good|long or short|buy or sell|levels?)\b/i;
 const DEEP_INTENT = /\b(why|explain|teach|walk me|help me understand|how do|how does|what is|what are|difference|psychology|mindset|tilt|revenge|discipline|journal review|mistake|habit|routine|review my|lesson|history|compare|strategy for|should i change)\b/i;
 
@@ -650,6 +656,7 @@ export const Route = createFileRoute("/api/chat")({
           {
             claude: !anthropicKey ? "not_configured" : claudeOk ? "ok" : "out_of_credits",
             fallbackActive: !claudeOk,
+            fallbackModel: FALLBACK_LABEL,
           },
           { headers: cors },
         );
@@ -877,7 +884,7 @@ export const Route = createFileRoute("/api/chat")({
         // screenshot reads stay on the top model.
         const routed = routeChatModel(messages, coach);
         const claudeId = routed === "cheap" ? CLAUDE_CHEAP : CLAUDE_SMART;
-        const gatewayId = routed === "cheap" ? "google/gemini-2.5-flash" : "google/gemini-2.5-flash";
+        const gatewayId = FALLBACK_MODEL;
         const claudeModel = useClaude
           ? (createAnthropic({ apiKey: anthropicKey! })(claudeId) as unknown as Parameters<typeof streamText>[0]["model"])
           : null;
@@ -898,6 +905,12 @@ export const Route = createFileRoute("/api/chat")({
               : {}),
           },
           { role: "system", content: liveSystem },
+          {
+            role: "system",
+            content: useClaude
+              ? "MODEL AWARENESS: You are running on Claude (the primary coaching model). If the trader asks which model powers you, say Claude."
+              : `MODEL AWARENESS: The Claude account is unavailable (out of credits or key rejected), so you are running on ${FALLBACK_LABEL} as the backup model. If the trader asks why replies were failing, why quality changed, or which model you are, tell them plainly: Claude credits ran out and you are answering on ${FALLBACK_LABEL} until an admin tops up. Never claim to be Claude while on the backup.`,
+          },
           ...(await convertToModelMessages(messages)),
         ];
 
