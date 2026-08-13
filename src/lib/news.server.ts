@@ -241,18 +241,30 @@ export async function writeNewsBriefing(
 
   try {
     const { generateText } = await import("ai");
-    let model: Parameters<typeof generateText>[0]["model"];
+    let model: Parameters<typeof generateText>[0]["model"] | null = null;
     if (anthropicKey) {
-      const { createAnthropic } = await import("@ai-sdk/anthropic");
-      model = createAnthropic({ apiKey: anthropicKey })(
-        "claude-sonnet-4-5",
-      ) as unknown as Parameters<typeof generateText>[0]["model"];
-    } else {
+      // Only use Claude when the account actually accepts calls; otherwise the
+      // briefing silently returns null while the coach runs fine on Gemini.
+      let claudeOk = false;
+      try {
+        const { probeClaude } = await import("@/lib/ai-credits.server");
+        claudeOk = (await probeClaude()).status === "ok";
+      } catch { claudeOk = false; }
+      if (claudeOk) {
+        const { createAnthropic } = await import("@ai-sdk/anthropic");
+        model = createAnthropic({ apiKey: anthropicKey })(
+          "claude-sonnet-4-5",
+        ) as unknown as Parameters<typeof generateText>[0]["model"];
+      }
+    }
+    if (!model) {
+      if (!gatewayKey) return null;
       const { createAiGatewayProvider } = await import("@/lib/ai-gateway.server");
-      model = createAiGatewayProvider(gatewayKey!)(
+      model = createAiGatewayProvider(gatewayKey)(
         "google/gemini-2.5-flash",
       ) as unknown as Parameters<typeof generateText>[0]["model"];
     }
+
     const { text } = await generateText({ model, prompt, maxRetries: 1 });
     const clean = text.replace(/[\u2013\u2014]/g, "-").trim();
     return clean || null;

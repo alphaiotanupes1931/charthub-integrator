@@ -193,9 +193,17 @@ export type ActiveModelInfo = { provider: "claude" | "gemini"; model: string; la
 
 export const getActiveModel = createServerFn({ method: "GET" })
   .handler(async () => {
-    const hasClaudeKey = !!process.env.ANTHROPIC_API_KEY;
-    if (hasClaudeKey) {
-      return { provider: "claude", model: "claude-sonnet-4-5", label: "Claude Sonnet" } as ActiveModelInfo;
+    const gemini = { provider: "gemini", model: "google/gemini-2.5-flash", label: "Google Gemini" } as ActiveModelInfo;
+    if (!process.env.ANTHROPIC_API_KEY) return gemini;
+    // A present key is not enough: an out-of-credits Anthropic account still has
+    // a valid key, and the coach is answering on Gemini in that case.
+    try {
+      const { probeClaude } = await import("@/lib/ai-credits.server");
+      const probe = await probeClaude();
+      if (probe.status !== "ok") return gemini;
+    } catch {
+      return gemini;
     }
-    return { provider: "gemini", model: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash" } as ActiveModelInfo;
+    return { provider: "claude", model: "claude-sonnet-4-5", label: "Claude Sonnet" } as ActiveModelInfo;
   });
+
