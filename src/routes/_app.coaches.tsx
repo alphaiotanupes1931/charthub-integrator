@@ -399,12 +399,12 @@ function CoachDetailModal({
           </section>
 
           <section>
-            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-2">Ideal for</div>
+            <div className="text-[10px] tracking-[0.2em] text-muted-foreground mb-2">Ideal for</div>
             <p className="text-sm text-foreground/90 leading-relaxed">{coach.idealUser}</p>
           </section>
 
           <section>
-            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-2">Strengths</div>
+            <div className="text-[10px] tracking-[0.2em] text-muted-foreground mb-2">Strengths</div>
             <div className="flex flex-wrap gap-1.5">
               {coach.strengths.map((s) => (
                 <span key={s} className="rounded border border-border/60 bg-background px-2 py-0.5 text-[11px]">{s}</span>
@@ -413,7 +413,7 @@ function CoachDetailModal({
           </section>
 
           <section>
-            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-2">How it sounds</div>
+            <div className="text-[10px] tracking-[0.2em] text-muted-foreground mb-2">How it sounds</div>
             <div className="space-y-2">
               {coach.signatureLines.map((line, i) => (
                 <div key={i} className="rounded-xl border border-border/60 bg-background/50 px-3 py-2 text-sm text-foreground/85 italic leading-relaxed">

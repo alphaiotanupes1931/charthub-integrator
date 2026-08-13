@@ -56,7 +56,7 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
   if (!grade) {
     if (!scanning) return null;
     return (
-      <div className="shrink-0 flex items-center gap-2 px-3 py-1 border-b border-border/60 bg-card/40 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
+      <div className="shrink-0 flex items-center gap-2 px-3 py-1 border-b border-border/60 bg-card/40 text-[10px] font-semibold tracking-[0.18em] text-primary">
         <Clock className="h-3 w-3 animate-pulse" />
         Scanning setup…
       </div>

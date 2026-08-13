@@ -157,7 +157,7 @@ function FriendsPage() {
       </Card>
 
       <div>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        <h2 className="mb-3 text-sm font-semibold tracking-wide text-muted-foreground">
           Connected ({friends.length})
         </h2>
         {loading ? (

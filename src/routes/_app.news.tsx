@@ -165,7 +165,7 @@ function NewsPage() {
                       {fmtTime(e.date)}
                     </span>
                     <span
-                      className={`shrink-0 rounded border px-1.5 py-0.5 text-[10px] uppercase ${impactClass(e.impact)}`}
+                      className={`shrink-0 rounded border px-1.5 py-0.5 text-[10px] ${impactClass(e.impact)}`}
                     >
                       {e.impact}
                     </span>

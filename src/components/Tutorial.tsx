@@ -224,7 +224,7 @@ export function Tutorial() {
             <div className="flex items-center justify-center h-10 w-10 rounded-2xl bg-primary/10 ring-1 ring-primary/30">
               <Icon className="h-5 w-5 text-primary" />
             </div>
-            <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
+            <div className="text-[11px] font-medium tracking-[0.2em] text-muted-foreground">
               Step {step + 1} of {STEPS.length}
             </div>
           </div>

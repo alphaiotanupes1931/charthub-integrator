@@ -90,7 +90,7 @@ export function VenueOrderTicket({
             key={s}
             type="button"
             onClick={() => setSide(s)}
-            className={`rounded-xl border px-2.5 py-1 text-xs uppercase ${
+            className={`rounded-xl border px-2.5 py-1 text-xs ${
               side === s ? "border-foreground bg-foreground text-background" : "border-border/60 text-muted-foreground"
             }`}
           >
@@ -103,7 +103,7 @@ export function VenueOrderTicket({
             key={t}
             type="button"
             onClick={() => setType(t)}
-            className={`rounded-xl border px-2.5 py-1 text-xs uppercase ${
+            className={`rounded-xl border px-2.5 py-1 text-xs ${
               type === t ? "border-foreground bg-foreground text-background" : "border-border/60 text-muted-foreground"
             }`}
           >

@@ -48,14 +48,14 @@ export function ActiveCoachCard({ collapsed }: { collapsed?: boolean }) {
 
   return (
     <div className="px-3 pb-3">
-      <div className="flex items-center gap-1.5 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+      <div className="flex items-center gap-1.5 mb-1.5 text-[10px] font-semibold tracking-[0.22em] text-muted-foreground">
         <Sparkles className="h-3 w-3 text-primary" /> AI Coach
       </div>
       <Link
         to="/coaches"
         className="block rounded-2xl border border-border/60 bg-card/60 hover:border-primary/50 transition p-2.5"
       >
-        <div className="text-[9px] font-semibold uppercase tracking-[0.22em] text-primary mb-1">Active</div>
+        <div className="text-[9px] font-semibold tracking-[0.22em] text-primary mb-1">Active</div>
         <div className="flex items-center gap-2">
           <span className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${meta.iconBg} ${meta.iconText}`}>
             <Icon className="h-3 w-3" />

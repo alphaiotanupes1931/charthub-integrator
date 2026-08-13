@@ -1311,7 +1311,7 @@ function TradeFormModal({
       >
         <div className="flex items-center justify-between p-5 border-b border-border/60">
           <div>
-            <div className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+            <div className="text-[11px] tracking-[0.2em] text-muted-foreground">
               {editing ? "Edit trade" : "Log trade"}
             </div>
             <h2 className="font-display text-xl font-semibold">{formatYmdHuman(date)}</h2>
@@ -1562,17 +1562,17 @@ function TradeFormModal({
 
           <div className="rounded-2xl border border-border/60 bg-background/50 p-3 grid grid-cols-3 gap-3 text-sm">
             <div>
-              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">P&amp;L</div>
+              <div className="text-[10px] tracking-[0.2em] text-muted-foreground">P&amp;L</div>
               <div className={`font-semibold ${previewPnl > 0 ? "text-bull" : previewPnl < 0 ? "text-destructive" : ""}`}>
                 {previewPnl >= 0 ? "+" : ""}{previewPnl.toFixed(2)}
               </div>
             </div>
             <div>
-              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">R:R (actual)</div>
+              <div className="text-[10px] tracking-[0.2em] text-muted-foreground">R:R (actual)</div>
               <div className="font-semibold">{previewRR == null ? "-" : previewRR.toFixed(2)}</div>
             </div>
             <div>
-              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">R:R (planned)</div>
+              <div className="text-[10px] tracking-[0.2em] text-muted-foreground">R:R (planned)</div>
               <div className="font-semibold">{previewPlannedRR == null ? "-" : previewPlannedRR.toFixed(2)}</div>
             </div>
           </div>
@@ -1596,7 +1596,7 @@ function TradeFormModal({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1.5">{label}</div>
+      <div className="text-[10px] tracking-[0.2em] text-muted-foreground mb-1.5">{label}</div>
       {children}
     </label>
   );

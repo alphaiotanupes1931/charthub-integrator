@@ -186,7 +186,7 @@ function ConnectionsPage() {
       ) : (
         visibleGroups.map((group) => (
           <section key={group} className="mb-8">
-            <h2 className="mb-3 text-xs uppercase tracking-wide text-muted-foreground">{group}</h2>
+            <h2 className="mb-3 text-xs tracking-wide text-muted-foreground">{group}</h2>
             <div className="grid gap-3 sm:grid-cols-2">
               {BROKERS.filter((b) => b.group === group).map((def) => {
                 const conn = connMap[def.id];
@@ -204,12 +204,12 @@ function ConnectionsPage() {
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-medium">{def.name}</span>
                           {conn ? (
-                            <span className="inline-flex items-center gap-1 rounded-xl border border-border/60 px-1.5 py-0.5 text-[10px] uppercase text-muted-foreground">
+                            <span className="inline-flex items-center gap-1 rounded-xl border border-border/60 px-1.5 py-0.5 text-[10px] text-muted-foreground">
                               <Check className="h-3 w-3" /> {conn.env === "live" ? "Live" : "Demo"}
                             </span>
                           ) : null}
                           {def.trading ? (
-                            <span className="rounded-xl border border-border/60 px-1.5 py-0.5 text-[10px] uppercase text-muted-foreground">
+                            <span className="rounded-xl border border-border/60 px-1.5 py-0.5 text-[10px] text-muted-foreground">
                               Order routing
                             </span>
                           ) : null}

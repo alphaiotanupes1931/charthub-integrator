@@ -101,7 +101,7 @@ function AlertsPage() {
       <form onSubmit={submit} className="rounded-2xl border border-border/60 bg-card p-4 md:p-5 mb-8 space-y-3">
         <div className="grid grid-cols-1 md:grid-cols-[1fr_120px_1fr] gap-3">
           <div>
-            <label className="text-xs uppercase tracking-wide text-muted-foreground">Symbol</label>
+            <label className="text-xs tracking-wide text-muted-foreground">Symbol</label>
             <input
               value={symbol}
               onChange={(e) => setSymbol(e.target.value)}
@@ -114,7 +114,7 @@ function AlertsPage() {
             </datalist>
           </div>
           <div>
-            <label className="text-xs uppercase tracking-wide text-muted-foreground">When price is</label>
+            <label className="text-xs tracking-wide text-muted-foreground">When price is</label>
             <select
               value={side}
               onChange={(e) => setSide(e.target.value as "above" | "below")}
@@ -125,7 +125,7 @@ function AlertsPage() {
             </select>
           </div>
           <div>
-            <label className="text-xs uppercase tracking-wide text-muted-foreground">Price</label>
+            <label className="text-xs tracking-wide text-muted-foreground">Price</label>
             <input
               value={price}
               onChange={(e) => setPrice(e.target.value)}
@@ -137,7 +137,7 @@ function AlertsPage() {
           </div>
         </div>
         <div>
-          <label className="text-xs uppercase tracking-wide text-muted-foreground">Note (optional)</label>
+          <label className="text-xs tracking-wide text-muted-foreground">Note (optional)</label>
           <input
             value={note}
             onChange={(e) => setNote(e.target.value)}
@@ -162,7 +162,7 @@ function AlertsPage() {
       </form>
 
       <section className="mb-8">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3">Active ({active.length})</h2>
+        <h2 className="text-sm font-semibold tracking-wide text-muted-foreground mb-3">Active ({active.length})</h2>
         {isLoading ? (
           <div className="text-sm text-muted-foreground">Loading…</div>
         ) : active.length === 0 ? (
@@ -178,7 +178,7 @@ function AlertsPage() {
 
       {done.length > 0 && (
         <section>
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3">Recently fired / paused</h2>
+          <h2 className="text-sm font-semibold tracking-wide text-muted-foreground mb-3">Recently fired / paused</h2>
           <ul className="space-y-2">
             {done.map((row) => <AlertItem key={row.id} row={row} onDelete={() => mDelete.mutate(row.id)} onToggle={() => mToggle.mutate({ id: row.id, active: true })} muted />)}
           </ul>

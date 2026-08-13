@@ -164,7 +164,7 @@ function VoiceCoachPage() {
             <Mic className="h-5 w-5 text-primary" />
           </div>
           <div className="flex-1">
-            <div className="text-xs text-primary/80 uppercase tracking-wide">Active Coach</div>
+            <div className="text-xs text-primary/80 tracking-wide">Active Coach</div>
             <button
               onClick={() => setDropdown((d) => !d)}
               className="flex items-center gap-2 text-primary font-semibold text-lg"

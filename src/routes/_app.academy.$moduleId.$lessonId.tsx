@@ -222,7 +222,7 @@ function BlockRenderer({ block }: { block: LessonBlock }) {
             <div className={`h-6 w-6 rounded-full ${t.bg} border ${t.border} flex items-center justify-center`}>
               <Icon className="h-3.5 w-3.5" />
             </div>
-            <span className="text-[10px] uppercase tracking-[0.18em] font-bold">{block.label}</span>
+            <span className="text-[10px] tracking-[0.18em] font-bold">{block.label}</span>
           </div>
           {block.title && <div className="font-semibold text-lg mb-2">{block.title}</div>}
           <p className="text-[15px] leading-relaxed text-foreground/90 whitespace-pre-line">{block.body}</p>
@@ -249,7 +249,7 @@ function BlockRenderer({ block }: { block: LessonBlock }) {
         <div className="rounded-xl border border-border/60 bg-card p-4 sm:p-5">
           <div className="flex items-center gap-2 mb-3 text-primary">
             <ListChecks className="h-4 w-4" />
-            <span className="text-[10px] uppercase tracking-[0.18em] font-bold">{block.title}</span>
+            <span className="text-[10px] tracking-[0.18em] font-bold">{block.title}</span>
           </div>
           <ol className="space-y-2">
             {block.steps.map((s, i) => (
@@ -267,7 +267,7 @@ function BlockRenderer({ block }: { block: LessonBlock }) {
         <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 sm:p-5">
           <div className="flex items-center gap-2 mb-2 text-primary">
             <Sparkles className="h-4 w-4" />
-            <span className="text-[10px] uppercase tracking-[0.18em] font-bold">Key Takeaway</span>
+            <span className="text-[10px] tracking-[0.18em] font-bold">Key Takeaway</span>
           </div>
           <p className="text-[15px] leading-relaxed font-medium">{block.body}</p>
         </div>

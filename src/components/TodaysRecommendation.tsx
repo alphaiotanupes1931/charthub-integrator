@@ -30,7 +30,7 @@ export function TodaysRecommendation() {
           <Lightbulb className="h-4 w-4 text-primary" />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground mb-1">
+          <div className="text-[11px] font-medium tracking-[0.2em] text-muted-foreground mb-1">
             Today's recommendation
           </div>
           <div className="font-display text-lg font-semibold mb-1">{rec.headline}</div>
