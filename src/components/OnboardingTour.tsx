@@ -52,21 +52,26 @@ export function OnboardingTour() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    try {
-      const done = localStorage.getItem(KEY);
-      if (!done && window.location.pathname === "/dashboard") {
+    let cancelled = false;
+    if (window.location.pathname === "/dashboard") {
+      void shouldShowTour([KEY]).then((show) => {
+        if (cancelled || !show) return;
         startFirstWeek();
         setOpen(true);
-      }
-    } catch { /* noop */ }
+      });
+    }
     const openHandler = () => { setStep(0); setOpen(true); };
     window.addEventListener("trademind:open-tour", openHandler);
-    return () => window.removeEventListener("trademind:open-tour", openHandler);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("trademind:open-tour", openHandler);
+    };
   }, []);
 
   function close() {
     setOpen(false);
     try { localStorage.setItem(KEY, "1"); } catch { /* noop */ }
+    void markTourSeen();
     startFirstWeek();
     emitFirstWeekEvent("tour-done");
   }
