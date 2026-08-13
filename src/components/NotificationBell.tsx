@@ -251,7 +251,7 @@ export function NotificationBell() {
                     {filter === "unread" ? "No unread notifications" : "No notifications yet"}
                   </p>
                   <p className="text-xs mt-1.5 max-w-[260px]">
-                    Signals, price alerts, and scanner hits will show up here as they happen.
+                    Course progress, leaderboard moves, invites, and account notices show up here. Signals and price alerts go to Discord.
                   </p>
                 </div>
               ) : (
