@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { reportSystemNotice } from "@/lib/notifications.functions";
 import { AlertTriangle } from "lucide-react";
 
 type Status = {
@@ -15,6 +17,8 @@ type Status = {
 export function AiCreditNotice({ className = "" }: { className?: string }) {
   const [status, setStatus] = useState<Status | null>(null);
   const [dismissed, setDismissed] = useState(false);
+  const notify = useServerFn(reportSystemNotice);
+  const notifiedRef = useRef(false);
 
   useEffect(() => {
     let alive = true;
@@ -35,6 +39,14 @@ export function AiCreditNotice({ className = "" }: { className?: string }) {
       clearInterval(id);
     };
   }, []);
+
+  // Also log it to the notification inbox (once per day, server-deduped) so the
+  // trader can see why chat quality changed even after dismissing the banner.
+  useEffect(() => {
+    if (!status || status.claude !== "out_of_credits" || notifiedRef.current) return;
+    notifiedRef.current = true;
+    void notify({ data: { reason: "ai_backup_model" } }).catch(() => { /* best-effort */ });
+  }, [status, notify]);
 
   if (dismissed || !status || status.claude !== "out_of_credits") return null;
 
