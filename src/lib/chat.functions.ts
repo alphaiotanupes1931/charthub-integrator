@@ -189,6 +189,30 @@ export const renameChatThread = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/**
+ * Saves an assistant message the client generated locally (the Analysis engine's
+ * grade card injected into the chat) so reopening the thread from history still
+ * shows the full setup instead of just the coach prose.
+ */
+export const appendAssistantChatMessage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ threadId: z.string().uuid(), text: z.string().min(1).max(20000) }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.from("chat_messages").insert({
+      thread_id: data.threadId,
+      user_id: context.userId,
+      client_id: context.userId,
+      role: "assistant",
+      parts: [{ type: "text", text: data.text }] as never,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+
+
 export type ActiveModelInfo = { provider: "claude" | "gemini"; model: string; label: string };
 
 export const getActiveModel = createServerFn({ method: "GET" })
