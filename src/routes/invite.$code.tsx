@@ -40,7 +40,7 @@ function AcceptInvitePage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-6">
-      <div className="max-w-md w-full rounded-2xl border border-border bg-card p-8 text-center">
+      <div className="max-w-md w-full rounded-2xl border border-border/60 bg-card p-8 text-center">
         <div className="mx-auto h-12 w-12 rounded-xl bg-primary/10 ring-1 ring-primary/30 flex items-center justify-center mb-4">
           <Sparkles className="h-5 w-5 text-primary" />
         </div>
@@ -57,7 +57,7 @@ function AcceptInvitePage() {
             </p>
             <Link
               to="/auth"
-              className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+              className="inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
             >
               Continue to sign in
             </Link>

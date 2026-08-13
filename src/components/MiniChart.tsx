@@ -60,7 +60,7 @@ function Sparkline({ seed, height }: { seed: string; height: number }) {
 
 export function MiniChart({ symbol, width = "100%", height = 70 }: Props) {
   return (
-    <div className="rounded-md overflow-hidden bg-transparent" style={{ width, height }}>
+    <div className="rounded-xl overflow-hidden bg-transparent" style={{ width, height }}>
       <Sparkline seed={symbol} height={height} />
     </div>
   );
@@ -81,7 +81,7 @@ export function SymbolOverview({ symbol, height = 320 }: SymbolOverviewProps) {
 
   return (
     <div
-      className="rounded-lg overflow-hidden bg-transparent border border-border/40 p-4 flex flex-col"
+      className="rounded-2xl overflow-hidden bg-transparent border border-border/40 p-4 flex flex-col"
       style={{ width: "100%", height }}
     >
       <div className="flex items-baseline justify-between mb-3">

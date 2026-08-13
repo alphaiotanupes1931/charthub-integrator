@@ -49,7 +49,7 @@ function HelpCenter() {
           </Link>
           <Link
             to="/"
-            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-4 py-2 text-xs sm:text-sm font-medium hover:bg-card transition"
+            className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card/60 px-4 py-2 text-xs sm:text-sm font-medium hover:bg-card transition"
           >
             <ArrowLeft className="size-4" />
             Back home
@@ -65,7 +65,7 @@ function HelpCenter() {
             transition={{ duration: 0.5 }}
             className="text-center mb-10 sm:mb-14"
           >
-            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-3.5 py-1.5 text-xs mb-6">
+            <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/60 px-3.5 py-1.5 text-xs mb-6">
               <BookOpen className="size-3.5 text-primary" />
               <span className="text-muted-foreground">Help center</span>
             </div>
@@ -83,7 +83,7 @@ function HelpCenter() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search articles…"
-                className="w-full rounded-full border border-border bg-card/60 pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                className="w-full rounded-full border border-border/60 bg-card/60 pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                 aria-label="Search help articles"
               />
             </div>
@@ -95,7 +95,7 @@ function HelpCenter() {
                 {results.length} {results.length === 1 ? "result" : "results"} for "{query}"
               </p>
               {results.length === 0 ? (
-                <div className="rounded-2xl border border-border bg-card/40 p-8 text-center text-sm text-muted-foreground">
+                <div className="rounded-2xl border border-border/60 bg-card/40 p-8 text-center text-sm text-muted-foreground">
                   Nothing matched. Try a different word, or browse the categories below.
                 </div>
               ) : (
@@ -105,7 +105,7 @@ function HelpCenter() {
                       <Link
                         to="/help/$slug"
                         params={{ slug: a.slug }}
-                        className="block rounded-xl border border-border bg-card/40 hover:bg-card/70 transition p-4 sm:p-5"
+                        className="block rounded-xl border border-border/60 bg-card/40 hover:bg-card/70 transition p-4 sm:p-5"
                       >
                         <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
                           {HELP_CATEGORIES.find((c) => c.id === a.category)?.title}
@@ -125,7 +125,7 @@ function HelpCenter() {
                 return (
                   <section
                     key={cat.id}
-                    className="rounded-2xl border border-border bg-card/40 p-5 sm:p-6"
+                    className="rounded-2xl border border-border/60 bg-card/40 p-5 sm:p-6"
                   >
                     <h2 className="font-display text-xl font-medium">{cat.title}</h2>
                     <p className="text-sm text-muted-foreground mt-1">{cat.description}</p>

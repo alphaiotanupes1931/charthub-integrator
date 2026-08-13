@@ -36,10 +36,10 @@ export function ActiveCoachCard({ collapsed }: { collapsed?: boolean }) {
     return (
       <Link
         to="/coaches"
-        className="mx-2 my-2 flex items-center justify-center h-10 w-10 rounded-lg border border-border/60 bg-card/60 hover:border-primary/50 transition"
+        className="mx-2 my-2 flex items-center justify-center h-10 w-10 rounded-2xl border border-border/60 bg-card/60 hover:border-primary/50 transition"
         title={`Active coach: ${coach}`}
       >
-        <span className={`inline-flex h-8 w-8 items-center justify-center rounded-lg ${meta.iconBg} ${meta.iconText}`}>
+        <span className={`inline-flex h-8 w-8 items-center justify-center rounded-2xl ${meta.iconBg} ${meta.iconText}`}>
           <Icon className="h-4 w-4" />
         </span>
       </Link>
@@ -53,7 +53,7 @@ export function ActiveCoachCard({ collapsed }: { collapsed?: boolean }) {
       </div>
       <Link
         to="/coaches"
-        className="block rounded-lg border border-border/60 bg-card/60 hover:border-primary/50 transition p-2.5"
+        className="block rounded-2xl border border-border/60 bg-card/60 hover:border-primary/50 transition p-2.5"
       >
         <div className="text-[9px] font-semibold uppercase tracking-[0.22em] text-primary mb-1">Active</div>
         <div className="flex items-center gap-2">

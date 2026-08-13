@@ -332,7 +332,7 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
 
 
       {drawMode && !showFallback && (
-        <div className="absolute right-2 bottom-11 sm:right-3 sm:bottom-12 z-40 flex flex-wrap items-center gap-1 rounded-md border border-border bg-background/90 backdrop-blur px-1.5 py-1 shadow-lg">
+        <div className="absolute right-2 bottom-11 sm:right-3 sm:bottom-12 z-40 flex flex-wrap items-center gap-1 rounded-xl border border-border/60 bg-background/90 backdrop-blur px-1.5 py-1 shadow-lg">
           {([
             { k: "pen", Icon: Pencil, label: "Pen" },
             { k: "line", Icon: LineIcon, label: "Line" },
@@ -359,7 +359,7 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
               onClick={() => setDrawColor(c)}
               title={c}
               aria-label={`Color ${c}`}
-              className={`h-4 w-4 rounded-sm border ${drawColor === c ? "border-foreground scale-110" : "border-border/60"} transition`}
+              className={`h-4 w-4 rounded-lg border ${drawColor === c ? "border-foreground scale-110" : "border-border/60"} transition`}
               style={{ background: c }}
             />
           ))}
@@ -380,10 +380,10 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
             onClick={() => setDrawMode((v) => !v)}
             title={drawMode ? "Exit draw mode (chart interactive again)" : "Draw on chart"}
             aria-label={drawMode ? "Exit draw mode" : "Draw on chart"}
-            className={`inline-flex items-center gap-1.5 rounded-md border backdrop-blur px-2 py-1.5 text-[10px] font-mono uppercase tracking-wider transition-colors ${
+            className={`inline-flex items-center gap-1.5 rounded-xl border backdrop-blur px-2 py-1.5 text-[10px] font-mono tracking-tight transition-colors ${
               drawMode
                 ? "border-primary/50 bg-primary/15 text-primary hover:bg-primary/20"
-                : "border-border bg-background/80 hover:bg-background text-foreground/90 hover:text-foreground"
+                : "border-border/60 bg-background/80 hover:bg-background text-foreground/90 hover:text-foreground"
             }`}
           >
             {drawMode ? <CloseIcon className="h-3.5 w-3.5" /> : <Pencil className="h-3.5 w-3.5" />}

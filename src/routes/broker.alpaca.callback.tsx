@@ -60,13 +60,13 @@ function AlpacaCallback() {
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-background px-6">
-      <div className="w-full max-w-md rounded-md border border-border bg-card p-6 text-center">
+      <div className="w-full max-w-md rounded-xl border border-border/60 bg-card p-6 text-center">
         <h1 className="text-lg font-semibold mb-2">Alpaca sign-in</h1>
         <p className={`text-sm ${failed ? "text-red-500" : "text-muted-foreground"}`}>{message}</p>
         {failed && (
           <button
             onClick={() => void navigate({ to: "/broker" })}
-            className="mt-4 inline-flex items-center px-3 py-2 rounded-md border border-border text-sm hover:bg-muted"
+            className="mt-4 inline-flex items-center px-3 py-2 rounded-xl border border-border/60 text-sm hover:bg-muted"
           >
             Back to brokers
           </button>

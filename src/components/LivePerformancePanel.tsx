@@ -89,9 +89,9 @@ export function LivePerformancePanel() {
   if (!journalStats && !paper) return null;
 
   return (
-    <div className="rounded-md border border-border bg-card px-3 py-2.5">
+    <div className="rounded-xl border border-border/60 bg-card px-3 py-2.5">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Live performance</div>
+        <div className="text-xs font-semibold tracking-tight text-muted-foreground">Live performance</div>
         {journalStats && (
           <>
             <div className="flex items-center gap-1.5 text-xs">

@@ -70,15 +70,15 @@ export function AlpacaPanel() {
   }
 
   return (
-    <div className="rounded-md border border-border bg-card p-5 mb-6">
+    <div className="rounded-xl border border-border/60 bg-card p-5 mb-6">
       <div className="flex items-center justify-between gap-3 mb-3">
         <div>
-          <div className="text-xs uppercase tracking-widest text-muted-foreground">Alpaca</div>
+          <div className="text-xs tracking-tight text-muted-foreground">Alpaca</div>
           <div className="font-semibold text-sm">Sign in with Alpaca (one click)</div>
         </div>
         <button
           onClick={() => void refresh()}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-border text-xs hover:bg-muted"
+          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-border/60 text-xs hover:bg-muted"
         >
           <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
           Refresh
@@ -101,7 +101,7 @@ export function AlpacaPanel() {
           </div>
 
           {positions.length > 0 && (
-            <div className="border border-border rounded-md divide-y divide-border mb-4">
+            <div className="border border-border/60 rounded-xl divide-y divide-border mb-4">
               {positions.map((p) => (
                 <div key={p.symbol} className="flex items-center justify-between px-3 py-2 text-sm">
                   <div className="flex items-center gap-3">
@@ -126,7 +126,7 @@ export function AlpacaPanel() {
                           toast.error((e as Error).message);
                         }
                       }}
-                      className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-border text-xs hover:bg-muted"
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded-xl border border-border/60 text-xs hover:bg-muted"
                     >
                       <X className="h-3 w-3" />
                       Close
@@ -147,7 +147,7 @@ export function AlpacaPanel() {
                 toast.error((e as Error).message);
               }
             }}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md border border-border text-sm hover:bg-muted"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border/60 text-sm hover:bg-muted"
           >
             <Trash2 className="h-4 w-4" />
             Disconnect Alpaca
@@ -162,7 +162,7 @@ export function AlpacaPanel() {
           <button
             onClick={() => void signIn()}
             disabled={connecting}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-foreground text-background text-sm font-medium disabled:opacity-60"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-foreground text-background text-sm font-medium disabled:opacity-60"
           >
             <LogIn className="h-4 w-4" />
             {connecting ? "Opening Alpaca..." : "Sign in with Alpaca"}
@@ -178,8 +178,8 @@ export function AlpacaPanel() {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="border border-border rounded-md p-3">
-      <div className="text-[11px] uppercase tracking-widest text-muted-foreground">{label}</div>
+    <div className="border border-border/60 rounded-xl p-3">
+      <div className="text-[11px] tracking-tight text-muted-foreground">{label}</div>
       <div className="text-sm font-semibold mt-0.5">{value}</div>
     </div>
   );

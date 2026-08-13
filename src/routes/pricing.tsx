@@ -105,7 +105,7 @@ function PricingPage() {
 
       <main className="mx-auto max-w-6xl px-4 py-12">
         <div className="mb-10 text-center">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-3 py-1 text-xs text-muted-foreground">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/60 px-3 py-1 text-xs text-muted-foreground">
             <Sparkles className="h-3 w-3" />
             {hasHadTrial ? "Reactivate your subscription" : "7-day free trial on any plan"}
           </div>
@@ -126,10 +126,10 @@ function PricingPage() {
           {PLANS.map((p) => (
             <div
               key={p.id}
-              className={`relative flex flex-col rounded-2xl border p-8 ${p.popular ? "border-primary bg-primary/5" : "border-border bg-card/40"}`}
+              className={`relative flex flex-col rounded-2xl border p-8 ${p.popular ? "border-primary bg-primary/5" : "border-border/60 bg-card/40"}`}
             >
               {p.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-[10px] font-medium uppercase tracking-wider text-primary-foreground">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-[10px] font-medium tracking-tight text-primary-foreground">
                   Most popular
                 </div>
               )}
@@ -151,7 +151,7 @@ function PricingPage() {
                 type="button"
                 onClick={() => start(p.id)}
                 disabled={loading !== null}
-                className={`mt-8 flex h-11 items-center justify-center gap-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`mt-8 flex h-11 items-center justify-center gap-2 rounded-2xl text-sm font-medium transition-colors ${
                   p.popular ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-foreground text-background hover:bg-foreground/90"
                 } disabled:cursor-not-allowed disabled:opacity-50`}
               >
