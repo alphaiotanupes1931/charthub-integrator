@@ -405,11 +405,28 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
     const [dragging, setDragging] = useState(false);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const [activeCoach, setActiveCoach] = useState<string>(() => readActiveCoach());
+    // Coach switches must land on the very next reply, so re-read the stored
+    // coach on same-tab switches, cross-tab writes, and window focus.
+    useEffect(() => {
+      const sync = () => setActiveCoach(readActiveCoach());
+      window.addEventListener("trademind:coach", sync);
+      window.addEventListener("storage", sync);
+      window.addEventListener("focus", sync);
+      return () => {
+        window.removeEventListener("trademind:coach", sync);
+        window.removeEventListener("storage", sync);
+        window.removeEventListener("focus", sync);
+      };
+    }, []);
+    // Which coach wrote the previous turn in this thread, so the model knows to
+    // drop the old voice instead of mimicking it from history.
+    const lastSentCoachRef = useRef<string | null>(null);
     const coachMeta = COACH_ICON_META[activeCoach] ?? DEFAULT_COACH_ICON;
     const CoachIcon = coachMeta.icon;
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const chartRef = useRef<ChartContext | undefined>(chart);
     useEffect(() => { chartRef.current = chart; }, [chart]);
+
     const voice = useCoachVoice();
     const [activeModel, setActiveModel] = useState<ActiveModelInfo | null>(null);
     const getModel = useServerFn(getActiveModel);
