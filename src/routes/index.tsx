@@ -586,11 +586,14 @@ function Footer({ dashboardHref }: { dashboardHref: string }) {
 
 function SectionEyebrow({ children, align = "center" }: { children: React.ReactNode; align?: "center" | "left" }) {
   return (
-    <div className={`font-mono text-[11px] tracking-tight text-primary mb-6 ${align === "center" ? "text-center" : ""}`}>
-      {children}
+    <div className={`mb-6 flex ${align === "center" ? "justify-center" : "justify-start"}`}>
+      <span className="inline-flex items-center rounded-full border border-border/60 bg-card px-3 py-1 text-[11px] font-semibold tracking-tight text-muted-foreground">
+        {children}
+      </span>
     </div>
   );
 }
+
 
 function Bullet({ children }: { children: React.ReactNode }) {
   return (
