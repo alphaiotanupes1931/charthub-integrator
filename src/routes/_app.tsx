@@ -131,28 +131,44 @@ export const Route = createFileRoute("/_app")({
         }
       } catch { /* ignore */ }
     }
-    const user = await getHydratedUser();
+    let user: Awaited<ReturnType<typeof getHydratedUser>> = null;
+    try {
+      user = await getHydratedUser();
+    } catch (err) {
+      // A failure inside the auth client must not hard-block the app with an
+      // error card; treat it as "not signed in yet" and let the auth page
+      // recover the session.
+      logGate({ step: "access-check-soft-failed", message: (err as Error)?.message ?? "hydrate threw" });
+      user = null;
+    }
     if (!user) {
       throw redirect({ to: "/auth", search: { redirect: location.href, mode: "signin" } });
     }
     // Temporary-password accounts must choose a new password before they can
-    // use the app.
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("must_change_password,email")
-      .eq("id", user.id)
-      .maybeSingle();
-    // Keep the profile email in step with the confirmed auth email. Legacy
-    // username accounts were created with a placeholder address, and username
-    // sign-in resolves through this column, so a stale value would lock them out
-    // after they add their real email in settings.
-    if (user.email && profile && profile.email?.toLowerCase() !== user.email.toLowerCase()) {
-      await supabase.from("profiles").update({ email: user.email }).eq("id", user.id);
-    }
-    if (profile?.must_change_password) {
-      throw redirect({ to: "/reset-password" });
+    // use the app. Any failure here is soft: never block dashboard access on
+    // a profile read.
+    try {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("must_change_password,email")
+        .eq("id", user.id)
+        .maybeSingle();
+      // Keep the profile email in step with the confirmed auth email. Legacy
+      // username accounts were created with a placeholder address, and username
+      // sign-in resolves through this column, so a stale value would lock them out
+      // after they add their real email in settings.
+      if (user.email && profile && profile.email?.toLowerCase() !== user.email.toLowerCase()) {
+        await supabase.from("profiles").update({ email: user.email }).eq("id", user.id);
+      }
+      if (profile?.must_change_password) {
+        throw redirect({ to: "/reset-password" });
+      }
+    } catch (err) {
+      if (err && typeof err === "object" && ("to" in err || "isRedirect" in err || "href" in err)) throw err;
+      logGate({ step: "profile-timeout-soft-allow", message: (err as Error)?.message ?? "profile read failed" });
     }
     return { user };
+
   },
 
   component: () => (
