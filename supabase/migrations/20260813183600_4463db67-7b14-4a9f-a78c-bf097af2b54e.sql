@@ -1,0 +1,1 @@
+UPDATE public.profiles SET tour_completed_at = now() WHERE tour_completed_at IS NULL;
