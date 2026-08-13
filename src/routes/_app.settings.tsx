@@ -285,6 +285,12 @@ function SettingsPage() {
         )}
       </Card>
 
+      <div className="mt-4">
+        <EmailCard currentEmail={profile?.email ?? null} />
+      </div>
+
+
+
       {/* DISPLAY */}
       <SectionLabel>Display</SectionLabel>
       <Card>
