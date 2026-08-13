@@ -1026,6 +1026,7 @@ export type Database = {
           onboarded: boolean
           recovery_code_hash: string | null
           referral_source: string | null
+          tour_completed_at: string | null
           updated_at: string
           username: string | null
           voice_enabled: boolean
@@ -1046,6 +1047,7 @@ export type Database = {
           onboarded?: boolean
           recovery_code_hash?: string | null
           referral_source?: string | null
+          tour_completed_at?: string | null
           updated_at?: string
           username?: string | null
           voice_enabled?: boolean
@@ -1066,6 +1068,7 @@ export type Database = {
           onboarded?: boolean
           recovery_code_hash?: string | null
           referral_source?: string | null
+          tour_completed_at?: string | null
           updated_at?: string
           username?: string | null
           voice_enabled?: boolean
