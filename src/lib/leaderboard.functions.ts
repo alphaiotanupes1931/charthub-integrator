@@ -65,3 +65,58 @@ export const setMyOptIn = createServerFn({ method: "POST" })
     }
     return { ok: true };
   });
+
+/**
+ * Compares the caller's current leaderboard rank against the last rank we
+ * notified them about and drops an inbox notification when it moved. Called
+ * from the leaderboard page after the board loads; deduped per rank so a
+ * refresh cannot spam the inbox.
+ */
+export const checkMyLeaderboardRank = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: optIn } = await context.supabase
+      .from("leaderboard_opt_in")
+      .select("handle,opted_in")
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (!optIn?.opted_in || !optIn.handle) return { rank: null as number | null, notified: false };
+
+    const board = await getLeaderboard();
+    const idx = board.findIndex((r) => r.handle === optIn.handle);
+    if (idx < 0) return { rank: null as number | null, notified: false };
+    const rank = idx + 1;
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: prior } = await supabaseAdmin
+      .from("notifications")
+      .select("meta")
+      .eq("user_id", context.userId)
+      .eq("kind", "info")
+      .like("meta->>dedupe", "leaderboard:rank:%")
+      .order("created_at", { ascending: false })
+      .limit(1);
+    const priorRank = Number((prior?.[0]?.meta as { rank?: number } | null)?.rank ?? 0) || null;
+    if (priorRank === rank) return { rank, notified: false };
+
+    const { createNotificationOnce } = await import("@/lib/notifications.server");
+    const moved =
+      priorRank == null
+        ? `You're #${rank} on the leaderboard.`
+        : rank < priorRank
+          ? `You moved up from #${priorRank} to #${rank}.`
+          : `You slipped from #${priorRank} to #${rank}.`;
+    const created = await createNotificationOnce(
+      `leaderboard:rank:${rank}`,
+      {
+        userId: context.userId,
+        kind: "info",
+        title: rank <= 3 ? `Top ${rank} on the leaderboard` : `Leaderboard rank: #${rank}`,
+        body: moved,
+        url: "/leaderboard",
+        meta: { rank },
+      },
+      24,
+    );
+    return { rank, notified: !!created };
+  });
