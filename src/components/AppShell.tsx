@@ -232,21 +232,22 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
   }, [mobileOpen]);
 
+  const initial = (profile?.email ?? "?").trim().charAt(0).toUpperCase();
+
   const SidebarContent = (
     <>
-      <div className="flex items-center justify-between gap-2.5 px-4 py-5">
+      <div className="flex items-center justify-between gap-2.5 px-5 py-6">
         <LogoLink
           to="/dashboard"
           size="lg"
           variant="brand"
-          glow
           showText={!collapsed}
-          textClassName="text-xl"
+          textClassName="text-[19px] tracking-tight"
           className="gap-2.5"
         />
         <button
           onClick={() => setMobileOpen(false)}
-          className="md:hidden h-8 w-8 rounded-md text-muted-foreground hover:text-foreground"
+          className="md:hidden h-9 w-9 rounded-full text-muted-foreground hover:bg-accent/60 hover:text-foreground flex items-center justify-center transition"
           aria-label="Close menu"
         >
           <X className="h-5 w-5" />
@@ -254,12 +255,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
 
       {!collapsed && (
-        <div className="px-3 pb-2">
+        <div className="px-4 pb-3">
           <SidebarSearch nav={nav} />
         </div>
       )}
 
-      <nav className="flex-1 px-2 py-2 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 px-3 py-1 space-y-1 overflow-y-auto">
         {collapsed ? (
           // Collapsed rail: flat icon list, no group headers.
           nav.map((item) => (
@@ -279,7 +280,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 onToggle={() => toggleGroup(group.id)}
               />
             ))}
-            <div className="pt-2 mt-2 border-t border-border/60 space-y-0.5">
+            <div className="pt-2 mt-2 border-t border-border/50 space-y-1">
               {BOTTOM_NAV.filter((n) => n.to !== "/admin" || isAdmin).map((item) => (
                 <NavLinkRow key={item.to} item={item} pathname={pathname} />
               ))}
@@ -289,25 +290,36 @@ export function AppShell({ children }: { children: ReactNode }) {
       </nav>
 
       {!collapsed ? (
-        <div className="px-3 pb-3 space-y-2 border-t border-border/60 pt-3">
-          {profile?.email && (
-            <div className="text-[11px] text-muted-foreground truncate px-1" title={profile.email}>
-              {profile.email}
+        <div className="px-3 pb-4 pt-3 border-t border-border/50">
+          <div className="flex items-center gap-3 rounded-2xl px-2 py-2">
+            <span className="h-9 w-9 shrink-0 rounded-full bg-accent/70 text-[13px] font-semibold text-foreground/80 flex items-center justify-center">
+              {initial}
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="text-[13px] font-semibold text-foreground truncate">
+                {profile?.display_name ?? "Account"}
+              </div>
+              {profile?.email && (
+                <div className="text-[11px] text-muted-foreground truncate" title={profile.email}>
+                  {profile.email}
+                </div>
+              )}
             </div>
-          )}
-          <button
-            onClick={handleSignOut}
-            className="w-full flex items-center gap-2 text-sm text-foreground/80 hover:text-foreground px-1"
-          >
-            <LogOut className="h-4 w-4" />
-            Sign Out
-          </button>
+            <button
+              onClick={handleSignOut}
+              className="h-8 w-8 rounded-full text-muted-foreground hover:bg-accent/60 hover:text-foreground flex items-center justify-center transition"
+              aria-label="Sign out"
+              title="Sign out"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       ) : (
-        <div className="px-2 pb-3 pt-3 border-t border-border/60 flex flex-col items-center gap-2">
+        <div className="px-2 pb-4 pt-3 border-t border-border/50 flex flex-col items-center gap-2">
           <button
             onClick={handleSignOut}
-            className="h-9 w-9 rounded-md text-muted-foreground hover:text-foreground flex items-center justify-center"
+            className="h-9 w-9 rounded-full text-muted-foreground hover:bg-accent/60 hover:text-foreground flex items-center justify-center transition"
             aria-label="Sign out"
             title="Sign out"
           >
@@ -319,17 +331,19 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 
 
+
   return (
     <WelcomeBackProvider>
       <div className={`flex w-full text-foreground ${isDashboard ? "h-screen overflow-hidden" : "min-h-screen"}`}>
       {/* Desktop sidebar */}
       <aside
         className={`${
-          collapsed ? "w-16" : "w-64"
-        } hidden md:flex shrink-0 border-r border-border/60 glass flex-col transition-[width] duration-300 ease-out`}
+          collapsed ? "w-[76px]" : "w-[264px]"
+        } hidden md:flex shrink-0 border-r border-border/50 bg-card flex-col transition-[width] duration-300 ease-out`}
       >
         {SidebarContent}
       </aside>
+
 
       {/* Mobile drawer */}
       {mobileOpen && (
@@ -379,23 +393,24 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="sticky top-0 z-30 flex items-center gap-2 px-4 md:px-6 py-3 border-b border-border/60 bg-background/80 backdrop-blur-xl">
+        <header className="sticky top-0 z-30 flex items-center gap-2 px-4 md:px-6 py-3 border-b border-border/50 bg-background/85 backdrop-blur-xl">
           {/* Mobile menu */}
           <button
             onClick={() => setMobileOpen(true)}
-            className="md:hidden h-9 w-9 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:text-foreground shrink-0"
+            className="md:hidden h-9 w-9 rounded-full flex items-center justify-center text-muted-foreground hover:bg-accent/60 hover:text-foreground transition shrink-0"
             aria-label="Open menu"
           >
-            <Menu className="h-4 w-4" />
+            <Menu className="h-[18px] w-[18px]" />
           </button>
           {/* Desktop collapse */}
           <button
             onClick={() => setCollapsed((c) => !c)}
-            className="hidden md:flex h-9 w-9 rounded-md border border-border items-center justify-center text-muted-foreground hover:text-foreground shrink-0"
+            className="hidden md:flex h-9 w-9 rounded-full items-center justify-center text-muted-foreground hover:bg-accent/60 hover:text-foreground transition shrink-0"
             aria-label="Toggle sidebar"
           >
-            {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+            {collapsed ? <PanelLeftOpen className="h-[18px] w-[18px]" /> : <PanelLeftClose className="h-[18px] w-[18px]" />}
           </button>
+
           <NewsMarquee />
           <div className="flex-1 md:hidden" />
           <TestingBanner />
@@ -441,7 +456,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   active ? "text-primary" : "text-muted-foreground"
                 }`}
               >
-                <Icon className={`h-5 w-5 ${active ? "drop-shadow-[0_0_6px_color-mix(in_oklab,var(--gold)_60%,transparent)]" : ""}`} />
+                <Icon className="h-[22px] w-[22px]" strokeWidth={active ? 2.4 : 1.8} />
                 {t.label}
               </Link>
             );
@@ -480,20 +495,17 @@ function NavLinkRow({
   return (
     <Link
       to={item.to}
-      className={`group relative flex items-center gap-3 rounded-lg text-sm transition-all duration-200 ${
-        nested ? "pl-9 pr-3 py-2" : "px-3 py-2.5"
+      className={`group relative flex items-center gap-3.5 rounded-xl text-[14px] transition-colors ${
+        nested ? "pl-8 pr-3 py-2" : collapsed ? "px-3 py-2.5 justify-center" : "px-3 py-2.5"
       } ${
         active
-          ? "bg-gradient-to-r from-primary/15 via-primary/8 to-transparent text-primary ring-gold"
-          : item.accent
-          ? "text-primary/80 hover:bg-accent/40"
-          : "text-foreground/80 hover:bg-accent/40 hover:text-foreground"
+          ? "bg-accent text-foreground font-semibold"
+          : "text-foreground/70 hover:bg-accent/50 hover:text-foreground font-medium"
       }`}
       title={item.label}
     >
-      {active && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-r bg-gold-gradient" />}
-      <Icon className={`h-4 w-4 shrink-0 ${active ? "drop-shadow-[0_0_6px_color-mix(in_oklab,var(--gold)_60%,transparent)]" : ""}`} />
-      {!collapsed && <span className="font-medium truncate">{item.label}</span>}
+      <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={active ? 2.4 : 1.8} />
+      {!collapsed && <span className="truncate">{item.label}</span>}
     </Link>
   );
 }
@@ -517,13 +529,13 @@ function NavGroupBlock({
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
-          hasActive ? "text-primary" : "text-foreground/80 hover:bg-accent/40 hover:text-foreground"
+        className={`w-full flex items-center gap-3.5 rounded-xl px-3 py-2.5 text-[14px] transition-colors ${
+          hasActive ? "text-foreground font-semibold" : "text-foreground/70 hover:bg-accent/50 hover:text-foreground font-medium"
         }`}
       >
-        <Icon className="h-4 w-4 shrink-0" />
-        <span className="font-medium truncate flex-1 text-left">{group.label}</span>
-        <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+        <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={hasActive ? 2.4 : 1.8} />
+        <span className="truncate flex-1 text-left">{group.label}</span>
+        <ChevronDown className={`h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
         <div className="mt-0.5 space-y-0.5">
@@ -535,6 +547,7 @@ function NavGroupBlock({
     </div>
   );
 }
+
 
 function ComplianceGate() {
   const [open, setOpen] = useState(false);
@@ -628,14 +641,15 @@ function SidebarSearch({ nav }: { nav: NavItem[] }) {
           else if (e.key === "ArrowUp") { e.preventDefault(); setActive((i) => Math.max(i - 1, 0)); }
           else if (e.key === "Enter") { e.preventDefault(); const r = results[active]; if (r) go(r.to); }
         }}
-        placeholder="Search pages…"
-        className="w-full h-9 rounded-lg border border-border bg-card/50 pl-9 pr-3 md:pr-12 text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/40"
+        placeholder="Search"
+        className="w-full h-10 rounded-full border border-transparent bg-accent/60 pl-9 pr-3 md:pr-12 text-sm placeholder:text-muted-foreground focus:outline-none focus:bg-accent focus:border-border"
       />
-      <kbd className="hidden md:block absolute right-3 top-1/2 -translate-y-1/2 rounded border border-border bg-background px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground pointer-events-none">
+      <kbd className="hidden md:block absolute right-3 top-1/2 -translate-y-1/2 rounded px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground pointer-events-none">
         ⌘K
       </kbd>
       {open && results.length > 0 && (
-        <div className="absolute left-0 right-0 mt-1.5 rounded-lg border border-border bg-card shadow-xl z-50 overflow-hidden">
+        <div className="absolute left-0 right-0 mt-2 rounded-2xl border border-border bg-card shadow-xl z-50 overflow-hidden">
+
           {results.map((r, i) => {
             const Icon = r.icon;
             return (
