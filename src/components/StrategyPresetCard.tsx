@@ -23,21 +23,13 @@ export function StrategyPresetCard({ name, className = "" }: { name: string | nu
 
   return (
     <div className={`border-b border-border/60 bg-card/30 px-3 py-2 text-xs ${className}`}>
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center gap-2 text-left"
-        aria-expanded={open}
-      >
+      <div className="flex w-full items-center gap-2 text-left">
         <BookOpen className="h-3.5 w-3.5 text-primary shrink-0" />
         <span className="font-semibold">Strategy in use: {s.name}</span>
         {meta.length > 0 && (
           <span className="hidden sm:inline text-muted-foreground truncate">{meta.join(" · ")}</span>
         )}
-        <span className="ml-auto inline-flex items-center gap-1 text-muted-foreground">
-          {open ? "Hide rules" : "View rules"}
-          <ChevronDown className={`h-3 w-3 transition-transform ${open ? "rotate-180" : ""}`} />
-        </span>
-      </button>
+      </div>
 
       {open && (
         <div className="mt-2 space-y-3 pb-1">
