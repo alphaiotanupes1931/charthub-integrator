@@ -677,7 +677,9 @@ function Dashboard() {
     if (activeThreadId) writeLastThreadId(activeThreadId);
   }, [activeThreadId]);
 
-  const [chartTab, setChartTab] = useState<"live" | "setup">("live");
+  // Our own OANDA-fed chart is the default: the TradingView embed is blocked in
+  // some browsers/networks and painted a black panel, so it is now opt-in.
+  const [chartTab, setChartTab] = useState<"live" | "setup">("setup");
   // Mobile-only: which pane is visible full-height (chart / scan / chat). On >=lg
   // both are shown side-by-side and this state is ignored.
   const [mobileView, setMobileView] = useState<"chart" | "scan" | "chat">("chart");
