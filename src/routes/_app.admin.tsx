@@ -9,6 +9,8 @@ import { adminReferralStats, adminUsersOverview, adminSetPlatformStatus } from "
 import { aiCostSummary } from "@/lib/ai-cost.functions";
 import { aiCreditsStatus, setAiBudget } from "@/lib/ai-credits.functions";
 import { adminListSupportRequests } from "@/lib/support.functions";
+import { RevenuePanel } from "@/components/admin/RevenuePanel";
+
 
 
 export const Route = createFileRoute("/_app/admin")({
