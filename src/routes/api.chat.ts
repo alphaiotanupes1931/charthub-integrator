@@ -35,16 +35,37 @@ function lastUserText(messages: UIMessage[]): { text: string; hasImage: boolean 
   return { text: "", hasImage: false };
 }
 
+/** Coaches with a strongly stylized voice always need the stronger model, or
+ *  the cheap model flattens them all into the same neutral analyst tone. */
+const STYLIZED_COACHES = new Set([
+  "The Disciplinarian",
+  "The Mentor",
+  "The Minimalist",
+  "The Psychologist",
+]);
+
 /** "cheap" = mechanical grading or a short factual ask. "smart" = coaching. */
-function routeChatModel(messages: UIMessage[]): "cheap" | "smart" {
+function routeChatModel(messages: UIMessage[], coach?: string): "cheap" | "smart" {
   const { text, hasImage } = lastUserText(messages);
   if (hasImage) return "smart";          // screenshot reads need the stronger vision model
+  if (coach && STYLIZED_COACHES.has(coach)) return "smart"; // voice fidelity over cost
   if (!text) return "smart";
   if (DEEP_INTENT.test(text)) return "smart";
   if (GRADE_INTENT.test(text)) return "cheap";
   if (text.length <= 90 && text.split(/\s+/).length <= 14) return "cheap";
   return "smart";
 }
+
+/** Questions that should always end up drawn on the live chart, not just described. */
+const DRAW_INTENT =
+  /\b(show|draw|mark|plot|chart it|on the chart|where|level|levels|support|resistance|entry|entries|stop|stop loss|sl\b|take profit|tp\d?|target|targets|zone|zones|fvg|order block|ob\b|liquidity|sweep|supply|demand|range|trendline|fib|retrace|breakout|structure|grade|scan|setup|is this a good trade)\b/i;
+
+function shouldForceChartDraw(messages: UIMessage[]): boolean {
+  const { text, hasImage } = lastUserText(messages);
+  if (hasImage) return false; // annotations pin to the live chart, not an uploaded image
+  return !!text && DRAW_INTENT.test(text);
+}
+
 
 
 const stripReasoningTransform: StreamTextTransform<ToolSet> = () =>
