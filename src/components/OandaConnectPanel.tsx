@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { KeyRound, ExternalLink, Trash2, RefreshCw } from "lucide-react";
+import { KeyRound, ExternalLink, Trash2, RefreshCw, LogIn } from "lucide-react";
 import {
   saveOandaCredentials,
   setOandaActiveEnv,
@@ -12,9 +12,10 @@ import {
 type Meta = Awaited<ReturnType<typeof getOandaCredentialsMeta>>;
 
 /**
- * OANDA sign-in panel. Traders paste a personal access token from their OANDA
- * account; the token is encrypted server-side and never returned to the browser.
- * Demo (practice) and live accounts can both be saved and switched between.
+ * OANDA sign-in, reduced to a single field. The trader pastes one personal
+ * access token; the server figures out whether it is a demo or live token and
+ * which account it authorizes. The token is encrypted server-side and never
+ * returned to the browser.
  */
 export function OandaConnectPanel({ onChange }: { onChange?: () => void }) {
   const getMeta = useServerFn(getOandaCredentialsMeta);
@@ -27,8 +28,6 @@ export function OandaConnectPanel({ onChange }: { onChange?: () => void }) {
   const [busy, setBusy] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [apiKey, setApiKey] = useState("");
-  const [accountId, setAccountId] = useState("");
-  const [env, setEnvChoice] = useState<"practice" | "live">("practice");
 
   async function refresh() {
     setLoading(true);
@@ -51,10 +50,9 @@ export function OandaConnectPanel({ onChange }: { onChange?: () => void }) {
   async function handleSave() {
     setBusy(true);
     try {
-      await save({ data: { apiKey: apiKey.trim(), accountId: accountId.trim(), env, makeActive: true } });
-      toast.success(`OANDA ${env === "practice" ? "demo" : "live"} account connected`);
+      const res = await save({ data: { apiKey: apiKey.trim(), makeActive: true } });
+      toast.success(`Signed in to your OANDA ${res.env === "live" ? "live" : "demo"} account`);
       setApiKey("");
-      setAccountId("");
       await refresh();
       onChange?.();
     } catch (e) {
@@ -151,43 +149,24 @@ export function OandaConnectPanel({ onChange }: { onChange?: () => void }) {
       ) : (
         <div className="space-y-3">
           <p className="text-xs text-muted-foreground">
-            Sign in with your OANDA personal access token so trades placed here hit your real account. The token is
-            encrypted on the server and never exposed to the browser.
+            One step: paste your OANDA access token. We detect whether it is a demo or live account automatically, and
+            the token stays encrypted on the server.
           </p>
-          <div className="flex gap-2">
-            {(["practice", "live"] as const).map((e) => (
-              <button
-                key={e}
-                onClick={() => setEnvChoice(e)}
-                className={`rounded-xl border px-3 py-1.5 text-xs font-semibold ${
-                  env === e ? "border-primary bg-primary/10 text-primary" : "border-border/60 text-muted-foreground hover:bg-muted"
-                }`}
-              >
-                {e === "practice" ? "Demo account" : "Live account"}
-              </button>
-            ))}
-          </div>
-          <input
-            value={accountId}
-            onChange={(ev) => setAccountId(ev.target.value)}
-            placeholder="Account ID (e.g. 001-001-1234567-001)"
-            className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm font-mono"
-          />
           <input
             value={apiKey}
             onChange={(ev) => setApiKey(ev.target.value)}
             type="password"
             autoComplete="off"
-            placeholder="OANDA API token"
+            placeholder="Paste your OANDA access token"
             className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm font-mono"
           />
           <div className="flex items-center gap-2">
             <button
               onClick={handleSave}
-              disabled={busy || apiKey.trim().length < 20 || accountId.trim().length < 3}
+              disabled={busy || apiKey.trim().length < 20}
               className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"
             >
-              Sign in to OANDA
+              <LogIn className="h-4 w-4" /> {busy ? "Signing in..." : "Sign in to OANDA"}
             </button>
             <a
               href="https://www.oanda.com/account/tpa/personal_token"

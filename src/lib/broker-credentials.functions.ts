@@ -11,9 +11,9 @@ export const saveOandaCredentials = createServerFn({ method: "POST" })
   .inputValidator((raw: unknown) =>
     z
       .object({
-        apiKey: z.string().trim().min(20, "API key looks too short"),
-        accountId: z.string().trim().min(3, "Account ID is required"),
-        env: z.enum(["practice", "live"]).default("practice"),
+        apiKey: z.string().trim().min(20, "That token looks too short"),
+        accountId: z.string().trim().optional(),
+        env: z.enum(["practice", "live"]).optional(),
         makeActive: z.boolean().default(true),
       })
       .parse(raw),
@@ -21,6 +21,37 @@ export const saveOandaCredentials = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { encryptSecret } = await import("@/lib/broker-crypto.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Auto-detect which OANDA environment the token belongs to and which
+    // account it authorizes, so the trader only has to paste one value.
+    async function discover(env: "practice" | "live") {
+      const host = env === "live" ? "api-fxtrade.oanda.com" : "api-fxpractice.oanda.com";
+      try {
+        const res = await fetch(`https://${host}/v3/accounts`, {
+          headers: { Authorization: `Bearer ${data.apiKey}`, "Content-Type": "application/json" },
+        });
+        if (!res.ok) return null;
+        const json = (await res.json()) as { accounts?: Array<{ id?: string }> };
+        const id = json.accounts?.[0]?.id;
+        return id ? { env, accountId: id } : null;
+      } catch {
+        return null;
+      }
+    }
+
+    const order: Array<"practice" | "live"> = data.env === "live" ? ["live", "practice"] : ["practice", "live"];
+    let found: { env: "practice" | "live"; accountId: string } | null = null;
+    for (const env of order) {
+      found = await discover(env);
+      if (found) break;
+    }
+    if (!found && data.accountId && data.env) found = { env: data.env, accountId: data.accountId };
+    if (!found) {
+      throw new Error(
+        "That token was not accepted by OANDA. Copy a fresh personal access token and try again.",
+      );
+    }
+
     const { error } = await supabaseAdmin
       .from("user_broker_credentials")
       .upsert(
@@ -28,8 +59,8 @@ export const saveOandaCredentials = createServerFn({ method: "POST" })
           user_id: context.userId,
           broker: "oanda",
           api_key_ciphertext: encryptSecret(data.apiKey),
-          account_id: data.accountId,
-          env: data.env,
+          account_id: found.accountId,
+          env: found.env,
           is_active: data.makeActive,
           updated_at: new Date().toISOString(),
         },
@@ -43,9 +74,9 @@ export const saveOandaCredentials = createServerFn({ method: "POST" })
         .update({ is_active: false })
         .eq("user_id", context.userId)
         .eq("broker", "oanda")
-        .neq("env", data.env);
+        .neq("env", found.env);
     }
-    return { ok: true };
+    return { ok: true, env: found.env, accountId: found.accountId };
   });
 
 /** Switch which saved OANDA account (demo or live) trades route to. */
