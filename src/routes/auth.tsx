@@ -440,11 +440,12 @@ function AuthPage() {
             <form onSubmit={onSubmit} className="mt-5 space-y-3">
               <div>
                 <label className="text-xs font-medium text-muted-foreground" htmlFor="email">
-                  {mode === "signin" ? "Email or username" : "Email"}
+                  Email
                 </label>
                 <input
                   id="email"
                   type={mode === "signin" ? "text" : "email"}
+                  placeholder="you@email.com"
                   autoCapitalize="none"
                   spellCheck={false}
                   autoComplete={mode === "signin" ? "username" : "email"}
@@ -453,6 +454,12 @@ function AuthPage() {
                   className="mt-1 w-full h-10 rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:border-primary/50"
                   required
                 />
+                {mode === "signin" && (
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Legacy accounts can still sign in with their username.
+                  </p>
+                )}
+
               </div>
               <div>
                 <div className="flex items-center justify-between">
