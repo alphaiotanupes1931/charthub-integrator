@@ -22,7 +22,7 @@ import {
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { supabase } from "@/integrations/supabase/client";
 import { useTimezone, formatInTimezone } from "@/hooks/useTimezone";
-import { getOrCreateDashboardThread, getChatMessages, getActiveModel, type ActiveModelInfo } from "@/lib/chat.functions";
+import { getOrCreateDashboardThread, getChatMessages, getActiveModel, appendAssistantChatMessage, type ActiveModelInfo } from "@/lib/chat.functions";
 import { clearLastThreadId, readJournal, readActiveCoach, writeActiveCoach, readActiveStrategy, writeLastThreadId } from "@/lib/chat-client";
 import { findStrategyByName } from "@/lib/customStrategies";
 import { readActiveLensId, findLens } from "@/lib/scanLens";
@@ -61,6 +61,7 @@ export type ChartContext = {
 type Props = { chart?: ChartContext; onClose?: () => void; onMinimize?: () => void; onRunScan?: () => void; onStopScan?: () => void; scanning?: boolean; threadIdOverride?: string | null; onAnnotations?: (a: ChartAnnotation[]) => void; onConcept?: (c: ConceptRef | null) => void; onGrade?: (g: import("@/lib/chartAnnotations").ChartGrade | null) => void; onShowMe?: () => void; };
 
 const DASHBOARD_THREAD_FALLBACK_ID = "dashboard-scans";
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function uiMessageText(message: UIMessage | null | undefined): string {
   return textFromUiMessageParts(message?.parts);
@@ -412,6 +413,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
     const voice = useCoachVoice();
     const [activeModel, setActiveModel] = useState<ActiveModelInfo | null>(null);
     const getModel = useServerFn(getActiveModel);
+    const persistAssistant = useServerFn(appendAssistantChatMessage);
     useEffect(() => {
       getModel().then(setActiveModel).catch(() => setActiveModel(null));
     }, [getModel]);
@@ -541,6 +543,12 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
     }, []);
 
     const appendAssistantMessage = useCallback((text: string) => {
+      // Persist it too: this message is generated client-side (the Analysis
+      // engine's grade card), so without this the setup disappears when the
+      // thread is reopened from history.
+      if (UUID_RE.test(threadId)) {
+        void persistAssistant({ data: { threadId, text } }).catch(() => { /* best-effort */ });
+      }
       setMessages((prev) => [
         ...prev,
         {
@@ -549,7 +557,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
           parts: [{ type: "text", text }],
         } as UIMessage,
       ]);
-    }, [setMessages]);
+    }, [setMessages, threadId, persistAssistant]);
 
     const chatBusy = status === "submitted" || status === "streaming";
     const loading = scanning || chatBusy;
