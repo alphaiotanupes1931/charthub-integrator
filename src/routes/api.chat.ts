@@ -23,6 +23,49 @@ const CLAUDE_CHEAP = "claude-haiku-4-5-20251001";
 const GRADE_INTENT = /\b(scan|grade|rate|score|setup|entry|entries|plan|trade idea|is this a good|long or short|buy or sell|levels?)\b/i;
 const DEEP_INTENT = /\b(why|explain|teach|walk me|help me understand|how do|how does|what is|what are|difference|psychology|mindset|tilt|revenge|discipline|journal review|mistake|habit|routine|review my|lesson|history|compare|strategy for|should i change)\b/i;
 
+// Anthropic health gate. When the Anthropic account is out of credits or the key
+// is rejected, every reply used to fail with a bare "An error occurred" and the
+// trader saw no response at all. We probe once, cache the verdict, and fall back
+// to the Lovable gateway model so the coach keeps answering.
+let anthropicBlockedUntil = 0;
+let anthropicProbe: Promise<boolean> | null = null;
+const ANTHROPIC_COOLDOWN_MS = 10 * 60 * 1000;
+
+async function anthropicUsable(key: string): Promise<boolean> {
+  if (Date.now() < anthropicBlockedUntil) return false;
+  if (anthropicProbe) return anthropicProbe;
+  anthropicProbe = (async () => {
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-api-key": key,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: CLAUDE_CHEAP,
+          max_tokens: 1,
+          messages: [{ role: "user", content: "ok" }],
+        }),
+      });
+      if (res.ok) return true;
+      const body = await res.text();
+      console.warn(`[chat] anthropic_unavailable status=${res.status} ${body.slice(0, 200)}`);
+      anthropicBlockedUntil = Date.now() + ANTHROPIC_COOLDOWN_MS;
+      return false;
+    } catch (e) {
+      console.warn(`[chat] anthropic_probe_failed ${(e as Error).message}`);
+      anthropicBlockedUntil = Date.now() + ANTHROPIC_COOLDOWN_MS;
+      return false;
+    } finally {
+      // Allow a fresh probe after the cooldown (or immediately on success).
+      setTimeout(() => { anthropicProbe = null; }, 5_000);
+    }
+  })();
+  return anthropicProbe;
+}
+
 function lastUserText(messages: UIMessage[]): { text: string; hasImage: boolean } {
   for (let i = messages.length - 1; i >= 0; i--) {
     const m = messages[i];
