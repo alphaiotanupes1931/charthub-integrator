@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { X, MessageCircle, LineChart, BookOpen, FlaskConical, Send, ArrowRight, ArrowLeft } from "lucide-react";
 import { startFirstWeek, emitFirstWeekEvent } from "@/hooks/useFirstWeek";
+import { shouldShowTour, markTourSeen } from "@/lib/tourFlag";
 
 const KEY = "trademind.tour.v1.done";
 
