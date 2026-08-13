@@ -24,7 +24,6 @@ import {
   markAllNotificationsRead,
   deleteNotification,
   clearReadNotifications,
-  createTestNotification,
   type NotificationRow,
 } from "@/lib/notifications.functions";
 
@@ -78,7 +77,6 @@ export function NotificationBell() {
   const markAllFn = useServerFn(markAllNotificationsRead);
   const deleteFn = useServerFn(deleteNotification);
   const clearReadFn = useServerFn(clearReadNotifications);
-  const createTestFn = useServerFn(createTestNotification);
 
   const [hasSession, setHasSession] = useState(false);
   useEffect(() => {
@@ -151,17 +149,6 @@ export function NotificationBell() {
   const mAll = useMutation({ mutationFn: () => markAllFn(), onSuccess: invalidate });
   const mDel = useMutation({ mutationFn: (id: string) => deleteFn({ data: { id } }), onSuccess: invalidate });
   const mClr = useMutation({ mutationFn: () => clearReadFn(), onSuccess: invalidate });
-  const mTest = useMutation({
-    mutationFn: () =>
-      createTestFn({
-        data: {
-          kind: "signal",
-          title: "Test notification",
-          body: "This is a sample alert from the inbox. Everything is wired up.",
-        },
-      }),
-    onSuccess: invalidate,
-  });
 
   const navigate = useNavigate();
 
@@ -250,14 +237,6 @@ export function NotificationBell() {
                 Clear read
               </button>
               <div className="flex-1" />
-              <button
-                onClick={() => mTest.mutate()}
-                disabled={mTest.isPending}
-                className="font-medium text-muted-foreground/70 hover:text-foreground transition"
-                title="Create a test notification"
-              >
-                Test
-              </button>
             </div>
 
 
