@@ -320,7 +320,7 @@ function CalculatorPage() {
 
         {/* Right column - results */}
         <div className="space-y-3 lg:sticky lg:top-4 lg:self-start">
-          <div className="rounded-xl border border-primary/30 bg-gradient-to-br from-primary/10 via-card to-card p-4 space-y-3">
+          <div className="rounded-xl border border-primary/30 bg-primary/[0.06] p-4 space-y-3">
             <div className="text-[10px] uppercase tracking-[0.2em] text-primary font-bold">Results</div>
 
             {(mode === "size" || mode === "full") && (
