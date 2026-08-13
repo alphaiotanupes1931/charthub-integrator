@@ -163,6 +163,7 @@ export function Tutorial() {
 
   const close = (completed: boolean) => {
     try { localStorage.setItem(STORAGE_KEY, completed ? "completed" : "skipped"); } catch { /* ignore */ }
+    void markTourSeen();
     setOpen(false);
     setRect(null);
   };
