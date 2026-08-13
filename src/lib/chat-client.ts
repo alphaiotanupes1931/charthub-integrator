@@ -32,8 +32,14 @@ export function readActiveCoach(): string {
 
 export function writeActiveCoach(name: string) {
   if (typeof window === "undefined") return;
-  try { window.localStorage.setItem(COACH_KEY, name); } catch { /* ignore */ }
+  try {
+    window.localStorage.setItem(COACH_KEY, name);
+    // Same-tab listeners (chat panels/headers) need an explicit event: the
+    // native `storage` event only fires in OTHER tabs.
+    window.dispatchEvent(new Event("trademind:coach"));
+  } catch { /* ignore */ }
 }
+
 
 export const STRATEGY_KEY = "trademind.activeStrategy";
 export function readActiveStrategy(): string | null {
