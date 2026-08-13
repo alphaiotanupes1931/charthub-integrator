@@ -23,7 +23,7 @@ type BrokerSearch = {
   tp?: number | string;
 };
 
-import { AlpacaPanel } from "@/components/AlpacaPanel";
+import { OandaConnectPanel } from "@/components/OandaConnectPanel";
 
 
 export const Route = createFileRoute("/_app/broker")({
@@ -37,9 +37,9 @@ export const Route = createFileRoute("/_app/broker")({
   head: () => ({
     meta: [
       { title: "Brokers — TradeMind" },
-      { name: "description", content: "Connect your Alpaca account and place real trades from your scans." },
+      { name: "description", content: "Sign in to OANDA and place real trades straight from your scans." },
       { property: "og:title", content: "Brokers — TradeMind" },
-      { property: "og:description", content: "Connect your Alpaca account and place real trades from your scans." },
+      { property: "og:description", content: "Sign in to OANDA and place real trades straight from your scans." },
     ],
   }),
   component: BrokerPage,
@@ -196,7 +196,7 @@ function BrokerPage() {
         <div>
           <h1 className="font-display text-2xl md:text-3xl font-semibold mb-2">Brokers</h1>
           <p className="text-sm text-muted-foreground">
-            One-click sign in to your broker, then place trades straight from your scans. No API keys to copy.
+            Sign in to OANDA once, then place trades straight from your scans. Your token is encrypted on the server and never exposed to the browser.
           </p>
 
         </div>
@@ -210,7 +210,8 @@ function BrokerPage() {
       </div>
       <PageInstructions className="mb-6" />
 
-      <AlpacaPanel />
+      <OandaConnectPanel onChange={() => refresh()} />
+
 
 
       {status?.connected && (
