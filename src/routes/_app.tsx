@@ -139,6 +139,14 @@ export const Route = createFileRoute("/_app")({
       // error card; treat it as "not signed in yet" and let the auth page
       // recover the session.
       logGate({ step: "access-check-soft-failed", message: (err as Error)?.message ?? "hydrate threw" });
+      // A corrupted persisted session makes the auth client throw on every
+      // read; drop it so the next sign-in starts clean.
+      try {
+        for (let i = localStorage.length - 1; i >= 0; i -= 1) {
+          const k = localStorage.key(i);
+          if (k && k.startsWith("sb-") && k.includes("auth-token")) localStorage.removeItem(k);
+        }
+      } catch { /* ignore */ }
       user = null;
     }
     if (!user) {
