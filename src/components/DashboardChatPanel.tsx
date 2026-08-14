@@ -598,6 +598,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
 
     // Parse latest assistant message for chart annotations / concept / grade
     // and push to parent (dashboard) so the native chart can render them.
+    const autoShownRef = useRef<string | null>(null);
     useEffect(() => {
       const last = [...messages].reverse().find((m) => m.role === "assistant");
       if (!last) return;
@@ -606,7 +607,18 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
       if (onAnnotations) onAnnotations(parsed.annotations);
       if (onConcept) onConcept(parsed.concept ?? null);
       if (onGrade && parsed.grade) onGrade(sanitizeGradeForPrice(parsed.grade, chart?.snapshot?.lastPrice));
-    }, [messages, onAnnotations, onConcept, onGrade, chart?.snapshot?.lastPrice]);
+
+      // Auto "show me": once a reply finishes and it carries something drawable
+      // (levels or a graded plan), flip the chart to Setup so the trader sees
+      // the reasoning on the chart without having to ask for it.
+      const busy = status === "submitted" || status === "streaming";
+      const hasDrawable = parsed.annotations.length > 0 || !!parsed.grade;
+      if (!busy && hasDrawable && autoShownRef.current !== last.id) {
+        autoShownRef.current = last.id;
+        onShowMe?.();
+      }
+    }, [messages, status, onAnnotations, onConcept, onGrade, onShowMe, chart?.snapshot?.lastPrice]);
+
 
 
 
