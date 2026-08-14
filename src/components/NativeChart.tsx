@@ -20,6 +20,7 @@ import type { OhlcResponse } from "@/routes/api.ohlc";
 import { useTimeFormat, formatTime } from "@/hooks/useTimeFormat";
 import { useTimezone } from "@/hooks/useTimezone";
 import { computeVwapIndicator, VWAP_COLORS } from "@/lib/vwapSignals";
+import { computeFib } from "@/lib/fibLevels";
 import { ChartSourceBadge, feedLabel } from "@/components/ChartSourceBadge";
 
 export type LevelKey = "VWAP" | "POC" | "SR" | "ZONES" | "FVG" | "FIB" | "LIQ" | "OF" | "CISD";
