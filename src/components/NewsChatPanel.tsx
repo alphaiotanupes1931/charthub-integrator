@@ -122,11 +122,11 @@ export function NewsChatPanel({ writeup, watchlist = [] }: Props) {
 
       <div className="border-t border-border/60 p-3">
         <PromptInput
-          onSubmit={(e) => {
-            e.preventDefault();
-            ask(input);
+          onSubmit={(message) => {
+            ask(message.text ?? input);
           }}
         >
+
           <PromptInputTextarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
