@@ -92,10 +92,39 @@ type Trade = {
   followedPlan?: boolean;
   gradeMatch?: "yes" | "no" | "partial";
   takeaway?: string;
+  /** Outcome of the trade: checked against live price history or set by hand. */
+  result?: TradeResult;
+  /** Where the result came from, so a manual call is never overwritten. */
+  resultSource?: "auto" | "manual";
+  /** Realised R at the moment the result was decided. */
+  resultR?: number | null;
+  /** Plain-language explanation shown under the badge. */
+  resultNote?: string;
+  resultCheckedAt?: number;
   /** AI chat thread that produced this setup, so the trade links back to it. */
   threadId?: string;
   createdAt: number;
 };
+
+export type TradeResult = "tp" | "stop" | "breakeven" | "partial" | "open";
+
+const RESULT_META: Record<TradeResult, { label: string; cls: string }> = {
+  tp: { label: "Take profit hit", cls: "bg-bull/15 text-bull border-bull/30" },
+  breakeven: { label: "Breakeven", cls: "bg-bull/10 text-bull border-bull/25" },
+  stop: { label: "Stop loss hit", cls: "bg-destructive/15 text-destructive border-destructive/30" },
+  partial: { label: "Closed part way", cls: "bg-amber-500/15 text-amber-500 border-amber-500/30" },
+  open: { label: "Still open", cls: "bg-muted/40 text-muted-foreground border-border/60" },
+};
+
+const MANUAL_RESULTS: { value: TradeResult | ""; label: string }[] = [
+  { value: "", label: "Not set" },
+  { value: "tp", label: "Take profit hit" },
+  { value: "breakeven", label: "Breakeven" },
+  { value: "partial", label: "Closed part way" },
+  { value: "stop", label: "Stop loss hit" },
+  { value: "open", label: "Still open" },
+];
+
 
 const STORAGE_KEY = "trademind.journal.trades.v1";
 const MENTAL_KEY = "trademind.mental.v1";
