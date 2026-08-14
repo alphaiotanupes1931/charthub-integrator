@@ -6,6 +6,9 @@ import { useQuery } from "@tanstack/react-query";
 import {
   createChart,
   CandlestickSeries,
+  LineSeries,
+  createSeriesMarkers,
+  type ISeriesMarkersPluginApi,
   type IChartApi,
   type ISeriesApi,
   type Time,
@@ -16,6 +19,7 @@ import {
 import type { OhlcResponse } from "@/routes/api.ohlc";
 import { useTimeFormat, formatTime } from "@/hooks/useTimeFormat";
 import { useTimezone } from "@/hooks/useTimezone";
+import { computeVwapIndicator, VWAP_COLORS } from "@/lib/vwapSignals";
 import { ChartSourceBadge, feedLabel } from "@/components/ChartSourceBadge";
 
 export type LevelKey = "VWAP" | "POC" | "SR" | "ZONES" | "FVG" | "FIB" | "LIQ" | "OF" | "CISD";
