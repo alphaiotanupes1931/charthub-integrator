@@ -528,11 +528,46 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
           timeFormatter: (time: number) => fmtDateTime(time),
         },
       });
-      series = chart.addSeries(CandlestickSeries, {
-        upColor: candleColors.up, downColor: candleColors.down,
-        borderUpColor: candleColors.borderUp, borderDownColor: candleColors.borderDown,
-        wickUpColor: candleColors.wickUp, wickDownColor: candleColors.wickDown,
-      });
+      const style = getCandleStyle(candleType);
+      if (style.kind === "bar") {
+        series = chart.addSeries(BarSeries, {
+          upColor: candleColors.up, downColor: candleColors.down, thinBars: true,
+        }) as unknown as ISeriesApi<"Candlestick">;
+      } else if (style.kind === "line") {
+        series = chart.addSeries(LineSeries, {
+          color: candleColors.up,
+          lineWidth: 2,
+          lineType: style.stepped ? LineType.WithSteps : LineType.Simple,
+          pointMarkersVisible: !!style.markers,
+        }) as unknown as ISeriesApi<"Candlestick">;
+      } else if (style.kind === "area") {
+        series = chart.addSeries(AreaSeries, {
+          lineColor: candleColors.up,
+          topColor: `${candleColors.up}55`,
+          bottomColor: `${candleColors.up}05`,
+          lineWidth: 2,
+        }) as unknown as ISeriesApi<"Candlestick">;
+      } else if (style.kind === "baseline") {
+        series = chart.addSeries(BaselineSeries, {
+          topLineColor: candleColors.up,
+          topFillColor1: `${candleColors.up}55`,
+          topFillColor2: `${candleColors.up}05`,
+          bottomLineColor: candleColors.down,
+          bottomFillColor1: `${candleColors.down}05`,
+          bottomFillColor2: `${candleColors.down}55`,
+        }) as unknown as ISeriesApi<"Candlestick">;
+      } else if (style.kind === "histogram") {
+        series = chart.addSeries(HistogramSeries, {
+          color: candleColors.up,
+        }) as unknown as ISeriesApi<"Candlestick">;
+      } else {
+        series = chart.addSeries(CandlestickSeries, {
+          upColor: style.hollow ? "rgba(0,0,0,0)" : candleColors.up,
+          downColor: candleColors.down,
+          borderUpColor: candleColors.borderUp, borderDownColor: candleColors.borderDown,
+          wickUpColor: candleColors.wickUp, wickDownColor: candleColors.wickDown,
+        });
+      }
     } catch (err) {
       // Never leave a blank panel: fall back to the lightweight SVG renderer.
       setInitError(err instanceof Error ? err.message : "Chart engine failed to start");
