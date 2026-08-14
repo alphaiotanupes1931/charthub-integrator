@@ -177,20 +177,7 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
                 <BookOpen className="h-3 w-3" /> Log this trade
               </button>
             )}
-            <Link
-              to="/broker"
-              search={{
-                symbol: symbol ?? "",
-                side: isLong ? "long" : "short",
-                entry: grade.entry ?? "",
-                stop: grade.stop ?? "",
-                tp: grade.tp1 ?? "",
-              } as never}
-              className="inline-flex h-8 items-center justify-center gap-1.5 rounded-2xl border border-border/60 px-3 text-[10px] font-bold tracking-tight text-foreground hover:bg-muted/60"
-              title="Sign in to your OANDA account and place this trade"
-            >
-              <Zap className="h-3 w-3" /> Take this trade
-            </Link>
+
           </div>
         )}
 
