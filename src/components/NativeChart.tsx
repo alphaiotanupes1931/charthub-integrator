@@ -393,6 +393,10 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     if (!base) return null;
     return { ...base, htfBias: detectHtfBias(candles) };
   }, [candles]);
+  const vwapIndicator = useMemo(
+    () => computeVwapIndicator(candles.map((c) => ({ time: Number(c.time), open: c.open, high: c.high, low: c.low, close: c.close }))),
+    [candles],
+  );
   const isLive = hasLive;
   const sourceLabel = isLive ? feedLabel(liveOhlc?.source) : "";
   const snapshotSource = isLive ? (liveOhlc?.source ?? "unknown") : "unavailable";
