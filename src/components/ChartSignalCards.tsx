@@ -5,6 +5,8 @@ import { takeTrade } from "@/lib/signalHistory";
 import type { ChartGrade } from "@/lib/chartAnnotations";
 import { AutoBacktestVerify } from "@/components/AutoBacktestVerify";
 import { useTradeLogged } from "@/hooks/useTradeLogged";
+import { useTimezone } from "@/hooks/useTimezone";
+import { computeTiming, clockLabel, tzAbbrev } from "@/lib/tradeTiming";
 
 type Props = {
   grade: ChartGrade | null;
@@ -51,6 +53,7 @@ function pct(from?: number, to?: number) {
 export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, scanning }: Props) {
   const [expanded, setExpanded] = useState(false);
   const logged = useTradeLogged({ symbol, entry: grade?.entry ?? null });
+  const { effectiveTimezone: tz } = useTimezone();
 
   // Empty state - render nothing when idle so the chart can fill the whole area.
   // While actively scanning, show a very thin one-line status so the user gets
