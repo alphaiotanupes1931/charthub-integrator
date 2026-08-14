@@ -60,3 +60,36 @@ export async function compressImageFile(file: File, maxDim = 1600, quality = 0.8
   const blob: Blob | null = await new Promise((res) => canvas.toBlob(res, "image/jpeg", quality));
   return blob ?? file;
 }
+
+// ---------------------------------------------------------------------------
+// Multiple screenshots per trade.
+// The first image keeps the bare trade id as its key so older single-image
+// trades keep working; extras are stored under `<tradeId>#<n>`.
+export function tradeImageKey(tradeId: string, index: number): string {
+  return index <= 0 ? tradeId : `${tradeId}#${index}`;
+}
+
+export async function putTradeImages(tradeId: string, blobs: Blob[]): Promise<void> {
+  for (let i = 0; i < blobs.length; i += 1) {
+    const blob = blobs[i];
+    if (blob) await putTradeImage(tradeImageKey(tradeId, i), blob);
+  }
+}
+
+/** Read every stored screenshot for a trade, in order. */
+export async function getTradeImages(tradeId: string, count: number): Promise<Blob[]> {
+  const total = Math.max(1, count || 1);
+  const out: Blob[] = [];
+  for (let i = 0; i < total; i += 1) {
+    const blob = await getTradeImage(tradeImageKey(tradeId, i));
+    if (blob) out.push(blob);
+  }
+  return out;
+}
+
+/** Remove all screenshots for a trade (used on delete / replace-all). */
+export async function deleteTradeImages(tradeId: string, count = 12): Promise<void> {
+  for (let i = 0; i < Math.max(1, count); i += 1) {
+    await deleteTradeImage(tradeImageKey(tradeId, i));
+  }
+}
