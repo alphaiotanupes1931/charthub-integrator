@@ -25,6 +25,7 @@ import {
   HeartPulse,
   MessageSquare,
   RefreshCw,
+  Ban,
 } from "lucide-react";
 import { MentalStatePanel, upsertMentalEntry, SCORE_META, loadMental, type MentalEntry } from "@/components/MentalStatePanel";
 import JournalReviewPanel from "@/components/JournalReviewPanel";
@@ -35,6 +36,7 @@ import { toast } from "sonner";
 import { pullAndMerge, pushAll, type SyncTrade } from "@/lib/journal-sync";
 import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
 import { markTradeLogged, unmarkTradeLogged } from "@/lib/loggedTrades";
+import { loadPassedTrades, onPassedTradesChange, unpassTrade, type PassedTrade } from "@/lib/passedTrades";
 
 import {
   getTradeImage,
@@ -655,6 +657,8 @@ function JournalPage() {
         </div>
       )}
 
+      {tab === "trades" && <PassedSetupsPanel />}
+
       {tab === "trades" && (
         <TradesList
           trades={sortedTrades}
@@ -920,6 +924,51 @@ function ExecutedToggle({ t, onUpdate }: { t: Trade; onUpdate: (t: Trade) => voi
     >
       {t.executed ? "Executed" : "Not executed"}
     </button>
+  );
+}
+
+/** Setups the trader consciously skipped, with the reason they typed. */
+function PassedSetupsPanel() {
+  const [list, setList] = useState<PassedTrade[]>([]);
+  useEffect(() => {
+    const sync = () => setList(loadPassedTrades());
+    sync();
+    return onPassedTradesChange(sync);
+  }, []);
+  if (!list.length) return null;
+  return (
+    <div className="rounded-xl border border-border/60 bg-card">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-border/60">
+        <Ban className="h-4 w-4 text-muted-foreground" />
+        <div className="text-sm font-semibold">Setups you passed</div>
+        <div className="text-[11px] text-muted-foreground ml-auto">{list.length} logged</div>
+      </div>
+      <div className="divide-y divide-border/60">
+        {list.slice(0, 15).map((p) => (
+          <div key={p.key} className="flex items-center gap-3 px-4 py-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap text-sm">
+                <span className="font-semibold">{p.symbol}</span>
+                {p.grade && <span className="text-[10px] rounded bg-muted/40 px-1.5 py-0.5 text-muted-foreground">Grade {p.grade}</span>}
+                {p.interval && <span className="text-[10px] rounded border border-border/60 px-1.5 py-0.5 text-muted-foreground">{p.interval}</span>}
+                <span className="text-xs text-muted-foreground">{new Date(p.at).toLocaleString()}</span>
+              </div>
+              <div className="mt-0.5 text-[11px] text-muted-foreground truncate">
+                {p.reason || "No reason given"}
+                {p.entry != null ? ` · entry ${p.entry}` : ""}
+              </div>
+            </div>
+            <button
+              onClick={() => unpassTrade(p.key)}
+              className="shrink-0 h-8 w-8 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 flex items-center justify-center"
+              aria-label="Remove passed setup"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
