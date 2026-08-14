@@ -612,12 +612,14 @@ export async function runPlanner(
   const isNoEntry = grade === "NO ENTRY";
 
   // `notes` already carries the thesis ("why take this trade"), so the details
-  // block must NOT repeat it - that was showing identical text under both
-  // Strength and Weakness in the UI.
+  // block must NOT repeat it. It is the read-out of the evidence itself:
+  // market structure, order flow and volume, volatility and levels, then a
+  // short takeaway in the active coach's voice, then trade management.
   const dataNote = snap.mtf
     ? ""
     : " Higher-timeframe data was incomplete on this scan, so the grade is capped at C until the feed fills in.";
-  const details = `Invalidation: ${finalPlan.invalidation}. Manage to break-even at TP1 (${fmt(finalPlan.tp1, dec)}), trail runner to TP2 (${fmt(finalPlan.tp2, dec)}). Risk 0.5-1R of account.${newsWarning}${dataNote}`;
+  const details = buildDetails(snap, memo, finalPlan, dec, coach, bias, grade, newsWarning, dataNote);
+
 
 
 
