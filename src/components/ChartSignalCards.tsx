@@ -49,6 +49,7 @@ function pct(from?: number, to?: number) {
 
 export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, scanning }: Props) {
   const [expanded, setExpanded] = useState(false);
+  const logged = useTradeLogged({ symbol, entry: grade?.entry ?? null });
 
   // Empty state - render nothing when idle so the chart can fill the whole area.
   // While actively scanning, show a very thin one-line status so the user gets
