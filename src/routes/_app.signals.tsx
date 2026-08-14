@@ -210,20 +210,7 @@ function SignalHistory({ records, onOpen }: { records: SignalRecord[]; onOpen: (
                       >
                         <BookOpen className="h-3 w-3" /> Log this trade
                       </button>
-                      <Link
-                        to="/broker"
-                        search={{
-                          symbol: r.symbol,
-                          side: r.bias.toLowerCase().startsWith("s") ? "short" : "long",
-                          entry: r.entry ?? "",
-                          stop: r.stop ?? "",
-                          tp: r.tp1 ?? "",
-                        } as never}
-                        className="inline-flex items-center justify-center gap-1 rounded-xl border border-border/60 px-2 py-1 font-semibold text-foreground hover:bg-muted/60"
-                        title="Sign in to your OANDA account and place this trade"
-                      >
-                        <Zap className="h-3 w-3" /> Take this trade
-                      </Link>
+
                     </div>
                   )
 
