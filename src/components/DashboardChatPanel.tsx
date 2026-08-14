@@ -598,7 +598,11 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
 
     // Parse latest assistant message for chart annotations / concept / grade
     // and push to parent (dashboard) so the native chart can render them.
-    const autoShownRef = useRef<string | null>(null);
+    // Seeded with the last assistant message already in history so reopening a
+    // thread does not yank the user to the chart for an old reply.
+    const autoShownRef = useRef<string | null>(
+      [...initial].reverse().find((m) => m.role === "assistant")?.id ?? null,
+    );
     useEffect(() => {
       const last = [...messages].reverse().find((m) => m.role === "assistant");
       if (!last) return;
