@@ -126,6 +126,9 @@ function NewsPage() {
         )}
       </section>
 
+      <NewsChatPanel writeup={news.data?.writeup ?? null} watchlist={watchlist} />
+
+
       <section className="rounded-xl border border-border/60 bg-card/40 p-4 space-y-3">
         <div className="flex items-center justify-between gap-2">
           <h2 className="font-semibold">Releases</h2>
