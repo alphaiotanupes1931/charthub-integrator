@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { takeTrade } from "@/lib/signalHistory";
 import type { ChartGrade } from "@/lib/chartAnnotations";
 import { AutoBacktestVerify } from "@/components/AutoBacktestVerify";
+import { useTradeLogged } from "@/hooks/useTradeLogged";
 
 type Props = {
   grade: ChartGrade | null;
