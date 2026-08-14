@@ -953,21 +953,67 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     }
   }, [ticker, interval]);
 
-  // ---- Freehand markup overlay (pen / line / rect / arrow) ----
-  type DrawTool = "pen" | "line" | "rect" | "arrow" | "eraser";
+  // ---- Drawing layer (TradingView-style tools, anchored to price/time) ----
+  type DrawTool =
+    | "cursor" | "pen" | "line" | "ray" | "hline" | "vline"
+    | "rect" | "arrow" | "fib" | "measure" | "text" | "eraser";
+  type Anchor = { l: number; p: number };            // logical bar index + price
   type Stroke = {
     tool: DrawTool;
     color: string;
     width: number;
-    points: { x: number; y: number }[]; // pen: many; others: [start, end]
+    points: Anchor[];                                 // pen: many; others: [start, end]
+    text?: string;
   };
   const drawCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const [drawMode, setDrawMode] = useState(false);
-  const [drawTool, setDrawTool] = useState<DrawTool>("pen");
+  const [drawTool, setDrawTool] = useState<DrawTool>("line");
   const [drawColor, setDrawColor] = useState<string>("#fbbf24");
   const [strokes, setStrokes] = useState<Stroke[]>([]);
+  const [magnet, setMagnet] = useState(true);
+  const [locked, setLocked] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const currentStrokeRef = useRef<Stroke | null>(null);
   const drawingRef = useRef(false);
+
+  const FIB_RATIOS = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
+
+  const decimals = useCallback((v: number) => (Math.abs(v) >= 1000 ? 2 : Math.abs(v) >= 10 ? 3 : 5), []);
+
+  // screen <-> chart coordinate helpers
+  const toAnchor = useCallback((x: number, y: number): Anchor | null => {
+    const chart = chartRef.current, series = seriesRef.current;
+    if (!chart || !series) return null;
+    const l = chart.timeScale().coordinateToLogical(x);
+    const p = series.coordinateToPrice(y);
+    if (l == null || p == null) return null;
+    return { l: l as number, p: p as number };
+  }, []);
+  const toScreen = useCallback((a: Anchor): { x: number; y: number } | null => {
+    const chart = chartRef.current, series = seriesRef.current;
+    if (!chart || !series) return null;
+    const x = chart.timeScale().logicalToCoordinate(a.l as never);
+    const y = series.priceToCoordinate(a.p);
+    if (x == null || y == null) return null;
+    return { x: x as number, y: y as number };
+  }, []);
+  // magnet: snap the price to the nearest OHLC of the bar under the cursor
+  const snapAnchor = useCallback((a: Anchor): Anchor => {
+    if (!magnet) return a;
+    const idx = Math.round(a.l);
+    const c = displayCandles[idx];
+    if (!c) return a;
+    const cands = [c.open, c.high, c.low, c.close];
+    let best = a.p, bestD = Infinity;
+    for (const v of cands) {
+      const d = Math.abs(v - a.p);
+      if (d < bestD) { bestD = d; best = v; }
+    }
+    // only snap when reasonably close (within 35% of the bar range)
+    const range = Math.max(1e-9, c.high - c.low);
+    if (bestD > range * 0.35) return a;
+    return { l: idx, p: best };
+  }, [magnet, displayCandles]);
 
   const redraw = useCallback(() => {
     const cvs = drawCanvasRef.current;
@@ -975,27 +1021,48 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     const ctx = cvs.getContext("2d");
     if (!ctx) return;
     ctx.clearRect(0, 0, cvs.width, cvs.height);
+    if (hidden) return;
     const dpr = window.devicePixelRatio || 1;
+    const cssW = cvs.width / dpr, cssH = cvs.height / dpr;
     ctx.save();
     ctx.scale(dpr, dpr);
+    ctx.font = "11px ui-monospace, SFMono-Regular, Menlo, monospace";
     const all = currentStrokeRef.current ? [...strokes, currentStrokeRef.current] : strokes;
     for (const s of all) {
-      if (s.points.length === 0) continue;
+      const pts = s.points.map(toScreen).filter(Boolean) as { x: number; y: number }[];
+      if (pts.length === 0) continue;
       ctx.strokeStyle = s.color;
       ctx.fillStyle = s.color;
       ctx.lineWidth = s.width;
+      ctx.setLineDash([]);
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
+      const a = pts[0], b = pts[pts.length - 1];
+      const priceOf = (i: number) => s.points[i]?.p ?? 0;
       if (s.tool === "pen") {
         ctx.beginPath();
-        ctx.moveTo(s.points[0].x, s.points[0].y);
-        for (let i = 1; i < s.points.length; i++) ctx.lineTo(s.points[i].x, s.points[i].y);
+        ctx.moveTo(a.x, a.y);
+        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
         ctx.stroke();
-      } else if (s.points.length >= 2) {
-        const a = s.points[0], b = s.points[s.points.length - 1];
+      } else if (s.tool === "text") {
+        ctx.font = "600 13px ui-sans-serif, system-ui, sans-serif";
+        ctx.fillText(s.text || "", a.x, a.y);
+      } else if (s.tool === "hline") {
+        ctx.beginPath(); ctx.moveTo(0, a.y); ctx.lineTo(cssW, a.y); ctx.stroke();
+        ctx.fillText(priceOf(0).toFixed(decimals(priceOf(0))), 6, a.y - 4);
+      } else if (s.tool === "vline") {
+        ctx.beginPath(); ctx.moveTo(a.x, 0); ctx.lineTo(a.x, cssH); ctx.stroke();
+      } else if (pts.length >= 2) {
         if (s.tool === "line") {
           ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+        } else if (s.tool === "ray") {
+          const dx = b.x - a.x, dy = b.y - a.y;
+          const k = 4000 / Math.max(1, Math.hypot(dx, dy));
+          ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(a.x + dx * k, a.y + dy * k); ctx.stroke();
         } else if (s.tool === "rect") {
+          ctx.globalAlpha = 0.12;
+          ctx.fillRect(a.x, a.y, b.x - a.x, b.y - a.y);
+          ctx.globalAlpha = 1;
           ctx.strokeRect(a.x, a.y, b.x - a.x, b.y - a.y);
         } else if (s.tool === "arrow") {
           ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
@@ -1007,13 +1074,47 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
           ctx.lineTo(b.x - head * Math.cos(angle + Math.PI / 7), b.y - head * Math.sin(angle + Math.PI / 7));
           ctx.closePath();
           ctx.fill();
+        } else if (s.tool === "fib") {
+          const p0 = s.points[0].p, p1 = s.points[s.points.length - 1].p;
+          const x1 = Math.min(a.x, b.x), x2 = Math.max(a.x, b.x);
+          const d = decimals(p0);
+          FIB_RATIOS.forEach((r) => {
+            const price = p0 + (p1 - p0) * r;
+            const sc = toScreen({ l: s.points[0].l, p: price });
+            if (!sc) return;
+            ctx.setLineDash(r === 0 || r === 1 ? [] : [4, 4]);
+            ctx.globalAlpha = 0.9;
+            ctx.beginPath(); ctx.moveTo(x1, sc.y); ctx.lineTo(Math.max(x2, x1 + 60), sc.y); ctx.stroke();
+            ctx.fillText(`${r} · ${price.toFixed(d)}`, x1 + 4, sc.y - 3);
+          });
+          ctx.setLineDash([]);
+        } else if (s.tool === "measure") {
+          const p0 = s.points[0].p, p1 = s.points[s.points.length - 1].p;
+          const bars = Math.abs(Math.round(s.points[s.points.length - 1].l - s.points[0].l));
+          const diff = p1 - p0;
+          const pct = p0 !== 0 ? (diff / p0) * 100 : 0;
+          const up = diff >= 0;
+          ctx.strokeStyle = up ? "#2dd4bf" : "#f87171";
+          ctx.fillStyle = up ? "#2dd4bf" : "#f87171";
+          ctx.globalAlpha = 0.14;
+          ctx.fillRect(a.x, a.y, b.x - a.x, b.y - a.y);
+          ctx.globalAlpha = 1;
+          ctx.setLineDash([4, 3]);
+          ctx.strokeRect(a.x, a.y, b.x - a.x, b.y - a.y);
+          ctx.setLineDash([]);
+          const label = `${up ? "+" : ""}${diff.toFixed(decimals(p0))} (${pct.toFixed(2)}%) · ${bars} bars`;
+          const tw = ctx.measureText(label).width;
+          const lx = Math.min(cssW - tw - 10, (a.x + b.x) / 2 - tw / 2);
+          const ly = b.y + (up ? -8 : 16);
+          ctx.fillText(label, Math.max(4, lx), ly);
         }
       }
+      ctx.globalAlpha = 1;
     }
     ctx.restore();
-  }, [strokes]);
+  }, [strokes, hidden, toScreen, decimals]);
 
-  // Size canvas to container and repaint on resize
+  // Size canvas to container and repaint on resize / pan / zoom
   useEffect(() => {
     const cvs = drawCanvasRef.current;
     const host = containerRef.current;
@@ -1030,8 +1131,16 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     resize();
     const ro = new ResizeObserver(resize);
     ro.observe(host);
-    return () => ro.disconnect();
-  }, [redraw]);
+    const chart = chartRef.current;
+    const ts = chart?.timeScale();
+    ts?.subscribeVisibleLogicalRangeChange(redraw);
+    ts?.subscribeVisibleTimeRangeChange(redraw);
+    return () => {
+      ro.disconnect();
+      ts?.unsubscribeVisibleLogicalRangeChange(redraw);
+      ts?.unsubscribeVisibleTimeRangeChange(redraw);
+    };
+  }, [redraw, ready]);
 
   useEffect(() => { redraw(); }, [strokes, redraw]);
 
@@ -1051,55 +1160,67 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     return Math.hypot(p.x - (a.x + t*dx), p.y - (a.y + t*dy));
   };
   const strokeHitTest = (s: Stroke, p: {x:number;y:number}, tol: number) => {
-    if (s.points.length === 0) return false;
+    const pts = s.points.map(toScreen).filter(Boolean) as { x: number; y: number }[];
+    if (pts.length === 0) return false;
+    const a = pts[0], b = pts[pts.length - 1];
     if (s.tool === "pen") {
-      for (let i = 1; i < s.points.length; i++) {
-        if (distToSegment(p, s.points[i-1], s.points[i]) <= tol) return true;
-      }
+      for (let i = 1; i < pts.length; i++) if (distToSegment(p, pts[i-1], pts[i]) <= tol) return true;
       return false;
     }
-    if (s.points.length < 2) return false;
-    const a = s.points[0], b = s.points[s.points.length - 1];
-    if (s.tool === "line" || s.tool === "arrow") return distToSegment(p, a, b) <= tol;
-    if (s.tool === "rect") {
-      const x1 = Math.min(a.x, b.x), x2 = Math.max(a.x, b.x);
-      const y1 = Math.min(a.y, b.y), y2 = Math.max(a.y, b.y);
-      const edges: Array<[{x:number;y:number},{x:number;y:number}]> = [
-        [{x:x1,y:y1},{x:x2,y:y1}], [{x:x2,y:y1},{x:x2,y:y2}],
-        [{x:x2,y:y2},{x:x1,y:y2}], [{x:x1,y:y2},{x:x1,y:y1}],
-      ];
-      return edges.some(([e1, e2]) => distToSegment(p, e1, e2) <= tol);
-    }
-    return false;
+    if (s.tool === "text") return Math.hypot(p.x - a.x, p.y - a.y) <= 24;
+    if (s.tool === "hline") return Math.abs(p.y - a.y) <= tol;
+    if (s.tool === "vline") return Math.abs(p.x - a.x) <= tol;
+    if (pts.length < 2) return false;
+    if (s.tool === "line" || s.tool === "arrow" || s.tool === "ray") return distToSegment(p, a, b) <= tol;
+    // rect / fib / measure: any edge of the bounding box
+    const x1 = Math.min(a.x, b.x), x2 = Math.max(a.x, b.x);
+    const y1 = Math.min(a.y, b.y), y2 = Math.max(a.y, b.y);
+    if (s.tool === "fib") return p.x >= x1 - tol && p.x <= x2 + tol && p.y >= y1 - tol && p.y <= y2 + tol;
+    const edges: Array<[{x:number;y:number},{x:number;y:number}]> = [
+      [{x:x1,y:y1},{x:x2,y:y1}], [{x:x2,y:y1},{x:x2,y:y2}],
+      [{x:x2,y:y2},{x:x1,y:y2}], [{x:x1,y:y2},{x:x1,y:y1}],
+    ];
+    return edges.some(([e1, e2]) => distToSegment(p, e1, e2) <= tol);
   };
   const eraseAt = (p: {x:number;y:number}) => {
     setStrokes((prev) => prev.filter((s) => !strokeHitTest(s, p, 10)));
   };
 
+  const interactive = drawMode && !locked && !hidden && drawTool !== "cursor";
+
   const onPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!drawMode) return;
+    if (!interactive) return;
     e.preventDefault();
     (e.target as Element).setPointerCapture(e.pointerId);
-    drawingRef.current = true;
-    const p = getPoint(e);
-    if (drawTool === "eraser") {
-      eraseAt(p);
+    const sp = getPoint(e);
+    if (drawTool === "eraser") { drawingRef.current = true; eraseAt(sp); return; }
+    const raw = toAnchor(sp.x, sp.y);
+    if (!raw) return;
+    const anchor = drawTool === "pen" || drawTool === "text" ? raw : snapAnchor(raw);
+    if (drawTool === "text") {
+      const text = window.prompt("Text label");
+      if (text) setStrokes((prev) => [...prev, { tool: "text", color: drawColor, width: 2, points: [anchor], text }]);
       return;
     }
-    currentStrokeRef.current = { tool: drawTool, color: drawColor, width: 2, points: [p] };
+    drawingRef.current = true;
+    currentStrokeRef.current = { tool: drawTool, color: drawColor, width: 2, points: [anchor] };
+    if (drawTool === "hline" || drawTool === "vline") {
+      setStrokes((prev) => [...prev, currentStrokeRef.current!]);
+      currentStrokeRef.current = null;
+      drawingRef.current = false;
+      return;
+    }
     redraw();
   };
   const onPointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!drawMode || !drawingRef.current) return;
-    const p = getPoint(e);
-    if (drawTool === "eraser") {
-      eraseAt(p);
-      return;
-    }
-    if (!currentStrokeRef.current) return;
+    if (!interactive || !drawingRef.current) return;
+    const sp = getPoint(e);
+    if (drawTool === "eraser") { eraseAt(sp); return; }
+    const raw = toAnchor(sp.x, sp.y);
+    if (!raw || !currentStrokeRef.current) return;
     const s = currentStrokeRef.current;
-    if (s.tool === "pen") s.points.push(p);
-    else s.points = [s.points[0], p];
+    if (s.tool === "pen") s.points.push(raw);
+    else s.points = [s.points[0], snapAnchor(raw)];
     redraw();
   };
   const onPointerUp = () => {
