@@ -594,7 +594,50 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     return () => { cancelled = true; window.clearTimeout(t1); window.clearTimeout(t2); };
   }, [displayCandles, ready, initAttempt]);
 
+  // ---- VWAP Buy/Sell indicator: VWAP + fast/slow MA + Buy/Sell/TP labels ----
+  useEffect(() => {
+    if (!ready || !chartRef.current || !seriesRef.current) return;
+    const chart = chartRef.current;
+    const cleanup = () => {
+      vwapSeriesRef.current.forEach((sr) => { try { chart.removeSeries(sr); } catch { /* ignore */ } });
+      vwapSeriesRef.current = [];
+      if (vwapMarkersRef.current) { try { vwapMarkersRef.current.setMarkers([]); } catch { /* ignore */ } }
+    };
+    cleanup();
+    if (!enabled.VWAP || vwapIndicator.vwap.length === 0) return;
+
+    try {
+      const mk = (data: { time: number; value: number }[], color: string, width: 1 | 2, dashed: boolean, title: string) => {
+        const line = chart.addSeries(LineSeries, {
+          color, lineWidth: width, title,
+          lineStyle: dashed ? LineStyle.Dashed : LineStyle.Solid,
+          priceLineVisible: false, lastValueVisible: true,
+          crosshairMarkerVisible: false,
+        });
+        line.setData(data.map((p) => ({ time: p.time as Time, value: p.value })));
+        vwapSeriesRef.current.push(line);
+      };
+      mk(vwapIndicator.vwap, VWAP_COLORS.vwap, 2, true, "VWAP");
+      mk(vwapIndicator.fast, VWAP_COLORS.fast, 2, false, "MA 21");
+      mk(vwapIndicator.slow, VWAP_COLORS.slow, 2, false, "MA 50");
+
+      vwapMarkersRef.current = createSeriesMarkers(
+        seriesRef.current,
+        vwapIndicator.signals.map((sig) => ({
+          time: sig.time as Time,
+          position: sig.kind === "sell" ? ("aboveBar" as const) : ("belowBar" as const),
+          color: sig.kind === "buy" ? VWAP_COLORS.buy : sig.kind === "sell" ? VWAP_COLORS.sell : VWAP_COLORS.tp,
+          shape: sig.kind === "buy" ? ("arrowUp" as const) : sig.kind === "sell" ? ("arrowDown" as const) : ("circle" as const),
+          text: sig.kind === "buy" ? "Buy" : sig.kind === "sell" ? "Sell" : "TP",
+        })),
+      );
+    } catch { /* indicator is decorative: never break the chart */ }
+
+    return cleanup;
+  }, [ready, enabled.VWAP, vwapIndicator]);
+
   // Sync overlays from `enabled` toggles
+
   useEffect(() => {
     if (!ready || !seriesRef.current) return;
     const s = seriesRef.current;
