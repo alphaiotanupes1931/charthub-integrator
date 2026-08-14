@@ -1034,6 +1034,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     ctx.font = "11px ui-monospace, SFMono-Regular, Menlo, monospace";
     const all = currentStrokeRef.current ? [...strokes, currentStrokeRef.current] : strokes;
     for (const s of all) {
+      if (!s || !Array.isArray(s.points)) continue;
       const pts = s.points.map(toScreen).filter(Boolean) as { x: number; y: number }[];
       if (pts.length === 0) continue;
       ctx.strokeStyle = s.color;
@@ -1207,14 +1208,13 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       if (text) setStrokes((prev) => [...prev, { tool: "text", color: drawColor, width: 2, points: [anchor], text }]);
       return;
     }
-    drawingRef.current = true;
-    currentStrokeRef.current = { tool: drawTool, color: drawColor, width: 2, points: [anchor] };
+    const fresh: Stroke = { tool: drawTool, color: drawColor, width: 2, points: [anchor] };
     if (drawTool === "hline" || drawTool === "vline") {
-      setStrokes((prev) => [...prev, currentStrokeRef.current!]);
-      currentStrokeRef.current = null;
-      drawingRef.current = false;
+      setStrokes((prev) => [...prev, fresh]);
       return;
     }
+    drawingRef.current = true;
+    currentStrokeRef.current = fresh;
     redraw();
   };
   const onPointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
