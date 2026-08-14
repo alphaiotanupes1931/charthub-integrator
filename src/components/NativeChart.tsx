@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Camera, Pencil, Minus as LineIcon, Square as RectIcon, ArrowUpRight, Undo2, Trash2, Eraser as EraserIcon, X as CloseIcon } from "lucide-react";
+import {
+  Camera, Pencil, Minus as LineIcon, Square as RectIcon, ArrowUpRight, Undo2, Trash2,
+  Eraser as EraserIcon, X as CloseIcon, MousePointer2, TrendingUp as TrendIcon, MoveUpRight,
+  Separator as VLineIcon, AlignHorizontalJustifyStart as FibIcon, Ruler as RulerIcon,
+  Type as TypeIcon, Magnet as MagnetIcon, Lock, Unlock, Eye, EyeOff,
+} from "lucide-react";
 import { useCandleColors } from "@/hooks/useCandleColors";
 import { useChartBackground } from "@/hooks/useChartBackground";
 import { useQuery } from "@tanstack/react-query";
@@ -1407,14 +1412,21 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
         }}
       />
 
-      {/* Draw toolbar (visible when drawMode is on) */}
+      {/* TradingView-style tool rail (visible when drawMode is on) */}
       {drawMode && (
-        <div className="absolute right-2 bottom-11 sm:right-3 sm:bottom-12 z-40 flex flex-wrap items-center gap-1 rounded-xl border border-border/60 bg-background/90 backdrop-blur px-1.5 py-1 shadow-lg">
+        <div className="absolute left-1.5 top-1/2 -translate-y-1/2 sm:left-2 z-40 flex max-h-[92%] flex-col items-center gap-0.5 overflow-y-auto rounded-xl border border-border/60 bg-background/95 backdrop-blur px-1 py-1.5 shadow-lg">
           {([
-            { k: "pen", Icon: Pencil, label: "Pen" },
-            { k: "line", Icon: LineIcon, label: "Line" },
-            { k: "rect", Icon: RectIcon, label: "Rect" },
+            { k: "cursor", Icon: MousePointer2, label: "Cursor (pan chart)" },
+            { k: "line", Icon: TrendIcon, label: "Trend line" },
+            { k: "ray", Icon: MoveUpRight, label: "Ray" },
+            { k: "hline", Icon: LineIcon, label: "Horizontal line" },
+            { k: "vline", Icon: VLineIcon, label: "Vertical line" },
+            { k: "rect", Icon: RectIcon, label: "Rectangle / zone" },
             { k: "arrow", Icon: ArrowUpRight, label: "Arrow" },
+            { k: "fib", Icon: FibIcon, label: "Fib retracement" },
+            { k: "measure", Icon: RulerIcon, label: "Measure (price / % / bars)" },
+            { k: "text", Icon: TypeIcon, label: "Text label" },
+            { k: "pen", Icon: Pencil, label: "Brush" },
             { k: "eraser", Icon: EraserIcon, label: "Eraser" },
           ] as { k: DrawTool; Icon: typeof Pencil; label: string }[]).map(({ k, Icon, label }) => (
             <button
@@ -1425,27 +1437,57 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
               aria-label={label}
               className={`inline-flex items-center justify-center rounded p-1.5 transition ${drawTool === k ? "bg-primary/20 text-primary" : "text-foreground/80 hover:bg-muted"}`}
             >
-              <Icon className="h-3.5 w-3.5" />
+              <Icon className="h-4 w-4" />
             </button>
           ))}
-          <span className="mx-1 h-4 w-px bg-border" />
-          {["#fbbf24", "#22d3ee", "#f87171", "#a3e635", "#f472b6", "#ffffff"].map((c) => (
-            <button
-              key={c}
-              type="button"
-              onClick={() => setDrawColor(c)}
-              title={c}
-              aria-label={`Color ${c}`}
-              className={`h-4 w-4 rounded-lg border ${drawColor === c ? "border-foreground scale-110" : "border-border/60"} transition`}
-              style={{ background: c }}
-            />
-          ))}
-          <span className="mx-1 h-4 w-px bg-border" />
-          <button type="button" onClick={undoStroke} title="Undo" aria-label="Undo" className="p-1.5 rounded text-foreground/80 hover:bg-muted">
-            <Undo2 className="h-3.5 w-3.5" />
+          <span className="my-0.5 h-px w-5 bg-border" />
+          <button
+            type="button"
+            onClick={() => setMagnet((v) => !v)}
+            title={magnet ? "Magnet on (snap to OHLC)" : "Magnet off"}
+            aria-label="Toggle magnet"
+            className={`inline-flex items-center justify-center rounded p-1.5 transition ${magnet ? "bg-primary/20 text-primary" : "text-foreground/70 hover:bg-muted"}`}
+          >
+            <MagnetIcon className="h-4 w-4" />
           </button>
-          <button type="button" onClick={clearStrokes} title="Clear all" aria-label="Clear all" className="p-1.5 rounded text-foreground/80 hover:bg-muted">
-            <Trash2 className="h-3.5 w-3.5" />
+          <button
+            type="button"
+            onClick={() => setLocked((v) => !v)}
+            title={locked ? "Drawings locked" : "Lock drawings"}
+            aria-label="Toggle lock"
+            className={`inline-flex items-center justify-center rounded p-1.5 transition ${locked ? "bg-primary/20 text-primary" : "text-foreground/70 hover:bg-muted"}`}
+          >
+            {locked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+          </button>
+          <button
+            type="button"
+            onClick={() => setHidden((v) => !v)}
+            title={hidden ? "Show drawings" : "Hide drawings"}
+            aria-label="Toggle drawing visibility"
+            className={`inline-flex items-center justify-center rounded p-1.5 transition ${hidden ? "bg-primary/20 text-primary" : "text-foreground/70 hover:bg-muted"}`}
+          >
+            {hidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+          <span className="my-0.5 h-px w-5 bg-border" />
+          <div className="flex flex-col items-center gap-1 py-0.5">
+            {["#fbbf24", "#22d3ee", "#f87171", "#a3e635", "#ffffff"].map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setDrawColor(c)}
+                title={c}
+                aria-label={`Color ${c}`}
+                className={`h-3.5 w-3.5 rounded-full border ${drawColor === c ? "border-foreground scale-110" : "border-border/60"} transition`}
+                style={{ background: c }}
+              />
+            ))}
+          </div>
+          <span className="my-0.5 h-px w-5 bg-border" />
+          <button type="button" onClick={undoStroke} title="Undo" aria-label="Undo" className="rounded p-1.5 text-foreground/80 hover:bg-muted">
+            <Undo2 className="h-4 w-4" />
+          </button>
+          <button type="button" onClick={clearStrokes} title="Remove all drawings" aria-label="Remove all drawings" className="rounded p-1.5 text-foreground/80 hover:bg-muted">
+            <Trash2 className="h-4 w-4" />
           </button>
         </div>
       )}
