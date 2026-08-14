@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Camera, Pencil, Minus as LineIcon, Square as RectIcon, ArrowUpRight, Undo2, Trash2,
   Eraser as EraserIcon, X as CloseIcon, MousePointer2, TrendingUp as TrendIcon, MoveUpRight,
-  Separator as VLineIcon, AlignHorizontalJustifyStart as FibIcon, Ruler as RulerIcon,
+  SeparatorVertical as VLineIcon, AlignHorizontalJustifyStart as FibIcon, Ruler as RulerIcon,
   Type as TypeIcon, Magnet as MagnetIcon, Lock, Unlock, Eye, EyeOff,
 } from "lucide-react";
 import { useCandleColors } from "@/hooks/useCandleColors";
