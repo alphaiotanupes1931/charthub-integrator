@@ -125,15 +125,15 @@ function SignalsPage() {
 
       {signals.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <SignalColumn title="BUY" tone="buy" signals={grouped.BUY} onClick={(t) => navigate({ to: "/dashboard", search: { symbol: t } as never })} />
-          <SignalColumn title="SELL" tone="sell" signals={grouped.SELL} onClick={(t) => navigate({ to: "/dashboard", search: { symbol: t } as never })} />
-          <SignalColumn title="HOLD" tone="hold" signals={grouped.HOLD} onClick={(t) => navigate({ to: "/dashboard", search: { symbol: t } as never })} />
+          <SignalColumn title="BUY" tone="buy" signals={grouped.BUY} onClick={(t) => navigate({ to: "/dashboard", search: { symbol: t, scan: "1" } as never })} />
+          <SignalColumn title="SELL" tone="sell" signals={grouped.SELL} onClick={(t) => navigate({ to: "/dashboard", search: { symbol: t, scan: "1" } as never })} />
+          <SignalColumn title="HOLD" tone="hold" signals={grouped.HOLD} onClick={(t) => navigate({ to: "/dashboard", search: { symbol: t, scan: "1" } as never })} />
         </div>
       )}
 
       <SignalHistory
         records={history}
-        onOpen={(t) => navigate({ to: "/dashboard", search: { symbol: t } as never })}
+        onOpen={(t) => navigate({ to: "/dashboard", search: { symbol: t, scan: "1" } as never })}
       />
 
 

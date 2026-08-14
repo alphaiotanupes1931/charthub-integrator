@@ -57,7 +57,7 @@ function activeStrategyDesc(): string | undefined {
 
 
 
-type DashboardSearch = { ask?: string; symbol?: string; thread?: string };
+type DashboardSearch = { ask?: string; symbol?: string; thread?: string; scan?: string };
 
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({
@@ -70,7 +70,9 @@ export const Route = createFileRoute("/_app/dashboard")({
     ask: typeof s.ask === "string" ? s.ask : undefined,
     symbol: typeof s.symbol === "string" ? s.symbol : undefined,
     thread: typeof s.thread === "string" ? s.thread : undefined,
+    scan: typeof s.scan === "string" ? s.scan : undefined,
   }),
+
   component: Dashboard,
 });
 
@@ -940,6 +942,7 @@ function Dashboard() {
 
   // Honor ?symbol= deep links (e.g. from AI Signals tab)
   const symbolAppliedRef = useRef<string | null>(null);
+  const [pendingScanTicker, setPendingScanTicker] = useState<string | null>(null);
   useEffect(() => {
     const t = search.symbol?.trim();
     if (!t || symbolAppliedRef.current === t) return;
@@ -947,9 +950,13 @@ function Dashboard() {
     if (match) {
       setSymbol(match);
       symbolAppliedRef.current = t;
+      // Clicking an instrument in AI Signals should re-run the scan for that
+      // instrument and drop the trader straight into the chat conversation.
+      if (search.scan === "1") setPendingScanTicker(match.ticker);
     }
-    navigate({ to: "/dashboard", search: (prev: DashboardSearch) => ({ ...prev, symbol: undefined }), replace: true });
-  }, [search.symbol, navigate]);
+    navigate({ to: "/dashboard", search: (prev: DashboardSearch) => ({ ...prev, symbol: undefined, scan: undefined }), replace: true });
+  }, [search.symbol, search.scan, navigate]);
+
 
   // Honor ?thread= deep links (e.g. "AI chat" button on a journal trade)
   const threadAppliedRef = useRef<string | null>(null);
@@ -1199,6 +1206,22 @@ function Dashboard() {
         setLastUpdatedAt(Date.now());
       });
   };
+
+
+
+  // Deep-linked scan (?symbol=X&scan=1): wait until the chart is actually on
+  // that instrument, then run the scan straight into the chat conversation.
+  const runScanRef = useRef(runScan);
+  runScanRef.current = runScan;
+  useEffect(() => {
+    if (!pendingScanTicker) return;
+    if (symbol.ticker !== pendingScanTicker) return;
+    setPendingScanTicker(null);
+    const id = window.setTimeout(() => { void runScanRef.current("chat"); }, 250);
+    return () => window.clearTimeout(id);
+  }, [pendingScanTicker, symbol.ticker]);
+
+
 
 
 
