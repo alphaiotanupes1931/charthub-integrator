@@ -1055,7 +1055,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
         ctx.fillText(s.text || "", a.x, a.y);
       } else if (s.tool === "hline") {
         ctx.beginPath(); ctx.moveTo(0, a.y); ctx.lineTo(cssW, a.y); ctx.stroke();
-        ctx.fillText(priceOf(0).toFixed(decimals(priceOf(0))), 6, a.y - 4);
+        ctx.fillText(priceOf(0).toFixed(decimals(priceOf(0))), drawMode ? 46 : 8, a.y - 4);
       } else if (s.tool === "vline") {
         ctx.beginPath(); ctx.moveTo(a.x, 0); ctx.lineTo(a.x, cssH); ctx.stroke();
       } else if (pts.length >= 2) {
@@ -1118,7 +1118,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       ctx.globalAlpha = 1;
     }
     ctx.restore();
-  }, [strokes, hidden, toScreen, decimals]);
+  }, [strokes, hidden, toScreen, decimals, drawMode]);
 
   // Size canvas to container and repaint on resize / pan / zoom
   useEffect(() => {
