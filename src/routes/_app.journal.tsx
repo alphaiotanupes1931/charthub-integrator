@@ -203,7 +203,7 @@ function csvEscape(v: unknown): string {
 }
 
 function exportTradesCsv(trades: Trade[]) {
-  const headers = ["date","timeframe","symbol","side","entry","exit","stop","takeProfit","size","pointValue","fees","pnl","rr","plannedRR","ruleBroken","ruleBrokenNote","lossCategory","setup","followedPlan","gradeMatch","takeaway","result","resultR","notes"];
+  const headers = ["date","timeframe","symbol","side","entry","exit","stop","takeProfit","size","pointValue","fees","pnl","rr","plannedRR","ruleBroken","ruleBrokenNote","lossCategory","setup","followedPlan","gradeMatch","takeaway","result","resultR","executed","notes"];
   const rows = trades.map((t) => {
     const rr = tradeRR(t);
     const prr = plannedRR(t);
@@ -223,6 +223,7 @@ function exportTradesCsv(trades: Trade[]) {
       t.takeaway ?? "",
       t.result ?? "",
       t.resultR ?? "",
+      t.executed === undefined ? "" : t.executed ? "yes" : "no",
       t.notes ?? "",
     ].map(csvEscape).join(",");
   });
