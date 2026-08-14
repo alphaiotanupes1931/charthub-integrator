@@ -883,6 +883,46 @@ function CheckResultButton({ t, onUpdate }: { t: Trade; onUpdate: (t: Trade) => 
   );
 }
 
+/**
+ * Asks straight out whether the trader actually pulled the trigger on a logged
+ * setup. Once answered it shows the answer and stays editable.
+ */
+function ExecutedToggle({ t, onUpdate }: { t: Trade; onUpdate: (t: Trade) => void }) {
+  const set = (executed: boolean) => onUpdate({ ...t, executed, executedAt: Date.now() });
+  if (t.executed === undefined) {
+    return (
+      <div className="shrink-0 flex items-center gap-1" title="Did you actually place this trade?">
+        <span className="hidden sm:inline text-[10px] text-muted-foreground">Executed?</span>
+        <button
+          onClick={() => set(true)}
+          className="rounded-xl border border-border/60 px-2 py-1 text-[10px] font-semibold text-muted-foreground hover:text-bull hover:border-bull/40 hover:bg-bull/10"
+        >
+          Yes
+        </button>
+        <button
+          onClick={() => set(false)}
+          className="rounded-xl border border-border/60 px-2 py-1 text-[10px] font-semibold text-muted-foreground hover:text-destructive hover:border-destructive/40 hover:bg-destructive/10"
+        >
+          No
+        </button>
+      </div>
+    );
+  }
+  return (
+    <button
+      onClick={() => set(!t.executed)}
+      title={`${t.executed ? "Marked as executed" : "Marked as not executed"} — tap to change`}
+      className={`shrink-0 rounded-xl border px-2 py-1 text-[10px] font-semibold ${
+        t.executed
+          ? "border-bull/30 bg-bull/10 text-bull"
+          : "border-border/60 bg-muted/30 text-muted-foreground"
+      }`}
+    >
+      {t.executed ? "Executed" : "Not executed"}
+    </button>
+  );
+}
+
 function TradeRow({ t, onEdit, onDelete, onUpdate }: { t: Trade; onEdit: (t: Trade) => void; onDelete: (id: string) => void; onUpdate: (t: Trade) => void }) {
   const pnl = tradePnl(t);
   const rr = tradeRR(t);
@@ -935,6 +975,7 @@ function TradeRow({ t, onEdit, onDelete, onUpdate }: { t: Trade; onEdit: (t: Tra
           R:R {rr == null ? "-" : `${rr.toFixed(2)}`}
         </div>
       </div>
+      <ExecutedToggle t={t} onUpdate={onUpdate} />
       {t.resultSource !== "manual" && <CheckResultButton t={t} onUpdate={onUpdate} />}
       {t.threadId && (
 
