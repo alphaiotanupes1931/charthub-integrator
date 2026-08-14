@@ -34,8 +34,13 @@ function readInitial(): string {
   return AUTO_TZ;
 }
 
+function readDevice(): string {
+  try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"; } catch { return "UTC"; }
+}
+
 export function useTimezone() {
   const [tz, setTzState] = useState<string>(readInitial);
+  const [deviceTz, setDeviceTz] = useState<string>(readDevice);
 
   useEffect(() => {
     try { localStorage.setItem(KEY, tz); } catch { /* ignore */ }
@@ -51,9 +56,34 @@ export function useTimezone() {
     return () => window.removeEventListener(EVENT, onChange);
   }, [tz]);
 
+  // The device timezone can change while the tab is open (travel, OS setting,
+  // DST). Poll it so displayed session times never drift out of date.
+  useEffect(() => {
+    const check = () => {
+      const next = readDevice();
+      setDeviceTz((prev) => (prev === next ? prev : next));
+    };
+    const id = window.setInterval(check, 60_000);
+    window.addEventListener("focus", check);
+    document.addEventListener("visibilitychange", check);
+    return () => {
+      window.clearInterval(id);
+      window.removeEventListener("focus", check);
+      document.removeEventListener("visibilitychange", check);
+    };
+  }, []);
+
   const resolved = tz === AUTO_TZ ? undefined : tz;
-  return { timezone: tz, resolvedTimezone: resolved, setTimezone: setTzState };
+  return {
+    timezone: tz,
+    resolvedTimezone: resolved,
+    /** Always a concrete IANA zone: the chosen one, or the live device zone. */
+    effectiveTimezone: resolved ?? deviceTz,
+    deviceTimezone: deviceTz,
+    setTimezone: setTzState,
+  };
 }
+
 
 /** Format a timestamp in the given timezone. Falls back to browser local when tz is undefined. */
 export function formatInTimezone(
