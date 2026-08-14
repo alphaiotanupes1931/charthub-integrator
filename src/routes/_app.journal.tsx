@@ -31,6 +31,7 @@ import JournalReviewPanel from "@/components/JournalReviewPanel";
 
 import { exportMyData } from "@/lib/privacy.functions";
 import { verifyJournalTrade } from "@/lib/trade-verify.functions";
+import { toast } from "sonner";
 import { pullAndMerge, pushAll, type SyncTrade } from "@/lib/journal-sync";
 import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
 import { markTradeLogged, unmarkTradeLogged } from "@/lib/loggedTrades";
@@ -374,6 +375,88 @@ function JournalPage() {
     const timer = setTimeout(() => { void pushAll(trades as unknown as SyncTrade[]).catch(() => undefined); }, 400);
     return () => clearTimeout(timer);
   }, [hydrated, trades]);
+
+  // ---- Automatic outcome checking -------------------------------------------
+  // The server sweeps every unresolved trade on a 15-minute cron and writes the
+  // outcome (plus an inbox notification). While the journal is open we also
+  // check locally on the same cadence so the row flips without a refresh, and
+  // announce anything that just resolved.
+  const checkingRef = useRef(false);
+  useEffect(() => {
+    if (!hydrated) return;
+
+    const sweep = async () => {
+      if (checkingRef.current) return;
+      checkingRef.current = true;
+      try {
+        const list = loadTrades();
+        const pending = list.filter(
+          (t) =>
+            t.resultSource !== "manual" &&
+            (!t.result || t.result === "open") &&
+            !!t.symbol &&
+            isFinite(t.entry) &&
+            isFinite(t.stop) &&
+            t.entry !== t.stop &&
+            Date.now() - (t.resultCheckedAt ?? 0) > 10 * 60_000,
+        );
+        const updates = new Map<string, Trade>();
+        for (const t of pending.slice(0, 12)) {
+          try {
+            const res = await verifyJournalTrade({
+              data: {
+                symbol: t.symbol,
+                timeframe: t.timeframe,
+                side: t.side,
+                entry: t.entry,
+                stop: t.stop,
+                takeProfit: t.takeProfit ?? null,
+                since: t.createdAt || parseYmd(t.date).getTime(),
+              },
+            });
+            updates.set(t.id, {
+              ...t,
+              result: res.status,
+              resultSource: "auto",
+              resultR: res.r,
+              resultNote: res.note,
+              resultCheckedAt: Date.now(),
+            });
+            if (res.status !== "open") {
+              const label = RESULT_META[res.status].label;
+              const rTxt = res.r == null ? "" : ` ${res.r > 0 ? "+" : ""}${res.r}R`;
+              toast(`${t.symbol} ${t.side} — ${label}${rTxt}`, { description: res.note });
+              try {
+                if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+                  new Notification(`${t.symbol} ${t.side} — ${label}${rTxt}`, { body: res.note });
+                }
+              } catch { /* browser notifications are best effort */ }
+            }
+          } catch { /* keep sweeping the rest */ }
+        }
+        if (updates.size) {
+          setTrades((prev) => prev.map((t) => updates.get(t.id) ?? t));
+        }
+        // Pick up anything the server cron resolved while we were away.
+        const merged = await pullAndMerge(loadTrades() as unknown as SyncTrade[]).catch(() => null);
+        if (merged) setTrades(merged as unknown as Trade[]);
+      } finally {
+        checkingRef.current = false;
+      }
+    };
+
+    void sweep();
+    const id = window.setInterval(() => { void sweep(); }, 15 * 60_000);
+    const onVisible = () => { if (document.visibilityState === "visible") void sweep(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated]);
+
+
 
 
 
