@@ -28,6 +28,7 @@ import { Route as HelpSlugRouteImport } from './routes/help.$slug'
 import { Route as ApiVersionRouteImport } from './routes/api.version'
 import { Route as ApiTtsRouteImport } from './routes/api.tts'
 import { Route as ApiOhlcRouteImport } from './routes/api.ohlc'
+import { Route as ApiNewsChatRouteImport } from './routes/api.news-chat'
 import { Route as ApiHealthRouteImport } from './routes/api.health'
 import { Route as ApiChatRouteImport } from './routes/api.chat'
 import { Route as AppVoiceCoachRouteImport } from './routes/_app.voice-coach'
@@ -190,6 +191,11 @@ const ApiTtsRoute = ApiTtsRouteImport.update({
 const ApiOhlcRoute = ApiOhlcRouteImport.update({
   id: '/api/ohlc',
   path: '/api/ohlc',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiNewsChatRoute = ApiNewsChatRouteImport.update({
+  id: '/api/news-chat',
+  path: '/api/news-chat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiHealthRoute = ApiHealthRouteImport.update({
@@ -605,6 +611,7 @@ export interface FileRoutesByFullPath {
   '/voice-coach': typeof AppVoiceCoachRoute
   '/api/chat': typeof ApiChatRoute
   '/api/health': typeof ApiHealthRoute
+  '/api/news-chat': typeof ApiNewsChatRoute
   '/api/ohlc': typeof ApiOhlcRoute
   '/api/tts': typeof ApiTtsRoute
   '/api/version': typeof ApiVersionRoute
@@ -691,6 +698,7 @@ export interface FileRoutesByTo {
   '/voice-coach': typeof AppVoiceCoachRoute
   '/api/chat': typeof ApiChatRoute
   '/api/health': typeof ApiHealthRoute
+  '/api/news-chat': typeof ApiNewsChatRoute
   '/api/ohlc': typeof ApiOhlcRoute
   '/api/tts': typeof ApiTtsRoute
   '/api/version': typeof ApiVersionRoute
@@ -781,6 +789,7 @@ export interface FileRoutesById {
   '/_app/voice-coach': typeof AppVoiceCoachRoute
   '/api/chat': typeof ApiChatRoute
   '/api/health': typeof ApiHealthRoute
+  '/api/news-chat': typeof ApiNewsChatRoute
   '/api/ohlc': typeof ApiOhlcRoute
   '/api/tts': typeof ApiTtsRoute
   '/api/version': typeof ApiVersionRoute
@@ -872,6 +881,7 @@ export interface FileRouteTypes {
     | '/voice-coach'
     | '/api/chat'
     | '/api/health'
+    | '/api/news-chat'
     | '/api/ohlc'
     | '/api/tts'
     | '/api/version'
@@ -958,6 +968,7 @@ export interface FileRouteTypes {
     | '/voice-coach'
     | '/api/chat'
     | '/api/health'
+    | '/api/news-chat'
     | '/api/ohlc'
     | '/api/tts'
     | '/api/version'
@@ -1047,6 +1058,7 @@ export interface FileRouteTypes {
     | '/_app/voice-coach'
     | '/api/chat'
     | '/api/health'
+    | '/api/news-chat'
     | '/api/ohlc'
     | '/api/tts'
     | '/api/version'
@@ -1106,6 +1118,7 @@ export interface RootRouteChildren {
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiHealthRoute: typeof ApiHealthRoute
+  ApiNewsChatRoute: typeof ApiNewsChatRoute
   ApiOhlcRoute: typeof ApiOhlcRoute
   ApiTtsRoute: typeof ApiTtsRoute
   ApiVersionRoute: typeof ApiVersionRoute
@@ -1265,6 +1278,13 @@ declare module '@tanstack/react-router' {
       path: '/api/ohlc'
       fullPath: '/api/ohlc'
       preLoaderRoute: typeof ApiOhlcRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/news-chat': {
+      id: '/api/news-chat'
+      path: '/api/news-chat'
+      fullPath: '/api/news-chat'
+      preLoaderRoute: typeof ApiNewsChatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/health': {
@@ -1929,6 +1949,7 @@ const rootRouteChildren: RootRouteChildren = {
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ApiChatRoute: ApiChatRoute,
   ApiHealthRoute: ApiHealthRoute,
+  ApiNewsChatRoute: ApiNewsChatRoute,
   ApiOhlcRoute: ApiOhlcRoute,
   ApiTtsRoute: ApiTtsRoute,
   ApiVersionRoute: ApiVersionRoute,

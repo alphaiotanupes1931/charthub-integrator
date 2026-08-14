@@ -7,6 +7,8 @@ import { RefreshCw, ChevronDown } from "lucide-react";
 import { getMarketNews } from "@/lib/news.functions";
 import { getBriefingState } from "@/lib/briefings.functions";
 import { useTimezone } from "@/hooks/useTimezone";
+import { NewsChatPanel } from "@/components/NewsChatPanel";
+
 
 export const Route = createFileRoute("/_app/news")({
   head: () => ({
@@ -125,6 +127,9 @@ function NewsPage() {
           <p className="text-sm text-muted-foreground">No session read available right now.</p>
         )}
       </section>
+
+      <NewsChatPanel writeup={news.data?.writeup ?? null} watchlist={watchlist} />
+
 
       <section className="rounded-xl border border-border/60 bg-card/40 p-4 space-y-3">
         <div className="flex items-center justify-between gap-2">
