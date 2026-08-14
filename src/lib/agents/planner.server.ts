@@ -700,3 +700,139 @@ function buildSynopsis(
 
   return `${parts.join(", ")}.${tail} Analyst consensus: ${memo.consensus}.`;
 }
+
+/**
+ * The "Details" block behind a scan. This is deliberately NOT the thesis - it
+ * reads out the evidence the grade was measured from (market structure, order
+ * flow, volume, volatility and levels), then closes with one takeaway written
+ * in the active coach's voice and the management rules.
+ */
+function buildDetails(
+  snap: MarketSnapshot,
+  memo: ResearchMemo,
+  plan: RawPlan,
+  dec: number,
+  coach: string | undefined,
+  bias: string,
+  grade: string,
+  newsWarning: string,
+  dataNote: string,
+): string {
+  const l = snap.mtf?.ladder ?? [];
+  const rung = (label: string) => l.find((r) => r.label === label);
+  const of = snap.orderFlow;
+  const atr = snap.stats.atr14;
+  const last = snap.lastPrice;
+  const sections: string[] = [];
+
+  // 1. Market structure, top down.
+  const structure: string[] = [];
+  const ladderLine = (["Weekly", "Daily", "4H", "1H", "15m"] as const)
+    .map((label) => {
+      const r = rung(label);
+      return r ? `${label} ${r.bias}/${r.trend}` : null;
+    })
+    .filter(Boolean)
+    .join(", ");
+  if (ladderLine) structure.push(`Timeframes read ${ladderLine}.`);
+  const h4 = snap.mtf?.h4;
+  if (h4) {
+    const sup = h4.keyLevels.support[0];
+    const res = h4.keyLevels.resistance[0];
+    structure.push(
+      `4H direction is ${h4.direction} in a ${h4.trend}, nearest 4H support ${sup != null ? fmt(sup, dec) : "n/a"} and resistance ${res != null ? fmt(res, dec) : "n/a"}.`,
+    );
+    const demand = h4.supplyDemand.demand[0];
+    const supply = h4.supplyDemand.supply[0];
+    if (demand || supply) {
+      structure.push(
+        `Active zones: demand ${demand ? `${fmt(demand[0], dec)}-${fmt(demand[1], dec)}` : "none mapped"}, supply ${supply ? `${fmt(supply[0], dec)}-${fmt(supply[1], dec)}` : "none mapped"}.`,
+      );
+    }
+  }
+  const h1 = snap.mtf?.h1;
+  if (h1) {
+    const ob = bias === "Short" ? h1.orderBlocks.bear[0] : h1.orderBlocks.bull[0];
+    const fvg = bias === "Short" ? h1.fvg.bear[0] : h1.fvg.bull[0];
+    structure.push(
+      `1H structure break is ${h1.structureBreak}, reversal signal ${h1.reversal}, nearest ${bias === "Short" ? "bearish" : "bullish"} order block ${ob ? `${fmt(ob[0], dec)}-${fmt(ob[1], dec)}` : "none"} and FVG ${fvg ? `${fmt(fvg[0], dec)}-${fmt(fvg[1], dec)}` : "none"}.`,
+    );
+    const buyside = h1.liquidity.buyside[0];
+    const sellside = h1.liquidity.sellside[0];
+    if (buyside != null || sellside != null) {
+      structure.push(
+        `Resting liquidity sits ${buyside != null ? `above at ${fmt(buyside, dec)}` : "above: none"} and ${sellside != null ? `below at ${fmt(sellside, dec)}` : "below: none"}.`,
+      );
+    }
+  }
+  const m15 = snap.mtf?.m15;
+  if (m15) structure.push(`15m confirmation: ${m15.confirmation === "none" ? "not yet" : m15.confirmation}${m15.reason ? ` (${m15.reason})` : ""}.`);
+  if (structure.length) sections.push(`Market structure: ${structure.join(" ")}`);
+
+  // 2. Order flow and volume, from the real metrics.
+  if (of) {
+    const flow = [
+      `Delta is ${of.delta >= 0 ? "+" : ""}${of.delta.toFixed(0)} against a ${of.deltaAvg.toFixed(0)} average and CVD is ${of.cvdSlope >= 0 ? "rising" : "falling"}, so ${of.cvdSlope >= 0 ? "buyers" : "sellers"} are the ones paying up over the last ${of.bars} bars.`,
+      `Volume splits ${of.buyPct.toFixed(0)}% buy / ${(100 - of.buyPct).toFixed(0)}% sell, last bar traded ${of.lastVolRatio.toFixed(2)}x its average, and the book reads ${of.depth}.`,
+      `Point of control ${of.poc.toLocaleString()} with the value area ${of.valueAreaLow.toLocaleString()} to ${of.valueAreaHigh.toLocaleString()}; price is ${of.priceVsPoc} it, which is ${of.priceVsPoc === "above" ? "where longs get accepted and shorts get squeezed" : of.priceVsPoc === "below" ? "where sellers keep control until price reclaims value" : "balance, so expect chop until one side commits"}.`,
+      of.stackedSide !== "none"
+        ? `There are ${of.stackedImbalances} stacked ${of.stackedSide} imbalances, an aggressive-${of.stackedSide === "buy" ? "buyer" : "seller"} footprint that usually gets revisited.`
+        : "No stacked imbalances, so no obvious aggressive footprint to lean on.",
+      of.estimated
+        ? "This feed does not publish volume for the instrument, so these figures come from bar range and close position - treat them as directional, not exact."
+        : "",
+    ].filter(Boolean);
+    sections.push(`Order flow and volume: ${flow.join(" ")} Net order-flow bias is ${of.bias}.`);
+  } else {
+    sections.push("Order flow and volume: no volume data was published for this instrument on this timeframe, so the grade leans entirely on structure.");
+  }
+
+  // 3. Volatility and level geometry, in ATR terms the trader can size with.
+  const inAtr = (a: number, b: number) => (atr > 0 ? `${(Math.abs(a - b) / atr).toFixed(1)}x ATR` : "n/a");
+  sections.push(
+    `Volatility and geometry: ATR14 is ${fmt(atr, dec)} (${last > 0 ? ((atr / last) * 100).toFixed(2) : "0"}% of price) and the 20-bar range is ${fmt(snap.stats.low20, dec)} to ${fmt(snap.stats.high20, dec)}. Entry sits ${inAtr(plan.entry, last)} from spot, the stop is ${inAtr(plan.entry, plan.stop)} of risk, TP1 is ${inAtr(plan.entry, plan.tp1)} away and TP2 ${inAtr(plan.entry, plan.tp2)}. Sessions live: ${snap.sessionsActive.join(", ") || "none"}.`,
+  );
+
+  // 4. One takeaway in the active coach's voice.
+  sections.push(`${coach ?? "The Analyst"}'s read: ${coachStory(coach, snap, of, grade, bias, memo)}`);
+
+  // 5. Management, unchanged rules.
+  sections.push(
+    `Management: invalidation is ${plan.invalidation} Move to break-even at TP1 (${fmt(plan.tp1, dec)}), trail the runner to TP2 (${fmt(plan.tp2, dec)}), risk 0.5-1R of the account.${newsWarning}${dataNote}`,
+  );
+
+  return sections.join("\n\n");
+}
+
+/** The same evidence, told as a story in each coach's voice. */
+function coachStory(
+  coach: string | undefined,
+  snap: MarketSnapshot,
+  of: OrderFlow | undefined,
+  grade: string,
+  bias: string,
+  memo: ResearchMemo,
+): string {
+  const dir = bias.toLowerCase();
+  const flow = of ? `${of.buyPct.toFixed(0)}% buy volume, CVD ${of.cvdSlope >= 0 ? "rising" : "falling"}, price ${of.priceVsPoc} the point of control` : "no published volume";
+  const aligned = snap.mtf?.alignment ?? "none";
+  const confirm = snap.mtf?.m15.confirmation ?? "none";
+  switch (coach) {
+    case "The Disciplinarian":
+      return grade === "NO ENTRY" || confirm === "none"
+        ? `The checklist is not complete. Alignment is ${aligned} and the 15m confirmation is ${confirm}, so there is no trade to take yet. You do not get to front-run your own rules because the chart looks interesting.`
+        : `Alignment is ${aligned}, the 15m has confirmed, and flow shows ${flow}. That clears the checklist for a ${dir}. One entry, one stop, no averaging, and you are done for the session once it is placed.`;
+    case "The Mentor":
+      return `Notice the order of operations here: the higher timeframes set the ${dir === "neutral" ? "context" : dir} bias, the 1H gave you the structure, and only then does flow (${flow}) tell you whether real money agrees. That sequence is why this is a ${grade} rather than a guess - practice reading it in that order and the grade becomes obvious before you look at it.`;
+    case "The Minimalist":
+      return grade === "A+" || grade === "A"
+        ? `Clean ${dir}. Aligned, confirmed, flow agrees. Take it or leave it.`
+        : `Marginal. ${aligned} alignment, ${confirm} confirmation. Skip it.`;
+    case "The Psychologist":
+      return grade === "NO ENTRY"
+        ? `The trap here is the need to do something. With ${aligned} alignment and ${confirm} confirmation, any entry is boredom wearing a thesis. Sit on your hands and note what you felt while reading this.`
+        : `The setup is real, and so is the emotional trap: ${of && of.lastVolRatio > 1.5 ? "that volume spike invites you to chase the move instead of waiting at your level" : "the slow build here invites you to move your stop closer just to feel safer"}. Decide your risk before the entry triggers, not after.`;
+    default:
+      return `Measured, the evidence stacks like this: alignment ${aligned}, 15m ${confirm}, flow ${flow}, analyst consensus ${memo.consensus} at ${memo.consensusConfidence}%. That combination is what prints a ${grade} ${dir}, and it is the flow leg that would degrade first if this fails.`;
+  }
+}
