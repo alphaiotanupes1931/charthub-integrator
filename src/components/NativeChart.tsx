@@ -389,6 +389,9 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     return [];
   }, [liveOhlc, hasLive]);
   const levels = useMemo(() => computeLevels(candles), [candles]);
+  // Fibonacci retracement is timeframe aware: swap the interval and the leg
+  // being measured (and every level price) re-anchors to that timeframe.
+  const fibStudy = useMemo(() => computeFib(candles, interval), [candles, interval]);
   const cisd = useMemo<CisdInfo | null>(() => {
     const base = detectCisd(candles);
     if (!base) return null;
