@@ -25,6 +25,7 @@ import {
   HeartPulse,
   MessageSquare,
   RefreshCw,
+  Ban,
 } from "lucide-react";
 import { MentalStatePanel, upsertMentalEntry, SCORE_META, loadMental, type MentalEntry } from "@/components/MentalStatePanel";
 import JournalReviewPanel from "@/components/JournalReviewPanel";
@@ -35,11 +36,13 @@ import { toast } from "sonner";
 import { pullAndMerge, pushAll, type SyncTrade } from "@/lib/journal-sync";
 import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
 import { markTradeLogged, unmarkTradeLogged } from "@/lib/loggedTrades";
+import { loadPassedTrades, onPassedTradesChange, unpassTrade, type PassedTrade } from "@/lib/passedTrades";
 
 import {
-  putTradeImage,
   getTradeImage,
-  deleteTradeImage,
+  getTradeImages,
+  putTradeImages,
+  deleteTradeImages,
   compressImageFile,
 } from "@/lib/journalImages";
 
@@ -88,6 +91,11 @@ type Trade = {
   pointValue?: number;    // $ per 1.0 price move per unit (contract multiplier / pip value)
   notes: string;
   hasImage?: boolean;
+  /** How many screenshots are stored for this trade (1 = legacy single image). */
+  imageCount?: number;
+  /** Did the trader actually pull the trigger on this setup? */
+  executed?: boolean;
+  executedAt?: number;
   ruleBroken?: boolean;
   ruleBrokenNote?: string;
   lossCategory?: LossCategory;
@@ -195,7 +203,7 @@ function csvEscape(v: unknown): string {
 }
 
 function exportTradesCsv(trades: Trade[]) {
-  const headers = ["date","timeframe","symbol","side","entry","exit","stop","takeProfit","size","pointValue","fees","pnl","rr","plannedRR","ruleBroken","ruleBrokenNote","lossCategory","setup","followedPlan","gradeMatch","takeaway","result","resultR","notes"];
+  const headers = ["date","timeframe","symbol","side","entry","exit","stop","takeProfit","size","pointValue","fees","pnl","rr","plannedRR","ruleBroken","ruleBrokenNote","lossCategory","setup","followedPlan","gradeMatch","takeaway","result","resultR","executed","notes"];
   const rows = trades.map((t) => {
     const rr = tradeRR(t);
     const prr = plannedRR(t);
@@ -215,6 +223,7 @@ function exportTradesCsv(trades: Trade[]) {
       t.takeaway ?? "",
       t.result ?? "",
       t.resultR ?? "",
+      t.executed === undefined ? "" : t.executed ? "yes" : "no",
       t.notes ?? "",
     ].map(csvEscape).join(",");
   });
@@ -529,7 +538,7 @@ function JournalPage() {
   const handleDelete = (id: string) => {
     setTrades((prev) => prev.filter((p) => p.id !== id));
     unmarkTradeLogged(id);
-    void deleteTradeImage(id);
+    void deleteTradeImages(id);
   };
 
   const editing = editingId ? trades.find((t) => t.id === editingId) ?? null : null;
@@ -648,6 +657,8 @@ function JournalPage() {
           </div>
         </div>
       )}
+
+      {tab === "trades" && <PassedSetupsPanel />}
 
       {tab === "trades" && (
         <TradesList
@@ -877,6 +888,91 @@ function CheckResultButton({ t, onUpdate }: { t: Trade; onUpdate: (t: Trade) => 
   );
 }
 
+/**
+ * Asks straight out whether the trader actually pulled the trigger on a logged
+ * setup. Once answered it shows the answer and stays editable.
+ */
+function ExecutedToggle({ t, onUpdate }: { t: Trade; onUpdate: (t: Trade) => void }) {
+  const set = (executed: boolean) => onUpdate({ ...t, executed, executedAt: Date.now() });
+  if (t.executed === undefined) {
+    return (
+      <div className="shrink-0 flex items-center gap-1" title="Did you actually place this trade?">
+        <span className="hidden sm:inline text-[10px] text-muted-foreground">Executed?</span>
+        <button
+          onClick={() => set(true)}
+          className="rounded-xl border border-border/60 px-2 py-1 text-[10px] font-semibold text-muted-foreground hover:text-bull hover:border-bull/40 hover:bg-bull/10"
+        >
+          Yes
+        </button>
+        <button
+          onClick={() => set(false)}
+          className="rounded-xl border border-border/60 px-2 py-1 text-[10px] font-semibold text-muted-foreground hover:text-destructive hover:border-destructive/40 hover:bg-destructive/10"
+        >
+          No
+        </button>
+      </div>
+    );
+  }
+  return (
+    <button
+      onClick={() => set(!t.executed)}
+      title={`${t.executed ? "Marked as executed" : "Marked as not executed"} — tap to change`}
+      className={`shrink-0 rounded-xl border px-2 py-1 text-[10px] font-semibold ${
+        t.executed
+          ? "border-bull/30 bg-bull/10 text-bull"
+          : "border-border/60 bg-muted/30 text-muted-foreground"
+      }`}
+    >
+      {t.executed ? "Executed" : "Not executed"}
+    </button>
+  );
+}
+
+/** Setups the trader consciously skipped, with the reason they typed. */
+function PassedSetupsPanel() {
+  const [list, setList] = useState<PassedTrade[]>([]);
+  useEffect(() => {
+    const sync = () => setList(loadPassedTrades());
+    sync();
+    return onPassedTradesChange(sync);
+  }, []);
+  if (!list.length) return null;
+  return (
+    <div className="rounded-xl border border-border/60 bg-card">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-border/60">
+        <Ban className="h-4 w-4 text-muted-foreground" />
+        <div className="text-sm font-semibold">Setups you passed</div>
+        <div className="text-[11px] text-muted-foreground ml-auto">{list.length} logged</div>
+      </div>
+      <div className="divide-y divide-border/60">
+        {list.slice(0, 15).map((p) => (
+          <div key={p.key} className="flex items-center gap-3 px-4 py-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap text-sm">
+                <span className="font-semibold">{p.symbol}</span>
+                {p.grade && <span className="text-[10px] rounded bg-muted/40 px-1.5 py-0.5 text-muted-foreground">Grade {p.grade}</span>}
+                {p.interval && <span className="text-[10px] rounded border border-border/60 px-1.5 py-0.5 text-muted-foreground">{p.interval}</span>}
+                <span className="text-xs text-muted-foreground">{new Date(p.at).toLocaleString()}</span>
+              </div>
+              <div className="mt-0.5 text-[11px] text-muted-foreground truncate">
+                {p.reason || "No reason given"}
+                {p.entry != null ? ` · entry ${p.entry}` : ""}
+              </div>
+            </div>
+            <button
+              onClick={() => unpassTrade(p.key)}
+              className="shrink-0 h-8 w-8 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 flex items-center justify-center"
+              aria-label="Remove passed setup"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function TradeRow({ t, onEdit, onDelete, onUpdate }: { t: Trade; onEdit: (t: Trade) => void; onDelete: (id: string) => void; onUpdate: (t: Trade) => void }) {
   const pnl = tradePnl(t);
   const rr = tradeRR(t);
@@ -929,6 +1025,7 @@ function TradeRow({ t, onEdit, onDelete, onUpdate }: { t: Trade; onEdit: (t: Tra
           R:R {rr == null ? "-" : `${rr.toFixed(2)}`}
         </div>
       </div>
+      <ExecutedToggle t={t} onUpdate={onUpdate} />
       {t.resultSource !== "manual" && <CheckResultButton t={t} onUpdate={onUpdate} />}
       {t.threadId && (
 
@@ -1426,53 +1523,62 @@ function TradeFormModal({
   }, [date]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [pendingImage, setPendingImage] = useState<Blob | null>(null);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [removeImage, setRemoveImage] = useState(false);
+  // Multiple screenshots per trade: before/after, higher timeframe, execution.
+  const [images, setImages] = useState<{ blob: Blob; url: string }[]>([]);
+  const [imagesDirty, setImagesDirty] = useState(false);
 
   useEffect(() => {
-    let revokedUrl: string | null = null;
+    let active = true;
+    const urls: string[] = [];
     if (editing?.hasImage) {
-      void getTradeImage(editing.id).then((blob) => {
-        if (blob) {
+      void getTradeImages(editing.id, editing.imageCount ?? 1).then((blobs) => {
+        if (!active) return;
+        const next = blobs.map((blob) => {
           const url = URL.createObjectURL(blob);
-          revokedUrl = url;
-          setImageUrl(url);
-        }
+          urls.push(url);
+          return { blob, url };
+        });
+        setImages(next);
       });
     }
-    return () => { if (revokedUrl) URL.revokeObjectURL(revokedUrl); };
-  }, [editing?.id, editing?.hasImage]);
+    return () => { active = false; urls.forEach((u) => URL.revokeObjectURL(u)); };
+  }, [editing?.id, editing?.hasImage, editing?.imageCount]);
 
-  const handlePickFile = async (file: File | null | undefined) => {
-    if (!file || !file.type.startsWith("image/")) return;
-    const compressed = await compressImageFile(file);
-    setPendingImage(compressed);
-    setRemoveImage(false);
-    if (imageUrl) URL.revokeObjectURL(imageUrl);
-    setImageUrl(URL.createObjectURL(compressed));
+  const handlePickFiles = async (files: FileList | File[] | null | undefined) => {
+    const list = Array.from(files ?? []).filter((f) => f.type.startsWith("image/"));
+    if (!list.length) return;
+    const added: { blob: Blob; url: string }[] = [];
+    for (const file of list.slice(0, 12)) {
+      const compressed = await compressImageFile(file);
+      added.push({ blob: compressed, url: URL.createObjectURL(compressed) });
+    }
+    setImages((prev) => [...prev, ...added].slice(0, 12));
+    setImagesDirty(true);
   };
 
-  const clearImage = () => {
-    if (imageUrl) URL.revokeObjectURL(imageUrl);
-    setImageUrl(null);
-    setPendingImage(null);
-    setRemoveImage(true);
+  const removeImageAt = (i: number) => {
+    setImages((prev) => {
+      const target = prev[i];
+      if (target) URL.revokeObjectURL(target.url);
+      return prev.filter((_, idx) => idx !== i);
+    });
+    setImagesDirty(true);
   };
 
   useEffect(() => {
     const onPaste = (e: ClipboardEvent) => {
-      const item = Array.from(e.clipboardData?.items ?? []).find((i) => i.type.startsWith("image/"));
-      if (!item) return;
-      const file = item.getAsFile();
-      if (file) void handlePickFile(file);
+      const files = Array.from(e.clipboardData?.items ?? [])
+        .filter((i) => i.type.startsWith("image/"))
+        .map((i) => i.getAsFile())
+        .filter((f): f is File => !!f);
+      if (files.length) void handlePickFiles(files);
     };
     window.addEventListener("paste", onPaste);
     return () => window.removeEventListener("paste", onPaste);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const hasImage = !!pendingImage || (!!editing?.hasImage && !removeImage);
+  const hasImage = images.length > 0;
 
   // A trade you just took has no exit yet. Treat a blank exit as "still open"
   // and fall back to the entry so P&L reads 0 until the trade is closed.
@@ -1498,6 +1604,9 @@ function TradeFormModal({
     ruleBrokenNote: ruleBroken ? (ruleBrokenNote || undefined) : undefined,
     lossCategory: lossCategory || undefined,
     hasImage,
+    imageCount: images.length || undefined,
+    executed: editing?.executed,
+    executedAt: editing?.executedAt,
     followedPlan: followedPlan || undefined,
     gradeMatch: gradeMatch || undefined,
     takeaway: takeaway.trim() || undefined,
@@ -1522,10 +1631,9 @@ function TradeFormModal({
     if (!canSave) return;
 
     const id = editing?.id ?? `t_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
-    if (pendingImage) {
-      await putTradeImage(id, pendingImage);
-    } else if (removeImage && editing?.hasImage) {
-      await deleteTradeImage(id);
+    if (imagesDirty || !editing) {
+      await deleteTradeImages(id, Math.max(12, editing?.imageCount ?? 1));
+      if (images.length) await putTradeImages(id, images.map((i) => i.blob));
     }
     if (mentalScore != null) {
       const existing = loadMental().find((e) => e.date === date);
@@ -1738,45 +1846,40 @@ function TradeFormModal({
             />
           </Field>
 
-          <Field label="Chart screenshot (stays on this device)">
+          <Field label="Chart screenshots (stay on this device)">
             <input
               ref={fileInputRef}
               type="file"
               accept="image/*"
+              multiple
               className="hidden"
-              onChange={(e) => { void handlePickFile(e.target.files?.[0]); e.target.value = ""; }}
+              onChange={(e) => { void handlePickFiles(e.target.files); e.target.value = ""; }}
             />
-            {imageUrl ? (
-              <div className="relative rounded-xl border border-border/60 overflow-hidden bg-background">
-                <img src={imageUrl} alt="Trade screenshot" className="w-full max-h-72 object-contain" />
-                <div className="absolute top-2 right-2 flex gap-1">
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="rounded bg-background/80 backdrop-blur px-2 py-1 text-[10px] font-medium border border-border/60 hover:bg-accent"
-                  >
-                    Replace
-                  </button>
-                  <button
-                    type="button"
-                    onClick={clearImage}
-                    className="rounded bg-background/80 backdrop-blur px-2 py-1 text-[10px] font-medium border border-border/60 text-destructive hover:bg-destructive/10"
-                  >
-                    Remove
-                  </button>
-                </div>
+            {images.length > 0 && (
+              <div className="grid grid-cols-2 gap-2 mb-2">
+                {images.map((img, i) => (
+                  <div key={img.url} className="relative rounded-xl border border-border/60 overflow-hidden bg-background">
+                    <img src={img.url} alt={`Trade screenshot ${i + 1}`} className="w-full max-h-48 object-contain" />
+                    <button
+                      type="button"
+                      onClick={() => removeImageAt(i)}
+                      className="absolute top-1.5 right-1.5 rounded bg-background/80 px-2 py-1 text-[10px] font-medium border border-border/60 text-destructive hover:bg-destructive/10"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
               </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full rounded-xl border border-dashed border-border/60 bg-background/40 px-3 py-6 text-sm text-muted-foreground hover:border-primary/40 hover:text-foreground transition flex flex-col items-center gap-1.5"
-              >
-                <Upload className="h-4 w-4" />
-                <span>Upload screenshot or paste from clipboard</span>
-                <span className="text-[10px]">Stored only on your device</span>
-              </button>
             )}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full rounded-xl border border-dashed border-border/60 bg-background/40 px-3 py-5 text-sm text-muted-foreground hover:border-primary/40 hover:text-foreground transition flex flex-col items-center gap-1.5"
+            >
+              <Upload className="h-4 w-4" />
+              <span>{images.length ? "Add another screenshot" : "Upload screenshots or paste from clipboard"}</span>
+              <span className="text-[10px]">You can pick several at once · stored only on your device</span>
+            </button>
           </Field>
 
           <div className="rounded-2xl border border-border/60 bg-card/60 p-4">

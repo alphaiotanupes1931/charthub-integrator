@@ -29,6 +29,7 @@ import { listChatThreads, createChatThread, deleteChatThread } from "@/lib/chat.
 import type { ResearchMemo, OrderFlow } from "@/lib/agents/types";
 import { Link } from "@tanstack/react-router";
 import { useTradeLogged } from "@/hooks/useTradeLogged";
+import { PassTradeButton } from "@/components/PassTradeButton";
 import { recordSignal, takeTrade } from "@/lib/signalHistory";
 import { formatJournalPerf } from "@/lib/journalStats";
 import { toast } from "sonner";
@@ -442,6 +443,20 @@ function ScanTicket({
             >
               <Zap className="h-3.5 w-3.5" /> Take this trade
             </Link>
+          )}
+
+          {!isNoEntry && (
+            <PassTradeButton
+              setup={{
+                symbol: symbol.ticker,
+                interval,
+                grade: result.grade,
+                bias: result.bias,
+                entry: parseNum(result.entry),
+                stop: parseNum(result.stop),
+                tp1: parseNum(result.tp1),
+              }}
+            />
           )}
 
           <AutoBacktestVerify
