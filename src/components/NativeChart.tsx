@@ -95,7 +95,7 @@ interface Props {
   sessions?: boolean;
   onSnapshot?: (snap: ChartSnapshot) => void;
   annotations?: import("@/lib/chartAnnotations").ChartAnnotation[];
-  candleType?: "candle" | "ha";
+  candleType?: CandleStyleId;
   className?: string;
 }
 
