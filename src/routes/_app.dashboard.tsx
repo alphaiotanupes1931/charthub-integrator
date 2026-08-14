@@ -330,6 +330,13 @@ function ScanTicket({
 }) {
   const isNoEntry = result.grade === "NO ENTRY";
 
+  const parseNum = (v?: string) => {
+    const n = parseFloat(String(v ?? "").replace(/[^0-9.\-]/g, ""));
+    return Number.isFinite(n) ? n : undefined;
+  };
+  // Was this exact setup already saved into the journal (not just prefilled)?
+  const logged = useTradeLogged({ symbol: symbol.ticker, entry: parseNum(result.entry) ?? null });
+
   // Compact volume / order-flow read from the research memo. The written
   // narrative (strength/weakness, coach reasoning) lives in the chat panel;
   // this card stays purely numeric and glanceable.
