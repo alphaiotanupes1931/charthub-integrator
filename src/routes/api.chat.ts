@@ -756,7 +756,29 @@ export const Route = createFileRoute("/api/chat")({
             return new Response("Forbidden", { status: 403, headers: cors });
           }
           thread = threadRow;
+
+          // Save the incoming turn(s) right away so a refresh mid-stream never
+          // loses what the trader typed. Deduped on (thread_id, msg_id).
+          if (sb && userId) {
+            const rows = (messages as Array<{ id?: string; role: string; parts: unknown }>)
+              .filter((m) => m && typeof m.id === "string" && m.id && Array.isArray(m.parts))
+              .map((m) => ({
+                thread_id: threadId,
+                user_id: userId as string,
+                client_id: userId as string,
+                msg_id: m.id as string,
+                role: m.role,
+                parts: m.parts as unknown as Json,
+              }));
+            if (rows.length > 0) {
+              const { error: preErr } = await sb
+                .from("chat_messages")
+                .upsert(rows as never, { onConflict: "thread_id,msg_id", ignoreDuplicates: true });
+              if (preErr) console.error("[chat] pre-persist error", preErr.message);
+            }
+          }
         }
+
 
         // --- Daily AI cap per user (UTC) - admins bypass ---
         let isAdmin = false;
