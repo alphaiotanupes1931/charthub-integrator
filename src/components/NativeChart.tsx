@@ -816,6 +816,53 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     };
   }, [sessions, ready, candles]);
 
+  // ---- Order Blocks overlay (time-anchored boxes extending to mitigation) ----
+  useEffect(() => {
+    if (!ready || !chartRef.current || !seriesRef.current) { setObBoxes([]); return; }
+    if (!enabled.OB || orderBlocks.length === 0) { setObBoxes([]); return; }
+    const chart = chartRef.current;
+
+    const recompute = () => {
+      const series = seriesRef.current;
+      if (!series) return;
+      const ts = chart.timeScale();
+      const width = containerRef.current?.clientWidth ?? 0;
+      const out: Array<{ key: string; left: number; width: number; top: number; height: number; color: string; label: string; mitigated: boolean }> = [];
+      orderBlocks.forEach((b, i) => {
+        const yTop = series.priceToCoordinate(b.top);
+        const yBot = series.priceToCoordinate(b.bot);
+        if (yTop == null || yBot == null) return;
+        const x1 = ts.timeToCoordinate(b.time as Time);
+        const x2raw = b.mitigatedTime != null ? ts.timeToCoordinate(b.mitigatedTime as Time) : null;
+        const left = x1 ?? 0;
+        const right = x2raw != null ? x2raw : Math.max(width - 56, left + 8);
+        out.push({
+          key: `ob-${i}-${b.time}`,
+          left,
+          width: Math.max(6, right - left),
+          top: Math.min(yTop, yBot),
+          height: Math.max(3, Math.abs(yBot - yTop)),
+          color: b.kind === "bullish" ? OB_COLORS.bullish : OB_COLORS.bearish,
+          label: obLabel(b),
+          mitigated: b.mitigated,
+        });
+      });
+      setObBoxes(out);
+    };
+
+    recompute();
+    const ts = chart.timeScale();
+    ts.subscribeVisibleTimeRangeChange(recompute);
+    ts.subscribeVisibleLogicalRangeChange(recompute);
+    const ro = new ResizeObserver(recompute);
+    if (containerRef.current) ro.observe(containerRef.current);
+    return () => {
+      ts.unsubscribeVisibleTimeRangeChange(recompute);
+      ts.unsubscribeVisibleLogicalRangeChange(recompute);
+      ro.disconnect();
+    };
+  }, [ready, enabled.OB, orderBlocks, candles]);
+
   // ---- AI annotations (hlines / zones / labels) ----
   useEffect(() => {
     if (!ready || !seriesRef.current) { setAnnZones([]); return; }
@@ -1128,6 +1175,33 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
             );
           })}
         </svg>
+      )}
+      {/* Order block boxes */}
+      {obBoxes.length > 0 && (
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          {obBoxes.map((b) => (
+            <div
+              key={b.key}
+              className="absolute"
+              style={{
+                left: b.left,
+                width: b.width,
+                top: b.top,
+                height: b.height,
+                background: b.mitigated ? `${b.color}14` : `${b.color}2e`,
+                border: `1px ${b.mitigated ? "dashed" : "solid"} ${b.color}${b.mitigated ? "66" : "aa"}`,
+                borderRadius: 2,
+              }}
+            >
+              <span
+                className="absolute left-1 -top-3.5 text-[9px] font-mono tracking-tight whitespace-nowrap"
+                style={{ color: b.color, opacity: b.mitigated ? 0.6 : 1 }}
+              >
+                {b.label}
+              </span>
+            </div>
+          ))}
+        </div>
       )}
       {/* AI annotation zones (shaded) */}
       {annZones.length > 0 && (
