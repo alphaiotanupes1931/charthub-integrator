@@ -1512,29 +1512,37 @@ function Dashboard() {
                 Levels apply to Live where supported and fully on Setup.
               </div>
 
-              {/* Candle style */}
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[11px] font-medium text-foreground/80">Candle</span>
-                <div className="inline-flex items-center rounded-xl border border-border/60 bg-background/50 p-0.5">
-                  <button
-                    disabled={chartTab !== "setup"}
-                    onClick={() => setCandleType("candle")}
-                    className={`px-2 py-0.5 rounded text-[11px] font-medium transition disabled:opacity-40 ${
-                      candleType === "candle" && chartTab === "setup" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    Candle
-                  </button>
-                  <button
-                    disabled={chartTab !== "setup"}
-                    onClick={() => setCandleType("ha")}
-                    className={`px-2 py-0.5 rounded text-[11px] font-medium transition disabled:opacity-40 ${
-                      candleType === "ha" && chartTab === "setup" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    HA
-                  </button>
+              {/* Candle / chart display style — all 21 options */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[11px] font-medium text-foreground/80">Candle style</span>
+                  <span className="text-[10px] text-muted-foreground">
+                    {CANDLE_STYLE_MAP[candleType]?.label ?? "Candles"}
+                  </span>
                 </div>
+                <div className="max-h-44 overflow-y-auto pr-0.5 grid grid-cols-2 gap-1">
+                  {CANDLE_STYLES.map((s) => {
+                    const on = candleType === s.id && chartTab === "setup";
+                    return (
+                      <button
+                        key={s.id}
+                        disabled={chartTab !== "setup"}
+                        onClick={() => setCandleType(s.id)}
+                        title={s.hint}
+                        className={`text-left rounded-xl border px-2 py-1 text-[11px] font-medium transition disabled:opacity-40 ${
+                          on
+                            ? "border-primary/40 bg-primary/15 text-primary"
+                            : "border-border/60 text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {s.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                {chartTab !== "setup" && (
+                  <div className="mt-1 text-[10px] text-muted-foreground">Switch to Setup to change the style.</div>
+                )}
               </div>
 
               {/* Sessions */}
