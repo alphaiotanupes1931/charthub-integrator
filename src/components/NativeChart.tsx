@@ -627,7 +627,9 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
         line.setData(data.map((p) => ({ time: p.time as Time, value: p.value })));
         vwapSeriesRef.current.push(line);
       };
-      mk(vwapIndicator.vwap, VWAP_COLORS.vwap, 2, true, "VWAP");
+      mk(vwapIndicator.vwap, VWAP_COLORS.vwap, 2, false, "VWAP");
+      mk(vwapIndicator.upper1, VWAP_COLORS.band, 1, false, "VWAP +1σ");
+      mk(vwapIndicator.lower1, VWAP_COLORS.band, 1, false, "VWAP -1σ");
       mk(vwapIndicator.fast, VWAP_COLORS.fast, 2, false, "MA 21");
       mk(vwapIndicator.slow, VWAP_COLORS.slow, 2, false, "MA 50");
 
