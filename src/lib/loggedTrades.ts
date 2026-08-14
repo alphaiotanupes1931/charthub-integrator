@@ -58,9 +58,11 @@ export function markTradeLogged(input: {
   threadId?: string | null;
   entry?: number | null;
   date?: string;
+  /** When the journal entry was created; defaults to now. */
+  at?: number;
 }) {
   const marks: LoggedTradeMark[] = [];
-  const now = Date.now();
+  const now = input.at && Number.isFinite(input.at) ? input.at : Date.now();
   const base = { at: now, tradeId: input.tradeId, symbol: input.symbol, threadId: input.threadId ?? undefined, entry: input.entry ?? undefined, date: input.date };
   // Store both the thread-scoped key and a symbol+entry key, so the setup is
   // recognised from the chat it came from and from a fresh scan of the same level.

@@ -352,7 +352,7 @@ function JournalPage() {
     // saved before this device knew about it are still recognised in the chat.
     const backfill = (list: Trade[]) => {
       for (const t of list) {
-        markTradeLogged({ tradeId: t.id, symbol: t.symbol, threadId: t.threadId ?? null, entry: t.entry, date: t.date });
+        markTradeLogged({ tradeId: t.id, symbol: t.symbol, threadId: t.threadId ?? null, entry: t.entry, date: t.date, at: t.createdAt });
       }
     };
     const local = loadTrades();
