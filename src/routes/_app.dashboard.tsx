@@ -1849,6 +1849,18 @@ function Dashboard() {
             )}
           </div>
 
+          {/* Buy / Sell on TradingView - shown under both Live and Setup charts */}
+          {!isChartFullscreen && (
+            <ChartTradeBar
+              tvSymbol={symbol.tv}
+              ticker={symbol.ticker}
+              interval={interval}
+              bias={aiGrade?.bias}
+            />
+          )}
+
+
+
 
 
           {/* Broker strip - thin, single line so it doesn't eat chart height */}
