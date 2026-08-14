@@ -91,7 +91,19 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
   }
   const actionLabel = isLong ? "BUY" : isShort ? "SELL" : "WAIT";
 
+  const timing = computeTiming({
+    symbol,
+    interval,
+    bias: isLong ? "long" : isShort ? "short" : "neutral",
+    entry: grade.entry,
+    stop: grade.stop,
+    tp1: grade.tp1,
+    tp2: grade.tp2,
+  });
+  const tzTag = tzAbbrev(tz);
+
   const rows: Array<{ key: string; label: string; value?: number; tone: string; icon: React.ComponentType<{ className?: string }>; from?: number }> = [
+
     { key: "entry", label: "Entry", value: grade.entry, tone: "text-foreground", icon: Target, from: lastPrice },
     { key: "stop", label: "Stop", value: grade.stop, tone: "text-red-300", icon: Shield, from: grade.entry },
     { key: "tp1", label: "TP1", value: grade.tp1, tone: "text-bull", icon: Flag, from: grade.entry },
