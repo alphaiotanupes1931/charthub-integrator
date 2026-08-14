@@ -393,13 +393,19 @@ function ScanTicket({
         </div>
 
         <div className="space-y-2">
-          {!isNoEntry && (
+          {!isNoEntry && logged && (
+            <Link
+              to="/journal"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-bull/40 bg-bull/10 px-4 py-2.5 text-xs font-semibold text-bull hover:bg-bull/20 transition"
+              title={`Saved to your journal on ${new Date(logged.at).toLocaleString()}. Open the journal to edit it.`}
+            >
+              <Check className="h-3.5 w-3.5" /> You already logged this trade
+            </Link>
+          )}
+
+          {!isNoEntry && !logged && (
             <button
               onClick={() => {
-                const parseNum = (v: string) => {
-                  const n = parseFloat(String(v).replace(/[^0-9.\-]/g, ""));
-                  return Number.isFinite(n) ? n : undefined;
-                };
                 takeTrade({
                   symbol: symbol.ticker,
                   bias: result.bias,
