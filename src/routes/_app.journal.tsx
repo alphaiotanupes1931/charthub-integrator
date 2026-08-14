@@ -706,9 +706,69 @@ function TradesList({
 }
 
 
-function TradeRow({ t, onEdit, onDelete }: { t: Trade; onEdit: (t: Trade) => void; onDelete: (id: string) => void }) {
+function ResultBadge({ t }: { t: Trade }) {
+  if (!t.result) return null;
+  const meta = RESULT_META[t.result];
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-semibold ${meta.cls}`}
+      title={t.resultNote ?? undefined}
+    >
+      {meta.label}
+      {t.resultR != null && <span className="opacity-70">{t.resultR > 0 ? "+" : ""}{t.resultR}R</span>}
+      {t.resultSource === "manual" && <span className="opacity-60">manual</span>}
+    </span>
+  );
+}
+
+/** Checks the trade against real price bars and stores the outcome. */
+function CheckResultButton({ t, onUpdate }: { t: Trade; onUpdate: (t: Trade) => void }) {
+  const [busy, setBusy] = useState(false);
+  const run = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const res = await verifyJournalTrade({
+        data: {
+          symbol: t.symbol,
+          timeframe: t.timeframe,
+          side: t.side,
+          entry: t.entry,
+          stop: t.stop,
+          takeProfit: t.takeProfit ?? null,
+          since: t.createdAt || parseYmd(t.date).getTime(),
+        },
+      });
+      onUpdate({
+        ...t,
+        result: res.status,
+        resultSource: "auto",
+        resultR: res.r,
+        resultNote: res.note,
+        resultCheckedAt: Date.now(),
+      });
+    } catch (e) {
+      onUpdate({ ...t, resultNote: `Could not check: ${(e as Error).message}`, resultCheckedAt: Date.now() });
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <button
+      onClick={run}
+      disabled={busy}
+      className="shrink-0 inline-flex items-center gap-1 rounded-xl border border-border/60 px-2 py-1 text-[10px] font-semibold text-muted-foreground hover:text-foreground hover:bg-accent/40 disabled:opacity-50"
+      title="Check this trade against live price history"
+    >
+      <RefreshCw className={`h-3 w-3 ${busy ? "animate-spin" : ""}`} /> {busy ? "Checking" : "Check result"}
+    </button>
+  );
+}
+
+function TradeRow({ t, onEdit, onDelete, onUpdate }: { t: Trade; onEdit: (t: Trade) => void; onDelete: (id: string) => void; onUpdate: (t: Trade) => void }) {
   const pnl = tradePnl(t);
   const rr = tradeRR(t);
+
   return (
     <div className="flex items-center gap-4 p-4 hover:bg-accent/20 transition">
       {t.hasImage && <TradeThumb tradeId={t.id} />}
