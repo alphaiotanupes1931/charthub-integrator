@@ -29,6 +29,7 @@ import { listChatThreads, createChatThread, deleteChatThread } from "@/lib/chat.
 import type { ResearchMemo, OrderFlow } from "@/lib/agents/types";
 import { Link } from "@tanstack/react-router";
 import { useTradeLogged } from "@/hooks/useTradeLogged";
+import { PassTradeButton } from "@/components/PassTradeButton";
 import { recordSignal, takeTrade } from "@/lib/signalHistory";
 import { formatJournalPerf } from "@/lib/journalStats";
 import { toast } from "sonner";
