@@ -57,7 +57,7 @@ function activeStrategyDesc(): string | undefined {
 
 
 
-type DashboardSearch = { ask?: string; symbol?: string; thread?: string };
+type DashboardSearch = { ask?: string; symbol?: string; thread?: string; scan?: string };
 
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({
@@ -70,7 +70,9 @@ export const Route = createFileRoute("/_app/dashboard")({
     ask: typeof s.ask === "string" ? s.ask : undefined,
     symbol: typeof s.symbol === "string" ? s.symbol : undefined,
     thread: typeof s.thread === "string" ? s.thread : undefined,
+    scan: typeof s.scan === "string" ? s.scan : undefined,
   }),
+
   component: Dashboard,
 });
 
