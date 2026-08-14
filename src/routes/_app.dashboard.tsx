@@ -643,6 +643,10 @@ function Dashboard() {
   });
 
   const [levelsOpen, setLevelsOpen] = useState(false);
+  // Analysis timing is rendered in the trader's timezone; "Auto" tracks the
+  // device so a timezone change (travel, DST, OS setting) is picked up live.
+  const { timezone, effectiveTimezone: tz, setTimezone } = useTimezone();
+  const tzLabel = tzAbbrev(tz);
 
   
   const [levels, setLevels] = useState<Record<LevelKey, boolean>>(() =>
