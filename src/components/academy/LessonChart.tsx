@@ -71,11 +71,12 @@ const BULL = "#22c55e";
 const BEAR = "#ef4444";
 const NEUTRAL = "hsl(var(--muted-foreground))";
 const ACCENT = "#38bdf8";
+const NEUTRAL_HEX = "#94a3b8";
 
 type Tone = "bull" | "bear" | "accent" | "neutral";
 
 function toneColor(tone: Tone) {
-  return tone === "bull" ? BULL : tone === "bear" ? BEAR : tone === "neutral" ? NEUTRAL : ACCENT;
+  return tone === "bull" ? BULL : tone === "bear" ? BEAR : tone === "neutral" ? NEUTRAL_HEX : ACCENT;
 }
 
 function label(x: number, y: number, text: string, tone: Tone = "accent", delay = 1.15) {
