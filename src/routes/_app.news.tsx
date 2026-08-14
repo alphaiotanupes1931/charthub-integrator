@@ -7,6 +7,8 @@ import { RefreshCw, ChevronDown } from "lucide-react";
 import { getMarketNews } from "@/lib/news.functions";
 import { getBriefingState } from "@/lib/briefings.functions";
 import { useTimezone } from "@/hooks/useTimezone";
+import { NewsChatPanel } from "@/components/NewsChatPanel";
+
 
 export const Route = createFileRoute("/_app/news")({
   head: () => ({
