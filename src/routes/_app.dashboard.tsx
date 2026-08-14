@@ -727,7 +727,14 @@ function Dashboard() {
   // Mobile-only: which pane is visible full-height (chart / scan / chat). On >=lg
   // both are shown side-by-side and this state is ignored.
   const [mobileView, setMobileView] = useState<"chart" | "scan" | "chat">("chart");
-  const [candleType, setCandleType] = useState<"candle" | "ha">("candle");
+  const [candleType, setCandleType] = useState<CandleStyleId>(() => {
+    if (typeof window === "undefined") return "candle";
+    const saved = window.localStorage.getItem("trademind:candleStyle");
+    return (saved && CANDLE_STYLES.some((s) => s.id === saved) ? saved : "candle") as CandleStyleId;
+  });
+  useEffect(() => {
+    try { window.localStorage.setItem("trademind:candleStyle", candleType); } catch { /* ignore */ }
+  }, [candleType]);
   const [snapshot, setSnapshot] = useState<ChartSnapshot | null>(null);
   const [aiAnnotationsRaw, setAiAnnotationsRaw] = useState<import("@/lib/chartAnnotations").ChartAnnotation[]>([]);
   const [aiConcept, setAiConcept] = useState<import("@/lib/chartAnnotations").ConceptRef | null>(null);
