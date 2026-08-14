@@ -1205,7 +1205,20 @@ function Dashboard() {
         setScanning(false);
         setLastUpdatedAt(Date.now());
       });
-  };
+
+  // Deep-linked scan (?symbol=X&scan=1): wait until the chart is actually on
+  // that instrument, then run the scan straight into the chat conversation.
+  const runScanRef = useRef(runScan);
+  runScanRef.current = runScan;
+  useEffect(() => {
+    if (!pendingScanTicker) return;
+    if (symbol.ticker !== pendingScanTicker) return;
+    setPendingScanTicker(null);
+    const id = window.setTimeout(() => { void runScanRef.current("chat"); }, 250);
+    return () => window.clearTimeout(id);
+  }, [pendingScanTicker, symbol.ticker]);
+
+
 
 
 
