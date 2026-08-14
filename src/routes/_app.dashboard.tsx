@@ -942,6 +942,7 @@ function Dashboard() {
 
   // Honor ?symbol= deep links (e.g. from AI Signals tab)
   const symbolAppliedRef = useRef<string | null>(null);
+  const [pendingScanTicker, setPendingScanTicker] = useState<string | null>(null);
   useEffect(() => {
     const t = search.symbol?.trim();
     if (!t || symbolAppliedRef.current === t) return;
@@ -949,9 +950,13 @@ function Dashboard() {
     if (match) {
       setSymbol(match);
       symbolAppliedRef.current = t;
+      // Clicking an instrument in AI Signals should re-run the scan for that
+      // instrument and drop the trader straight into the chat conversation.
+      if (search.scan === "1") setPendingScanTicker(match.ticker);
     }
-    navigate({ to: "/dashboard", search: (prev: DashboardSearch) => ({ ...prev, symbol: undefined }), replace: true });
-  }, [search.symbol, navigate]);
+    navigate({ to: "/dashboard", search: (prev: DashboardSearch) => ({ ...prev, symbol: undefined, scan: undefined }), replace: true });
+  }, [search.symbol, search.scan, navigate]);
+
 
   // Honor ?thread= deep links (e.g. "AI chat" button on a journal trade)
   const threadAppliedRef = useRef<string | null>(null);
