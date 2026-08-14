@@ -14,6 +14,7 @@ import { useCoachVoice } from "@/hooks/useCoachVoice";
 import { DashboardChatPanel, type DashboardChatHandle } from "@/components/DashboardChatPanel";
 import { ChartConceptOverlay } from "@/components/ConceptDiagram";
 import { ChartSignalCards } from "@/components/ChartSignalCards";
+import { ChartTradeBar } from "@/components/ChartTradeBar";
 import { useTimezone, TIMEZONE_OPTIONS } from "@/hooks/useTimezone";
 import { computeTiming, clockLabel, tzAbbrev } from "@/lib/tradeTiming";
 
