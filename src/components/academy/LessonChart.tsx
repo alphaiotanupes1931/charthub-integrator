@@ -6,17 +6,18 @@ const ANIM_CSS = `
 @keyframes lcFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 @keyframes lcPop  { from { opacity: 0; transform: scale(.72); } to { opacity: 1; transform: scale(1); } }
 @keyframes lcPulse { 0%,100% { opacity: .9; } 50% { opacity: .35; } }
-.lc-live path[data-anim="draw"] { stroke-dasharray: 1400; stroke-dashoffset: 1400; animation: lcDraw 1.5s cubic-bezier(.4,0,.2,1) forwards; }
+.lc-live path[data-anim="draw"], .lc-live path[fill="none"] { stroke-dasharray: 1400; stroke-dashoffset: 1400; animation: lcDraw 1.5s cubic-bezier(.4,0,.2,1) forwards; }
 .lc-live g[data-anim="candle"] { opacity: 0; animation: lcPop .38s ease forwards; transform-box: fill-box; transform-origin: center; }
 .lc-live g[data-anim="tag"] { opacity: 0; animation: lcFade .5s ease forwards; animation-delay: 1.15s; }
 .lc-live rect[data-anim="zone"] { opacity: 0; animation: lcFade .7s ease .25s forwards; }
-.lc-live circle[data-anim="dot"] { opacity: 0; animation: lcPop .35s ease forwards; animation-delay: 1s; }
-.lc-live line[data-anim="level"] { animation: lcPulse 3.2s ease-in-out infinite; }
+.lc-live circle { opacity: 0; animation: lcPop .35s ease forwards; animation-delay: .9s; }
+.lc-live line[data-anim="level"], .lc-live line[stroke-dasharray="4 4"] { animation: lcPulse 3.2s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) {
-  .lc-live path[data-anim="draw"] { stroke-dashoffset: 0; animation: none; }
-  .lc-live g[data-anim], .lc-live rect[data-anim], .lc-live circle[data-anim] { opacity: 1; animation: none; }
-  .lc-live line[data-anim="level"] { animation: none; }
+  .lc-live path { stroke-dashoffset: 0 !important; animation: none !important; }
+  .lc-live g[data-anim], .lc-live rect[data-anim], .lc-live circle { opacity: 1; animation: none; }
+  .lc-live line { animation: none; }
 }
+
 `;
 
 /**
