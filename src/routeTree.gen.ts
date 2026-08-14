@@ -92,6 +92,7 @@ import { Route as ApiPublicHooksResolveSignalsRouteImport } from './routes/api.p
 import { Route as ApiPublicHooksReconcilePaperRouteImport } from './routes/api.public.hooks.reconcile-paper'
 import { Route as ApiPublicHooksPriceAlertsTickRouteImport } from './routes/api.public.hooks.price-alerts-tick'
 import { Route as ApiPublicHooksJournalVerifyTickRouteImport } from './routes/api.public.hooks.journal-verify-tick'
+import { Route as ApiPublicHooksJournalDailyCheckinRouteImport } from './routes/api.public.hooks.journal-daily-checkin'
 import { Route as ApiPublicHooksAutopilotTickRouteImport } from './routes/api.public.hooks.autopilot-tick'
 import { Route as ApiPublicHooksAiCreditsRouteImport } from './routes/api.public.hooks.ai-credits'
 import { Route as AppAcademyCertificateModuleIdRouteImport } from './routes/_app.academy.certificate.$moduleId'
@@ -524,6 +525,12 @@ const ApiPublicHooksJournalVerifyTickRoute =
     path: '/api/public/hooks/journal-verify-tick',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksJournalDailyCheckinRoute =
+  ApiPublicHooksJournalDailyCheckinRouteImport.update({
+    id: '/api/public/hooks/journal-daily-checkin',
+    path: '/api/public/hooks/journal-daily-checkin',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksAutopilotTickRoute =
   ApiPublicHooksAutopilotTickRouteImport.update({
     id: '/api/public/hooks/autopilot-tick',
@@ -623,6 +630,7 @@ export interface FileRoutesByFullPath {
   '/academy/certificate/$moduleId': typeof AppAcademyCertificateModuleIdRoute
   '/api/public/hooks/ai-credits': typeof ApiPublicHooksAiCreditsRoute
   '/api/public/hooks/autopilot-tick': typeof ApiPublicHooksAutopilotTickRoute
+  '/api/public/hooks/journal-daily-checkin': typeof ApiPublicHooksJournalDailyCheckinRoute
   '/api/public/hooks/journal-verify-tick': typeof ApiPublicHooksJournalVerifyTickRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
   '/api/public/hooks/reconcile-paper': typeof ApiPublicHooksReconcilePaperRoute
@@ -707,6 +715,7 @@ export interface FileRoutesByTo {
   '/academy/certificate/$moduleId': typeof AppAcademyCertificateModuleIdRoute
   '/api/public/hooks/ai-credits': typeof ApiPublicHooksAiCreditsRoute
   '/api/public/hooks/autopilot-tick': typeof ApiPublicHooksAutopilotTickRoute
+  '/api/public/hooks/journal-daily-checkin': typeof ApiPublicHooksJournalDailyCheckinRoute
   '/api/public/hooks/journal-verify-tick': typeof ApiPublicHooksJournalVerifyTickRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
   '/api/public/hooks/reconcile-paper': typeof ApiPublicHooksReconcilePaperRoute
@@ -797,6 +806,7 @@ export interface FileRoutesById {
   '/_app/academy/certificate/$moduleId': typeof AppAcademyCertificateModuleIdRoute
   '/api/public/hooks/ai-credits': typeof ApiPublicHooksAiCreditsRoute
   '/api/public/hooks/autopilot-tick': typeof ApiPublicHooksAutopilotTickRoute
+  '/api/public/hooks/journal-daily-checkin': typeof ApiPublicHooksJournalDailyCheckinRoute
   '/api/public/hooks/journal-verify-tick': typeof ApiPublicHooksJournalVerifyTickRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
   '/api/public/hooks/reconcile-paper': typeof ApiPublicHooksReconcilePaperRoute
@@ -887,6 +897,7 @@ export interface FileRouteTypes {
     | '/academy/certificate/$moduleId'
     | '/api/public/hooks/ai-credits'
     | '/api/public/hooks/autopilot-tick'
+    | '/api/public/hooks/journal-daily-checkin'
     | '/api/public/hooks/journal-verify-tick'
     | '/api/public/hooks/price-alerts-tick'
     | '/api/public/hooks/reconcile-paper'
@@ -971,6 +982,7 @@ export interface FileRouteTypes {
     | '/academy/certificate/$moduleId'
     | '/api/public/hooks/ai-credits'
     | '/api/public/hooks/autopilot-tick'
+    | '/api/public/hooks/journal-daily-checkin'
     | '/api/public/hooks/journal-verify-tick'
     | '/api/public/hooks/price-alerts-tick'
     | '/api/public/hooks/reconcile-paper'
@@ -1060,6 +1072,7 @@ export interface FileRouteTypes {
     | '/_app/academy/certificate/$moduleId'
     | '/api/public/hooks/ai-credits'
     | '/api/public/hooks/autopilot-tick'
+    | '/api/public/hooks/journal-daily-checkin'
     | '/api/public/hooks/journal-verify-tick'
     | '/api/public/hooks/price-alerts-tick'
     | '/api/public/hooks/reconcile-paper'
@@ -1105,6 +1118,7 @@ export interface RootRouteChildren {
   BrokerAlpacaCallbackRoute: typeof BrokerAlpacaCallbackRoute
   ApiPublicHooksAiCreditsRoute: typeof ApiPublicHooksAiCreditsRoute
   ApiPublicHooksAutopilotTickRoute: typeof ApiPublicHooksAutopilotTickRoute
+  ApiPublicHooksJournalDailyCheckinRoute: typeof ApiPublicHooksJournalDailyCheckinRoute
   ApiPublicHooksJournalVerifyTickRoute: typeof ApiPublicHooksJournalVerifyTickRoute
   ApiPublicHooksPriceAlertsTickRoute: typeof ApiPublicHooksPriceAlertsTickRoute
   ApiPublicHooksReconcilePaperRoute: typeof ApiPublicHooksReconcilePaperRoute
@@ -1701,6 +1715,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksJournalVerifyTickRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/journal-daily-checkin': {
+      id: '/api/public/hooks/journal-daily-checkin'
+      path: '/api/public/hooks/journal-daily-checkin'
+      fullPath: '/api/public/hooks/journal-daily-checkin'
+      preLoaderRoute: typeof ApiPublicHooksJournalDailyCheckinRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/autopilot-tick': {
       id: '/api/public/hooks/autopilot-tick'
       path: '/api/public/hooks/autopilot-tick'
@@ -1920,6 +1941,8 @@ const rootRouteChildren: RootRouteChildren = {
   BrokerAlpacaCallbackRoute: BrokerAlpacaCallbackRoute,
   ApiPublicHooksAiCreditsRoute: ApiPublicHooksAiCreditsRoute,
   ApiPublicHooksAutopilotTickRoute: ApiPublicHooksAutopilotTickRoute,
+  ApiPublicHooksJournalDailyCheckinRoute:
+    ApiPublicHooksJournalDailyCheckinRoute,
   ApiPublicHooksJournalVerifyTickRoute: ApiPublicHooksJournalVerifyTickRoute,
   ApiPublicHooksPriceAlertsTickRoute: ApiPublicHooksPriceAlertsTickRoute,
   ApiPublicHooksReconcilePaperRoute: ApiPublicHooksReconcilePaperRoute,
