@@ -162,17 +162,28 @@ export const getChatMessages = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: rows, error } = await context.supabase
       .from("chat_messages")
-      .select("id,role,parts,created_at")
+      .select("id,msg_id,role,parts,created_at")
       .eq("user_id", context.userId)
       .eq("thread_id", data.threadId)
       .order("created_at", { ascending: true });
     if (error) throw new Error(error.message);
-    return (rows ?? []).map((r) => ({
-      id: r.id as string,
-      role: r.role as "user" | "assistant" | "system",
-      parts: (r.parts ?? []) as Array<{ type: string; text?: string }>,
-    }));
+    const seen = new Set<string>();
+    return (rows ?? [])
+      .map((r) => ({
+        // Reuse the original message id so the next turn re-saves the same row
+        // instead of writing a duplicate copy of the history.
+        id: ((r as { msg_id?: string | null }).msg_id ?? (r.id as string)) as string,
+        role: r.role as "user" | "assistant" | "system",
+        parts: (r.parts ?? []) as Array<{ type: string; text?: string }>,
+      }))
+      .filter((m) => {
+        const key = `${m.role}:${JSON.stringify(m.parts)}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
   });
+
 
 export const renameChatThread = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -197,19 +208,21 @@ export const renameChatThread = createServerFn({ method: "POST" })
 export const appendAssistantChatMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z.object({ threadId: z.string().uuid(), text: z.string().min(1).max(20000) }).parse(d),
+    z.object({ threadId: z.string().uuid(), text: z.string().min(1).max(20000), msgId: z.string().max(120).optional() }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    const { error } = await context.supabase.from("chat_messages").insert({
+    const { error } = await context.supabase.from("chat_messages").upsert({
       thread_id: data.threadId,
       user_id: context.userId,
       client_id: context.userId,
+      msg_id: data.msgId ?? null,
       role: "assistant",
       parts: [{ type: "text", text: data.text }] as never,
-    });
+    } as never, { onConflict: "thread_id,msg_id", ignoreDuplicates: true });
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
 
 
 
