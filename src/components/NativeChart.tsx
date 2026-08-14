@@ -1178,7 +1178,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       )}
       {/* Order block boxes */}
       {obBoxes.length > 0 && (
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="pointer-events-none absolute inset-0 z-[6] overflow-hidden">
           {obBoxes.map((b) => (
             <div
               key={b.key}
