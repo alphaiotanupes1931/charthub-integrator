@@ -37,9 +37,10 @@ import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
 import { markTradeLogged, unmarkTradeLogged } from "@/lib/loggedTrades";
 
 import {
-  putTradeImage,
   getTradeImage,
-  deleteTradeImage,
+  getTradeImages,
+  putTradeImages,
+  deleteTradeImages,
   compressImageFile,
 } from "@/lib/journalImages";
 
@@ -1431,53 +1432,62 @@ function TradeFormModal({
   }, [date]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [pendingImage, setPendingImage] = useState<Blob | null>(null);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [removeImage, setRemoveImage] = useState(false);
+  // Multiple screenshots per trade: before/after, higher timeframe, execution.
+  const [images, setImages] = useState<{ blob: Blob; url: string }[]>([]);
+  const [imagesDirty, setImagesDirty] = useState(false);
 
   useEffect(() => {
-    let revokedUrl: string | null = null;
+    let active = true;
+    const urls: string[] = [];
     if (editing?.hasImage) {
-      void getTradeImage(editing.id).then((blob) => {
-        if (blob) {
+      void getTradeImages(editing.id, editing.imageCount ?? 1).then((blobs) => {
+        if (!active) return;
+        const next = blobs.map((blob) => {
           const url = URL.createObjectURL(blob);
-          revokedUrl = url;
-          setImageUrl(url);
-        }
+          urls.push(url);
+          return { blob, url };
+        });
+        setImages(next);
       });
     }
-    return () => { if (revokedUrl) URL.revokeObjectURL(revokedUrl); };
-  }, [editing?.id, editing?.hasImage]);
+    return () => { active = false; urls.forEach((u) => URL.revokeObjectURL(u)); };
+  }, [editing?.id, editing?.hasImage, editing?.imageCount]);
 
-  const handlePickFile = async (file: File | null | undefined) => {
-    if (!file || !file.type.startsWith("image/")) return;
-    const compressed = await compressImageFile(file);
-    setPendingImage(compressed);
-    setRemoveImage(false);
-    if (imageUrl) URL.revokeObjectURL(imageUrl);
-    setImageUrl(URL.createObjectURL(compressed));
+  const handlePickFiles = async (files: FileList | File[] | null | undefined) => {
+    const list = Array.from(files ?? []).filter((f) => f.type.startsWith("image/"));
+    if (!list.length) return;
+    const added: { blob: Blob; url: string }[] = [];
+    for (const file of list.slice(0, 12)) {
+      const compressed = await compressImageFile(file);
+      added.push({ blob: compressed, url: URL.createObjectURL(compressed) });
+    }
+    setImages((prev) => [...prev, ...added].slice(0, 12));
+    setImagesDirty(true);
   };
 
-  const clearImage = () => {
-    if (imageUrl) URL.revokeObjectURL(imageUrl);
-    setImageUrl(null);
-    setPendingImage(null);
-    setRemoveImage(true);
+  const removeImageAt = (i: number) => {
+    setImages((prev) => {
+      const target = prev[i];
+      if (target) URL.revokeObjectURL(target.url);
+      return prev.filter((_, idx) => idx !== i);
+    });
+    setImagesDirty(true);
   };
 
   useEffect(() => {
     const onPaste = (e: ClipboardEvent) => {
-      const item = Array.from(e.clipboardData?.items ?? []).find((i) => i.type.startsWith("image/"));
-      if (!item) return;
-      const file = item.getAsFile();
-      if (file) void handlePickFile(file);
+      const files = Array.from(e.clipboardData?.items ?? [])
+        .filter((i) => i.type.startsWith("image/"))
+        .map((i) => i.getAsFile())
+        .filter((f): f is File => !!f);
+      if (files.length) void handlePickFiles(files);
     };
     window.addEventListener("paste", onPaste);
     return () => window.removeEventListener("paste", onPaste);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const hasImage = !!pendingImage || (!!editing?.hasImage && !removeImage);
+  const hasImage = images.length > 0;
 
   // A trade you just took has no exit yet. Treat a blank exit as "still open"
   // and fall back to the entry so P&L reads 0 until the trade is closed.
@@ -1503,6 +1513,9 @@ function TradeFormModal({
     ruleBrokenNote: ruleBroken ? (ruleBrokenNote || undefined) : undefined,
     lossCategory: lossCategory || undefined,
     hasImage,
+    imageCount: images.length || undefined,
+    executed: editing?.executed,
+    executedAt: editing?.executedAt,
     followedPlan: followedPlan || undefined,
     gradeMatch: gradeMatch || undefined,
     takeaway: takeaway.trim() || undefined,
@@ -1527,10 +1540,9 @@ function TradeFormModal({
     if (!canSave) return;
 
     const id = editing?.id ?? `t_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
-    if (pendingImage) {
-      await putTradeImage(id, pendingImage);
-    } else if (removeImage && editing?.hasImage) {
-      await deleteTradeImage(id);
+    if (imagesDirty || !editing) {
+      await deleteTradeImages(id, Math.max(12, editing?.imageCount ?? 1));
+      if (images.length) await putTradeImages(id, images.map((i) => i.blob));
     }
     if (mentalScore != null) {
       const existing = loadMental().find((e) => e.date === date);
@@ -1743,45 +1755,40 @@ function TradeFormModal({
             />
           </Field>
 
-          <Field label="Chart screenshot (stays on this device)">
+          <Field label="Chart screenshots (stay on this device)">
             <input
               ref={fileInputRef}
               type="file"
               accept="image/*"
+              multiple
               className="hidden"
-              onChange={(e) => { void handlePickFile(e.target.files?.[0]); e.target.value = ""; }}
+              onChange={(e) => { void handlePickFiles(e.target.files); e.target.value = ""; }}
             />
-            {imageUrl ? (
-              <div className="relative rounded-xl border border-border/60 overflow-hidden bg-background">
-                <img src={imageUrl} alt="Trade screenshot" className="w-full max-h-72 object-contain" />
-                <div className="absolute top-2 right-2 flex gap-1">
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="rounded bg-background/80 backdrop-blur px-2 py-1 text-[10px] font-medium border border-border/60 hover:bg-accent"
-                  >
-                    Replace
-                  </button>
-                  <button
-                    type="button"
-                    onClick={clearImage}
-                    className="rounded bg-background/80 backdrop-blur px-2 py-1 text-[10px] font-medium border border-border/60 text-destructive hover:bg-destructive/10"
-                  >
-                    Remove
-                  </button>
-                </div>
+            {images.length > 0 && (
+              <div className="grid grid-cols-2 gap-2 mb-2">
+                {images.map((img, i) => (
+                  <div key={img.url} className="relative rounded-xl border border-border/60 overflow-hidden bg-background">
+                    <img src={img.url} alt={`Trade screenshot ${i + 1}`} className="w-full max-h-48 object-contain" />
+                    <button
+                      type="button"
+                      onClick={() => removeImageAt(i)}
+                      className="absolute top-1.5 right-1.5 rounded bg-background/80 px-2 py-1 text-[10px] font-medium border border-border/60 text-destructive hover:bg-destructive/10"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
               </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full rounded-xl border border-dashed border-border/60 bg-background/40 px-3 py-6 text-sm text-muted-foreground hover:border-primary/40 hover:text-foreground transition flex flex-col items-center gap-1.5"
-              >
-                <Upload className="h-4 w-4" />
-                <span>Upload screenshot or paste from clipboard</span>
-                <span className="text-[10px]">Stored only on your device</span>
-              </button>
             )}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full rounded-xl border border-dashed border-border/60 bg-background/40 px-3 py-5 text-sm text-muted-foreground hover:border-primary/40 hover:text-foreground transition flex flex-col items-center gap-1.5"
+            >
+              <Upload className="h-4 w-4" />
+              <span>{images.length ? "Add another screenshot" : "Upload screenshots or paste from clipboard"}</span>
+              <span className="text-[10px]">You can pick several at once · stored only on your device</span>
+            </button>
           </Field>
 
           <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
