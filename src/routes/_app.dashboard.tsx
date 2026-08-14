@@ -444,6 +444,20 @@ function ScanTicket({
             </Link>
           )}
 
+          {!isNoEntry && (
+            <PassTradeButton
+              setup={{
+                symbol: symbol.ticker,
+                interval,
+                grade: result.grade,
+                bias: result.bias,
+                entry: parseNum(result.entry),
+                stop: parseNum(result.stop),
+                tp1: parseNum(result.tp1),
+              }}
+            />
+          )}
+
           <AutoBacktestVerify
             symbol={symbol.ticker}
             interval={interval}
