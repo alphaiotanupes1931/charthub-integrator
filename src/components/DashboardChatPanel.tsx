@@ -568,18 +568,20 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
       // Persist it too: this message is generated client-side (the Analysis
       // engine's grade card), so without this the setup disappears when the
       // thread is reopened from history.
+      const id = crypto.randomUUID();
       if (UUID_RE.test(threadId)) {
-        void persistAssistant({ data: { threadId, text } }).catch(() => { /* best-effort */ });
+        void persistAssistant({ data: { threadId, text, msgId: id } }).catch(() => { /* best-effort */ });
       }
       setMessages((prev) => [
         ...prev,
         {
-          id: crypto.randomUUID(),
+          id,
           role: "assistant",
           parts: [{ type: "text", text }],
         } as UIMessage,
       ]);
     }, [setMessages, threadId, persistAssistant]);
+
 
     const chatBusy = status === "submitted" || status === "streaming";
     const loading = scanning || chatBusy;

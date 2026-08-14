@@ -756,7 +756,29 @@ export const Route = createFileRoute("/api/chat")({
             return new Response("Forbidden", { status: 403, headers: cors });
           }
           thread = threadRow;
+
+          // Save the incoming turn(s) right away so a refresh mid-stream never
+          // loses what the trader typed. Deduped on (thread_id, msg_id).
+          if (sb && userId) {
+            const rows = (messages as Array<{ id?: string; role: string; parts: unknown }>)
+              .filter((m) => m && typeof m.id === "string" && m.id && Array.isArray(m.parts))
+              .map((m) => ({
+                thread_id: threadId,
+                user_id: userId as string,
+                client_id: userId as string,
+                msg_id: m.id as string,
+                role: m.role,
+                parts: m.parts as unknown as Json,
+              }));
+            if (rows.length > 0) {
+              const { error: preErr } = await sb
+                .from("chat_messages")
+                .upsert(rows as never, { onConflict: "thread_id,msg_id", ignoreDuplicates: true });
+              if (preErr) console.error("[chat] pre-persist error", preErr.message);
+            }
+          }
         }
+
 
         // --- Daily AI cap per user (UTC) - admins bypass ---
         let isAdmin = false;
@@ -966,28 +988,29 @@ export const Route = createFileRoute("/api/chat")({
           headers: { "X-Request-Id": reqId },
           originalMessages: messages,
           onFinish: async ({ messages: finalMessages, isAborted }) => {
-            if (isAborted) return;
+            // Even an aborted stream keeps whatever text was produced, so the
+            // partial reply survives a refresh instead of vanishing.
             if (!shouldPersist || !thread) return;
             try {
               if (!sb || !userId) return;
-              const { data: existing } = await sb
-                .from("chat_messages")
-                .select("id")
-                .eq("thread_id", threadId);
-              const existingIds = new Set((existing ?? []).map((r) => r.id as string));
-              const toInsert = finalMessages
-                .filter((m) => !existingIds.has(m.id))
+              const rows = finalMessages
+                .filter((m) => Array.isArray(m.parts) && m.parts.length > 0)
                 .map((m) => ({
                   thread_id: threadId,
-                  user_id: userId,
-                  client_id: userId, // legacy NOT NULL column
+                  user_id: userId as string,
+                  client_id: userId as string, // legacy NOT NULL column
+                  msg_id: m.id,
                   role: m.role,
                   parts: m.parts as unknown as Json,
                 }));
-              if (toInsert.length > 0) {
-                const { error } = await sb.from("chat_messages").insert(toInsert);
+              if (rows.length > 0) {
+                const { error } = await sb
+                  .from("chat_messages")
+                  .upsert(rows as never, { onConflict: "thread_id,msg_id" });
                 if (error) console.error("[chat] persist error", error.message);
               }
+              if (isAborted) return;
+
               // Keep history titled by the instrument on the chart, not by the
               // first casual message like "yo".
               const chartTitle = historyTitleFromChart(enrichedChart ?? chart);

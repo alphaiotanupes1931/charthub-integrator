@@ -463,6 +463,7 @@ export type Database = {
           client_id: string
           created_at: string
           id: string
+          msg_id: string | null
           parts: Json
           role: string
           thread_id: string
@@ -472,6 +473,7 @@ export type Database = {
           client_id: string
           created_at?: string
           id?: string
+          msg_id?: string | null
           parts: Json
           role: string
           thread_id: string
@@ -481,6 +483,7 @@ export type Database = {
           client_id?: string
           created_at?: string
           id?: string
+          msg_id?: string | null
           parts?: Json
           role?: string
           thread_id?: string
