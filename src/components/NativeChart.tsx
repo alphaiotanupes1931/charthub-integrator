@@ -337,6 +337,8 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
   const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
   const linesRef = useRef<IPriceLine[]>([]);
   const annLinesRef = useRef<IPriceLine[]>([]);
+  const vwapSeriesRef = useRef<ISeriesApi<"Line">[]>([]);
+  const vwapMarkersRef = useRef<ISeriesMarkersPluginApi<Time> | null>(null);
   const [ready, setReady] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);
   const [initAttempt, setInitAttempt] = useState(0);
