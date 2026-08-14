@@ -11,6 +11,10 @@ import { useQuery } from "@tanstack/react-query";
 import {
   createChart,
   CandlestickSeries,
+  BarSeries,
+  AreaSeries,
+  BaselineSeries,
+  HistogramSeries,
   LineSeries,
   createSeriesMarkers,
   type ISeriesMarkersPluginApi,
@@ -19,8 +23,10 @@ import {
   type Time,
   type IPriceLine,
   LineStyle,
+  LineType,
   CrosshairMode,
 } from "lightweight-charts";
+import { getCandleStyle, type CandleStyleId } from "@/lib/candleStyles";
 import type { OhlcResponse } from "@/routes/api.ohlc";
 import { useTimeFormat, formatTime } from "@/hooks/useTimeFormat";
 import { useTimezone } from "@/hooks/useTimezone";
@@ -89,7 +95,7 @@ interface Props {
   sessions?: boolean;
   onSnapshot?: (snap: ChartSnapshot) => void;
   annotations?: import("@/lib/chartAnnotations").ChartAnnotation[];
-  candleType?: "candle" | "ha";
+  candleType?: CandleStyleId;
   className?: string;
 }
 
@@ -522,11 +528,46 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
           timeFormatter: (time: number) => fmtDateTime(time),
         },
       });
-      series = chart.addSeries(CandlestickSeries, {
-        upColor: candleColors.up, downColor: candleColors.down,
-        borderUpColor: candleColors.borderUp, borderDownColor: candleColors.borderDown,
-        wickUpColor: candleColors.wickUp, wickDownColor: candleColors.wickDown,
-      });
+      const style = getCandleStyle(candleType);
+      if (style.kind === "bar") {
+        series = chart.addSeries(BarSeries, {
+          upColor: candleColors.up, downColor: candleColors.down, thinBars: true,
+        }) as unknown as ISeriesApi<"Candlestick">;
+      } else if (style.kind === "line") {
+        series = chart.addSeries(LineSeries, {
+          color: candleColors.up,
+          lineWidth: 2,
+          lineType: style.stepped ? LineType.WithSteps : LineType.Simple,
+          pointMarkersVisible: !!style.markers,
+        }) as unknown as ISeriesApi<"Candlestick">;
+      } else if (style.kind === "area") {
+        series = chart.addSeries(AreaSeries, {
+          lineColor: candleColors.up,
+          topColor: `${candleColors.up}55`,
+          bottomColor: `${candleColors.up}05`,
+          lineWidth: 2,
+        }) as unknown as ISeriesApi<"Candlestick">;
+      } else if (style.kind === "baseline") {
+        series = chart.addSeries(BaselineSeries, {
+          topLineColor: candleColors.up,
+          topFillColor1: `${candleColors.up}55`,
+          topFillColor2: `${candleColors.up}05`,
+          bottomLineColor: candleColors.down,
+          bottomFillColor1: `${candleColors.down}05`,
+          bottomFillColor2: `${candleColors.down}55`,
+        }) as unknown as ISeriesApi<"Candlestick">;
+      } else if (style.kind === "histogram") {
+        series = chart.addSeries(HistogramSeries, {
+          color: candleColors.up,
+        }) as unknown as ISeriesApi<"Candlestick">;
+      } else {
+        series = chart.addSeries(CandlestickSeries, {
+          upColor: style.hollow ? "rgba(0,0,0,0)" : candleColors.up,
+          downColor: candleColors.down,
+          borderUpColor: candleColors.borderUp, borderDownColor: candleColors.borderDown,
+          wickUpColor: candleColors.wickUp, wickDownColor: candleColors.wickDown,
+        });
+      }
     } catch (err) {
       // Never leave a blank panel: fall back to the lightweight SVG renderer.
       setInitError(err instanceof Error ? err.message : "Chart engine failed to start");
@@ -543,17 +584,20 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       seriesRef.current = null;
       setReady(false);
     };
-  }, [resolvedTimezone, timeFormat, initAttempt]);
+  }, [resolvedTimezone, timeFormat, initAttempt, candleType]);
 
   // Apply live candle-color updates without recreating the chart
   useEffect(() => {
     if (!ready || !seriesRef.current) return;
+    const style = getCandleStyle(candleType);
+    if (style.kind !== "candlestick") return;
     seriesRef.current.applyOptions({
-      upColor: candleColors.up, downColor: candleColors.down,
+      upColor: style.hollow ? "rgba(0,0,0,0)" : candleColors.up,
+      downColor: candleColors.down,
       borderUpColor: candleColors.borderUp, borderDownColor: candleColors.borderDown,
       wickUpColor: candleColors.wickUp, wickDownColor: candleColors.wickDown,
     });
-  }, [ready, candleColors]);
+  }, [ready, candleColors, candleType]);
 
   // Apply live chart-background updates without recreating the chart
   useEffect(() => {
@@ -569,32 +613,51 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     });
   }, [ready, chartBg]);
 
-  // Convert to Heikin-Ashi when requested
-  const displayCandles = useMemo<Candle[]>(() => {
-    if (candleType !== "ha" || candles.length === 0) return candles;
-    const out: Candle[] = [];
-    for (let i = 0; i < candles.length; i++) {
-      const c = candles[i];
-      const haClose = (c.open + c.high + c.low + c.close) / 4;
-      const prev = out[i - 1];
-      const haOpen = prev ? (prev.open + prev.close) / 2 : (c.open + c.close) / 2;
-      const haHigh = Math.max(c.high, haOpen, haClose);
-      const haLow  = Math.min(c.low,  haOpen, haClose);
-      out.push({ time: c.time, open: haOpen, high: haHigh, low: haLow, close: haClose });
+  // Transform raw bars into the selected display style (Heikin Ashi, Renko,
+  // Kagi, line variants, ...). Value-based styles are also expressed as flat
+  // candles so drawing/magnet/fallback logic keeps working.
+  const styleData = useMemo(() => {
+    const style = getCandleStyle(candleType);
+    if (candles.length === 0) return { style, ohlc: [] as Candle[], values: [] as Array<{ time: number; value: number; color?: string }> };
+    const raw = candles.map((c) => ({ time: Number(c.time), open: c.open, high: c.high, low: c.low, close: c.close }));
+    if (style.ohlc) {
+      const out = style.ohlc(raw);
+      return { style, ohlc: out.map((p) => ({ ...p, time: p.time as Time })) as Candle[], values: [] };
     }
-    return out;
-  }, [candles, candleType]);
+    const vals = (style.values?.(raw) ?? []).map((p, i, arr) => ({
+      ...p,
+      color: style.kind === "histogram"
+        ? (i > 0 && p.value < arr[i - 1].value ? candleColors.down : candleColors.up)
+        : undefined,
+    }));
+    return {
+      style,
+      ohlc: vals.map((p) => ({ time: p.time as Time, open: p.value, high: p.value, low: p.value, close: p.value })) as Candle[],
+      values: vals,
+    };
+  }, [candles, candleType, candleColors]);
 
-  // Push candle data
+  const displayCandles = styleData.ohlc;
+
+  // Push data in the shape the active series expects
   useEffect(() => {
     if (!ready || !seriesRef.current || !chartRef.current) return;
     try {
-      seriesRef.current.setData(displayCandles);
+      const { style, ohlc, values } = styleData;
+      if (style.kind === "candlestick" || style.kind === "bar") {
+        seriesRef.current.setData(ohlc);
+      } else {
+        if (style.kind === "baseline" && values.length) {
+          const base = values[0].value;
+          seriesRef.current.applyOptions({ baseValue: { type: "price", price: base } } as never);
+        }
+        seriesRef.current.setData(values as never);
+      }
       chartRef.current.timeScale().fitContent();
     } catch (err) {
       setInitError(err instanceof Error ? err.message : "Chart data could not be drawn");
     }
-  }, [displayCandles, ready]);
+  }, [styleData, ready]);
 
   // Blank-panel guard: if we have candles but the canvas never got real pixels
   // (hidden container at mount, zero-size layout, engine hiccup), fall back to
