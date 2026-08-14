@@ -438,7 +438,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       vwap: levels.vwap,
       poc: levels.poc,
       sr: levels.sr,
-      fib: levels.fib,
+      fib: (fibStudy?.levels ?? levels.fib).map((f) => ({ ratio: f.ratio, price: f.price })),
       liq: levels.liq,
       of: levels.of,
       delta: levels.delta,
@@ -449,7 +449,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     onSnapshot(snap);
     // intentionally exclude onSnapshot identity from deps to avoid loops
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [candles, levels, ticker, interval, liveOhlc?.source, sourceLabel, activeSessionsNow]);
+  }, [candles, levels, fibStudy, ticker, interval, liveOhlc?.source, sourceLabel, activeSessionsNow]);
 
   // Init / teardown chart. Re-init when timezone changes so axis + crosshair labels re-render in the new zone.
   useEffect(() => {
@@ -680,7 +680,20 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       add(g.top, LEVEL_META.FVG.color, `FVG ${i + 1} ↑`, true);
       add(g.bot, LEVEL_META.FVG.color, `FVG ${i + 1} ↓`, true);
     });
-    if (enabled.FIB) levels.fib.forEach((f) => add(f.price, LEVEL_META.FIB.color, `Fib ${f.ratio}`, true));
+    if (enabled.FIB && fibStudy) {
+      fibStudy.levels.forEach((f) => {
+        const anchor = f.ratio === 0 || f.ratio === 1;
+        const line = s.createPriceLine({
+          price: f.price,
+          color: f.color,
+          lineWidth: 1,
+          lineStyle: anchor ? LineStyle.Solid : f.ratio > 1 ? LineStyle.Dotted : LineStyle.Dashed,
+          axisLabelVisible: true,
+          title: f.label,
+        });
+        linesRef.current.push(line);
+      });
+    }
     if (enabled.LIQ) levels.liq.forEach((l) => add(l.price, LEVEL_META.LIQ.color, l.side === "buy" ? "Buy-side liq" : "Sell-side liq"));
     if (enabled.OF) levels.of.forEach((o, i) =>
       add(o.price, LEVEL_META.OF.color, `${o.side === "buy" ? "OF↑" : "OF↓"} ${i + 1}`, true),
@@ -692,7 +705,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       add(cisd.proj1,   LEVEL_META.CISD.color, `CISD 1x → ${cisd.proj1.toFixed(2)}`, true);
       add(cisd.proj2,   LEVEL_META.CISD.color, `CISD 2x → ${cisd.proj2.toFixed(2)}`, true);
     }
-  }, [enabled, levels, cisd, ready]);
+  }, [enabled, levels, fibStudy, cisd, ready]);
 
   // ---- Sessions overlay ----
   useEffect(() => {
