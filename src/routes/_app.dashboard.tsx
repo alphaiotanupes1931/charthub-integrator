@@ -491,6 +491,37 @@ function ScanTicket({
         </div>
       )}
 
+      {/* When to enter, when to give up on the entry, when to be flat, and how
+          to scale out by R multiple. Times follow the trader's timezone. */}
+      {!isNoEntry && panelTiming && (
+        <MetricBlock
+          title="Timing and management"
+          tag={panelTiming.live ? "Window open" : "Window later"}
+          tone={panelTiming.live ? "good" : "neutral"}
+        >
+          <MetricRow label="Session" value={panelTiming.session} />
+          <MetricRow label="Enter from" value={clockLabel(panelTiming.enterFrom, panelTz)} />
+          <MetricRow label="Enter before" value={clockLabel(panelTiming.enterUntil, panelTz)} />
+          <MetricRow label="Cancel if unfilled" value={clockLabel(panelTiming.cancelIfUnfilled, panelTz)} />
+          <MetricRow label="Exit by" value={clockLabel(panelTiming.exitBy, panelTz)} />
+          <MetricRow label="Expected hold" value={panelTiming.holdTime} />
+          <MetricRow label="TP1 / TP2 in R" value={`${panelTiming.tp1R.toFixed(1)}R / ${panelTiming.tp2R.toFixed(1)}R`} />
+          <p className="pt-1 text-[10px] leading-relaxed text-foreground">{panelTiming.ratioAdvice}</p>
+          <div className="space-y-1 pt-1">
+            {panelTiming.scale.map((s2) => (
+              <div key={s2.label} className="flex items-baseline gap-2 text-[10px]">
+                <span className="w-14 shrink-0 font-semibold tracking-wider text-muted-foreground">{s2.label}</span>
+                <span className="font-mono text-foreground">{s2.price}</span>
+                <span className="text-muted-foreground">{s2.action}</span>
+              </div>
+            ))}
+          </div>
+          <p className="pt-1 text-[10px] text-muted-foreground">
+            All times in {panelTz}{panelTzLabel ? ` (${panelTzLabel})` : ""}.
+          </p>
+        </MetricBlock>
+      )}
+
       {/* Daily bias and current trend - they can disagree, and that matters */}
       <MetricBlock
         title="Bias and trend"
