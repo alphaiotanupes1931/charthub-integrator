@@ -119,7 +119,7 @@ const module1: Module = {
           "Price on the side, showing how expensive the asset is",
           "Bars or candles in the middle, each one covering a set slice of time",
         ]},
-        { kind: "callout", tone: "amber", label: "Simple Example", body: "If you look at a chart and the marks are climbing from lower-left to upper-right, price is going up over time. If they are dropping the other way, price is going down. That is the whole idea.", chart: "trend-up", caption: "Bottom to top means price is rising as time passes. That is an uptrend." },
+        { kind: "callout", tone: "amber", label: "Simple Example", body: "If you look at a chart and the marks are climbing from lower-left to upper-right, price is going up over time. If they are dropping the other way, price is going down. That is the whole idea.", chart: "chart-axes", caption: "Time runs left to right, price runs bottom to top. Rising marks mean an uptrend." },
         { kind: "callout", tone: "violet", label: "On a Real Chart", body: "Real charts pack a lot of information into a small space, but the two axes never change. Time on the bottom, price on the side. Everything else is just detail layered on top.", chart: "candles-generic", caption: "Read left to right. The newest bar is always on the right edge." },
         takeaway("A chart is a picture of price over time. If you can find the two axes and understand which way price moved, you are already reading it correctly."),
       ],
@@ -136,7 +136,7 @@ const module1: Module = {
           "The wicks: the thin lines above and below the body, showing the highest and lowest prices reached",
           "The color: green or teal usually means price closed higher than it opened, red usually means it closed lower",
         ]},
-        { kind: "callout", tone: "amber", label: "Simple Example", body: "A green candle with a small wick on top and a long body means buyers were in control for that whole period. A red candle with a long lower wick means sellers pushed price down, but buyers fought back before the close.", chart: "candles-generic", caption: "Body shows the open-to-close range. Wicks show how far price traveled outside that range." },
+        { kind: "callout", tone: "amber", label: "Simple Example", body: "A green candle with a small wick on top and a long body means buyers were in control for that whole period. A red candle with a long lower wick means sellers pushed price down, but buyers fought back before the close.", chart: "candle-anatomy", caption: "Body shows the open-to-close range. Wicks show how far price traveled outside that range." },
         { kind: "callout", tone: "violet", label: "On a Real Chart", body: "You will see clusters of candles that tell a story. A run of green candles means momentum is up. A big red candle after a run of green ones can mean the story is changing.", chart: "candles-zones", caption: "Groups of candles reveal momentum. One candle rarely tells the full story on its own." },
         takeaway("A candle is four numbers in one shape. Body for open and close, wicks for the extremes, color for direction. That is all you need to read them."),
       ],
@@ -153,7 +153,7 @@ const module1: Module = {
           "Lower timeframes like the 5-minute and 15-minute show intraday detail and noise",
           "The higher timeframe wins arguments. If the daily is up, small dips on the 15-minute usually get bought back",
         ]},
-        { kind: "callout", tone: "amber", label: "Simple Example", body: "Zoom out to the daily and you might see a clear uptrend for weeks. Zoom into the 5-minute and you see wobbly ups and downs. Both are true. One is the story, the other is the sentence.", chart: "trend-up", caption: "Same asset, different zoom. Higher timeframes filter out the noise." },
+        { kind: "callout", tone: "amber", label: "Simple Example", body: "Zoom out to the daily and you might see a clear uptrend for weeks. Zoom into the 5-minute and you see wobbly ups and downs. Both are true. One is the story, the other is the sentence.", chart: "timeframe-zoom", caption: "Same asset, different zoom. Higher timeframes filter out the noise." },
         takeaway("Higher timeframe for context. Lower timeframe for timing. Always know which one you are looking at."),
       ],
     },
@@ -214,6 +214,7 @@ const module1: Module = {
           "Rallies on falling volume often stall",
           "Reversals on a big volume spike deserve extra attention",
         ]},
+        { kind: "chart", chart: "volume-basics", caption: "Volume bars under price. Breaks with a volume spike carry more weight than quiet drifts." },
         takeaway("Volume is the fuel behind price. A move without fuel usually does not go far."),
       ],
     },
@@ -275,6 +276,7 @@ const module2: Module = {
           "Watch what happens on the retest. A real break holds, a fakeout snaps back",
           "Volume can confirm. Real breaks usually come with a step up in participation",
         ]},
+        { kind: "chart", chart: "fakeout", caption: "A wick beyond the level is a fakeout. A body close beyond it is a real break." },
         takeaway("Do not chase the first candle across a level. Let the market prove the break with a close and a hold."),
       ],
     },
@@ -289,6 +291,7 @@ const module2: Module = {
         { kind: "callout", tone: "sky", label: "B — Breathe", body: "Price pulls back toward the level after the break. This is the retest phase." },
         { kind: "callout", tone: "violet", label: "H — Hold", body: "The old level acts as new support or resistance. Price does not close back through it." },
         { kind: "callout", tone: "emerald", label: "G — Go", body: "Momentum resumes in the direction of the break. This is where the real move happens." },
+        { kind: "chart", chart: "bbhg", caption: "All four BBHG phases in order: break the level, breathe back into it, hold it, then go." },
         takeaway("BBHG is a checklist. If you cannot name all four phases on your setup, wait for one that lets you."),
       ],
     },
@@ -299,6 +302,7 @@ const module2: Module = {
       minutes: 4,
       blocks: [
         { kind: "intro", text: "Price hitting a level is a question. The reaction is the answer. A soft touch and reverse means the level is respected. A slice straight through means the level is broken. Wicks that fail to close beyond mean rejection." },
+        { kind: "chart", chart: "reaction-map", caption: "Three reactions at the same level: respected, rejected, broken." },
         takeaway("Do not predict what price will do at a level. Watch what it actually does, then act."),
       ],
     },
@@ -309,6 +313,7 @@ const module2: Module = {
       minutes: 4,
       blocks: [
         { kind: "intro", text: "A momentum shift is when the character of the move changes. Bigger red candles inside an uptrend. Smaller and smaller pushes to new highs. These are the earliest hints that the tide is turning, before any structure breaks." },
+        { kind: "chart", chart: "momentum-shift", caption: "Pushes get smaller, then sellers take over. Momentum shifts before structure does." },
         takeaway("Watch the size and speed of the candles. Momentum shifts precede structural shifts."),
       ],
     },
@@ -319,6 +324,7 @@ const module2: Module = {
       minutes: 4,
       blocks: [
         { kind: "intro", text: "Reading price behavior is a three-step loop. What is the structure? What level are we near? What is the reaction? Do that on every chart, every timeframe, and the market starts to make sense." },
+        { kind: "chart", chart: "read-loop", caption: "Structure, level, reaction. Run the loop on every chart." },
         takeaway("Structure, level, reaction. Repeat until it feels automatic."),
       ],
     },
@@ -345,6 +351,7 @@ const module3: Module = {
           "Stop: rest an order beyond a level, only fills if price breaks through",
         ]},
         { kind: "callout", tone: "emerald", label: "Rule of thumb", body: "If the setup is not clean enough to explain in one sentence, do not take it." },
+        { kind: "chart", chart: "entry-types", caption: "Market fills now, limit waits below price, stop triggers above price." },
         takeaway("Entries are decisions. Slow down enough to make them on purpose."),
       ],
     },
@@ -352,6 +359,7 @@ const module3: Module = {
       id: "3.2", title: "Exits", summary: "Exits win or lose the game. Plan them before you enter.", minutes: 4,
       blocks: [
         { kind: "intro", text: "Every trade needs two exits: one where you are wrong (the stop) and one where you are right (the target). Decide both before you click buy. Once the trade is live, emotions try to change the plan." },
+        { kind: "chart", chart: "exit-plan", caption: "Both exits mapped before entry: stop zone below, target zone above." },
         takeaway("Both exits get planned before entry. That is the rule."),
       ],
     },
@@ -359,6 +367,7 @@ const module3: Module = {
       id: "3.3", title: "Invalidation", summary: "The price that says the setup is broken.", minutes: 4,
       blocks: [
         { kind: "intro", text: "Invalidation is the price that proves you were wrong. Not almost wrong, actually wrong. Your stop lives just beyond invalidation, so if the idea is broken, you are out quickly and cheaply." },
+        { kind: "chart", chart: "invalidation", caption: "Invalidation is a price, not a feeling. Beyond it, the idea is dead." },
         takeaway("Invalidation is a level, not a feeling. Find it before you enter."),
       ],
     },
@@ -367,6 +376,7 @@ const module3: Module = {
       blocks: [
         { kind: "intro", text: "Risk to reward is the ratio between what you can lose and what you can win. If you risk one to make one, you need to be right most of the time. If you risk one to make three, you can be wrong more than half the time and still profit." },
         { kind: "callout", tone: "amber", label: "Rule of thumb", body: "Aim for at least 1:2. Anything below 1:1.5 is usually not worth the mental cost." },
+        { kind: "chart", chart: "rr-ladder", caption: "Risk one to make three. You can be wrong more than half the time and still profit." },
         takeaway("A great trader with bad risk-reward loses money. A mediocre trader with great risk-reward wins over time."),
       ],
     },
@@ -374,6 +384,7 @@ const module3: Module = {
       id: "3.5", title: "When Not to Trade", summary: "The best trade is often no trade.", minutes: 4,
       blocks: [
         { kind: "intro", text: "There are days where the chart offers nothing clean. There are moods where your judgement is off. There are news events where price does not follow structure. On those days, the winning move is to close the platform." },
+        { kind: "chart", chart: "no-trade", caption: "Chop with no clean level. This is a day to stay flat." },
         takeaway("You do not have to trade every day. The market will be here tomorrow."),
       ],
     },
@@ -394,6 +405,7 @@ const module4: Module = {
       id: "4.1", title: "Spot the Phase", summary: "Name whether price is trending, ranging, or reversing.", minutes: 4,
       blocks: [
         { kind: "intro", text: "Practice by opening any chart and naming what price is doing in one sentence. Uptrend on the daily, range on the 1-hour, reversal forming on the 15-minute. If you cannot name it, you cannot trade it." },
+        { kind: "chart", chart: "phase-map", caption: "Trend, range, reverse. Name the phase before anything else." },
         takeaway("If you cannot name the phase, you have no business being in the trade."),
       ],
     },
@@ -401,6 +413,7 @@ const module4: Module = {
       id: "4.2", title: "Break, Breathe, Hold, or Go?", summary: "Say which BBHG phase price is in right now.", minutes: 4,
       blocks: [
         { kind: "intro", text: "Look at your current setup. Which BBHG phase is price in? Missing a phase means missing a piece of the setup. Naming it out loud forces you to see clearly." },
+        { kind: "chart", chart: "bbhg", caption: "Point at the chart and say which BBHG phase price is in right now." },
         takeaway("Say the phase out loud. It sharpens your read every time."),
       ],
     },
@@ -417,6 +430,7 @@ const module4: Module = {
       id: "4.4", title: "Read the Reaction", summary: "How did price behave at the last touch?", minutes: 4,
       blocks: [
         { kind: "intro", text: "Look at the last time price hit your level. Did it wick and reverse? Did it break through? Did it grind through slowly? The most recent reaction is a strong clue about the next one." },
+        { kind: "chart", chart: "reaction-map", caption: "Check the last touch. Respected, rejected, or broken?" },
         takeaway("Recent behavior is the best guess for near-term behavior."),
       ],
     },
@@ -424,6 +438,7 @@ const module4: Module = {
       id: "4.5", title: "Where Would You Place a Stop?", summary: "Practice defining risk on every chart you look at.", minutes: 4,
       blocks: [
         { kind: "intro", text: "Even when you are not trading, practice placing a mental stop. Where is the price that says you are wrong? Doing this on every chart trains your eye to see risk first." },
+        { kind: "chart", chart: "stop-zones", caption: "Stops belong beyond structure, not right at the level." },
         takeaway("Practice placing stops even when you are not trading."),
       ],
     },
@@ -431,6 +446,7 @@ const module4: Module = {
       id: "4.6", title: "Where Would You Take Profit?", summary: "Every stop needs a target on the other side.", minutes: 4,
       blocks: [
         { kind: "intro", text: "The other half of the practice. Where would you take profit? Aim for a level with clear historical significance, at least twice as far as your stop." },
+        { kind: "chart", chart: "target-zones", caption: "Target the next obvious level, then the major one beyond it." },
         takeaway("A target without a level is a guess. Always anchor to structure."),
       ],
     },
@@ -438,6 +454,7 @@ const module4: Module = {
       id: "4.7", title: "Explain It in One Sentence", summary: "If you can not, do not trade it.", minutes: 4,
       blocks: [
         { kind: "intro", text: "The final filter. Explain the setup out loud in one sentence: what you see, where you enter, where you are wrong, where you take profit. If the sentence gets tangled, the setup is not ready." },
+        { kind: "chart", chart: "one-sentence", caption: "Level, reaction, target. If the sentence does not fit, the trade does not either." },
         takeaway("One sentence. If it takes more, walk away."),
       ],
     },
@@ -489,6 +506,7 @@ const module5: Module = {
       id: "5.5", title: "Order Blocks", summary: "The last opposite candle before a strong move.", minutes: 4,
       blocks: [
         { kind: "intro", text: "An order block is the last down candle before a strong up move, or the last up candle before a strong down move. Institutions leave footprints there. Price often returns to those candles later to fill the rest of the orders." },
+        { kind: "chart", chart: "order-block", caption: "The last opposing candle before displacement. Price often returns to it." },
         takeaway("Order blocks are where the big money left orders unfilled. Watch them on retests."),
       ],
     },
@@ -496,6 +514,7 @@ const module5: Module = {
       id: "5.6", title: "Imbalances and Gaps", summary: "Fast moves leave gaps price tends to fill.", minutes: 4,
       blocks: [
         { kind: "intro", text: "When price moves too fast, it leaves a gap between candle wicks. These gaps are called imbalances. Price often returns to fill them before continuing, because the missing trades still need to happen." },
+        { kind: "chart", chart: "imbalance-gap", caption: "Fast moves leave an imbalance. Price frequently comes back to fill it." },
         takeaway("Gaps get filled more often than not. Do not ignore them."),
       ],
     },
@@ -503,6 +522,7 @@ const module5: Module = {
       id: "5.7", title: "Reading Intent", summary: "Is price building a level or breaking through?", minutes: 4,
       blocks: [
         { kind: "intro", text: "Intent is a fancy word for asking: what is price trying to do right now? Is it building energy at a level, or is it trying to break through? The answer tells you whether to trade the level or the breakout." },
+        { kind: "chart", chart: "intent-map", caption: "Slow overlapping candles build a level. One decisive push breaks it." },
         takeaway("Every candle is a message. Ask what the market is trying to accomplish."),
       ],
     },
@@ -510,6 +530,7 @@ const module5: Module = {
       id: "5.8", title: "Fair Value and Displacement", summary: "Big candles that shift the balance leave the strongest footprints.", minutes: 4,
       blocks: [
         { kind: "intro", text: "Displacement is a strong, fast move that leaves an imbalance behind. It is a signal of intent. When you see displacement, the direction of that candle is usually the direction to trade." },
+        { kind: "chart", chart: "displacement", caption: "Displacement candle shifts the balance, then price returns to fair value." },
         takeaway("Big displaced candles are the market showing its hand. Follow the direction."),
       ],
     },
