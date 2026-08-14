@@ -33,6 +33,7 @@ import { exportMyData } from "@/lib/privacy.functions";
 import { verifyJournalTrade } from "@/lib/trade-verify.functions";
 import { pullAndMerge, pushAll, type SyncTrade } from "@/lib/journal-sync";
 import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
+import { markTradeLogged, unmarkTradeLogged } from "@/lib/loggedTrades";
 
 import {
   putTradeImage,
