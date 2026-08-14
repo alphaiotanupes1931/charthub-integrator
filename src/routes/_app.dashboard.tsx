@@ -1205,6 +1205,9 @@ function Dashboard() {
         setScanning(false);
         setLastUpdatedAt(Date.now());
       });
+  };
+
+
 
   // Deep-linked scan (?symbol=X&scan=1): wait until the chart is actually on
   // that instrument, then run the scan straight into the chat conversation.
