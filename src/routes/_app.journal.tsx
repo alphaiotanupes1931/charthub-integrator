@@ -801,6 +801,7 @@ function TradeRow({ t, onEdit, onDelete, onUpdate }: { t: Trade; onEdit: (t: Tra
           {t.lossCategory && (
             <span className="text-[10px] rounded bg-destructive/10 text-destructive px-1.5 py-0.5">{t.lossCategory}</span>
           )}
+          <ResultBadge t={t} />
         </div>
         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground tabular-nums">
           <span>Entry <span className="text-foreground font-medium">{t.entry}</span></span>
@@ -809,6 +810,7 @@ function TradeRow({ t, onEdit, onDelete, onUpdate }: { t: Trade; onEdit: (t: Tra
           <span>Exit <span className="text-foreground font-medium">{t.exit && t.exit !== t.entry ? t.exit : "open"}</span></span>
           <span>Size <span className="text-foreground font-medium">{t.size}</span></span>
         </div>
+        {t.resultNote && <div className="mt-1 text-[11px] text-muted-foreground">{t.resultNote}</div>}
         {t.notes && <div className="mt-1 text-xs text-muted-foreground line-clamp-1">{t.notes}</div>}
 
       </button>
@@ -820,7 +822,9 @@ function TradeRow({ t, onEdit, onDelete, onUpdate }: { t: Trade; onEdit: (t: Tra
           R:R {rr == null ? "-" : `${rr.toFixed(2)}`}
         </div>
       </div>
+      {t.resultSource !== "manual" && <CheckResultButton t={t} onUpdate={onUpdate} />}
       {t.threadId && (
+
         <Link
           to="/chat/$threadId"
           params={{ threadId: t.threadId }}
