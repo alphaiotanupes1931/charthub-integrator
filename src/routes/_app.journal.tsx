@@ -33,6 +33,7 @@ import { exportMyData } from "@/lib/privacy.functions";
 import { verifyJournalTrade } from "@/lib/trade-verify.functions";
 import { pullAndMerge, pushAll, type SyncTrade } from "@/lib/journal-sync";
 import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
+import { markTradeLogged, unmarkTradeLogged } from "@/lib/loggedTrades";
 
 import {
   putTradeImage,
@@ -347,13 +348,24 @@ function JournalPage() {
   // Saving during the first commit would persist the empty initial state and
   // erase a log that is already on disk.
   useEffect(() => {
+    // Rebuild the "already logged" registry from the journal itself, so trades
+    // saved before this device knew about it are still recognised in the chat.
+    const backfill = (list: Trade[]) => {
+      for (const t of list) {
+        markTradeLogged({ tradeId: t.id, symbol: t.symbol, threadId: t.threadId ?? null, entry: t.entry, date: t.date, at: t.createdAt });
+      }
+    };
     const local = loadTrades();
     setTrades(local);
+    backfill(local);
     setHydrated(true);
     // Then reconcile with the account copy so a fresh login / new device sees
     // the same journal instead of an empty calendar.
     void pullAndMerge(local as unknown as SyncTrade[])
-      .then((merged) => setTrades(merged as unknown as Trade[]))
+      .then((merged) => {
+        setTrades(merged as unknown as Trade[]);
+        backfill(merged as unknown as Trade[]);
+      })
       .catch(() => undefined);
   }, []);
   useEffect(() => {
@@ -420,10 +432,20 @@ function JournalPage() {
     });
     setFormOpen(false);
     setEditingId(null);
+    // Only a real save counts as "logged", so the chat and dashboard can tell
+    // the trader they already submitted this setup.
+    markTradeLogged({
+      tradeId: t.id,
+      symbol: t.symbol,
+      threadId: t.threadId ?? null,
+      entry: t.entry,
+      date: t.date,
+    });
     emitFirstWeekEvent("journal-log");
   };
   const handleDelete = (id: string) => {
     setTrades((prev) => prev.filter((p) => p.id !== id));
+    unmarkTradeLogged(id);
     void deleteTradeImage(id);
   };
 
