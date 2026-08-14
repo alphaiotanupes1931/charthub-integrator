@@ -1406,9 +1406,9 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
         onPointerCancel={onPointerUp}
         className="absolute inset-0 z-30"
         style={{
-          pointerEvents: drawMode ? "auto" : "none",
-          cursor: drawMode ? "crosshair" : "default",
-          touchAction: drawMode ? "none" : "auto",
+          pointerEvents: interactive ? "auto" : "none",
+          cursor: interactive ? "crosshair" : "default",
+          touchAction: interactive ? "none" : "auto",
         }}
       />
 
