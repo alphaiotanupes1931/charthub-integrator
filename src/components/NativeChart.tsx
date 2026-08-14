@@ -11,6 +11,10 @@ import { useQuery } from "@tanstack/react-query";
 import {
   createChart,
   CandlestickSeries,
+  BarSeries,
+  AreaSeries,
+  BaselineSeries,
+  HistogramSeries,
   LineSeries,
   createSeriesMarkers,
   type ISeriesMarkersPluginApi,
@@ -19,8 +23,10 @@ import {
   type Time,
   type IPriceLine,
   LineStyle,
+  LineType,
   CrosshairMode,
 } from "lightweight-charts";
+import { getCandleStyle, type CandleStyleId } from "@/lib/candleStyles";
 import type { OhlcResponse } from "@/routes/api.ohlc";
 import { useTimeFormat, formatTime } from "@/hooks/useTimeFormat";
 import { useTimezone } from "@/hooks/useTimezone";
