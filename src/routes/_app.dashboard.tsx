@@ -353,6 +353,20 @@ function ScanTicket({
   // Real order-flow metrics computed server-side from OHLCV.
   const of = result.orderFlow;
 
+  // Session timing and R-multiple management for this exact plan, rendered in
+  // the trader's timezone (Auto follows the device).
+  const { effectiveTimezone: panelTz } = useTimezone();
+  const panelTzLabel = tzAbbrev(panelTz);
+  const panelTiming = computeTiming({
+    symbol: symbol.ticker,
+    interval,
+    bias: result.bias?.toLowerCase().includes("short") ? "short" : result.bias?.toLowerCase().includes("long") ? "long" : "neutral",
+    entry: parseNum(result.entry),
+    stop: parseNum(result.stop),
+    tp1: parseNum(result.tp1),
+    tp2: parseNum(result.tp2),
+  });
+
   // Daily bias is the direction for the day; current trend is what price is
   // doing right now. When they disagree the trader needs to know.
   const dailyBias = result.dailyBias ?? "neutral";
