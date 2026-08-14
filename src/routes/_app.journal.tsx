@@ -24,11 +24,13 @@ import {
   DatabaseBackup,
   HeartPulse,
   MessageSquare,
+  RefreshCw,
 } from "lucide-react";
 import { MentalStatePanel, upsertMentalEntry, SCORE_META, loadMental, type MentalEntry } from "@/components/MentalStatePanel";
 import JournalReviewPanel from "@/components/JournalReviewPanel";
 
 import { exportMyData } from "@/lib/privacy.functions";
+import { verifyJournalTrade } from "@/lib/trade-verify.functions";
 import { pullAndMerge, pushAll, type SyncTrade } from "@/lib/journal-sync";
 import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
 
@@ -546,6 +548,7 @@ function JournalPage() {
           onEdit={openEdit}
           onDelete={handleDelete}
           onImport={(merged) => setTrades(merged)}
+          onUpdate={handleSave}
         />
 
       )}
@@ -615,6 +618,7 @@ function JournalPage() {
                   t={t}
                   onEdit={(tr) => { setDayView(null); openEdit(tr); }}
                   onDelete={handleDelete}
+                  onUpdate={handleSave}
                 />
               ))}
             </div>
@@ -637,12 +641,13 @@ function JournalPage() {
 }
 
 function TradesList({
-  trades, onEdit, onDelete, onImport,
+  trades, onEdit, onDelete, onImport, onUpdate,
 }: {
   trades: Trade[];
   onEdit: (t: Trade) => void;
   onDelete: (id: string) => void;
   onImport: (merged: Trade[]) => void;
+  onUpdate: (t: Trade) => void;
 }) {
   const restoreInputRef = useRef<HTMLInputElement>(null);
   const handleRestore = async (file: File | null | undefined) => {
@@ -697,7 +702,7 @@ function TradesList({
       ) : (
         <div className="divide-y divide-border/60">
           {trades.map((t) => (
-            <TradeRow key={t.id} t={t} onEdit={onEdit} onDelete={onDelete} />
+            <TradeRow key={t.id} t={t} onEdit={onEdit} onDelete={onDelete} onUpdate={onUpdate} />
           ))}
         </div>
       )}
