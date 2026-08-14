@@ -5,6 +5,8 @@ import { takeTrade } from "@/lib/signalHistory";
 import type { ChartGrade } from "@/lib/chartAnnotations";
 import { AutoBacktestVerify } from "@/components/AutoBacktestVerify";
 import { useTradeLogged } from "@/hooks/useTradeLogged";
+import { useTimezone } from "@/hooks/useTimezone";
+import { computeTiming, clockLabel, tzAbbrev } from "@/lib/tradeTiming";
 
 type Props = {
   grade: ChartGrade | null;
@@ -51,6 +53,7 @@ function pct(from?: number, to?: number) {
 export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, scanning }: Props) {
   const [expanded, setExpanded] = useState(false);
   const logged = useTradeLogged({ symbol, entry: grade?.entry ?? null });
+  const { effectiveTimezone: tz } = useTimezone();
 
   // Empty state - render nothing when idle so the chart can fill the whole area.
   // While actively scanning, show a very thin one-line status so the user gets
@@ -91,7 +94,19 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
   }
   const actionLabel = isLong ? "BUY" : isShort ? "SELL" : "WAIT";
 
+  const timing = computeTiming({
+    symbol,
+    interval,
+    bias: isLong ? "long" : isShort ? "short" : "neutral",
+    entry: grade.entry,
+    stop: grade.stop,
+    tp1: grade.tp1,
+    tp2: grade.tp2,
+  });
+  const tzTag = tzAbbrev(tz);
+
   const rows: Array<{ key: string; label: string; value?: number; tone: string; icon: React.ComponentType<{ className?: string }>; from?: number }> = [
+
     { key: "entry", label: "Entry", value: grade.entry, tone: "text-foreground", icon: Target, from: lastPrice },
     { key: "stop", label: "Stop", value: grade.stop, tone: "text-red-300", icon: Shield, from: grade.entry },
     { key: "tp1", label: "TP1", value: grade.tp1, tone: "text-bull", icon: Flag, from: grade.entry },
@@ -113,6 +128,17 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
             title={orderHelp}
           >
             {orderType}
+          </span>
+        )}
+
+        {timing && (
+          <span
+            className="inline-flex h-8 items-center gap-1.5 rounded-2xl border border-border/60 bg-background/60 px-2.5 text-[10px] font-semibold tracking-tight text-muted-foreground"
+            title={`Best window to enter: ${clockLabel(timing.enterFrom, tz)} to ${clockLabel(timing.enterUntil, tz)} (${timing.session}). Times shown in ${tz}.`}
+          >
+            <Clock className="h-3 w-3" />
+            {timing.live ? "Enter now" : `Enter ${clockLabel(timing.enterFrom, tz)}`}
+            <span className="text-muted-foreground/70">{tzTag}</span>
           </span>
         )}
 
@@ -209,6 +235,45 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
               </div>
             );
           })}
+          {timing && (
+            <div className="col-span-2 sm:col-span-4 space-y-2 rounded-xl border border-border/50 bg-background/40 p-2.5">
+              <div className="flex items-center gap-1.5">
+                <Clock className="h-3 w-3 text-muted-foreground" />
+                <span className="text-[10px] font-bold tracking-wider text-foreground">TIMING</span>
+                <span className="text-[10px] text-muted-foreground">
+                  {timing.session} · all times {tz}{tzTag ? ` (${tzTag})` : ""}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {[
+                  { k: "enter", label: "Enter from", v: clockLabel(timing.enterFrom, tz) },
+                  { k: "until", label: "Enter before", v: clockLabel(timing.enterUntil, tz) },
+                  { k: "cancel", label: "Cancel if unfilled", v: clockLabel(timing.cancelIfUnfilled, tz) },
+                  { k: "exit", label: "Exit by", v: clockLabel(timing.exitBy, tz) },
+                ].map((t) => (
+                  <div key={t.k} className="flex flex-col gap-0.5 rounded-lg border border-border/40 px-2 py-1.5">
+                    <span className="text-[9px] uppercase tracking-wider text-muted-foreground">{t.label}</span>
+                    <span className="font-mono text-[11px] text-foreground">{t.v}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="text-[10px] text-muted-foreground">
+                Expected hold: <span className="text-foreground">{timing.holdTime}</span>. Targets pay{" "}
+                <span className="text-foreground">{timing.tp1R.toFixed(1)}R</span> at TP1 and{" "}
+                <span className="text-foreground">{timing.tp2R.toFixed(1)}R</span> at TP2.
+              </div>
+              <div className="text-[10px] text-foreground">{timing.ratioAdvice}</div>
+              <div className="space-y-1">
+                {timing.scale.map((s2) => (
+                  <div key={s2.label} className="flex items-baseline gap-2 text-[10px]">
+                    <span className="w-16 shrink-0 font-bold tracking-wider text-muted-foreground">{s2.label}</span>
+                    <span className="font-mono text-foreground">{fmt(s2.price)}</span>
+                    <span className="text-muted-foreground">{s2.action}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           {orderType && orderHelp && (
             <div className="col-span-2 sm:col-span-4 text-[10px] text-muted-foreground">
               <span className="font-semibold text-foreground">{orderType}:</span> {orderHelp}.
