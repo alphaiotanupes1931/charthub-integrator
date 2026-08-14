@@ -27,6 +27,9 @@ export type VwapSignal = {
 
 export type VwapIndicator = {
   vwap: VwapPoint[];
+  /** +/- 1 standard-deviation bands around the session VWAP. */
+  upper1: VwapPoint[];
+  lower1: VwapPoint[];
   fast: VwapPoint[];
   slow: VwapPoint[];
   signals: VwapSignal[];
@@ -36,7 +39,8 @@ export type VwapIndicator = {
 };
 
 export const VWAP_COLORS = {
-  vwap: "#fbbf24",   // amber, matches the VWAP badge
+  vwap: "#2962FF",   // TradingView VWAP blue
+  band: "#22c55e",   // 1st stdev band (green)
   fast: "#eab308",   // yellow fast MA
   slow: "#3b82f6",   // blue slow MA
   buy: "#22c55e",
@@ -73,7 +77,7 @@ export function computeVwapIndicator(
   const tpAtr = opts.tpAtr ?? 1.5;
 
   if (bars.length < Math.max(fastLength, slowLength) + 2) {
-    return { vwap: [], fast: [], slow: [], signals: [], state: "flat", lastSignal: null };
+    return { vwap: [], upper1: [], lower1: [], fast: [], slow: [], signals: [], state: "flat", lastSignal: null };
   }
 
   const closes = bars.map((b) => b.close);
@@ -81,17 +85,33 @@ export function computeVwapIndicator(
   const slowVals = ema(closes, slowLength);
   const atrVals = atr(bars, 14);
 
-  // Anchored VWAP. No volume in the feed, so bar range is the volume proxy
-  // (same approach used elsewhere for the VWAP level).
+  // Session-anchored VWAP (resets on each new UTC day), matching the Pine
+  // "Anchor Period = Session" default. No volume in the feed, so bar range is
+  // the volume proxy. Standard-deviation bands use the same weights.
   const vwap: VwapPoint[] = [];
+  const upper1: VwapPoint[] = [];
+  const lower1: VwapPoint[] = [];
   let pv = 0;
+  let pv2 = 0;
   let vol = 0;
+  let anchorDay: number | null = null;
   bars.forEach((b) => {
-    const typical = (b.high + b.low + b.close) / 3;
+    const day = Math.floor(b.time / 86400);
+    if (anchorDay === null || day !== anchorDay) {
+      anchorDay = day;
+      pv = 0; pv2 = 0; vol = 0;
+    }
+    const typical = (b.high + b.low + b.close) / 3; // hlc3 source
     const v = Math.max(1e-9, b.high - b.low);
     pv += typical * v;
+    pv2 += typical * typical * v;
     vol += v;
-    vwap.push({ time: b.time, value: pv / vol });
+    const value = pv / vol;
+    const variance = Math.max(0, pv2 / vol - value * value);
+    const sd = Math.sqrt(variance);
+    vwap.push({ time: b.time, value });
+    upper1.push({ time: b.time, value: value + sd });
+    lower1.push({ time: b.time, value: value - sd });
   });
 
   const fast: VwapPoint[] = bars.map((b, i) => ({ time: b.time, value: fastVals[i] }));
@@ -138,6 +158,8 @@ export function computeVwapIndicator(
 
   return {
     vwap,
+    upper1,
+    lower1,
     fast,
     slow,
     signals,
