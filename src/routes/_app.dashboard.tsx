@@ -14,6 +14,8 @@ import { useCoachVoice } from "@/hooks/useCoachVoice";
 import { DashboardChatPanel, type DashboardChatHandle } from "@/components/DashboardChatPanel";
 import { ChartConceptOverlay } from "@/components/ConceptDiagram";
 import { ChartSignalCards } from "@/components/ChartSignalCards";
+import { useTimezone, TIMEZONE_OPTIONS } from "@/hooks/useTimezone";
+import { computeTiming, clockLabel, tzAbbrev } from "@/lib/tradeTiming";
 
 import { TodaysRecommendation } from "@/components/TodaysRecommendation";
 import { findStrategyByName, allStrategies } from "@/lib/customStrategies";
@@ -351,6 +353,20 @@ function ScanTicket({
   // Real order-flow metrics computed server-side from OHLCV.
   const of = result.orderFlow;
 
+  // Session timing and R-multiple management for this exact plan, rendered in
+  // the trader's timezone (Auto follows the device).
+  const { effectiveTimezone: panelTz } = useTimezone();
+  const panelTzLabel = tzAbbrev(panelTz);
+  const panelTiming = computeTiming({
+    symbol: symbol.ticker,
+    interval,
+    bias: result.bias?.toLowerCase().includes("short") ? "short" : result.bias?.toLowerCase().includes("long") ? "long" : "neutral",
+    entry: parseNum(result.entry),
+    stop: parseNum(result.stop),
+    tp1: parseNum(result.tp1),
+    tp2: parseNum(result.tp2),
+  });
+
   // Daily bias is the direction for the day; current trend is what price is
   // doing right now. When they disagree the trader needs to know.
   const dailyBias = result.dailyBias ?? "neutral";
@@ -487,6 +503,37 @@ function ScanTicket({
           <span className="text-muted-foreground tracking-tight text-[10px]">Risk / reward</span>
           <span className="font-mono font-semibold text-foreground">{result.rr}</span>
         </div>
+      )}
+
+      {/* When to enter, when to give up on the entry, when to be flat, and how
+          to scale out by R multiple. Times follow the trader's timezone. */}
+      {!isNoEntry && panelTiming && (
+        <MetricBlock
+          title="Timing and management"
+          tag={panelTiming.live ? "Window open" : "Window later"}
+          tone={panelTiming.live ? "good" : "neutral"}
+        >
+          <MetricRow label="Session" value={panelTiming.session} />
+          <MetricRow label="Enter from" value={clockLabel(panelTiming.enterFrom, panelTz)} />
+          <MetricRow label="Enter before" value={clockLabel(panelTiming.enterUntil, panelTz)} />
+          <MetricRow label="Cancel if unfilled" value={clockLabel(panelTiming.cancelIfUnfilled, panelTz)} />
+          <MetricRow label="Exit by" value={clockLabel(panelTiming.exitBy, panelTz)} />
+          <MetricRow label="Expected hold" value={panelTiming.holdTime} />
+          <MetricRow label="TP1 / TP2 in R" value={`${panelTiming.tp1R.toFixed(1)}R / ${panelTiming.tp2R.toFixed(1)}R`} />
+          <p className="pt-1 text-[10px] leading-relaxed text-foreground">{panelTiming.ratioAdvice}</p>
+          <div className="space-y-1 pt-1">
+            {panelTiming.scale.map((s2) => (
+              <div key={s2.label} className="flex items-baseline gap-2 text-[10px]">
+                <span className="w-14 shrink-0 font-semibold tracking-wider text-muted-foreground">{s2.label}</span>
+                <span className="font-mono text-foreground">{s2.price}</span>
+                <span className="text-muted-foreground">{s2.action}</span>
+              </div>
+            ))}
+          </div>
+          <p className="pt-1 text-[10px] text-muted-foreground">
+            All times in {panelTz}{panelTzLabel ? ` (${panelTzLabel})` : ""}.
+          </p>
+        </MetricBlock>
       )}
 
       {/* Daily bias and current trend - they can disagree, and that matters */}
@@ -641,6 +688,10 @@ function Dashboard() {
   });
 
   const [levelsOpen, setLevelsOpen] = useState(false);
+  // Analysis timing is rendered in the trader's timezone; "Auto" tracks the
+  // device so a timezone change (travel, DST, OS setting) is picked up live.
+  const { timezone, effectiveTimezone: tz, setTimezone } = useTimezone();
+  const tzLabel = tzAbbrev(tz);
 
   
   const [levels, setLevels] = useState<Record<LevelKey, boolean>>(() =>
@@ -1091,6 +1142,15 @@ function Dashboard() {
     const safeStop = stop === undefined ? plan.stop : fmtPrice(stop, dec);
     const safeTp1 = tp1 === undefined ? plan.tp1 : fmtPrice(tp1, dec);
     const safeTp2 = tp2 === undefined ? plan.tp2 : fmtPrice(tp2, dec);
+    const scanTiming = computeTiming({
+      symbol: scanSymbol.ticker,
+      interval,
+      bias,
+      entry,
+      stop,
+      tp1,
+      tp2,
+    });
     const gradePayload = {
       grade: plan.grade,
       bias,
@@ -1113,6 +1173,12 @@ function Dashboard() {
           `TP1: ${safeTp1}`,
           `TP2: ${safeTp2}`,
           `R:R: ${plan.rr}`,
+          ...(scanTiming
+            ? [
+                `Timing (${tzLabel}): enter between ${clockLabel(scanTiming.enterFrom, tz)} and ${clockLabel(scanTiming.enterUntil, tz)} during the ${scanTiming.session}. Cancel the order if unfilled by ${clockLabel(scanTiming.cancelIfUnfilled, tz)}. Exit by ${clockLabel(scanTiming.exitBy, tz)}; expected hold ${scanTiming.holdTime}.`,
+                `Management: ${scanTiming.ratioAdvice} ${scanTiming.scale.map((s2) => `${s2.label} at ${s2.price} - ${s2.action}`).join("; ")}.`,
+              ]
+            : []),
         ];
     return [
       `${scanSymbol.name} scan: ${plan.grade} ${plan.bias}. Confidence ${plan.confidence}%.`,
@@ -1606,6 +1672,23 @@ function Dashboard() {
             </div>
           )}
         </div>
+
+        <label
+          className="hidden lg:inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-border/60 bg-background/50 px-3 text-xs font-medium text-muted-foreground"
+          title={`Analysis times are shown in ${tz}. Auto follows your device, so a timezone change is picked up automatically.`}
+        >
+          <Clock className="h-3 w-3" />
+          <select
+            value={timezone}
+            onChange={(e) => setTimezone(e.target.value)}
+            className="bg-transparent text-xs font-medium text-foreground outline-none"
+          >
+            {TIMEZONE_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+          <span className="font-mono text-[10px] text-muted-foreground">{tzLabel}</span>
+        </label>
 
         <button
           onClick={scanning ? () => { chatRef.current?.stop(); voice.stop(); setScanning(false); } : () => runScan("analysis")}
