@@ -88,6 +88,11 @@ type Trade = {
   pointValue?: number;    // $ per 1.0 price move per unit (contract multiplier / pip value)
   notes: string;
   hasImage?: boolean;
+  /** How many screenshots are stored for this trade (1 = legacy single image). */
+  imageCount?: number;
+  /** Did the trader actually pull the trigger on this setup? */
+  executed?: boolean;
+  executedAt?: number;
   ruleBroken?: boolean;
   ruleBrokenNote?: string;
   lossCategory?: LossCategory;
