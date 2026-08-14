@@ -3,7 +3,7 @@
 // selected interval (a 15m fib measures the last intraday leg, a weekly fib
 // measures the last multi-month leg).
 
-export type FibCandle = { time: number; open: number; high: number; low: number; close: number };
+export type FibCandle = { open: number; high: number; low: number; close: number };
 
 export type FibLevel = {
   ratio: number;
