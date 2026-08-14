@@ -1,13 +1,48 @@
+import { useEffect, useRef, useState } from "react";
 import type { LessonChartType } from "@/lib/academy-content";
+
+const ANIM_CSS = `
+@keyframes lcDraw { from { stroke-dashoffset: 1400; } to { stroke-dashoffset: 0; } }
+@keyframes lcFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes lcPop  { from { opacity: 0; transform: scale(.72); } to { opacity: 1; transform: scale(1); } }
+@keyframes lcPulse { 0%,100% { opacity: .9; } 50% { opacity: .35; } }
+.lc-live path[data-anim="draw"] { stroke-dasharray: 1400; stroke-dashoffset: 1400; animation: lcDraw 1.5s cubic-bezier(.4,0,.2,1) forwards; }
+.lc-live g[data-anim="candle"] { opacity: 0; animation: lcPop .38s ease forwards; transform-box: fill-box; transform-origin: center; }
+.lc-live g[data-anim="tag"] { opacity: 0; animation: lcFade .5s ease forwards; animation-delay: 1.15s; }
+.lc-live rect[data-anim="zone"] { opacity: 0; animation: lcFade .7s ease .25s forwards; }
+.lc-live circle[data-anim="dot"] { opacity: 0; animation: lcPop .35s ease forwards; animation-delay: 1s; }
+.lc-live line[data-anim="level"] { animation: lcPulse 3.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .lc-live path[data-anim="draw"] { stroke-dashoffset: 0; animation: none; }
+  .lc-live g[data-anim], .lc-live rect[data-anim], .lc-live circle[data-anim] { opacity: 1; animation: none; }
+  .lc-live line[data-anim="level"] { animation: none; }
+}
+`;
 
 /**
  * Small illustrative SVG diagrams used inside academy lesson callouts.
  * All diagrams share the same viewBox + palette so they feel cohesive.
+ * Diagrams animate in (line draw, candle pop, label fade) when scrolled into view.
  */
 export function LessonChart({ type }: { type: LessonChartType }) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [live, setLive] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (typeof IntersectionObserver === "undefined") { setLive(true); return; }
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) if (e.isIntersecting) { setLive(true); io.disconnect(); }
+    }, { threshold: 0.25 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
   return (
-    <div className="rounded-lg border border-border/60 bg-background/40 p-3 sm:p-4">
-      <svg viewBox="0 0 600 260" className="w-full h-auto" role="img" aria-label={type}>
+    <div ref={ref} className="rounded-lg border border-border/60 bg-background/40 p-3 sm:p-4">
+      <svg viewBox="0 0 600 260" className={`w-full h-auto ${live ? "lc-live" : "opacity-0"}`} role="img" aria-label={type}>
+        <style>{ANIM_CSS}</style>
         <defs>
           <linearGradient id="grid-fade" x1="0" x2="0" y1="0" y2="1">
             <stop offset="0%" stopColor="hsl(var(--muted-foreground) / 0.14)" />
@@ -29,6 +64,7 @@ export function LessonChart({ type }: { type: LessonChartType }) {
     </div>
   );
 }
+
 
 const BULL = "#22c55e";
 const BEAR = "#ef4444";
