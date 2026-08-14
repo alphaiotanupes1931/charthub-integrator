@@ -1305,6 +1305,7 @@ function TradeFormModal({
   const [followedPlan, setFollowedPlan] = useState<boolean>(editing?.followedPlan ?? true);
   const [gradeMatch, setGradeMatch] = useState<"yes" | "no" | "partial" | "">(editing?.gradeMatch ?? "");
   const [takeaway, setTakeaway] = useState<string>(editing?.takeaway ?? "");
+  const [result, setResult] = useState<TradeResult | "">(editing?.result ?? "");
 
   // Mental state for this trade's date — two birds, one stone.
   const [mentalScore, setMentalScore] = useState<1 | 2 | 3 | 4 | 5 | null>(null);
@@ -1393,6 +1394,12 @@ function TradeFormModal({
     followedPlan: followedPlan || undefined,
     gradeMatch: gradeMatch || undefined,
     takeaway: takeaway.trim() || undefined,
+    result: result || undefined,
+    resultSource: result ? (result === editing?.result ? editing?.resultSource ?? "manual" : "manual") : undefined,
+    resultR: result && result !== editing?.result ? null : editing?.resultR ?? null,
+    resultNote:
+      result && result !== editing?.result ? "Result set by hand in the journal." : editing?.resultNote,
+    resultCheckedAt: result ? Date.now() : editing?.resultCheckedAt,
     threadId: editing?.threadId ?? prefill?.threadId,
     createdAt: editing?.createdAt ?? Date.now(),
   };
@@ -1595,6 +1602,17 @@ function TradeFormModal({
                 </button>
               ))}
             </div>
+            <Field label="Result of this trade">
+              <select
+                value={result}
+                onChange={(e) => setResult(e.target.value as TradeResult | "")}
+                className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm"
+              >
+                {MANUAL_RESULTS.map((r) => (
+                  <option key={r.value || "none"} value={r.value}>{r.label}</option>
+                ))}
+              </select>
+            </Field>
             <input
               value={takeaway}
               onChange={(e) => setTakeaway(e.target.value)}
