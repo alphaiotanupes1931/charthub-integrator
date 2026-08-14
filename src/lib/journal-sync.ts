@@ -33,7 +33,25 @@ export async function pullAndMerge(local: SyncTrade[]): Promise<SyncTrade[]> {
     if (!t || typeof t.id !== "string") continue;
     const remote = merged.get(t.id);
     // Local edits are usually the fresher copy; keep whichever has the later stamp.
-    if (!remote || (t.createdAt ?? 0) >= (remote.createdAt ?? 0)) merged.set(t.id, t);
+    if (!remote || (t.createdAt ?? 0) >= (remote.createdAt ?? 0)) {
+      // Exception: the 15-minute background checker writes the outcome on the
+      // server. If the cloud copy has a newer result check and the trader
+      // hasn't set the result by hand, carry those fields down.
+      const localChecked = Number(t["resultCheckedAt"] ?? 0) || 0;
+      const remoteChecked = Number(remote?.["resultCheckedAt"] ?? 0) || 0;
+      if (remote && t["resultSource"] !== "manual" && remoteChecked > localChecked) {
+        merged.set(t.id, {
+          ...t,
+          result: remote["result"],
+          resultSource: remote["resultSource"],
+          resultR: remote["resultR"],
+          resultNote: remote["resultNote"],
+          resultCheckedAt: remote["resultCheckedAt"],
+        });
+      } else {
+        merged.set(t.id, t);
+      }
+    }
   }
   return [...merged.values()];
 }
