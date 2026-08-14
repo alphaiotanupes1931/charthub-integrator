@@ -72,29 +72,63 @@ const BEAR = "#ef4444";
 const NEUTRAL = "hsl(var(--muted-foreground))";
 const ACCENT = "#38bdf8";
 
-function label(x: number, y: number, text: string, tone: "bull" | "bear" | "accent" = "accent") {
-  const bg = tone === "bull" ? BULL : tone === "bear" ? BEAR : ACCENT;
+type Tone = "bull" | "bear" | "accent" | "neutral";
+
+function toneColor(tone: Tone) {
+  return tone === "bull" ? BULL : tone === "bear" ? BEAR : tone === "neutral" ? NEUTRAL : ACCENT;
+}
+
+function label(x: number, y: number, text: string, tone: Tone = "accent", delay = 1.15) {
+  const bg = toneColor(tone);
   const w = Math.max(text.length * 6.5 + 14, 60);
   return (
-    <g>
+    <g data-anim="tag" style={{ animationDelay: `${delay}s` }}>
       <rect x={x - w / 2} y={y - 12} width={w} height={20} rx={10} fill={`${bg}22`} stroke={bg} strokeWidth={1} />
       <text x={x} y={y + 2} fontSize="10" fontWeight="700" textAnchor="middle" fill={bg}>{text}</text>
     </g>
   );
 }
 
-function candle(x: number, o: number, h: number, l: number, c: number, w = 12) {
+function candle(x: number, o: number, h: number, l: number, c: number, w = 12, i = 0) {
   const bull = c < o; // in SVG lower y = higher price; keep intuitive
   const color = bull ? BULL : BEAR;
   const top = Math.min(o, c);
   const bot = Math.max(o, c);
   return (
-    <g key={`c-${x}`}>
+    <g key={`c-${x}`} data-anim="candle" style={{ animationDelay: `${0.06 * i}s` }}>
       <line x1={x} y1={h} x2={x} y2={l} stroke={color} strokeWidth={1.2} />
       <rect x={x - w / 2} y={top} width={w} height={Math.max(bot - top, 2)} fill={color} opacity={0.85} />
     </g>
   );
 }
+
+/** Animated polyline path from [x,y] points. */
+function line(pts: number[][], tone: Tone = "accent", width = 2.5) {
+  const d = "M " + pts.map(([x, y]) => `${x} ${y}`).join(" L ");
+  return <path d={d} fill="none" stroke={toneColor(tone)} strokeWidth={width} strokeLinecap="round" data-anim="draw" />;
+}
+
+/** Dashed horizontal level with a pulsing feel. */
+function level(y: number, tone: Tone = "accent", x1 = 40, x2 = 580) {
+  return <line x1={x1} y1={y} x2={x2} y2={y} stroke={toneColor(tone)} strokeDasharray="4 4" data-anim="level" opacity={0.85} />;
+}
+
+function zone(x: number, y: number, w: number, h: number, tone: Tone = "accent") {
+  return <rect x={x} y={y} width={w} height={h} rx={3} fill={`${toneColor(tone)}1e`} stroke={`${toneColor(tone)}66`} data-anim="zone" />;
+}
+
+function dot(x: number, y: number, tone: Tone = "accent", delay = 1) {
+  return <circle cx={x} cy={y} r={5} fill={toneColor(tone)} style={{ animationDelay: `${delay}s` }} />;
+}
+
+function note(x: number, y: number, text: string, tone: Tone = "neutral", delay = 1.3, anchor: "start" | "middle" | "end" = "middle") {
+  return (
+    <g data-anim="tag" style={{ animationDelay: `${delay}s` }}>
+      <text x={x} y={y} fontSize="9.5" fontWeight="600" textAnchor={anchor} fill={toneColor(tone)}>{text}</text>
+    </g>
+  );
+}
+
 
 function renderShape(type: LessonChartType) {
   switch (type) {
