@@ -21,9 +21,10 @@ import { useTimeFormat, formatTime } from "@/hooks/useTimeFormat";
 import { useTimezone } from "@/hooks/useTimezone";
 import { computeVwapIndicator, VWAP_COLORS } from "@/lib/vwapSignals";
 import { computeFib } from "@/lib/fibLevels";
+import { computeOrderBlocks, obLabel, OB_COLORS, type OrderBlock } from "@/lib/orderBlocks";
 import { ChartSourceBadge, feedLabel } from "@/components/ChartSourceBadge";
 
-export type LevelKey = "VWAP" | "POC" | "SR" | "ZONES" | "FVG" | "FIB" | "LIQ" | "OF" | "CISD";
+export type LevelKey = "VWAP" | "POC" | "SR" | "ZONES" | "FVG" | "FIB" | "LIQ" | "OF" | "CISD" | "OB";
 
 /** lightweight-charts parses colors itself and cannot read CSS variables. */
 const BULL_COLOR = "#2dd4bf";
@@ -39,6 +40,7 @@ export const LEVEL_META: Record<LevelKey, { label: string; color: string; tone: 
   LIQ:   { label: "Liq",   color: "#f87171", tone: "bg-red-500/10 text-red-300 border-red-500/30" },
   OF:    { label: "Order Flow", color: "#22d3ee", tone: "bg-cyan-500/10 text-cyan-300 border-cyan-500/30" },
   CISD:  { label: "CISD",  color: "#a3e635", tone: "bg-lime-500/10 text-lime-300 border-lime-500/30" },
+  OB:    { label: "Order Blocks", color: "#2dd4bf", tone: "bg-teal-500/10 text-teal-300 border-teal-500/30" },
 };
 
 export type CisdInfo = {
@@ -67,6 +69,7 @@ export type ChartSnapshot = {
   fib: { ratio: number; price: number }[];
   liq: { price: number; side: "buy" | "sell" }[];
   of: { price: number; side: "buy" | "sell"; strength: number }[];
+  orderBlocks: { kind: "bullish" | "bearish"; top: number; bot: number; mitigated: boolean; strength: number }[];
   delta: number;
   sessionsActive: string[];
   cisd: CisdInfo | null;
@@ -348,6 +351,8 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
   const [bands, setBands] = useState<Array<{ key: string; color: string; label: string; left: number; width: number; top: number; height: number; high: number; low: number; idx: number; vwap: Array<{ x: number; y: number }>; meanY: number | null; regX1: number; regY1: number; regX2: number; regY2: number }>>([]);
   // AI annotation zones projected into pixel coords for a shaded overlay
   const [annZones, setAnnZones] = useState<Array<{ key: string; top: number; height: number; color: string; label?: string }>>([]);
+  // Order block boxes projected into pixel coords
+  const [obBoxes, setObBoxes] = useState<Array<{ key: string; left: number; width: number; top: number; height: number; color: string; label: string; mitigated: boolean }>>([]);
   const { colors: candleColors } = useCandleColors();
   const { colors: chartBg } = useChartBackground();
 
@@ -397,6 +402,10 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     if (!base) return null;
     return { ...base, htfBias: detectHtfBias(candles) };
   }, [candles]);
+  const orderBlocks = useMemo<OrderBlock[]>(
+    () => computeOrderBlocks(candles.map((c) => ({ time: Number(c.time), open: c.open, high: c.high, low: c.low, close: c.close }))),
+    [candles],
+  );
   const vwapIndicator = useMemo(
     () => computeVwapIndicator(candles.map((c) => ({ time: Number(c.time), open: c.open, high: c.high, low: c.low, close: c.close }))),
     [candles],
@@ -441,6 +450,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       fib: (fibStudy?.levels ?? levels.fib).map((f) => ({ ratio: f.ratio, price: f.price })),
       liq: levels.liq,
       of: levels.of,
+      orderBlocks: orderBlocks.map((b) => ({ kind: b.kind, top: b.top, bot: b.bot, mitigated: b.mitigated, strength: b.strength })),
       delta: levels.delta,
       sessionsActive: activeSessionsNow,
       cisd,
@@ -449,7 +459,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     onSnapshot(snap);
     // intentionally exclude onSnapshot identity from deps to avoid loops
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [candles, levels, fibStudy, ticker, interval, liveOhlc?.source, sourceLabel, activeSessionsNow]);
+  }, [candles, levels, fibStudy, orderBlocks, ticker, interval, liveOhlc?.source, sourceLabel, activeSessionsNow]);
 
   // Init / teardown chart. Re-init when timezone changes so axis + crosshair labels re-render in the new zone.
   useEffect(() => {
@@ -806,6 +816,53 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     };
   }, [sessions, ready, candles]);
 
+  // ---- Order Blocks overlay (time-anchored boxes extending to mitigation) ----
+  useEffect(() => {
+    if (!ready || !chartRef.current || !seriesRef.current) { setObBoxes([]); return; }
+    if (!enabled.OB || orderBlocks.length === 0) { setObBoxes([]); return; }
+    const chart = chartRef.current;
+
+    const recompute = () => {
+      const series = seriesRef.current;
+      if (!series) return;
+      const ts = chart.timeScale();
+      const width = containerRef.current?.clientWidth ?? 0;
+      const out: Array<{ key: string; left: number; width: number; top: number; height: number; color: string; label: string; mitigated: boolean }> = [];
+      orderBlocks.forEach((b, i) => {
+        const yTop = series.priceToCoordinate(b.top);
+        const yBot = series.priceToCoordinate(b.bot);
+        if (yTop == null || yBot == null) return;
+        const x1 = ts.timeToCoordinate(b.time as Time);
+        const x2raw = b.mitigatedTime != null ? ts.timeToCoordinate(b.mitigatedTime as Time) : null;
+        const left = x1 ?? 0;
+        const right = x2raw != null ? x2raw : Math.max(width - 56, left + 8);
+        out.push({
+          key: `ob-${i}-${b.time}`,
+          left,
+          width: Math.max(6, right - left),
+          top: Math.min(yTop, yBot),
+          height: Math.max(3, Math.abs(yBot - yTop)),
+          color: b.kind === "bullish" ? OB_COLORS.bullish : OB_COLORS.bearish,
+          label: obLabel(b),
+          mitigated: b.mitigated,
+        });
+      });
+      setObBoxes(out);
+    };
+
+    recompute();
+    const ts = chart.timeScale();
+    ts.subscribeVisibleTimeRangeChange(recompute);
+    ts.subscribeVisibleLogicalRangeChange(recompute);
+    const ro = new ResizeObserver(recompute);
+    if (containerRef.current) ro.observe(containerRef.current);
+    return () => {
+      ts.unsubscribeVisibleTimeRangeChange(recompute);
+      ts.unsubscribeVisibleLogicalRangeChange(recompute);
+      ro.disconnect();
+    };
+  }, [ready, enabled.OB, orderBlocks, candles]);
+
   // ---- AI annotations (hlines / zones / labels) ----
   useEffect(() => {
     if (!ready || !seriesRef.current) { setAnnZones([]); return; }
@@ -1118,6 +1175,33 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
             );
           })}
         </svg>
+      )}
+      {/* Order block boxes */}
+      {obBoxes.length > 0 && (
+        <div className="pointer-events-none absolute inset-0 z-[6] overflow-hidden">
+          {obBoxes.map((b) => (
+            <div
+              key={b.key}
+              className="absolute"
+              style={{
+                left: b.left,
+                width: b.width,
+                top: b.top,
+                height: b.height,
+                background: b.mitigated ? `${b.color}14` : `${b.color}2e`,
+                border: `1px ${b.mitigated ? "dashed" : "solid"} ${b.color}${b.mitigated ? "66" : "aa"}`,
+                borderRadius: 2,
+              }}
+            >
+              <span
+                className="absolute left-1 -top-3.5 text-[9px] font-mono tracking-tight whitespace-nowrap"
+                style={{ color: b.color, opacity: b.mitigated ? 0.6 : 1 }}
+              >
+                {b.label}
+              </span>
+            </div>
+          ))}
+        </div>
       )}
       {/* AI annotation zones (shaded) */}
       {annZones.length > 0 && (

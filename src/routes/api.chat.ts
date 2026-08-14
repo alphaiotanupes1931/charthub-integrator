@@ -153,6 +153,7 @@ type ChartSnap = {
   fib?: { ratio: number; price: number }[];
   liq?: { price: number; side: string }[];
   of?: { price: number; side: string; strength: number }[];
+  orderBlocks?: { kind: string; top: number; bot: number; mitigated: boolean; strength: number }[];
   delta?: number;
   sessionsActive?: string[];
   cisd?: { state: string; level: number; trigger: number; proj1: number; proj2: number; legSize: number; htfBias: string } | null;
@@ -385,6 +386,7 @@ function chartContextBlock(chart?: ChartCtx, ladderText?: string, orderFlowText?
       s.fib?.length ? `  Fib levels: ${s.fib.map((f) => `${f.ratio}=${fmt(f.price, 4)}`).join(", ")}` : "",
       s.liq?.length ? `  Liquidity pools: ${s.liq.map((l) => `${l.side}@${fmt(l.price, 4)}`).join(", ")}` : "",
       s.of?.length ? `  Order-flow initiative bars: ${s.of.map((o) => `${o.side}@${fmt(o.price, 4)} (${(o.strength * 100).toFixed(0)}%)`).join(", ")}` : "",
+      s.orderBlocks?.length ? `  Order blocks: ${s.orderBlocks.map((b) => `${b.kind === "bullish" ? "bull" : "bear"} ${fmt(b.bot, 4)}-${fmt(b.top, 4)}${b.mitigated ? " (mitigated)" : " (fresh)"} ${b.strength}x`).join(", ")}` : "",
       s.cisd ? `  CISD: ${s.cisd.state} flip · level ${fmt(s.cisd.level, 4)} · trigger ${fmt(s.cisd.trigger, 4)} · proj 1x ${fmt(s.cisd.proj1, 4)} / 2x ${fmt(s.cisd.proj2, 4)} · HTF bias ${s.cisd.htfBias}` : `  CISD: no confirmed flip in the current window`,
       s.sessionsActive?.length ? `  Active sessions right now: ${s.sessionsActive.join(", ")}` : `  Active sessions right now: none (off-hours)`,
     );
