@@ -24,11 +24,13 @@ import {
   DatabaseBackup,
   HeartPulse,
   MessageSquare,
+  RefreshCw,
 } from "lucide-react";
 import { MentalStatePanel, upsertMentalEntry, SCORE_META, loadMental, type MentalEntry } from "@/components/MentalStatePanel";
 import JournalReviewPanel from "@/components/JournalReviewPanel";
 
 import { exportMyData } from "@/lib/privacy.functions";
+import { verifyJournalTrade } from "@/lib/trade-verify.functions";
 import { pullAndMerge, pushAll, type SyncTrade } from "@/lib/journal-sync";
 import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
 
@@ -92,10 +94,39 @@ type Trade = {
   followedPlan?: boolean;
   gradeMatch?: "yes" | "no" | "partial";
   takeaway?: string;
+  /** Outcome of the trade: checked against live price history or set by hand. */
+  result?: TradeResult;
+  /** Where the result came from, so a manual call is never overwritten. */
+  resultSource?: "auto" | "manual";
+  /** Realised R at the moment the result was decided. */
+  resultR?: number | null;
+  /** Plain-language explanation shown under the badge. */
+  resultNote?: string;
+  resultCheckedAt?: number;
   /** AI chat thread that produced this setup, so the trade links back to it. */
   threadId?: string;
   createdAt: number;
 };
+
+export type TradeResult = "tp" | "stop" | "breakeven" | "partial" | "open";
+
+const RESULT_META: Record<TradeResult, { label: string; cls: string }> = {
+  tp: { label: "Take profit hit", cls: "bg-bull/15 text-bull border-bull/30" },
+  breakeven: { label: "Breakeven", cls: "bg-bull/10 text-bull border-bull/25" },
+  stop: { label: "Stop loss hit", cls: "bg-destructive/15 text-destructive border-destructive/30" },
+  partial: { label: "Closed part way", cls: "bg-amber-500/15 text-amber-500 border-amber-500/30" },
+  open: { label: "Still open", cls: "bg-muted/40 text-muted-foreground border-border/60" },
+};
+
+const MANUAL_RESULTS: { value: TradeResult | ""; label: string }[] = [
+  { value: "", label: "Not set" },
+  { value: "tp", label: "Take profit hit" },
+  { value: "breakeven", label: "Breakeven" },
+  { value: "partial", label: "Closed part way" },
+  { value: "stop", label: "Stop loss hit" },
+  { value: "open", label: "Still open" },
+];
+
 
 const STORAGE_KEY = "trademind.journal.trades.v1";
 const MENTAL_KEY = "trademind.mental.v1";
@@ -162,7 +193,7 @@ function csvEscape(v: unknown): string {
 }
 
 function exportTradesCsv(trades: Trade[]) {
-  const headers = ["date","timeframe","symbol","side","entry","exit","stop","takeProfit","size","pointValue","fees","pnl","rr","plannedRR","ruleBroken","ruleBrokenNote","lossCategory","setup","followedPlan","gradeMatch","takeaway","notes"];
+  const headers = ["date","timeframe","symbol","side","entry","exit","stop","takeProfit","size","pointValue","fees","pnl","rr","plannedRR","ruleBroken","ruleBrokenNote","lossCategory","setup","followedPlan","gradeMatch","takeaway","result","resultR","notes"];
   const rows = trades.map((t) => {
     const rr = tradeRR(t);
     const prr = plannedRR(t);
@@ -180,6 +211,8 @@ function exportTradesCsv(trades: Trade[]) {
       t.followedPlan ? "yes" : t.followedPlan === false ? "no" : "",
       t.gradeMatch ?? "",
       t.takeaway ?? "",
+      t.result ?? "",
+      t.resultR ?? "",
       t.notes ?? "",
     ].map(csvEscape).join(",");
   });
@@ -517,6 +550,7 @@ function JournalPage() {
           onEdit={openEdit}
           onDelete={handleDelete}
           onImport={(merged) => setTrades(merged)}
+          onUpdate={handleSave}
         />
 
       )}
@@ -586,6 +620,7 @@ function JournalPage() {
                   t={t}
                   onEdit={(tr) => { setDayView(null); openEdit(tr); }}
                   onDelete={handleDelete}
+                  onUpdate={handleSave}
                 />
               ))}
             </div>
@@ -608,12 +643,13 @@ function JournalPage() {
 }
 
 function TradesList({
-  trades, onEdit, onDelete, onImport,
+  trades, onEdit, onDelete, onImport, onUpdate,
 }: {
   trades: Trade[];
   onEdit: (t: Trade) => void;
   onDelete: (id: string) => void;
   onImport: (merged: Trade[]) => void;
+  onUpdate: (t: Trade) => void;
 }) {
   const restoreInputRef = useRef<HTMLInputElement>(null);
   const handleRestore = async (file: File | null | undefined) => {
@@ -668,7 +704,7 @@ function TradesList({
       ) : (
         <div className="divide-y divide-border/60">
           {trades.map((t) => (
-            <TradeRow key={t.id} t={t} onEdit={onEdit} onDelete={onDelete} />
+            <TradeRow key={t.id} t={t} onEdit={onEdit} onDelete={onDelete} onUpdate={onUpdate} />
           ))}
         </div>
       )}
@@ -677,9 +713,69 @@ function TradesList({
 }
 
 
-function TradeRow({ t, onEdit, onDelete }: { t: Trade; onEdit: (t: Trade) => void; onDelete: (id: string) => void }) {
+function ResultBadge({ t }: { t: Trade }) {
+  if (!t.result) return null;
+  const meta = RESULT_META[t.result];
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-semibold ${meta.cls}`}
+      title={t.resultNote ?? undefined}
+    >
+      {meta.label}
+      {t.resultR != null && <span className="opacity-70">{t.resultR > 0 ? "+" : ""}{t.resultR}R</span>}
+      {t.resultSource === "manual" && <span className="opacity-60">manual</span>}
+    </span>
+  );
+}
+
+/** Checks the trade against real price bars and stores the outcome. */
+function CheckResultButton({ t, onUpdate }: { t: Trade; onUpdate: (t: Trade) => void }) {
+  const [busy, setBusy] = useState(false);
+  const run = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const res = await verifyJournalTrade({
+        data: {
+          symbol: t.symbol,
+          timeframe: t.timeframe,
+          side: t.side,
+          entry: t.entry,
+          stop: t.stop,
+          takeProfit: t.takeProfit ?? null,
+          since: t.createdAt || parseYmd(t.date).getTime(),
+        },
+      });
+      onUpdate({
+        ...t,
+        result: res.status,
+        resultSource: "auto",
+        resultR: res.r,
+        resultNote: res.note,
+        resultCheckedAt: Date.now(),
+      });
+    } catch (e) {
+      onUpdate({ ...t, resultNote: `Could not check: ${(e as Error).message}`, resultCheckedAt: Date.now() });
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <button
+      onClick={run}
+      disabled={busy}
+      className="shrink-0 inline-flex items-center gap-1 rounded-xl border border-border/60 px-2 py-1 text-[10px] font-semibold text-muted-foreground hover:text-foreground hover:bg-accent/40 disabled:opacity-50"
+      title="Check this trade against live price history"
+    >
+      <RefreshCw className={`h-3 w-3 ${busy ? "animate-spin" : ""}`} /> {busy ? "Checking" : "Check result"}
+    </button>
+  );
+}
+
+function TradeRow({ t, onEdit, onDelete, onUpdate }: { t: Trade; onEdit: (t: Trade) => void; onDelete: (id: string) => void; onUpdate: (t: Trade) => void }) {
   const pnl = tradePnl(t);
   const rr = tradeRR(t);
+
   return (
     <div className="flex items-center gap-4 p-4 hover:bg-accent/20 transition">
       {t.hasImage && <TradeThumb tradeId={t.id} />}
@@ -707,6 +803,7 @@ function TradeRow({ t, onEdit, onDelete }: { t: Trade; onEdit: (t: Trade) => voi
           {t.lossCategory && (
             <span className="text-[10px] rounded bg-destructive/10 text-destructive px-1.5 py-0.5">{t.lossCategory}</span>
           )}
+          <ResultBadge t={t} />
         </div>
         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground tabular-nums">
           <span>Entry <span className="text-foreground font-medium">{t.entry}</span></span>
@@ -715,6 +812,7 @@ function TradeRow({ t, onEdit, onDelete }: { t: Trade; onEdit: (t: Trade) => voi
           <span>Exit <span className="text-foreground font-medium">{t.exit && t.exit !== t.entry ? t.exit : "open"}</span></span>
           <span>Size <span className="text-foreground font-medium">{t.size}</span></span>
         </div>
+        {t.resultNote && <div className="mt-1 text-[11px] text-muted-foreground">{t.resultNote}</div>}
         {t.notes && <div className="mt-1 text-xs text-muted-foreground line-clamp-1">{t.notes}</div>}
 
       </button>
@@ -726,7 +824,9 @@ function TradeRow({ t, onEdit, onDelete }: { t: Trade; onEdit: (t: Trade) => voi
           R:R {rr == null ? "-" : `${rr.toFixed(2)}`}
         </div>
       </div>
+      {t.resultSource !== "manual" && <CheckResultButton t={t} onUpdate={onUpdate} />}
       {t.threadId && (
+
         <Link
           to="/chat/$threadId"
           params={{ threadId: t.threadId }}
@@ -1207,6 +1307,7 @@ function TradeFormModal({
   const [followedPlan, setFollowedPlan] = useState<boolean>(editing?.followedPlan ?? true);
   const [gradeMatch, setGradeMatch] = useState<"yes" | "no" | "partial" | "">(editing?.gradeMatch ?? "");
   const [takeaway, setTakeaway] = useState<string>(editing?.takeaway ?? "");
+  const [result, setResult] = useState<TradeResult | "">(editing?.result ?? "");
 
   // Mental state for this trade's date — two birds, one stone.
   const [mentalScore, setMentalScore] = useState<1 | 2 | 3 | 4 | 5 | null>(null);
@@ -1295,6 +1396,12 @@ function TradeFormModal({
     followedPlan: followedPlan || undefined,
     gradeMatch: gradeMatch || undefined,
     takeaway: takeaway.trim() || undefined,
+    result: result || undefined,
+    resultSource: result ? (result === editing?.result ? editing?.resultSource ?? "manual" : "manual") : undefined,
+    resultR: result && result !== editing?.result ? null : editing?.resultR ?? null,
+    resultNote:
+      result && result !== editing?.result ? "Result set by hand in the journal." : editing?.resultNote,
+    resultCheckedAt: result ? Date.now() : editing?.resultCheckedAt,
     threadId: editing?.threadId ?? prefill?.threadId,
     createdAt: editing?.createdAt ?? Date.now(),
   };
@@ -1497,6 +1604,17 @@ function TradeFormModal({
                 </button>
               ))}
             </div>
+            <Field label="Result of this trade">
+              <select
+                value={result}
+                onChange={(e) => setResult(e.target.value as TradeResult | "")}
+                className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm"
+              >
+                {MANUAL_RESULTS.map((r) => (
+                  <option key={r.value || "none"} value={r.value}>{r.label}</option>
+                ))}
+              </select>
+            </Field>
             <input
               value={takeaway}
               onChange={(e) => setTakeaway(e.target.value)}
