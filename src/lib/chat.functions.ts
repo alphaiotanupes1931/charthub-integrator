@@ -208,19 +208,21 @@ export const renameChatThread = createServerFn({ method: "POST" })
 export const appendAssistantChatMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z.object({ threadId: z.string().uuid(), text: z.string().min(1).max(20000) }).parse(d),
+    z.object({ threadId: z.string().uuid(), text: z.string().min(1).max(20000), msgId: z.string().max(120).optional() }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    const { error } = await context.supabase.from("chat_messages").insert({
+    const { error } = await context.supabase.from("chat_messages").upsert({
       thread_id: data.threadId,
       user_id: context.userId,
       client_id: context.userId,
+      msg_id: data.msgId ?? null,
       role: "assistant",
       parts: [{ type: "text", text: data.text }] as never,
-    });
+    } as never, { onConflict: "thread_id,msg_id", ignoreDuplicates: true });
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
 
 
 
