@@ -420,10 +420,20 @@ function JournalPage() {
     });
     setFormOpen(false);
     setEditingId(null);
+    // Only a real save counts as "logged", so the chat and dashboard can tell
+    // the trader they already submitted this setup.
+    markTradeLogged({
+      tradeId: t.id,
+      symbol: t.symbol,
+      threadId: t.threadId ?? null,
+      entry: t.entry,
+      date: t.date,
+    });
     emitFirstWeekEvent("journal-log");
   };
   const handleDelete = (id: string) => {
     setTrades((prev) => prev.filter((p) => p.id !== id));
+    unmarkTradeLogged(id);
     void deleteTradeImage(id);
   };
 
