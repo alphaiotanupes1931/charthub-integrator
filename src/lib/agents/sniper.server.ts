@@ -146,7 +146,7 @@ export function refineSniper(snap: MarketSnapshot, plan: SniperInput): SniperRes
   if (!(last > 0) || !(riskBefore > 0) || snap.candles.length < 20) return base;
 
   const minGap = Math.max(atr * 0.05, last * 0.0002);
-  const maxGap = atr * 2.5;
+  const maxGap = atr * 1.8; // deeper than this and the limit rarely fills
   const pad = Math.max(atr * 0.2, last * 0.0003);
 
   const cands = [...structureCandidates(snap, bias), ...swingLeg(snap, bias)];
@@ -204,7 +204,7 @@ export function refineSniper(snap: MarketSnapshot, plan: SniperInput): SniperRes
     notes:
       `Rescanned on the ${snap.interval === "D" ? "daily" : `${snap.interval}m`} chart and found a deeper fill at the ${best.anchor}. ` +
       `${best.orderType} at ${f(best.entry)} with the stop at ${f(best.stop)} cuts risk by ${tighter}% and lifts R:R on TP1 from ${rrBefore.toFixed(2)} to ${best.rr.toFixed(2)}. ` +
-      `Targets stay at ${f(plan.tp1)} and ${f(plan.tp2)}. This limit only fills if price trades back that far, so it is a patience trade, not a chase.`,
+      `Targets stay at ${f(plan.tp1)} and ${f(plan.tp2)}. This limit only fills if price trades back that far, so it is a patience trade, not a chase. Distance to fill is ${(Math.abs(best.entry - last) / atr).toFixed(2)}x ATR.`,
   };
 }
 
