@@ -918,7 +918,15 @@ export const Route = createFileRoute("/api/chat")({
 
         const staticSystem = staticSystemPrompt();
         const forceDraw = shouldForceChartDraw(messages);
-        const liveSystem = dynamicSystemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens), learningCtx, newsCtx, scoreCtx, forceDraw, previousCoach);
+        let liveSystem = dynamicSystemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens), learningCtx, newsCtx, scoreCtx, forceDraw, previousCoach);
+        // Retrieved methodology / psychology reference for this exact question.
+        try {
+          const { methodologyContextBlock } = await import("@/lib/agents/methodology-kb");
+          const methodCtx = methodologyContextBlock(lastUserText(messages).text, coach);
+          if (methodCtx) liveSystem = `${methodCtx}\n\n${liveSystem}`;
+        } catch (e) {
+          console.warn(`[chat] req=${reqId} methodology_failed`, (e as Error).message);
+        }
 
         const useClaude = !!anthropicKey && (await anthropicUsable(anthropicKey));
         // Model routing: a plain setup grade or a short factual question runs on
