@@ -260,6 +260,14 @@ function sanitizeGradeForPrice(grade: ChartGrade, lastPrice?: number): ChartGrad
   const bias = grade.bias ?? "neutral";
   if (!lastPrice || !isFinite(lastPrice) || lastPrice <= 0 || typeof grade.entry !== "number" || typeof grade.stop !== "number") return grade;
   if (!isFinite(grade.entry) || !isFinite(grade.stop)) return grade;
+  // Scan-engine cards have already passed deterministic structure, ATR, and
+  // direction validation. Re-clamping them here created a second entry price
+  // that no longer matched the Setup chart or the engine's written thesis.
+  // Only round trusted scan levels for display; sanitize free-form coach cards.
+  if (grade.dataSource) {
+    const r = (n?: number) => (typeof n === "number" && isFinite(n) ? roundPrice(n, lastPrice) : n);
+    return { ...grade, entry: r(grade.entry), stop: r(grade.stop), tp1: r(grade.tp1), tp2: r(grade.tp2) };
+  }
   // Risk and pullback distance both get a sane ceiling so the chat card can
   // never show an entry parked far away from where price actually is.
   const maxRisk = lastPrice * 0.006;
