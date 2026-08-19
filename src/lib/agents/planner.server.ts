@@ -400,8 +400,11 @@ function sanitizePlan(plan: RawPlan, snap: MarketSnapshot, memo: ResearchMemo): 
   }
 
   const dec = decimalsFor(last);
+  // Once deterministic validation changes an AI-proposed level, the old thesis
+  // can no longer be trusted to name the entry anchor. Replace it rather than
+  // appending to it, otherwise the same explanation can claim two entries.
   const thesis = anchorLabel
-    ? `${plan.thesis} Entry refined to the ${anchorLabel} at ${fmt(entry, dec)}; stop sits ${fmt(stopDist, dec)} beyond it (${(stopDist / atr).toFixed(2)}x ATR).`
+    ? `The planned entry is ${fmt(entry, dec)}, anchored to the ${anchorLabel}. The stop is ${fmt(stop, dec)}, giving ${fmt(stopDist, dec)} of risk (${(stopDist / atr).toFixed(2)}x ATR). Other mapped zones are supporting structure or invalidation unless they contain ${fmt(entry, dec)}.`
     : plan.thesis;
 
   return { ...plan, entry, stop, tp1, tp2, thesis };
@@ -752,10 +755,26 @@ function buildDetails(
   }
   const h1 = snap.mtf?.h1;
   if (h1) {
-    const ob = bias === "Short" ? h1.orderBlocks.bear[0] : h1.orderBlocks.bull[0];
+    const orderBlocks = bias === "Short" ? h1.orderBlocks.bear : h1.orderBlocks.bull;
+    const ob = [...orderBlocks].sort((a, b) => {
+      const distance = (z: [number, number]) => {
+        const lo = Math.min(z[0], z[1]);
+        const hi = Math.max(z[0], z[1]);
+        return plan.entry < lo ? lo - plan.entry : plan.entry > hi ? plan.entry - hi : 0;
+      };
+      return distance(a) - distance(b);
+    })[0];
     const fvg = bias === "Short" ? h1.fvg.bear[0] : h1.fvg.bull[0];
+    const obLo = ob ? Math.min(ob[0], ob[1]) : null;
+    const obHi = ob ? Math.max(ob[0], ob[1]) : null;
+    const entryInOb = obLo !== null && obHi !== null && plan.entry >= obLo && plan.entry <= obHi;
+    const obRole = ob
+      ? entryInOb
+        ? `The planned entry ${fmt(plan.entry, dec)} is inside that order block.`
+        : `The planned entry is ${fmt(plan.entry, dec)}, so this order block is supporting or invalidation structure, not the entry zone.`
+      : "";
     structure.push(
-      `1H structure break is ${h1.structureBreak}, reversal signal ${h1.reversal}, nearest ${bias === "Short" ? "bearish" : "bullish"} order block ${ob ? `${fmt(ob[0], dec)}-${fmt(ob[1], dec)}` : "none"} and FVG ${fvg ? `${fmt(fvg[0], dec)}-${fmt(fvg[1], dec)}` : "none"}.`,
+      `1H structure break is ${h1.structureBreak}, reversal signal ${h1.reversal}, nearest ${bias === "Short" ? "bearish" : "bullish"} order block ${ob ? `${fmt(obLo ?? ob[0], dec)}-${fmt(obHi ?? ob[1], dec)}` : "none"} and FVG ${fvg ? `${fmt(fvg[0], dec)}-${fmt(fvg[1], dec)}` : "none"}. ${obRole}`,
     );
     const buyside = h1.liquidity.buyside[0];
     const sellside = h1.liquidity.sellside[0];
