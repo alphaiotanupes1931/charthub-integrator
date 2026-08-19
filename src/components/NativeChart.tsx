@@ -472,23 +472,31 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [candles, levels, fibStudy, orderBlocks, ticker, interval, liveOhlc?.source, sourceLabel, activeSessionsNow]);
 
-  // Init / teardown chart. Re-init when timezone changes so axis + crosshair labels re-render in the new zone.
+  // Time formatting is read through refs so changing the timezone (or 12/24h)
+  // only re-applies axis options instead of tearing the chart down, which used
+  // to leave a blank panel until the next data push.
+  const tzRef = useRef<string | undefined>(resolvedTimezone);
+  const hour12Ref = useRef<boolean>(timeFormat === "12h");
+  tzRef.current = resolvedTimezone;
+  hour12Ref.current = timeFormat === "12h";
+
+  const fmtTime = useCallback((t: number) => {
+    const d = new Date(t * 1000);
+    return d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", hour12: hour12Ref.current, timeZone: tzRef.current });
+  }, []);
+  const fmtDateTime = useCallback((t: number) => {
+    const d = new Date(t * 1000);
+    return d.toLocaleString(undefined, {
+      month: "short", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", hour12: hour12Ref.current, timeZone: tzRef.current,
+    });
+  }, []);
+
+  // Init / teardown chart.
   useEffect(() => {
     if (!containerRef.current) return;
     setInitError(null);
-    const hour12 = timeFormat === "12h";
-    const tz = resolvedTimezone; // undefined => browser local
-    const fmtTime = (t: number) => {
-      const d = new Date(t * 1000);
-      return d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", hour12, timeZone: tz });
-    };
-    const fmtDateTime = (t: number) => {
-      const d = new Date(t * 1000);
-      return d.toLocaleString(undefined, {
-        month: "short", day: "2-digit",
-        hour: "2-digit", minute: "2-digit", hour12, timeZone: tz,
-      });
-    };
+
     let chart: IChartApi;
     let series: ISeriesApi<"Candlestick">;
     try {
