@@ -1794,10 +1794,12 @@ function Dashboard() {
                 onClear={aiGrade ? () => { setAiGrade(null); setAiAnnotationsRaw([]); } : undefined}
                 onApplySniper={({ entry, stop, tp1, tp2, notes }) => {
                   const bias = aiGrade?.bias === "short" ? "short" : "long";
+
                   setAiGrade((prev) => (prev ? { ...prev, entry, stop, tp1, tp2, strength: notes || prev.strength } : prev));
                   setAiAnnotationsRaw(buildLevelAnnotations(bias, entry, stop, tp1, tp2, snapshot?.lastPrice));
                   setChartTab("setup");
                 }}
+
               />
 
               
