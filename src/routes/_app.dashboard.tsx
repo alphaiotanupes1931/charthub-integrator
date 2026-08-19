@@ -267,6 +267,57 @@ function normalizePlanLevels(plan: ScanResult, last?: number): NormalizedLevels 
   return { bias, entry, stop, tp1, tp2 };
 }
 
+/**
+ * Spell the entry out on the chart: order type (stop vs limit relative to the
+ * live price), the exact price, an entry zone band, then stop and targets with
+ * their R multiples. Shared by the scan pass and the sniper refinement so both
+ * always draw the same way.
+ */
+function buildLevelAnnotations(
+  bias: "long" | "short",
+  entry: number,
+  stop: number,
+  tp1: number,
+  tp2: number,
+  last?: number,
+): import("@/lib/chartAnnotations").ChartAnnotation[] {
+  const dp = entry >= 10 ? (entry >= 100 ? 2 : 3) : entry >= 1 ? 4 : 5;
+  const fmt = (v: number) => v.toFixed(dp);
+  const risk = Math.abs(entry - stop) || entry * 0.001;
+  const side = bias === "long" ? "BUY" : "SELL";
+  let orderType = "MARKET";
+  if (last && isFinite(last)) {
+    const tol = Math.max(last * 0.0002, risk * 0.05);
+    if (Math.abs(entry - last) > tol) {
+      if (bias === "long") orderType = entry > last ? "STOP" : "LIMIT";
+      else orderType = entry < last ? "STOP" : "LIMIT";
+    }
+  }
+  const entryColor = bias === "long" ? "var(--bull)" : "#ef4444";
+  const band = risk * 0.12;
+  const r1 = Math.abs(tp1 - entry) / risk;
+  const r2 = Math.abs(tp2 - entry) / risk;
+  return [
+    {
+      kind: "zone",
+      top: entry + band,
+      bottom: entry - band,
+      label: `ENTRY ZONE ${fmt(entry - band)} - ${fmt(entry + band)}`,
+      color: bias === "long" ? "#34d399" : "#ef4444",
+    },
+    {
+      kind: "hline",
+      price: entry,
+      label: `ENTER HERE - ${side} ${orderType} @ ${fmt(entry)}`,
+      color: entryColor,
+    },
+    { kind: "hline", price: stop, label: `STOP ${fmt(stop)} (-1R)`, color: "#ef4444", dashed: true },
+    { kind: "hline", price: tp1, label: `TP1 ${fmt(tp1)} (${r1.toFixed(1)}R)`, color: "var(--bull)", dashed: true },
+    { kind: "hline", price: tp2, label: `TP2 ${fmt(tp2)} (${r2.toFixed(1)}R)`, color: "var(--bull)", dashed: true },
+  ];
+}
+
+
 
 
 function gradeFor(symbol: Symbol, lastPrice?: number): ScanResult {
@@ -1090,43 +1141,8 @@ function Dashboard() {
       candleCount: plan.candleCount,
     });
     if (entry && stop && tp1 && tp2 && bias !== "neutral") {
-      // Spell the entry out on the chart: order type (stop vs limit relative to
-      // the live price), the exact price, and an entry zone band so the trader
-      // can see where to enter without reading the text.
-      const dp = entry >= 1000 ? 2 : entry >= 100 ? 2 : entry >= 10 ? 3 : entry >= 1 ? 4 : 5;
-      const fmt = (v: number) => v.toFixed(dp);
-      const risk = Math.abs(entry - stop) || entry * 0.001;
-      const side = bias === "long" ? "BUY" : "SELL";
-      let orderType = "MARKET";
-      if (last && isFinite(last)) {
-        const tol = Math.max(last * 0.0002, risk * 0.05);
-        if (Math.abs(entry - last) > tol) {
-          if (bias === "long") orderType = entry > last ? "STOP" : "LIMIT";
-          else orderType = entry < last ? "STOP" : "LIMIT";
-        }
-      }
-      const entryColor = bias === "long" ? "var(--bull)" : "#ef4444";
-      const band = risk * 0.12;
-      const r1 = Math.abs(tp1 - entry) / risk;
-      const r2 = Math.abs(tp2 - entry) / risk;
-      setAiAnnotationsRaw([
-        {
-          kind: "zone",
-          top: entry + band,
-          bottom: entry - band,
-          label: `ENTRY ZONE ${fmt(entry - band)} - ${fmt(entry + band)}`,
-          color: bias === "long" ? "#34d399" : "#ef4444",
-        },
-        {
-          kind: "hline",
-          price: entry,
-          label: `ENTER HERE - ${side} ${orderType} @ ${fmt(entry)}`,
-          color: entryColor,
-        },
-        { kind: "hline", price: stop, label: `STOP ${fmt(stop)} (-1R)`, color: "#ef4444", dashed: true },
-        { kind: "hline", price: tp1, label: `TP1 ${fmt(tp1)} (${r1.toFixed(1)}R)`, color: "var(--bull)", dashed: true },
-        { kind: "hline", price: tp2, label: `TP2 ${fmt(tp2)} (${r2.toFixed(1)}R)`, color: "var(--bull)", dashed: true },
-      ]);
+      setAiAnnotationsRaw(buildLevelAnnotations(bias, entry, stop, tp1, tp2, last));
+
 
       // TradingView (Live) can't render our markers, so a scan always drops the
       // chart onto the Setup view where entry/stop/TP lines are drawn. Without
@@ -1776,7 +1792,14 @@ function Dashboard() {
                 interval={interval}
                 scanning={scanning}
                 onClear={aiGrade ? () => { setAiGrade(null); setAiAnnotationsRaw([]); } : undefined}
+                onApplySniper={({ entry, stop, tp1, tp2, notes }) => {
+                  const bias = aiGrade?.bias === "short" ? "short" : "long";
+                  setAiGrade((prev) => (prev ? { ...prev, entry, stop, tp1, tp2, strength: notes || prev.strength } : prev));
+                  setAiAnnotationsRaw(buildLevelAnnotations(bias, entry, stop, tp1, tp2, snapshot?.lastPrice));
+                  setChartTab("setup");
+                }}
               />
+
               
             </div>
           )}

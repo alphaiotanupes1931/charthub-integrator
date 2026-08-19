@@ -1,12 +1,16 @@
 import { useState } from "react";
-import { ArrowUpRight, ArrowDownRight, Minus, Target, Shield, Flag, Clock, ChevronDown, ChevronUp, X, Zap, BookOpen, FlaskConical, Check } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, Minus, Target, Shield, Flag, Clock, ChevronDown, ChevronUp, X, Zap, BookOpen, FlaskConical, Check, Crosshair, Loader2 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import { useMutation } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { takeTrade } from "@/lib/signalHistory";
 import type { ChartGrade } from "@/lib/chartAnnotations";
 import { AutoBacktestVerify } from "@/components/AutoBacktestVerify";
 import { useTradeLogged } from "@/hooks/useTradeLogged";
 import { useTimezone } from "@/hooks/useTimezone";
 import { computeTiming, clockLabel, tzAbbrev } from "@/lib/tradeTiming";
+import { runSniperEntry } from "@/lib/agents/sniper.functions";
+import type { SniperResult } from "@/lib/agents/sniper.server";
 
 type Props = {
   grade: ChartGrade | null;
@@ -16,7 +20,10 @@ type Props = {
   interval?: string;
   onClear?: () => void;
   scanning?: boolean;
+  /** Push a refined sniper limit onto the chart + signal levels. */
+  onApplySniper?: (levels: { entry: number; stop: number; tp1: number; tp2: number; notes: string }) => void;
 };
+
 
 // Chart intervals the historical engine supports; anything finer or coarser is
 // snapped to the closest supported bar size.
@@ -50,10 +57,32 @@ function pct(from?: number, to?: number) {
   return `${(((to - from) / from) * 100).toFixed(2)}%`;
 }
 
-export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, scanning }: Props) {
+export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, scanning, onApplySniper }: Props) {
   const [expanded, setExpanded] = useState(false);
   const logged = useTradeLogged({ symbol, entry: grade?.entry ?? null });
   const { effectiveTimezone: tz } = useTimezone();
+  const sniperFn = useServerFn(runSniperEntry);
+  const [sniper, setSniper] = useState<SniperResult | null>(null);
+  const sniperMut = useMutation({
+    mutationFn: async (input: { entry: number; stop: number; tp1: number; tp2: number; bias: "Long" | "Short" }) =>
+      sniperFn({
+        data: {
+          ticker: symbol ?? "",
+          interval: interval ?? "60",
+          bias: input.bias,
+          entry: input.entry,
+          stop: input.stop,
+          tp1: input.tp1,
+          tp2: input.tp2,
+        },
+      }),
+    onSuccess: (res) => {
+      setSniper(res);
+      setExpanded(true);
+    },
+  });
+
+
 
   // Empty state - render nothing when idle so the chart can fill the whole area.
   // While actively scanning, show a very thin one-line status so the user gets
@@ -144,6 +173,31 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
 
         <div className="flex-1" />
 
+        {(isLong || isShort)
+          && typeof grade.entry === "number" && typeof grade.stop === "number"
+          && typeof grade.tp1 === "number" && typeof grade.tp2 === "number" && (
+          <button
+            type="button"
+            disabled={sniperMut.isPending}
+            onClick={() =>
+              sniperMut.mutate({
+                bias: isLong ? "Long" : "Short",
+                entry: grade.entry as number,
+                stop: grade.stop as number,
+                tp1: grade.tp1 as number,
+                tp2: grade.tp2 as number,
+              })
+            }
+            className="inline-flex h-8 items-center gap-1.5 rounded-2xl border border-primary/50 bg-primary/10 px-3 text-[10px] font-bold tracking-tight text-primary hover:bg-primary/20 disabled:opacity-60"
+            title="Double down: rescan on a lower timeframe for a deeper sniper limit with tighter risk"
+          >
+            {sniperMut.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Crosshair className="h-3 w-3" />}
+            {sniperMut.isPending ? "Sniping…" : "Sniper entry"}
+          </button>
+        )}
+
+
+
         {(isLong || isShort) && (
           <div className="flex flex-col gap-1">
             {logged ? (
@@ -204,8 +258,70 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
         )}
       </div>
 
+      {sniperMut.isError && (
+        <div className="border-t border-border/40 px-4 py-2 text-[10px] text-red-300">
+          The sniper pass could not run just now. Try it again in a moment.
+        </div>
+      )}
+
+      {sniper && (
+        <div className="border-t border-primary/30 bg-primary/5 px-4 py-3 space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Crosshair className="h-3 w-3 text-primary" />
+            <span className="text-[10px] font-bold tracking-wider text-primary">SNIPER ENTRY</span>
+            <span className="text-[10px] text-muted-foreground">
+              {sniper.improved ? `${sniper.orderType} · anchored to ${sniper.anchor}` : "no better fill found"}
+            </span>
+            <div className="flex-1" />
+            {sniper.improved && onApplySniper && (
+              <button
+                type="button"
+                onClick={() =>
+                  onApplySniper({
+                    entry: sniper.entry,
+                    stop: sniper.stop,
+                    tp1: sniper.tp1,
+                    tp2: sniper.tp2,
+                    notes: sniper.notes,
+                  })
+                }
+                className="inline-flex h-7 items-center gap-1.5 rounded-2xl bg-primary px-3 text-[10px] font-bold tracking-tight text-primary-foreground hover:opacity-90"
+                title="Replace the plan levels with this sniper limit and redraw the chart"
+              >
+                <Check className="h-3 w-3" /> Use this limit
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setSniper(null)}
+              className="inline-flex h-7 w-7 items-center justify-center rounded-2xl text-muted-foreground hover:text-foreground hover:bg-muted/60"
+              aria-label="Dismiss sniper entry"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+          {sniper.improved && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {[
+                { k: "entry", label: "Sniper entry", v: fmt(sniper.entry), tone: "text-foreground" },
+                { k: "stop", label: "Sniper stop", v: fmt(sniper.stop), tone: "text-red-300" },
+                { k: "rr", label: "R:R on TP1", v: `${sniper.rr.toFixed(2)} (was ${sniper.rrBefore.toFixed(2)})`, tone: "text-bull" },
+                { k: "risk", label: "Risk per unit", v: `${fmt(sniper.riskAfter)} (was ${fmt(sniper.riskBefore)})`, tone: "text-foreground" },
+              ].map((c) => (
+                <div key={c.k} className="flex flex-col gap-0.5 rounded-xl border border-border/50 bg-background/40 px-2 py-1.5">
+                  <span className="text-[9px] uppercase tracking-wider text-muted-foreground">{c.label}</span>
+                  <span className={`font-mono text-[11px] ${c.tone}`}>{c.v}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="text-[10px] text-muted-foreground">{sniper.notes}</div>
+        </div>
+      )}
+
       {expanded && (
         <div className="border-t border-border/40 px-4 py-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
+
           {rows.map((r) => {
             const Icon = r.icon;
             const delta = pct(r.from, r.value);
