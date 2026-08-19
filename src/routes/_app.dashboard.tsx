@@ -1156,33 +1156,10 @@ function Dashboard() {
   };
 
   const scanResultToChatText = (plan: ScanResult, scanSymbol: Symbol) => {
-    const num = (s: string): number | undefined => {
-      if (!s || s === "-") return undefined;
-      const n = parseFloat(String(s).replace(/[^0-9.\-]/g, ""));
-      return isFinite(n) ? n : undefined;
-    };
-    const bias = plan.bias.toLowerCase() as "long" | "short" | "neutral";
     const last = snapshot?.lastPrice;
-    let entry = num(plan.entry);
-    let stop = num(plan.stop);
-    let tp1 = num(plan.tp1);
-    let tp2 = num(plan.tp2);
-    if (entry && stop && tp1 && tp2 && last && isFinite(last) && last > 0) {
-      const tol = Math.max(last * 0.0001, Math.abs(entry - stop) * 0.05);
-      if (bias === "long" && entry > last + tol) entry = last;
-      if (bias === "short" && entry < last - tol) entry = last;
-      const risk = Math.max(Math.abs(entry - stop), last * 0.001);
-      if (bias === "long") {
-        stop = entry - risk;
-        tp1 = Math.max(tp1, entry + risk * 1.5);
-        tp2 = Math.max(tp2, tp1 + risk * 1.5, entry + risk * 3);
-      } else if (bias === "short") {
-        stop = entry + risk;
-        tp1 = Math.min(tp1, entry - risk * 1.5);
-        tp2 = Math.min(tp2, tp1 - risk * 1.5, entry - risk * 3);
-      }
-    }
+    const { bias, entry, stop, tp1, tp2 } = levelsForPlan(plan);
     const dec = decimalsFor(last || entry || 1);
+
     const safeEntry = entry === undefined ? plan.entry : fmtPrice(entry, dec);
     const safeStop = stop === undefined ? plan.stop : fmtPrice(stop, dec);
     const safeTp1 = tp1 === undefined ? plan.tp1 : fmtPrice(tp1, dec);
