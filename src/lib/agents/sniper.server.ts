@@ -146,7 +146,7 @@ export function refineSniper(snap: MarketSnapshot, plan: SniperInput): SniperRes
   if (!(last > 0) || !(riskBefore > 0) || snap.candles.length < 20) return base;
 
   const minGap = Math.max(atr * 0.05, last * 0.0002);
-  const maxGap = atr * 1.8; // deeper than this and the limit rarely fills
+  const maxGap = atr * 2.5; // beyond this the limit almost never fills
   const pad = Math.max(atr * 0.2, last * 0.0003);
 
   const cands = [...structureCandidates(snap, bias), ...swingLeg(snap, bias)];
