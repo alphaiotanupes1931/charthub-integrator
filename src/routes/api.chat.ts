@@ -3,6 +3,7 @@ import { convertToModelMessages, streamText, type StreamTextTransform, type Tool
 import { createClient } from "@supabase/supabase-js";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createAiGatewayProvider } from "@/lib/ai-gateway.server";
+import { METHODOLOGY_CORE } from "@/lib/agents/methodology-kb";
 import {
   corsHeadersFor,
   enforceMaxBody,
