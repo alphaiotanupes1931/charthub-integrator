@@ -592,7 +592,21 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       seriesRef.current = null;
       setReady(false);
     };
-  }, [resolvedTimezone, timeFormat, initAttempt, candleType]);
+  }, [initAttempt, candleType, fmtTime, fmtDateTime]);
+
+  // Timezone / clock-format change: re-apply the axis formatters in place so the
+  // existing candles stay on screen.
+  useEffect(() => {
+    if (!ready || !chartRef.current) return;
+    try {
+      chartRef.current.applyOptions({
+        timeScale: { tickMarkFormatter: (time: number) => fmtTime(time) },
+        localization: { timeFormatter: (time: number) => fmtDateTime(time) },
+      } as never);
+    } catch { /* ignore */ }
+  }, [ready, resolvedTimezone, timeFormat, fmtTime, fmtDateTime]);
+
+
 
   // Apply live candle-color updates without recreating the chart
   useEffect(() => {
