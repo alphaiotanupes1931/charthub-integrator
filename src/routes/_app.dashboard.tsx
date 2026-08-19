@@ -229,6 +229,46 @@ function decimalsFor(price: number): number {
   return 5;
 }
 
+type NormalizedLevels = {
+  bias: "long" | "short" | "neutral";
+  entry?: number;
+  stop?: number;
+  tp1?: number;
+  tp2?: number;
+};
+
+/** Single source of truth for the numbers shown in chat and on the Setup chart. */
+function normalizePlanLevels(plan: ScanResult, last?: number): NormalizedLevels {
+  const num = (s: string): number | undefined => {
+    if (!s || s === "-") return undefined;
+    const n = parseFloat(String(s).replace(/[^0-9.\-]/g, ""));
+    return isFinite(n) ? n : undefined;
+  };
+  const bias = (plan.bias === "Long" ? "long" : plan.bias === "Short" ? "short" : "neutral") as NormalizedLevels["bias"];
+  let entry = num(plan.entry);
+  let stop = num(plan.stop);
+  let tp1 = num(plan.tp1);
+  let tp2 = num(plan.tp2);
+  if (entry && stop && tp1 && tp2 && last && isFinite(last) && last > 0) {
+    const tol = Math.max(last * 0.0001, Math.abs(entry - stop) * 0.05);
+    if (bias === "long" && entry > last + tol) entry = last;
+    if (bias === "short" && entry < last - tol) entry = last;
+    const risk = Math.max(Math.abs(entry - stop), last * 0.001);
+    if (bias === "long") {
+      stop = entry - risk;
+      tp1 = Math.max(tp1, entry + risk * 1.5);
+      tp2 = Math.max(tp2, tp1 + risk * 1.5, entry + risk * 3);
+    } else if (bias === "short") {
+      stop = entry + risk;
+      tp1 = Math.min(tp1, entry - risk * 1.5);
+      tp2 = Math.min(tp2, tp1 - risk * 1.5, entry - risk * 3);
+    }
+  }
+  return { bias, entry, stop, tp1, tp2 };
+}
+
+
+
 function gradeFor(symbol: Symbol, lastPrice?: number): ScanResult {
   let h = 0;
   for (let i = 0; i < symbol.tv.length; i++) h = (h * 31 + symbol.tv.charCodeAt(i)) >>> 0;
