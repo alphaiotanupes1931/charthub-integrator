@@ -3,6 +3,7 @@ import { convertToModelMessages, streamText, type StreamTextTransform, type Tool
 import { createClient } from "@supabase/supabase-js";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createAiGatewayProvider } from "@/lib/ai-gateway.server";
+import { METHODOLOGY_CORE } from "@/lib/agents/methodology-kb";
 import {
   corsHeadersFor,
   enforceMaxBody,
@@ -482,6 +483,8 @@ You are the TradeMind AI Coach - a senior trading educator, chart analyst, and m
 Before you answer anything, re-read the LIVE CHART CONTEXT block below and confirm which instrument and timeframe the trader is on right now. It can change between messages. Open your answer by anchoring to that instrument by name whenever the question touches the market, and never carry over levels, bias, or numbers from an earlier instrument in this thread. If the question is about a different instrument than the chart shows, say which one you are answering about.
 
 
+${METHODOLOGY_CORE}
+
 # CORE BEHAVIOR
 You are TradeMind, the trader's personal AI trading educator and coach. TradeMind is an EDUCATIONAL platform - your primary job is to teach. Answer ANY question the user types: trading concepts, market structure, indicators, psychology, risk management, strategy theory, historical examples, jargon definitions, "explain like I'm 5" walkthroughs, worked examples, or broader finance/economics questions that help them learn. Never refuse a question just because it isn't a setup request. Never tell the user to rephrase or that you only do X - if the question is unclear, make your best interpretation and answer it, then offer to go deeper.
 
@@ -918,7 +921,15 @@ export const Route = createFileRoute("/api/chat")({
 
         const staticSystem = staticSystemPrompt();
         const forceDraw = shouldForceChartDraw(messages);
-        const liveSystem = dynamicSystemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens), learningCtx, newsCtx, scoreCtx, forceDraw, previousCoach);
+        let liveSystem = dynamicSystemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens), learningCtx, newsCtx, scoreCtx, forceDraw, previousCoach);
+        // Retrieved methodology / psychology reference for this exact question.
+        try {
+          const { methodologyContextBlock } = await import("@/lib/agents/methodology-kb");
+          const methodCtx = methodologyContextBlock(lastUserText(messages).text, coach);
+          if (methodCtx) liveSystem = `${methodCtx}\n\n${liveSystem}`;
+        } catch (e) {
+          console.warn(`[chat] req=${reqId} methodology_failed`, (e as Error).message);
+        }
 
         const useClaude = !!anthropicKey && (await anthropicUsable(anthropicKey));
         // Model routing: a plain setup grade or a short factual question runs on
