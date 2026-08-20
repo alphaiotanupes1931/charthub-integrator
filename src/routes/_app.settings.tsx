@@ -29,6 +29,8 @@ import {
 import { isWelcomeBackMuted, setWelcomeBackMuted } from "@/lib/welcomeBack";
 import { useCandleColors, type CandleColors } from "@/hooks/useCandleColors";
 import { useChartBackground, CHART_BG_PRESETS, type ChartBackground } from "@/hooks/useChartBackground";
+import { ChartReadabilityNotice } from "@/components/ChartReadabilityNotice";
+import { contrastRatio, formatRatio } from "@/lib/chartContrast";
 import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
 
 export const Route = createFileRoute("/_app/settings")({
