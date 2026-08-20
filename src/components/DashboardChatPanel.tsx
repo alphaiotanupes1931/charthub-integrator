@@ -32,7 +32,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { compressImage, getScreenshotQuota, bumpScreenshotQuota } from "@/lib/imageCompress";
 import { toast } from "sonner";
 import { parseAiPayload, type ChartAnnotation, type ChartGrade, type ConceptRef } from "@/lib/chartAnnotations";
-import { coalesceUiMessageStream, textFromUiMessageParts } from "@/lib/chat-stream";
+import { coalesceUiMessageStream, textFromUiMessageParts, friendlyChatError } from "@/lib/chat-stream";
 import { ConceptDiagram } from "@/components/ConceptDiagram";
 import { buildLearningPromptBlock } from "@/lib/signalLearning";
 import { takeTrade } from "@/lib/signalHistory";
