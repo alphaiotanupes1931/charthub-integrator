@@ -90,12 +90,15 @@ function AdminPage() {
         setErr(e instanceof Error ? e.message : "Failed to load");
       }
     })();
-    aiCostSummary({ data: { days: 30 } })
+    // Calendar-month-to-date window so the numbers match "this month".
+    aiCostSummary({ data: { days: Math.max(1, new Date().getDate()) } })
       .then((res) => {
-        setAiSpend30(res.byKind.reduce((s, r) => s + Number(r.cost_usd), 0));
+        const sum = res.byKind.reduce((s, r) => s + Number(r.cost_usd), 0);
+        setAiSpend30(sum);
+        setAiSpendMonth(sum);
         setAiPerUser(res.byUser);
       })
-      .catch(() => setAiSpend30(null));
+      .catch(() => { setAiSpend30(null); setAiSpendMonth(null); });
     adminUsageToday()
       .then((rows) => setUsageToday(rows))
       .catch(() => setUsageToday([]));
