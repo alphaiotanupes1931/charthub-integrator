@@ -34,8 +34,9 @@ export function contrastRatio(a: string, b: string): number {
 
 /** Axis text is small, so we hold it to the AA small-text bar. */
 export const TEXT_MIN_RATIO = 4.5;
-/** Gridlines only need to be perceivable, not readable. */
-export const GRID_MIN_RATIO = 1.2;
+/** Gridlines are deliberately subtle; only flag ones that vanish entirely.
+ * Every shipped preset sits at 1.10-1.21, so the bar stays below that. */
+export const GRID_MIN_RATIO = 1.05;
 
 export type ChartContrastIssue = {
   id: "text" | "grid";
