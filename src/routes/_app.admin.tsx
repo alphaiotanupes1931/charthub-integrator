@@ -10,6 +10,8 @@ import { aiCostSummary } from "@/lib/ai-cost.functions";
 import { aiCreditsStatus, setAiBudget } from "@/lib/ai-credits.functions";
 import { adminListSupportRequests } from "@/lib/support.functions";
 import { RevenuePanel } from "@/components/admin/RevenuePanel";
+import { CustomerMoneyTable } from "@/components/admin/CustomerMoneyTable";
+import { AiAveragesPanel } from "@/components/admin/AiAveragesPanel";
 
 
 
