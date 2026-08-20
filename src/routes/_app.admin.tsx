@@ -394,18 +394,13 @@ type CreditSnapshot = Awaited<ReturnType<typeof aiCreditsStatus>>;
 function AiCreditsPanel() {
   const [snap, setSnap] = useState<CreditSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const [budget, setBudget] = useState("");
-  const [threshold, setThreshold] = useState("");
 
   const load = async () => {
     setLoading(true);
     try {
       const res = await aiCreditsStatus();
       setSnap(res);
-      setBudget(String(res.monthlyBudgetUsd));
-      setThreshold(String(res.lowThresholdPct));
       setErr(null);
     } catch (e) {
       setErr((e as Error).message);
@@ -416,21 +411,6 @@ function AiCreditsPanel() {
 
   useEffect(() => { void load(); }, []);
 
-  const save = async () => {
-    setSaving(true);
-    try {
-      const res = await setAiBudget({
-        data: { monthlyBudgetUsd: Number(budget), lowThresholdPct: Number(threshold) },
-      });
-      setSnap(res);
-      toast.success("Budget saved");
-    } catch (e) {
-      toast.error((e as Error).message);
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const usd = (n: number) => `$${n.toFixed(n < 1 ? 4 : 2)}`;
   const status = snap?.providerStatus ?? "unknown";
   const statusLabel: Record<string, string> = {
@@ -440,13 +420,14 @@ function AiCreditsPanel() {
     error: "Claude is erroring",
     unknown: "Not checked yet",
   };
-  const low = (snap?.remainingPct ?? 100) <= (snap?.lowThresholdPct ?? 20);
+
+  const perDay = snap ? snap.monthToDateUsd / Math.max(1, new Date().getDate()) : 0;
 
   return (
     <section className="mt-8">
       <div className="mb-3 flex items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 text-sm font-medium">
-          <DollarSign className="h-4 w-4 text-muted-foreground" /> AI credits and provider health
+          <DollarSign className="h-4 w-4 text-muted-foreground" /> AI spend and provider health
         </h2>
         <button
           onClick={() => void load()}
@@ -477,57 +458,29 @@ function AiCreditsPanel() {
             {snap.providerMessage ? ` — ${snap.providerMessage}` : ""}
           </div>
 
-          <div className="mt-3 grid gap-3 sm:grid-cols-4">
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
             <div className="rounded-xl border border-border/60 p-4">
-              <div className="text-xs text-muted-foreground">Credits left this month</div>
-              <div className={`mt-2 text-2xl font-semibold ${low ? "text-destructive" : ""}`}>{usd(snap.remainingUsd)}</div>
-              <div className="mt-1 text-[11px] text-muted-foreground">{snap.remainingPct}% of budget</div>
-            </div>
-            <div className="rounded-xl border border-border/60 p-4">
-              <div className="text-xs text-muted-foreground">Spent month to date</div>
-              <div className="mt-2 text-2xl font-semibold">{usd(snap.monthToDateUsd)}</div>
+              <div className="text-xs text-muted-foreground">Spent this month</div>
+              <div className="mt-2 text-2xl font-semibold tabular-nums">{usd(snap.monthToDateUsd)}</div>
+              <div className="mt-1 text-[11px] text-muted-foreground">about {usd(perDay)} per day so far</div>
             </div>
             <div className="rounded-xl border border-border/60 p-4">
               <div className="text-xs text-muted-foreground">Last 24 hours</div>
-              <div className="mt-2 text-2xl font-semibold">{usd(snap.todayUsd)}</div>
+              <div className="mt-2 text-2xl font-semibold tabular-nums">{usd(snap.todayUsd)}</div>
+              <div className="mt-1 text-[11px] text-muted-foreground">rolling one day</div>
             </div>
             <div className="rounded-xl border border-border/60 p-4">
               <div className="text-xs text-muted-foreground">Last 7 days</div>
-              <div className="mt-2 text-2xl font-semibold">{usd(snap.last7dUsd)}</div>
+              <div className="mt-2 text-2xl font-semibold tabular-nums">{usd(snap.last7dUsd)}</div>
+              <div className="mt-1 text-[11px] text-muted-foreground">about {usd(snap.last7dUsd / 7)} per day</div>
             </div>
           </div>
 
-          <div className="mt-3 flex flex-wrap items-end gap-3 rounded-xl border border-border/60 p-4">
-            <label className="block">
-              <span className="text-xs text-muted-foreground">Monthly budget, USD</span>
-              <input
-                value={budget}
-                onChange={(e) => setBudget(e.target.value)}
-                inputMode="decimal"
-                className="mt-1 w-32 rounded-2xl border border-border/60 bg-background px-3 py-2 text-sm outline-none focus:border-foreground/40"
-              />
-            </label>
-            <label className="block">
-              <span className="text-xs text-muted-foreground">Warn at, percent left</span>
-              <input
-                value={threshold}
-                onChange={(e) => setThreshold(e.target.value)}
-                inputMode="numeric"
-                className="mt-1 w-28 rounded-2xl border border-border/60 bg-background px-3 py-2 text-sm outline-none focus:border-foreground/40"
-              />
-            </label>
-            <button
-              onClick={() => void save()}
-              disabled={saving}
-              className="inline-flex h-10 items-center gap-2 rounded-2xl bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-60"
-            >
-              {saving && <Loader2 className="h-4 w-4 animate-spin" />} Save budget
-            </button>
-            <div className="text-[11px] text-muted-foreground">
-              Checked {snap.checkedAt ? new Date(snap.checkedAt).toLocaleString() : "never"}. Admins get a notification
-              when credits run low or Claude stops responding.
-            </div>
-          </div>
+          <p className="mt-3 text-[11px] text-muted-foreground">
+            No platform budget is set. AI usage is paid out of customer revenue, so watch the per-person spend in the money
+            table above to decide each user's monthly limit. Checked{" "}
+            {snap.checkedAt ? new Date(snap.checkedAt).toLocaleString() : "never"}.
+          </p>
         </>
       ) : null}
     </section>
