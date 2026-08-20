@@ -52,6 +52,19 @@ function cleanBars(bars: OhlcBar[]): OhlcBar[] {
 }
 
 // ----- OANDA v20 (FX, metals, indices - most accurate) -----
+const CRYPTO_BASES = new Set([
+  "BTC", "ETH", "XRP", "SOL", "DOGE", "ADA", "LTC", "BCH", "LINK", "AVAX",
+  "DOT", "MATIC", "TRX", "XLM", "ATOM", "UNI", "ETC", "FIL", "NEAR", "APT",
+  "ARB", "OP", "SUI", "TON", "SHIB", "PEPE", "PAXG", "BNB",
+]);
+
+/** True for crypto tickers, including ones shaped like an FX pair (ETH/USD). */
+function isCryptoTicker(ticker: string): boolean {
+  const t = ticker.toUpperCase().replace(/\s+/g, "");
+  const base = t.split("/")[0]?.replace(/(USD|USDT)$/, "") ?? "";
+  return CRYPTO_BASES.has(t.split("/")[0] ?? "") || CRYPTO_BASES.has(base);
+}
+
 function tickerToOanda(ticker: string): string | null {
   const t = ticker.toUpperCase();
   const map: Record<string, string> = {
