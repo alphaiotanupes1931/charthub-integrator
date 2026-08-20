@@ -115,6 +115,7 @@ function AdminPage() {
   const mrrUsd = mrrCents / 100;
   const usd = (n: number) => `$${n.toLocaleString(undefined, { minimumFractionDigits: n < 10 && n !== 0 ? 2 : 0, maximumFractionDigits: 2 })}`;
   const aiByUser = new Map(aiPerUser.map((r) => [r.user_id, r]));
+  const todayByUser = new Map(usageToday.map((r) => [r.user_id, r]));
 
   return (
     <div className="p-4 md:p-8 max-w-[1100px] mx-auto space-y-6">
