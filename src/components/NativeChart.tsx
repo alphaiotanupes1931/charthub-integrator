@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { useCandleColors } from "@/hooks/useCandleColors";
 import { useChartBackground } from "@/hooks/useChartBackground";
+import { ChartReadabilityNotice } from "@/components/ChartReadabilityNotice";
 import { useQuery } from "@tanstack/react-query";
 import {
   createChart,
@@ -1629,6 +1630,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
           </div>
         </div>
       )}
+      <ChartReadabilityNotice className="absolute bottom-2 left-1/2 z-30 max-w-[min(24rem,calc(100%-1rem))] -translate-x-1/2" />
     </div>
   );
 }

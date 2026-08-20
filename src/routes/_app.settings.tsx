@@ -29,6 +29,8 @@ import {
 import { isWelcomeBackMuted, setWelcomeBackMuted } from "@/lib/welcomeBack";
 import { useCandleColors, type CandleColors } from "@/hooks/useCandleColors";
 import { useChartBackground, CHART_BG_PRESETS, type ChartBackground } from "@/hooks/useChartBackground";
+import { ChartReadabilityNotice } from "@/components/ChartReadabilityNotice";
+import { contrastRatio, formatRatio } from "@/lib/chartContrast";
 import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
 
 export const Route = createFileRoute("/_app/settings")({
@@ -495,6 +497,10 @@ function SettingsPage() {
             </div>
           ))}
         </div>
+        <div className="mt-4 text-xs text-muted-foreground">
+          Label contrast {formatRatio(contrastRatio(chartBg.text, chartBg.bg))} (4.5:1 or better reads cleanly)
+        </div>
+        <ChartReadabilityNotice className="mt-2" />
         <div className="mt-4 flex items-center justify-between">
           <button
             type="button"
