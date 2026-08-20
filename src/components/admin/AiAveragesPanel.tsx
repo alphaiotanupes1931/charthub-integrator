@@ -1,0 +1,89 @@
+import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
+import { aiCostSummary } from "@/lib/ai-cost.functions";
+
+const usd = (n: number) => `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+/**
+ * Plain-English AI spend dashboard. Dollars big, technical counts small.
+ */
+export function AiAveragesPanel({ userCount }: { userCount: number }) {
+  const [days, setDays] = useState(30);
+  const [data, setData] = useState<Awaited<ReturnType<typeof aiCostSummary>> | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    aiCostSummary({ data: { days } })
+      .then((res) => { if (!cancelled) setData(res); })
+      .catch(() => { if (!cancelled) setData(null); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [days]);
+
+  const kinds = data?.byKind ?? [];
+  const byUser = data?.byUser ?? [];
+  const total = kinds.reduce((s, r) => s + Number(r.cost_usd), 0);
+  const calls = kinds.reduce((s, r) => s + Number(r.calls), 0);
+  const setups = byUser.reduce((s, r) => s + Number(r.graded_setups), 0);
+  const activePeople = byUser.filter((r) => Number(r.cost_usd) > 0).length;
+  const avgPerActive = activePeople ? total / activePeople : 0;
+  const avgPerUser = userCount ? total / userCount : 0;
+  const perSetup = setups ? total / setups : 0;
+  const perDay = total / days;
+  const tokens = kinds.reduce(
+    (s, r) => s + Number(r.input_tokens ?? 0) + Number(r.cached_input_tokens ?? 0) + Number(r.output_tokens ?? 0),
+    0,
+  );
+
+  const cards: Array<{ label: string; value: string; hint: string }> = [
+    { label: "AI cost, all users", value: usd(total), hint: `last ${days} days` },
+    { label: "Average per active user", value: usd(avgPerActive), hint: `${activePeople} people used AI` },
+    { label: "Average per signup", value: usd(avgPerUser), hint: `${userCount} accounts` },
+    { label: "Cost per trade idea", value: usd(perSetup), hint: `${setups.toLocaleString()} graded setups` },
+  ];
+
+  return (
+    <section className="rounded-2xl border border-border/60 bg-card overflow-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 border-b border-border/60">
+        <div>
+          <h2 className="text-[15px] font-semibold tracking-tight">AI usage in dollars</h2>
+          <p className="mt-0.5 text-xs text-muted-foreground">What the AI costs on average across the platform.</p>
+        </div>
+        <div className="flex items-center gap-1">
+          {[7, 30, 90].map((d) => (
+            <button
+              key={d}
+              onClick={() => setDays(d)}
+              className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${d === days ? "border-foreground/40 bg-muted" : "border-border/60 text-muted-foreground"}`}
+            >
+              {d}d
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center gap-2 px-5 py-8 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" /> Loading
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y divide-border">
+            {cards.map((c) => (
+              <div key={c.label} className="p-5">
+                <div className="text-xs text-muted-foreground">{c.label}</div>
+                <div className="mt-1.5 text-2xl font-semibold tabular-nums">{c.value}</div>
+                <div className="mt-1 text-[11px] text-muted-foreground">{c.hint}</div>
+              </div>
+            ))}
+          </div>
+          <div className="px-5 py-3 border-t border-border/60 text-[11px] text-muted-foreground">
+            About {usd(perDay)} per day · {calls.toLocaleString()} AI calls · {tokens.toLocaleString()} credits (tokens) used
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
