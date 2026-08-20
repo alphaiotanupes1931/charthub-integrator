@@ -77,6 +77,7 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
   // The embed renders its own axes and toolbar, so its theme has to track the
   // app/chart palette or the price labels end up unreadable.
   const { theme: embedTheme, toolbarBg } = useChartTheme();
+  const chartBgColor = `#${toolbarBg}`;
 
   const src = useMemo(() => {
     const iv = INTERVAL_MAP[interval] ?? "D";
