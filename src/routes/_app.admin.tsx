@@ -45,6 +45,7 @@ function AdminPage() {
   const [aiPerUser, setAiPerUser] = useState<
     Array<{ user_id: string; email: string | null; calls: number; graded_setups: number; cost_usd: number; cost_per_setup: number }>
   >([]);
+  const [usageToday, setUsageToday] = useState<Array<{ user_id: string; requests: number; screenshots: number }>>([]);
 
 
 
