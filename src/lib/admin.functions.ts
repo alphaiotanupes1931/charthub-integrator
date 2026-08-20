@@ -32,6 +32,17 @@ export const adminUsersOverview = createServerFn({ method: "GET" })
     return data ?? [];
   });
 
+/** Today's per-user AI requests and screenshot reads, for the admin panel. */
+export const adminUsageToday = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin.rpc("admin_usage_today");
+    if (error) throw new Error(error.message);
+    return (data ?? []) as Array<{ user_id: string; requests: number; screenshots: number }>;
+  });
+
 export const adminSetPlatformStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) =>
