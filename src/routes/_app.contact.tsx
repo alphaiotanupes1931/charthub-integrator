@@ -34,6 +34,7 @@ function ContactPage() {
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [replyEmail, setReplyEmail] = useState("");
+  const [sentiment, setSentiment] = useState<"good" | "neutral" | "bad">("good");
 
   const email = replyEmail || profile?.email || "";
 
@@ -44,7 +45,7 @@ function ContactPage() {
 
   const submit = useMutation({
     mutationFn: () =>
-      submitFn({ data: { kind, subject: subject.trim(), message: message.trim(), replyEmail: email.trim() } }),
+      submitFn({ data: { kind, subject: subject.trim(), message: message.trim(), replyEmail: email.trim(), ...(kind === "feedback" ? { sentiment } : {}) } }),
     onSuccess: () => {
       toast.success(kind === "ticket" ? "Ticket submitted. We will reply by email." : "Feedback sent. Thank you.");
       setSubject("");
@@ -85,6 +86,30 @@ function ContactPage() {
             );
           })}
         </div>
+
+        {kind === "feedback" && (
+          <div className="mt-5">
+            <span className="text-xs text-muted-foreground">How would you rate this?</span>
+            <div className="mt-2 flex gap-2">
+              {([
+                { id: "good" as const, label: "Good", cls: "border-bull/40 bg-bull/10 text-bull" },
+                { id: "neutral" as const, label: "Okay", cls: "border-amber-500/40 bg-amber-500/10 text-amber-500" },
+                { id: "bad" as const, label: "Bad", cls: "border-destructive/40 bg-destructive/10 text-destructive" },
+              ]).map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setSentiment(opt.id)}
+                  className={`flex-1 rounded-2xl border px-3 py-2 text-sm font-medium transition ${
+                    sentiment === opt.id ? opt.cls : "border-border/60 text-muted-foreground hover:bg-muted/50"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="mt-5 space-y-4">
           <label className="block">
