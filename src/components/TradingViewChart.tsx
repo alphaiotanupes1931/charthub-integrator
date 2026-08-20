@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pencil, Minus as LineIcon, Square as RectIcon, ArrowUpRight, Undo2, Trash2, Eraser as EraserIcon, X as CloseIcon } from "lucide-react";
 import type { LevelKey } from "@/components/NativeChart";
 import { ChartSourceBadge } from "@/components/ChartSourceBadge";
+import { useChartTheme } from "@/hooks/useChartTheme";
 
 
 interface Props {
@@ -73,6 +74,10 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
     return s;
   }, [enabled]);
 
+  // The embed renders its own axes and toolbar, so its theme has to track the
+  // app/chart palette or the price labels end up unreadable.
+  const { theme: embedTheme, toolbarBg } = useChartTheme();
+
   const src = useMemo(() => {
     const iv = INTERVAL_MAP[interval] ?? "D";
     const params = new URLSearchParams({
@@ -82,9 +87,9 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
       hidetoptoolbar: "0",
       symboledit: "1",
       saveimage: "0",
-      toolbarbg: "1a1f2e",
+      toolbarbg: toolbarBg,
       studies: JSON.stringify(studies),
-      theme: "dark",
+      theme: embedTheme,
       style: "1",
       timezone: "Etc/UTC",
       withdateranges: "1",
@@ -92,7 +97,7 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
       locale: "en",
     });
     return `https://s.tradingview.com/widgetembed/?${params.toString()}`;
-  }, [symbol, interval, studies]);
+  }, [symbol, interval, studies, embedTheme, toolbarBg]);
 
   // Only a symbol/interval change resets the sticky state; a background retry
   // must not clear it (that is what caused the flicker).
