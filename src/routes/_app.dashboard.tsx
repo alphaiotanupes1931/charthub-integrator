@@ -1719,7 +1719,7 @@ function Dashboard() {
           <select
             value={timezone}
             onChange={(e) => setTimezone(e.target.value)}
-            className="bg-transparent text-xs font-medium text-foreground outline-none [color-scheme:dark] dark:[color-scheme:dark]"
+            className="bg-transparent text-xs font-medium text-foreground outline-none dark:[color-scheme:dark]"
           >
             {TIMEZONE_OPTIONS.map((o) => (
               <option
