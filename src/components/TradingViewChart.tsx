@@ -296,14 +296,20 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
   // the same panel so the trader always has a working chart. The embed stays
   // mounted underneath and keeps reloading until it recovers on its own.
   return (
-    <div ref={hostRef} className="relative h-full w-full">
+    <div ref={hostRef} className="relative h-full w-full" style={{ background: chartBgColor }}>
       <iframe
         ref={iframeRef}
         key={`${src}|${reloadKey}`}
         src={src}
         title="TradingView chart"
         className="h-full w-full border-0"
-        style={showFallback ? { pointerEvents: "none", visibility: "hidden" } : undefined}
+        style={{
+          // Matches the embed to the panel so a reload never flashes the wrong
+          // colour, and keeps native widget UI in the right scheme.
+          background: chartBgColor,
+          colorScheme: embedTheme,
+          ...(showFallback ? { pointerEvents: "none" as const, visibility: "hidden" as const } : null),
+        }}
         allow="fullscreen"
 
         onLoad={() => { setLoaded(true); setFailed(false); }}
