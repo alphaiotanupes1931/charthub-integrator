@@ -48,6 +48,8 @@ function AdminPage() {
     Array<{ user_id: string; email: string | null; calls: number; graded_setups: number; cost_usd: number; cost_per_setup: number }>
   >([]);
   const [usageToday, setUsageToday] = useState<Array<{ user_id: string; requests: number; screenshots: number }>>([]);
+  const [totals, setTotals] = useState({ gross: 0, aiCost: 0, profit: 0 });
+  const [aiSpendMonth, setAiSpendMonth] = useState<number | null>(null);
 
 
 
