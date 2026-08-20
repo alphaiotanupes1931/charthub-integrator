@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
-import { Loader2, ShieldAlert, Users, BarChart3, CircleDot, CircleOff, CircleDashed, Ban, ShieldCheck, DollarSign } from "lucide-react";
+import { Loader2, CircleDot, CircleOff, CircleDashed, Ban, ShieldCheck, DollarSign, Send } from "lucide-react";
 import { toast } from "sonner";
 import { adminReferralStats, adminUsersOverview, adminSetPlatformStatus, adminUsageToday } from "@/lib/admin.functions";
 import { aiCostSummary } from "@/lib/ai-cost.functions";
