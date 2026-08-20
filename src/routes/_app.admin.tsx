@@ -92,6 +92,9 @@ function AdminPage() {
         setAiPerUser(res.byUser);
       })
       .catch(() => setAiSpend30(null));
+    adminUsageToday()
+      .then((rows) => setUsageToday(rows))
+      .catch(() => setUsageToday([]));
   }, []);
 
 
