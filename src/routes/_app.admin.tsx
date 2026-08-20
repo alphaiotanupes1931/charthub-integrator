@@ -534,24 +534,65 @@ function AiCreditsPanel() {
   );
 }
 
-type TicketRow = Awaited<ReturnType<typeof adminListSupportRequests>>[number];
+type TicketRow = Awaited<ReturnType<typeof adminListSupportRequests>>[number] & { sentiment?: string | null };
+
+const SENTIMENTS: Record<string, { label: string; cls: string }> = {
+  good: { label: "Good", cls: "border-bull/30 bg-bull/10 text-bull" },
+  neutral: { label: "Okay", cls: "border-amber-500/30 bg-amber-500/10 text-amber-500" },
+  bad: { label: "Bad", cls: "border-destructive/30 bg-destructive/10 text-destructive" },
+};
 
 function SupportTicketsPanel() {
   const [rows, setRows] = useState<TicketRow[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<"all" | "good" | "neutral" | "bad" | "ticket">("all");
 
   useEffect(() => {
     let cancelled = false;
     adminListSupportRequests()
-      .then((r) => { if (!cancelled) setRows(r); })
+      .then((r) => { if (!cancelled) setRows(r as TicketRow[]); })
       .catch((e: Error) => { if (!cancelled) setErr(e.message); });
     return () => { cancelled = true; };
   }, []);
 
+  const counts = {
+    all: rows?.length ?? 0,
+    good: rows?.filter((r) => r.sentiment === "good").length ?? 0,
+    neutral: rows?.filter((r) => r.sentiment === "neutral").length ?? 0,
+    bad: rows?.filter((r) => r.sentiment === "bad").length ?? 0,
+    ticket: rows?.filter((r) => r.kind === "ticket").length ?? 0,
+  };
+  const visible = (rows ?? []).filter((r) =>
+    filter === "all" ? true : filter === "ticket" ? r.kind === "ticket" : r.sentiment === filter,
+  );
+
+  const TABS: Array<{ id: typeof filter; label: string }> = [
+    { id: "all", label: "All" },
+    { id: "good", label: "Good" },
+    { id: "neutral", label: "Okay" },
+    { id: "bad", label: "Bad" },
+    { id: "ticket", label: "Tickets" },
+  ];
+
   return (
     <section className="mt-8">
-      <h2 className="mb-3 text-sm font-medium">Tickets and feedback</h2>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-sm font-medium">Tickets and feedback</h2>
+        <div className="flex flex-wrap gap-1.5">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setFilter(t.id)}
+              className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${
+                filter === t.id ? "border-foreground/40 bg-muted" : "border-border/60 text-muted-foreground"
+              }`}
+            >
+              {t.label} {counts[t.id]}
+            </button>
+          ))}
+        </div>
+      </div>
       {err && (
         <div className="rounded-xl border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">{err}</div>
       )}
@@ -560,29 +601,37 @@ function SupportTicketsPanel() {
           <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" /> Loading
           </div>
-        ) : rows.length === 0 ? (
-          <div className="p-4 text-sm text-muted-foreground">Nothing submitted yet.</div>
+        ) : visible.length === 0 ? (
+          <div className="p-4 text-sm text-muted-foreground">Nothing here yet.</div>
         ) : (
-          rows.map((r) => (
-            <button
-              key={r.id}
-              onClick={() => setOpenId(openId === r.id ? null : r.id)}
-              className="block w-full px-4 py-3 text-left hover:bg-muted/50"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div className="text-sm font-medium">{r.subject}</div>
-                <span className="rounded-full border border-border/60 px-2 py-0.5 text-[11px] text-muted-foreground">
-                  {r.kind === "ticket" ? "Ticket" : "Feedback"}
-                </span>
-              </div>
-              <div className="mt-1 text-xs text-muted-foreground">
-                {r.reply_email} · {new Date(r.created_at).toLocaleString()} · {r.status.replace("_", " ")}
-              </div>
-              {openId === r.id && (
-                <div className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{r.message}</div>
-              )}
-            </button>
-          ))
+          visible.map((r) => {
+            const s = r.sentiment ? SENTIMENTS[r.sentiment] : null;
+            return (
+              <button
+                key={r.id}
+                onClick={() => setOpenId(openId === r.id ? null : r.id)}
+                className="block w-full px-4 py-3 text-left hover:bg-muted/50"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="text-sm font-medium">{r.subject}</div>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    {s && (
+                      <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${s.cls}`}>{s.label}</span>
+                    )}
+                    <span className="rounded-full border border-border/60 px-2 py-0.5 text-[11px] text-muted-foreground">
+                      {r.kind === "ticket" ? "Ticket" : "Feedback"}
+                    </span>
+                  </div>
+                </div>
+                <div className="mt-1 text-xs text-muted-foreground">
+                  {r.reply_email} · {new Date(r.created_at).toLocaleString()} · {r.status.replace("_", " ")}
+                </div>
+                {openId === r.id && (
+                  <div className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{r.message}</div>
+                )}
+              </button>
+            );
+          })
         )}
       </div>
     </section>
