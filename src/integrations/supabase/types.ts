@@ -120,18 +120,21 @@ export type Database = {
         Row: {
           count: number
           day: string
+          image_count: number
           updated_at: string
           user_id: string
         }
         Insert: {
           count?: number
           day?: string
+          image_count?: number
           updated_at?: string
           user_id: string
         }
         Update: {
           count?: number
           day?: string
+          image_count?: number
           updated_at?: string
           user_id?: string
         }
@@ -1605,6 +1608,10 @@ export type Database = {
         }[]
       }
       bump_ai_usage: {
+        Args: { _cap: number; _user_id: string }
+        Returns: number
+      }
+      bump_image_usage: {
         Args: { _cap: number; _user_id: string }
         Returns: number
       }
