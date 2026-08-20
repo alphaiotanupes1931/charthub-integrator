@@ -207,10 +207,7 @@ function AdminPage() {
                 <tr>
                   <th className="text-left px-4 py-2 font-medium">Name</th>
                   <th className="text-left px-4 py-2 font-medium">Email</th>
-                  <th className="text-right px-4 py-2 font-medium">AI calls</th>
-                   <th className="text-right px-4 py-2 font-medium">AI cost</th>
-                   <th className="text-right px-4 py-2 font-medium">Today</th>
-                   <th className="text-right px-4 py-2 font-medium">Shots today</th>
+                   <th className="text-right px-4 py-2 font-medium">AI spend</th>
                    <th className="text-left px-4 py-2 font-medium">Role</th>
                   <th className="text-left px-4 py-2 font-medium">Broker</th>
 
@@ -221,24 +218,18 @@ function AdminPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {users === null ? (
-                  <tr><td colSpan={11} className="p-6 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Loading…</td></tr>
+                  <tr><td colSpan={8} className="p-6 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Loading…</td></tr>
                 ) : users.length === 0 ? (
-                  <tr><td colSpan={11} className="p-6 text-muted-foreground">No users yet.</td></tr>
+                  <tr><td colSpan={8} className="p-6 text-muted-foreground">No users yet.</td></tr>
 
                 ) : users.map((u) => (
                   <tr key={u.id} className={u.banned ? "bg-destructive/5" : ""}>
                     <td className="px-4 py-2.5">{u.display_name ?? <span className="text-muted-foreground">-</span>}</td>
                     <td className="px-4 py-2.5 text-muted-foreground">{u.email}</td>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-muted-foreground">{aiByUser.get(u.id)?.calls ?? 0}</td>
                     <td className="px-4 py-2.5 text-right tabular-nums font-medium">
-                      {aiByUser.get(u.id) ? `$${Number(aiByUser.get(u.id)!.cost_usd).toFixed(2)}` : "$0.00"}
+                      {usd(Number(aiByUser.get(u.id)?.cost_usd ?? 0))}
                     </td>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-muted-foreground">
-                      {(u.role ?? "user") === "admin" ? "unlimited" : `${todayByUser.get(u.id)?.requests ?? 0}/100`}
-                    </td>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-muted-foreground">
-                      {(u.role ?? "user") === "admin" ? "unlimited" : `${todayByUser.get(u.id)?.screenshots ?? 0}/5`}
-                    </td>
+
                     <td className="px-4 py-2.5">
                       <select
                         value={(u.role ?? "user") as string}
