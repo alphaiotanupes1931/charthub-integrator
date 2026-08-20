@@ -32,7 +32,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { compressImage, getScreenshotQuota, bumpScreenshotQuota } from "@/lib/imageCompress";
 import { toast } from "sonner";
 import { parseAiPayload, type ChartAnnotation, type ChartGrade, type ConceptRef } from "@/lib/chartAnnotations";
-import { coalesceUiMessageStream, textFromUiMessageParts } from "@/lib/chat-stream";
+import { coalesceUiMessageStream, textFromUiMessageParts, friendlyChatError } from "@/lib/chat-stream";
 import { ConceptDiagram } from "@/components/ConceptDiagram";
 import { buildLearningPromptBlock } from "@/lib/signalLearning";
 import { takeTrade } from "@/lib/signalHistory";
@@ -534,7 +534,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
       }),
       onError: (err) => {
         console.error(err);
-        const msg = err?.message?.trim() || "";
+        const msg = friendlyChatError(err).trim();
         // Suppress generic stream-end errors and transient auth blips.
         const suppress = /^(an error occurred\.?|unauthorized|forbidden)$/i.test(msg);
         if (msg && !suppress) toast.error(msg);
