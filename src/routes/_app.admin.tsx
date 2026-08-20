@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
 import { Loader2, ShieldAlert, Users, BarChart3, CircleDot, CircleOff, CircleDashed, Ban, ShieldCheck, DollarSign } from "lucide-react";
 import { toast } from "sonner";
-import { adminReferralStats, adminUsersOverview, adminSetPlatformStatus } from "@/lib/admin.functions";
+import { adminReferralStats, adminUsersOverview, adminSetPlatformStatus, adminUsageToday } from "@/lib/admin.functions";
 import { aiCostSummary } from "@/lib/ai-cost.functions";
 import { aiCreditsStatus, setAiBudget } from "@/lib/ai-credits.functions";
 import { adminListSupportRequests } from "@/lib/support.functions";
@@ -45,6 +45,7 @@ function AdminPage() {
   const [aiPerUser, setAiPerUser] = useState<
     Array<{ user_id: string; email: string | null; calls: number; graded_setups: number; cost_usd: number; cost_per_setup: number }>
   >([]);
+  const [usageToday, setUsageToday] = useState<Array<{ user_id: string; requests: number; screenshots: number }>>([]);
 
 
 
@@ -91,6 +92,9 @@ function AdminPage() {
         setAiPerUser(res.byUser);
       })
       .catch(() => setAiSpend30(null));
+    adminUsageToday()
+      .then((rows) => setUsageToday(rows))
+      .catch(() => setUsageToday([]));
   }, []);
 
 
@@ -111,6 +115,7 @@ function AdminPage() {
   const mrrUsd = mrrCents / 100;
   const usd = (n: number) => `$${n.toLocaleString(undefined, { minimumFractionDigits: n < 10 && n !== 0 ? 2 : 0, maximumFractionDigits: 2 })}`;
   const aiByUser = new Map(aiPerUser.map((r) => [r.user_id, r]));
+  const todayByUser = new Map(usageToday.map((r) => [r.user_id, r]));
 
   return (
     <div className="p-4 md:p-8 max-w-[1100px] mx-auto space-y-6">
@@ -204,8 +209,10 @@ function AdminPage() {
                   <th className="text-left px-4 py-2 font-medium">Name</th>
                   <th className="text-left px-4 py-2 font-medium">Email</th>
                   <th className="text-right px-4 py-2 font-medium">AI calls</th>
-                  <th className="text-right px-4 py-2 font-medium">AI cost</th>
-                  <th className="text-left px-4 py-2 font-medium">Role</th>
+                   <th className="text-right px-4 py-2 font-medium">AI cost</th>
+                   <th className="text-right px-4 py-2 font-medium">Today</th>
+                   <th className="text-right px-4 py-2 font-medium">Shots today</th>
+                   <th className="text-left px-4 py-2 font-medium">Role</th>
                   <th className="text-left px-4 py-2 font-medium">Broker</th>
 
                   <th className="text-left px-4 py-2 font-medium">Status</th>
@@ -215,9 +222,9 @@ function AdminPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {users === null ? (
-                  <tr><td colSpan={9} className="p-6 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Loading…</td></tr>
+                  <tr><td colSpan={11} className="p-6 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Loading…</td></tr>
                 ) : users.length === 0 ? (
-                  <tr><td colSpan={9} className="p-6 text-muted-foreground">No users yet.</td></tr>
+                  <tr><td colSpan={11} className="p-6 text-muted-foreground">No users yet.</td></tr>
 
                 ) : users.map((u) => (
                   <tr key={u.id} className={u.banned ? "bg-destructive/5" : ""}>
@@ -226,6 +233,12 @@ function AdminPage() {
                     <td className="px-4 py-2.5 text-right tabular-nums text-muted-foreground">{aiByUser.get(u.id)?.calls ?? 0}</td>
                     <td className="px-4 py-2.5 text-right tabular-nums font-medium">
                       {aiByUser.get(u.id) ? `$${Number(aiByUser.get(u.id)!.cost_usd).toFixed(2)}` : "$0.00"}
+                    </td>
+                    <td className="px-4 py-2.5 text-right tabular-nums text-muted-foreground">
+                      {(u.role ?? "user") === "admin" ? "unlimited" : `${todayByUser.get(u.id)?.requests ?? 0}/100`}
+                    </td>
+                    <td className="px-4 py-2.5 text-right tabular-nums text-muted-foreground">
+                      {(u.role ?? "user") === "admin" ? "unlimited" : `${todayByUser.get(u.id)?.screenshots ?? 0}/5`}
                     </td>
                     <td className="px-4 py-2.5">
                       <select

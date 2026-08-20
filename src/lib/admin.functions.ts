@@ -32,6 +32,17 @@ export const adminUsersOverview = createServerFn({ method: "GET" })
     return data ?? [];
   });
 
+/** Today's per-user AI requests and screenshot reads, for the admin panel. */
+export const adminUsageToday = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    // The RPC re-checks has_role(auth.uid()), so it must run as the signed-in admin.
+    const { data, error } = await context.supabase.rpc("admin_usage_today");
+    if (error) throw new Error(error.message);
+    return (data ?? []) as Array<{ user_id: string; requests: number; screenshots: number }>;
+  });
+
 export const adminSetPlatformStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) =>

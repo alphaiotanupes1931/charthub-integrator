@@ -69,8 +69,25 @@ const OANDA: Record<string, string> = {
   "NATGAS": "NATGAS_USD",
 };
 
+const CRYPTO_BASES = new Set([
+  "BTC", "ETH", "XRP", "SOL", "DOGE", "ADA", "LTC", "BCH", "LINK", "AVAX",
+  "DOT", "MATIC", "TRX", "XLM", "ATOM", "UNI", "ETC", "FIL", "NEAR", "APT",
+  "ARB", "OP", "SUI", "TON", "SHIB", "PEPE", "PAXG", "BNB",
+]);
+
+/** True for crypto tickers, including ones shaped like an FX pair (ETH/USD). */
+export function isCryptoTicker(ticker: string): boolean {
+  const t = (ticker ?? "").toUpperCase().replace(/\s+/g, "");
+  const head = t.split("/")[0] ?? "";
+  return CRYPTO_BASES.has(head) || CRYPTO_BASES.has(head.replace(/(USD|USDT)$/, ""));
+}
+
 function oandaInstrument(ticker: string): string | null {
   if (OANDA[ticker]) return OANDA[ticker];
+  // Crypto never goes to OANDA: "ETH/USD" matches the FX shape below, and the
+  // OANDA crypto CFD feed is stale, which produced A+ signals hundreds of
+  // dollars away from real Ethereum spot. Crypto history comes from Binance.
+  if (isCryptoTicker(ticker)) return null;
   // Any plain FX pair OANDA quotes, e.g. "EUR/USD" -> "EUR_USD".
   if (/^[A-Z]{3}\/[A-Z]{3}$/.test(ticker.toUpperCase())) return ticker.toUpperCase().replace("/", "_");
   return null;

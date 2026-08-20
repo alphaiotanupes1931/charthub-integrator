@@ -52,6 +52,19 @@ function cleanBars(bars: OhlcBar[]): OhlcBar[] {
 }
 
 // ----- OANDA v20 (FX, metals, indices - most accurate) -----
+const CRYPTO_BASES = new Set([
+  "BTC", "ETH", "XRP", "SOL", "DOGE", "ADA", "LTC", "BCH", "LINK", "AVAX",
+  "DOT", "MATIC", "TRX", "XLM", "ATOM", "UNI", "ETC", "FIL", "NEAR", "APT",
+  "ARB", "OP", "SUI", "TON", "SHIB", "PEPE", "PAXG", "BNB",
+]);
+
+/** True for crypto tickers, including ones shaped like an FX pair (ETH/USD). */
+function isCryptoTicker(ticker: string): boolean {
+  const t = ticker.toUpperCase().replace(/\s+/g, "");
+  const base = t.split("/")[0]?.replace(/(USD|USDT)$/, "") ?? "";
+  return CRYPTO_BASES.has(t.split("/")[0] ?? "") || CRYPTO_BASES.has(base);
+}
+
 function tickerToOanda(ticker: string): string | null {
   const t = ticker.toUpperCase();
   const map: Record<string, string> = {
@@ -90,6 +103,10 @@ function tickerToOanda(ticker: string): string | null {
     "USD/ZAR": "USD_ZAR",
   };
   if (map[t]) return map[t];
+  // Crypto must never fall through to the FX rule below: "ETH/USD" looks like a
+  // 3-letter FX pair, and OANDA's crypto CFDs are stale/unavailable, which put
+  // Ethereum hundreds of dollars away from real spot. Crypto uses Binance.
+  if (isCryptoTicker(t)) return null;
   // Any plain FX pair OANDA quotes, e.g. "NOK/SEK" -> "NOK_SEK".
   if (/^[A-Z]{3}\/[A-Z]{3}$/.test(t)) return t.replace("/", "_");
   return null;

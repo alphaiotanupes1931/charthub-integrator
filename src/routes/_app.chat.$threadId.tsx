@@ -27,7 +27,7 @@ import { findLens, readActiveLensId } from "@/lib/scanLens";
 import { getChatMessages, getActiveModel, type ActiveModelInfo } from "@/lib/chat.functions";
 import { useCoachVoice } from "@/hooks/useCoachVoice";
 import { voiceForCoach } from "@/lib/coachVoices";
-import { coalesceUiMessageStream, textFromUiMessageParts } from "@/lib/chat-stream";
+import { coalesceUiMessageStream, textFromUiMessageParts, friendlyChatError } from "@/lib/chat-stream";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { buildLearningPromptBlock } from "@/lib/signalLearning";
@@ -215,7 +215,7 @@ function ChatThreadInner({
     }),
     onError: (err) => {
       console.error(err);
-      toast.error(err?.message || "AI request failed");
+      toast.error(friendlyChatError(err));
     },
   });
 
