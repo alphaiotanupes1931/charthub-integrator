@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
 import { Loader2, ShieldAlert, Users, BarChart3, CircleDot, CircleOff, CircleDashed, Ban, ShieldCheck, DollarSign } from "lucide-react";
 import { toast } from "sonner";
-import { adminReferralStats, adminUsersOverview, adminSetPlatformStatus } from "@/lib/admin.functions";
+import { adminReferralStats, adminUsersOverview, adminSetPlatformStatus, adminUsageToday } from "@/lib/admin.functions";
 import { aiCostSummary } from "@/lib/ai-cost.functions";
 import { aiCreditsStatus, setAiBudget } from "@/lib/ai-credits.functions";
 import { adminListSupportRequests } from "@/lib/support.functions";
