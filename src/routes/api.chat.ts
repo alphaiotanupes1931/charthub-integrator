@@ -14,6 +14,9 @@ import {
 import type { Database, Json } from "@/integrations/supabase/types";
 
 const DAILY_AI_CAP = 100; // requests per user per UTC day
+// Screenshot reads are the most expensive call we make (vision model), so they
+// get their own smaller daily allowance. Admins are exempt.
+const DAILY_IMAGE_CAP = 5;
 
 // Model routing. Setup grading is a mechanical job against a fixed rubric, so it
 // runs on the cheap model; coaching, teaching, psychology, and screenshot reads
