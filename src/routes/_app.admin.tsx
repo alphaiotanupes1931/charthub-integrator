@@ -209,8 +209,10 @@ function AdminPage() {
                   <th className="text-left px-4 py-2 font-medium">Name</th>
                   <th className="text-left px-4 py-2 font-medium">Email</th>
                   <th className="text-right px-4 py-2 font-medium">AI calls</th>
-                  <th className="text-right px-4 py-2 font-medium">AI cost</th>
-                  <th className="text-left px-4 py-2 font-medium">Role</th>
+                   <th className="text-right px-4 py-2 font-medium">AI cost</th>
+                   <th className="text-right px-4 py-2 font-medium">Today</th>
+                   <th className="text-right px-4 py-2 font-medium">Shots today</th>
+                   <th className="text-left px-4 py-2 font-medium">Role</th>
                   <th className="text-left px-4 py-2 font-medium">Broker</th>
 
                   <th className="text-left px-4 py-2 font-medium">Status</th>
