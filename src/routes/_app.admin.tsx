@@ -10,6 +10,8 @@ import { aiCostSummary } from "@/lib/ai-cost.functions";
 import { aiCreditsStatus, setAiBudget } from "@/lib/ai-credits.functions";
 import { adminListSupportRequests } from "@/lib/support.functions";
 import { RevenuePanel } from "@/components/admin/RevenuePanel";
+import { CustomerMoneyTable } from "@/components/admin/CustomerMoneyTable";
+import { AiAveragesPanel } from "@/components/admin/AiAveragesPanel";
 
 
 
@@ -46,6 +48,8 @@ function AdminPage() {
     Array<{ user_id: string; email: string | null; calls: number; graded_setups: number; cost_usd: number; cost_per_setup: number }>
   >([]);
   const [usageToday, setUsageToday] = useState<Array<{ user_id: string; requests: number; screenshots: number }>>([]);
+  const [totals, setTotals] = useState({ gross: 0, aiCost: 0, profit: 0 });
+  const [aiSpendMonth, setAiSpendMonth] = useState<number | null>(null);
 
 
 
@@ -86,12 +90,15 @@ function AdminPage() {
         setErr(e instanceof Error ? e.message : "Failed to load");
       }
     })();
-    aiCostSummary({ data: { days: 30 } })
+    // Calendar-month-to-date window so the numbers match "this month".
+    aiCostSummary({ data: { days: Math.max(1, new Date().getDate()) } })
       .then((res) => {
-        setAiSpend30(res.byKind.reduce((s, r) => s + Number(r.cost_usd), 0));
+        const sum = res.byKind.reduce((s, r) => s + Number(r.cost_usd), 0);
+        setAiSpend30(sum);
+        setAiSpendMonth(sum);
         setAiPerUser(res.byUser);
       })
-      .catch(() => setAiSpend30(null));
+      .catch(() => { setAiSpend30(null); setAiSpendMonth(null); });
     adminUsageToday()
       .then((rows) => setUsageToday(rows))
       .catch(() => setUsageToday([]));
@@ -115,50 +122,41 @@ function AdminPage() {
   const mrrUsd = mrrCents / 100;
   const usd = (n: number) => `$${n.toLocaleString(undefined, { minimumFractionDigits: n < 10 && n !== 0 ? 2 : 0, maximumFractionDigits: 2 })}`;
   const aiByUser = new Map(aiPerUser.map((r) => [r.user_id, r]));
-  const todayByUser = new Map(usageToday.map((r) => [r.user_id, r]));
 
   return (
     <div className="p-4 md:p-8 max-w-[1100px] mx-auto space-y-6">
-      <PageHeader title="Admin" description="Users, AI usage, cost, and revenue in one place." />
+      <PageHeader title="Admin" description="Simple money view: what comes in, what AI costs, what you keep." />
 
       {err && (
         <div className="rounded-xl border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">{err}</div>
       )}
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="rounded-2xl border border-border/60 bg-card p-5">
-          <div className="flex items-center gap-2 text-xs tracking-tight text-muted-foreground">
-            <Users className="h-3.5 w-3.5" /> Total users
-          </div>
-          <div className="mt-2 text-2xl md:text-3xl font-semibold tabular-nums">{totalUsers}</div>
+          <div className="text-xs text-muted-foreground">Money in, per month</div>
+          <div className="mt-2 text-3xl font-semibold tabular-nums">{usd(totals.gross || mrrUsd)}</div>
+          <div className="mt-1 text-[11px] text-muted-foreground">{totalUsers} accounts</div>
         </div>
         <div className="rounded-2xl border border-border/60 bg-card p-5">
-          <div className="flex items-center gap-2 text-xs tracking-tight text-muted-foreground">
-            <DollarSign className="h-3.5 w-3.5" /> MRR
-          </div>
-          <div className="mt-2 text-2xl md:text-3xl font-semibold tabular-nums">{usd(mrrUsd)}</div>
-          <div className="mt-1 text-[11px] text-muted-foreground">Manual entries</div>
+          <div className="text-xs text-muted-foreground">AI cost, this month</div>
+          <div className="mt-2 text-3xl font-semibold tabular-nums">{aiSpendMonth === null ? "-" : usd(aiSpendMonth)}</div>
+          <div className="mt-1 text-[11px] text-muted-foreground">What you pay for the AI</div>
         </div>
         <div className="rounded-2xl border border-border/60 bg-card p-5">
-          <div className="flex items-center gap-2 text-xs tracking-tight text-muted-foreground">
-            <BarChart3 className="h-3.5 w-3.5" /> AI cost, 30d
+          <div className="text-xs text-muted-foreground">Real profit</div>
+          <div className={`mt-2 text-3xl font-semibold tabular-nums ${(totals.profit) < 0 ? "text-destructive" : "text-bull"}`}>
+            {usd(totals.profit)}
           </div>
-          <div className="mt-2 text-2xl md:text-3xl font-semibold tabular-nums">
-            {aiSpend30 === null ? "-" : usd(aiSpend30)}
-          </div>
-        </div>
-        <div className="rounded-2xl border border-border/60 bg-card p-5">
-          <div className="flex items-center gap-2 text-xs tracking-tight text-muted-foreground">
-            <DollarSign className="h-3.5 w-3.5" /> Net, 30d
-          </div>
-          <div className={`mt-2 text-2xl md:text-3xl font-semibold tabular-nums ${mrrUsd - (aiSpend30 ?? 0) < 0 ? "text-destructive" : ""}`}>
-            {usd(mrrUsd - (aiSpend30 ?? 0))}
-          </div>
-          <div className="mt-1 text-[11px] text-muted-foreground">MRR minus AI spend</div>
+          <div className="mt-1 text-[11px] text-muted-foreground">Money in minus AI cost</div>
         </div>
       </div>
 
+      <CustomerMoneyTable users={users} aiSpend={aiPerUser} onTotals={setTotals} />
+
+      <AiAveragesPanel userCount={totalUsers} />
+
       <RevenuePanel onMrrChange={setMrrCents} />
+
 
       <PlatformStatusEditor />
 
@@ -208,10 +206,7 @@ function AdminPage() {
                 <tr>
                   <th className="text-left px-4 py-2 font-medium">Name</th>
                   <th className="text-left px-4 py-2 font-medium">Email</th>
-                  <th className="text-right px-4 py-2 font-medium">AI calls</th>
-                   <th className="text-right px-4 py-2 font-medium">AI cost</th>
-                   <th className="text-right px-4 py-2 font-medium">Today</th>
-                   <th className="text-right px-4 py-2 font-medium">Shots today</th>
+                   <th className="text-right px-4 py-2 font-medium">AI spend</th>
                    <th className="text-left px-4 py-2 font-medium">Role</th>
                   <th className="text-left px-4 py-2 font-medium">Broker</th>
 
@@ -222,24 +217,18 @@ function AdminPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {users === null ? (
-                  <tr><td colSpan={11} className="p-6 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Loading…</td></tr>
+                  <tr><td colSpan={8} className="p-6 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Loading…</td></tr>
                 ) : users.length === 0 ? (
-                  <tr><td colSpan={11} className="p-6 text-muted-foreground">No users yet.</td></tr>
+                  <tr><td colSpan={8} className="p-6 text-muted-foreground">No users yet.</td></tr>
 
                 ) : users.map((u) => (
                   <tr key={u.id} className={u.banned ? "bg-destructive/5" : ""}>
                     <td className="px-4 py-2.5">{u.display_name ?? <span className="text-muted-foreground">-</span>}</td>
                     <td className="px-4 py-2.5 text-muted-foreground">{u.email}</td>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-muted-foreground">{aiByUser.get(u.id)?.calls ?? 0}</td>
                     <td className="px-4 py-2.5 text-right tabular-nums font-medium">
-                      {aiByUser.get(u.id) ? `$${Number(aiByUser.get(u.id)!.cost_usd).toFixed(2)}` : "$0.00"}
+                      {usd(Number(aiByUser.get(u.id)?.cost_usd ?? 0))}
                     </td>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-muted-foreground">
-                      {(u.role ?? "user") === "admin" ? "unlimited" : `${todayByUser.get(u.id)?.requests ?? 0}/100`}
-                    </td>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-muted-foreground">
-                      {(u.role ?? "user") === "admin" ? "unlimited" : `${todayByUser.get(u.id)?.screenshots ?? 0}/5`}
-                    </td>
+
                     <td className="px-4 py-2.5">
                       <select
                         value={(u.role ?? "user") as string}
@@ -299,141 +288,9 @@ function AdminPage() {
 
       <SupportTicketsPanel />
 
-      <AiCostPanel />
     </div>
   );
 }
-
-function AiCostPanel() {
-  const [days, setDays] = useState(30);
-  const [data, setData] = useState<Awaited<ReturnType<typeof aiCostSummary>> | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    aiCostSummary({ data: { days } })
-      .then((res) => { if (!cancelled) { setData(res); setError(null); } })
-      .catch((e: Error) => { if (!cancelled) setError(e.message); })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
-  }, [days]);
-
-  const total = (data?.byKind ?? []).reduce((s, r) => s + Number(r.cost_usd), 0);
-  const cachedTokens = (data?.byKind ?? []).reduce((s, r) => s + Number(r.cached_input_tokens ?? 0), 0);
-  const inputTokens = (data?.byKind ?? []).reduce((s, r) => s + Number(r.input_tokens ?? 0), 0);
-  const cacheHitPct = inputTokens + cachedTokens > 0
-    ? Math.round((cachedTokens / (inputTokens + cachedTokens)) * 100)
-    : 0;
-  const usd = (n: number) => `$${n.toFixed(n < 1 ? 4 : 2)}`;
-
-  return (
-    <section className="mt-8">
-      <div className="flex items-center justify-between gap-3 mb-3">
-        <h2 className="text-sm font-medium flex items-center gap-2">
-          <DollarSign className="h-4 w-4 text-muted-foreground" /> AI spend
-        </h2>
-        <div className="flex items-center gap-1">
-          {[7, 30, 90].map((d) => (
-            <button
-              key={d}
-              onClick={() => setDays(d)}
-              className={`rounded-xl border px-2 py-1 text-[11px] ${d === days ? "border-foreground/40 bg-muted" : "border-border/60 text-muted-foreground"}`}
-            >
-              {d}d
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {error && (
-        <div className="rounded-xl border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">{error}</div>
-      )}
-
-      <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-xl border border-border/60 p-4">
-          <div className="text-xs text-muted-foreground">Total spend, last {days} days</div>
-          <div className="mt-2 text-2xl font-semibold">{usd(total)}</div>
-        </div>
-        <div className="rounded-xl border border-border/60 p-4">
-          <div className="text-xs text-muted-foreground">Cache hit rate on input</div>
-          <div className="mt-2 text-2xl font-semibold">{cacheHitPct}%</div>
-        </div>
-        <div className="rounded-xl border border-border/60 p-4">
-          <div className="text-xs text-muted-foreground">Logged calls</div>
-          <div className="mt-2 text-2xl font-semibold">
-            {(data?.byKind ?? []).reduce((s, r) => s + Number(r.calls), 0)}
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border border-border/60 overflow-hidden">
-          <div className="border-b border-border/60 px-4 py-2 text-xs text-muted-foreground">By call type and model</div>
-          {loading ? (
-            <div className="p-4 text-sm text-muted-foreground flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Loading</div>
-          ) : (data?.byKind.length ?? 0) === 0 ? (
-            <div className="p-4 text-sm text-muted-foreground">No AI calls logged yet.</div>
-          ) : (
-            <table className="w-full text-xs">
-              <thead className="text-muted-foreground">
-                <tr className="border-b border-border/60">
-                  <th className="text-left px-3 py-2">Kind</th>
-                  <th className="text-left px-3 py-2">Model</th>
-                  <th className="text-right px-3 py-2">Calls</th>
-                  <th className="text-right px-3 py-2">Cost</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data!.byKind.map((r, i) => (
-                  <tr key={`${r.kind}-${r.model}-${i}`} className="border-b border-border/60">
-                    <td className="px-3 py-2">{r.kind}</td>
-                    <td className="px-3 py-2 text-muted-foreground">{r.model}</td>
-                    <td className="px-3 py-2 text-right">{r.calls}</td>
-                    <td className="px-3 py-2 text-right">{usd(Number(r.cost_usd))}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-
-        <div className="rounded-xl border border-border/60 overflow-hidden">
-          <div className="border-b border-border/60 px-4 py-2 text-xs text-muted-foreground">Per user, cost per graded setup</div>
-          {loading ? (
-            <div className="p-4 text-sm text-muted-foreground flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Loading</div>
-          ) : (data?.byUser.length ?? 0) === 0 ? (
-            <div className="p-4 text-sm text-muted-foreground">No usage attributed yet.</div>
-          ) : (
-            <table className="w-full text-xs">
-              <thead className="text-muted-foreground">
-                <tr className="border-b border-border/60">
-                  <th className="text-left px-3 py-2">User</th>
-                  <th className="text-right px-3 py-2">Setups</th>
-                  <th className="text-right px-3 py-2">Spend</th>
-                  <th className="text-right px-3 py-2">Per setup</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data!.byUser.map((r, i) => (
-                  <tr key={r.user_id ?? `anon-${i}`} className="border-b border-border/60">
-                    <td className="px-3 py-2 truncate max-w-[180px]">{r.email ?? (r.user_id ? r.user_id.slice(0, 8) : "System")}</td>
-
-                    <td className="px-3 py-2 text-right">{r.graded_setups}</td>
-                    <td className="px-3 py-2 text-right">{usd(Number(r.cost_usd))}</td>
-                    <td className="px-3 py-2 text-right">{Number(r.cost_per_setup) > 0 ? usd(Number(r.cost_per_setup)) : "-"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 
 type StatusLevel = "operational" | "degraded" | "down";
 
