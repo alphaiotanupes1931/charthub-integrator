@@ -42,7 +42,7 @@ export function useChartTheme() {
     const theme: ChartTheme = paletteLight ? "light" : appTheme === "light" ? "light" : "dark";
     // The embed wants bare hex for the toolbar. Keep it on the palette so the
     // widget chrome matches the panel it sits in.
-    const toolbarBg = (theme === "light" ? colors.bg : colors.bg).replace("#", "");
+    const toolbarBg = colors.bg.replace("#", "");
     return {
       theme,
       toolbarBg,
