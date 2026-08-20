@@ -234,6 +234,12 @@ function AdminPage() {
                     <td className="px-4 py-2.5 text-right tabular-nums font-medium">
                       {aiByUser.get(u.id) ? `$${Number(aiByUser.get(u.id)!.cost_usd).toFixed(2)}` : "$0.00"}
                     </td>
+                    <td className="px-4 py-2.5 text-right tabular-nums text-muted-foreground">
+                      {(u.role ?? "user") === "admin" ? "unlimited" : `${todayByUser.get(u.id)?.requests ?? 0}/100`}
+                    </td>
+                    <td className="px-4 py-2.5 text-right tabular-nums text-muted-foreground">
+                      {(u.role ?? "user") === "admin" ? "unlimited" : `${todayByUser.get(u.id)?.screenshots ?? 0}/5`}
+                    </td>
                     <td className="px-4 py-2.5">
                       <select
                         value={(u.role ?? "user") as string}
