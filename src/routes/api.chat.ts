@@ -825,6 +825,31 @@ export const Route = createFileRoute("/api/chat")({
           console.log(`[chat] req=${reqId} public_ephemeral`);
         }
 
+        // --- Daily screenshot allowance (vision calls). Admins are exempt. ---
+        if (sb && userId && !isAdmin && lastUserText(messages).hasImage) {
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          const { data: shotCount, error: shotErr } = await supabaseAdmin.rpc("bump_image_usage", {
+            _user_id: userId,
+            _cap: DAILY_IMAGE_CAP,
+          });
+          if (shotErr) {
+            if ((shotErr.message || "").toLowerCase().includes("image_cap_reached")) {
+              console.log(`[chat] req=${reqId} user=${userId} image_cap_reached`);
+              return new Response(
+                JSON.stringify({
+                  error: "image_cap_reached",
+                  message: `You have used your ${DAILY_IMAGE_CAP} chart screenshot reads for today. Keep chatting and scanning live charts - screenshot reads reset tomorrow.`,
+                  cap: DAILY_IMAGE_CAP,
+                }),
+                { status: 429, headers: { ...cors, "Content-Type": "application/json" } },
+              );
+            }
+            console.error(`[chat] req=${reqId} image_usage_error`, shotErr.message);
+          } else {
+            console.log(`[chat] req=${reqId} user=${userId} screenshots=${shotCount}/${DAILY_IMAGE_CAP}`);
+          }
+        }
+
         const journalCtx = buildJournalContext(journal ?? []);
 
         // If the client didn't attach a live snapshot but we know the ticker,
