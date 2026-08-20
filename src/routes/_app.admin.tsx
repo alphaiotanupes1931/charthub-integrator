@@ -80,12 +80,18 @@ function AdminPage() {
   useEffect(() => {
     (async () => {
       try {
-        const [s, u] = await Promise.all([
-          adminReferralStats(),
-          adminUsersOverview(),
-        ]);
-        setStats((s ?? []) as ReferralRow[]);
-        setUsers((u ?? []) as UserRow[]);
+        const u = ((await adminUsersOverview()) ?? []) as UserRow[];
+        setUsers(u);
+        // Derive the signup-source breakdown straight from the user list so it
+        // never disagrees with the people table.
+        const tally = new Map<string, number>();
+        for (const row of u) {
+          const key = (row.referral_source ?? "").trim() || "Not answered";
+          tally.set(key, (tally.get(key) ?? 0) + 1);
+        }
+        setStats(
+          Array.from(tally, ([source, count]) => ({ source, count })).sort((a, b) => b.count - a.count),
+        );
       } catch (e) {
         setErr(e instanceof Error ? e.message : "Failed to load");
       }
@@ -94,14 +100,10 @@ function AdminPage() {
     aiCostSummary({ data: { days: Math.max(1, new Date().getDate()) } })
       .then((res) => {
         const sum = res.byKind.reduce((s, r) => s + Number(r.cost_usd), 0);
-        setAiSpend30(sum);
         setAiSpendMonth(sum);
         setAiPerUser(res.byUser);
       })
-      .catch(() => { setAiSpend30(null); setAiSpendMonth(null); });
-    adminUsageToday()
-      .then((rows) => setUsageToday(rows))
-      .catch(() => setUsageToday([]));
+      .catch(() => { setAiSpendMonth(null); });
   }, []);
 
 
@@ -121,7 +123,6 @@ function AdminPage() {
   const maxCount = stats?.reduce((a, r) => Math.max(a, Number(r.count)), 0) ?? 0;
   const mrrUsd = mrrCents / 100;
   const usd = (n: number) => `$${n.toLocaleString(undefined, { minimumFractionDigits: n < 10 && n !== 0 ? 2 : 0, maximumFractionDigits: 2 })}`;
-  const aiByUser = new Map(aiPerUser.map((r) => [r.user_id, r]));
 
   return (
     <div className="p-4 md:p-8 max-w-[1100px] mx-auto space-y-6">
