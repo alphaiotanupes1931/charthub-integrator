@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { useCandleColors } from "@/hooks/useCandleColors";
 import { useChartBackground } from "@/hooks/useChartBackground";
+import { ChartReadabilityNotice } from "@/components/ChartReadabilityNotice";
 import { useQuery } from "@tanstack/react-query";
 import {
   createChart,
