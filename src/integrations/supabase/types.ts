@@ -1345,6 +1345,7 @@ export type Database = {
           kind: string
           message: string
           reply_email: string
+          sentiment: string | null
           status: string
           subject: string
           updated_at: string
@@ -1356,6 +1357,7 @@ export type Database = {
           kind?: string
           message: string
           reply_email: string
+          sentiment?: string | null
           status?: string
           subject: string
           updated_at?: string
@@ -1367,6 +1369,7 @@ export type Database = {
           kind?: string
           message?: string
           reply_email?: string
+          sentiment?: string | null
           status?: string
           subject?: string
           updated_at?: string
