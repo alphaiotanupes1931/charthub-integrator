@@ -119,46 +119,38 @@ function AdminPage() {
 
   return (
     <div className="p-4 md:p-8 max-w-[1100px] mx-auto space-y-6">
-      <PageHeader title="Admin" description="Users, AI usage, cost, and revenue in one place." />
+      <PageHeader title="Admin" description="Simple money view: what comes in, what AI costs, what you keep." />
 
       {err && (
         <div className="rounded-xl border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">{err}</div>
       )}
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="rounded-2xl border border-border/60 bg-card p-5">
-          <div className="flex items-center gap-2 text-xs tracking-tight text-muted-foreground">
-            <Users className="h-3.5 w-3.5" /> Total users
-          </div>
-          <div className="mt-2 text-2xl md:text-3xl font-semibold tabular-nums">{totalUsers}</div>
+          <div className="text-xs text-muted-foreground">Money in, per month</div>
+          <div className="mt-2 text-3xl font-semibold tabular-nums">{usd(totals.gross || mrrUsd)}</div>
+          <div className="mt-1 text-[11px] text-muted-foreground">{totalUsers} accounts</div>
         </div>
         <div className="rounded-2xl border border-border/60 bg-card p-5">
-          <div className="flex items-center gap-2 text-xs tracking-tight text-muted-foreground">
-            <DollarSign className="h-3.5 w-3.5" /> MRR
-          </div>
-          <div className="mt-2 text-2xl md:text-3xl font-semibold tabular-nums">{usd(mrrUsd)}</div>
-          <div className="mt-1 text-[11px] text-muted-foreground">Manual entries</div>
+          <div className="text-xs text-muted-foreground">AI cost, this month</div>
+          <div className="mt-2 text-3xl font-semibold tabular-nums">{aiSpendMonth === null ? "-" : usd(aiSpendMonth)}</div>
+          <div className="mt-1 text-[11px] text-muted-foreground">What you pay for the AI</div>
         </div>
         <div className="rounded-2xl border border-border/60 bg-card p-5">
-          <div className="flex items-center gap-2 text-xs tracking-tight text-muted-foreground">
-            <BarChart3 className="h-3.5 w-3.5" /> AI cost, 30d
+          <div className="text-xs text-muted-foreground">Real profit</div>
+          <div className={`mt-2 text-3xl font-semibold tabular-nums ${(totals.profit) < 0 ? "text-destructive" : "text-bull"}`}>
+            {usd(totals.profit)}
           </div>
-          <div className="mt-2 text-2xl md:text-3xl font-semibold tabular-nums">
-            {aiSpend30 === null ? "-" : usd(aiSpend30)}
-          </div>
-        </div>
-        <div className="rounded-2xl border border-border/60 bg-card p-5">
-          <div className="flex items-center gap-2 text-xs tracking-tight text-muted-foreground">
-            <DollarSign className="h-3.5 w-3.5" /> Net, 30d
-          </div>
-          <div className={`mt-2 text-2xl md:text-3xl font-semibold tabular-nums ${mrrUsd - (aiSpend30 ?? 0) < 0 ? "text-destructive" : ""}`}>
-            {usd(mrrUsd - (aiSpend30 ?? 0))}
-          </div>
-          <div className="mt-1 text-[11px] text-muted-foreground">MRR minus AI spend</div>
+          <div className="mt-1 text-[11px] text-muted-foreground">Money in minus AI cost</div>
         </div>
       </div>
 
+      <CustomerMoneyTable users={users} aiSpend={aiPerUser} onTotals={setTotals} />
+
+      <AiAveragesPanel userCount={totalUsers} />
+
       <RevenuePanel onMrrChange={setMrrCents} />
+
 
       <PlatformStatusEditor />
 
