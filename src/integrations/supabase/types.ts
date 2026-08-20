@@ -1591,6 +1591,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      admin_usage_today: {
+        Args: never
+        Returns: {
+          requests: number
+          screenshots: number
+          user_id: string
+        }[]
+      }
       admin_users_overview: {
         Args: never
         Returns: {
