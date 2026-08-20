@@ -5,9 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
 import { Loader2, CircleDot, CircleOff, CircleDashed, Ban, ShieldCheck, DollarSign, Send } from "lucide-react";
 import { toast } from "sonner";
-import { adminReferralStats, adminUsersOverview, adminSetPlatformStatus, adminUsageToday } from "@/lib/admin.functions";
+import { adminUsersOverview, adminSetPlatformStatus } from "@/lib/admin.functions";
 import { aiCostSummary } from "@/lib/ai-cost.functions";
-import { aiCreditsStatus, setAiBudget } from "@/lib/ai-credits.functions";
+import { aiCreditsStatus } from "@/lib/ai-credits.functions";
 import { adminListSupportRequests } from "@/lib/support.functions";
 import { RevenuePanel } from "@/components/admin/RevenuePanel";
 import { CustomerMoneyTable } from "@/components/admin/CustomerMoneyTable";
@@ -43,11 +43,9 @@ function AdminPage() {
   const [err, setErr] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [mrrCents, setMrrCents] = useState(0);
-  const [aiSpend30, setAiSpend30] = useState<number | null>(null);
   const [aiPerUser, setAiPerUser] = useState<
     Array<{ user_id: string; email: string | null; calls: number; graded_setups: number; cost_usd: number; cost_per_setup: number }>
   >([]);
-  const [usageToday, setUsageToday] = useState<Array<{ user_id: string; requests: number; screenshots: number }>>([]);
   const [totals, setTotals] = useState({ gross: 0, aiCost: 0, profit: 0 });
   const [aiSpendMonth, setAiSpendMonth] = useState<number | null>(null);
 

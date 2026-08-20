@@ -14,6 +14,7 @@ const SubmitInput = z.object({
   subject: z.string().trim().min(3).max(140),
   message: z.string().trim().min(10).max(4000),
   replyEmail: z.string().trim().email().max(255),
+  sentiment: z.enum(["good", "neutral", "bad"]).optional(),
 });
 
 function escapeHtml(s: string): string {
@@ -38,6 +39,7 @@ export const submitSupportRequest = createServerFn({ method: "POST" })
         subject: data.subject,
         message: data.message,
         reply_email: data.replyEmail,
+        sentiment: data.sentiment ?? null,
       })
       .select("id, created_at")
       .single();
@@ -47,6 +49,7 @@ export const submitSupportRequest = createServerFn({ method: "POST" })
     const label = data.kind === "ticket" ? "Support ticket" : "Feedback";
     const html = `<div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:15px;color:#111">
 <p style="margin:0 0 16px"><strong>${label}</strong> from ${escapeHtml(data.replyEmail)}</p>
+${data.sentiment ? `<p style="margin:0 0 8px"><strong>Rating:</strong> ${data.sentiment}</p>` : ""}
 <p style="margin:0 0 8px"><strong>Subject:</strong> ${escapeHtml(data.subject)}</p>
 <p style="margin:0 0 16px;white-space:pre-wrap">${escapeHtml(data.message)}</p>
 <hr style="border:none;border-top:1px solid #e5e5e5;margin:16px 0" />
@@ -125,12 +128,12 @@ export const adminListSupportRequests = createServerFn({ method: "POST" })
 
     const { data, error } = await supabase
       .from("support_tickets")
-      .select("id, kind, subject, message, reply_email, status, created_at")
+      .select("id, kind, subject, message, reply_email, status, sentiment, created_at")
       .order("created_at", { ascending: false })
       .limit(50);
     if (error) throw new Error(error.message);
     return (data ?? []) as unknown as Array<{
       id: string; kind: string; subject: string; message: string;
-      reply_email: string; status: string; created_at: string;
+      reply_email: string; status: string; sentiment: string | null; created_at: string;
     }>;
   });
