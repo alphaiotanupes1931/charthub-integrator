@@ -534,7 +534,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
       }),
       onError: (err) => {
         console.error(err);
-        const msg = err?.message?.trim() || "";
+        const msg = friendlyChatError(err).trim();
         // Suppress generic stream-end errors and transient auth blips.
         const suppress = /^(an error occurred\.?|unauthorized|forbidden)$/i.test(msg);
         if (msg && !suppress) toast.error(msg);
