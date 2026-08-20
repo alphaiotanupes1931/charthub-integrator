@@ -1719,10 +1719,17 @@ function Dashboard() {
           <select
             value={timezone}
             onChange={(e) => setTimezone(e.target.value)}
-            className="bg-transparent text-xs font-medium text-foreground outline-none"
+            className="bg-transparent text-xs font-medium text-foreground outline-none [color-scheme:dark] dark:[color-scheme:dark]"
           >
             {TIMEZONE_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
+              <option
+                key={o.value}
+                value={o.value}
+                className="bg-background text-foreground"
+                style={{ backgroundColor: "hsl(var(--background))", color: "hsl(var(--foreground))" }}
+              >
+                {o.label}
+              </option>
             ))}
           </select>
           <span className="font-mono text-[10px] text-muted-foreground">{tzLabel}</span>
