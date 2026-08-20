@@ -3,11 +3,11 @@ import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
-import { Loader2, ShieldAlert, Users, BarChart3, CircleDot, CircleOff, CircleDashed, Ban, ShieldCheck, DollarSign } from "lucide-react";
+import { Loader2, CircleDot, CircleOff, CircleDashed, Ban, ShieldCheck, DollarSign, Send } from "lucide-react";
 import { toast } from "sonner";
-import { adminReferralStats, adminUsersOverview, adminSetPlatformStatus, adminUsageToday } from "@/lib/admin.functions";
+import { adminUsersOverview, adminSetPlatformStatus } from "@/lib/admin.functions";
 import { aiCostSummary } from "@/lib/ai-cost.functions";
-import { aiCreditsStatus, setAiBudget } from "@/lib/ai-credits.functions";
+import { aiCreditsStatus } from "@/lib/ai-credits.functions";
 import { adminListSupportRequests } from "@/lib/support.functions";
 import { RevenuePanel } from "@/components/admin/RevenuePanel";
 import { CustomerMoneyTable } from "@/components/admin/CustomerMoneyTable";
@@ -43,11 +43,9 @@ function AdminPage() {
   const [err, setErr] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [mrrCents, setMrrCents] = useState(0);
-  const [aiSpend30, setAiSpend30] = useState<number | null>(null);
   const [aiPerUser, setAiPerUser] = useState<
     Array<{ user_id: string; email: string | null; calls: number; graded_setups: number; cost_usd: number; cost_per_setup: number }>
   >([]);
-  const [usageToday, setUsageToday] = useState<Array<{ user_id: string; requests: number; screenshots: number }>>([]);
   const [totals, setTotals] = useState({ gross: 0, aiCost: 0, profit: 0 });
   const [aiSpendMonth, setAiSpendMonth] = useState<number | null>(null);
 
@@ -80,12 +78,18 @@ function AdminPage() {
   useEffect(() => {
     (async () => {
       try {
-        const [s, u] = await Promise.all([
-          adminReferralStats(),
-          adminUsersOverview(),
-        ]);
-        setStats((s ?? []) as ReferralRow[]);
-        setUsers((u ?? []) as UserRow[]);
+        const u = ((await adminUsersOverview()) ?? []) as UserRow[];
+        setUsers(u);
+        // Derive the signup-source breakdown straight from the user list so it
+        // never disagrees with the people table.
+        const tally = new Map<string, number>();
+        for (const row of u) {
+          const key = (row.referral_source ?? "").trim() || "Not answered";
+          tally.set(key, (tally.get(key) ?? 0) + 1);
+        }
+        setStats(
+          Array.from(tally, ([source, count]) => ({ source, count })).sort((a, b) => b.count - a.count),
+        );
       } catch (e) {
         setErr(e instanceof Error ? e.message : "Failed to load");
       }
@@ -94,14 +98,10 @@ function AdminPage() {
     aiCostSummary({ data: { days: Math.max(1, new Date().getDate()) } })
       .then((res) => {
         const sum = res.byKind.reduce((s, r) => s + Number(r.cost_usd), 0);
-        setAiSpend30(sum);
         setAiSpendMonth(sum);
         setAiPerUser(res.byUser);
       })
-      .catch(() => { setAiSpend30(null); setAiSpendMonth(null); });
-    adminUsageToday()
-      .then((rows) => setUsageToday(rows))
-      .catch(() => setUsageToday([]));
+      .catch(() => { setAiSpendMonth(null); });
   }, []);
 
 
@@ -121,7 +121,6 @@ function AdminPage() {
   const maxCount = stats?.reduce((a, r) => Math.max(a, Number(r.count)), 0) ?? 0;
   const mrrUsd = mrrCents / 100;
   const usd = (n: number) => `$${n.toLocaleString(undefined, { minimumFractionDigits: n < 10 && n !== 0 ? 2 : 0, maximumFractionDigits: 2 })}`;
-  const aiByUser = new Map(aiPerUser.map((r) => [r.user_id, r]));
 
   return (
     <div className="p-4 md:p-8 max-w-[1100px] mx-auto space-y-6">
@@ -198,7 +197,7 @@ function AdminPage() {
       </section>
 
       <section>
-        <h2 className="text-sm font-semibold tracking-tight text-muted-foreground mb-3">Users and AI usage, last 30 days</h2>
+        <h2 className="text-sm font-semibold tracking-tight text-muted-foreground mb-3">People and access</h2>
         <div className="rounded-2xl border border-border/60 bg-card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -206,7 +205,6 @@ function AdminPage() {
                 <tr>
                   <th className="text-left px-4 py-2 font-medium">Name</th>
                   <th className="text-left px-4 py-2 font-medium">Email</th>
-                   <th className="text-right px-4 py-2 font-medium">AI spend</th>
                    <th className="text-left px-4 py-2 font-medium">Role</th>
                   <th className="text-left px-4 py-2 font-medium">Broker</th>
 
@@ -217,17 +215,15 @@ function AdminPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {users === null ? (
-                  <tr><td colSpan={8} className="p-6 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Loading…</td></tr>
+                  <tr><td colSpan={7} className="p-6 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Loading…</td></tr>
                 ) : users.length === 0 ? (
-                  <tr><td colSpan={8} className="p-6 text-muted-foreground">No users yet.</td></tr>
+                  <tr><td colSpan={7} className="p-6 text-muted-foreground">No users yet.</td></tr>
 
                 ) : users.map((u) => (
                   <tr key={u.id} className={u.banned ? "bg-destructive/5" : ""}>
                     <td className="px-4 py-2.5">{u.display_name ?? <span className="text-muted-foreground">-</span>}</td>
                     <td className="px-4 py-2.5 text-muted-foreground">{u.email}</td>
-                    <td className="px-4 py-2.5 text-right tabular-nums font-medium">
-                      {usd(Number(aiByUser.get(u.id)?.cost_usd ?? 0))}
-                    </td>
+
 
                     <td className="px-4 py-2.5">
                       <select
@@ -306,6 +302,7 @@ function PlatformStatusEditor() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
+  const [notify, setNotify] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -326,13 +323,18 @@ function PlatformStatusEditor() {
   const save = async () => {
     setSaving(true);
     try {
-      const row = await adminSetPlatformStatus({ data: { level, message } }) as { updated_at: string } | null;
+      const res = await adminSetPlatformStatus({ data: { level, message, notifyUsers: notify } });
+      const row = res?.row as { updated_at?: string } | null;
       setSaving(false);
-      toast.success("Platform status updated");
+      toast.success(
+        notify
+          ? `Status sent to ${res?.emailed ?? 0} ${(res?.emailed ?? 0) === 1 ? "person" : "people"}`
+          : "Platform status updated",
+      );
       if (row?.updated_at) setUpdatedAt(row.updated_at);
     } catch (e) {
       setSaving(false);
-      toast.error(e instanceof Error ? e.message : "Failed to save");
+      toast.error(e instanceof Error ? e.message : "Failed to send");
     }
   };
 
@@ -373,14 +375,23 @@ function PlatformStatusEditor() {
             className="w-full rounded-2xl border border-border/60 bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/40"
             placeholder="Message shown to all users…"
           />
-          <div className="flex justify-end">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <label className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={notify}
+                onChange={(e) => setNotify(e.target.checked)}
+                className="h-4 w-4 rounded border-border/60 accent-primary"
+              />
+              Email every user a branded status update
+            </label>
             <button
               onClick={save}
               disabled={saving || !message.trim()}
               className="inline-flex items-center gap-2 rounded-2xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
             >
-              {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-              Save status
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              Send status
             </button>
           </div>
         </>
@@ -394,18 +405,13 @@ type CreditSnapshot = Awaited<ReturnType<typeof aiCreditsStatus>>;
 function AiCreditsPanel() {
   const [snap, setSnap] = useState<CreditSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const [budget, setBudget] = useState("");
-  const [threshold, setThreshold] = useState("");
 
   const load = async () => {
     setLoading(true);
     try {
       const res = await aiCreditsStatus();
       setSnap(res);
-      setBudget(String(res.monthlyBudgetUsd));
-      setThreshold(String(res.lowThresholdPct));
       setErr(null);
     } catch (e) {
       setErr((e as Error).message);
@@ -416,21 +422,6 @@ function AiCreditsPanel() {
 
   useEffect(() => { void load(); }, []);
 
-  const save = async () => {
-    setSaving(true);
-    try {
-      const res = await setAiBudget({
-        data: { monthlyBudgetUsd: Number(budget), lowThresholdPct: Number(threshold) },
-      });
-      setSnap(res);
-      toast.success("Budget saved");
-    } catch (e) {
-      toast.error((e as Error).message);
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const usd = (n: number) => `$${n.toFixed(n < 1 ? 4 : 2)}`;
   const status = snap?.providerStatus ?? "unknown";
   const statusLabel: Record<string, string> = {
@@ -440,13 +431,14 @@ function AiCreditsPanel() {
     error: "Claude is erroring",
     unknown: "Not checked yet",
   };
-  const low = (snap?.remainingPct ?? 100) <= (snap?.lowThresholdPct ?? 20);
+
+  const perDay = snap ? snap.monthToDateUsd / Math.max(1, new Date().getDate()) : 0;
 
   return (
     <section className="mt-8">
       <div className="mb-3 flex items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 text-sm font-medium">
-          <DollarSign className="h-4 w-4 text-muted-foreground" /> AI credits and provider health
+          <DollarSign className="h-4 w-4 text-muted-foreground" /> AI spend and provider health
         </h2>
         <button
           onClick={() => void load()}
@@ -477,81 +469,94 @@ function AiCreditsPanel() {
             {snap.providerMessage ? ` — ${snap.providerMessage}` : ""}
           </div>
 
-          <div className="mt-3 grid gap-3 sm:grid-cols-4">
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
             <div className="rounded-xl border border-border/60 p-4">
-              <div className="text-xs text-muted-foreground">Credits left this month</div>
-              <div className={`mt-2 text-2xl font-semibold ${low ? "text-destructive" : ""}`}>{usd(snap.remainingUsd)}</div>
-              <div className="mt-1 text-[11px] text-muted-foreground">{snap.remainingPct}% of budget</div>
-            </div>
-            <div className="rounded-xl border border-border/60 p-4">
-              <div className="text-xs text-muted-foreground">Spent month to date</div>
-              <div className="mt-2 text-2xl font-semibold">{usd(snap.monthToDateUsd)}</div>
+              <div className="text-xs text-muted-foreground">Spent this month</div>
+              <div className="mt-2 text-2xl font-semibold tabular-nums">{usd(snap.monthToDateUsd)}</div>
+              <div className="mt-1 text-[11px] text-muted-foreground">about {usd(perDay)} per day so far</div>
             </div>
             <div className="rounded-xl border border-border/60 p-4">
               <div className="text-xs text-muted-foreground">Last 24 hours</div>
-              <div className="mt-2 text-2xl font-semibold">{usd(snap.todayUsd)}</div>
+              <div className="mt-2 text-2xl font-semibold tabular-nums">{usd(snap.todayUsd)}</div>
+              <div className="mt-1 text-[11px] text-muted-foreground">rolling one day</div>
             </div>
             <div className="rounded-xl border border-border/60 p-4">
               <div className="text-xs text-muted-foreground">Last 7 days</div>
-              <div className="mt-2 text-2xl font-semibold">{usd(snap.last7dUsd)}</div>
+              <div className="mt-2 text-2xl font-semibold tabular-nums">{usd(snap.last7dUsd)}</div>
+              <div className="mt-1 text-[11px] text-muted-foreground">about {usd(snap.last7dUsd / 7)} per day</div>
             </div>
           </div>
 
-          <div className="mt-3 flex flex-wrap items-end gap-3 rounded-xl border border-border/60 p-4">
-            <label className="block">
-              <span className="text-xs text-muted-foreground">Monthly budget, USD</span>
-              <input
-                value={budget}
-                onChange={(e) => setBudget(e.target.value)}
-                inputMode="decimal"
-                className="mt-1 w-32 rounded-2xl border border-border/60 bg-background px-3 py-2 text-sm outline-none focus:border-foreground/40"
-              />
-            </label>
-            <label className="block">
-              <span className="text-xs text-muted-foreground">Warn at, percent left</span>
-              <input
-                value={threshold}
-                onChange={(e) => setThreshold(e.target.value)}
-                inputMode="numeric"
-                className="mt-1 w-28 rounded-2xl border border-border/60 bg-background px-3 py-2 text-sm outline-none focus:border-foreground/40"
-              />
-            </label>
-            <button
-              onClick={() => void save()}
-              disabled={saving}
-              className="inline-flex h-10 items-center gap-2 rounded-2xl bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-60"
-            >
-              {saving && <Loader2 className="h-4 w-4 animate-spin" />} Save budget
-            </button>
-            <div className="text-[11px] text-muted-foreground">
-              Checked {snap.checkedAt ? new Date(snap.checkedAt).toLocaleString() : "never"}. Admins get a notification
-              when credits run low or Claude stops responding.
-            </div>
-          </div>
+          <p className="mt-3 text-[11px] text-muted-foreground">
+            No platform budget is set. AI usage is paid out of customer revenue, so watch the per-person spend in the money
+            table above to decide each user's monthly limit. Checked{" "}
+            {snap.checkedAt ? new Date(snap.checkedAt).toLocaleString() : "never"}.
+          </p>
         </>
       ) : null}
     </section>
   );
 }
 
-type TicketRow = Awaited<ReturnType<typeof adminListSupportRequests>>[number];
+type TicketRow = Awaited<ReturnType<typeof adminListSupportRequests>>[number] & { sentiment?: string | null };
+
+const SENTIMENTS: Record<string, { label: string; cls: string }> = {
+  good: { label: "Good", cls: "border-bull/30 bg-bull/10 text-bull" },
+  neutral: { label: "Okay", cls: "border-amber-500/30 bg-amber-500/10 text-amber-500" },
+  bad: { label: "Bad", cls: "border-destructive/30 bg-destructive/10 text-destructive" },
+};
 
 function SupportTicketsPanel() {
   const [rows, setRows] = useState<TicketRow[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<"all" | "good" | "neutral" | "bad" | "ticket">("all");
 
   useEffect(() => {
     let cancelled = false;
     adminListSupportRequests()
-      .then((r) => { if (!cancelled) setRows(r); })
+      .then((r) => { if (!cancelled) setRows(r as TicketRow[]); })
       .catch((e: Error) => { if (!cancelled) setErr(e.message); });
     return () => { cancelled = true; };
   }, []);
 
+  const counts = {
+    all: rows?.length ?? 0,
+    good: rows?.filter((r) => r.sentiment === "good").length ?? 0,
+    neutral: rows?.filter((r) => r.sentiment === "neutral").length ?? 0,
+    bad: rows?.filter((r) => r.sentiment === "bad").length ?? 0,
+    ticket: rows?.filter((r) => r.kind === "ticket").length ?? 0,
+  };
+  const visible = (rows ?? []).filter((r) =>
+    filter === "all" ? true : filter === "ticket" ? r.kind === "ticket" : r.sentiment === filter,
+  );
+
+  const TABS: Array<{ id: typeof filter; label: string }> = [
+    { id: "all", label: "All" },
+    { id: "good", label: "Good" },
+    { id: "neutral", label: "Okay" },
+    { id: "bad", label: "Bad" },
+    { id: "ticket", label: "Tickets" },
+  ];
+
   return (
     <section className="mt-8">
-      <h2 className="mb-3 text-sm font-medium">Tickets and feedback</h2>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-sm font-medium">Tickets and feedback</h2>
+        <div className="flex flex-wrap gap-1.5">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setFilter(t.id)}
+              className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${
+                filter === t.id ? "border-foreground/40 bg-muted" : "border-border/60 text-muted-foreground"
+              }`}
+            >
+              {t.label} {counts[t.id]}
+            </button>
+          ))}
+        </div>
+      </div>
       {err && (
         <div className="rounded-xl border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">{err}</div>
       )}
@@ -560,29 +565,37 @@ function SupportTicketsPanel() {
           <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" /> Loading
           </div>
-        ) : rows.length === 0 ? (
-          <div className="p-4 text-sm text-muted-foreground">Nothing submitted yet.</div>
+        ) : visible.length === 0 ? (
+          <div className="p-4 text-sm text-muted-foreground">Nothing here yet.</div>
         ) : (
-          rows.map((r) => (
-            <button
-              key={r.id}
-              onClick={() => setOpenId(openId === r.id ? null : r.id)}
-              className="block w-full px-4 py-3 text-left hover:bg-muted/50"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div className="text-sm font-medium">{r.subject}</div>
-                <span className="rounded-full border border-border/60 px-2 py-0.5 text-[11px] text-muted-foreground">
-                  {r.kind === "ticket" ? "Ticket" : "Feedback"}
-                </span>
-              </div>
-              <div className="mt-1 text-xs text-muted-foreground">
-                {r.reply_email} · {new Date(r.created_at).toLocaleString()} · {r.status.replace("_", " ")}
-              </div>
-              {openId === r.id && (
-                <div className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{r.message}</div>
-              )}
-            </button>
-          ))
+          visible.map((r) => {
+            const s = r.sentiment ? SENTIMENTS[r.sentiment] : null;
+            return (
+              <button
+                key={r.id}
+                onClick={() => setOpenId(openId === r.id ? null : r.id)}
+                className="block w-full px-4 py-3 text-left hover:bg-muted/50"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="text-sm font-medium">{r.subject}</div>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    {s && (
+                      <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${s.cls}`}>{s.label}</span>
+                    )}
+                    <span className="rounded-full border border-border/60 px-2 py-0.5 text-[11px] text-muted-foreground">
+                      {r.kind === "ticket" ? "Ticket" : "Feedback"}
+                    </span>
+                  </div>
+                </div>
+                <div className="mt-1 text-xs text-muted-foreground">
+                  {r.reply_email} · {new Date(r.created_at).toLocaleString()} · {r.status.replace("_", " ")}
+                </div>
+                {openId === r.id && (
+                  <div className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{r.message}</div>
+                )}
+              </button>
+            );
+          })
         )}
       </div>
     </section>

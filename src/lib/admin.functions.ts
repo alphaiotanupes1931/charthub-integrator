@@ -49,6 +49,7 @@ export const adminSetPlatformStatus = createServerFn({ method: "POST" })
     z.object({
       level: z.enum(["operational", "degraded", "down"]),
       message: z.string().min(1).max(500),
+      notifyUsers: z.boolean().optional(),
     }).parse(data),
   )
   .handler(async ({ data, context }) => {
@@ -59,5 +60,53 @@ export const adminSetPlatformStatus = createServerFn({ method: "POST" })
       _message: data.message,
     });
     if (error) throw new Error(error.message);
-    return row;
+
+    let emailed = 0;
+    if (data.notifyUsers) {
+      const { buildStatusEmail } = await import("@/lib/platform-status-email.server");
+      const mail = buildStatusEmail(data.level, data.message);
+      const { data: people } = await supabaseAdmin
+        .from("profiles")
+        .select("email")
+        .not("email", "is", null)
+        .eq("banned", false);
+      const recipients = Array.from(
+        new Set(((people ?? []) as Array<{ email: string | null }>).map((p) => p.email).filter((e): e is string => !!e)),
+      );
+      const stamp = Date.now();
+      for (const to of recipients) {
+        try {
+          const messageId = crypto.randomUUID();
+          await supabaseAdmin.from("email_send_log").insert({
+            message_id: messageId,
+            template_name: "platform_status",
+            recipient_email: to,
+            status: "pending",
+          });
+          const { error: qErr } = await supabaseAdmin.rpc("enqueue_email" as never, {
+            queue_name: "transactional_emails",
+            payload: {
+              message_id: messageId,
+              to,
+              from: "TradeMind <noreply@notify.reeddigitalgroup.com>",
+              sender_domain: "notify.reeddigitalgroup.com",
+              subject: mail.subject,
+              html: mail.html,
+              text: mail.text,
+              purpose: "transactional",
+              idempotency_key: `status:${stamp}:${to}`,
+              unsubscribe_token: `platform-status:${to}`,
+              label: "platform_status",
+              queued_at: new Date().toISOString(),
+            },
+          } as never);
+          if (qErr) throw new Error(qErr.message);
+          emailed += 1;
+        } catch (e) {
+          console.error("[status] email enqueue failed", to, (e as Error).message);
+        }
+      }
+    }
+
+    return { row, emailed };
   });
