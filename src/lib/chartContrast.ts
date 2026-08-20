@@ -15,7 +15,7 @@ function toRgb(hex: string): [number, number, number] {
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 
-function luminance(hex: string): number {
+export function luminance(hex: string): number {
   const [r, g, b] = toRgb(hex).map((v) => {
     const s = v / 255;
     return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
