@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pencil, Minus as LineIcon, Square as RectIcon, ArrowUpRight, Undo2, Trash2, Eraser as EraserIcon, X as CloseIcon } from "lucide-react";
 import type { LevelKey } from "@/components/NativeChart";
 import { ChartSourceBadge } from "@/components/ChartSourceBadge";
+import { useChartTheme } from "@/hooks/useChartTheme";
 
 
 interface Props {
@@ -73,6 +74,11 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
     return s;
   }, [enabled]);
 
+  // The embed renders its own axes and toolbar, so its theme has to track the
+  // app/chart palette or the price labels end up unreadable.
+  const { theme: embedTheme, toolbarBg } = useChartTheme();
+  const chartBgColor = `#${toolbarBg}`;
+
   const src = useMemo(() => {
     const iv = INTERVAL_MAP[interval] ?? "D";
     const params = new URLSearchParams({
@@ -82,9 +88,9 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
       hidetoptoolbar: "0",
       symboledit: "1",
       saveimage: "0",
-      toolbarbg: "1a1f2e",
+      toolbarbg: toolbarBg,
       studies: JSON.stringify(studies),
-      theme: "dark",
+      theme: embedTheme,
       style: "1",
       timezone: "Etc/UTC",
       withdateranges: "1",
@@ -92,7 +98,7 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
       locale: "en",
     });
     return `https://s.tradingview.com/widgetembed/?${params.toString()}`;
-  }, [symbol, interval, studies]);
+  }, [symbol, interval, studies, embedTheme, toolbarBg]);
 
   // Only a symbol/interval change resets the sticky state; a background retry
   // must not clear it (that is what caused the flicker).
@@ -291,14 +297,20 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
   // the same panel so the trader always has a working chart. The embed stays
   // mounted underneath and keeps reloading until it recovers on its own.
   return (
-    <div ref={hostRef} className="relative h-full w-full">
+    <div ref={hostRef} className="relative h-full w-full" style={{ background: chartBgColor }}>
       <iframe
         ref={iframeRef}
         key={`${src}|${reloadKey}`}
         src={src}
         title="TradingView chart"
         className="h-full w-full border-0"
-        style={showFallback ? { pointerEvents: "none", visibility: "hidden" } : undefined}
+        style={{
+          // Matches the embed to the panel so a reload never flashes the wrong
+          // colour, and keeps native widget UI in the right scheme.
+          background: chartBgColor,
+          colorScheme: embedTheme,
+          ...(showFallback ? { pointerEvents: "none" as const, visibility: "hidden" as const } : null),
+        }}
         allow="fullscreen"
 
         onLoad={() => { setLoaded(true); setFailed(false); }}
