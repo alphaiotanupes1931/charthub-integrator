@@ -55,3 +55,17 @@ export async function coalesceUiMessageStream(response: Response): Promise<Respo
 
   return new Response(body, { status: response.status, statusText: response.statusText, headers });
 }
+/**
+ * Turns a raw chat API failure into copy a trader can act on. Cap responses
+ * arrive as a JSON body, which the AI SDK surfaces as the error message.
+ */
+export function friendlyChatError(err: unknown): string {
+  const raw = err instanceof Error ? err.message : typeof err === "string" ? err : "";
+  try {
+    const parsed = JSON.parse(raw) as { message?: string; error?: string };
+    if (parsed?.message) return parsed.message;
+  } catch {
+    /* not a JSON body */
+  }
+  return raw || "AI request failed";
+}
