@@ -90,6 +90,10 @@ function tickerToOanda(ticker: string): string | null {
     "USD/ZAR": "USD_ZAR",
   };
   if (map[t]) return map[t];
+  // Crypto must never fall through to the FX rule below: "ETH/USD" looks like a
+  // 3-letter FX pair, and OANDA's crypto CFDs are stale/unavailable, which put
+  // Ethereum hundreds of dollars away from real spot. Crypto uses Binance.
+  if (isCryptoTicker(t)) return null;
   // Any plain FX pair OANDA quotes, e.g. "NOK/SEK" -> "NOK_SEK".
   if (/^[A-Z]{3}\/[A-Z]{3}$/.test(t)) return t.replace("/", "_");
   return null;
