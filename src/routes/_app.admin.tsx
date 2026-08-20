@@ -326,13 +326,18 @@ function PlatformStatusEditor() {
   const save = async () => {
     setSaving(true);
     try {
-      const row = await adminSetPlatformStatus({ data: { level, message } }) as { updated_at: string } | null;
+      const res = await adminSetPlatformStatus({ data: { level, message, notifyUsers: notify } });
+      const row = res?.row as { updated_at?: string } | null;
       setSaving(false);
-      toast.success("Platform status updated");
+      toast.success(
+        notify
+          ? `Status sent to ${res?.emailed ?? 0} ${(res?.emailed ?? 0) === 1 ? "person" : "people"}`
+          : "Platform status updated",
+      );
       if (row?.updated_at) setUpdatedAt(row.updated_at);
     } catch (e) {
       setSaving(false);
-      toast.error(e instanceof Error ? e.message : "Failed to save");
+      toast.error(e instanceof Error ? e.message : "Failed to send");
     }
   };
 
