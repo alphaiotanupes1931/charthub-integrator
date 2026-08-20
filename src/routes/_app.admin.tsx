@@ -378,14 +378,23 @@ function PlatformStatusEditor() {
             className="w-full rounded-2xl border border-border/60 bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/40"
             placeholder="Message shown to all users…"
           />
-          <div className="flex justify-end">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <label className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={notify}
+                onChange={(e) => setNotify(e.target.checked)}
+                className="h-4 w-4 rounded border-border/60 accent-primary"
+              />
+              Email every user a branded status update
+            </label>
             <button
               onClick={save}
               disabled={saving || !message.trim()}
               className="inline-flex items-center gap-2 rounded-2xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
             >
-              {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-              Save status
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              Send status
             </button>
           </div>
         </>
