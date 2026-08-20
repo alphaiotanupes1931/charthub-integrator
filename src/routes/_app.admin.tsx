@@ -306,6 +306,7 @@ function PlatformStatusEditor() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
+  const [notify, setNotify] = useState(true);
 
   useEffect(() => {
     (async () => {
