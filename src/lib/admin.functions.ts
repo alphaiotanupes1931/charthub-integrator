@@ -37,8 +37,8 @@ export const adminUsageToday = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data, error } = await supabaseAdmin.rpc("admin_usage_today");
+    // The RPC re-checks has_role(auth.uid()), so it must run as the signed-in admin.
+    const { data, error } = await context.supabase.rpc("admin_usage_today");
     if (error) throw new Error(error.message);
     return (data ?? []) as Array<{ user_id: string; requests: number; screenshots: number }>;
   });
