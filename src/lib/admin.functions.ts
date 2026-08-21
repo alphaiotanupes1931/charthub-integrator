@@ -157,10 +157,11 @@ export const adminImageUsage = createServerFn({ method: "GET" })
 
     // Estimated cost of one screenshot read: average cost of an AI call in the
     // window, scaled up because vision calls carry a much larger input payload.
+    const VISION_MULTIPLIER = 3;
     const costRows = costRes.data ?? [];
     const totalCost = costRows.reduce((s, r) => s + Number(r.cost_usd ?? 0), 0);
     const avgCall = costRows.length ? totalCost / costRows.length : 0;
-    const estCostPerImage = Number((avgCall * 3).toFixed(6));
+    const estCostPerImage = Number((avgCall * VISION_MULTIPLIER).toFixed(6));
 
     const rows = Array.from(byUser, ([user_id, v]) => ({
       user_id,
@@ -174,14 +175,30 @@ export const adminImageUsage = createServerFn({ method: "GET" })
       est_cost_usd: Number((v.images * estCostPerImage).toFixed(4)),
     })).sort((a, b) => b.images - a.images);
 
+    const imageCost = Number((totalImages * estCostPerImage).toFixed(4));
+    const grossMonthly = ((revenueRes.data ?? []).reduce((s, r) => s + Number(r.monthly_amount_cents ?? 0), 0)) / 100;
+
     return {
       days: data.days,
       rows,
       totals: {
         images: totalImages,
         requests: totalRequests,
-        est_cost_usd: Number((totalImages * estCostPerImage).toFixed(4)),
+        est_cost_usd: imageCost,
         est_cost_per_image: estCostPerImage,
+      },
+      breakdown: {
+        total_ai_cost_usd: Number(totalCost.toFixed(4)),
+        ai_calls: costRows.length,
+        avg_call_usd: Number(avgCall.toFixed(6)),
+        vision_multiplier: VISION_MULTIPLIER,
+        image_cost_usd: imageCost,
+        image_share_pct: totalCost > 0 ? Number(((imageCost / totalCost) * 100).toFixed(1)) : 0,
+        text_cost_usd: Number(Math.max(0, totalCost - imageCost).toFixed(4)),
+        cost_per_read_usd: estCostPerImage,
+        reads_per_dollar: estCostPerImage > 0 ? Math.floor(1 / estCostPerImage) : 0,
+        gross_monthly_usd: Number(grossMonthly.toFixed(2)),
+        real_profit_usd: Number((grossMonthly - totalCost).toFixed(2)),
       },
     };
   });
