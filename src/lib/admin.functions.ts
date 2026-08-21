@@ -116,7 +116,7 @@ export const adminSetPlatformStatus = createServerFn({ method: "POST" })
  */
 export const adminImageUsage = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data) => z.object({ days: z.number().int().min(1).max(90).default(30) }).parse(data ?? {}))
+  .inputValidator((data) => z.object({ days: z.number().int().min(1).max(365).default(30) }).parse(data ?? {}))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -209,7 +209,7 @@ export const adminImageUsage = createServerFn({ method: "GET" })
  */
 export const adminUsageTrends = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data) => z.object({ days: z.number().int().min(1).max(90).default(30) }).parse(data ?? {}))
+  .inputValidator((data) => z.object({ days: z.number().int().min(1).max(365).default(30) }).parse(data ?? {}))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
