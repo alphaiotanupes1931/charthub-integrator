@@ -13,6 +13,7 @@ import { RevenuePanel } from "@/components/admin/RevenuePanel";
 import { CustomerMoneyTable } from "@/components/admin/CustomerMoneyTable";
 import { AiAveragesPanel } from "@/components/admin/AiAveragesPanel";
 import { ImageUsagePanel } from "@/components/admin/ImageUsagePanel";
+import { UserUsageDrawer } from "@/components/admin/UserUsageDrawer";
 
 
 
