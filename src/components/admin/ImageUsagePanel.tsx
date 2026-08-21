@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Download, Loader2, Image as ImageIcon } from "lucide-react";
 import { adminImageUsage } from "@/lib/admin.functions";
 import { csvDate, downloadCsv } from "@/lib/csv-export";
+import { DailyUsageChart, PerPersonChart } from "@/components/admin/UsageTrendCharts";
+
 
 
 const usd = (n: number) => `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
