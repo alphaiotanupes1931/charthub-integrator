@@ -106,7 +106,7 @@ export function AiAveragesPanel({ userCount }: { userCount: number }) {
               title="AI cost per person"
               hint={`Top spenders, ${range.label}`}
               format="usd"
-              rows={byUser.map((r) => ({ label: r.email ?? r.user_id.slice(0, 8), value: Number(r.cost_usd) }))}
+              rows={byUser.map((r) => ({ label: r.email ?? (r.user_id ? String(r.user_id).slice(0, 8) : "System"), value: Number(r.cost_usd) }))}
             />
           </div>
           <div className="px-5 py-3 border-t border-border/60 text-[11px] text-muted-foreground">
