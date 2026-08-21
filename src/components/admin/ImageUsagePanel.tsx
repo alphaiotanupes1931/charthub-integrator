@@ -143,7 +143,7 @@ export function ImageUsagePanel({ imageCap = 5 }: { imageCap?: number }) {
           format="count"
           loading={loading}
           rows={rows.map((r) => ({
-            label: r.name ?? r.email ?? r.user_id.slice(0, 8),
+            label: r.name ?? r.email ?? (r.user_id ? String(r.user_id).slice(0, 8) : "System"),
             value: r.images,
             isAdmin: r.is_admin,
           }))}
