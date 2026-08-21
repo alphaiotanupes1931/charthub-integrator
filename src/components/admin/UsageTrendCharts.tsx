@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Loader2 } from "lucide-react";
 import { adminUsageTrends } from "@/lib/admin.functions";
+import { groupSeries, type Grouping } from "@/components/admin/DateRangeSelector";
 
 const usd = (n: number) => `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const shortDay = (d: string) => d.slice(5).replace("-", "/");
