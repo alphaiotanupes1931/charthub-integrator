@@ -221,7 +221,16 @@ function AdminPage() {
 
                 ) : users.map((u) => (
                   <tr key={u.id} className={u.banned ? "bg-destructive/5" : ""}>
-                    <td className="px-4 py-2.5">{u.display_name ?? <span className="text-muted-foreground">-</span>}</td>
+                    <td className="px-4 py-2.5">
+                      <span className="inline-flex items-center gap-2">
+                        {u.display_name ?? <span className="text-muted-foreground">-</span>}
+                        {(u.role ?? "user") === "admin" && (
+                          <span className="rounded-full border border-border/60 bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                            Admin
+                          </span>
+                        )}
+                      </span>
+                    </td>
                     <td className="px-4 py-2.5 text-muted-foreground">{u.email}</td>
 
 
