@@ -46,6 +46,21 @@ export function AiAveragesPanel({ userCount }: { userCount: number }) {
     { label: "Cost per trade idea", value: usd(perSetup), hint: `${setups.toLocaleString()} graded setups` },
   ];
 
+  const exportCsv = () => {
+    downloadCsv(
+      `ai-usage-${days}d-${csvDate()}.csv`,
+      ["User ID", "Email", "AI calls", "Graded setups", "Cost USD", "Cost per setup USD"],
+      byUser.map((r) => [
+        r.user_id,
+        r.email ?? "",
+        r.calls,
+        r.graded_setups,
+        Number(r.cost_usd).toFixed(4),
+        Number(r.cost_per_setup ?? 0).toFixed(4),
+      ]),
+    );
+  };
+
   return (
     <section className="rounded-2xl border border-border/60 bg-card overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 border-b border-border/60">
