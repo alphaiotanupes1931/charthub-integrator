@@ -5,7 +5,10 @@ import { adminUsageTrends } from "@/lib/admin.functions";
 import { groupSeries, type Grouping } from "@/components/admin/DateRangeSelector";
 
 const usd = (n: number) => `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-const shortDay = (d: string) => d.slice(5).replace("-", "/");
+const shortDay = (d: string) =>
+  d.length === 7
+    ? new Date(`${d}-01T00:00:00Z`).toLocaleDateString(undefined, { month: "short", year: "2-digit", timeZone: "UTC" })
+    : d.slice(5).replace("-", "/");
 
 function Frame({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
