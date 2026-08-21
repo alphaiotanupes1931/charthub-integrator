@@ -268,8 +268,13 @@ function AdminPage() {
                   <tr><td colSpan={7} className="p-6 text-muted-foreground">No users yet.</td></tr>
 
                 ) : users.map((u) => (
-                  <tr key={u.id} className={u.banned ? "bg-destructive/5" : ""}>
+                  <tr
+                    key={u.id}
+                    onClick={() => setDetailUser(u)}
+                    className={`cursor-pointer transition-colors hover:bg-muted/40 ${u.banned ? "bg-destructive/5" : ""}`}
+                  >
                     <td className="px-4 py-2.5">
+
                       <span className="inline-flex items-center gap-2">
                         {u.display_name ?? <span className="text-muted-foreground">-</span>}
                         {(u.role ?? "user") === "admin" && (
