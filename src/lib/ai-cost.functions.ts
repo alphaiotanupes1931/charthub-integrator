@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const DaysInput = z.object({ days: z.number().int().min(1).max(180).default(30) });
+const DaysInput = z.object({ days: z.number().int().min(1).max(365).default(30) });
 
 export const aiCostSummary = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
