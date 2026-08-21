@@ -13,6 +13,7 @@ import { RevenuePanel } from "@/components/admin/RevenuePanel";
 import { CustomerMoneyTable } from "@/components/admin/CustomerMoneyTable";
 import { AiAveragesPanel } from "@/components/admin/AiAveragesPanel";
 import { ImageUsagePanel } from "@/components/admin/ImageUsagePanel";
+import { UserUsageDrawer } from "@/components/admin/UserUsageDrawer";
 
 
 
@@ -59,6 +60,7 @@ function AdminPage() {
   const [totals, setTotals] = useState({ gross: 0, aiCost: 0, profit: 0 });
   const [aiSpendMonth, setAiSpendMonth] = useState<number | null>(null);
   const [tab, setTab] = useState<AdminTab>("profit");
+  const [detailUser, setDetailUser] = useState<UserRow | null>(null);
 
 
 
@@ -268,8 +270,13 @@ function AdminPage() {
                   <tr><td colSpan={7} className="p-6 text-muted-foreground">No users yet.</td></tr>
 
                 ) : users.map((u) => (
-                  <tr key={u.id} className={u.banned ? "bg-destructive/5" : ""}>
+                  <tr
+                    key={u.id}
+                    onClick={() => setDetailUser(u)}
+                    className={`cursor-pointer transition-colors hover:bg-muted/40 ${u.banned ? "bg-destructive/5" : ""}`}
+                  >
                     <td className="px-4 py-2.5">
+
                       <span className="inline-flex items-center gap-2">
                         {u.display_name ?? <span className="text-muted-foreground">-</span>}
                         {(u.role ?? "user") === "admin" && (
@@ -282,7 +289,8 @@ function AdminPage() {
                     <td className="px-4 py-2.5 text-muted-foreground">{u.email}</td>
 
 
-                    <td className="px-4 py-2.5">
+                    <td className="px-4 py-2.5" onClick={(e) => e.stopPropagation()}>
+
                       <select
                         value={(u.role ?? "user") as string}
                         onChange={(e) => changeRole(u, e.target.value as "user" | "admin")}
@@ -319,7 +327,7 @@ function AdminPage() {
                     </td>
                     <td className="px-4 py-2.5 text-muted-foreground tabular-nums">{new Date(u.created_at).toLocaleDateString()}</td>
 
-                    <td className="px-4 py-2.5 text-right">
+                    <td className="px-4 py-2.5 text-right" onClick={(e) => e.stopPropagation()}>
                       <button
                         onClick={() => toggleBan(u)}
                         disabled={busyId === u.id}
@@ -340,6 +348,19 @@ function AdminPage() {
       <SupportTicketsPanel />
       </>
       )}
+
+      {detailUser && (
+        <UserUsageDrawer
+          user={detailUser}
+          aiSpend={aiPerUser.find(
+            (r) =>
+              r.user_id === detailUser.id ||
+              (!!r.email && !!detailUser.email && r.email.trim().toLowerCase() === detailUser.email.trim().toLowerCase()),
+          )}
+          onClose={() => setDetailUser(null)}
+        />
+      )}
+
 
     </div>
   );
