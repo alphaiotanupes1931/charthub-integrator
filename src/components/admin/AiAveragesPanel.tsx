@@ -104,9 +104,19 @@ export function AiAveragesPanel({ userCount }: { userCount: number }) {
               </div>
             ))}
           </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 border-t border-border/60 p-5">
+            <DailyUsageChart days={days} metric="ai" />
+            <PerPersonChart
+              title="AI cost per person"
+              hint={`Top spenders, last ${days} days`}
+              format="usd"
+              rows={byUser.map((r) => ({ label: r.email ?? r.user_id.slice(0, 8), value: Number(r.cost_usd) }))}
+            />
+          </div>
           <div className="px-5 py-3 border-t border-border/60 text-[11px] text-muted-foreground">
             About {usd(perDay)} per day · {calls.toLocaleString()} AI calls · {tokens.toLocaleString()} credits (tokens) used
           </div>
+
         </>
       )}
     </section>
