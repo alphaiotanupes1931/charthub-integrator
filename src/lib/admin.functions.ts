@@ -184,3 +184,56 @@ export const adminImageUsage = createServerFn({ method: "GET" })
       },
     };
   });
+
+/**
+ * Daily trend series for the admin usage charts: AI spend/calls per day and
+ * screenshot reads per day, over the same day window as the tables.
+ */
+export const adminUsageTrends = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => z.object({ days: z.number().int().min(1).max(90).default(30) }).parse(data ?? {}))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const sinceMs = Date.now() - data.days * 86_400_000;
+    const sinceDay = new Date(sinceMs).toISOString().slice(0, 10);
+
+    const [costRes, usageRes] = await Promise.all([
+      supabaseAdmin.from("ai_cost_log").select("cost_usd, created_at").gte("created_at", new Date(sinceMs).toISOString()),
+      supabaseAdmin.from("ai_usage").select("day, count, image_count").gte("day", sinceDay),
+    ]);
+    if (costRes.error) throw new Error(costRes.error.message);
+    if (usageRes.error) throw new Error(usageRes.error.message);
+
+    const aiMap = new Map<string, { cost_usd: number; calls: number }>();
+    for (const r of costRes.data ?? []) {
+      const day = String(r.created_at).slice(0, 10);
+      const cur = aiMap.get(day) ?? { cost_usd: 0, calls: 0 };
+      cur.cost_usd += Number(r.cost_usd ?? 0);
+      cur.calls += 1;
+      aiMap.set(day, cur);
+    }
+
+    const imgMap = new Map<string, { images: number; requests: number }>();
+    for (const r of usageRes.data ?? []) {
+      const day = String(r.day).slice(0, 10);
+      const cur = imgMap.get(day) ?? { images: 0, requests: 0 };
+      cur.images += Number(r.image_count ?? 0);
+      cur.requests += Number(r.count ?? 0);
+      imgMap.set(day, cur);
+    }
+
+    // Emit a continuous series so gaps read as zero instead of collapsing.
+    const aiByDay: Array<{ day: string; cost_usd: number; calls: number }> = [];
+    const imagesByDay: Array<{ day: string; images: number; requests: number }> = [];
+    for (let i = data.days - 1; i >= 0; i--) {
+      const day = new Date(Date.now() - i * 86_400_000).toISOString().slice(0, 10);
+      const a = aiMap.get(day);
+      const b = imgMap.get(day);
+      aiByDay.push({ day, cost_usd: Number((a?.cost_usd ?? 0).toFixed(4)), calls: a?.calls ?? 0 });
+      imagesByDay.push({ day, images: b?.images ?? 0, requests: b?.requests ?? 0 });
+    }
+
+    return { days: data.days, aiByDay, imagesByDay };
+  });
