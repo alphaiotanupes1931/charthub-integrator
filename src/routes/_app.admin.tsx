@@ -132,6 +132,11 @@ function AdminPage() {
   const maxCount = stats?.reduce((a, r) => Math.max(a, Number(r.count)), 0) ?? 0;
   const mrrUsd = mrrCents / 100;
   const usd = (n: number) => `$${n.toLocaleString(undefined, { minimumFractionDigits: n < 10 && n !== 0 ? 2 : 0, maximumFractionDigits: 2 })}`;
+  // One source of truth: money in from the revenue table, AI cost = every logged
+  // call this month (per-person plus system/background), profit is the difference.
+  const grossMonth = totals.gross || mrrUsd;
+  const aiCostMonth = aiSpendMonth === null ? null : Math.max(aiSpendMonth, totals.aiCost);
+  const realProfit = grossMonth - (aiCostMonth ?? totals.aiCost);
 
   return (
     <div className="p-4 md:p-8 max-w-[1100px] mx-auto space-y-6">
