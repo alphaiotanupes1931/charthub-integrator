@@ -12,7 +12,7 @@ import { adminListSupportRequests } from "@/lib/support.functions";
 import { RevenuePanel } from "@/components/admin/RevenuePanel";
 import { CustomerMoneyTable } from "@/components/admin/CustomerMoneyTable";
 import { AiAveragesPanel } from "@/components/admin/AiAveragesPanel";
-import { AnthropicBilledCost } from "@/components/admin/AnthropicBilledCost";
+
 import { ImageUsagePanel } from "@/components/admin/ImageUsagePanel";
 import { DateRangeSelector, monthToDateRange, type AdminRange } from "@/components/admin/DateRangeSelector";
 import { UserUsageDrawer } from "@/components/admin/UserUsageDrawer";
@@ -211,7 +211,7 @@ function AdminPage() {
 
       {tab === "ai" && (
       <>
-        <AnthropicBilledCost />
+        
         <AiAveragesPanel userCount={totalUsers} />
         <AiCreditsPanel />
       </>
