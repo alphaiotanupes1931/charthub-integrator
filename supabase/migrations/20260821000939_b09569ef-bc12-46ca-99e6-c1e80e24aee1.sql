@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.admin_set_platform_status(text, text) TO authenticated;
