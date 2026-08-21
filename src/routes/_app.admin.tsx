@@ -348,6 +348,19 @@ function AdminPage() {
       </>
       )}
 
+      {detailUser && (
+        <UserUsageDrawer
+          user={detailUser}
+          aiSpend={aiPerUser.find(
+            (r) =>
+              r.user_id === detailUser.id ||
+              (!!r.email && !!detailUser.email && r.email.trim().toLowerCase() === detailUser.email.trim().toLowerCase()),
+          )}
+          onClose={() => setDetailUser(null)}
+        />
+      )}
+
+
     </div>
   );
 }
