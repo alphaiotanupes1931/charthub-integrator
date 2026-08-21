@@ -288,7 +288,8 @@ function AdminPage() {
                     <td className="px-4 py-2.5 text-muted-foreground">{u.email}</td>
 
 
-                    <td className="px-4 py-2.5">
+                    <td className="px-4 py-2.5" onClick={(e) => e.stopPropagation()}>
+
                       <select
                         value={(u.role ?? "user") as string}
                         onChange={(e) => changeRole(u, e.target.value as "user" | "admin")}
