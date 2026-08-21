@@ -28,8 +28,8 @@ function utcDay(d: Date): string {
  * Anthropic cost report for a date range (UTC days, inclusive of start).
  * Shape: { data: [{ starting_at, results: [{ amount, currency, ... }] }] }
  *
- * The admin key may be saved under ANTHROPIC_ADMIN_KEY or, when the same key
- * doubles as the model key, under ANTHROPIC_API_KEY — try both.
+ * The billing key may be saved under ANTHROPIC_ADMIN_KEY or, when the same key
+ * doubles as the model key, under ANTHROPIC_API_KEY, so try both.
  */
 export async function fetchAnthropicCost(startingAt: Date, endingAt?: Date): Promise<AnthropicCostReport> {
   const keys = [process.env["ANTHROPIC_ADMIN_KEY"], process.env["ANTHROPIC_API_KEY"]].filter(
