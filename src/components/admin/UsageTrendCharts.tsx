@@ -30,13 +30,17 @@ const TOOLTIP = {
   labelStyle: { color: "hsl(var(--muted-foreground))" },
 } as const;
 
-/** Daily bars: AI dollars per day or screenshot reads per day. */
+/** Daily (or monthly) bars: AI dollars or screenshot reads over the window. */
 export function DailyUsageChart({
   days,
   metric,
+  grouping = "day",
+  rangeLabel,
 }: {
   days: number;
   metric: "ai" | "images";
+  grouping?: Grouping;
+  rangeLabel?: string;
 }) {
   const [data, setData] = useState<Awaited<ReturnType<typeof adminUsageTrends>> | null>(null);
   const [loading, setLoading] = useState(true);
@@ -44,7 +48,7 @@ export function DailyUsageChart({
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    adminUsageTrends({ data: { days: Math.min(days, 90) } })
+    adminUsageTrends({ data: { days: Math.min(days, 365) } })
       .then((res) => { if (!cancelled) setData(res); })
       .catch(() => { if (!cancelled) setData(null); })
       .finally(() => { if (!cancelled) setLoading(false); });
@@ -52,14 +56,18 @@ export function DailyUsageChart({
   }, [days]);
 
   const isAi = metric === "ai";
-  const rows = (isAi ? data?.aiByDay : data?.imagesByDay) ?? [];
+  const raw = (isAi ? data?.aiByDay : data?.imagesByDay) ?? [];
   const key = isAi ? "cost_usd" : "images";
+  const rows = groupSeries(raw as Array<Record<string, unknown> & { day: string }>, grouping, [key, isAi ? "calls" : "requests"]);
+  const byMonth = grouping === "month";
+  const window = rangeLabel ?? `last ${days} days`;
 
   return (
     <Frame
-      title={isAi ? "AI cost by day" : "Screenshot reads by day"}
-      hint={isAi ? `Dollars spent each day, last ${days} days` : `Chart images read each day, last ${days} days`}
+      title={isAi ? (byMonth ? "AI cost by month" : "AI cost by day") : byMonth ? "Screenshot reads by month" : "Screenshot reads by day"}
+      hint={isAi ? `Dollars spent each ${byMonth ? "month" : "day"}, ${window}` : `Chart images read each ${byMonth ? "month" : "day"}, ${window}`}
     >
+
       {loading ? (
         <div className="flex h-full items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" /> Loading
