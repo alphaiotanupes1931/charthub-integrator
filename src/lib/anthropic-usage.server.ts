@@ -1,10 +1,9 @@
-// Server-only: pull the REAL billed cost from Anthropic's own Admin API.
+// Server-only: pull the REAL billed cost from Anthropic's own billing report.
 //
-// Our ai_cost_log is an in-app estimate (tokens x price table). Anthropic's
-// cost report is what they actually charge. The cost report lives on the
-// Admin API and needs an ADMIN key (sk-ant-admin...), which is different from
-// the regular ANTHROPIC_API_KEY used for model calls. If no admin key is set we
-// say so plainly instead of guessing.
+// Our ai_cost_log is an in-app estimate (tokens x our price table). Anthropic's
+// cost report is what they actually charge, for the whole Anthropic account,
+// so it can be higher than app-only usage. It needs a key with billing access;
+// we accept it under ANTHROPIC_ADMIN_KEY or ANTHROPIC_API_KEY.
 
 export interface AnthropicCostBucket {
   day: string; // YYYY-MM-DD
