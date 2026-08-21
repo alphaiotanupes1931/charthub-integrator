@@ -1,0 +1,1 @@
+DELETE FROM public.ai_cost_log; DELETE FROM public.ai_usage;
