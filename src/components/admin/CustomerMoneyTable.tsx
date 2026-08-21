@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
 import { listManualRevenue } from "@/lib/revenue.functions";
+import { csvDate, downloadCsv } from "@/lib/csv-export";
+
 
 export type AiSpendRow = { user_id: string; email: string | null; cost_usd: number; calls: number };
 export type SimpleUser = { id: string; email: string | null; display_name: string | null; role?: string | null };
@@ -85,6 +87,24 @@ export function CustomerMoneyTable({
     onTotals?.({ gross, aiCost, profit });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gross, aiCost, profit]);
+  const exportCsv = () => {
+    downloadCsv(
+      `profit-per-person-${csvDate()}.csv`,
+      ["Name", "Email", "Admin", "Pays per month USD", "AI cost USD", "AI calls", "You keep USD"],
+      [
+        ...lines.map((l) => [
+          l.name,
+          l.email ?? "",
+          l.isAdmin ? "yes" : "no",
+          l.pays.toFixed(2),
+          l.aiSpend.toFixed(4),
+          l.calls,
+          (l.pays - l.aiSpend).toFixed(2),
+        ]),
+        ["TOTAL", "", "", gross.toFixed(2), aiCost.toFixed(4), totalCalls, profit.toFixed(2)],
+      ],
+    );
+  };
 
   return (
     <section className="rounded-2xl border border-border/60 bg-card overflow-hidden">
@@ -95,19 +115,29 @@ export function CustomerMoneyTable({
             What they pay, what their AI use costs you, what you keep.
           </p>
         </div>
-        <label className="flex items-center gap-2 text-xs text-muted-foreground">
-          AI limit per person
-          <span className="inline-flex items-center rounded-full border border-border/60 bg-background px-2.5 py-1 text-foreground">
-            $
-            <input
-              value={limit}
-              onChange={(e) => setLimit(Math.max(0, Number(e.target.value) || 0))}
-              inputMode="decimal"
-              className="w-12 bg-transparent text-sm outline-none tabular-nums"
-            />
-          </span>
-        </label>
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="flex items-center gap-2 text-xs text-muted-foreground">
+            AI limit per person
+            <span className="inline-flex items-center rounded-full border border-border/60 bg-background px-2.5 py-1 text-foreground">
+              $
+              <input
+                value={limit}
+                onChange={(e) => setLimit(Math.max(0, Number(e.target.value) || 0))}
+                inputMode="decimal"
+                className="w-12 bg-transparent text-sm outline-none tabular-nums"
+              />
+            </span>
+          </label>
+          <button
+            onClick={exportCsv}
+            disabled={lines.length === 0}
+            className="inline-flex items-center gap-1.5 rounded-full border border-border/60 px-3 py-1.5 text-[11px] font-medium text-muted-foreground hover:bg-muted disabled:opacity-40"
+          >
+            <Download className="h-3.5 w-3.5" /> CSV
+          </button>
+        </div>
       </div>
+
 
       <div className="overflow-x-auto">
         <table className="w-full text-sm">

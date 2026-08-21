@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
-import { Loader2, Image as ImageIcon } from "lucide-react";
+import { Download, Loader2, Image as ImageIcon } from "lucide-react";
 import { adminImageUsage } from "@/lib/admin.functions";
+import { csvDate, downloadCsv } from "@/lib/csv-export";
+
 
 const usd = (n: number) => `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -33,6 +35,22 @@ export function ImageUsagePanel({ imageCap = 5 }: { imageCap?: number }) {
     { label: "People reading charts", value: String(people), hint: `Last ${days} days` },
   ];
 
+  const exportCsv = () => {
+    downloadCsv(
+      `image-usage-${days}d-${csvDate()}.csv`,
+      ["User ID", "Name", "Email", "Admin", "Screenshot reads", "Est cost USD", "Last read"],
+      rows.map((r) => [
+        r.user_id,
+        r.name ?? "",
+        r.email ?? "",
+        r.is_admin ? "yes" : "no",
+        r.images,
+        Number(r.est_cost_usd).toFixed(4),
+        r.last_day ?? "",
+      ]),
+    );
+  };
+
   return (
     <section className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -49,8 +67,16 @@ export function ImageUsagePanel({ imageCap = 5 }: { imageCap?: number }) {
               {d}d
             </button>
           ))}
+          <button
+            onClick={exportCsv}
+            disabled={rows.length === 0}
+            className="ml-2 inline-flex items-center gap-1.5 rounded-full border border-border/60 px-3 py-1 text-[11px] font-medium text-muted-foreground hover:bg-muted disabled:opacity-40"
+          >
+            <Download className="h-3.5 w-3.5" /> CSV
+          </button>
         </div>
       </div>
+
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {cards.map((c) => (
