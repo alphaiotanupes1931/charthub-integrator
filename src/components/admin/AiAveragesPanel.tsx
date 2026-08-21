@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
 import { aiCostSummary } from "@/lib/ai-cost.functions";
+import { csvDate, downloadCsv } from "@/lib/csv-export";
+
 
 const usd = (n: number) => `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -44,6 +46,21 @@ export function AiAveragesPanel({ userCount }: { userCount: number }) {
     { label: "Cost per trade idea", value: usd(perSetup), hint: `${setups.toLocaleString()} graded setups` },
   ];
 
+  const exportCsv = () => {
+    downloadCsv(
+      `ai-usage-${days}d-${csvDate()}.csv`,
+      ["User ID", "Email", "AI calls", "Graded setups", "Cost USD", "Cost per setup USD"],
+      byUser.map((r) => [
+        r.user_id,
+        r.email ?? "",
+        r.calls,
+        r.graded_setups,
+        Number(r.cost_usd).toFixed(4),
+        Number(r.cost_per_setup ?? 0).toFixed(4),
+      ]),
+    );
+  };
+
   return (
     <section className="rounded-2xl border border-border/60 bg-card overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 border-b border-border/60">
@@ -61,8 +78,16 @@ export function AiAveragesPanel({ userCount }: { userCount: number }) {
               {d}d
             </button>
           ))}
+          <button
+            onClick={exportCsv}
+            disabled={byUser.length === 0}
+            className="ml-2 inline-flex items-center gap-1.5 rounded-full border border-border/60 px-3 py-1 text-[11px] font-medium text-muted-foreground hover:bg-muted disabled:opacity-40"
+          >
+            <Download className="h-3.5 w-3.5" /> CSV
+          </button>
         </div>
       </div>
+
 
       {loading ? (
         <div className="flex items-center gap-2 px-5 py-8 text-sm text-muted-foreground">
