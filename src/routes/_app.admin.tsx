@@ -59,6 +59,7 @@ function AdminPage() {
   const [totals, setTotals] = useState({ gross: 0, aiCost: 0, profit: 0 });
   const [aiSpendMonth, setAiSpendMonth] = useState<number | null>(null);
   const [tab, setTab] = useState<AdminTab>("profit");
+  const [detailUser, setDetailUser] = useState<UserRow | null>(null);
 
 
 
