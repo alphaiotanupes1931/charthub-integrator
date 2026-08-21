@@ -108,3 +108,79 @@ export const adminSetPlatformStatus = createServerFn({ method: "POST" })
 
     return { row, emailed };
   });
+
+/**
+ * Screenshot ("image read") usage per person over a day window, plus an
+ * estimated dollar cost per read derived from real chat spend.
+ * Admins are exempt from the daily image allowance, so they are flagged here.
+ */
+export const adminImageUsage = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => z.object({ days: z.number().int().min(1).max(90).default(30) }).parse(data ?? {}))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const since = new Date(Date.now() - data.days * 86_400_000).toISOString().slice(0, 10);
+
+    const [usageRes, profilesRes, adminsRes, costRes] = await Promise.all([
+      supabaseAdmin.from("ai_usage").select("user_id, day, count, image_count").gte("day", since),
+      supabaseAdmin.from("profiles").select("id, email, display_name"),
+      supabaseAdmin.from("user_roles").select("user_id").eq("role", "admin"),
+      supabaseAdmin.from("ai_cost_log").select("cost_usd, input_tokens, created_at").gte("created_at", new Date(Date.now() - data.days * 86_400_000).toISOString()),
+    ]);
+    if (usageRes.error) throw new Error(usageRes.error.message);
+
+    const emails = new Map(
+      (profilesRes.data ?? []).map((p) => [p.id as string, { email: p.email as string | null, name: p.display_name as string | null }]),
+    );
+    const adminIds = new Set((adminsRes.data ?? []).map((r) => r.user_id as string));
+
+    const byUser = new Map<string, { images: number; requests: number; activeDays: number; lastDay: string | null }>();
+    let totalImages = 0;
+    let totalRequests = 0;
+    for (const row of usageRes.data ?? []) {
+      const uid = row.user_id as string;
+      const images = Number(row.image_count ?? 0);
+      const requests = Number(row.count ?? 0);
+      totalImages += images;
+      totalRequests += requests;
+      const cur = byUser.get(uid) ?? { images: 0, requests: 0, activeDays: 0, lastDay: null as string | null };
+      cur.images += images;
+      cur.requests += requests;
+      cur.activeDays += 1;
+      const day = String(row.day);
+      if (!cur.lastDay || day > cur.lastDay) cur.lastDay = day;
+      byUser.set(uid, cur);
+    }
+
+    // Estimated cost of one screenshot read: average cost of an AI call in the
+    // window, scaled up because vision calls carry a much larger input payload.
+    const costRows = costRes.data ?? [];
+    const totalCost = costRows.reduce((s, r) => s + Number(r.cost_usd ?? 0), 0);
+    const avgCall = costRows.length ? totalCost / costRows.length : 0;
+    const estCostPerImage = Number((avgCall * 3).toFixed(6));
+
+    const rows = Array.from(byUser, ([user_id, v]) => ({
+      user_id,
+      email: emails.get(user_id)?.email ?? null,
+      name: emails.get(user_id)?.name ?? null,
+      is_admin: adminIds.has(user_id),
+      images: v.images,
+      requests: v.requests,
+      active_days: v.activeDays,
+      last_day: v.lastDay,
+      est_cost_usd: Number((v.images * estCostPerImage).toFixed(4)),
+    })).sort((a, b) => b.images - a.images);
+
+    return {
+      days: data.days,
+      rows,
+      totals: {
+        images: totalImages,
+        requests: totalRequests,
+        est_cost_usd: Number((totalImages * estCostPerImage).toFixed(4)),
+        est_cost_per_image: estCostPerImage,
+      },
+    };
+  });
