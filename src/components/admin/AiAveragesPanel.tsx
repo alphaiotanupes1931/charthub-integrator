@@ -3,6 +3,7 @@ import { Download, Loader2 } from "lucide-react";
 import { aiCostSummary } from "@/lib/ai-cost.functions";
 import { csvDate, downloadCsv } from "@/lib/csv-export";
 import { DailyUsageChart, PerPersonChart } from "@/components/admin/UsageTrendCharts";
+import { DateRangeSelector, DEFAULT_RANGE, type AdminRange } from "@/components/admin/DateRangeSelector";
 
 
 
@@ -43,7 +44,7 @@ export function AiAveragesPanel({ userCount }: { userCount: number }) {
   );
 
   const cards: Array<{ label: string; value: string; hint: string }> = [
-    { label: "AI cost, all users", value: usd(total), hint: `last ${days} days` },
+    { label: "AI cost, all users", value: usd(total), hint: range.label },
     { label: "Average per active user", value: usd(avgPerActive), hint: `${activePeople} people used AI` },
     { label: "Average per signup", value: usd(avgPerUser), hint: `${userCount} accounts` },
     { label: "Cost per trade idea", value: usd(perSetup), hint: `${setups.toLocaleString()} graded setups` },
@@ -71,16 +72,8 @@ export function AiAveragesPanel({ userCount }: { userCount: number }) {
           <h2 className="text-[15px] font-semibold tracking-tight">AI usage in dollars</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">What the AI costs on average across the platform.</p>
         </div>
-        <div className="flex items-center gap-1">
-          {[7, 30, 90].map((d) => (
-            <button
-              key={d}
-              onClick={() => setDays(d)}
-              className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${d === days ? "border-foreground/40 bg-muted" : "border-border/60 text-muted-foreground"}`}
-            >
-              {d}d
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-1">
+          <DateRangeSelector value={range} onChange={setRange} />
           <button
             onClick={exportCsv}
             disabled={byUser.length === 0}
@@ -108,10 +101,10 @@ export function AiAveragesPanel({ userCount }: { userCount: number }) {
             ))}
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 border-t border-border/60 p-5">
-            <DailyUsageChart days={days} metric="ai" />
+            <DailyUsageChart days={days} metric="ai" grouping={range.grouping} rangeLabel={range.label} />
             <PerPersonChart
               title="AI cost per person"
-              hint={`Top spenders, last ${days} days`}
+              hint={`Top spenders, ${range.label}`}
               format="usd"
               rows={byUser.map((r) => ({ label: r.email ?? r.user_id.slice(0, 8), value: Number(r.cost_usd) }))}
             />
