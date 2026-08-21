@@ -32,9 +32,9 @@ export function AnthropicBilledCost() {
     <section className="rounded-2xl border border-border/60 bg-card overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 border-b border-border/60">
         <div>
-          <h2 className="text-[15px] font-semibold tracking-tight">What Anthropic actually billed</h2>
+          <h2 className="text-[15px] font-semibold tracking-tight">What Claude actually billed you</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Straight from Anthropic's cost report for this calendar month.
+            Real invoice numbers from Anthropic for this calendar month, for your whole Anthropic account.
           </p>
         </div>
         <button
@@ -56,33 +56,34 @@ export function AnthropicBilledCost() {
         <>
           <div className="grid grid-cols-1 sm:grid-cols-3 divide-x divide-y divide-border">
             <div className="p-5">
-              <div className="text-xs text-muted-foreground">Billed by Anthropic, this month</div>
+              <div className="text-xs text-muted-foreground">Claude bill, this month</div>
               <div className="mt-1.5 text-2xl font-semibold tabular-nums">
                 {data.configured ? usd(data.monthToDateUsd) : "Not connected"}
               </div>
               <div className="mt-1 text-[11px] text-muted-foreground">
-                {data.configured ? `Today: ${usd(data.todayUsd)}` : "Add an Anthropic admin key to see this"}
+                {data.configured ? `Today so far: ${usd(data.todayUsd)}` : "Save an Anthropic key with billing access"}
               </div>
             </div>
             <div className="p-5">
-              <div className="text-xs text-muted-foreground">Our in-app estimate</div>
+              <div className="text-xs text-muted-foreground">Cost from this app only</div>
               <div className="mt-1.5 text-2xl font-semibold tabular-nums">{usd(data.loggedEstimateUsd)}</div>
-              <div className="mt-1 text-[11px] text-muted-foreground">Counted from tokens we logged per call</div>
+              <div className="mt-1 text-[11px] text-muted-foreground">Every AI call TradeMind logged this month</div>
             </div>
             <div className="p-5">
-              <div className="text-xs text-muted-foreground">Difference</div>
+              <div className="text-xs text-muted-foreground">Spent outside this app</div>
               <div className="mt-1.5 text-2xl font-semibold tabular-nums">
-                {data.configured ? `${diff >= 0 ? "+" : "-"}${usd(Math.abs(diff))}` : "-"}
+                {data.configured ? usd(Math.max(0, diff)) : "-"}
               </div>
               <div className="mt-1 text-[11px] text-muted-foreground">
                 {data.configured
                   ? diff >= 0
-                    ? "Anthropic billed more than we estimated"
-                    : "We estimated more than Anthropic billed"
+                    ? "Claude usage on the same account that is not TradeMind"
+                    : "App estimate runs above the bill, prices may need a refresh"
                   : "Needs the billed number first"}
               </div>
             </div>
           </div>
+
 
           {data.error ? (
             <div className="border-t border-border/60 px-5 py-3 text-[11px] text-muted-foreground">{data.error}</div>
