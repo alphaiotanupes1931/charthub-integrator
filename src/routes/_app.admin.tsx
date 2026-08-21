@@ -13,6 +13,7 @@ import { RevenuePanel } from "@/components/admin/RevenuePanel";
 import { CustomerMoneyTable } from "@/components/admin/CustomerMoneyTable";
 import { AiAveragesPanel } from "@/components/admin/AiAveragesPanel";
 import { ImageUsagePanel } from "@/components/admin/ImageUsagePanel";
+import { DateRangeSelector, monthToDateRange, type AdminRange } from "@/components/admin/DateRangeSelector";
 import { UserUsageDrawer } from "@/components/admin/UserUsageDrawer";
 
 
@@ -61,6 +62,8 @@ function AdminPage() {
   const [aiSpendMonth, setAiSpendMonth] = useState<number | null>(null);
   const [tab, setTab] = useState<AdminTab>("profit");
   const [detailUser, setDetailUser] = useState<UserRow | null>(null);
+  // Money window for the Profit tab: defaults to this calendar month so far.
+  const [profitRange, setProfitRange] = useState<AdminRange>(monthToDateRange());
 
 
 
@@ -107,15 +110,20 @@ function AdminPage() {
         setErr(e instanceof Error ? e.message : "Failed to load");
       }
     })();
-    // Calendar-month-to-date window so the numbers match "this month".
-    aiCostSummary({ data: { days: Math.max(1, new Date().getDate()) } })
+  }, []);
+
+  // AI spend for the selected money window (defaults to month to date).
+  useEffect(() => {
+    let cancelled = false;
+    aiCostSummary({ data: { days: profitRange.days } })
       .then((res) => {
-        const sum = res.byKind.reduce((s, r) => s + Number(r.cost_usd), 0);
-        setAiSpendMonth(sum);
+        if (cancelled) return;
+        setAiSpendMonth(res.byKind.reduce((s, r) => s + Number(r.cost_usd), 0));
         setAiPerUser(res.byUser);
       })
-      .catch(() => { setAiSpendMonth(null); });
-  }, []);
+      .catch(() => { if (!cancelled) setAiSpendMonth(null); });
+    return () => { cancelled = true; };
+  }, [profitRange.days]);
 
 
   if (profileLoading) {
@@ -162,6 +170,10 @@ function AdminPage() {
 
       {tab === "profit" && (
       <>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="text-xs text-muted-foreground">Money window: {profitRange.label}</div>
+        <DateRangeSelector value={profitRange} onChange={setProfitRange} showGrouping={false} />
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="rounded-2xl border border-border/60 bg-card p-5">
@@ -170,7 +182,7 @@ function AdminPage() {
           <div className="mt-1 text-[11px] text-muted-foreground">{totalUsers} accounts</div>
         </div>
         <div className="rounded-2xl border border-border/60 bg-card p-5">
-          <div className="text-xs text-muted-foreground">AI cost, this month</div>
+          <div className="text-xs text-muted-foreground">AI cost, {profitRange.label}</div>
           <div className="mt-2 text-3xl font-semibold tabular-nums">{aiCostMonth === null ? "-" : usd(aiCostMonth)}</div>
           <div className="mt-1 text-[11px] text-muted-foreground">
             {aiCostMonth === null
