@@ -12,7 +12,8 @@ const usd = (n: number) => `$${n.toLocaleString(undefined, { minimumFractionDigi
  * Plain-English AI spend dashboard. Dollars big, technical counts small.
  */
 export function AiAveragesPanel({ userCount }: { userCount: number }) {
-  const [days, setDays] = useState(30);
+  const [range, setRange] = useState<AdminRange>(DEFAULT_RANGE);
+  const days = range.days;
   const [data, setData] = useState<Awaited<ReturnType<typeof aiCostSummary>> | null>(null);
   const [loading, setLoading] = useState(true);
 
