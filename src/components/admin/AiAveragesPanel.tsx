@@ -63,8 +63,16 @@ export function AiAveragesPanel({ userCount }: { userCount: number }) {
               {d}d
             </button>
           ))}
+          <button
+            onClick={exportCsv}
+            disabled={byUser.length === 0}
+            className="ml-2 inline-flex items-center gap-1.5 rounded-full border border-border/60 px-3 py-1 text-[11px] font-medium text-muted-foreground hover:bg-muted disabled:opacity-40"
+          >
+            <Download className="h-3.5 w-3.5" /> CSV
+          </button>
         </div>
       </div>
+
 
       {loading ? (
         <div className="flex items-center gap-2 px-5 py-8 text-sm text-muted-foreground">
