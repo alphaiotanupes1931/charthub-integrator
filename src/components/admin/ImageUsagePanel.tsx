@@ -3,6 +3,7 @@ import { Download, Loader2, Image as ImageIcon } from "lucide-react";
 import { adminImageUsage } from "@/lib/admin.functions";
 import { csvDate, downloadCsv } from "@/lib/csv-export";
 import { DailyUsageChart, PerPersonChart } from "@/components/admin/UsageTrendCharts";
+import { DateRangeSelector, DEFAULT_RANGE, type AdminRange } from "@/components/admin/DateRangeSelector";
 
 
 
@@ -13,7 +14,8 @@ const usd = (n: number) => `$${n.toLocaleString(undefined, { minimumFractionDigi
  * Admins have no screenshot allowance, so their limit column reads "no limit".
  */
 export function ImageUsagePanel({ imageCap = 5 }: { imageCap?: number }) {
-  const [days, setDays] = useState(30);
+  const [range, setRange] = useState<AdminRange>(DEFAULT_RANGE);
+  const days = range.days;
   const [data, setData] = useState<Awaited<ReturnType<typeof adminImageUsage>> | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -34,7 +36,7 @@ export function ImageUsagePanel({ imageCap = 5 }: { imageCap?: number }) {
   const cards = [
     { label: "Image cost", value: totals ? usd(totals.est_cost_usd) : "-", hint: `${totals?.images ?? 0} screenshot reads` },
     { label: "Cost per read", value: totals ? `$${totals.est_cost_per_image.toFixed(4)}` : "-", hint: "Estimated from real AI spend" },
-    { label: "People reading charts", value: String(people), hint: `Last ${days} days` },
+    { label: "People reading charts", value: String(people), hint: range.label.replace(/^l/, "L") },
   ];
 
   const exportCsv = () => {
@@ -59,16 +61,8 @@ export function ImageUsagePanel({ imageCap = 5 }: { imageCap?: number }) {
         <h2 className="flex items-center gap-2 text-sm font-medium">
           <ImageIcon className="h-4 w-4 text-muted-foreground" /> Image usage
         </h2>
-        <div className="flex items-center gap-1">
-          {[7, 30, 90].map((d) => (
-            <button
-              key={d}
-              onClick={() => setDays(d)}
-              className={`rounded-full border px-3 py-1 text-[11px] font-medium ${d === days ? "border-foreground bg-foreground text-background" : "border-border/60 text-muted-foreground hover:bg-muted"}`}
-            >
-              {d}d
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-1">
+          <DateRangeSelector value={range} onChange={setRange} />
           <button
             onClick={exportCsv}
             disabled={rows.length === 0}
@@ -94,7 +88,7 @@ export function ImageUsagePanel({ imageCap = 5 }: { imageCap?: number }) {
         <div className="rounded-2xl border border-border/60 bg-card p-5">
           <div className="text-sm font-medium">Where the image money goes</div>
           <div className="mt-1 text-[11px] text-muted-foreground">
-            Last {days} days. Screenshot cost is estimated from real AI spend, so it always ties back to the same dollars.
+            Showing {range.label}. Screenshot cost is estimated from real AI spend, so it always ties back to the same dollars.
           </div>
 
           <dl className="mt-4 divide-y divide-border text-sm">
@@ -142,10 +136,10 @@ export function ImageUsagePanel({ imageCap = 5 }: { imageCap?: number }) {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <DailyUsageChart days={days} metric="images" />
+        <DailyUsageChart days={days} metric="images" grouping={range.grouping} rangeLabel={range.label} />
         <PerPersonChart
           title="Screenshot reads per person"
-          hint={`Top readers, last ${days} days`}
+          hint={`Top readers, ${range.label}`}
           format="count"
           loading={loading}
           rows={rows.map((r) => ({
