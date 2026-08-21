@@ -165,7 +165,7 @@ function AdminPage() {
         <div className="rounded-2xl border border-border/60 bg-card p-5">
           <div className="text-xs text-muted-foreground">AI cost, this month</div>
           <div className="mt-2 text-3xl font-semibold tabular-nums">{aiSpendMonth === null ? "-" : usd(aiSpendMonth)}</div>
-          <div className="mt-1 text-[11px] text-muted-foreground">What you pay for the AI</div>
+          <div className="mt-1 text-[11px] text-muted-foreground">Chat plus chart screenshot reads</div>
         </div>
         <div className="rounded-2xl border border-border/60 bg-card p-5">
           <div className="text-xs text-muted-foreground">Real profit</div>
