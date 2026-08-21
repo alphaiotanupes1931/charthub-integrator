@@ -255,3 +255,15 @@ export const adminUsageTrends = createServerFn({ method: "GET" })
 
     return { days: data.days, aiByDay, imagesByDay };
   });
+
+/**
+ * Real billed Anthropic cost for this month, straight from Anthropic's own
+ * cost report, next to our in-app token estimate so the two can be compared.
+ */
+export const adminAnthropicCost = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const { anthropicMonthToDate } = await import("@/lib/anthropic-usage.server");
+    return await anthropicMonthToDate();
+  });
