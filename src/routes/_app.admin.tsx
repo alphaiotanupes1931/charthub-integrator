@@ -210,6 +210,7 @@ function AdminPage() {
 
       {tab === "ai" && (
       <>
+        <AnthropicBilledCost />
         <AiAveragesPanel userCount={totalUsers} />
         <AiCreditsPanel />
       </>
