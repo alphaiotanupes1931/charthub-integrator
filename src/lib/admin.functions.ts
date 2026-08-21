@@ -16,8 +16,7 @@ export const adminReferralStats = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data, error } = await supabaseAdmin.rpc("admin_referral_stats");
+    const { data, error } = await context.supabase.rpc("admin_referral_stats");
     if (error) throw new Error(error.message);
     return data ?? [];
   });
@@ -26,8 +25,7 @@ export const adminUsersOverview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data, error } = await supabaseAdmin.rpc("admin_users_overview");
+    const { data, error } = await context.supabase.rpc("admin_users_overview");
     if (error) throw new Error(error.message);
     return data ?? [];
   });
@@ -55,7 +53,7 @@ export const adminSetPlatformStatus = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: row, error } = await supabaseAdmin.rpc("admin_set_platform_status", {
+    const { data: row, error } = await context.supabase.rpc("admin_set_platform_status", {
       _level: data.level,
       _message: data.message,
     });
