@@ -3,7 +3,7 @@ import { Loader2 } from "lucide-react";
 import { listManualRevenue } from "@/lib/revenue.functions";
 
 export type AiSpendRow = { user_id: string; email: string | null; cost_usd: number; calls: number };
-export type SimpleUser = { id: string; email: string | null; display_name: string | null };
+export type SimpleUser = { id: string; email: string | null; display_name: string | null; role?: string | null };
 
 const usd = (n: number) => `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -14,7 +14,9 @@ type Line = {
   pays: number;
   aiSpend: number;
   calls: number;
+  isAdmin: boolean;
 };
+
 
 /**
  * Money view: what each person pays, what their AI use costs, what is left over.
@@ -62,12 +64,13 @@ export function CustomerMoneyTable({
         pays: pay?.amount ?? 0,
         aiSpend: Number(spend?.cost_usd ?? 0),
         calls: Number(spend?.calls ?? 0),
+        isAdmin: (u.role ?? "user") === "admin",
       };
     });
 
     // Paying people who do not have an app account yet.
     for (const [email, pay] of paying) {
-      out.push({ key: `rev-${email}`, name: pay.name, email, pays: pay.amount, aiSpend: 0, calls: 0 });
+      out.push({ key: `rev-${email}`, name: pay.name, email, pays: pay.amount, aiSpend: 0, calls: 0, isAdmin: false });
     }
 
     return out.sort((a, b) => b.pays - a.pays || b.aiSpend - a.aiSpend);
@@ -129,12 +132,19 @@ export function CustomerMoneyTable({
               </tr>
             ) : (
               lines.map((l) => {
-                const over = limit > 0 && l.aiSpend > limit;
+                const over = !l.isAdmin && limit > 0 && l.aiSpend > limit;
                 const keep = l.pays - l.aiSpend;
                 return (
                   <tr key={l.key}>
                     <td className="px-5 py-3">
-                      <div className="font-medium">{l.name}</div>
+                      <div className="font-medium flex items-center gap-2">
+                        {l.name}
+                        {l.isAdmin && (
+                          <span className="rounded-full border border-border/60 bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                            Admin
+                          </span>
+                        )}
+                      </div>
                       <div className="text-xs text-muted-foreground truncate max-w-[240px]">{l.email ?? "-"}</div>
                     </td>
                     <td className="px-4 py-3 text-right tabular-nums font-medium">
@@ -142,7 +152,9 @@ export function CustomerMoneyTable({
                     </td>
                     <td className={`px-4 py-3 text-right tabular-nums font-medium ${over ? "text-destructive" : ""}`}>
                       {usd(l.aiSpend)}
-                      <span className="text-xs font-normal text-muted-foreground"> / {usd(limit)}</span>
+                      <span className="text-xs font-normal text-muted-foreground">
+                        {l.isAdmin ? " / no limit" : ` / ${usd(limit)}`}
+                      </span>
                     </td>
                     <td
                       className={`px-5 py-3 text-right tabular-nums font-semibold ${keep < 0 ? "text-destructive" : keep > 0 ? "text-bull" : "text-muted-foreground"}`}
