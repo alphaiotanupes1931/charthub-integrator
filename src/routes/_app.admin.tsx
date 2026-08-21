@@ -164,17 +164,24 @@ function AdminPage() {
         </div>
         <div className="rounded-2xl border border-border/60 bg-card p-5">
           <div className="text-xs text-muted-foreground">AI cost, this month</div>
-          <div className="mt-2 text-3xl font-semibold tabular-nums">{aiSpendMonth === null ? "-" : usd(aiSpendMonth)}</div>
-          <div className="mt-1 text-[11px] text-muted-foreground">Chat plus chart screenshot reads</div>
+          <div className="mt-2 text-3xl font-semibold tabular-nums">{aiCostMonth === null ? "-" : usd(aiCostMonth)}</div>
+          <div className="mt-1 text-[11px] text-muted-foreground">
+            {aiCostMonth === null
+              ? "Chat plus chart screenshot reads"
+              : `${usd(totals.aiCost)} tied to people, ${usd(Math.max(0, aiCostMonth - totals.aiCost))} system and background`}
+          </div>
         </div>
         <div className="rounded-2xl border border-border/60 bg-card p-5">
           <div className="text-xs text-muted-foreground">Real profit</div>
-          <div className={`mt-2 text-3xl font-semibold tabular-nums ${(totals.profit) < 0 ? "text-destructive" : "text-bull"}`}>
-            {usd(totals.profit)}
+          <div className={`mt-2 text-3xl font-semibold tabular-nums ${realProfit < 0 ? "text-destructive" : "text-bull"}`}>
+            {usd(realProfit)}
           </div>
-          <div className="mt-1 text-[11px] text-muted-foreground">Money in minus AI cost</div>
+          <div className="mt-1 text-[11px] text-muted-foreground">
+            {usd(grossMonth)} in minus {aiCostMonth === null ? "-" : usd(aiCostMonth)} AI
+          </div>
         </div>
       </div>
+
 
       <CustomerMoneyTable users={users} aiSpend={aiPerUser} onTotals={setTotals} />
 
