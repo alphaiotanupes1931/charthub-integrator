@@ -326,7 +326,7 @@ function AdminPage() {
                     </td>
                     <td className="px-4 py-2.5 text-muted-foreground tabular-nums">{new Date(u.created_at).toLocaleDateString()}</td>
 
-                    <td className="px-4 py-2.5 text-right">
+                    <td className="px-4 py-2.5 text-right" onClick={(e) => e.stopPropagation()}>
                       <button
                         onClick={() => toggleBan(u)}
                         disabled={busyId === u.id}
