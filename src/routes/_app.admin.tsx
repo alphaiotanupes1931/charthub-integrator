@@ -497,20 +497,6 @@ function AiCreditsPanel() {
         <div className="rounded-xl border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">{err}</div>
       )}
 
-      <div className="flex flex-wrap items-center gap-1.5 border-b border-border/60 pb-3">
-        {ADMIN_TABS.map((t) => (
-          <button
-            key={t.value}
-            onClick={() => setTab(t.value)}
-            className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${tab === t.value ? "bg-foreground text-background" : "text-muted-foreground hover:bg-muted"}`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {tab === "profit" && (
-      <>
 
       {loading && !snap ? (
         <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground">
@@ -621,20 +607,6 @@ function SupportTicketsPanel() {
         <div className="rounded-xl border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">{err}</div>
       )}
 
-      <div className="flex flex-wrap items-center gap-1.5 border-b border-border/60 pb-3">
-        {ADMIN_TABS.map((t) => (
-          <button
-            key={t.value}
-            onClick={() => setTab(t.value)}
-            className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${tab === t.value ? "bg-foreground text-background" : "text-muted-foreground hover:bg-muted"}`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {tab === "profit" && (
-      <>
       <div className="divide-y divide-border rounded-xl border border-border/60">
         {rows === null ? (
           <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground">
