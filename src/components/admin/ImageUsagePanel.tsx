@@ -88,6 +88,23 @@ export function ImageUsagePanel({ imageCap = 5 }: { imageCap?: number }) {
         ))}
       </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <DailyUsageChart days={days} metric="images" />
+        <PerPersonChart
+          title="Screenshot reads per person"
+          hint={`Top readers, last ${days} days`}
+          format="count"
+          loading={loading}
+          rows={rows.map((r) => ({
+            label: r.name ?? r.email ?? r.user_id.slice(0, 8),
+            value: r.images,
+            isAdmin: r.is_admin,
+          }))}
+        />
+      </div>
+
+
+
       <div className="rounded-2xl border border-border/60 bg-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
