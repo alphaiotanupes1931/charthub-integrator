@@ -12,6 +12,7 @@ import { adminListSupportRequests } from "@/lib/support.functions";
 import { RevenuePanel } from "@/components/admin/RevenuePanel";
 import { CustomerMoneyTable } from "@/components/admin/CustomerMoneyTable";
 import { AiAveragesPanel } from "@/components/admin/AiAveragesPanel";
+import { ImageUsagePanel } from "@/components/admin/ImageUsagePanel";
 
 
 
@@ -19,6 +20,15 @@ export const Route = createFileRoute("/_app/admin")({
   head: () => ({ meta: [{ title: "Admin, TradeMind" }] }),
   component: AdminPage,
 });
+
+type AdminTab = "profit" | "ai" | "image" | "people";
+
+const ADMIN_TABS: { value: AdminTab; label: string }[] = [
+  { value: "profit", label: "Profit" },
+  { value: "ai", label: "AI usage" },
+  { value: "image", label: "Image usage" },
+  { value: "people", label: "People and settings" },
+];
 
 type ReferralRow = { source: string; count: number };
 type UserRow = {
@@ -48,6 +58,7 @@ function AdminPage() {
   >([]);
   const [totals, setTotals] = useState({ gross: 0, aiCost: 0, profit: 0 });
   const [aiSpendMonth, setAiSpendMonth] = useState<number | null>(null);
+  const [tab, setTab] = useState<AdminTab>("profit");
 
 
 
@@ -130,6 +141,21 @@ function AdminPage() {
         <div className="rounded-xl border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">{err}</div>
       )}
 
+      <div className="flex flex-wrap items-center gap-1.5 border-b border-border/60 pb-3">
+        {ADMIN_TABS.map((t) => (
+          <button
+            key={t.value}
+            onClick={() => setTab(t.value)}
+            className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${tab === t.value ? "bg-foreground text-background" : "text-muted-foreground hover:bg-muted"}`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "profit" && (
+      <>
+
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="rounded-2xl border border-border/60 bg-card p-5">
           <div className="text-xs text-muted-foreground">Money in, per month</div>
@@ -139,7 +165,7 @@ function AdminPage() {
         <div className="rounded-2xl border border-border/60 bg-card p-5">
           <div className="text-xs text-muted-foreground">AI cost, this month</div>
           <div className="mt-2 text-3xl font-semibold tabular-nums">{aiSpendMonth === null ? "-" : usd(aiSpendMonth)}</div>
-          <div className="mt-1 text-[11px] text-muted-foreground">What you pay for the AI</div>
+          <div className="mt-1 text-[11px] text-muted-foreground">Chat plus chart screenshot reads</div>
         </div>
         <div className="rounded-2xl border border-border/60 bg-card p-5">
           <div className="text-xs text-muted-foreground">Real profit</div>
@@ -152,11 +178,21 @@ function AdminPage() {
 
       <CustomerMoneyTable users={users} aiSpend={aiPerUser} onTotals={setTotals} />
 
-      <AiAveragesPanel userCount={totalUsers} />
-
       <RevenuePanel onMrrChange={setMrrCents} />
+      </>
+      )}
 
+      {tab === "ai" && (
+      <>
+        <AiAveragesPanel userCount={totalUsers} />
+        <AiCreditsPanel />
+      </>
+      )}
 
+      {tab === "image" && <ImageUsagePanel />}
+
+      {tab === "people" && (
+      <>
       <PlatformStatusEditor />
 
       <div>
@@ -289,9 +325,9 @@ function AdminPage() {
         </div>
       </section>
 
-      <AiCreditsPanel />
-
       <SupportTicketsPanel />
+      </>
+      )}
 
     </div>
   );
@@ -461,6 +497,7 @@ function AiCreditsPanel() {
         <div className="rounded-xl border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">{err}</div>
       )}
 
+
       {loading && !snap ? (
         <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" /> Checking Claude and month-to-date spend
@@ -569,6 +606,7 @@ function SupportTicketsPanel() {
       {err && (
         <div className="rounded-xl border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">{err}</div>
       )}
+
       <div className="divide-y divide-border rounded-xl border border-border/60">
         {rows === null ? (
           <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground">
