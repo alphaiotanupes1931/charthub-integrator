@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
 import { listManualRevenue } from "@/lib/revenue.functions";
+import { csvDate, downloadCsv } from "@/lib/csv-export";
+
 
 export type AiSpendRow = { user_id: string; email: string | null; cost_usd: number; calls: number };
 export type SimpleUser = { id: string; email: string | null; display_name: string | null; role?: string | null };
