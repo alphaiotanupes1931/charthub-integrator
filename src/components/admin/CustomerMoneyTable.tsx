@@ -3,7 +3,7 @@ import { Loader2 } from "lucide-react";
 import { listManualRevenue } from "@/lib/revenue.functions";
 
 export type AiSpendRow = { user_id: string; email: string | null; cost_usd: number; calls: number };
-export type SimpleUser = { id: string; email: string | null; display_name: string | null };
+export type SimpleUser = { id: string; email: string | null; display_name: string | null; role?: string | null };
 
 const usd = (n: number) => `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -14,7 +14,9 @@ type Line = {
   pays: number;
   aiSpend: number;
   calls: number;
+  isAdmin: boolean;
 };
+
 
 /**
  * Money view: what each person pays, what their AI use costs, what is left over.
