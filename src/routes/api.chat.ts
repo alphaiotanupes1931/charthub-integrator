@@ -975,7 +975,7 @@ export const Route = createFileRoute("/api/chat")({
         const gatewayModel = key ? createAiGatewayProvider(key)(gatewayId) : null;
         const primaryModel = claudeModel ?? gatewayModel!;
         const activeModelId = useClaude ? claudeId : gatewayId;
-        console.log(`[chat] req=${reqId} route=${routed} model=${activeModelId}`);
+        console.log(`[chat] req=${reqId} route=${routed} model=${activeModelId} pref=${modelPref}`);
 
         // Prompt caching: mark the static prefix as an ephemeral cache breakpoint
         // so repeat requests read it at ~10% of input price instead of resending
