@@ -9,7 +9,11 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:matrix": "vitest run tests/e2e/accessMatrix.test.ts",
+    "test:matrix:shard": "vitest run tests/e2e/accessMatrix.test.ts --shard"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.98",
