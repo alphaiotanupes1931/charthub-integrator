@@ -1,8 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
+import { requireCapability } from "@/lib/capability-middleware";
 import { z } from "zod";
 import type { SniperResult } from "./sniper.server";
 
 export const runSniperEntry = createServerFn({ method: "POST" })
+  .middleware([requireCapability("signal_engine")])
   .inputValidator((raw: unknown) =>
     z
       .object({
