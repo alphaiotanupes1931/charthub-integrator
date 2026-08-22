@@ -1,5 +1,7 @@
+import { useEffect } from "react";
 import { Link } from "@tanstack/react-router";
 import { X } from "lucide-react";
+import { track } from "@/lib/product-events";
 
 type Props = {
   open: boolean;
