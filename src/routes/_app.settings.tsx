@@ -608,6 +608,8 @@ function BillingCard() {
     cancel_at_period_end: boolean;
   } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const changeCancel = useServerFn(cancelMySubscription);
 
   useEffect(() => {
     let cancelled = false;
@@ -627,6 +629,20 @@ function BillingCard() {
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not open billing portal");
       setLoading(false);
+    }
+  }
+
+  async function toggleCancel(resume: boolean) {
+    if (!resume && !window.confirm("Cancel your membership? You keep access until the end of the paid period.")) return;
+    setCancelling(true);
+    try {
+      const res = await changeCancel({ data: { resume } });
+      setSub((prev) => (prev ? { ...prev, ...res } : prev));
+      toast.success(resume ? "Membership resumed" : "Membership cancels at period end");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not update membership");
+    } finally {
+      setCancelling(false);
     }
   }
 
