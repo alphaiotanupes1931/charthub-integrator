@@ -241,6 +241,7 @@ function AcademyIndex() {
                 ) : (
                   <button
                     onClick={() => setPayOpen(true)}
+                    data-testid="unlock-module"
                     className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground"
                   >
                     <Lock className="h-3.5 w-3.5" /> Unlock module
