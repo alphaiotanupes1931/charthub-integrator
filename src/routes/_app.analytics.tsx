@@ -117,6 +117,8 @@ function endOfWeek(d: Date): string {
 
 function AnalyticsPage() {
   const navigate = useNavigate();
+  const ent = useEntitlements();
+
   const qc = useQueryClient();
   const [trades] = useState<LocalTrade[]>(() => loadLocalTrades());
   const [mental] = useState<Mental[]>(() => loadMental());
