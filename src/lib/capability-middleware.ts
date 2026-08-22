@@ -49,7 +49,7 @@ export async function resolveEntitlementsForUser(userId: string): Promise<Entitl
 
 export function requireCapability(capability: Capability) {
   return createMiddleware({ type: "function" })
-    .middleware([requireSupabaseAuth])
+    .middleware([requireAuthOr401, requireSupabaseAuth])
     .server(async ({ next, context }) => {
       const entitlements = await resolveEntitlementsForUser(context.userId);
       assertCapability(entitlements, capability);
