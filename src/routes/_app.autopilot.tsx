@@ -23,6 +23,7 @@ import {
   setAutopilotPause,
 } from "@/lib/autopilot.functions";
 import { placeBrokerOrder } from "@/lib/broker-oanda.functions";
+import { CapabilityGate } from "@/components/CapabilityGate";
 
 export const Route = createFileRoute("/_app/autopilot")({
   head: () => ({
@@ -42,7 +43,7 @@ export const Route = createFileRoute("/_app/autopilot")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: AutopilotPage,
+  component: AutopilotRoute,
 });
 
 type SettingsPatch = {
@@ -71,6 +72,19 @@ function StatusPill({ status }: { status: string }) {
           : "border-border/60 text-muted-foreground";
   return (
     <span className={`rounded-xl border px-2 py-0.5 text-[11px] tracking-wide ${tone}`}>{status}</span>
+  );
+}
+
+function AutopilotRoute() {
+  return (
+    <CapabilityGate
+      capability="autopilot"
+      reason="autopilot"
+      title="Autopilot is part of the Elite plan"
+      body="Autopilot sends graded setups to your broker inside risk rails you set. Your journal, risk calculator, alerts and Academy basics stay free."
+    >
+      <AutopilotPage />
+    </CapabilityGate>
   );
 }
 

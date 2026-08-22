@@ -15,11 +15,12 @@ import {
   deleteSignal,
   type SignalRecord,
 } from "@/lib/signalHistory";
+import { CapabilityGate } from "@/components/CapabilityGate";
 
 
 export const Route = createFileRoute("/_app/signals")({
   head: () => ({ meta: [{ title: "AI Signals, TradeMind" }] }),
-  component: SignalsPage,
+  component: SignalsRoute,
 });
 
 const TF_OPTIONS = [
@@ -34,6 +35,19 @@ const num = (s?: string): number | undefined => {
   const n = parseFloat(String(s).replace(/[^0-9.\-]/g, ""));
   return Number.isFinite(n) ? n : undefined;
 };
+
+function SignalsRoute() {
+  return (
+    <CapabilityGate
+      capability="signal_engine"
+      reason="signals"
+      title="The signal engine is part of the paid plan"
+      body="Free accounts get 3 signal grades a month on the dashboard. Upgrade to scan every instrument on demand."
+    >
+      <SignalsPage />
+    </CapabilityGate>
+  );
+}
 
 function SignalsPage() {
   const navigate = useNavigate();
