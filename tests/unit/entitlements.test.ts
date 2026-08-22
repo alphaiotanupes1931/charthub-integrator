@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   FREE_GRADES_PER_MONTH,
+  academyModuleAllowed,
+  coachAllowed,
   can,
   isCacheFresh,
   monthKey,
