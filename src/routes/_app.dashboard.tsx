@@ -38,6 +38,9 @@ import { recordSignal, takeTrade } from "@/lib/signalHistory";
 import { formatJournalPerf } from "@/lib/journalStats";
 import { toast } from "sonner";
 import { AutoBacktestVerify } from "@/components/AutoBacktestVerify";
+import { useEntitlements } from "@/hooks/useEntitlements";
+import { QuotaBadge } from "@/components/QuotaBadge";
+import { UpgradeModal } from "@/components/UpgradeModal";
 
 // Scan context: the active strategy playbook is fed to the planner so the
 // Analysis grade is scored against the same rules the chat coach uses.
@@ -1021,6 +1024,11 @@ function Dashboard() {
   const reportSystemNoticeFn = useServerFn(reportSystemNotice);
   const createChatThreadFn = useServerFn(createChatThread);
 
+  // Free-plan grade quota. Paid and admin accounts get an inactive quota, so the
+  // badge and paywall below simply never render for them.
+  const ent = useEntitlements();
+  const [paywall, setPaywall] = useState(false);
+
   const sendToChat = (prompt: string, opts?: { focusChat?: boolean; targetThreadId?: string | null }) => {
     setRightOpen(true);
     setChatPanelView("conversation");
@@ -1246,11 +1254,18 @@ function Dashboard() {
 
 
   const runScan = async (from: "chat" | "analysis" = "analysis") => {
+    // Free plan: the 4th grade opens the paywall instead of running. Nothing is
+    // consumed here - the charge happens only once an answer is delivered.
+    if (ent.gradesExhausted) {
+      setPaywall(true);
+      return;
+    }
     const requestId = ++activeScanRequestRef.current;
     const scanSymbol = symbol;
     const scanInterval = interval;
     setScanning(true);
     emitFirstWeekEvent("scan-run");
+
 
     setAiGrade(null);
     const enabledLevels = ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none";
@@ -1298,6 +1313,14 @@ function Dashboard() {
         // appended to the chat thread so Chat and Analysis never disagree.
         const replyText = scanResultToChatText(r, scanSymbol);
         chatRef.current?.appendScanReply(replyText, scanThreadId);
+        // Charged only now, once a real answer exists. A legitimate "No Entry"
+        // is a real answer and does count; the server also de-dupes an identical
+        // re-scan inside ten minutes so it stays free.
+        void ent.recordScanOutcome(r.grade === "NO ENTRY" ? "no_entry" : "graded", {
+          symbol: scanSymbol.ticker,
+          timeframe: scanInterval,
+          methodology: lens.name,
+        });
       })
       .catch(() => {
         if (requestId !== activeScanRequestRef.current) return;
@@ -1305,6 +1328,8 @@ function Dashboard() {
         // later (deduped server-side to once every few hours).
         void reportSystemNoticeFn({ data: { reason: "scan_failed", detail: `${scanSymbol.ticker} ${scanInterval}` } })
           .catch(() => { /* best-effort */ });
+        // Our failure, so it costs the trader nothing.
+        void ent.recordScanOutcome("error");
         setResult({
           grade: "NO ENTRY", bias: "Neutral", confidence: 0,
           notes: "Research service is temporarily unavailable. Please try again in a moment.",
@@ -1734,6 +1759,16 @@ function Dashboard() {
           </select>
           <span className="font-mono text-[10px] text-muted-foreground">{tzLabel}</span>
         </label>
+
+        <UpgradeModal
+          open={paywall}
+          onClose={() => setPaywall(false)}
+          reason="grades"
+          used={ent.quota.used}
+          limit={ent.quota.limit}
+        />
+
+        <QuotaBadge quota={ent.quota} className="hidden lg:inline-flex" />
 
         <button
           onClick={scanning ? () => { chatRef.current?.stop(); voice.stop(); setScanning(false); } : () => runScan("analysis")}
