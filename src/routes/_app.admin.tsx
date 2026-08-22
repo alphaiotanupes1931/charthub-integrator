@@ -46,6 +46,8 @@ type UserRow = {
   broker_account_type: string | null;
   banned: boolean;
   role?: string | null;
+  ai_model_pref?: string | null;
+
 };
 
 
