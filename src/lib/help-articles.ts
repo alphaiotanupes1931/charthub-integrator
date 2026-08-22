@@ -121,7 +121,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       "Open Settings → Billing. You can switch plans at any time. Upgrades take effect immediately and are pro-rated. Downgrades take effect at the end of your current billing period - you keep the higher tier until then.",
       "Cancelling stops the next renewal. You keep access until the period ends. We do not pro-rate refunds for the unused portion of a paid period.",
       "## Trial",
-      "Cancelling during your 7-day trial means you are not charged. Your account stays active in read-only mode until you re-subscribe.",
+      "Cancelling drops you back to the free plan: 3 signal grades a month, plus the journal, risk calculator, alerts and Academy basics stay yours.",
     ],
   },
   {
