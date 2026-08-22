@@ -384,13 +384,14 @@ describe("monthly reset happens on the 1st in the account's own timezone", () =>
 describe("an identical re-scan inside the 10 minute window is free", () => {
   const sameScan = { symbol: "XAUUSD", timeframe: "15m", methodology: "wyckoff" } as const;
   const at = (minutes: number) => new Date(db.now.getTime() + minutes * 60 * 1000);
-  const rescan = (minutes: number, over: Partial<typeof sameScan> = {}) =>
+  const rescan = (minutes: number, over: Partial<typeof sameScan> = {}, limit?: number) =>
     consumeGradeFlow({
       entitlements: freeAccount(),
       timezone: TZ,
       store: db,
       input: { outcome: "graded", ...sameScan, ...over },
       now: at(minutes),
+      limit,
     });
 
   it("repeated identical scans across the window never reduce remaining grades", async () => {
@@ -427,13 +428,14 @@ describe("an identical re-scan inside the 10 minute window is free", () => {
   });
 
   it("only an exact instrument + timeframe + methodology match is free", async () => {
-    expect((await rescan(0)).charged).toBe(true);
-    expect((await rescan(1)).charged).toBe(false); // exact match, free
+    // A raised limit here so the month cap cannot be confused with the cache.
+    expect((await rescan(0, {}, 10)).charged).toBe(true);
+    expect((await rescan(1, {}, 10)).charged).toBe(false); // exact match, free
 
     // Each differing component is a different question and costs a grade.
-    expect((await rescan(1, { symbol: "EURUSD" })).charged).toBe(true);
-    expect((await rescan(1, { timeframe: "1h" })).charged).toBe(true);
-    expect((await rescan(1, { methodology: "smc" })).charged).toBe(true);
+    expect((await rescan(1, { symbol: "EURUSD" }, 10)).charged).toBe(true);
+    expect((await rescan(1, { timeframe: "1h" }, 10)).charged).toBe(true);
+    expect((await rescan(1, { methodology: "smc" }, 10)).charged).toBe(true);
     expect(await db.readUsed(monthKey(TZ, db.now))).toBe(4);
   });
 
