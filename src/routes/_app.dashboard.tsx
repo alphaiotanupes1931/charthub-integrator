@@ -1760,6 +1760,8 @@ function Dashboard() {
           <span className="font-mono text-[10px] text-muted-foreground">{tzLabel}</span>
         </label>
 
+        <QuotaBadge quota={ent.quota} className="hidden lg:inline-flex" />
+
         <button
           onClick={scanning ? () => { chatRef.current?.stop(); voice.stop(); setScanning(false); } : () => runScan("analysis")}
           className={`hidden lg:inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-4 text-xs font-semibold transition ${
