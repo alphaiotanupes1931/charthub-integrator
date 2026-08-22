@@ -143,11 +143,19 @@ describe("per-persona outcome for each gated route", () => {
     }
   }
 
-  it("flag off and legacy trial are never denied on any gated route", () => {
+  it("flag off (rollback) is never denied on any gated route", () => {
     for (const route of gatedRoutes) {
       expect(can(personas.flagOff.ent, route.capability)).toBe(true);
-      expect(can(personas.legacyTrial.ent, route.capability)).toBe(true);
     }
+  });
+
+  it("legacy tierless trial runs at Pro level, so only Elite-only Autopilot locks", () => {
+    for (const route of gatedRoutes) {
+      const expected = route.capability !== "autopilot";
+      expect(can(personas.legacyTrial.ent, route.capability)).toBe(expected);
+    }
+    // And the lock it does hit is still an in-page lock, never a redirect.
+    expect(routeSrc("_app.autopilot.tsx")).toContain("CapabilityGate");
   });
 
   it("free and expired trial are denied on the paid surfaces", () => {
