@@ -327,7 +327,7 @@ function CoachesPage() {
                   ) : allowedCoach(c.name) ? (
                     "Select Coach"
                   ) : (
-                    <span className="inline-flex items-center justify-center gap-1.5">
+                    <span className="inline-flex items-center justify-center gap-1.5" data-testid="unlock-coach">
                       <Lock className="h-3.5 w-3.5" /> Unlock coach
                     </span>
                   )}

@@ -7,6 +7,7 @@ import {
   BarChart3, Bot, MessageSquare, TrendingUp, TrendingDown, Target, Activity, HeartPulse, Calendar, Flame, Trash2, Sparkles, Lock,
 } from "lucide-react";
 import { useEntitlements } from "@/hooks/useEntitlements";
+import { guarded } from "@/lib/query-guard";
 import { toast } from "sonner";
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -130,7 +131,11 @@ function AnalyticsPage() {
 
   const analytics = useQuery({
     queryKey: ["performanceAnalytics"],
-    queryFn: () => getAnalytics(),
+    // Free accounts get a 403 here; guarded() makes that an error instead of
+    // data so the blurred preview renders rather than crashing on the body.
+    queryFn: () => guarded(getAnalytics()),
+    enabled: ent.loading || ent.allow("analytics"),
+    retry: false,
   });
 
   const reportMutation = useMutation({
@@ -146,7 +151,7 @@ function AnalyticsPage() {
   });
 
   const mergedTrades = useMemo(() => {
-    const server: LocalTrade[] = (analytics.data?.paperTrades ?? []).map(serverTradeToLocal);
+    const server: LocalTrade[] = (Array.isArray(analytics.data?.paperTrades) ? analytics.data.paperTrades : []).map(serverTradeToLocal);
     const all = [...trades, ...server].sort((a, b) => a.createdAt - b.createdAt);
     return all;
   }, [trades, analytics.data?.paperTrades]);
@@ -259,14 +264,16 @@ function AnalyticsPage() {
     reportMutation.mutate({ weekEnding: endOfWeek(new Date()) });
   };
 
-  const hasAnyData = mergedTrades.length > 0 || (analytics.data?.proposals.length ?? 0) > 0;
+  // A denied or failed request can resolve to a shape without these arrays, so
+  // every read stays optional - the preview must never crash the page.
+  const hasAnyData = mergedTrades.length > 0 || (analytics.data?.proposals?.length ?? 0) > 0;
 
   // Free plan: a real preview, not an empty locked page. The trade count is the
   // user's actual count so it's obvious the data is being kept, and the numbers
   // behind the blur are their own - unblurring is the whole upgrade.
   if (!ent.loading && !ent.allow("analytics")) {
     return (
-      <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-6">
+      <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-6" data-testid="analytics-preview">
         <PageHeader title="Analytics" description="Your trading performance at a glance" />
 
         <div className="rounded-xl border border-border/60 bg-card p-6">
@@ -283,13 +290,13 @@ function AnalyticsPage() {
             </div>
             <div className="flex gap-2">
               <Link to="/journal" className="inline-flex items-center rounded-xl border border-border px-4 py-2 text-sm font-medium">Go to Journal</Link>
-              <Link to="/pricing" className="inline-flex items-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">See plans</Link>
+              <Link to="/pricing" data-testid="analytics-preview-cta" className="inline-flex items-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">See plans</Link>
             </div>
           </div>
         </div>
 
         <div className="relative">
-          <div aria-hidden className="pointer-events-none select-none blur-[6px] opacity-60">
+          <div aria-hidden data-testid="analytics-preview-blur" className="pointer-events-none select-none blur-[6px] opacity-60">
             <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
               {["Net P&L", "Win Rate", "Avg R:R", "Profit Factor", "Expectancy", "Max Drawdown", "Win Streak", "Loss Streak", "Total Trades", "W / L"].map((label) => (
                 <div key={label} className="rounded-xl border border-border/60 bg-card p-4">
@@ -533,7 +540,7 @@ function AnalyticsPage() {
           {serverTab !== "autopilot" && stats?.perSymbol.length === 0 && (
             <p className="text-sm text-muted-foreground">No {serverTab} trades available.</p>
           )}
-          {serverTab === "autopilot" && (analytics.data?.proposals.length ?? 0) === 0 && (
+          {serverTab === "autopilot" && (analytics.data?.proposals?.length ?? 0) === 0 && (
             <p className="text-sm text-muted-foreground">No autopilot proposals yet.</p>
           )}
         </div>
