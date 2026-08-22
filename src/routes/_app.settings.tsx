@@ -7,7 +7,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { useTimeFormat, formatTime } from "@/hooks/useTimeFormat";
 import { useTimezone, TIMEZONE_OPTIONS, AUTO_TZ } from "@/hooks/useTimezone";
 import { exportMyData, deleteMyAccount } from "@/lib/privacy.functions";
-import { createPortalSession, getMySubscription } from "@/lib/billing.functions";
+import { cancelMySubscription, createPortalSession, getMySubscription } from "@/lib/billing.functions";
 import { toast } from "sonner";
 
 import {
