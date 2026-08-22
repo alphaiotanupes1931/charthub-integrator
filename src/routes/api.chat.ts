@@ -957,11 +957,12 @@ export const Route = createFileRoute("/api/chat")({
         // Claude is used when the key passes the health check, unless this account
         // is pinned: "claude" skips the fallback entirely, "fallback" never uses it.
         const claudeHealthy = !!anthropicKey && (await anthropicUsable(anthropicKey));
-        const useClaude = modelPref === "fallback"
-          ? false
-          : modelPref === "claude"
-            ? !!anthropicKey
-            : claudeHealthy;
+        const { useClaude, reason: routeReason } = resolveChatModel({
+          pref: modelPref,
+          hasKey: !!anthropicKey,
+          claudeHealthy,
+        });
+
 
         // Model routing: a plain setup grade or a short factual question runs on
         // the cheap model; open-ended coaching, teaching, psychology, and
