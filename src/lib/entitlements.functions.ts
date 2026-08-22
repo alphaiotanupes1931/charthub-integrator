@@ -107,55 +107,49 @@ export const consumeGrade = createServerFn({ method: "POST" })
         ? { status: subscription.status, tier: subscription.tier, trialEnd: subscription.trial_end }
         : null,
     });
-    const month = monthKey(timezone);
-
-    if (!entitlements.freeTierActive) {
-      return { charged: false, quota: quotaView(entitlements, 0), reason: "not_free_tier" };
-    }
-
-    const readQuota = async () => {
-      const { data: row } = await supabaseAdmin
-        .from("free_tier_quota")
-        .select("grades_used")
-        .eq("user_id", userId)
-        .eq("month", month)
-        .maybeSingle();
-      return quotaView(entitlements, row?.grades_used ?? 0);
+    // Same pipeline the e2e tests drive, backed here by the real tables.
+    const store: QuotaStore = {
+      readUsed: async (month) => {
+        const { data: row } = await supabaseAdmin
+          .from("free_tier_quota")
+          .select("grades_used")
+          .eq("user_id", userId)
+          .eq("month", month)
+          .maybeSingle();
+        return row?.grades_used ?? 0;
+      },
+      readCacheEntry: async (key) => {
+        const { data: row } = await supabaseAdmin
+          .from("scan_cache")
+          .select("created_at")
+          .eq("user_id", userId)
+          .eq("cache_key", key)
+          .maybeSingle();
+        return row ? { createdAt: row.created_at } : null;
+      },
+      writeCacheEntry: async (key) => {
+        await supabaseAdmin
+          .from("scan_cache")
+          .upsert({ user_id: userId, cache_key: key, result: {}, created_at: new Date().toISOString() });
+      },
+      increment: async (month, limit) => {
+        const { error } = await supabaseAdmin.rpc("consume_free_grade", {
+          _user_id: userId,
+          _month: month,
+          _limit: limit,
+          _timezone: timezone,
+        });
+        return { error: !!error };
+      },
     };
 
-    if (!shouldConsumeGrade({ kind: data.outcome } as ScanOutcome)) {
-      return { charged: false, quota: await readQuota(), reason: "not_chargeable" };
-    }
-
-    // Debounce: an identical scan inside the window returns the stored answer and
-    // is not charged again.
-    if (data.symbol && data.timeframe) {
-      const key = scanCacheKey({ symbol: data.symbol, timeframe: data.timeframe, methodology: data.methodology ?? null });
-      const { data: cachedRow } = await supabaseAdmin
-        .from("scan_cache")
-        .select("created_at")
-        .eq("user_id", userId)
-        .eq("cache_key", key)
-        .maybeSingle();
-      const fresh = cachedRow ? Date.now() - Date.parse(cachedRow.created_at) < 10 * 60 * 1000 : false;
-      if (fresh) {
-        return { charged: false, quota: await readQuota(), reason: "not_chargeable" };
-      }
-      await supabaseAdmin
-        .from("scan_cache")
-        .upsert({ user_id: userId, cache_key: key, result: {}, created_at: new Date().toISOString() });
-    }
-
-    const { error } = await supabaseAdmin.rpc("consume_free_grade", {
-      _user_id: userId,
-      _month: month,
-      _limit: FREE_GRADES_PER_MONTH,
-      _timezone: timezone,
+    return consumeGradeFlow({
+      entitlements,
+      timezone,
+      store,
+      input: data,
+      limit: FREE_GRADES_PER_MONTH,
     });
-    if (error) {
-      return { charged: false, quota: await readQuota(), reason: "limit_reached" };
-    }
-    return { charged: true, quota: await readQuota(), reason: "charged" };
   });
 
 /** Admin switch for the whole change — flipping it off restores prior behaviour. */
