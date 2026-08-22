@@ -643,21 +643,29 @@ export const Route = createFileRoute("/api/chat")({
   server: {
     handlers: {
       OPTIONS: async ({ request }) => preflight(request) ?? new Response(null, { status: 204 }),
-      // Lightweight health probe so the UI can tell the trader when the Claude
-      // account is out of credits (replies still work on the fallback model).
+      // Health probe so the UI can tell the trader when Claude can't be reached
+      // (replies still work on the fallback model). `?force=1` re-runs the check.
       GET: async ({ request }) => {
         const cors = corsHeadersFor(request);
-        const anthropicKey = process.env.ANTHROPIC_API_KEY;
-        const claudeOk = !!anthropicKey && (await anthropicUsable(anthropicKey));
+        const force = new URL(request.url).searchParams.get("force") === "1";
+        const { checkAnthropicHealth } = await import("@/lib/anthropic-health.server");
+        const health = await checkAnthropicHealth({ force });
         return Response.json(
           {
-            claude: !anthropicKey ? "not_configured" : claudeOk ? "ok" : "out_of_credits",
-            fallbackActive: !claudeOk,
+            // Legacy field the notice banner reads: anything unhealthy but
+            // configured still surfaces as the same "fallback in use" state.
+            claude: health.status === "ok" ? "ok" : health.status === "not_configured" ? "not_configured" : "out_of_credits",
+            claudeStatus: health.status,
+            claudeDetail: health.detail,
+            claudeCheckedAt: health.checkedAt,
+            claudeLatencyMs: health.latencyMs,
+            fallbackActive: !health.ok,
             fallbackModel: FALLBACK_LABEL,
           },
           { headers: cors },
         );
       },
+
       POST: async ({ request }) => {
         const reqId = getOrCreateRequestId(request);
         const originBlock = enforceOrigin(request);
