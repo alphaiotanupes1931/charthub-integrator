@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { consumeGradeFlow, type QuotaStore } from "@/lib/quota-flow";
 import {
   FREE_GRADES_PER_MONTH,
   monthKey,
