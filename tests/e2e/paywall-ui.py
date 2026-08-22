@@ -125,6 +125,13 @@ async def run(persona: str, session_path: str, update: bool) -> None:
         page = await ctx.new_page()
         await page.goto(URL, wait_until="domcontentloaded")
         await page.evaluate(f"localStorage.setItem({json.dumps(key)}, {json.dumps(payload)})")
+        # Dismiss the one-time compliance notice and onboarding tour up front:
+        # both are full-screen overlays that would swallow the CTA clicks.
+        await page.evaluate(
+            "() => { localStorage.setItem('trademind.compliance.ack.v1', new Date().toISOString());"
+            " localStorage.setItem('trademind.tour.v1', 'done');"
+            " localStorage.setItem('trademind.tour.completed', '1'); }"
+        )
 
         for route in ROUTES:
             label = f"{persona} {route['path']}"
