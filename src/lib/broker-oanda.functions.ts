@@ -3,7 +3,7 @@
 // OANDA_ACCOUNT_ID env vars when a user has not saved their own.
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireCapability } from "@/lib/capability-middleware";
 
 type OandaEnv = "practice" | "live";
 type OandaEndpoint = { host: string; env: OandaEnv };
@@ -177,7 +177,7 @@ async function oandaFetch(userId: string, path: string, init: RequestInit = {}):
 }
 
 export const getBrokerStatus = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("broker_live")])
   .handler(async ({ context }) => {
     try {
       const account = await oandaFetch(context.userId, "/summary");
@@ -205,7 +205,7 @@ export const getBrokerStatus = createServerFn({ method: "GET" })
 // every account the token is authorized for, with the alias OANDA shows in its
 // own platform, so the trader can confirm it is really their account.
 export const verifyOandaIdentity = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("broker_live")])
   .handler(async ({ context }) => {
     try {
       const cfg = await loadOandaConfig(context.userId);
@@ -241,7 +241,7 @@ export const verifyOandaIdentity = createServerFn({ method: "GET" })
 
 
 export const listBrokerPositions = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("broker_live")])
   .handler(async ({ context }) => {
     const data = await oandaFetch(context.userId, "/openTrades");
     const trades = (data.trades ?? []) as Array<Record<string, unknown>>;
@@ -270,7 +270,7 @@ const PlaceOrderInput = z.object({
 });
 
 export const placeBrokerOrder = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("broker_live")])
   .inputValidator((raw: unknown) => PlaceOrderInput.parse(raw))
   .handler(async ({ data, context }) => {
     const instrument = toOandaInstrument(data.symbol);
@@ -324,7 +324,7 @@ export const placeBrokerOrder = createServerFn({ method: "POST" })
   });
 
 export const closeBrokerTrade = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("broker_live")])
   .inputValidator((raw: unknown) => z.object({ tradeId: z.string().min(1) }).parse(raw))
   .handler(async ({ data, context }) => {
     await oandaFetch(context.userId, `/trades/${encodeURIComponent(data.tradeId)}/close`, {
@@ -340,7 +340,7 @@ export const closeBrokerTrade = createServerFn({ method: "POST" })
 // ---------------------------------------------------------------------------
 
 export const listBrokerPendingOrders = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("broker_live")])
   .handler(async ({ context }) => {
     const data = await oandaFetch(context.userId, "/pendingOrders");
     const orders = (data.orders ?? []) as Array<Record<string, unknown>>;
@@ -361,7 +361,7 @@ export const listBrokerPendingOrders = createServerFn({ method: "GET" })
   });
 
 export const cancelBrokerOrder = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("broker_live")])
   .inputValidator((raw: unknown) => z.object({ orderId: z.string().min(1) }).parse(raw))
   .handler(async ({ data, context }) => {
     await oandaFetch(context.userId, `/orders/${encodeURIComponent(data.orderId)}/cancel`, { method: "PUT" });
@@ -377,7 +377,7 @@ const ModifyTradeInput = z.object({
 
 /** Replace/remove protective orders attached to an existing trade. */
 export const modifyBrokerTrade = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("broker_live")])
   .inputValidator((raw: unknown) => ModifyTradeInput.parse(raw))
   .handler(async ({ data, context }) => {
     const body: Record<string, unknown> = {};
@@ -409,7 +409,7 @@ export const modifyBrokerTrade = createServerFn({ method: "POST" })
 
 /** Close a trade fully or partially (units = number of units to close). */
 export const closeBrokerTradeUnits = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("broker_live")])
   .inputValidator((raw: unknown) =>
     z.object({ tradeId: z.string().min(1), units: z.number().positive().optional() }).parse(raw))
   .handler(async ({ data, context }) => {
@@ -425,7 +425,7 @@ export const closeBrokerTradeUnits = createServerFn({ method: "POST" })
 
 /** Full detail on one open trade, including current protective orders. */
 export const getBrokerTrade = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("broker_live")])
   .inputValidator((raw: unknown) => z.object({ tradeId: z.string().min(1) }).parse(raw))
   .handler(async ({ data, context }) => {
     const resp = await oandaFetch(context.userId, `/trades/${encodeURIComponent(data.tradeId)}`);

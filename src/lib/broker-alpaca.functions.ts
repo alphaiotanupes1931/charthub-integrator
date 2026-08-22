@@ -1,13 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireCapability } from "@/lib/capability-middleware";
 
 // Alpaca supports real OAuth, so this is a genuine one-click "Sign in with Alpaca"
 // flow: the trader logs in on Alpaca's own site and we never see their password.
 
 /** Step 1: build the Alpaca consent URL for this signed-in user. */
 export const startAlpacaLogin = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("broker_live")])
   .inputValidator((raw: unknown) => z.object({ origin: z.string().url() }).parse(raw))
   .handler(async ({ data, context }) => {
     const { authorizeUrl } = await import("@/lib/broker-alpaca.server");
@@ -16,7 +16,7 @@ export const startAlpacaLogin = createServerFn({ method: "POST" })
 
 /** Step 2: exchange the callback code for a token and save it encrypted. */
 export const completeAlpacaLogin = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("broker_live")])
   .inputValidator((raw: unknown) =>
     z
       .object({
@@ -45,7 +45,7 @@ export const completeAlpacaLogin = createServerFn({ method: "POST" })
 
 /** Live view of the connected Alpaca account. */
 export const getAlpacaStatus = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("broker_live")])
   .handler(async ({ context }) => {
     const { loadSession, alpacaFetch } = await import("@/lib/broker-alpaca.server");
     try {
@@ -74,7 +74,7 @@ export const getAlpacaStatus = createServerFn({ method: "GET" })
 
 /** Open positions on the connected Alpaca account. */
 export const getAlpacaPositions = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("broker_live")])
   .handler(async ({ context }) => {
     const { loadSession, alpacaFetch } = await import("@/lib/broker-alpaca.server");
     const session = await loadSession(context.userId);
@@ -95,7 +95,7 @@ export const getAlpacaPositions = createServerFn({ method: "GET" })
 
 /** Place an order on the connected Alpaca account. */
 export const placeAlpacaOrder = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("broker_live")])
   .inputValidator((raw: unknown) =>
     z
       .object({
@@ -137,7 +137,7 @@ export const placeAlpacaOrder = createServerFn({ method: "POST" })
 
 /** Close a single open position at market. */
 export const closeAlpacaPosition = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("broker_live")])
   .inputValidator((raw: unknown) => z.object({ symbol: z.string().trim().min(1) }).parse(raw))
   .handler(async ({ data, context }) => {
     const { loadSession, alpacaFetch } = await import("@/lib/broker-alpaca.server");
@@ -150,7 +150,7 @@ export const closeAlpacaPosition = createServerFn({ method: "POST" })
 
 /** Disconnect the Alpaca login. */
 export const disconnectAlpaca = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("broker_live")])
   .handler(async ({ context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin

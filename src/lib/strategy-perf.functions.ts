@@ -2,14 +2,14 @@
 // given instrument/timeframe, store the measured edge, and feed it back into
 // scan grading so proven playbooks weigh more than untested ones.
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireCapability } from "@/lib/capability-middleware";
 import { StrategyPerfInput } from "@/lib/backtest/schemas";
 import type { StrategyPerfRow } from "@/lib/strategy-perf.shared";
 
 export type { StrategyPerfRow };
 
 export const listStrategyPerformance = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("strategy_library")])
   .handler(async ({ context }): Promise<StrategyPerfRow[]> => {
     const { data, error } = await context.supabase
       .from("strategy_performance")
@@ -32,7 +32,7 @@ export const listStrategyPerformance = createServerFn({ method: "GET" })
   });
 
 export const recordStrategyBacktest = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("strategy_library")])
   .inputValidator((raw: unknown) => StrategyPerfInput.parse(raw))
   .handler(async ({ data, context }): Promise<{ ok: true; row: StrategyPerfRow } | { ok: false; error: string }> => {
     const { getHistory } = await import("@/lib/backtest/history.server");
