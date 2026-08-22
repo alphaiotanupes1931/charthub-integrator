@@ -432,7 +432,7 @@ function Landing() {
           <h2 className="font-display font-semibold tracking-[-0.03em] text-[2rem] sm:text-4xl md:text-[3rem] leading-tight">
             Grade the next trade.
           </h2>
-          <p className="text-sm sm:text-base text-muted-foreground mt-5">Free for 7 days. Cancel anytime.</p>
+          <p className="text-sm sm:text-base text-muted-foreground mt-5">{freeTier ? "Free plan, no card required." : "Free for 7 days. Cancel anytime."}</p>
           <div className="mt-10">
             <a
               href={dashboardHref}
