@@ -8,6 +8,7 @@ import { LogoLink } from "@/components/LogoLink";
 import { supabase } from "@/integrations/supabase/client";
 import { createCheckoutSession } from "@/lib/billing.functions";
 import { useFreeTierFlag } from "@/hooks/useFreeTierFlag";
+import { track } from "@/lib/product-events";
 
 export const Route = createFileRoute("/pricing")({
   ssr: false,
@@ -78,6 +79,7 @@ function PricingPage() {
         window.location.assign(`/auth?mode=signup&redirect=${encodeURIComponent("/pricing")}`);
         return;
       }
+      track("checkout_started", { tier });
       const { url } = await checkout({ data: { tier } });
       if (url) window.location.assign(url);
     } catch (e) {

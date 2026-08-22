@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { guarded } from "@/lib/query-guard";
+import { track } from "@/lib/product-events";
 import { toast } from "sonner";
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -268,10 +269,15 @@ function AnalyticsPage() {
   // every read stays optional - the preview must never crash the page.
   const hasAnyData = mergedTrades.length > 0 || (analytics.data?.proposals?.length ?? 0) > 0;
 
+  const previewShown = !ent.loading && !ent.allow("analytics");
+  useEffect(() => {
+    if (previewShown) track("analytics_preview_viewed", { trades: mergedTrades.length });
+  }, [previewShown, mergedTrades.length]);
+
   // Free plan: a real preview, not an empty locked page. The trade count is the
   // user's actual count so it's obvious the data is being kept, and the numbers
   // behind the blur are their own - unblurring is the whole upgrade.
-  if (!ent.loading && !ent.allow("analytics")) {
+  if (previewShown) {
     return (
       <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-6" data-testid="analytics-preview">
         <PageHeader title="Analytics" description="Your trading performance at a glance" />
