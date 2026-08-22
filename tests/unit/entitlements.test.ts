@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   FREE_GRADES_PER_MONTH,
+  academyModuleAllowed,
+  coachAllowed,
   can,
   isCacheFresh,
   monthKey,
@@ -121,12 +123,13 @@ describe("§3 free tier capabilities", () => {
     }
   });
 
-  it("gives free one coach, basic two, pro and elite all five", () => {
+  it("gives free one coach, basic two, pro and elite the full roster", () => {
     expect(free.coachAllowance).toBe(1);
     expect(resolveEntitlements({ flagEnabled: true, subscription: paid("basic"), now: NOW }).coachAllowance).toBe(2);
-    expect(resolveEntitlements({ flagEnabled: true, subscription: paid("pro"), now: NOW }).coachAllowance).toBe(5);
-    expect(resolveEntitlements({ flagEnabled: true, subscription: paid("elite"), now: NOW }).coachAllowance).toBe(5);
+    expect(resolveEntitlements({ flagEnabled: true, subscription: paid("pro"), now: NOW }).coachAllowance).toBe(6);
+    expect(resolveEntitlements({ flagEnabled: true, subscription: paid("elite"), now: NOW }).coachAllowance).toBe(6);
   });
+
 
   it("basic keeps Analytics but not the Pro-only surfaces", () => {
     const basic = resolveEntitlements({ flagEnabled: true, subscription: paid("basic"), now: NOW });
@@ -202,5 +205,42 @@ describe("§4 quota mechanics", () => {
   it("falls back to UTC when the timezone is missing or bogus", () => {
     expect(monthKey(null, NOW)).toBe("2026-08");
     expect(monthKey("Not/AZone", NOW)).toBe("2026-08");
+  });
+});
+
+describe("phase 4 gating helpers", () => {
+  const free = resolveEntitlements({ flagEnabled: true, subscription: null });
+  const pro = resolveEntitlements({ flagEnabled: true, subscription: { status: "active", tier: "pro", trialEnd: null } });
+  const basic = resolveEntitlements({ flagEnabled: true, subscription: { status: "active", tier: "basic", trialEnd: null } });
+
+  it("free tier keeps only The Analyst", () => {
+    expect(coachAllowed(free, "The Analyst")).toBe(true);
+    expect(coachAllowed(free, "The Psychologist")).toBe(false);
+  });
+
+  it("basic gets two coaches, pro gets all", () => {
+    expect(coachAllowed(basic, "The Strategist")).toBe(true);
+    expect(coachAllowed(basic, "The Mentor")).toBe(false);
+    expect(coachAllowed(pro, "The Psychologist")).toBe(true);
+  });
+
+  it("free academy stops after module 3", () => {
+    expect(academyModuleAllowed(free, 3)).toBe(true);
+    expect(academyModuleAllowed(free, 4)).toBe(false);
+    expect(academyModuleAllowed(pro, 12)).toBe(true);
+  });
+
+  it("free tier cannot reach autopilot, signals or strategy win rates", () => {
+    expect(can(free, "autopilot")).toBe(false);
+    expect(can(free, "signal_engine")).toBe(false);
+    expect(can(free, "strategy_library")).toBe(false);
+    expect(can(free, "journal")).toBe(true);
+  });
+
+  it("flag off leaves every gate open", () => {
+    const legacy = resolveEntitlements({ flagEnabled: false, subscription: null });
+    expect(can(legacy, "autopilot")).toBe(true);
+    expect(coachAllowed(legacy, "The Psychologist")).toBe(true);
+    expect(academyModuleAllowed(legacy, 12)).toBe(true);
   });
 });

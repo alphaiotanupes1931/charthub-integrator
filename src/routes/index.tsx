@@ -19,6 +19,7 @@ import trader1 from "@/assets/trader-1.jpg";
 import trader2 from "@/assets/trader-2.jpg";
 import trader3 from "@/assets/trader-3.jpg";
 import trader4 from "@/assets/trader-4.jpg";
+import { useFreeTierFlag } from "@/hooks/useFreeTierFlag";
 
 const TRADER_AVATARS: string[] = [trader1, trader2, trader3, trader4];
 
@@ -104,8 +105,10 @@ const heroItem = {
 
 function Landing() {
   const [isAuthed, setIsAuthed] = useState(false);
+  const freeTier = useFreeTierFlag();
   const dashboardHref = isAuthed ? "/dashboard" : "/auth?mode=signin&redirect=%2Fdashboard";
-  const signupHref = "/auth?mode=signup&redirect=%2Fpricing";
+  const signupHref = freeTier ? "/auth?mode=signup&redirect=%2Fdashboard" : "/auth?mode=signup&redirect=%2Fpricing";
+
   useEffect(() => {
     let cancelled = false;
     supabase.auth.getSession().then(({ data }) => {
@@ -179,7 +182,7 @@ function Landing() {
                 href={signupHref}
                 className="inline-flex w-full sm:w-auto items-center justify-center rounded-full border border-border/60 bg-card px-6 py-3 text-sm font-semibold hover:bg-muted/60 transition-colors"
               >
-                Start free trial
+                {freeTier ? "Create free account" : "Start free trial"}
               </a>
             </motion.div>
 
@@ -225,9 +228,9 @@ function Landing() {
               variants={heroItem}
               className="mt-6 flex flex-wrap items-center lg:justify-start justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground"
             >
-              <Bullet>7-day free trial</Bullet>
-              <Bullet>Cancel anytime</Bullet>
-              <Bullet>No card to browse</Bullet>
+              <Bullet>{freeTier ? "Free plan, no card" : "7-day free trial"}</Bullet>
+              <Bullet>{freeTier ? "3 signal grades a month, free" : "Cancel anytime"}</Bullet>
+              <Bullet>{freeTier ? "Journal and Academy free forever" : "No card to browse"}</Bullet>
             </motion.div>
           </div>
 
@@ -366,7 +369,7 @@ function Landing() {
                       : "bg-foreground text-background border-foreground"
                   }`}
                 >
-                  Start free trial
+                  {freeTier ? "Get started" : "Start free trial"}
                 </a>
                 <ul className="mt-6 space-y-3 pt-5 border-t border-border/60">
                   {p.features.map((f) => (

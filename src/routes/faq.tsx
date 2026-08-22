@@ -60,7 +60,7 @@ const FAQS = [
   },
   {
     q: "How do I cancel or change my plan?",
-    a: "You can upgrade, downgrade, or cancel from your account settings at any time. If you cancel during your 7-day trial you will not be charged.",
+    a: "You can upgrade, downgrade, or cancel from your account settings at any time. If you cancel, your account drops to the free plan: 3 signal grades a month, plus your journal, risk calculator, alerts and Academy basics.",
   },
 ];
 

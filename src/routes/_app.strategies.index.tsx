@@ -14,6 +14,8 @@ import {
   STYLES,
   MARKETS,
 } from "@/lib/customStrategies";
+import { useEntitlements } from "@/hooks/useEntitlements";
+
 
 export const Route = createFileRoute("/_app/strategies/")({
   head: () => ({ meta: [{ title: "Strategies, TradeMind" }] }),
@@ -32,6 +34,9 @@ const styleIcon = { Day: CircleDot, Swing: TrendingUp, Scalp: Zap } as const;
 const STRAT_KEY = "trademind.activeStrategy";
 
 function StrategiesPage() {
+  const ent = useEntitlements();
+  // Free accounts see the library titles; the measured win rates are paid (13.2).
+  const showStats = ent.allow("strategy_library");
   const [q, setQ] = useState("");
   const [active, setActive] = useState<string | null>(null);
   const [builderOpen, setBuilderOpen] = useState(false);
@@ -169,7 +174,7 @@ function StrategiesPage() {
               <div className="flex items-center gap-5 text-xs pt-2 border-t border-border/50">
                 <div className="flex items-center gap-1.5">
                   <BarChart2 className="h-3.5 w-3.5 text-bull" />
-                  <span className="font-mono font-semibold text-bull">{s.winRate}%</span>
+                  <span className="font-mono font-semibold text-bull">{showStats ? `${s.winRate}%` : "--"}</span>
                   <span className="text-muted-foreground">Win Rate</span>
                 </div>
                 <div className="flex items-center gap-1.5">
