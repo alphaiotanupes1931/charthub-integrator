@@ -140,6 +140,30 @@ export type Database = {
         }
         Relationships: []
       }
+      app_flags: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          key: string
+          note: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          key: string
+          note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          key?: string
+          note?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       autopilot_events: {
         Row: {
           created_at: string
@@ -613,6 +637,36 @@ export type Database = {
           id?: string
           token?: string
           used_at?: string | null
+        }
+        Relationships: []
+      }
+      free_tier_quota: {
+        Row: {
+          created_at: string
+          grades_used: number
+          lifetime_grades: number
+          month: string
+          timezone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          grades_used?: number
+          lifetime_grades?: number
+          month: string
+          timezone?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          grades_used?: number
+          lifetime_grades?: number
+          month?: string
+          timezone?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -1146,6 +1200,27 @@ export type Database = {
         }
         Relationships: []
       }
+      scan_cache: {
+        Row: {
+          cache_key: string
+          created_at: string
+          result: Json
+          user_id: string
+        }
+        Insert: {
+          cache_key: string
+          created_at?: string
+          result: Json
+          user_id: string
+        }
+        Update: {
+          cache_key?: string
+          created_at?: string
+          result?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       signal_feed: {
         Row: {
           action: string
@@ -1578,6 +1653,22 @@ export type Database = {
         Args: { _pref: string; _user_id: string }
         Returns: undefined
       }
+      admin_set_flag: {
+        Args: { _enabled: boolean; _key: string }
+        Returns: {
+          created_at: string
+          enabled: boolean
+          key: string
+          note: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "app_flags"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       admin_set_platform_status: {
         Args: { _level: string; _message: string }
         Returns: {
@@ -1634,6 +1725,15 @@ export type Database = {
         Args: { _cap: number; _user_id: string }
         Returns: number
       }
+      consume_free_grade: {
+        Args: {
+          _limit: number
+          _month: string
+          _timezone?: string
+          _user_id: string
+        }
+        Returns: number
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -1641,6 +1741,10 @@ export type Database = {
       email_queue_dispatch: { Args: never; Returns: undefined }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
+        Returns: number
+      }
+      free_grades_used: {
+        Args: { _month: string; _user_id: string }
         Returns: number
       }
       get_public_leaderboard: {
