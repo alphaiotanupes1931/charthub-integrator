@@ -81,6 +81,24 @@ function AdminPage() {
     setUsers((prev) => prev?.map((x) => (x.id === u.id ? { ...x, role } : x)) ?? prev);
   };
 
+  // Pin one account's coach model without touching anyone else.
+  const changeModel = async (u: UserRow, pref: "auto" | "claude" | "fallback") => {
+    if (pref === (u.ai_model_pref ?? "auto")) return;
+    setBusyId(u.id);
+    const { error } = await supabase.rpc("admin_set_ai_model_pref" as never, { _user_id: u.id, _pref: pref } as never);
+    setBusyId(null);
+    if (error) { toast.error(error.message); return; }
+    toast.success(
+      pref === "claude"
+        ? `${u.email ?? "User"} is pinned to Claude`
+        : pref === "fallback"
+          ? `${u.email ?? "User"} is pinned to the backup model`
+          : `${u.email ?? "User"} is back on automatic routing`,
+    );
+    setUsers((prev) => prev?.map((x) => (x.id === u.id ? { ...x, ai_model_pref: pref } : x)) ?? prev);
+  };
+
+
   const toggleBan = async (u: UserRow) => {
     const next = !u.banned;
     if (next && !confirm(`Ban ${u.email}? They will be signed out and blocked from the app.`)) return;
