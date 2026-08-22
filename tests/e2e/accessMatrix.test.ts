@@ -99,6 +99,24 @@ type RouteSpec = {
 };
 
 const ALL: PersonaId[] = Object.keys(personas) as PersonaId[];
+
+/**
+ * CI shards this suite by persona: `MATRIX_PERSONAS=free,basic pnpm test:matrix`
+ * runs only those personas' route checks. Unset (local, and the full CI job) runs
+ * every persona. Invariant blocks below always run — they're cheap and global.
+ */
+const requested = (process.env["MATRIX_PERSONAS"] ?? "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+const unknown = requested.filter((id) => !ALL.includes(id as PersonaId));
+if (unknown.length) {
+  throw new Error(
+    `MATRIX_PERSONAS contains unknown persona(s): ${unknown.join(", ")}. Known: ${ALL.join(", ")}`,
+  );
+}
+const SELECTED: PersonaId[] = requested.length ? (requested as PersonaId[]) : ALL;
+
 const PAID_AND_ABOVE: PersonaId[] = [
   "basic",
   "pro",
@@ -161,17 +179,21 @@ const ROUTES: RouteSpec[] = [
   { route: "/community", file: null, capability: "community", allowed: ALL },
 ];
 
+// Persona-first grouping: CI shards by persona (MATRIX_PERSONAS=free,basic), and
+// a failing report reads "persona: free … locks /autopilot", so the regression is
+// named by who broke and where, without opening the test file.
 describe("access matrix — every gated route against every persona", () => {
-  for (const spec of ROUTES) {
-    describe(`${spec.route} (${spec.capability})`, () => {
-      for (const id of ALL) {
+  for (const id of SELECTED) {
+    describe(`persona: ${id} (${personas[id].label})`, () => {
+      for (const spec of ROUTES) {
         const shouldPass = spec.allowed.includes(id);
-        it(`${shouldPass ? "allows" : "locks"} ${personas[id].label}`, () => {
+        it(`${shouldPass ? "allows" : "locks"} ${spec.route} [${spec.capability}]`, () => {
           expect(can(personas[id].ent, spec.capability)).toBe(shouldPass);
         });
       }
     });
   }
+
 
   it("covers every capability the resolver knows about", () => {
     const covered = new Set(ROUTES.map((r) => r.capability));

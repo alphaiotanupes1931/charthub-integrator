@@ -1,0 +1,90 @@
+name: Access matrix
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: access-matrix-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # One job per persona group. A red check tells you which kind of account broke
+  # before you open a log, and the groups run in parallel so the whole matrix
+  # finishes in the time of the slowest group.
+  personas:
+    name: personas ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: free-tier
+            personas: free,expiredTrial,canceled
+          - name: paid
+            personas: basic,pro,elite,pastDue
+          - name: trial-and-admin
+            personas: legacyTrial,admin
+          - name: flag-off-rollback
+            personas: flagOffAnonymous,flagOffBasic,flagOffTrial
+    env:
+      CI: "true"
+      MATRIX_PERSONAS: ${{ matrix.personas }}
+      VITEST_JUNIT_OUTPUT: reports/junit/access-matrix-${{ matrix.name }}.xml
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - name: Run access matrix (${{ matrix.personas }})
+        run: bun run test:matrix -- --reporter=default --reporter=junit
+      - name: Upload JUnit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: access-matrix-${{ matrix.name }}
+          path: reports/junit/*.xml
+          if-no-files-found: warn
+
+  # Everything else, split into time-balanced shards.
+  suites:
+    name: suites shard ${{ matrix.shard }}/3
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    env:
+      CI: "true"
+      VITEST_JUNIT_OUTPUT: reports/junit/suites-${{ matrix.shard }}.xml
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - run: bun run test -- --shard=${{ matrix.shard }}/3
+      - name: Upload JUnit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: suites-${{ matrix.shard }}
+          path: reports/junit/*.xml
+          if-no-files-found: warn
+
+  report:
+    name: matrix summary
+    runs-on: ubuntu-latest
+    needs: [personas, suites]
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: reports
+          merge-multiple: true
+      - name: Write per-persona summary
+        run: node scripts/junit-summary.mjs reports >> "$GITHUB_STEP_SUMMARY"
