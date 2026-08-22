@@ -52,7 +52,9 @@ for (const file of files) {
     const skipped = /<skipped\b/.test(body ?? "");
 
     const persona = (classname + " " + name).match(/persona:\s*([A-Za-z]+)/);
-    const label = persona ? `persona: ${persona[1]}` : (classname.split(" > ")[0] || "other");
+    const label = persona
+      ? `persona: ${persona[1]}`
+      : name.split(" > ")[0] || classname || "other";
 
     const g = groups.get(label) ?? { total: 0, failed: 0, skipped: 0, time: 0, failures: [] };
     g.total++;
