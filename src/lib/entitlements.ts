@@ -73,7 +73,7 @@ const TIER_CAPABILITIES: Record<Tier, Capability[]> = {
  * Marcus still owes us the number and which two (§13.1), so answering it is an
  * edit here, not a rewrite.
  */
-export const COACH_ALLOWANCE: Record<Tier, number> = { free: 1, basic: 2, pro: 5, elite: 5 };
+export const COACH_ALLOWANCE: Record<Tier, number> = { free: 1, basic: 2, pro: 6, elite: 6 };
 /** Free tier sees The Analyst only. */
 export const FREE_COACH_IDS = ["analyst"];
 /** Placeholder until §13.1 is answered — Basic keeps the Analyst plus one more. */
@@ -262,4 +262,30 @@ export function isCacheFresh(createdAt: string | Date, now: Date = new Date()): 
   const t = typeof createdAt === "string" ? Date.parse(createdAt) : createdAt.getTime();
   if (!Number.isFinite(t)) return false;
   return now.getTime() - t < SCAN_DEBOUNCE_MS;
+}
+
+/** Academy basics per §3: modules 1-3 are free forever, the rest is paid. */
+export const FREE_ACADEMY_MODULES = 3;
+
+export function academyModuleAllowed(ent: Entitlements, moduleId: number): boolean {
+  if (can(ent, "academy_all")) return true;
+  return moduleId <= FREE_ACADEMY_MODULES;
+}
+
+/** Coach display names, in the order tiers unlock them. */
+export const COACH_NAME_ORDER = [
+  "The Analyst",
+  "The Strategist",
+  "The Disciplinarian",
+  "The Mentor",
+  "The Minimalist",
+  "The Psychologist",
+];
+
+/** A tier gets the first N coaches in COACH_NAME_ORDER; unknown names are paid. */
+export function coachAllowed(ent: Entitlements, coachName: string): boolean {
+  if (ent.coachAllowance >= COACH_NAME_ORDER.length) return true;
+  const idx = COACH_NAME_ORDER.indexOf(coachName);
+  if (idx === -1) return false;
+  return idx < ent.coachAllowance;
 }
