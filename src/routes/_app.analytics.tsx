@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { guarded } from "@/lib/query-guard";
+import { track } from "@/lib/product-events";
 import { toast } from "sonner";
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
