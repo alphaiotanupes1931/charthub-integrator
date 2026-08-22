@@ -123,12 +123,13 @@ describe("§3 free tier capabilities", () => {
     }
   });
 
-  it("gives free one coach, basic two, pro and elite all five", () => {
+  it("gives free one coach, basic two, pro and elite the full roster", () => {
     expect(free.coachAllowance).toBe(1);
     expect(resolveEntitlements({ flagEnabled: true, subscription: paid("basic"), now: NOW }).coachAllowance).toBe(2);
-    expect(resolveEntitlements({ flagEnabled: true, subscription: paid("pro"), now: NOW }).coachAllowance).toBe(5);
-    expect(resolveEntitlements({ flagEnabled: true, subscription: paid("elite"), now: NOW }).coachAllowance).toBe(5);
+    expect(resolveEntitlements({ flagEnabled: true, subscription: paid("pro"), now: NOW }).coachAllowance).toBe(6);
+    expect(resolveEntitlements({ flagEnabled: true, subscription: paid("elite"), now: NOW }).coachAllowance).toBe(6);
   });
+
 
   it("basic keeps Analytics but not the Pro-only surfaces", () => {
     const basic = resolveEntitlements({ flagEnabled: true, subscription: paid("basic"), now: NOW });
