@@ -29,7 +29,7 @@ const unescape = (s) =>
     .replace(/&amp;/g, "&");
 
 const attr = (tag, name) => {
-  const m = tag.match(new RegExp(`${name}="([^"]*)"`));
+  const m = tag.match(new RegExp(`(?:^|\\s)${name}="([^"]*)"`));
   return m ? unescape(m[1]) : "";
 };
 
