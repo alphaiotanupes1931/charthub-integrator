@@ -142,10 +142,11 @@ const TWELVE_DATA: Record<string, string> = {
   "EUR/USD": "EUR/USD",
   "GBP/USD": "GBP/USD",
   "USD/JPY": "USD/JPY",
-  "BTC/USD": "BTC/USD",
-  "ETH/USD": "ETH/USD",
+  // Crypto is deliberately absent: the chart reads Binance, so scans must too,
+  // or a Binance hiccup grades Ethereum off a different venue's price scale.
   "WTI Oil": "WTI/USD",
 };
+
 
 function twelveInterval(interval: string): string {
   switch (interval) {
