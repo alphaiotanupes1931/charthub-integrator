@@ -6,12 +6,13 @@ const read = (p: string) => readFileSync(p, "utf8");
 describe("phase 5: copy", () => {
   it("never advertises the 7-day trial outside a free-tier flag check", () => {
     for (const file of ["src/routes/pricing.tsx", "src/routes/index.tsx"]) {
-      const src = read(file);
-      for (const line of src.split("\n")) {
-        if (/7[- ]day|free trial|Free for 7 days/i.test(line)) {
-          expect(line, `${file}: ${line.trim()}`).toMatch(/freeTier|hasHadTrial/);
-        }
-      }
+      const lines = read(file).split("\n");
+      lines.forEach((line, i) => {
+        if (!/7[- ]day|free trial|Free for 7 days/i.test(line)) return;
+        // The flag check can sit a few lines above inside a multi-line ternary.
+        const context = lines.slice(Math.max(0, i - 4), i + 2).join("\n");
+        expect(context, `${file}: ${line.trim()}`).toMatch(/freeTier|hasHadTrial/);
+      });
     }
   });
 
