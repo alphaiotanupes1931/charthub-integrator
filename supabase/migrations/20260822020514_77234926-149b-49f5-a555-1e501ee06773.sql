@@ -1,0 +1,2 @@
+UPDATE public.app_flags SET enabled = true, updated_at = now() WHERE key = 'free_tier_enabled';
+INSERT INTO public.app_flags (key, enabled, note) SELECT 'free_tier_enabled', true, 'Permanent free tier rollout' WHERE NOT EXISTS (SELECT 1 FROM public.app_flags WHERE key='free_tier_enabled');
