@@ -7,7 +7,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { useTimeFormat, formatTime } from "@/hooks/useTimeFormat";
 import { useTimezone, TIMEZONE_OPTIONS, AUTO_TZ } from "@/hooks/useTimezone";
 import { exportMyData, deleteMyAccount } from "@/lib/privacy.functions";
-import { createPortalSession, getMySubscription } from "@/lib/billing.functions";
+import { cancelMySubscription, createPortalSession, getMySubscription } from "@/lib/billing.functions";
 import { toast } from "sonner";
 
 import {
@@ -608,6 +608,8 @@ function BillingCard() {
     cancel_at_period_end: boolean;
   } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const changeCancel = useServerFn(cancelMySubscription);
 
   useEffect(() => {
     let cancelled = false;
@@ -627,6 +629,20 @@ function BillingCard() {
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not open billing portal");
       setLoading(false);
+    }
+  }
+
+  async function toggleCancel(resume: boolean) {
+    if (!resume && !window.confirm("Cancel your membership? You keep access until the end of the paid period.")) return;
+    setCancelling(true);
+    try {
+      const res = await changeCancel({ data: { resume } });
+      setSub((prev) => (prev ? { ...prev, ...res } : prev));
+      toast.success(resume ? "Membership resumed" : "Membership cancels at period end");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not update membership");
+    } finally {
+      setCancelling(false);
     }
   }
 
@@ -653,22 +669,45 @@ function BillingCard() {
       </span>
       {sub?.current_period_end && (
         <div className="text-xs text-muted-foreground mb-4">
-          {sub.status === "trialing" ? "Trial ends" : "Renews"} on{" "}
+          {sub.cancel_at_period_end
+            ? "Access ends"
+            : sub.status === "trialing"
+              ? "Trial ends"
+              : "Renews"} on{" "}
           {new Date(sub.current_period_end).toLocaleDateString()}
         </div>
       )}
       <div className="flex flex-wrap gap-2">
         {active ? (
-          <GhostButton onClick={manage} disabled={loading}>
-            <ExternalLink className="size-4" />
-            {loading ? "Opening…" : "Manage subscription"}
-          </GhostButton>
+          <>
+            <GhostButton onClick={manage} disabled={loading}>
+              <ExternalLink className="size-4" />
+              {loading ? "Opening…" : "Payment method and invoices"}
+            </GhostButton>
+            {sub?.cancel_at_period_end ? (
+              <GhostButton onClick={() => toggleCancel(true)} disabled={cancelling}>
+                <ShieldCheck className="size-4" />
+                {cancelling ? "Working…" : "Resume membership"}
+              </GhostButton>
+            ) : (
+              <GhostButton onClick={() => toggleCancel(false)} disabled={cancelling}>
+                <CreditCard className="size-4" />
+                {cancelling ? "Working…" : "Cancel membership"}
+              </GhostButton>
+            )}
+          </>
         ) : (
           <GhostButton onClick={() => navigate({ to: "/pricing" })}>
             <CreditCard className="size-4" /> Choose a plan
           </GhostButton>
         )}
       </div>
+      {active && !sub?.cancel_at_period_end && (
+        <p className="mt-3 text-xs text-muted-foreground">
+          Cancelling keeps your access until the end of the paid period, then your account drops to
+          the free plan. Journal, risk calculator, alerts and Academy basics stay free.
+        </p>
+      )}
     </Card>
   );
 }
