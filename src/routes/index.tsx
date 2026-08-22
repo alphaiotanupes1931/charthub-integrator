@@ -104,8 +104,10 @@ const heroItem = {
 
 function Landing() {
   const [isAuthed, setIsAuthed] = useState(false);
+  const freeTier = useFreeTierFlag();
   const dashboardHref = isAuthed ? "/dashboard" : "/auth?mode=signin&redirect=%2Fdashboard";
-  const signupHref = "/auth?mode=signup&redirect=%2Fpricing";
+  const signupHref = freeTier ? "/auth?mode=signup&redirect=%2Fdashboard" : "/auth?mode=signup&redirect=%2Fpricing";
+
   useEffect(() => {
     let cancelled = false;
     supabase.auth.getSession().then(({ data }) => {
