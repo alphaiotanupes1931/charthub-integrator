@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { consumeGrade, getEntitlements, type EntitlementSnapshot } from "@/lib/entitlements.functions";
 import { can, quotaView, type Capability, type ScanOutcome } from "@/lib/entitlements";
+import { track } from "@/lib/product-events";
 
 const QUERY_KEY = ["entitlements"] as const;
 
@@ -38,6 +39,14 @@ export function useEntitlements() {
         const res = await charge({ data: { outcome, ...scan } });
         if (res?.quota) {
           qc.setQueryData<EntitlementSnapshot>(QUERY_KEY, (prev) => (prev ? { ...prev, quota: res.quota } : prev));
+        }
+        if (res?.charged) {
+          track("free_grade_used", {
+            symbol: scan?.symbol ?? null,
+            timeframe: scan?.timeframe ?? null,
+            remaining: res.quota?.remaining ?? null,
+          });
+          if (res.quota?.exhausted) track("free_quota_exhausted", { limit: res.quota.limit ?? null });
         }
       } catch {
         // Never let accounting break a delivered scan; refresh instead.
