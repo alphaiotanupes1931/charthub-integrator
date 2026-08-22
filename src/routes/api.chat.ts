@@ -37,6 +37,8 @@ const DEEP_INTENT = /\b(why|explain|teach|walk me|help me understand|how do|how 
 // automated health check (see lib/anthropic-health.server.ts); otherwise replies
 // would die mid-stream on a rejected key. On failure we fall back to the Lovable
 // gateway model so the coach keeps answering.
+import { resolveChatModel, normalizeModelPref } from "@/lib/ai-routing";
+
 async function anthropicHealth() {
   const { checkAnthropicHealth } = await import("@/lib/anthropic-health.server");
   return checkAnthropicHealth();
@@ -789,7 +791,7 @@ export const Route = createFileRoute("/api/chat")({
             .eq("id", userId)
             .maybeSingle();
           const raw = (prefRow as { ai_model_pref?: string } | null)?.ai_model_pref;
-          if (raw === "claude" || raw === "fallback") modelPref = raw;
+          modelPref = normalizeModelPref(raw);
         }
 
 
@@ -976,7 +978,7 @@ export const Route = createFileRoute("/api/chat")({
         const gatewayModel = key ? createAiGatewayProvider(key)(gatewayId) : null;
         const primaryModel = claudeModel ?? gatewayModel!;
         const activeModelId = useClaude ? claudeId : gatewayId;
-        console.log(`[chat] req=${reqId} route=${routed} model=${activeModelId} pref=${modelPref}`);
+        console.log(`[chat] req=${reqId} route=${routed} model=${activeModelId} pref=${modelPref} why=${routeReason}`);
 
         // Prompt caching: mark the static prefix as an ephemeral cache breakpoint
         // so repeat requests read it at ~10% of input price instead of resending
