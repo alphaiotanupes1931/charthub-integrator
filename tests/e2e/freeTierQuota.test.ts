@@ -217,3 +217,166 @@ describe("only real answers decrement quota", () => {
     expect(db.incrementAttempts).toBe(0);
   });
 });
+
+describe("monthly reset happens on the 1st in the account's own timezone", () => {
+  // Each case is an instant that is still the last day of the month locally
+  // while UTC has already rolled over, or the reverse — the two disagree, so a
+  // UTC-only implementation gets exactly one of them wrong.
+  const cases = [
+    {
+      tz: "America/New_York", // UTC-4 in September
+      label: "New York, UTC has rolled over but the local month has not",
+      lastMomentOfMonth: "2026-09-01T03:59:00Z", // 23:59 Aug 31 local
+      firstMomentOfNextMonth: "2026-09-01T04:00:00Z", // 00:00 Sep 1 local
+      endedMonth: "2026-08",
+      newMonth: "2026-09",
+    },
+    {
+      tz: "America/Los_Angeles", // UTC-7
+      label: "Los Angeles, seven hours behind UTC",
+      lastMomentOfMonth: "2026-09-01T06:59:00Z",
+      firstMomentOfNextMonth: "2026-09-01T07:00:00Z",
+      endedMonth: "2026-08",
+      newMonth: "2026-09",
+    },
+    {
+      tz: "Asia/Tokyo", // UTC+9 — the local month rolls over before UTC does
+      label: "Tokyo, nine hours ahead of UTC",
+      lastMomentOfMonth: "2026-08-31T14:59:00Z", // 23:59 Aug 31 local
+      firstMomentOfNextMonth: "2026-08-31T15:00:00Z", // 00:00 Sep 1 local
+      endedMonth: "2026-08",
+      newMonth: "2026-09",
+    },
+    {
+      tz: "Pacific/Kiritimati", // UTC+14, the earliest zone on earth
+      label: "Kiritimati, fourteen hours ahead of UTC",
+      lastMomentOfMonth: "2026-08-31T09:59:00Z",
+      firstMomentOfNextMonth: "2026-08-31T10:00:00Z",
+      endedMonth: "2026-08",
+      newMonth: "2026-09",
+    },
+    {
+      tz: "Australia/Adelaide", // UTC+9:30, a half-hour offset
+      label: "Adelaide, a half-hour offset",
+      lastMomentOfMonth: "2026-08-31T14:29:00Z",
+      firstMomentOfNextMonth: "2026-08-31T14:30:00Z",
+      endedMonth: "2026-08",
+      newMonth: "2026-09",
+    },
+    {
+      tz: "Europe/London",
+      label: "London, one hour ahead of UTC under summer time",
+      lastMomentOfMonth: "2026-08-31T22:59:00Z",
+      firstMomentOfNextMonth: "2026-08-31T23:00:00Z",
+      endedMonth: "2026-08",
+      newMonth: "2026-09",
+    },
+  ] as const;
+
+  it.each(cases)("$label", async (c) => {
+    const spend = async (tz: string, now: Date) => {
+      for (const symbol of ["XAUUSD", "EURUSD", "US30"]) {
+        await consumeGradeFlow({
+          entitlements: freeAccount(),
+          timezone: tz,
+          store: db,
+          input: { outcome: "graded", symbol, timeframe: "1h", methodology: "wyckoff" },
+          now,
+        });
+      }
+    };
+
+    const beforeMidnight = new Date(c.lastMomentOfMonth);
+    const afterMidnight = new Date(c.firstMomentOfNextMonth);
+
+    // The month key is the local calendar month, so it flips exactly at local
+    // midnight — never at UTC midnight.
+    expect(monthKey(c.tz, beforeMidnight)).toBe(c.endedMonth);
+    expect(monthKey(c.tz, afterMidnight)).toBe(c.newMonth);
+
+    // Spend the whole allowance in the outgoing local month.
+    await spend(c.tz, beforeMidnight);
+    const spent = await consumeGradeFlow({
+      entitlements: freeAccount(),
+      timezone: c.tz,
+      store: db,
+      input: { outcome: "graded", symbol: "NAS100", timeframe: "1h" },
+      now: beforeMidnight,
+    });
+    expect(spent.reason).toBe("limit_reached");
+    expect(shouldPaywallOnIntent(spent.quota)).toBe(true);
+    expect(db.months.get(c.endedMonth)).toBe(FREE_GRADES_PER_MONTH);
+
+    // One minute later it is the 1st locally: a fresh three grades.
+    const afterReset = await consumeGradeFlow({
+      entitlements: freeAccount(),
+      timezone: c.tz,
+      store: db,
+      input: { outcome: "graded", symbol: "NAS100", timeframe: "1h" },
+      now: afterMidnight,
+    });
+    expect(afterReset.charged).toBe(true);
+    expect(afterReset.quota.used).toBe(1);
+    expect(afterReset.quota.remaining).toBe(2);
+    expect(shouldPaywallOnIntent(afterReset.quota)).toBe(false);
+    expect(quotaLabel(afterReset.quota)).toBe("2 of 3 grades left this month");
+
+    // The old month's record is untouched by the new month's usage.
+    expect(db.months.get(c.endedMonth)).toBe(FREE_GRADES_PER_MONTH);
+    expect(db.months.get(c.newMonth)).toBe(1);
+  });
+
+  it("does not reset on UTC midnight for an account that is still in the old month locally", async () => {
+    const tz = "America/New_York";
+    const utcMidnight = new Date("2026-09-01T00:30:00Z"); // 20:30 Aug 31 in New York
+    expect(monthKey(tz, utcMidnight)).toBe("2026-08");
+    expect(monthKey("UTC", utcMidnight)).toBe("2026-09"); // UTC has already rolled
+
+    db.months.set("2026-08", FREE_GRADES_PER_MONTH);
+    const attempt = await consumeGradeFlow({
+      entitlements: freeAccount(),
+      timezone: tz,
+      store: db,
+      input: { outcome: "graded", symbol: "XAUUSD", timeframe: "1h" },
+      now: utcMidnight,
+    });
+    expect(attempt.charged).toBe(false);
+    expect(attempt.reason).toBe("limit_reached");
+    expect(db.months.get("2026-09")).toBeUndefined();
+  });
+
+  it("does not hand an extra allowance to an account that is already in the new month locally", async () => {
+    const tz = "Asia/Tokyo";
+    const beforeUtcRollover = new Date("2026-08-31T20:00:00Z"); // 05:00 Sep 1 in Tokyo
+    expect(monthKey(tz, beforeUtcRollover)).toBe("2026-09");
+    expect(monthKey("UTC", beforeUtcRollover)).toBe("2026-08");
+
+    db.months.set("2026-08", FREE_GRADES_PER_MONTH); // last month is spent
+    for (let i = 1; i <= FREE_GRADES_PER_MONTH; i += 1) {
+      const res = await consumeGradeFlow({
+        entitlements: freeAccount(),
+        timezone: tz,
+        store: db,
+        input: { outcome: "graded", symbol: `SYM${i}`, timeframe: "1h" },
+        now: beforeUtcRollover,
+      });
+      expect(res.charged).toBe(true);
+      expect(res.quota.used).toBe(i);
+    }
+    const fourth = await consumeGradeFlow({
+      entitlements: freeAccount(),
+      timezone: tz,
+      store: db,
+      input: { outcome: "graded", symbol: "SYM4", timeframe: "1h" },
+      now: beforeUtcRollover,
+    });
+    expect(fourth.reason).toBe("limit_reached");
+    expect(db.months.get("2026-09")).toBe(FREE_GRADES_PER_MONTH);
+  });
+
+  it("falls back to UTC when the account has no usable timezone", () => {
+    const at = new Date("2026-09-01T00:30:00Z");
+    expect(monthKey(null, at)).toBe("2026-09");
+    expect(monthKey("Not/AZone", at)).toBe("2026-09");
+  });
+});
