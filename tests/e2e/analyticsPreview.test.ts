@@ -47,7 +47,7 @@ describe("free preview branch", () => {
   });
 
   it("masks the actual numbers and offers the upgrade path", () => {
-    expect(previewBlock).toContain('"--"');
+    expect(previewBlock).toMatch(/>--</);
     expect(previewBlock).toContain("Unlocks with any paid plan");
     expect(previewBlock).toContain('to="/pricing"');
     expect(previewBlock).toContain('to="/journal"');
