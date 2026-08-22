@@ -99,6 +99,24 @@ type RouteSpec = {
 };
 
 const ALL: PersonaId[] = Object.keys(personas) as PersonaId[];
+
+/**
+ * CI shards this suite by persona: `MATRIX_PERSONAS=free,basic pnpm test:matrix`
+ * runs only those personas' route checks. Unset (local, and the full CI job) runs
+ * every persona. Invariant blocks below always run — they're cheap and global.
+ */
+const requested = (process.env["MATRIX_PERSONAS"] ?? "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+const unknown = requested.filter((id) => !ALL.includes(id as PersonaId));
+if (unknown.length) {
+  throw new Error(
+    `MATRIX_PERSONAS contains unknown persona(s): ${unknown.join(", ")}. Known: ${ALL.join(", ")}`,
+  );
+}
+const SELECTED: PersonaId[] = requested.length ? (requested as PersonaId[]) : ALL;
+
 const PAID_AND_ABOVE: PersonaId[] = [
   "basic",
   "pro",
