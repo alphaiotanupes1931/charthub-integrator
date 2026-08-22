@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import type Stripe from "stripe";
 
 function subscriptionIdOf(event: Stripe.Event): string | null {
-  const obj = event.data.object as Record<string, unknown>;
+  const obj = event.data.object as unknown as Record<string, unknown>;
   if (typeof obj["subscription"] === "string") return obj["subscription"] as string;
   const nested = obj["subscription"] as { id?: string } | null | undefined;
   if (nested?.id) return nested.id;
@@ -80,8 +80,11 @@ export const Route = createFileRoute("/api/public/stripe-webhook")({
           }
         } catch (err) {
           console.error("[stripe-webhook] handler error", event.type, err);
-          // 500 makes Stripe retry; the event claim is rolled forward on retry
-          // because a failed sync leaves the row claimed only after success below.
+          // Release the claim so Stripe's retry is not treated as a duplicate.
+          try {
+            const { releaseEvent } = await import("@/lib/stripe-sync.server");
+            await releaseEvent(event.id);
+          } catch { /* best effort */ }
           return new Response("Handler error", { status: 500 });
         }
 
