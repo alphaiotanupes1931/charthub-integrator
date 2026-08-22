@@ -19,6 +19,7 @@ import trader1 from "@/assets/trader-1.jpg";
 import trader2 from "@/assets/trader-2.jpg";
 import trader3 from "@/assets/trader-3.jpg";
 import trader4 from "@/assets/trader-4.jpg";
+import { useFreeTierFlag } from "@/hooks/useFreeTierFlag";
 
 const TRADER_AVATARS: string[] = [trader1, trader2, trader3, trader4];
 
