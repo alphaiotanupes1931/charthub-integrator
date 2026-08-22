@@ -777,6 +777,22 @@ export const Route = createFileRoute("/api/chat")({
           isAdmin = !!adminRow;
         }
 
+        // --- Per-account model routing ---
+        // "auto" (default) uses the health-checked Claude with gateway fallback.
+        // "claude" forces Claude for this account only; "fallback" pins it to the
+        // gateway model. Set per person by an admin in Admin -> People.
+        let modelPref: "auto" | "claude" | "fallback" = "auto";
+        if (sb && userId) {
+          const { data: prefRow } = await sb
+            .from("profiles")
+            .select("ai_model_pref")
+            .eq("id", userId)
+            .maybeSingle();
+          const raw = (prefRow as { ai_model_pref?: string } | null)?.ai_model_pref;
+          if (raw === "claude" || raw === "fallback") modelPref = raw;
+        }
+
+
         if (sb && userId && !isAdmin) {
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           const { data: usageCount, error: usageErr } = await supabaseAdmin.rpc("bump_ai_usage", { _user_id: userId, _cap: DAILY_AI_CAP });
