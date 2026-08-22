@@ -5,7 +5,6 @@ import { type Level, type Style, type Strategy } from "@/data/strategies";
 import { Search, Plus, ChevronDown, BarChart2, TrendingUp, CircleDot, Zap, X, CheckCircle2, Trash2, Pencil, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import {
-import { useEntitlements } from "@/hooks/useEntitlements";
   type CustomStrategy,
   allStrategies,
   readCustomStrategies,
@@ -15,6 +14,8 @@ import { useEntitlements } from "@/hooks/useEntitlements";
   STYLES,
   MARKETS,
 } from "@/lib/customStrategies";
+import { useEntitlements } from "@/hooks/useEntitlements";
+
 
 export const Route = createFileRoute("/_app/strategies/")({
   head: () => ({ meta: [{ title: "Strategies, TradeMind" }] }),
