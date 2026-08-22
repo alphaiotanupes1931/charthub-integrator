@@ -1254,11 +1254,18 @@ function Dashboard() {
 
 
   const runScan = async (from: "chat" | "analysis" = "analysis") => {
+    // Free plan: the 4th grade opens the paywall instead of running. Nothing is
+    // consumed here - the charge happens only once an answer is delivered.
+    if (ent.gradesExhausted) {
+      setPaywall(true);
+      return;
+    }
     const requestId = ++activeScanRequestRef.current;
     const scanSymbol = symbol;
     const scanInterval = interval;
     setScanning(true);
     emitFirstWeekEvent("scan-run");
+
 
     setAiGrade(null);
     const enabledLevels = ALL_LEVELS.filter((k) => levels[k]).map((k) => LEVEL_META[k].label).join(", ") || "none";
