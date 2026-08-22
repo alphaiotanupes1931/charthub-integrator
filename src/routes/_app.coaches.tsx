@@ -5,6 +5,10 @@ import { Bot, BarChart2, Target, GraduationCap, Minus, HeartPulse, CheckCircle2,
 import { COACH_VOICES } from "@/lib/coachVoices";
 import { readActiveCoach, writeActiveCoach } from "@/lib/chat-client";
 import { toast } from "sonner";
+import { Lock } from "lucide-react";
+import { useEntitlements } from "@/hooks/useEntitlements";
+import { coachAllowed } from "@/lib/entitlements";
+import { UpgradeModal } from "@/components/UpgradeModal";
 
 
 export const Route = createFileRoute("/_app/coaches")({
@@ -138,9 +142,15 @@ function CoachesPage() {
   const [previewing, setPreviewing] = useState<string | null>(null);
   const [detail, setDetail] = useState<CoachEntry | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const ent = useEntitlements();
+  const [payOpen, setPayOpen] = useState(false);
 
+
+  const allowedCoach = (name: string) =>
+    ent.loading || !ent.snapshot || coachAllowed(ent.snapshot.entitlements, name);
 
   const select = (name: string) => {
+    if (!allowedCoach(name)) { setPayOpen(true); return; }
     writeActiveCoach(name);
     setActive(name);
     toast.success(`${name} is now your active coach`);
@@ -303,6 +313,7 @@ function CoachesPage() {
                 <button
                   onClick={() => select(c.name)}
                   disabled={isActive}
+                  title={allowedCoach(c.name) ? undefined : "Available on the paid plan"}
                   className={`flex-1 rounded-xl py-2 text-sm font-semibold transition ${
                     isActive
                       ? "bg-primary/10 text-primary cursor-default"
@@ -313,8 +324,12 @@ function CoachesPage() {
                     <span className="inline-flex items-center justify-center gap-1.5">
                       <CheckCircle2 className="h-4 w-4" /> Selected
                     </span>
-                  ) : (
+                  ) : allowedCoach(c.name) ? (
                     "Select Coach"
+                  ) : (
+                    <span className="inline-flex items-center justify-center gap-1.5">
+                      <Lock className="h-3.5 w-3.5" /> Unlock coach
+                    </span>
                   )}
                 </button>
               </div>
