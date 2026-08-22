@@ -1313,6 +1313,14 @@ function Dashboard() {
         // appended to the chat thread so Chat and Analysis never disagree.
         const replyText = scanResultToChatText(r, scanSymbol);
         chatRef.current?.appendScanReply(replyText, scanThreadId);
+        // Charged only now, once a real answer exists. A legitimate "No Entry"
+        // is a real answer and does count; the server also de-dupes an identical
+        // re-scan inside ten minutes so it stays free.
+        void ent.recordScanOutcome(r.grade === "NO ENTRY" ? "no_entry" : "graded", {
+          symbol: scanSymbol.ticker,
+          timeframe: scanInterval,
+          methodology: lens.name,
+        });
       })
       .catch(() => {
         if (requestId !== activeScanRequestRef.current) return;
@@ -1320,6 +1328,8 @@ function Dashboard() {
         // later (deduped server-side to once every few hours).
         void reportSystemNoticeFn({ data: { reason: "scan_failed", detail: `${scanSymbol.ticker} ${scanInterval}` } })
           .catch(() => { /* best-effort */ });
+        // Our failure, so it costs the trader nothing.
+        void ent.recordScanOutcome("error");
         setResult({
           grade: "NO ENTRY", bias: "Neutral", confidence: 0,
           notes: "Research service is temporarily unavailable. Please try again in a moment.",
