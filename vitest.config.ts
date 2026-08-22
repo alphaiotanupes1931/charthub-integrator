@@ -14,7 +14,7 @@ export default defineConfig({
     alias: { "@": resolve(import.meta.dirname, "./src") },
   },
   test: {
-    include: ["tests/**/*.test.ts"],
+    include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"],
     environment: "node",
     reporters: isCI
       ? ["default", ["junit", { outputFile: junitOut, suiteName: "trademind" }]]
