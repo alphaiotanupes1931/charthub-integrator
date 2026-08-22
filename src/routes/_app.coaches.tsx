@@ -355,7 +355,10 @@ function CoachesPage() {
           onSelect={() => { select(detail.name); setDetail(null); }}
         />
       )}
+
+      <UpgradeModal open={payOpen} onClose={() => setPayOpen(false)} reason="coaches" />
     </div>
+
   );
 }
 
