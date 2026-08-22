@@ -125,3 +125,9 @@ export async function claimEvent(event: {
   }
   return true;
 }
+
+/** Undo a claim so a Stripe retry of a failed delivery is processed again. */
+export async function releaseEvent(eventId: string): Promise<void> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  await supabaseAdmin.from("stripe_webhook_events").delete().eq("event_id", eventId);
+}
