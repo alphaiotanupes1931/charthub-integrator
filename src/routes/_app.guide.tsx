@@ -143,7 +143,7 @@ const SECTIONS: Section[] = [
     id: "plans",
     group: "Account & settings",
     title: "Plans & billing",
-    blurb: "Subscription tiers, free trial, payment, cancellation, and reactivation.",
+    blurb: "Free plan, subscription tiers, payment, cancellation, and reactivation.",
     items: [
       { q: "Where to manage", a: "Settings → Billing to view your current plan, upgrade, downgrade, cancel, or reactivate. Changes take effect at the end of the current billing cycle unless otherwise noted." },
     ],
