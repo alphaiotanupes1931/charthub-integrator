@@ -4,8 +4,9 @@ import { PageHeader } from "@/components/PageHeader";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  BarChart3, Bot, MessageSquare, TrendingUp, TrendingDown, Target, Activity, HeartPulse, Calendar, Flame, Trash2, Sparkles,
+  BarChart3, Bot, MessageSquare, TrendingUp, TrendingDown, Target, Activity, HeartPulse, Calendar, Flame, Trash2, Sparkles, Lock,
 } from "lucide-react";
+import { useEntitlements } from "@/hooks/useEntitlements";
 import { toast } from "sonner";
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
