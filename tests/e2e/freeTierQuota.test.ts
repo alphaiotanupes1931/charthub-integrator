@@ -380,3 +380,81 @@ describe("monthly reset happens on the 1st in the account's own timezone", () =>
     expect(monthKey("Not/AZone", at)).toBe("2026-09");
   });
 });
+
+describe("an identical re-scan inside the 10 minute window is free", () => {
+  const sameScan = { symbol: "XAUUSD", timeframe: "15m", methodology: "wyckoff" } as const;
+  const at = (minutes: number) => new Date(db.now.getTime() + minutes * 60 * 1000);
+  const rescan = (minutes: number, over: Partial<typeof sameScan> = {}, limit?: number) =>
+    consumeGradeFlow({
+      entitlements: freeAccount(),
+      timezone: TZ,
+      store: db,
+      input: { outcome: "graded", ...sameScan, ...over },
+      now: at(minutes),
+      limit,
+    });
+
+  it("repeated identical scans across the window never reduce remaining grades", async () => {
+    const first = await rescan(0);
+    expect(first.charged).toBe(true);
+    expect(first.quota.used).toBe(1);
+    expect(first.quota.remaining).toBe(2);
+    const chargesAfterFirst = db.incrementAttempts;
+
+    // Hammer the same instrument + timeframe + methodology through the window.
+    for (const minutes of [0, 0.5, 1, 2, 4, 6, 8, 9, 9.983]) {
+      const again = await rescan(minutes);
+      expect(again.charged).toBe(false);
+      expect(again.reason).toBe("not_chargeable");
+      expect(again.quota.used).toBe(1);
+      expect(again.quota.remaining).toBe(2);
+      expect(quotaLabel(again.quota)).toBe("2 of 3 grades left this month");
+      expect(shouldPaywallOnIntent(again.quota)).toBe(false);
+    }
+
+    // Not a single further write reached the counter.
+    expect(db.incrementAttempts).toBe(chargesAfterFirst);
+    expect(await db.readUsed(monthKey(TZ, db.now))).toBe(1);
+  });
+
+  it("charges once at the window edge: free at 9:59, chargeable at exactly 10:00", async () => {
+    expect((await rescan(0)).charged).toBe(true);
+    expect((await rescan(9 + 59 / 60)).charged).toBe(false);
+
+    const atTen = await rescan(10);
+    expect(atTen.charged).toBe(true);
+    expect(atTen.quota.used).toBe(2);
+    expect(atTen.quota.remaining).toBe(1);
+  });
+
+  it("only an exact instrument + timeframe + methodology match is free", async () => {
+    // A raised limit here so the month cap cannot be confused with the cache.
+    expect((await rescan(0, {}, 10)).charged).toBe(true);
+    expect((await rescan(1, {}, 10)).charged).toBe(false); // exact match, free
+
+    // Each differing component is a different question and costs a grade.
+    expect((await rescan(1, { symbol: "EURUSD" }, 10)).charged).toBe(true);
+    expect((await rescan(1, { timeframe: "1h" }, 10)).charged).toBe(true);
+    expect((await rescan(1, { methodology: "smc" }, 10)).charged).toBe(true);
+    expect(await db.readUsed(monthKey(TZ, db.now))).toBe(4);
+  });
+
+  it("free re-scans still work when the last grade of the month was the one that paid for them", async () => {
+    // Spend down to the final grade, then buy the answer with it.
+    for (const symbol of ["EURUSD", "US30"]) {
+      expect((await rescan(0, { symbol })).charged).toBe(true);
+    }
+    const last = await rescan(0);
+    expect(last.charged).toBe(true);
+    expect(last.quota.remaining).toBe(0);
+    expect(last.quota.exhausted).toBe(true);
+
+    // Re-opening the same answer is free and never shows the paywall,
+    // even though the month is spent.
+    const repeat = await rescan(5);
+    expect(repeat.charged).toBe(false);
+    expect(repeat.reason).toBe("not_chargeable");
+    expect(repeat.quota.used).toBe(FREE_GRADES_PER_MONTH);
+    expect(db.incrementAttempts).toBe(FREE_GRADES_PER_MONTH);
+  });
+});
