@@ -203,11 +203,17 @@ function tdInterval(interval: string): string {
 
 function tickerToTwelveData(ticker: string): string | null {
   const t = ticker.toUpperCase();
+  // Crypto stays on Binance. "ETH/USD" matches the FX shape below, and the
+  // Twelve Data crypto series is a different venue/quote that can sit a few
+  // percent away from Binance spot, which made the Ethereum chart jump to a
+  // whole new price scale whenever Binance hiccuped for one refresh.
+  if (isCryptoTicker(t)) return null;
   if (/^[A-Z]{3}\/[A-Z]{3}$/.test(t)) return t;
   // Indices: TwelveData free tier doesn't cover ^NDX/^GSPC/^DJI reliably.
   // Skip TD for indices; Yahoo fallback returns the real index prices.
   return null;
 }
+
 
 
 async function fetchTwelveData(symbol: string, interval: string): Promise<OhlcBar[]> {
@@ -277,7 +283,7 @@ const CACHE = new Map<string, CacheEntry>();
 const TTL_MS = 30_000;
 const INFLIGHT = new Map<string, Promise<CacheEntry>>();
 
-async function fetchBestAvailable(ticker: string, interval: string): Promise<CacheEntry> {
+async function fetchBestAvailable(ticker: string, interval: string, prior?: CacheEntry): Promise<CacheEntry> {
   // One consistent feed order everywhere in the app: OANDA (broker-grade,
   // no daily quota) for FX/metals/indices/energy, Binance for crypto and as a
   // gold backstop via PAXG, Twelve Data only as a final safety net.
@@ -296,11 +302,27 @@ async function fetchBestAvailable(ticker: string, interval: string): Promise<Cac
     attempts.push(async () => ({ at: Date.now(), bars: await fetchTwelveData(tdSymbol, tdInterval(interval)), source: "twelvedata" }));
   }
 
+  // A fallback feed may quote a different venue. If its last price disagrees
+  // with the price we were already showing by more than 10%, it is a different
+  // market, not a new candle - drop it instead of rescaling the chart.
+  const priorLast = prior?.bars.at(-1)?.close;
+  const agreesWithPrior = (entry: CacheEntry) => {
+    if (!priorLast || entry.source === prior?.source) return true;
+    const last = entry.bars.at(-1)?.close;
+    if (!last || !Number.isFinite(last)) return false;
+    return Math.abs(last - priorLast) / priorLast <= 0.1;
+  };
+
   let lastError: unknown;
   for (const attempt of attempts) {
     try {
       const entry = await attempt();
-      if (entry.bars.length > 0) return entry;
+      if (entry.bars.length === 0) continue;
+      if (!agreesWithPrior(entry)) {
+        console.error("[ohlc] rejected off-scale feed", ticker, interval, entry.source, entry.bars.at(-1)?.close, "vs", priorLast);
+        continue;
+      }
+      return entry;
     } catch (error) {
       console.error("[ohlc] attempt failed", ticker, interval, (error as Error)?.message);
       lastError = error;
@@ -308,6 +330,7 @@ async function fetchBestAvailable(ticker: string, interval: string): Promise<Cac
   }
   throw lastError instanceof Error ? lastError : new Error("No OHLC source available");
 }
+
 
 export const Route = createFileRoute("/api/ohlc")({
   server: {
@@ -354,7 +377,7 @@ export const Route = createFileRoute("/api/ohlc")({
 
         let inflight = INFLIGHT.get(key);
         if (!inflight) {
-          inflight = fetchBestAvailable(t, iv)
+          inflight = fetchBestAvailable(t, iv, cached)
             .then((entry) => {
               CACHE.set(key, entry);
               return entry;
