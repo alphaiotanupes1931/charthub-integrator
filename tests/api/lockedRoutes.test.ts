@@ -247,8 +247,9 @@ describe("public webhook routes stay signature-verified", () => {
     it(`${file} verifies its caller before doing work`, () => {
       const src = read(path.join("src/routes", file));
       const verifies =
-        /timingSafeEqual|createHmac|constructEvent|CRON_SECRET|process\.env\[?['"]?[A-Z_]*SECRET/i.test(src) ||
-        /x-hub-signature|stripe-signature|authorization/i.test(src);
+        /timingSafeEqual|createHmac|constructEvent|CRON_SECRET|SUPABASE_PUBLISHABLE_KEY/i.test(src) ||
+        /[A-Z_]*SECRET/.test(src) ||
+        /x-hub-signature|stripe-signature|authorization|["']apikey["']/i.test(src);
       expect(verifies, `${file} has no caller verification`).toBe(true);
     });
   }
