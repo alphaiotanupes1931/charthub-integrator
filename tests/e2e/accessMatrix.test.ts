@@ -118,7 +118,9 @@ const ROUTES: RouteSpec[] = [
     route: "/autopilot",
     file: "src/routes/_app.autopilot.tsx",
     capability: "autopilot",
-    allowed: ["elite", "legacyTrial", "admin", "flagOffAnonymous", "flagOffTrial"],
+    // A legacy trial without a tier resolves to Pro, so it does not include
+    // the two Elite-only surfaces.
+    allowed: ["elite", "admin", "flagOffAnonymous", "flagOffTrial"],
   },
   {
     route: "/signals",
@@ -146,7 +148,7 @@ const ROUTES: RouteSpec[] = [
     route: "/broker (live orders)",
     file: null,
     capability: "broker_live",
-    allowed: ["elite", "legacyTrial", "admin", "flagOffAnonymous", "flagOffTrial"],
+    allowed: ["elite", "admin", "flagOffAnonymous", "flagOffTrial"],
   },
   { route: "unlimited grades", file: null, capability: "unlimited_grades", allowed: PAID_AND_ABOVE },
 
@@ -231,6 +233,21 @@ describe("access matrix — coach picker", () => {
       }
     },
   );
+
+  it("a tierless legacy trial runs at Pro level, so Elite-only surfaces stay locked", () => {
+    expect(personas.legacyTrial.ent.tier).toBe("pro");
+    expect(personas.legacyTrial.ent.onLegacyTrial).toBe(true);
+    expect(can(personas.legacyTrial.ent, "autopilot")).toBe(false);
+    expect(can(personas.legacyTrial.ent, "broker_live")).toBe(false);
+    // An Elite trial does get them.
+    const eliteTrial = resolveEntitlements({
+      flagEnabled: true,
+      subscription: { status: "trialing", tier: "elite", trialEnd: FUTURE },
+      now: NOW,
+    });
+    expect(can(eliteTrial, "autopilot")).toBe(true);
+    expect(can(eliteTrial, "broker_live")).toBe(true);
+  });
 
   it("an expired trial is back to one coach", () => {
     expect(personas.expiredTrial.ent.coachAllowance).toBe(1);
