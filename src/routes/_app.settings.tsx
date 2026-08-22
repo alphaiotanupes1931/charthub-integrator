@@ -652,31 +652,65 @@ function BillingCard() {
         <CreditCard className="size-5 text-primary" />
         Subscription
       </h2>
-      <div className="text-sm text-muted-foreground mb-2">Status</div>
-      <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-xl mb-5 ${
-        active
-          ? "bg-primary text-primary-foreground"
-          : "bg-muted text-muted-foreground"
-      }`}>
-        <ShieldCheck className="size-3.5" />
-        {sub ? (
-          <>
-            {sub.status}
-            {sub.tier ? ` · ${sub.tier}` : ""}
-            {sub.cancel_at_period_end ? " (cancelling)" : ""}
-          </>
-        ) : "No subscription"}
-      </span>
-      {sub?.current_period_end && (
-        <div className="text-xs text-muted-foreground mb-4">
-          {sub.cancel_at_period_end
-            ? "Access ends"
-            : sub.status === "trialing"
-              ? "Trial ends"
-              : "Renews"} on{" "}
-          {new Date(sub.current_period_end).toLocaleDateString()}
+      <div
+        className="mb-5 grid gap-4 rounded-xl border border-border bg-muted/30 p-4 sm:grid-cols-3"
+        data-testid="billing-summary"
+      >
+        <div>
+          <div className="text-xs uppercase tracking-wide text-muted-foreground">Current plan</div>
+          <div className="mt-1 text-sm font-semibold capitalize" data-testid="billing-plan">
+            {sub?.tier ?? "Free"}
+          </div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            {active ? sub?.status : sub ? `Subscription ${sub.status}` : "No paid subscription"}
+          </div>
         </div>
-      )}
+        <div>
+          <div className="text-xs uppercase tracking-wide text-muted-foreground">
+            {sub?.cancel_at_period_end
+              ? "Access ends"
+              : sub?.status === "trialing"
+                ? "Trial ends"
+                : "Next renewal"}
+          </div>
+          <div className="mt-1 text-sm font-semibold" data-testid="billing-renewal">
+            {sub?.current_period_end
+              ? new Date(sub.current_period_end).toLocaleDateString(undefined, {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })
+              : "—"}
+          </div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            {sub?.current_period_end
+              ? sub.cancel_at_period_end
+                ? "Then your account moves to the free plan"
+                : "Billed automatically on this date"
+              : "Nothing scheduled"}
+          </div>
+        </div>
+        <div>
+          <div className="text-xs uppercase tracking-wide text-muted-foreground">Cancellation</div>
+          <span
+            data-testid="billing-cancel-state"
+            className={`mt-1 inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1 text-xs font-semibold ${
+              sub?.cancel_at_period_end
+                ? "bg-muted text-muted-foreground"
+                : active
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground"
+            }`}
+          >
+            <ShieldCheck className="size-3.5" />
+            {sub?.cancel_at_period_end
+              ? "Cancellation scheduled"
+              : active
+                ? "Membership active"
+                : "Not subscribed"}
+          </span>
+        </div>
+      </div>
       <div className="flex flex-wrap gap-2">
         {active ? (
           <>
