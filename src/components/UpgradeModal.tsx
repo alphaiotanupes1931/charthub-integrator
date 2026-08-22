@@ -63,7 +63,7 @@ export function UpgradeModal({ open, onClose, reason, used, limit }: Props) {
       <div className="w-full max-w-md rounded-t-2xl border border-border bg-card p-6 sm:rounded-xl">
         <div className="flex items-start justify-between gap-4">
           <h2 className="text-base font-semibold text-foreground" data-testid="upgrade-title">{copy.title}</h2>
-          <button onClick={onClose} className="rounded-full p-1 text-muted-foreground hover:bg-accent" aria-label="Close">
+          <button onClick={dismiss} className="rounded-full p-1 text-muted-foreground hover:bg-accent" aria-label="Close">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -77,14 +77,17 @@ export function UpgradeModal({ open, onClose, reason, used, limit }: Props) {
         <div className="mt-6 flex flex-col gap-2">
           <Link
             to="/pricing"
-            onClick={onClose}
+            onClick={() => {
+              track("upgrade_cta_clicked", { reason });
+              onClose();
+            }}
             data-testid="upgrade-primary-cta"
             className="inline-flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground hover:opacity-90"
           >
             See plans
           </Link>
           <button
-            onClick={onClose}
+            onClick={dismiss}
             data-testid="upgrade-secondary-cta"
             className="inline-flex h-10 items-center justify-center rounded-lg border border-border px-4 text-sm font-medium text-foreground hover:bg-accent"
           >
