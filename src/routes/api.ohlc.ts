@@ -203,11 +203,17 @@ function tdInterval(interval: string): string {
 
 function tickerToTwelveData(ticker: string): string | null {
   const t = ticker.toUpperCase();
+  // Crypto stays on Binance. "ETH/USD" matches the FX shape below, and the
+  // Twelve Data crypto series is a different venue/quote that can sit a few
+  // percent away from Binance spot, which made the Ethereum chart jump to a
+  // whole new price scale whenever Binance hiccuped for one refresh.
+  if (isCryptoTicker(t)) return null;
   if (/^[A-Z]{3}\/[A-Z]{3}$/.test(t)) return t;
   // Indices: TwelveData free tier doesn't cover ^NDX/^GSPC/^DJI reliably.
   // Skip TD for indices; Yahoo fallback returns the real index prices.
   return null;
 }
+
 
 
 async function fetchTwelveData(symbol: string, interval: string): Promise<OhlcBar[]> {
