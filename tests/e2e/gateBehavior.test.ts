@@ -119,7 +119,12 @@ describe("gated routes never redirect the denied user away", () => {
       } else {
         expect(src).toMatch(new RegExp(`allow\\("${route.capability}"\\)`));
       }
-      if (route.reason) expect(src).toContain("UpgradeModal");
+      // Whole-page locks get the modal from CapabilityGate; per-item locks
+      // render their own modal on the page.
+      if (route.denial === "inline-item-lock" && route.reason) {
+        expect(src).toContain("UpgradeModal");
+        expect(src).toContain(`reason="${route.reason}"`);
+      }
     });
   }
 });
