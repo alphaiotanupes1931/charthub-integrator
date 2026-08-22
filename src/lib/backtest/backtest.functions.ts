@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { requireCapability } from "@/lib/capability-middleware";
 import { BacktestInput } from "./schemas";
 import type { BtBar, BtResult } from "./engine";
 
@@ -8,6 +9,7 @@ export type BacktestResponse =
   | { ok: false; error: string };
 
 export const runHistoricalBacktest = createServerFn({ method: "POST" })
+  .middleware([requireCapability("strategy_library")])
   .inputValidator((input: unknown) => BacktestInput.parse(input))
   .handler(async ({ data }): Promise<BacktestResponse> => {
     const { getHistory } = await import("./history.server");
