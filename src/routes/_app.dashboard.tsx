@@ -1024,6 +1024,11 @@ function Dashboard() {
   const reportSystemNoticeFn = useServerFn(reportSystemNotice);
   const createChatThreadFn = useServerFn(createChatThread);
 
+  // Free-plan grade quota. Paid and admin accounts get an inactive quota, so the
+  // badge and paywall below simply never render for them.
+  const ent = useEntitlements();
+  const [paywall, setPaywall] = useState(false);
+
   const sendToChat = (prompt: string, opts?: { focusChat?: boolean; targetThreadId?: string | null }) => {
     setRightOpen(true);
     setChatPanelView("conversation");
