@@ -1131,6 +1131,30 @@ export type Database = {
         }
         Relationships: []
       }
+      product_events: {
+        Row: {
+          created_at: string
+          event: string
+          id: number
+          props: Json
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event: string
+          id?: number
+          props?: Json
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event?: string
+          id?: number
+          props?: Json
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           ai_model_pref: string
