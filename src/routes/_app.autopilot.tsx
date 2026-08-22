@@ -535,7 +535,7 @@ function AutopilotPage() {
           <p className="mt-3 text-sm text-muted-foreground">No autopilot activity recorded yet.</p>
         ) : (
           <ul className="mt-3 divide-y divide-border">
-            {(eventsQuery.data ?? []).map((e) => (
+            {(Array.isArray(eventsQuery.data) ? eventsQuery.data : []).map((e) => (
               <li key={e.id} className="flex flex-wrap items-baseline gap-2 py-2 text-xs">
                 <span className="w-20 shrink-0 rounded-xl border border-border/60 px-2 py-0.5 text-center text-[10px] tracking-wide text-muted-foreground">
                   {e.kind}

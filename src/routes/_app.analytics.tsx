@@ -146,7 +146,7 @@ function AnalyticsPage() {
   });
 
   const mergedTrades = useMemo(() => {
-    const server: LocalTrade[] = (analytics.data?.paperTrades ?? []).map(serverTradeToLocal);
+    const server: LocalTrade[] = (Array.isArray(analytics.data?.paperTrades) ? analytics.data.paperTrades : []).map(serverTradeToLocal);
     const all = [...trades, ...server].sort((a, b) => a.createdAt - b.createdAt);
     return all;
   }, [trades, analytics.data?.paperTrades]);
@@ -259,7 +259,9 @@ function AnalyticsPage() {
     reportMutation.mutate({ weekEnding: endOfWeek(new Date()) });
   };
 
-  const hasAnyData = mergedTrades.length > 0 || (analytics.data?.proposals.length ?? 0) > 0;
+  // A denied or failed request can resolve to a shape without these arrays, so
+  // every read stays optional - the preview must never crash the page.
+  const hasAnyData = mergedTrades.length > 0 || (analytics.data?.proposals?.length ?? 0) > 0;
 
   // Free plan: a real preview, not an empty locked page. The trade count is the
   // user's actual count so it's obvious the data is being kept, and the numbers
@@ -533,7 +535,7 @@ function AnalyticsPage() {
           {serverTab !== "autopilot" && stats?.perSymbol.length === 0 && (
             <p className="text-sm text-muted-foreground">No {serverTab} trades available.</p>
           )}
-          {serverTab === "autopilot" && (analytics.data?.proposals.length ?? 0) === 0 && (
+          {serverTab === "autopilot" && (analytics.data?.proposals?.length ?? 0) === 0 && (
             <p className="text-sm text-muted-foreground">No autopilot proposals yet.</p>
           )}
         </div>
