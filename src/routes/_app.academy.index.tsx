@@ -2,7 +2,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHeader } from "@/components/PageHeader";
 import { ACADEMY, findLesson, type Lesson } from "@/lib/academy-content";
 import { useAcademyProgress } from "@/hooks/useAcademyProgress";
-import { GraduationCap, CheckCircle2, ArrowRight, PlayCircle, Flame, Target, Award } from "lucide-react";
+import { GraduationCap, CheckCircle2, ArrowRight, PlayCircle, Flame, Target, Award, Lock } from "lucide-react";
+import { useEntitlements } from "@/hooks/useEntitlements";
+import { academyModuleAllowed } from "@/lib/entitlements";
+import { UpgradeModal } from "@/components/UpgradeModal";
+import { useState } from "react";
 
 export const Route = createFileRoute("/_app/academy/")({
   head: () => ({
@@ -19,6 +23,10 @@ export const Route = createFileRoute("/_app/academy/")({
 });
 
 function AcademyIndex() {
+  const ent = useEntitlements();
+  const [payOpen, setPayOpen] = useState(false);
+  const moduleOpen = (id: number) =>
+    ent.loading || !ent.snapshot || academyModuleAllowed(ent.snapshot.entitlements, id);
   const {
     moduleCompletion,
     lastModule,
@@ -179,6 +187,7 @@ function AcademyIndex() {
           const rest = m.lessons.length - 3;
           const quiz = quizScores[String(m.id)];
           const certEligible = done === total && quiz && quiz.score / quiz.total >= 2 / 3;
+          const unlocked = moduleOpen(m.id);
           return (
             <div
               key={m.id}
@@ -221,13 +230,22 @@ function AcademyIndex() {
               </div>
 
               <div className="mt-auto flex items-center gap-3">
-                <Link
-                  to="/academy/$moduleId"
-                  params={{ moduleId: String(m.id) }}
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-primary"
-                >
-                  {done === 0 ? "Start module" : done === total ? "Review module" : "Continue"} <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
+                {unlocked ? (
+                  <Link
+                    to="/academy/$moduleId"
+                    params={{ moduleId: String(m.id) }}
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-primary"
+                  >
+                    {done === 0 ? "Start module" : done === total ? "Review module" : "Continue"} <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                ) : (
+                  <button
+                    onClick={() => setPayOpen(true)}
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground"
+                  >
+                    <Lock className="h-3.5 w-3.5" /> Unlock module
+                  </button>
+                )}
                 {certEligible && (
                   <Link
                     to="/academy/certificate/$moduleId"
@@ -242,6 +260,7 @@ function AcademyIndex() {
           );
         })}
       </div>
+      <UpgradeModal open={payOpen} onClose={() => setPayOpen(false)} reason="academy" />
     </div>
   );
 }
