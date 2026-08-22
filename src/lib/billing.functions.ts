@@ -54,16 +54,25 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     }
 
     const origin = originFromRequest();
-    // Only offer trial if user has never had one before
+    // Permanent free tier replaces the trial: once the flag is on, checkout is
+    // straight to paid. Otherwise only offer a trial if they never had one.
+    const { data: flag } = await supabaseAdmin
+      .from("app_flags")
+      .select("enabled")
+      .eq("key", "free_tier_enabled")
+      .maybeSingle();
+    const freeTierOn = !!flag?.enabled;
     const hasHadTrial = !!existing?.trial_end;
+    const offerTrial = !freeTierOn && !hasHadTrial;
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: customerId,
       line_items: [{ price: priceId, quantity: 1 }],
-      subscription_data: hasHadTrial
-        ? { metadata: { user_id: userId } }
-        : { trial_period_days: 7, metadata: { user_id: userId } },
+      subscription_data: offerTrial
+        ? { trial_period_days: 7, metadata: { user_id: userId } }
+        : { metadata: { user_id: userId } },
+
       success_url: `${origin}/dashboard?checkout=success`,
       cancel_url: `${origin}/pricing?checkout=cancelled`,
       allow_promotion_codes: true,
