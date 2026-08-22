@@ -7,8 +7,26 @@
 // first (401) and a signed-in free account fails the capability check (403).
 import { createMiddleware } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { assertCapability } from "@/lib/capability-guard";
+import { assertCapability, unauthorizedResponse } from "@/lib/capability-guard";
 import { resolveEntitlements, type Capability, type Entitlements } from "@/lib/entitlements";
+
+/** True when the header carries something shaped like a bearer JWT. */
+export function isBearerJwt(header: string | null | undefined): boolean {
+  if (!header || !header.startsWith("Bearer ")) return false;
+  const token = header.slice("Bearer ".length).trim();
+  return token.length > 0 && token.split(".").length === 3;
+}
+
+/**
+ * Runs before requireSupabaseAuth so a missing/malformed token produces a real
+ * 401 Response instead of a generic thrown Error (which surfaces as a 500).
+ */
+export const requireAuthOr401 = createMiddleware({ type: "function" }).server(async ({ next }) => {
+  const { getRequest } = await import("@tanstack/react-start/server");
+  const request = getRequest();
+  if (!isBearerJwt(request?.headers?.get("authorization"))) throw unauthorizedResponse();
+  return next();
+});
 
 /** Reads the flag, subscription and admin row for a user and resolves entitlements. */
 export async function resolveEntitlementsForUser(userId: string): Promise<Entitlements> {
