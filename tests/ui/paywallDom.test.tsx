@@ -11,14 +11,17 @@
 // keyed off data-testid hooks and visible copy.
 
 import { describe, expect, it, vi, beforeEach } from "vitest";
+import type React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { resolveEntitlements, can, type Capability, type Entitlements } from "@/lib/entitlements";
 
 // Router Link -> plain anchor so the modal renders outside a router context.
 vi.mock("@tanstack/react-router", () => ({
-  Link: ({ to, children, ...rest }: never & { to: string; children?: unknown }) =>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ({ type: "a", props: { href: to, ...(rest as object), children }, key: null, $$typeof: Symbol.for("react.element") }) as never,
+  Link: ({ to, children, ...rest }: { to: string; children?: React.ReactNode }) => (
+    <a href={to} {...rest}>
+      {children}
+    </a>
+  ),
 }));
 
 const entState: { value: Entitlements; loading: boolean } = {
