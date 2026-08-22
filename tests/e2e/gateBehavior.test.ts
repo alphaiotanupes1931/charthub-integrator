@@ -79,14 +79,16 @@ type GatedRoute = {
   denial: DenialStyle;
   /** Upgrade modal reason string the page passes. */
   reason?: string;
+  /** Per-item helper the page uses instead of a whole-page capability check. */
+  helper?: string;
 };
 
 const gatedRoutes: GatedRoute[] = [
   { url: "/signals", file: "_app.signals.tsx", capability: "signal_engine", denial: "inline-lock", reason: "signals" },
   { url: "/autopilot", file: "_app.autopilot.tsx", capability: "autopilot", denial: "inline-lock", reason: "autopilot" },
   { url: "/analytics", file: "_app.analytics.tsx", capability: "analytics", denial: "inline-preview" },
-  { url: "/coaches", file: "_app.coaches.tsx", capability: "coaching", denial: "inline-item-lock", reason: "coaches" },
-  { url: "/academy", file: "_app.academy.index.tsx", capability: "academy_full", denial: "inline-item-lock", reason: "academy" },
+  { url: "/coaches", file: "_app.coaches.tsx", capability: "unlimited_grades", denial: "inline-item-lock", reason: "coaches", helper: "coachAllowed" },
+  { url: "/academy", file: "_app.academy.index.tsx", capability: "academy_all", denial: "inline-item-lock", reason: "academy", helper: "academyModuleAllowed" },
   { url: "/strategies", file: "_app.strategies.index.tsx", capability: "strategy_library", denial: "inline-item-lock" },
 ];
 
@@ -112,8 +114,10 @@ describe("gated routes never redirect the denied user away", () => {
       } else if (route.denial === "inline-preview") {
         expect(src).toMatch(new RegExp(`allow\\("${route.capability}"\\)`));
         expect(src).toContain("blur-[6px]");
+      } else if (route.helper) {
+        expect(src).toContain(route.helper);
       } else {
-        expect(src).toMatch(new RegExp(`(allow|Allowed)\\(`));
+        expect(src).toMatch(new RegExp(`allow\\("${route.capability}"\\)`));
       }
       if (route.reason) expect(src).toContain("UpgradeModal");
     });
