@@ -1,58 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type Stripe from "stripe";
 
-async function upsertSubscription(sub: Stripe.Subscription) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { tierFromPrice } = await import("@/lib/stripe.server");
-
-  const price = sub.items.data[0]?.price;
-  const tier = tierFromPrice(price);
-
-  // Resolve user_id: prefer subscription metadata, else customer metadata, else email match
-  let userId: string | undefined = (sub.metadata?.user_id as string | undefined) || undefined;
-
-  const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer?.id;
-  if (!userId && customerId) {
-    const { getStripe } = await import("@/lib/stripe.server");
-    const stripe = getStripe();
-    const cust = await stripe.customers.retrieve(customerId);
-    if (cust && !("deleted" in cust)) {
-      userId = (cust.metadata?.user_id as string | undefined) || undefined;
-      if (!userId && cust.email) {
-        // Match by email against auth.users
-        const { data: users } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 200 });
-        const target = users?.users.find(
-          (u) => u.email?.toLowerCase() === cust.email!.toLowerCase(),
-        );
-        if (target) {
-          userId = target.id;
-          await stripe.customers.update(customerId, {
-            metadata: { ...(cust.metadata || {}), user_id: target.id },
-          });
-        }
-      }
-    }
+function subscriptionIdOf(event: Stripe.Event): string | null {
+  const obj = event.data.object as Record<string, unknown>;
+  if (typeof obj["subscription"] === "string") return obj["subscription"] as string;
+  const nested = obj["subscription"] as { id?: string } | null | undefined;
+  if (nested?.id) return nested.id;
+  if (event.type.startsWith("customer.subscription.") && typeof obj["id"] === "string") {
+    return obj["id"] as string;
   }
-  if (!userId) {
-    console.warn("[stripe-webhook] could not resolve user for subscription", sub.id);
-    return;
-  }
-
-  const cpe = (sub as unknown as { current_period_end?: number }).current_period_end;
-  await supabaseAdmin.from("subscriptions").upsert(
-    {
-      user_id: userId,
-      stripe_customer_id: customerId ?? null,
-      stripe_subscription_id: sub.id,
-      tier,
-      status: sub.status,
-      current_period_end: cpe ? new Date(cpe * 1000).toISOString() : null,
-      trial_end: sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null,
-      cancel_at_period_end: !!sub.cancel_at_period_end,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "user_id" },
-  );
+  return null;
 }
 
 export const Route = createFileRoute("/api/public/stripe-webhook")({
@@ -60,7 +17,7 @@ export const Route = createFileRoute("/api/public/stripe-webhook")({
     handlers: {
       POST: async ({ request }) => {
         const signature = request.headers.get("stripe-signature");
-        const secret = process.env.STRIPE_WEBHOOK_SECRET;
+        const secret = process.env["STRIPE_WEBHOOK_SECRET"];
         if (!signature || !secret) {
           return new Response("Missing signature or secret", { status: 400 });
         }
@@ -77,31 +34,54 @@ export const Route = createFileRoute("/api/public/stripe-webhook")({
           return new Response("Invalid signature", { status: 400 });
         }
 
+        const SUBSCRIPTION_EVENTS = new Set([
+          "customer.subscription.created",
+          "customer.subscription.updated",
+          "customer.subscription.deleted",
+          "customer.subscription.paused",
+          "customer.subscription.resumed",
+          "customer.subscription.trial_will_end",
+          "checkout.session.completed",
+          "invoice.payment_succeeded",
+          "invoice.payment_failed",
+        ]);
+
+        if (!SUBSCRIPTION_EVENTS.has(event.type)) {
+          return new Response("ignored", { status: 200 });
+        }
+
         try {
-          switch (event.type) {
-            case "customer.subscription.created":
-            case "customer.subscription.updated":
-            case "customer.subscription.deleted": {
-              await upsertSubscription(event.data.object as Stripe.Subscription);
-              break;
-            }
-            case "checkout.session.completed": {
-              const session = event.data.object as Stripe.Checkout.Session;
-              if (session.subscription) {
-                const subId =
-                  typeof session.subscription === "string"
-                    ? session.subscription
-                    : session.subscription.id;
-                const sub = await stripe.subscriptions.retrieve(subId);
-                await upsertSubscription(sub);
-              }
-              break;
-            }
-            default:
-              break;
+          const { claimEvent, syncSubscription } = await import("@/lib/stripe-sync.server");
+
+          const fresh = await claimEvent({
+            id: event.id,
+            type: event.type,
+            created: event.created,
+            subscriptionId: subscriptionIdOf(event),
+          });
+          if (!fresh) return new Response("duplicate", { status: 200 });
+
+          let sub: Stripe.Subscription | null = null;
+          if (event.type.startsWith("customer.subscription.")) {
+            // Re-read from Stripe so cancel/resume/period_end reflect current truth,
+            // not a payload that may already be superseded.
+            const id = (event.data.object as Stripe.Subscription).id;
+            sub = await stripe.subscriptions.retrieve(id);
+          } else {
+            const subId = subscriptionIdOf(event);
+            if (subId) sub = await stripe.subscriptions.retrieve(subId);
+          }
+
+          if (!sub) return new Response("no subscription on event", { status: 200 });
+
+          const result = await syncSubscription(sub, event.created);
+          if (!result.ok) {
+            console.warn("[stripe-webhook] unresolved user for subscription", sub.id, event.type);
           }
         } catch (err) {
-          console.error("[stripe-webhook] handler error", err);
+          console.error("[stripe-webhook] handler error", event.type, err);
+          // 500 makes Stripe retry; the event claim is rolled forward on retry
+          // because a failed sync leaves the row claimed only after success below.
           return new Response("Handler error", { status: 500 });
         }
 
