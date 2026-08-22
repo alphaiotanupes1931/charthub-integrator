@@ -24,6 +24,7 @@ import {
 } from "@/lib/autopilot.functions";
 import { placeBrokerOrder } from "@/lib/broker-oanda.functions";
 import { CapabilityGate } from "@/components/CapabilityGate";
+import { guarded } from "@/lib/query-guard";
 
 export const Route = createFileRoute("/_app/autopilot")({
   head: () => ({
@@ -101,23 +102,30 @@ function AutopilotPage() {
   const loadEvents = useServerFn(listAutopilotEvents);
   const togglePause = useServerFn(setAutopilotPause);
 
+  // AutopilotPage only mounts for entitled accounts, but a lapsed subscription
+  // can still be denied mid-session: guarded() surfaces that as an error state
+  // rather than letting the denial body reach .filter/.map.
   const settingsQuery = useQuery({
     queryKey: ["autopilot", "settings"],
-    queryFn: () => loadSettings(),
+    queryFn: () => guarded(loadSettings()),
+    retry: false,
   });
   const proposalsQuery = useQuery({
     queryKey: ["autopilot", "proposals"],
-    queryFn: () => loadProposals(),
+    queryFn: () => guarded(loadProposals()),
+    retry: false,
     refetchInterval: 30_000,
   });
 
   const eventsQuery = useQuery({
     queryKey: ["autopilot", "events"],
-    queryFn: () => loadEvents(),
+    queryFn: () => guarded(loadEvents()),
+    retry: false,
     refetchInterval: 60_000,
   });
 
   const settings: AutopilotSettings = settingsQuery.data ?? DEFAULT_AUTOPILOT_SETTINGS;
+  const proposals = Array.isArray(proposalsQuery.data) ? proposalsQuery.data : [];
   const [liveConfirmOpen, setLiveConfirmOpen] = useState(false);
 
   const save = useMutation({
@@ -187,12 +195,12 @@ function AutopilotPage() {
   });
 
   const pending = useMemo(
-    () => (proposalsQuery.data ?? []).filter((p) => p.status === "pending"),
-    [proposalsQuery.data],
+    () => proposals.filter((p) => p.status === "pending"),
+    [proposals],
   );
   const history = useMemo(
-    () => (proposalsQuery.data ?? []).filter((p) => p.status !== "pending"),
-    [proposalsQuery.data],
+    () => proposals.filter((p) => p.status !== "pending"),
+    [proposals],
   );
 
   function setMode(mode: AutopilotMode) {

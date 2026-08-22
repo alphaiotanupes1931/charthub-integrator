@@ -7,6 +7,7 @@ import {
   BarChart3, Bot, MessageSquare, TrendingUp, TrendingDown, Target, Activity, HeartPulse, Calendar, Flame, Trash2, Sparkles, Lock,
 } from "lucide-react";
 import { useEntitlements } from "@/hooks/useEntitlements";
+import { guarded } from "@/lib/query-guard";
 import { toast } from "sonner";
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -130,7 +131,11 @@ function AnalyticsPage() {
 
   const analytics = useQuery({
     queryKey: ["performanceAnalytics"],
-    queryFn: () => getAnalytics(),
+    // Free accounts get a 403 here; guarded() makes that an error instead of
+    // data so the blurred preview renders rather than crashing on the body.
+    queryFn: () => guarded(getAnalytics()),
+    enabled: ent.loading || ent.allow("analytics"),
+    retry: false,
   });
 
   const reportMutation = useMutation({
