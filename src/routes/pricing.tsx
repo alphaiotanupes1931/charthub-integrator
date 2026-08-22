@@ -43,6 +43,7 @@ function PricingPage() {
   const checkout = useServerFn(createCheckoutSession);
   const [userReady, setUserReady] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
+  const freeTier = useFreeTierFlag();
   const [hasHadTrial, setHasHadTrial] = useState(false);
   const [inactive, setInactive] = useState(false);
   const [loading, setLoading] = useState<string | null>(null);
@@ -108,13 +109,15 @@ function PricingPage() {
         <div className="mb-10 text-center">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/60 px-3 py-1 text-xs text-muted-foreground">
             <Sparkles className="h-3 w-3" />
-            {hasHadTrial ? "Reactivate your subscription" : "7-day free trial on any plan"}
+            {freeTier ? "Free plan available, upgrade anytime" : hasHadTrial ? "Reactivate your subscription" : "7-day free trial on any plan"}
           </div>
           <h1 className="font-display text-4xl font-medium tracking-tight sm:text-5xl">Choose your plan</h1>
           <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
             {inactive
               ? "Your subscription is inactive. Pick a plan to keep using TradeMind."
-              : "Start free for 7 days. Cancel anytime from your billing portal."}
+              : freeTier
+                ? "The free plan gives you 3 signal grades a month, plus journal and Academy basics forever. Upgrade for the coaching layer and analytics."
+                : "Start free for 7 days. Cancel anytime from your billing portal."}
           </p>
           {!signedIn && userReady && (
             <p className="mx-auto mt-3 max-w-xl text-xs text-muted-foreground">
@@ -156,7 +159,7 @@ function PricingPage() {
                   p.popular ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-foreground text-background hover:bg-foreground/90"
                 } disabled:cursor-not-allowed disabled:opacity-50`}
               >
-                {loading === p.id ? <Loader2 className="h-4 w-4 animate-spin" /> : hasHadTrial ? "Subscribe" : "Start 7-day free trial"}
+                {loading === p.id ? <Loader2 className="h-4 w-4 animate-spin" /> : freeTier || hasHadTrial ? "Subscribe" : "Start 7-day free trial"}
               </button>
             </div>
           ))}
