@@ -377,7 +377,7 @@ export const Route = createFileRoute("/api/ohlc")({
 
         let inflight = INFLIGHT.get(key);
         if (!inflight) {
-          inflight = fetchBestAvailable(t, iv)
+          inflight = fetchBestAvailable(t, iv, cached)
             .then((entry) => {
               CACHE.set(key, entry);
               return entry;
