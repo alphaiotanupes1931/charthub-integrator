@@ -2,7 +2,7 @@
 // from the cron reconciler.
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireCapability } from "@/lib/capability-middleware";
 import {
   getLastPrice,
   evaluateExit,
@@ -37,7 +37,7 @@ async function ensureAccountRow(supabase: any, userId: string): Promise<AccountR
 }
 
 export const getPaperState = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("broker_paper")])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const account = await ensureAccountRow(supabase, userId);
@@ -55,7 +55,7 @@ export const getPaperState = createServerFn({ method: "GET" })
   });
 
 export const setTestingMode = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("broker_paper")])
   .inputValidator((raw) => z.object({ enabled: z.boolean() }).parse(raw))
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
@@ -69,7 +69,7 @@ export const setTestingMode = createServerFn({ method: "POST" })
   });
 
 export const resetPaperAccount = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("broker_paper")])
   .inputValidator((raw) => z.object({ startingBalance: z.number().positive().max(10_000_000).optional() }).parse(raw))
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
@@ -93,7 +93,7 @@ export const resetPaperAccount = createServerFn({ method: "POST" })
   });
 
 export const resumePaperAccount = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("broker_paper")])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const account = await ensureAccountRow(supabase, userId);
@@ -116,7 +116,7 @@ const openInput = z.object({
 });
 
 export const openPaperPosition = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("broker_paper")])
   .inputValidator((raw) => openInput.parse(raw))
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
@@ -148,7 +148,7 @@ export const openPaperPosition = createServerFn({ method: "POST" })
   });
 
 export const closePaperPosition = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("broker_paper")])
   .inputValidator((raw) => z.object({ id: z.string().uuid() }).parse(raw))
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;

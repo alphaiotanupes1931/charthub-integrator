@@ -1,7 +1,7 @@
 // User-facing briefing server functions.
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireCapability } from "@/lib/capability-middleware";
 import { buildBriefingBody, sendTelegramMessage, sendDiscordWebhook, sendDiscordShared } from "@/lib/briefings.server";
 
 function randCode() {
@@ -22,7 +22,7 @@ async function ensurePrefs(supabase: any, userId: string) {
 }
 
 export const getBriefingState = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("briefings")])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const prefs = await ensurePrefs(supabase, userId);
@@ -50,7 +50,7 @@ const prefsInput = z.object({
 });
 
 export const updateBriefingPrefs = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("briefings")])
   .inputValidator((raw) => prefsInput.parse(raw))
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
@@ -68,7 +68,7 @@ export const updateBriefingPrefs = createServerFn({ method: "POST" })
   });
 
 export const generateTelegramLinkCode = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("briefings")])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     await ensurePrefs(supabase, userId);
@@ -82,7 +82,7 @@ export const generateTelegramLinkCode = createServerFn({ method: "POST" })
   });
 
 export const unlinkTelegram = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("briefings")])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const { error } = await supabase
@@ -94,7 +94,7 @@ export const unlinkTelegram = createServerFn({ method: "POST" })
   });
 
 export const setDiscordWebhook = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("briefings")])
   .inputValidator((raw) =>
     z.object({
       webhook_url: z.string().url().max(500).regex(/^https:\/\/(discord\.com|discordapp\.com)\/api\/webhooks\//, "Must be a Discord webhook URL"),
@@ -115,7 +115,7 @@ export const setDiscordWebhook = createServerFn({ method: "POST" })
   });
 
 export const unlinkDiscord = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("briefings")])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const { error } = await supabase
@@ -127,7 +127,7 @@ export const unlinkDiscord = createServerFn({ method: "POST" })
   });
 
 export const sendBriefingNow = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("briefings")])
   .inputValidator((raw) => z.object({ kind: z.enum(["morning", "evening", "ad_hoc"]).default("ad_hoc") }).parse(raw))
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;

@@ -3,7 +3,7 @@
 // localStorage are merged on the client.
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireCapability } from "@/lib/capability-middleware";
 
 export type ServerTrade = {
   id: string;
@@ -90,7 +90,7 @@ function serverProposalFromRow(row: Record<string, unknown>): ServerProposal {
 }
 
 export const getPerformanceAnalytics = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("analytics")])
   .handler(async ({ context }): Promise<PerformanceAnalytics> => {
     const [{ data: paperData }, { data: proposalData }, { data: reportData }] = await Promise.all([
       context.supabase
@@ -195,7 +195,7 @@ function computeWeeklyMetrics(trades: ServerTrade[]): WeeklyMetrics {
 }
 
 export const generateWeeklyReport = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("analytics")])
   .inputValidator((raw: unknown) =>
     z
       .object({
@@ -257,7 +257,7 @@ export const generateWeeklyReport = createServerFn({ method: "POST" })
   });
 
 export const deleteWeeklyReport = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("analytics")])
   .inputValidator((raw: unknown) => z.object({ id: z.string().uuid() }).parse(raw))
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase

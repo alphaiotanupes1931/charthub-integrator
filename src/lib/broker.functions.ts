@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireCapability } from "@/lib/capability-middleware";
 
 const RecordSchema = z.object({
   brokerName: z.string().min(1),
@@ -9,7 +9,7 @@ const RecordSchema = z.object({
 });
 
 export const recordBrokerConnection = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("broker_live")])
   .inputValidator((data: unknown) => RecordSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase
