@@ -161,17 +161,21 @@ const ROUTES: RouteSpec[] = [
   { route: "/community", file: null, capability: "community", allowed: ALL },
 ];
 
+// Persona-first grouping: CI shards by persona (MATRIX_PERSONAS=free,basic), and
+// a failing report reads "persona: free … locks /autopilot", so the regression is
+// named by who broke and where, without opening the test file.
 describe("access matrix — every gated route against every persona", () => {
-  for (const spec of ROUTES) {
-    describe(`${spec.route} (${spec.capability})`, () => {
-      for (const id of ALL) {
+  for (const id of SELECTED) {
+    describe(`persona: ${id} (${personas[id].label})`, () => {
+      for (const spec of ROUTES) {
         const shouldPass = spec.allowed.includes(id);
-        it(`${shouldPass ? "allows" : "locks"} ${personas[id].label}`, () => {
+        it(`${shouldPass ? "allows" : "locks"} ${spec.route} [${spec.capability}]`, () => {
           expect(can(personas[id].ent, spec.capability)).toBe(shouldPass);
         });
       }
     });
   }
+
 
   it("covers every capability the resolver knows about", () => {
     const covered = new Set(ROUTES.map((r) => r.capability));
