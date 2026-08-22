@@ -73,7 +73,7 @@ const TIER_CAPABILITIES: Record<Tier, Capability[]> = {
  * Marcus still owes us the number and which two (§13.1), so answering it is an
  * edit here, not a rewrite.
  */
-export const COACH_ALLOWANCE: Record<Tier, number> = { free: 1, basic: 2, pro: 5, elite: 5 };
+export const COACH_ALLOWANCE: Record<Tier, number> = { free: 1, basic: 2, pro: 6, elite: 6 };
 /** Free tier sees The Analyst only. */
 export const FREE_COACH_IDS = ["analyst"];
 /** Placeholder until §13.1 is answered — Basic keeps the Analyst plus one more. */
@@ -284,8 +284,8 @@ export const COACH_NAME_ORDER = [
 
 /** A tier gets the first N coaches in COACH_NAME_ORDER; unknown names are paid. */
 export function coachAllowed(ent: Entitlements, coachName: string): boolean {
-  if (!ent.freeTierActive && ent.coachAllowance >= COACH_NAME_ORDER.length) return true;
+  if (ent.coachAllowance >= COACH_NAME_ORDER.length) return true;
   const idx = COACH_NAME_ORDER.indexOf(coachName);
-  if (idx === -1) return ent.coachAllowance >= COACH_NAME_ORDER.length;
+  if (idx === -1) return false;
   return idx < ent.coachAllowance;
 }
