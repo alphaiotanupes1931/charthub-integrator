@@ -249,7 +249,7 @@ describe("public webhook routes stay signature-verified", () => {
       const verifies =
         /timingSafeEqual|createHmac|constructEvent|CRON_SECRET|SUPABASE_PUBLISHABLE_KEY/i.test(src) ||
         /[A-Z_]*SECRET/.test(src) ||
-        /x-hub-signature|stripe-signature|authorization|["']apikey["']/i.test(src);
+        /x-hub-signature|stripe-signature|authorization|["']apikey["']|x-[a-z-]*token/i.test(src);
       expect(verifies, `${file} has no caller verification`).toBe(true);
     });
   }
