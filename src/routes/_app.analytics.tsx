@@ -266,7 +266,7 @@ function AnalyticsPage() {
   // behind the blur are their own - unblurring is the whole upgrade.
   if (!ent.loading && !ent.allow("analytics")) {
     return (
-      <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-6">
+      <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-6" data-testid="analytics-preview">
         <PageHeader title="Analytics" description="Your trading performance at a glance" />
 
         <div className="rounded-xl border border-border/60 bg-card p-6">
@@ -283,13 +283,13 @@ function AnalyticsPage() {
             </div>
             <div className="flex gap-2">
               <Link to="/journal" className="inline-flex items-center rounded-xl border border-border px-4 py-2 text-sm font-medium">Go to Journal</Link>
-              <Link to="/pricing" className="inline-flex items-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">See plans</Link>
+              <Link to="/pricing" data-testid="analytics-preview-cta" className="inline-flex items-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">See plans</Link>
             </div>
           </div>
         </div>
 
         <div className="relative">
-          <div aria-hidden className="pointer-events-none select-none blur-[6px] opacity-60">
+          <div aria-hidden data-testid="analytics-preview-blur" className="pointer-events-none select-none blur-[6px] opacity-60">
             <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
               {["Net P&L", "Win Rate", "Avg R:R", "Profit Factor", "Expectancy", "Max Drawdown", "Win Streak", "Loss Streak", "Total Trades", "W / L"].map((label) => (
                 <div key={label} className="rounded-xl border border-border/60 bg-card p-4">
