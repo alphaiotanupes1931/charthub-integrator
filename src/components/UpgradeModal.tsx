@@ -48,8 +48,16 @@ const COPY: Record<Props["reason"], { title: string; body: string }> = {
  * interstitial before the user has tried to do the thing (§5).
  */
 export function UpgradeModal({ open, onClose, reason, used, limit }: Props) {
+  useEffect(() => {
+    if (open) track("paywall_shown", { reason, used: used ?? null, limit: limit ?? null });
+  }, [open, reason, used, limit]);
+
   if (!open) return null;
   const copy = COPY[reason];
+  const dismiss = () => {
+    track("paywall_dismissed", { reason });
+    onClose();
+  };
   return (
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4" role="dialog" aria-modal="true" data-testid="upgrade-modal" data-reason={reason}>
       <div className="w-full max-w-md rounded-t-2xl border border-border bg-card p-6 sm:rounded-xl">
