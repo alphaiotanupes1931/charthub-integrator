@@ -13,14 +13,26 @@ type Props = {
 };
 
 /**
- * Wraps a whole page. While entitlements load we render the page, so a paying
- * account never sees a flash of the lock screen.
+ * Wraps a whole page. While entitlements are still resolving we render a neutral
+ * placeholder rather than the page: a paying account never sees a flash of the
+ * lock screen, and a free account never mounts the paid page long enough to fire
+ * its gated requests (those come back 403 and used to crash the page before the
+ * lock could appear).
  */
 export function CapabilityGate({ capability, reason, title, body, children }: Props) {
   const ent = useEntitlements();
   const [open, setOpen] = useState(false);
 
-  if (ent.loading || ent.allow(capability)) return <>{children}</>;
+  if (ent.loading) {
+    return (
+      <div className="max-w-3xl mx-auto py-10" data-testid="capability-gate-loading" aria-busy="true">
+        <div className="h-32 animate-pulse rounded-xl border border-border bg-card" />
+      </div>
+    );
+  }
+
+  if (ent.allow(capability)) return <>{children}</>;
+
 
   return (
     <div className="max-w-3xl mx-auto py-10" data-testid="capability-lock" data-capability={capability}>
