@@ -263,3 +263,29 @@ export function isCacheFresh(createdAt: string | Date, now: Date = new Date()): 
   if (!Number.isFinite(t)) return false;
   return now.getTime() - t < SCAN_DEBOUNCE_MS;
 }
+
+/** Academy basics per §3: modules 1-3 are free forever, the rest is paid. */
+export const FREE_ACADEMY_MODULES = 3;
+
+export function academyModuleAllowed(ent: Entitlements, moduleId: number): boolean {
+  if (can(ent, "academy_all")) return true;
+  return moduleId <= FREE_ACADEMY_MODULES;
+}
+
+/** Coach display names, in the order tiers unlock them. */
+export const COACH_NAME_ORDER = [
+  "The Analyst",
+  "The Strategist",
+  "The Disciplinarian",
+  "The Mentor",
+  "The Minimalist",
+  "The Psychologist",
+];
+
+/** A tier gets the first N coaches in COACH_NAME_ORDER; unknown names are paid. */
+export function coachAllowed(ent: Entitlements, coachName: string): boolean {
+  if (!ent.freeTierActive && ent.coachAllowance >= COACH_NAME_ORDER.length) return true;
+  const idx = COACH_NAME_ORDER.indexOf(coachName);
+  if (idx === -1) return ent.coachAllowance >= COACH_NAME_ORDER.length;
+  return idx < ent.coachAllowance;
+}
