@@ -777,6 +777,22 @@ export const Route = createFileRoute("/api/chat")({
           isAdmin = !!adminRow;
         }
 
+        // --- Per-account model routing ---
+        // "auto" (default) uses the health-checked Claude with gateway fallback.
+        // "claude" forces Claude for this account only; "fallback" pins it to the
+        // gateway model. Set per person by an admin in Admin -> People.
+        let modelPref: "auto" | "claude" | "fallback" = "auto";
+        if (sb && userId) {
+          const { data: prefRow } = await sb
+            .from("profiles")
+            .select("ai_model_pref")
+            .eq("id", userId)
+            .maybeSingle();
+          const raw = (prefRow as { ai_model_pref?: string } | null)?.ai_model_pref;
+          if (raw === "claude" || raw === "fallback") modelPref = raw;
+        }
+
+
         if (sb && userId && !isAdmin) {
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           const { data: usageCount, error: usageErr } = await supabaseAdmin.rpc("bump_ai_usage", { _user_id: userId, _cap: DAILY_AI_CAP });
@@ -938,7 +954,15 @@ export const Route = createFileRoute("/api/chat")({
           console.warn(`[chat] req=${reqId} methodology_failed`, (e as Error).message);
         }
 
-        const useClaude = !!anthropicKey && (await anthropicUsable(anthropicKey));
+        // Claude is used when the key passes the health check, unless this account
+        // is pinned: "claude" skips the fallback entirely, "fallback" never uses it.
+        const claudeHealthy = !!anthropicKey && (await anthropicUsable(anthropicKey));
+        const useClaude = modelPref === "fallback"
+          ? false
+          : modelPref === "claude"
+            ? !!anthropicKey
+            : claudeHealthy;
+
         // Model routing: a plain setup grade or a short factual question runs on
         // the cheap model; open-ended coaching, teaching, psychology, and
         // screenshot reads stay on the top model.
@@ -951,7 +975,7 @@ export const Route = createFileRoute("/api/chat")({
         const gatewayModel = key ? createAiGatewayProvider(key)(gatewayId) : null;
         const primaryModel = claudeModel ?? gatewayModel!;
         const activeModelId = useClaude ? claudeId : gatewayId;
-        console.log(`[chat] req=${reqId} route=${routed} model=${activeModelId}`);
+        console.log(`[chat] req=${reqId} route=${routed} model=${activeModelId} pref=${modelPref}`);
 
         // Prompt caching: mark the static prefix as an ephemeral cache breakpoint
         // so repeat requests read it at ~10% of input price instead of resending

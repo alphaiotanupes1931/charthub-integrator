@@ -46,6 +46,8 @@ type UserRow = {
   broker_account_type: string | null;
   banned: boolean;
   role?: string | null;
+  ai_model_pref?: string | null;
+
 };
 
 
@@ -78,6 +80,24 @@ function AdminPage() {
     toast.success(`${u.email ?? "User"} is now ${role}`);
     setUsers((prev) => prev?.map((x) => (x.id === u.id ? { ...x, role } : x)) ?? prev);
   };
+
+  // Pin one account's coach model without touching anyone else.
+  const changeModel = async (u: UserRow, pref: "auto" | "claude" | "fallback") => {
+    if (pref === (u.ai_model_pref ?? "auto")) return;
+    setBusyId(u.id);
+    const { error } = await supabase.rpc("admin_set_ai_model_pref" as never, { _user_id: u.id, _pref: pref } as never);
+    setBusyId(null);
+    if (error) { toast.error(error.message); return; }
+    toast.success(
+      pref === "claude"
+        ? `${u.email ?? "User"} is pinned to Claude`
+        : pref === "fallback"
+          ? `${u.email ?? "User"} is pinned to the backup model`
+          : `${u.email ?? "User"} is back on automatic routing`,
+    );
+    setUsers((prev) => prev?.map((x) => (x.id === u.id ? { ...x, ai_model_pref: pref } : x)) ?? prev);
+  };
+
 
   const toggleBan = async (u: UserRow) => {
     const next = !u.banned;
@@ -270,6 +290,7 @@ function AdminPage() {
                   <th className="text-left px-4 py-2 font-medium">Name</th>
                   <th className="text-left px-4 py-2 font-medium">Email</th>
                    <th className="text-left px-4 py-2 font-medium">Role</th>
+                  <th className="text-left px-4 py-2 font-medium">AI model</th>
                   <th className="text-left px-4 py-2 font-medium">Broker</th>
 
                   <th className="text-left px-4 py-2 font-medium">Status</th>
@@ -279,9 +300,9 @@ function AdminPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {users === null ? (
-                  <tr><td colSpan={7} className="p-6 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Loading…</td></tr>
+                  <tr><td colSpan={8} className="p-6 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Loading…</td></tr>
                 ) : users.length === 0 ? (
-                  <tr><td colSpan={7} className="p-6 text-muted-foreground">No users yet.</td></tr>
+                  <tr><td colSpan={8} className="p-6 text-muted-foreground">No users yet.</td></tr>
 
                 ) : users.map((u) => (
                   <tr
@@ -315,6 +336,21 @@ function AdminPage() {
                         <option value="admin">Admin</option>
                       </select>
                     </td>
+
+                    <td className="px-4 py-2.5" onClick={(e) => e.stopPropagation()}>
+                      <select
+                        value={(u.ai_model_pref ?? "auto") as string}
+                        onChange={(e) => changeModel(u, e.target.value as "auto" | "claude" | "fallback")}
+                        disabled={busyId === u.id}
+                        title="Which coach model this account uses"
+                        className="rounded-xl border border-border/60 bg-background px-2 py-1 text-xs font-medium disabled:opacity-50"
+                      >
+                        <option value="auto">Automatic</option>
+                        <option value="claude">Claude only</option>
+                        <option value="fallback">Backup only</option>
+                      </select>
+                    </td>
+
 
                     <td className="px-4 py-2.5">
                       {u.broker_connected ? (
