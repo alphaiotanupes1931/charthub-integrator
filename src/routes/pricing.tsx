@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { LogoLink } from "@/components/LogoLink";
 import { supabase } from "@/integrations/supabase/client";
 import { createCheckoutSession } from "@/lib/billing.functions";
+import { useFreeTierFlag } from "@/hooks/useFreeTierFlag";
 
 export const Route = createFileRoute("/pricing")({
   ssr: false,
