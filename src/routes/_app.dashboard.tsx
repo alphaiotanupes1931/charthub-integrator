@@ -1760,6 +1760,14 @@ function Dashboard() {
           <span className="font-mono text-[10px] text-muted-foreground">{tzLabel}</span>
         </label>
 
+        <UpgradeModal
+          open={paywall}
+          onClose={() => setPaywall(false)}
+          reason="grades"
+          used={ent.quota.used}
+          limit={ent.quota.limit}
+        />
+
         <QuotaBadge quota={ent.quota} className="hidden lg:inline-flex" />
 
         <button
