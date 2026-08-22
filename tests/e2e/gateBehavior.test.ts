@@ -175,12 +175,22 @@ describe("per-persona outcome for each gated route", () => {
   });
 });
 
-describe("CapabilityGate renders the page while entitlements load", () => {
+describe("CapabilityGate holds the page until entitlements resolve", () => {
   const src = readFileSync(resolve(process.cwd(), "src/components/CapabilityGate.tsx"), "utf8");
 
   it("never flashes the lock screen at a paying account", () => {
-    expect(src).toContain("if (ent.loading || ent.allow(capability)) return <>{children}</>;");
+    expect(src).toContain('data-testid="capability-gate-loading"');
+    expect(src).toContain("if (ent.loading) {");
   });
+
+  it("never mounts the paid page before entitlements are known", () => {
+    // A denied account mounting the page fires its gated requests, which come
+    // back 403 and used to crash before the lock could render.
+    const loadingBranch = src.slice(src.indexOf("if (ent.loading) {"), src.indexOf("if (ent.allow(capability))"));
+    expect(loadingBranch).not.toContain("{children}");
+    expect(src).toContain("if (ent.allow(capability)) return <>{children}</>;");
+  });
+
 
   it("offers the upgrade modal rather than a navigation", () => {
     expect(src).toContain("UpgradeModal");
