@@ -38,6 +38,9 @@ import { recordSignal, takeTrade } from "@/lib/signalHistory";
 import { formatJournalPerf } from "@/lib/journalStats";
 import { toast } from "sonner";
 import { AutoBacktestVerify } from "@/components/AutoBacktestVerify";
+import { useEntitlements } from "@/hooks/useEntitlements";
+import { QuotaBadge } from "@/components/QuotaBadge";
+import { UpgradeModal } from "@/components/UpgradeModal";
 
 // Scan context: the active strategy playbook is fed to the planner so the
 // Analysis grade is scored against the same rules the chat coach uses.
