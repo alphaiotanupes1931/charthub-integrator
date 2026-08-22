@@ -954,7 +954,15 @@ export const Route = createFileRoute("/api/chat")({
           console.warn(`[chat] req=${reqId} methodology_failed`, (e as Error).message);
         }
 
-        const useClaude = !!anthropicKey && (await anthropicUsable(anthropicKey));
+        // Claude is used when the key passes the health check, unless this account
+        // is pinned: "claude" skips the fallback entirely, "fallback" never uses it.
+        const claudeHealthy = !!anthropicKey && (await anthropicUsable(anthropicKey));
+        const useClaude = modelPref === "fallback"
+          ? false
+          : modelPref === "claude"
+            ? !!anthropicKey
+            : claudeHealthy;
+
         // Model routing: a plain setup grade or a short factual question runs on
         // the cheap model; open-ended coaching, teaching, psychology, and
         // screenshot reads stay on the top model.
