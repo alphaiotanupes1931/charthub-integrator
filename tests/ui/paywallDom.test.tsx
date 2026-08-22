@@ -126,10 +126,20 @@ describe("locked page overlay matches the entitlement matrix", () => {
     }
   }
 
-  it("renders the page (never a flash of the lock) while entitlements load", () => {
+  it("shows a neutral placeholder while entitlements load", () => {
+    // Neither the lock (a paying account must not see a flash of it) nor the
+    // paid page (a free account mounting it fires gated requests that 403).
     const html = renderGate("free", pageGates[0]!, { loading: true });
-    expect(html).toContain(PAID_CONTENT);
+    expect(html).toContain('data-testid="capability-gate-loading"');
+    expect(html).toContain('aria-busy="true"');
+    expect(html).not.toContain(PAID_CONTENT);
     expect(html).not.toContain('data-testid="capability-lock"');
+  });
+
+  it("an entitled account still gets the page once entitlements resolve", () => {
+    for (const gate of pageGates) {
+      expect(renderGate("elite", gate)).toContain(PAID_CONTENT);
+    }
   });
 
   it("the modal is closed until the call to action is pressed", () => {
