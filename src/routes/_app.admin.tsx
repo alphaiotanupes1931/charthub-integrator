@@ -290,6 +290,7 @@ function AdminPage() {
                   <th className="text-left px-4 py-2 font-medium">Name</th>
                   <th className="text-left px-4 py-2 font-medium">Email</th>
                    <th className="text-left px-4 py-2 font-medium">Role</th>
+                  <th className="text-left px-4 py-2 font-medium">AI model</th>
                   <th className="text-left px-4 py-2 font-medium">Broker</th>
 
                   <th className="text-left px-4 py-2 font-medium">Status</th>
@@ -299,9 +300,9 @@ function AdminPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {users === null ? (
-                  <tr><td colSpan={7} className="p-6 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Loading…</td></tr>
+                  <tr><td colSpan={8} className="p-6 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Loading…</td></tr>
                 ) : users.length === 0 ? (
-                  <tr><td colSpan={7} className="p-6 text-muted-foreground">No users yet.</td></tr>
+                  <tr><td colSpan={8} className="p-6 text-muted-foreground">No users yet.</td></tr>
 
                 ) : users.map((u) => (
                   <tr
