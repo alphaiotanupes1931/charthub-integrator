@@ -204,3 +204,40 @@ describe("§4 quota mechanics", () => {
     expect(monthKey("Not/AZone", NOW)).toBe("2026-08");
   });
 });
+
+describe("phase 4 gating helpers", () => {
+  const free = resolveEntitlements({ flagEnabled: true, subscription: null });
+  const pro = resolveEntitlements({ flagEnabled: true, subscription: { status: "active", tier: "pro", trialEnd: null } });
+  const basic = resolveEntitlements({ flagEnabled: true, subscription: { status: "active", tier: "basic", trialEnd: null } });
+
+  it("free tier keeps only The Analyst", () => {
+    expect(coachAllowed(free, "The Analyst")).toBe(true);
+    expect(coachAllowed(free, "The Psychologist")).toBe(false);
+  });
+
+  it("basic gets two coaches, pro gets all", () => {
+    expect(coachAllowed(basic, "The Strategist")).toBe(true);
+    expect(coachAllowed(basic, "The Mentor")).toBe(false);
+    expect(coachAllowed(pro, "The Psychologist")).toBe(true);
+  });
+
+  it("free academy stops after module 3", () => {
+    expect(academyModuleAllowed(free, 3)).toBe(true);
+    expect(academyModuleAllowed(free, 4)).toBe(false);
+    expect(academyModuleAllowed(pro, 12)).toBe(true);
+  });
+
+  it("free tier cannot reach autopilot, signals or strategy win rates", () => {
+    expect(can(free, "autopilot")).toBe(false);
+    expect(can(free, "signal_engine")).toBe(false);
+    expect(can(free, "strategy_library")).toBe(false);
+    expect(can(free, "journal")).toBe(true);
+  });
+
+  it("flag off leaves every gate open", () => {
+    const legacy = resolveEntitlements({ flagEnabled: false, subscription: null });
+    expect(can(legacy, "autopilot")).toBe(true);
+    expect(coachAllowed(legacy, "The Psychologist")).toBe(true);
+    expect(academyModuleAllowed(legacy, 12)).toBe(true);
+  });
+});
