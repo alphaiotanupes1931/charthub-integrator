@@ -104,6 +104,52 @@ export const createPortalSession = createServerFn({ method: "POST" })
     return { url: portal.url };
   });
 
+/**
+ * In-app cancellation, so members can end their membership from Settings even
+ * when the hosted Stripe portal has no configuration. Cancels at period end so
+ * they keep access until the paid period runs out.
+ */
+export const cancelMySubscription = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({ resume: z.boolean().optional() }).parse(data ?? {}),
+  )
+  .handler(async ({ data, context }) => {
+    const { getStripe } = await import("@/lib/stripe.server");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const stripe = getStripe();
+
+    const { data: row } = await supabaseAdmin
+      .from("subscriptions")
+      .select("stripe_subscription_id")
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (!row?.stripe_subscription_id) {
+      throw new Error("No active subscription to change.");
+    }
+
+    const updated = await stripe.subscriptions.update(row.stripe_subscription_id, {
+      cancel_at_period_end: !data.resume,
+    });
+    const cpe = (updated as unknown as { current_period_end?: number }).current_period_end;
+
+    await supabaseAdmin
+      .from("subscriptions")
+      .update({
+        status: updated.status,
+        cancel_at_period_end: !!updated.cancel_at_period_end,
+        current_period_end: cpe ? new Date(cpe * 1000).toISOString() : null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", context.userId);
+
+    return {
+      cancel_at_period_end: !!updated.cancel_at_period_end,
+      status: updated.status,
+      current_period_end: cpe ? new Date(cpe * 1000).toISOString() : null,
+    };
+  });
+
 export const getMySubscription = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
