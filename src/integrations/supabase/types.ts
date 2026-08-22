@@ -1079,6 +1079,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          ai_model_pref: string
           banned: boolean
           broker_account_type: string | null
           broker_connected: boolean
@@ -1100,6 +1101,7 @@ export type Database = {
           wins: number
         }
         Insert: {
+          ai_model_pref?: string
           banned?: boolean
           broker_account_type?: string | null
           broker_connected?: boolean
@@ -1121,6 +1123,7 @@ export type Database = {
           wins?: number
         }
         Update: {
+          ai_model_pref?: string
           banned?: boolean
           broker_account_type?: string | null
           broker_connected?: boolean
@@ -1571,6 +1574,10 @@ export type Database = {
           source: string
         }[]
       }
+      admin_set_ai_model_pref: {
+        Args: { _pref: string; _user_id: string }
+        Returns: undefined
+      }
       admin_set_platform_status: {
         Args: { _level: string; _message: string }
         Returns: {
@@ -1605,6 +1612,7 @@ export type Database = {
       admin_users_overview: {
         Args: never
         Returns: {
+          ai_model_pref: string
           banned: boolean
           broker_account_type: string
           broker_connected: boolean
