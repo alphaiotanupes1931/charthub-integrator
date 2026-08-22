@@ -1,7 +1,7 @@
 // Signal quality scoreboard: file every scan, resolve it against real bars,
 // and report where the coach's calls actually work.
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireCapability } from "@/lib/capability-middleware";
 import { z } from "zod";
 import {
   buildScoreboard,
@@ -65,7 +65,7 @@ function toRow(r: Row): SignalScoreRow {
 
 /** File a scan result. Duplicate scans of the same symbol/level inside 10 minutes are ignored. */
 export const recordSignalScore = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("signal_engine")])
   .inputValidator((raw: unknown) => RecordInput.parse(raw))
   .handler(async ({ data, context }): Promise<{ ok: boolean; id?: string }> => {
     const risk = Math.abs(data.entry - data.stop);
@@ -106,7 +106,7 @@ export const recordSignalScore = createServerFn({ method: "POST" })
 
 /** Mark that the trader actually took a filed signal. */
 export const markSignalScoreTaken = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("signal_engine")])
   .inputValidator((raw: unknown) => z.object({ symbol: z.string().min(1).max(24) }).parse(raw))
   .handler(async ({ data, context }): Promise<{ ok: boolean }> => {
     const { data: rows } = await context.supabase
@@ -124,7 +124,7 @@ export const markSignalScoreTaken = createServerFn({ method: "POST" })
   });
 
 export const listSignalScores = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("signal_engine")])
   .handler(async ({ context }): Promise<SignalScoreRow[]> => {
     const { data, error } = await context.supabase
       .from("signal_scores")
@@ -137,7 +137,7 @@ export const listSignalScores = createServerFn({ method: "GET" })
   });
 
 export const getSignalScoreboard = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("signal_engine")])
   .handler(async ({ context }): Promise<{ scoreboard: Scoreboard; rows: SignalScoreRow[] }> => {
     const { data, error } = await context.supabase
       .from("signal_scores")
@@ -152,7 +152,7 @@ export const getSignalScoreboard = createServerFn({ method: "GET" })
 
 /** Resolve this trader's open signals now (also runs on a schedule). */
 export const resolveMySignalScores = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("signal_engine")])
   .handler(async ({ context }): Promise<{ checked: number; resolved: number }> => {
     const { data } = await context.supabase
       .from("signal_scores")

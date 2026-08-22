@@ -1,13 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireCapability } from "@/lib/capability-middleware";
 
 // TradeLocker supports a real credential login (email + password + server), so
 // this is an actual "log in to your broker" flow rather than a pasted API token.
 
 /** Log in to TradeLocker and, if it works, save the login (encrypted) for reuse. */
 export const connectTradeLocker = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("broker_live")])
   .inputValidator((raw: unknown) =>
     z
       .object({
@@ -73,7 +73,7 @@ export const connectTradeLocker = createServerFn({ method: "POST" })
 
 /** Live view of the saved TradeLocker login: which account, which server, balances. */
 export const getTradeLockerStatus = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("broker_live")])
   .handler(async ({ context }) => {
     const { tlSession } = await import("@/lib/broker-tradelocker.server");
     try {
@@ -101,7 +101,7 @@ export const getTradeLockerStatus = createServerFn({ method: "GET" })
 
 /** Choose which TradeLocker account this login trades. */
 export const setTradeLockerAccount = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("broker_live")])
   .inputValidator((raw: unknown) => z.object({ accountId: z.string().trim().min(1) }).parse(raw))
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -117,7 +117,7 @@ export const setTradeLockerAccount = createServerFn({ method: "POST" })
 
 /** Log out: delete the stored TradeLocker login. */
 export const disconnectTradeLocker = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("broker_live")])
   .handler(async ({ context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin

@@ -3,7 +3,7 @@
 // Execution stays behind an explicit approve step.
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireCapability } from "@/lib/capability-middleware";
 import {
   DEFAULT_AUTOPILOT_SETTINGS,
   evaluateRails,
@@ -11,7 +11,7 @@ import {
 } from "@/lib/autopilot.shared";
 
 export const getAutopilotSettings = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("autopilot")])
   .handler(async ({ context }): Promise<AutopilotSettings> => {
     const { data } = await context.supabase
       .from("autopilot_settings")
@@ -34,7 +34,7 @@ export const getAutopilotSettings = createServerFn({ method: "GET" })
   });
 
 export const updateAutopilotSettings = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("autopilot")])
   .inputValidator((raw: unknown) =>
     z
       .object({
@@ -74,7 +74,7 @@ export const updateAutopilotSettings = createServerFn({ method: "POST" })
   });
 
 export const listAutopilotProposals = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("autopilot")])
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase
       .from("autopilot_proposals")
@@ -111,7 +111,7 @@ export const listAutopilotProposals = createServerFn({ method: "GET" })
   });
 
 export const createAutopilotProposal = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("autopilot")])
   .inputValidator((raw: unknown) =>
     z
       .object({
@@ -191,7 +191,7 @@ export const createAutopilotProposal = createServerFn({ method: "POST" })
   });
 
 export const decideAutopilotProposal = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("autopilot")])
   .inputValidator((raw: unknown) =>
     z
       .object({
@@ -250,7 +250,7 @@ export const decideAutopilotProposal = createServerFn({ method: "POST" })
   });
 
 export const markAutopilotProposalResult = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("autopilot")])
   .inputValidator((raw: unknown) =>
     z
       .object({
@@ -278,7 +278,7 @@ export const markAutopilotProposalResult = createServerFn({ method: "POST" })
 // Phase 3: run the scan stack over the trader's allowed instruments, enforce the
 // daily loss cap, and in auto mode fill paper trades without a tap.
 export const runAutopilotScan = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("autopilot")])
   .inputValidator((raw: unknown) =>
     z.object({ timeframe: z.string().default("60") }).parse(raw ?? {}),
   )
@@ -301,7 +301,7 @@ export const runAutopilotScan = createServerFn({ method: "POST" })
 // Execute an approved proposal on the paper account. Live orders go through
 // the broker path on the client so the OANDA margin guard still applies.
 export const fillAutopilotProposalOnPaper = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("autopilot")])
   .inputValidator((raw: unknown) => z.object({ id: z.string().uuid() }).parse(raw))
   .handler(async ({ data, context }) => {
     const { data: proposal, error } = await context.supabase
@@ -362,7 +362,7 @@ export type AutopilotEventRow = {
 };
 
 export const listAutopilotEvents = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("autopilot")])
   .handler(async ({ context }): Promise<AutopilotEventRow[]> => {
     const { data, error } = await context.supabase
       .from("autopilot_events")
@@ -382,7 +382,7 @@ export const listAutopilotEvents = createServerFn({ method: "GET" })
 // Manual kill switch. Pausing drops autopilot out of the scheduled tick
 // immediately; resuming clears the reason and records who cleared it.
 export const setAutopilotPause = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("autopilot")])
   .inputValidator((raw: unknown) =>
     z.object({ paused: z.boolean(), reason: z.string().max(300).optional() }).parse(raw),
   )

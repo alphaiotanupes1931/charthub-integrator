@@ -2,7 +2,7 @@
 // then have the coach name the recurring mistakes it can see in the log.
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireCapability } from "@/lib/capability-middleware";
 
 const TradeInput = z.object({
   date: z.string().max(40),
@@ -42,7 +42,7 @@ export type JournalReview = {
 };
 
 export const reviewJournal = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("trading_memory")])
   .inputValidator((raw: unknown) => ReviewInput.parse(raw))
   .handler(async ({ data, context }): Promise<JournalReview> => {
     const trades = data.trades.filter((t) => Number.isFinite(t.pnl ?? NaN));
@@ -143,7 +143,7 @@ export const reviewJournal = createServerFn({ method: "POST" })
   });
 
 export const latestJournalReview = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireCapability("trading_memory")])
   .handler(async ({ context }): Promise<JournalReview | null> => {
     const { data } = await context.supabase
       .from("journal_reviews")
