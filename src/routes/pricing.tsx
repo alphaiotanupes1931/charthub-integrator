@@ -126,9 +126,41 @@ function PricingPage() {
           )}
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className={`grid gap-6 ${freeTier ? "md:grid-cols-2 lg:grid-cols-4" : "md:grid-cols-3"}`}>
+          {freeTier && (
+            <div className="relative flex flex-col rounded-2xl border border-border/60 bg-card/40 p-8">
+              <div className="text-sm font-medium uppercase tracking-[0.2em] text-muted-foreground">Free</div>
+              <div className="mt-4 flex items-baseline">
+                <span className="text-2xl text-muted-foreground">$</span>
+                <span className="font-display text-5xl font-medium">0</span>
+                <span className="ml-1 text-sm text-muted-foreground">/month</span>
+              </div>
+              <ul className="mt-6 flex-1 space-y-3">
+                {[
+                  "3 signal grades a month",
+                  "Trade journal, unlimited trades",
+                  "Risk calculator",
+                  "Price alerts",
+                  "Academy basics, first 3 modules",
+                  "Flashcards and community",
+                ].map((f) => (
+                  <li key={f} className="flex items-start gap-2 text-sm">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    <span>{f}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link
+                to="/auth"
+                search={{ mode: "signup" } as never}
+                className="mt-8 flex h-11 items-center justify-center rounded-2xl border border-border bg-transparent text-sm font-medium hover:bg-muted/50"
+              >
+                Create free account
+              </Link>
+            </div>
+          )}
           {PLANS.map((p) => (
-            <div
+
               key={p.id}
               className={`relative flex flex-col rounded-2xl border p-8 ${p.popular ? "border-primary bg-primary/5" : "border-border/60 bg-card/40"}`}
             >
