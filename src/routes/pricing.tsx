@@ -160,6 +160,7 @@ function PricingPage() {
             </div>
           )}
           {PLANS.map((p) => (
+            <div
 
               key={p.id}
               className={`relative flex flex-col rounded-2xl border p-8 ${p.popular ? "border-primary bg-primary/5" : "border-border/60 bg-card/40"}`}
