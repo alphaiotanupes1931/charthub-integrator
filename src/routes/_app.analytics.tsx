@@ -258,6 +258,57 @@ function AnalyticsPage() {
 
   const hasAnyData = mergedTrades.length > 0 || (analytics.data?.proposals.length ?? 0) > 0;
 
+  // Free plan: a real preview, not an empty locked page. The trade count is the
+  // user's actual count so it's obvious the data is being kept, and the numbers
+  // behind the blur are their own - unblurring is the whole upgrade.
+  if (!ent.loading && !ent.allow("analytics")) {
+    return (
+      <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-6">
+        <PageHeader title="Analytics" description="Your trading performance at a glance" />
+
+        <div className="rounded-xl border border-border/60 bg-card p-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <Lock className="h-4 w-4" /> Analytics is part of the paid plan
+              </div>
+              <p className="mt-2 max-w-lg text-sm text-muted-foreground">
+                {mergedTrades.length > 0
+                  ? `You have ${mergedTrades.length} ${mergedTrades.length === 1 ? "trade" : "trades"} recorded. Nothing is lost while you're on the free plan, and your win rate, expectancy and drawdown are ready the moment you upgrade.`
+                  : "Log trades in your journal for free and they'll be waiting here. Upgrade any time to see win rate, expectancy and drawdown."}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Link to="/journal" className="inline-flex items-center rounded-xl border border-border px-4 py-2 text-sm font-medium">Go to Journal</Link>
+              <Link to="/pricing" className="inline-flex items-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">See plans</Link>
+            </div>
+          </div>
+        </div>
+
+        <div className="relative">
+          <div aria-hidden className="pointer-events-none select-none blur-[6px] opacity-60">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
+              {["Net P&L", "Win Rate", "Avg R:R", "Profit Factor", "Expectancy", "Max Drawdown", "Win Streak", "Loss Streak", "Total Trades", "W / L"].map((label) => (
+                <div key={label} className="rounded-xl border border-border/60 bg-card p-4">
+                  <div className="mb-1 text-xs text-muted-foreground">{label}</div>
+                  <div className="text-lg font-semibold text-foreground">--</div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 h-52 rounded-xl border border-border/60 bg-card" />
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="rounded-full border border-border bg-background/90 px-3 py-1 text-xs font-medium text-muted-foreground">
+              Unlocks with any paid plan
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+
+
   if (!hasAnyData) {
     return (
       <div className="p-4 md:p-8 max-w-[1400px] mx-auto">
