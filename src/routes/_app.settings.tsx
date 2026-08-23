@@ -708,6 +708,14 @@ function BillingCard() {
         <CreditCard className="size-5 text-primary" />
         Subscription
       </h2>
+      {syncing && (
+        <div
+          data-testid="billing-syncing"
+          className="mb-4 rounded-xl border border-border bg-muted/40 p-3 text-xs text-muted-foreground"
+        >
+          Checking with Stripe for your latest membership state…
+        </div>
+      )}
       <div
         className="mb-5 grid gap-4 rounded-xl border border-border bg-muted/30 p-4 sm:grid-cols-3"
         data-testid="billing-summary"
