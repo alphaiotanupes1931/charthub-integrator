@@ -722,9 +722,21 @@ function BillingCard() {
       <div className="flex flex-wrap gap-2">
         {active ? (
           <>
-            <GhostButton onClick={manage} disabled={loading}>
+            <GhostButton
+              onClick={() => manage("invoices")}
+              disabled={pending !== null}
+              data-testid="portal-invoices"
+            >
               <ExternalLink className="size-4" />
-              {loading ? "Opening…" : "Payment method and invoices"}
+              {pending === "invoices" ? "Opening invoices…" : "View invoices and receipts"}
+            </GhostButton>
+            <GhostButton
+              onClick={() => manage("payment_method")}
+              disabled={pending !== null}
+              data-testid="portal-payment-method"
+            >
+              <CreditCard className="size-4" />
+              {pending === "payment_method" ? "Opening Stripe…" : "Update payment method"}
             </GhostButton>
             {sub?.cancel_at_period_end ? (
               <GhostButton onClick={() => toggleCancel(true)} disabled={cancelling}>
