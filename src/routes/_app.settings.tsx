@@ -607,7 +607,8 @@ function BillingCard() {
     trial_end: string | null;
     cancel_at_period_end: boolean;
   } | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [pending, setPending] = useState<"invoices" | "payment_method" | null>(null);
+  const [portalError, setPortalError] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState(false);
   const changeCancel = useServerFn(cancelMySubscription);
 
@@ -621,14 +622,21 @@ function BillingCard() {
 
   const active = sub && (sub.status === "active" || sub.status === "trialing");
 
-  async function manage() {
-    setLoading(true);
+  async function manage(flow: "invoices" | "payment_method") {
+    setPortalError(null);
+    setPending(flow);
     try {
-      const { url } = await openPortal();
-      if (url) window.location.assign(url);
+      const { url } = await openPortal({ data: { flow } });
+      if (url) {
+        window.location.assign(url);
+        return;
+      }
+      throw new Error("Stripe did not return a portal link. Try again in a moment.");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not open billing portal");
-      setLoading(false);
+      const message = e instanceof Error ? e.message : "Could not open the Stripe billing portal";
+      setPortalError(message);
+      toast.error(message);
+      setPending(null);
     }
   }
 
