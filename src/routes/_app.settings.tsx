@@ -8,6 +8,7 @@ import { useTimeFormat, formatTime } from "@/hooks/useTimeFormat";
 import { useTimezone, TIMEZONE_OPTIONS, AUTO_TZ } from "@/hooks/useTimezone";
 import { exportMyData, deleteMyAccount } from "@/lib/privacy.functions";
 import { cancelMySubscription, createPortalSession, getMySubscription } from "@/lib/billing.functions";
+import { FreeTierUsagePanel } from "@/components/FreeTierUsagePanel";
 import { toast } from "sonner";
 
 import {
@@ -593,7 +594,9 @@ function SettingsPage() {
 
       {/* BILLING */}
       <SectionLabel>Billing</SectionLabel>
+      <FreeTierUsagePanel className="mb-4" />
       <BillingCard />
+
 
 
     </div>
