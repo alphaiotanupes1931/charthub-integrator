@@ -639,26 +639,24 @@ function BillingCard() {
       void navigate({ to: "/settings", search: {}, replace: true });
     };
 
+    let lastSnapshot: string | null = null;
+
     const poll = async () => {
       attempts += 1;
-      let snapshot: string | null = null;
+      let changed = false;
       try {
         const fresh = (await getSub()) as typeof sub;
         if (cancelled) return;
-        snapshot = fresh ? JSON.stringify(fresh) : null;
-        setSub((prev) => {
-          const changed = JSON.stringify(prev ?? null) !== JSON.stringify(fresh ?? null);
-          if (changed) {
-            toast.success("Billing details updated");
-          }
-          return fresh;
-        });
+        const snapshot = JSON.stringify(fresh ?? null);
+        changed = lastSnapshot !== null && lastSnapshot !== snapshot;
+        lastSnapshot = snapshot;
+        setSub(fresh);
       } catch {
         if (cancelled) return;
       }
-      void snapshot;
-      if (attempts >= 4) {
+      if (changed || attempts >= 4) {
         setSyncing(false);
+        if (changed) toast.success("Membership updated");
         clearMarker();
         return;
       }
