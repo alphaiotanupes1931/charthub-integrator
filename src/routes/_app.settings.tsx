@@ -593,7 +593,9 @@ function SettingsPage() {
 
       {/* BILLING */}
       <SectionLabel>Billing</SectionLabel>
+      <FreeTierUsagePanel className="mb-4" />
       <BillingCard />
+
 
 
     </div>
