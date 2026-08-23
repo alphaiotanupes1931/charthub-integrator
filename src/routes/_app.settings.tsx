@@ -756,6 +756,21 @@ function BillingCard() {
           </GhostButton>
         )}
       </div>
+      {portalError && (
+        <div
+          data-testid="portal-error"
+          className="mt-3 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive"
+        >
+          {portalError}{" "}
+          <button
+            type="button"
+            className="underline underline-offset-2"
+            onClick={() => setPortalError(null)}
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
       {active && !sub?.cancel_at_period_end && (
         <p className="mt-3 text-xs text-muted-foreground">
           Cancelling keeps your access until the end of the paid period, then your account drops to
