@@ -74,6 +74,25 @@ export function FreeTierUsagePanel({ className = "" }: { className?: string }) {
         </span>
       </div>
 
+      {quota.remaining <= UPGRADE_NUDGE_THRESHOLD && !quota.exhausted && (
+        <div
+          data-testid="free-tier-upgrade-callout"
+          className="mt-3 rounded-xl border border-primary/30 bg-primary/10 p-3 text-xs"
+        >
+          <div className="flex items-start gap-2">
+            <Sparkles className="mt-0.5 size-4 shrink-0 text-primary" />
+            <div>
+              <p className="font-semibold text-primary">
+                Running low on grades
+              </p>
+              <p className="mt-0.5 text-muted-foreground">
+                You have {quota.remaining} grade{quota.remaining === 1 ? "" : "s"} left this month. Upgrade to keep scanning without limits.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <button
         type="button"
         onClick={() => navigate({ to: "/pricing" })}
