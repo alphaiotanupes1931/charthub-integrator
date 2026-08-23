@@ -102,7 +102,9 @@ export const createPortalSession = createServerFn({ method: "POST" })
       throw new Error("No billing account yet. Start a subscription first.");
     }
     const origin = originFromRequest();
-    const returnUrl = `${origin}/settings`;
+    // The `billing=updated` marker lets Settings re-read membership state on
+    // return from Stripe, so users never have to refresh manually.
+    const returnUrl = `${origin}/settings?billing=updated&flow=${data.flow ?? "overview"}`;
     const portal = await stripe.billingPortal.sessions.create({
       customer: sub.stripe_customer_id,
       return_url: returnUrl,

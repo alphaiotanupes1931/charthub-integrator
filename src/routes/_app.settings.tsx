@@ -35,6 +35,10 @@ import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
 
 export const Route = createFileRoute("/_app/settings")({
   head: () => ({ meta: [{ title: "Settings, TradeMind" }] }),
+  validateSearch: (search: Record<string, unknown>): { billing?: string; flow?: string } => ({
+    ...(typeof search.billing === "string" ? { billing: search.billing } : {}),
+    ...(typeof search.flow === "string" ? { flow: search.flow } : {}),
+  }),
   component: SettingsPage,
 });
 
@@ -610,7 +614,9 @@ function BillingCard() {
   const [pending, setPending] = useState<"invoices" | "payment_method" | null>(null);
   const [portalError, setPortalError] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const changeCancel = useServerFn(cancelMySubscription);
+  const { billing: billingReturn, flow: returnFlow } = Route.useSearch();
 
   useEffect(() => {
     let cancelled = false;
@@ -619,6 +625,48 @@ function BillingCard() {
     }).catch(() => {});
     return () => { cancelled = true; };
   }, [getSub]);
+
+  // Coming back from the Stripe portal: re-read membership state (polling briefly,
+  // since the webhook that writes the new state can land a second or two later)
+  // so Settings shows the right plan without a manual refresh.
+  useEffect(() => {
+    if (billingReturn !== "updated") return;
+    let cancelled = false;
+    let attempts = 0;
+    setSyncing(true);
+
+    const clearMarker = () => {
+      void navigate({ to: "/settings", search: {}, replace: true });
+    };
+
+    let lastSnapshot: string | null = null;
+
+    const poll = async () => {
+      attempts += 1;
+      let changed = false;
+      try {
+        const fresh = (await getSub()) as typeof sub;
+        if (cancelled) return;
+        const snapshot = JSON.stringify(fresh ?? null);
+        changed = lastSnapshot !== null && lastSnapshot !== snapshot;
+        lastSnapshot = snapshot;
+        setSub(fresh);
+      } catch {
+        if (cancelled) return;
+      }
+      if (changed || attempts >= 4) {
+        setSyncing(false);
+        if (changed) toast.success("Membership updated");
+        clearMarker();
+        return;
+      }
+      window.setTimeout(() => { if (!cancelled) void poll(); }, 1500);
+    };
+
+    void poll();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [billingReturn, returnFlow, getSub]);
 
   const active = sub && (sub.status === "active" || sub.status === "trialing");
 
@@ -660,6 +708,14 @@ function BillingCard() {
         <CreditCard className="size-5 text-primary" />
         Subscription
       </h2>
+      {syncing && (
+        <div
+          data-testid="billing-syncing"
+          className="mb-4 rounded-xl border border-border bg-muted/40 p-3 text-xs text-muted-foreground"
+        >
+          Checking with Stripe for your latest membership state…
+        </div>
+      )}
       <div
         className="mb-5 grid gap-4 rounded-xl border border-border bg-muted/30 p-4 sm:grid-cols-3"
         data-testid="billing-summary"
@@ -724,7 +780,7 @@ function BillingCard() {
           <>
             <GhostButton
               onClick={() => manage("invoices")}
-              disabled={pending !== null}
+              disabled={pending !== null || syncing}
               data-testid="portal-invoices"
             >
               <ExternalLink className="size-4" />
@@ -732,7 +788,7 @@ function BillingCard() {
             </GhostButton>
             <GhostButton
               onClick={() => manage("payment_method")}
-              disabled={pending !== null}
+              disabled={pending !== null || syncing}
               data-testid="portal-payment-method"
             >
               <CreditCard className="size-4" />
