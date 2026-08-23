@@ -1,7 +1,10 @@
 import { useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { CalendarClock, Gauge } from "lucide-react";
+import { CalendarClock, Gauge, Sparkles } from "lucide-react";
 import { useEntitlements } from "@/hooks/useEntitlements";
+
+/** Show an upgrade nudge when the user has this many grades or fewer left. */
+const UPGRADE_NUDGE_THRESHOLD = 2;
 
 /**
  * Free-plan usage at a glance: grades used, grades left, and exactly when the
