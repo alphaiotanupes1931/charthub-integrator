@@ -780,7 +780,7 @@ function BillingCard() {
           <>
             <GhostButton
               onClick={() => manage("invoices")}
-              disabled={pending !== null}
+              disabled={pending !== null || syncing}
               data-testid="portal-invoices"
             >
               <ExternalLink className="size-4" />
@@ -788,7 +788,7 @@ function BillingCard() {
             </GhostButton>
             <GhostButton
               onClick={() => manage("payment_method")}
-              disabled={pending !== null}
+              disabled={pending !== null || syncing}
               data-testid="portal-payment-method"
             >
               <CreditCard className="size-4" />
