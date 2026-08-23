@@ -10,6 +10,7 @@ import { aiCostSummary } from "@/lib/ai-cost.functions";
 import { aiCreditsStatus } from "@/lib/ai-credits.functions";
 import { adminListSupportRequests } from "@/lib/support.functions";
 import { RevenuePanel } from "@/components/admin/RevenuePanel";
+import { StripeSubscriptionsPanel } from "@/components/admin/StripeSubscriptionsPanel";
 import { CustomerMoneyTable } from "@/components/admin/CustomerMoneyTable";
 import { AiAveragesPanel } from "@/components/admin/AiAveragesPanel";
 
@@ -58,6 +59,7 @@ function AdminPage() {
   const [err, setErr] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [mrrCents, setMrrCents] = useState(0);
+  const [stripeMrrCents, setStripeMrrCents] = useState(0);
   const [aiPerUser, setAiPerUser] = useState<
     Array<{ user_id: string; email: string | null; calls: number; graded_setups: number; cost_usd: number; cost_per_setup: number }>
   >([]);
@@ -162,10 +164,11 @@ function AdminPage() {
   const totalReferrals = stats?.reduce((a, r) => a + Number(r.count), 0) ?? 0;
   const maxCount = stats?.reduce((a, r) => Math.max(a, Number(r.count)), 0) ?? 0;
   const mrrUsd = mrrCents / 100;
+  const stripeMrrUsd = stripeMrrCents / 100;
   const usd = (n: number) => `$${n.toLocaleString(undefined, { minimumFractionDigits: n < 10 && n !== 0 ? 2 : 0, maximumFractionDigits: 2 })}`;
   // One source of truth: money in from the revenue table, AI cost = every logged
   // call this month (per-person plus system/background), profit is the difference.
-  const grossMonth = totals.gross || mrrUsd;
+  const grossMonth = stripeMrrUsd + (totals.gross || mrrUsd);
   const aiCostMonth = aiSpendMonth === null ? null : Math.max(aiSpendMonth, totals.aiCost);
   const realProfit = grossMonth - (aiCostMonth ?? totals.aiCost);
 
@@ -199,8 +202,10 @@ function AdminPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="rounded-2xl border border-border/60 bg-card p-5">
           <div className="text-xs text-muted-foreground">Money in, per month</div>
-          <div className="mt-2 text-3xl font-semibold tabular-nums">{usd(totals.gross || mrrUsd)}</div>
-          <div className="mt-1 text-[11px] text-muted-foreground">{totalUsers} accounts</div>
+          <div className="mt-2 text-3xl font-semibold tabular-nums">{usd(grossMonth)}</div>
+          <div className="mt-1 text-[11px] text-muted-foreground">
+            {usd(stripeMrrUsd)} Stripe plus {usd(totals.gross || mrrUsd)} tracked manually, {totalUsers} accounts
+          </div>
         </div>
         <div className="rounded-2xl border border-border/60 bg-card p-5">
           <div className="text-xs text-muted-foreground">AI cost, {profitRange.label}</div>
@@ -224,6 +229,8 @@ function AdminPage() {
 
 
       <CustomerMoneyTable users={users} aiSpend={aiPerUser} onTotals={setTotals} />
+
+      <StripeSubscriptionsPanel onMrrChange={setStripeMrrCents} />
 
       <RevenuePanel onMrrChange={setMrrCents} />
       </>
