@@ -614,7 +614,9 @@ function BillingCard() {
   const [pending, setPending] = useState<"invoices" | "payment_method" | null>(null);
   const [portalError, setPortalError] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const changeCancel = useServerFn(cancelMySubscription);
+  const { billing: billingReturn, flow: returnFlow } = Route.useSearch();
 
   useEffect(() => {
     let cancelled = false;
@@ -623,6 +625,50 @@ function BillingCard() {
     }).catch(() => {});
     return () => { cancelled = true; };
   }, [getSub]);
+
+  // Coming back from the Stripe portal: re-read membership state (polling briefly,
+  // since the webhook that writes the new state can land a second or two later)
+  // so Settings shows the right plan without a manual refresh.
+  useEffect(() => {
+    if (billingReturn !== "updated") return;
+    let cancelled = false;
+    let attempts = 0;
+    setSyncing(true);
+
+    const clearMarker = () => {
+      void navigate({ to: "/settings", search: {}, replace: true });
+    };
+
+    const poll = async () => {
+      attempts += 1;
+      let snapshot: string | null = null;
+      try {
+        const fresh = (await getSub()) as typeof sub;
+        if (cancelled) return;
+        snapshot = fresh ? JSON.stringify(fresh) : null;
+        setSub((prev) => {
+          const changed = JSON.stringify(prev ?? null) !== JSON.stringify(fresh ?? null);
+          if (changed) {
+            toast.success("Billing details updated");
+          }
+          return fresh;
+        });
+      } catch {
+        if (cancelled) return;
+      }
+      void snapshot;
+      if (attempts >= 4) {
+        setSyncing(false);
+        clearMarker();
+        return;
+      }
+      window.setTimeout(() => { if (!cancelled) void poll(); }, 1500);
+    };
+
+    void poll();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [billingReturn, returnFlow, getSub]);
 
   const active = sub && (sub.status === "active" || sub.status === "trialing");
 
