@@ -35,6 +35,10 @@ import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
 
 export const Route = createFileRoute("/_app/settings")({
   head: () => ({ meta: [{ title: "Settings, TradeMind" }] }),
+  validateSearch: (search: Record<string, unknown>) => ({
+    billing: typeof search.billing === "string" ? search.billing : undefined,
+    flow: typeof search.flow === "string" ? search.flow : undefined,
+  }),
   component: SettingsPage,
 });
 
