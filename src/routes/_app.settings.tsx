@@ -607,7 +607,8 @@ function BillingCard() {
     trial_end: string | null;
     cancel_at_period_end: boolean;
   } | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [pending, setPending] = useState<"invoices" | "payment_method" | null>(null);
+  const [portalError, setPortalError] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState(false);
   const changeCancel = useServerFn(cancelMySubscription);
 
@@ -621,14 +622,21 @@ function BillingCard() {
 
   const active = sub && (sub.status === "active" || sub.status === "trialing");
 
-  async function manage() {
-    setLoading(true);
+  async function manage(flow: "invoices" | "payment_method") {
+    setPortalError(null);
+    setPending(flow);
     try {
-      const { url } = await openPortal();
-      if (url) window.location.assign(url);
+      const { url } = await openPortal({ data: { flow } });
+      if (url) {
+        window.location.assign(url);
+        return;
+      }
+      throw new Error("Stripe did not return a portal link. Try again in a moment.");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not open billing portal");
-      setLoading(false);
+      const message = e instanceof Error ? e.message : "Could not open the Stripe billing portal";
+      setPortalError(message);
+      toast.error(message);
+      setPending(null);
     }
   }
 
@@ -714,9 +722,21 @@ function BillingCard() {
       <div className="flex flex-wrap gap-2">
         {active ? (
           <>
-            <GhostButton onClick={manage} disabled={loading}>
+            <GhostButton
+              onClick={() => manage("invoices")}
+              disabled={pending !== null}
+              data-testid="portal-invoices"
+            >
               <ExternalLink className="size-4" />
-              {loading ? "Opening…" : "Payment method and invoices"}
+              {pending === "invoices" ? "Opening invoices…" : "View invoices and receipts"}
+            </GhostButton>
+            <GhostButton
+              onClick={() => manage("payment_method")}
+              disabled={pending !== null}
+              data-testid="portal-payment-method"
+            >
+              <CreditCard className="size-4" />
+              {pending === "payment_method" ? "Opening Stripe…" : "Update payment method"}
             </GhostButton>
             {sub?.cancel_at_period_end ? (
               <GhostButton onClick={() => toggleCancel(true)} disabled={cancelling}>
@@ -736,6 +756,21 @@ function BillingCard() {
           </GhostButton>
         )}
       </div>
+      {portalError && (
+        <div
+          data-testid="portal-error"
+          className="mt-3 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive"
+        >
+          {portalError}{" "}
+          <button
+            type="button"
+            className="underline underline-offset-2"
+            onClick={() => setPortalError(null)}
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
       {active && !sub?.cancel_at_period_end && (
         <p className="mt-3 text-xs text-muted-foreground">
           Cancelling keeps your access until the end of the paid period, then your account drops to

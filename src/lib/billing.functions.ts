@@ -84,7 +84,12 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
 
 export const createPortalSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator((data: unknown) =>
+    z
+      .object({ flow: z.enum(["overview", "payment_method", "invoices"]).optional() })
+      .parse(data ?? {}),
+  )
+  .handler(async ({ data, context }) => {
     const { getStripe } = await import("@/lib/stripe.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const stripe = getStripe();
@@ -97,9 +102,21 @@ export const createPortalSession = createServerFn({ method: "POST" })
       throw new Error("No billing account yet. Start a subscription first.");
     }
     const origin = originFromRequest();
+    const returnUrl = `${origin}/settings`;
     const portal = await stripe.billingPortal.sessions.create({
       customer: sub.stripe_customer_id,
-      return_url: `${origin}/settings`,
+      return_url: returnUrl,
+      ...(data.flow === "payment_method"
+        ? {
+            flow_data: {
+              type: "payment_method_update" as const,
+              after_completion: {
+                type: "redirect" as const,
+                redirect: { return_url: returnUrl },
+              },
+            },
+          }
+        : {}),
     });
     return { url: portal.url };
   });
