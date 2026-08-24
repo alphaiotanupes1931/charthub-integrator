@@ -24,7 +24,96 @@ export type SignalRecord = {
   confidence?: number | null;
   /** Active playbook at scan time, kept so the scoreboard can group by it. */
   strategyId?: string | null;
+  /** Market price the plan was measured against, kept for version compares. */
+  refPrice?: number | null;
+  /** Feed the bars came from, kept for version compares. */
+  dataSource?: string | null;
 };
+
+/** One scan of a symbol/timeframe, numbered oldest-first, with its deltas. */
+export type SignalVersion = {
+  record: SignalRecord;
+  /** 1 = first ever scan of this symbol + timeframe. */
+  version: number;
+  /** Total versions recorded for this symbol + timeframe. */
+  total: number;
+  changes: VersionChange[];
+};
+
+export type VersionChange = {
+  label: string;
+  from: string;
+  to: string;
+  direction: "up" | "down" | "same";
+};
+
+const GRADE_RANK: Record<string, number> = {
+  "A+": 6, A: 5, "A-": 4.5, "B+": 4, B: 3, C: 2, D: 1, "NO ENTRY": 0,
+};
+
+function fmtLevel(v: number | null | undefined, ref?: number | null): string {
+  if (typeof v !== "number" || !isFinite(v)) return "—";
+  const basis = Math.abs(ref ?? v);
+  const dec = basis >= 1000 ? 2 : basis >= 10 ? 3 : basis >= 1 ? 4 : 5;
+  return v.toLocaleString(undefined, { minimumFractionDigits: dec, maximumFractionDigits: dec });
+}
+
+function numberChange(label: string, prev: number | null | undefined, next: number | null | undefined): VersionChange | null {
+  const a = typeof prev === "number" && isFinite(prev) ? prev : null;
+  const b = typeof next === "number" && isFinite(next) ? next : null;
+  if (a === null && b === null) return null;
+  if (a !== null && b !== null && Math.abs(a - b) < 1e-9) return null;
+  return {
+    label,
+    from: fmtLevel(a, b),
+    to: fmtLevel(b, a),
+    direction: a === null || b === null ? "same" : b > a ? "up" : "down",
+  };
+}
+
+/** What moved between two scans of the same instrument (older -> newer). */
+export function versionChanges(older: SignalRecord, newer: SignalRecord): VersionChange[] {
+  const out: VersionChange[] = [];
+  if ((older.grade || "") !== (newer.grade || "")) {
+    const a = GRADE_RANK[older.grade] ?? 0;
+    const b = GRADE_RANK[newer.grade] ?? 0;
+    out.push({ label: "Grade", from: older.grade || "—", to: newer.grade || "—", direction: b > a ? "up" : b < a ? "down" : "same" });
+  }
+  if ((older.bias || "") !== (newer.bias || "")) {
+    out.push({ label: "Bias", from: older.bias || "—", to: newer.bias || "—", direction: "same" });
+  }
+  for (const [label, key] of [
+    ["Entry", "entry"], ["Stop", "stop"], ["TP1", "tp1"], ["TP2", "tp2"],
+  ] as const) {
+    const c = numberChange(label, older[key], newer[key]);
+    if (c) out.push(c);
+  }
+  const conf = numberChange("Confidence", older.confidence ?? null, newer.confidence ?? null);
+  if (conf) out.push({ ...conf, from: `${Math.round(Number(conf.from.replace(/,/g, "")) || 0)}%`, to: `${Math.round(Number(conf.to.replace(/,/g, "")) || 0)}%` });
+  const price = numberChange("Price used", older.refPrice ?? null, newer.refPrice ?? null);
+  if (price) out.push(price);
+  return out;
+}
+
+/**
+ * Every preserved scan of one symbol + timeframe, newest first, numbered from
+ * the oldest scan on record and annotated with what changed versus the scan
+ * immediately before it.
+ */
+export function listVersions(symbol: string, interval?: string): SignalVersion[] {
+  const all = read()
+    .filter((s) => s.symbol === symbol && (interval ? s.interval === interval : true))
+    .sort((a, b) => a.at - b.at);
+  const total = all.length;
+  return all
+    .map((record, i) => ({
+      record,
+      version: i + 1,
+      total,
+      changes: i === 0 ? [] : versionChanges(all[i - 1], record),
+    }))
+    .reverse();
+}
 
 const KEY = "trademind.signalHistory.v1";
 const MAX = 200;
