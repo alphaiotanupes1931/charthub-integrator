@@ -528,7 +528,9 @@ function SettingsPage() {
 
 
       <SectionLabel>Privacy &amp; Data</SectionLabel>
-      <Card>
+      <RetentionSettingsPanel />
+      <Card className="mt-4">
+
         <h2 className="flex items-center gap-2 text-lg font-semibold mb-2">
           <Download className="size-5 text-primary" />
           Download all my data
