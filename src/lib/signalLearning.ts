@@ -101,9 +101,12 @@ function group(recs: SignalRecord[], keyOf: (r: SignalRecord) => string): Bucket
 }
 
 export function buildLearningReport(records?: SignalRecord[]): LearningReport {
-  const all = records ?? listSignals();
+  // Scan history the trader tagged, plus every resolved journal trade, so real
+  // logged outcomes count even when the scan card was never tagged.
+  const all = records ?? [...listSignals(), ...journalAsSignalRecords()];
   const taken = all.filter((r) => r.taken);
   const graded = taken.filter((r) => r.outcome === "win" || r.outcome === "loss" || r.outcome === "breakeven");
+
 
   const base = bucket("all", graded);
   const byGrade = group(graded, (r) => r.grade || "ungraded");
