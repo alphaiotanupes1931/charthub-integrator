@@ -8,6 +8,9 @@ export type ScoreEvidence = {
   prompt: string;
   /** Highest grade this context has earned, or null when there is no basis to cap. */
   cap: "A+" | "A" | "B" | "C" | null;
+  /** Cap that applies only when the current setup is itself counter-trend. */
+  counterCap?: "A+" | "A" | "B" | "C" | null;
+  counterReason?: string | null;
   /** Plain sentence explaining the cap, appended to the plan's reasoning. */
   reason: string | null;
 };
@@ -177,11 +180,12 @@ export async function scoreEvidenceFor(
     );
   }
 
+  let counterCap: ScoreEvidence["cap"] = null;
+  let counterReason: string | null = null;
   if (counterDecided >= 4 && (avgR(counter) < 0 || pct(counter.targets, counterDecided) < 45)) {
-    setCap(
-      "C",
-      `Capped at C: counter-trend scans on ${symbol} have a measured ${pct(counter.targets, counterDecided)}% hit rate and ${avgR(counter)}R average over ${counter.total} resolved signals, so fighting the Daily and 4H here is not earning a higher grade.`,
-    );
+    counterCap = "C";
+    counterReason =
+      `Capped at C: counter-trend scans on ${symbol} have a measured ${pct(counter.targets, counterDecided)}% hit rate and ${avgR(counter)}R average over ${counter.total} resolved signals, so fighting the Daily and 4H here is not earning a higher grade.`;
   }
 
   const guidance = cap
@@ -191,6 +195,8 @@ export async function scoreEvidenceFor(
       : "";
 
   return {
+    counterCap,
+    counterReason,
     prompt: `SCAN TRACK RECORD (measured from resolved past signals, not opinion):\n${lines.join("\n")}${guidance}`,
     cap,
     reason,
