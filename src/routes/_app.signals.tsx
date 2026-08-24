@@ -16,6 +16,8 @@ import {
   type SignalRecord,
 } from "@/lib/signalHistory";
 import { CapabilityGate } from "@/components/CapabilityGate";
+import { useSignalOutcomes, outcomeLabel } from "@/hooks/useSignalOutcomes";
+import type { SignalScoreRow } from "@/lib/signal-scores.shared";
 
 
 export const Route = createFileRoute("/_app/signals")({
@@ -159,7 +161,21 @@ function SignalsPage() {
   );
 }
 
+function OutcomeBadge({ row }: { row: SignalScoreRow | null }) {
+  const { text, tone } = outcomeLabel(row);
+  const cls =
+    tone === "win"
+      ? "border-bull/50 text-bull"
+      : tone === "loss"
+        ? "border-red-500/50 text-red-500"
+        : tone === "open"
+          ? "border-border/60 text-muted-foreground"
+          : "border-border/60 text-muted-foreground";
+  return <span className={`rounded border px-1.5 py-0.5 font-semibold ${cls}`}>{text}</span>;
+}
+
 function SignalHistory({ records, onOpen }: { records: SignalRecord[]; onOpen: (ticker: string) => void }) {
+  const { outcomeFor, totals, recheck } = useSignalOutcomes();
   return (
     <div className="rounded-xl border border-border/60 bg-card">
       <div className="flex items-center justify-between gap-3 border-b border-border/60 px-4 py-3">
@@ -167,6 +183,14 @@ function SignalHistory({ records, onOpen }: { records: SignalRecord[]; onOpen: (
           <History className="h-4 w-4" /> Signal history
           <span className="font-normal text-muted-foreground">({records.length})</span>
         </div>
+        <button
+          onClick={() => recheck.mutate()}
+          disabled={recheck.isPending}
+          className="inline-flex items-center gap-1 rounded-xl border border-border/60 px-2 py-1 text-xs text-muted-foreground hover:text-foreground disabled:opacity-60"
+        >
+          <RefreshCw className={`h-3 w-3 ${recheck.isPending ? "animate-spin" : ""}`} />
+          {recheck.isPending ? "Checking bars" : "Check outcomes"}
+        </button>
         {records.length > 0 && (
           <button
             onClick={() => clearSignalHistory()}
@@ -175,6 +199,18 @@ function SignalHistory({ records, onOpen }: { records: SignalRecord[]; onOpen: (
             Clear
           </button>
         )}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border/60 px-4 py-2 text-xs text-muted-foreground">
+        <span>
+          Outcomes are measured from real price bars, so you do not have to log a trade for a scan to count.
+        </span>
+        <span className="font-mono">
+          <span className="text-bull">{totals.targets} hit TP</span> · <span className="text-red-500">{totals.stops} stopped</span> · {totals.open} open
+          {totals.hitRate != null ? ` · ${totals.hitRate}% hit rate` : ""}
+          {totals.avgR != null ? ` · ${totals.avgR}R avg` : ""}
+        </span>
+        <Link to="/scoreboard" className="text-primary underline">Full scoreboard</Link>
       </div>
 
       {records.length === 0 ? (
@@ -199,6 +235,10 @@ function SignalHistory({ records, onOpen }: { records: SignalRecord[]; onOpen: (
                 <span className="font-mono text-muted-foreground">
                   {r.entry != null ? `E ${r.entry}` : ""} {r.stop != null ? `· S ${r.stop}` : ""} {r.tp1 != null ? `· TP ${r.tp1}` : ""}
                 </span>
+                <OutcomeBadge row={outcomeFor(r)} />
+                {r.counterTrend && (
+                  <span className="rounded border border-amber-500/50 px-1.5 py-0.5 text-amber-500">Counter-trend</span>
+                )}
                 <div className="flex-1" />
                 {r.taken ? (
                   <div className="flex items-center gap-1">
