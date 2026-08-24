@@ -139,4 +139,6 @@ export type TradePlan = {
   dataSource?: MarketSnapshot["source"];
   dataFetchedAt?: string;
   candleCount?: number;
+  /** Market price this plan was measured against, at dataFetchedAt. */
+  refPrice?: number;
 };

@@ -5,6 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { takeTrade } from "@/lib/signalHistory";
 import type { ChartGrade } from "@/lib/chartAnnotations";
+import { ScanStamp } from "@/components/ScanStamp";
 import { AutoBacktestVerify } from "@/components/AutoBacktestVerify";
 import { useTradeLogged } from "@/hooks/useTradeLogged";
 import { useTimezone } from "@/hooks/useTimezone";
@@ -383,9 +384,12 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
             </div>
           )}
           <div className="col-span-2 sm:col-span-4 flex flex-wrap items-center gap-2 pt-1 border-t border-border/40">
-            <span className="text-[10px] text-muted-foreground">
-              {grade.dataSource ?? "feed unknown"} · {grade.candleCount ?? 0} bars
-            </span>
+            <ScanStamp
+              fetchedAt={grade.dataFetchedAt}
+              refPrice={grade.refPrice}
+              dataSource={grade.dataSource ?? "feed unknown"}
+              candleCount={grade.candleCount ?? 0}
+            />
             <div className="flex-1" />
             <AutoBacktestVerify
               symbol={symbol}
