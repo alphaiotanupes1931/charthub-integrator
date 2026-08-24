@@ -41,6 +41,8 @@ export type ChartGrade = {
   dataSource?: string;
   dataFetchedAt?: string;
   candleCount?: number;
+  /** Market price the plan was measured against, at dataFetchedAt. */
+  refPrice?: number;
 };
 
 export type ConceptId =
