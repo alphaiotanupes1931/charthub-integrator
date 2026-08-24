@@ -7,6 +7,8 @@
 // repeating setups that have historically lost.
 
 import { listSignals, type SignalRecord } from "./signalHistory";
+import { journalAsSignalRecords, journalUntaggedCount } from "./journalLearning";
+
 
 export type Bucket = {
   key: string;
@@ -101,9 +103,12 @@ function group(recs: SignalRecord[], keyOf: (r: SignalRecord) => string): Bucket
 }
 
 export function buildLearningReport(records?: SignalRecord[]): LearningReport {
-  const all = records ?? listSignals();
+  // Scan history the trader tagged, plus every resolved journal trade, so real
+  // logged outcomes count even when the scan card was never tagged.
+  const all = records ?? [...listSignals(), ...journalAsSignalRecords()];
   const taken = all.filter((r) => r.taken);
   const graded = taken.filter((r) => r.outcome === "win" || r.outcome === "loss" || r.outcome === "breakeven");
+
 
   const base = bucket("all", graded);
   const byGrade = group(graded, (r) => r.grade || "ungraded");
@@ -156,8 +161,12 @@ export function buildLearningReport(records?: SignalRecord[]): LearningReport {
 export function buildLearningPromptBlock(report?: LearningReport): string {
   const r = report ?? buildLearningReport();
   if (r.graded === 0) {
-    return "The trader has not tagged any taken signal with an outcome yet, so there is no measured signal edge. Do not invent past performance numbers.";
+    const open = journalUntaggedCount();
+    return open > 0
+      ? `No resolved outcomes yet: ${open} journal trade${open === 1 ? "" : "s"} are still open or have an exit equal to the entry, so there is no measured edge. Tell the trader to close them with the real exit price. Do not invent past performance numbers.`
+      : "The trader has not tagged any taken signal with an outcome yet, so there is no measured signal edge. Do not invent past performance numbers.";
   }
+
   const fmt = (bs: Bucket[]) =>
     bs.slice(0, 6).map((b) => `  ${b.key}: ${b.taken} trades, ${b.winRate}% WR, ${b.expectancyR > 0 ? "+" : ""}${b.expectancyR}R avg`).join("\n");
   return [
