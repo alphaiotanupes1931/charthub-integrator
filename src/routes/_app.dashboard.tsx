@@ -1177,6 +1177,8 @@ function Dashboard() {
       source: "chart",
       confidence: typeof plan.confidence === "number" ? plan.confidence : null,
       strategyId: readActiveStrategy() ?? null,
+      refPrice: typeof plan.refPrice === "number" ? plan.refPrice : (snapshot?.lastPrice ?? null),
+      dataSource: plan.dataSource ?? null,
     });
 
   };

@@ -6,6 +6,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { takeTrade } from "@/lib/signalHistory";
 import type { ChartGrade } from "@/lib/chartAnnotations";
 import { ScanStamp } from "@/components/ScanStamp";
+import { ScanVersionHistory } from "@/components/ScanVersionHistory";
 import { AutoBacktestVerify } from "@/components/AutoBacktestVerify";
 import { useTradeLogged } from "@/hooks/useTradeLogged";
 import { useTimezone } from "@/hooks/useTimezone";
@@ -390,6 +391,7 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
               dataSource={grade.dataSource ?? "feed unknown"}
               candleCount={grade.candleCount ?? 0}
             />
+            <ScanVersionHistory symbol={symbol} interval={interval} className="w-full order-last" />
             <div className="flex-1" />
             <AutoBacktestVerify
               symbol={symbol}
