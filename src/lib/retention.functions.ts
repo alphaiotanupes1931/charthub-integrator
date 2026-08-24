@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { RETENTION_VALUES } from "@/lib/retention";
 
 /**
  * Scan history retention.
@@ -10,16 +11,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
  * out of History but can be restored at any time from the Archived view.
  * A nightly job applies the same rule server-side.
  */
-export const RETENTION_OPTIONS = [
-  { value: 0, label: "Keep forever" },
-  { value: 7, label: "7 days" },
-  { value: 30, label: "30 days" },
-  { value: 90, label: "90 days" },
-  { value: 180, label: "6 months" },
-  { value: 365, label: "1 year" },
-] as const;
 
-const RETENTION_VALUES = RETENTION_OPTIONS.map((o) => o.value) as readonly number[];
 
 export const getRetentionSettings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
