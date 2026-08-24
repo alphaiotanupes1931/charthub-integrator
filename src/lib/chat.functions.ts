@@ -11,7 +11,11 @@ function getBearerToken() {
 }
 
 export const listChatThreads = createServerFn({ method: "POST" })
-  .handler(async () => {
+  .inputValidator((d: unknown) => {
+    const parsed = z.object({ archived: z.boolean().optional() }).safeParse(d ?? {});
+    return parsed.success ? parsed.data : {};
+  })
+  .handler(async ({ data }) => {
     // Auth-optional while the app is open for testing: no session means no saved history.
     const token = getBearerToken();
     if (!token) return [];
@@ -29,12 +33,16 @@ export const listChatThreads = createServerFn({ method: "POST" })
     const userId = userData.user?.id;
     if (!userId) return [];
 
-    const { data: threads, error } = await supabase
+    // Retention: archived threads are kept but hidden from the active History
+    // list unless the caller explicitly asks for the archive.
+    let query = supabase
       .from("chat_threads")
-      .select("id,title,updated_at,created_at")
-      .eq("user_id", userId)
-      .order("updated_at", { ascending: false });
+      .select("id,title,updated_at,created_at,archived_at")
+      .eq("user_id", userId);
+    query = data?.archived ? query.not("archived_at", "is", null) : query.is("archived_at", null);
+    const { data: threads, error } = await query.order("updated_at", { ascending: false });
     if (error) throw new Error(error.message);
+
     const rows = threads ?? [];
     if (rows.length === 0) return [];
 

@@ -9,6 +9,8 @@ import { useTimezone, TIMEZONE_OPTIONS, AUTO_TZ } from "@/hooks/useTimezone";
 import { exportMyData, deleteMyAccount } from "@/lib/privacy.functions";
 import { cancelMySubscription, createPortalSession, getMySubscription } from "@/lib/billing.functions";
 import { FreeTierUsagePanel } from "@/components/FreeTierUsagePanel";
+import { RetentionSettingsPanel } from "@/components/RetentionSettingsPanel";
+
 import { toast } from "sonner";
 
 import {
@@ -528,7 +530,9 @@ function SettingsPage() {
 
 
       <SectionLabel>Privacy &amp; Data</SectionLabel>
-      <Card>
+      <RetentionSettingsPanel />
+      <Card className="mt-4">
+
         <h2 className="flex items-center gap-2 text-lg font-semibold mb-2">
           <Download className="size-5 text-primary" />
           Download all my data
