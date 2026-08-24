@@ -79,13 +79,14 @@ export async function scoreEvidenceFor(
     status: string;
     realized_r: number | string | null;
     strategy_id: string | null;
+    counter_trend: boolean | null;
   };
 
   let rows: Row[] = [];
   try {
     const res = await supabase
       .from("signal_scores")
-      .select("symbol, timeframe, grade, bias, status, realized_r, strategy_id")
+      .select("symbol, timeframe, grade, bias, status, realized_r, strategy_id, counter_trend")
       .eq("user_id", userId)
       .eq("symbol", symbol)
       .neq("status", "open")
@@ -114,6 +115,16 @@ export async function scoreEvidenceFor(
   if (mid.targets + mid.stops >= 6) {
     lines.push(
       `Past B calls on ${symbol}: ${pct(mid.targets, mid.targets + mid.stops)}% hit rate, ${avgR(mid)}R average over ${mid.total} signals.`,
+    );
+  }
+
+  // Counter-trend record. This is what makes the coach learn from its own bad
+  // counter-trend calls without the trader logging a single trade.
+  const counter = statOf(rows.filter((r) => r.counter_trend === true));
+  const counterDecided = counter.targets + counter.stops;
+  if (counterDecided >= 4) {
+    lines.push(
+      `Counter-trend scans on ${symbol} (fighting the Daily and 4H): ${pct(counter.targets, counterDecided)}% hit rate, ${avgR(counter)}R average over ${counter.total} resolved signals.`,
     );
   }
 
@@ -163,6 +174,13 @@ export async function scoreEvidenceFor(
     setCap(
       "C",
       `Capped at C: this playbook has a negative measured record on ${symbol} (${avgR(strategyStat)}R average over ${strategyStat.total} resolved signals).`,
+    );
+  }
+
+  if (counterDecided >= 4 && (avgR(counter) < 0 || pct(counter.targets, counterDecided) < 45)) {
+    setCap(
+      "C",
+      `Capped at C: counter-trend scans on ${symbol} have a measured ${pct(counter.targets, counterDecided)}% hit rate and ${avgR(counter)}R average over ${counter.total} resolved signals, so fighting the Daily and 4H here is not earning a higher grade.`,
     );
   }
 
