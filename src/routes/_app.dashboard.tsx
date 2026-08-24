@@ -1201,20 +1201,29 @@ function Dashboard() {
       tp1,
       tp2,
     });
+    // Levels are rounded to the instrument's own precision so saved cards and
+    // the AI context recap never show float noise like 4348.450000000001.
+    const round = (v: number | undefined) =>
+      typeof v === "number" && isFinite(v) ? Number(v.toFixed(dec)) : v;
     const gradePayload = {
+      // Symbol and timeframe travel with the card so the context inspector and
+      // the coach's recap can name the instrument the scan belongs to.
+      symbol: scanSymbol.name,
+      ticker: scanSymbol.ticker,
+      timeframe: intervalLabel,
       grade: plan.grade,
       bias,
       confidence: plan.confidence,
-      entry,
-      stop,
-      tp1,
-      tp2,
+      entry: round(entry),
+      stop: round(stop),
+      tp1: round(tp1),
+      tp2: round(tp2),
       strength: plan.notes,
       weakness: plan.details,
       dataSource: plan.dataSource,
       dataFetchedAt: plan.dataFetchedAt,
       candleCount: plan.candleCount,
-      refPrice: typeof plan.refPrice === "number" ? plan.refPrice : last,
+      refPrice: round(typeof plan.refPrice === "number" ? plan.refPrice : last),
     };
     const levelLines = plan.grade === "NO ENTRY"
       ? ["No entry - stand down until the setup improves."]

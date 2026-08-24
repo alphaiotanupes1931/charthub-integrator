@@ -288,9 +288,12 @@ function ChatThreadInner({
           {messages.map((m) => {
             const text = uiMessageText(m);
             if (m.role !== "assistant") {
+              // Scan prompts carry an internal display marker; show the short
+              // trader-facing line, never the raw instruction sent to the model.
+              const display = text.match(/^<<<SCAN_DISPLAY:([^>]*)>>>/);
               return (
                 <Message key={m.id} from={m.role}>
-                  <MessageContent>{text}</MessageContent>
+                  <MessageContent>{display ? display[1] : text}</MessageContent>
                 </Message>
               );
             }
