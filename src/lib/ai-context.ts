@@ -45,16 +45,23 @@ export function extractPriorScans(messages: ChatLikeMessage[]): PriorScan[] {
     if (m.role !== "assistant") return;
     const re = /```chart-grade\s*([\s\S]*?)```/g;
     const text = textOf(m);
+    // Older cards were saved without a symbol field; the reply's opening line
+    // ("Gold Spot scan: B Short.") still names the instrument, so fall back to it.
+    const fallbackSymbol = text.match(/^(.{1,40}?) scan:/m)?.[1]?.trim() ?? null;
     let match: RegExpExecArray | null;
     while ((match = re.exec(text)) !== null) {
       try {
         const parsed = JSON.parse(match[1]) as Record<string, unknown>;
-        if (parsed && typeof parsed === "object") raw.push({ turn: i + 1, scan: parsed });
+        if (parsed && typeof parsed === "object") {
+          if (!parsed["symbol"] && fallbackSymbol) parsed["symbol"] = fallbackSymbol;
+          raw.push({ turn: i + 1, scan: parsed });
+        }
       } catch {
         /* ignore malformed block */
       }
     }
   });
+
 
   const cutoff = Math.max(0, raw.length - PRIOR_SCAN_LIMIT);
   return raw.map(({ turn, scan }, idx) => {
@@ -65,6 +72,17 @@ export function extractPriorScans(messages: ChatLikeMessage[]): PriorScan[] {
       }
       return null;
     };
+    // Levels saved by older scans can carry float noise (4348.450000000001);
+    // trim it so both the panel and the model recap read like prices.
+    const level = (...keys: string[]) => {
+      const v = get(...keys);
+      if (v === null) return null;
+      const n = Number(v);
+      if (!isFinite(n)) return v;
+      const abs = Math.abs(n);
+      const dec = abs >= 1000 ? 2 : abs >= 10 ? 3 : abs >= 1 ? 4 : 5;
+      return String(Number(n.toFixed(dec)));
+    };
     return {
       turn,
       symbol: get("symbol", "ticker"),
@@ -72,12 +90,12 @@ export function extractPriorScans(messages: ChatLikeMessage[]): PriorScan[] {
       grade: get("grade"),
       bias: get("bias"),
       confidence: get("confidence"),
-      entry: get("entry"),
-      stop: get("stop"),
-      tp1: get("tp1"),
-      tp2: get("tp2"),
+      entry: level("entry"),
+      stop: level("stop"),
+      tp1: level("tp1"),
+      tp2: level("tp2"),
       rr: get("rr"),
-      refPrice: get("refPrice"),
+      refPrice: level("refPrice"),
       scannedAt: get("dataFetchedAt", "scannedAt"),
       synopsis: get("synopsis", "rationale", "reason"),
       included: idx >= cutoff,
