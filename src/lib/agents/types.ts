@@ -141,4 +141,8 @@ export type TradePlan = {
   candleCount?: number;
   /** Market price this plan was measured against, at dataFetchedAt. */
   refPrice?: number;
+  /** True when the setup fights the Daily and 4H direction. */
+  counterTrend?: boolean;
+  /** Higher-timeframe (Daily) bias at scan time. */
+  htfBias?: "bullish" | "bearish" | "neutral";
 };
