@@ -223,6 +223,49 @@ function resolveDirection(
   return { bias: "Neutral", reason: "no directional evidence" };
 }
 
+// ---------- Counter-trend guard ----------
+// Shorting into a bullish 4H + Daily (or buying into a bearish one) is a
+// counter-trend trade. A 15m flip plus 1H structure is NOT alignment when the
+// higher timeframes are still intact, so those setups can never earn a high
+// grade unless the higher-timeframe structure itself is already broken with a
+// confirmed break in the trade's direction.
+export type CounterTrendRead = {
+  counterTrend: boolean;
+  /** Highest grade the higher-timeframe picture supports. */
+  cap: typeof GRADES[number] | null;
+  reason: string | null;
+};
+
+export function counterTrendRead(
+  bias: typeof BIASES[number],
+  snap: MarketSnapshot,
+): CounterTrendRead {
+  const none: CounterTrendRead = { counterTrend: false, cap: null, reason: null };
+  if (bias === "Neutral") return none;
+  const wanted = bias === "Long" ? "bullish" : "bearish";
+  const ladder = snap.mtf?.ladder ?? [];
+  const daily = ladder.find((r) => r.label === "Daily");
+  const dailyBias = daily?.bias ?? snap.cisd.htfBias;
+  const h4Dir = snap.mtf?.h4.direction ?? "neutral";
+  const against = (v: string | undefined) => v === (wanted === "bullish" ? "bearish" : "bullish");
+  if (!against(dailyBias) || !against(h4Dir)) return none;
+
+  const h4Row = ladder.find((r) => r.label === "4H");
+  const htfBroken = h4Row?.structure === wanted || daily?.structure === wanted;
+  if (htfBroken) {
+    return {
+      counterTrend: true,
+      cap: "A",
+      reason: `Counter-trend ${bias.toLowerCase()} against a ${dailyBias} Daily and ${h4Dir} 4H, but higher-timeframe structure has already broken ${wanted}, so the grade is capped at A.`,
+    };
+  }
+  return {
+    counterTrend: true,
+    cap: "C",
+    reason: `Counter-trend ${bias.toLowerCase()}: the Daily is ${dailyBias} and the 4H is ${h4Dir} with no confirmed higher-timeframe break, so the grade is capped at C no matter how clean the 1H/15m looks. Skip it or cut risk to 0.5R.`,
+  };
+}
+
 // ---------- Deterministic grade ----------
 // Grade is a function of counted evidence, not model sampling. Objective risk
 // controls can cap it later, but the model's habitual grade must not flatten
@@ -252,8 +295,16 @@ export function gradeFromEvidence(
 
   // Missing higher-timeframe data means the counters had little to work with.
   if (!snap.mtf && grade !== "C") grade = "C";
+
+  // Counter-trend setups are capped last so nothing can lift them back up.
+  const ct = counterTrendRead(bias, snap);
+  if (ct.cap) {
+    const order: string[] = ["NO ENTRY", "C", "B", "A", "A+"];
+    if (order.indexOf(grade) > order.indexOf(ct.cap)) grade = ct.cap;
+  }
   return grade;
 }
+
 
 
 // ---------- Structure-anchored entry refinement ----------
@@ -614,14 +665,18 @@ export async function runPlanner(
   }
   const isNoEntry = grade === "NO ENTRY";
 
+  const counterTrend = counterTrendRead(bias, snap);
+
   // `notes` already carries the thesis ("why take this trade"), so the details
   // block must NOT repeat it. It is the read-out of the evidence itself:
   // market structure, order flow and volume, volatility and levels, then a
   // short takeaway in the active coach's voice, then trade management.
-  const dataNote = snap.mtf
+  const dataNote = (snap.mtf
     ? ""
-    : " Higher-timeframe data was incomplete on this scan, so the grade is capped at C until the feed fills in.";
+    : " Higher-timeframe data was incomplete on this scan, so the grade is capped at C until the feed fills in.")
+    + (counterTrend.reason ? ` ${counterTrend.reason}` : "");
   const details = buildDetails(snap, memo, finalPlan, dec, coach, bias, grade, newsWarning, dataNote);
+
 
 
 
