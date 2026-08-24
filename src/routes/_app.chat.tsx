@@ -1,10 +1,11 @@
 import { createFileRoute, Link, Outlet, useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { MessageSquare, Plus, X } from "lucide-react";
+import { Archive, ArchiveRestore, MessageSquare, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { listChatThreads, createChatThread, deleteChatThread } from "@/lib/chat.functions";
+import { setThreadArchived } from "@/lib/retention.functions";
 import { clearLastThreadId } from "@/lib/chat-client";
 
 export const Route = createFileRoute("/_app/chat")({
@@ -17,22 +18,26 @@ type Thread = { id: string; title: string; updated_at: string };
 function ChatLayout() {
   const [threads, setThreads] = useState<Thread[]>([]);
   const [loading, setLoading] = useState(true);
+  // Retention: archived conversations stay out of the active list but are
+  // recoverable here instead of being deleted.
+  const [showArchived, setShowArchived] = useState(false);
   const navigate = useNavigate();
   const params = useParams({ strict: false }) as { threadId?: string };
 
   const listFn = useServerFn(listChatThreads);
   const createFn = useServerFn(createChatThread);
   const delFn = useServerFn(deleteChatThread);
+  const archiveFn = useServerFn(setThreadArchived);
 
   const reload = useCallback(async () => {
     setLoading(true);
     try {
-      const rows = await listFn();
+      const rows = await listFn({ data: { archived: showArchived } });
       setThreads(rows as Thread[]);
     } finally {
       setLoading(false);
     }
-  }, [listFn]);
+  }, [listFn, showArchived]);
 
   useEffect(() => {
     reload();
@@ -41,6 +46,7 @@ function ChatLayout() {
   const handleNew = useCallback(async () => {
     const t = await createFn({ data: {} });
     if (t) {
+      setShowArchived(false);
       setThreads((prev) => [{ id: t.id, title: t.title, updated_at: t.updated_at }, ...prev]);
       navigate({ to: "/chat/$threadId", params: { threadId: t.id } });
     }
@@ -60,20 +66,45 @@ function ChatLayout() {
     }
   }, [delFn, navigate, params.threadId]);
 
+  const handleArchiveToggle = useCallback(async (id: string, archived: boolean, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await archiveFn({ data: { threadId: id, archived } });
+      setThreads((prev) => prev.filter((t) => t.id !== id));
+      toast.success(archived ? "Conversation archived" : "Conversation restored");
+      if (archived && params.threadId === id) navigate({ to: "/chat" });
+    } catch {
+      toast.error(archived ? "Could not archive conversation" : "Could not restore conversation");
+    }
+  }, [archiveFn, navigate, params.threadId]);
+
   return (
     <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
       {/* Thread sidebar */}
       <aside className="w-72 shrink-0 border-r border-border/60 bg-card/40 flex flex-col">
-        <div className="p-3 border-b border-border/60">
+        <div className="p-3 border-b border-border/60 space-y-2">
           <Button onClick={handleNew} className="w-full justify-start gap-2" variant="default">
             <Plus className="h-4 w-4" /> New conversation
           </Button>
+          <button
+            type="button"
+            onClick={() => setShowArchived((v) => !v)}
+            className={`w-full flex items-center gap-2 rounded-xl px-2 py-1.5 text-xs transition ${
+              showArchived ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-accent/40"
+            }`}
+          >
+            <Archive className="h-3.5 w-3.5" />
+            {showArchived ? "Viewing archived" : "Archived"}
+          </button>
         </div>
         <div className="flex-1 overflow-y-auto p-2 space-y-1">
           {loading && <div className="text-xs text-muted-foreground p-3">Loading...</div>}
           {!loading && threads.length === 0 && (
             <div className="text-xs text-muted-foreground p-3 italic">
-              No conversations yet. Start one above.
+              {showArchived
+                ? "Nothing archived yet. Set a retention window in Settings to archive old scans automatically."
+                : "No conversations yet. Start one above."}
             </div>
           )}
           {threads.map((t) => {
@@ -93,6 +124,14 @@ function ChatLayout() {
                   <MessageSquare className="h-3.5 w-3.5 shrink-0 opacity-70" />
                   <span className="truncate">{t.title}</span>
                 </Link>
+                <button
+                  onClick={(e) => handleArchiveToggle(t.id, !showArchived, e)}
+                  className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-primary p-1"
+                  aria-label={showArchived ? "Restore conversation" : "Archive conversation"}
+                  title={showArchived ? "Restore conversation" : "Archive conversation"}
+                >
+                  {showArchived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />}
+                </button>
                 <button
                   onClick={(e) => handleDelete(t.id, e)}
                   className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive p-1"
