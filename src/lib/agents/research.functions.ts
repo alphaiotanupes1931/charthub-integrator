@@ -194,11 +194,18 @@ export const runResearchPlan = createServerFn({ method: "POST" })
 
     // Hard self-correction: the measured record outranks the model's own
     // opinion of the setup, so the grade is clamped after the fact too.
-    const effectiveCap = plan.counterTrend && counterCap ? counterCap : gradeCap;
-    const effectiveReason = plan.counterTrend && counterCap ? counterCapReason : capReason;
-    if (effectiveCap) {
+    const useCounter = Boolean(plan.counterTrend && counterCap);
+    if (gradeCap || useCounter) {
       const { applyGradeCap } = await import("@/lib/signal-evidence.server");
-      const capped = applyGradeCap(plan.grade, effectiveCap);
+      // Worst applicable cap wins; the counter-trend record only bites when
+      // this particular setup is fighting the higher timeframes.
+      let capped = applyGradeCap(plan.grade, gradeCap);
+      let effectiveReason = capped !== plan.grade ? capReason : null;
+      if (useCounter) {
+        const c2 = applyGradeCap(capped, counterCap);
+        if (c2 !== capped) effectiveReason = counterCapReason;
+        capped = c2;
+      }
       if (capped !== plan.grade) {
         return {
           ...plan,
