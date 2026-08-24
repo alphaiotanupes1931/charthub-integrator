@@ -213,6 +213,9 @@ type ScanResult = {
   dataFetchedAt?: string;
   candleCount?: number;
   refPrice?: number;
+  counterTrend?: boolean;
+  htfBias?: "bullish" | "bearish" | "neutral";
+
 };
 
 function fmtPrice(n: number, decimals: number): string {
@@ -1194,6 +1197,8 @@ function Dashboard() {
       strategyId: readActiveStrategy() ?? null,
       refPrice: typeof plan.refPrice === "number" ? plan.refPrice : (snapshot?.lastPrice ?? null),
       dataSource: plan.dataSource ?? null,
+      counterTrend: plan.counterTrend ?? false,
+      htfBias: plan.htfBias ?? null,
     });
 
   };

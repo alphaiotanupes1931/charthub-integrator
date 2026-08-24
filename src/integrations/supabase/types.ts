@@ -1300,9 +1300,11 @@ export type Database = {
         Row: {
           bias: string
           confidence: number | null
+          counter_trend: boolean
           created_at: string
           entry: number
           grade: string
+          htf_bias: string | null
           id: string
           planned_r: number | null
           realized_r: number | null
@@ -1320,9 +1322,11 @@ export type Database = {
         Insert: {
           bias: string
           confidence?: number | null
+          counter_trend?: boolean
           created_at?: string
           entry: number
           grade: string
+          htf_bias?: string | null
           id?: string
           planned_r?: number | null
           realized_r?: number | null
@@ -1340,9 +1344,11 @@ export type Database = {
         Update: {
           bias?: string
           confidence?: number | null
+          counter_trend?: boolean
           created_at?: string
           entry?: number
           grade?: string
+          htf_bias?: string | null
           id?: string
           planned_r?: number | null
           realized_r?: number | null

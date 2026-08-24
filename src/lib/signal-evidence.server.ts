@@ -8,6 +8,9 @@ export type ScoreEvidence = {
   prompt: string;
   /** Highest grade this context has earned, or null when there is no basis to cap. */
   cap: "A+" | "A" | "B" | "C" | null;
+  /** Cap that applies only when the current setup is itself counter-trend. */
+  counterCap?: "A+" | "A" | "B" | "C" | null;
+  counterReason?: string | null;
   /** Plain sentence explaining the cap, appended to the plan's reasoning. */
   reason: string | null;
 };
@@ -79,13 +82,14 @@ export async function scoreEvidenceFor(
     status: string;
     realized_r: number | string | null;
     strategy_id: string | null;
+    counter_trend: boolean | null;
   };
 
   let rows: Row[] = [];
   try {
     const res = await supabase
       .from("signal_scores")
-      .select("symbol, timeframe, grade, bias, status, realized_r, strategy_id")
+      .select("symbol, timeframe, grade, bias, status, realized_r, strategy_id, counter_trend")
       .eq("user_id", userId)
       .eq("symbol", symbol)
       .neq("status", "open")
@@ -114,6 +118,16 @@ export async function scoreEvidenceFor(
   if (mid.targets + mid.stops >= 6) {
     lines.push(
       `Past B calls on ${symbol}: ${pct(mid.targets, mid.targets + mid.stops)}% hit rate, ${avgR(mid)}R average over ${mid.total} signals.`,
+    );
+  }
+
+  // Counter-trend record. This is what makes the coach learn from its own bad
+  // counter-trend calls without the trader logging a single trade.
+  const counter = statOf(rows.filter((r) => r.counter_trend === true));
+  const counterDecided = counter.targets + counter.stops;
+  if (counterDecided >= 4) {
+    lines.push(
+      `Counter-trend scans on ${symbol} (fighting the Daily and 4H): ${pct(counter.targets, counterDecided)}% hit rate, ${avgR(counter)}R average over ${counter.total} resolved signals.`,
     );
   }
 
@@ -166,6 +180,14 @@ export async function scoreEvidenceFor(
     );
   }
 
+  let counterCap: ScoreEvidence["cap"] = null;
+  let counterReason: string | null = null;
+  if (counterDecided >= 4 && (avgR(counter) < 0 || pct(counter.targets, counterDecided) < 45)) {
+    counterCap = "C";
+    counterReason =
+      `Capped at C: counter-trend scans on ${symbol} have a measured ${pct(counter.targets, counterDecided)}% hit rate and ${avgR(counter)}R average over ${counter.total} resolved signals, so fighting the Daily and 4H here is not earning a higher grade.`;
+  }
+
   const guidance = cap
     ? `\nSelf-correction: the measured record above is worse than the grades previously given. Do not grade this setup above ${cap}, and say plainly in the invalidation that past scans on this instrument have not paid.`
     : decided >= 10 && avgR(all) > 0.3
@@ -173,6 +195,8 @@ export async function scoreEvidenceFor(
       : "";
 
   return {
+    counterCap,
+    counterReason,
     prompt: `SCAN TRACK RECORD (measured from resolved past signals, not opinion):\n${lines.join("\n")}${guidance}`,
     cap,
     reason,

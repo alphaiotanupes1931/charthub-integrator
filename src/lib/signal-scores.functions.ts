@@ -20,6 +20,8 @@ const RecordInput = z.object({
   entry: z.number().finite(),
   stop: z.number().finite(),
   tp1: z.number().finite(),
+  counterTrend: z.boolean().optional(),
+  htfBias: z.string().max(12).nullable().optional(),
 });
 
 type Row = {
@@ -39,6 +41,8 @@ type Row = {
   resolved_at: string | null;
   taken: boolean;
   created_at: string;
+  counter_trend: boolean | null;
+  htf_bias: string | null;
 };
 
 function toRow(r: Row): SignalScoreRow {
@@ -60,6 +64,8 @@ function toRow(r: Row): SignalScoreRow {
     resolvedAt: r.resolved_at,
     taken: r.taken,
     createdAt: r.created_at,
+    counterTrend: Boolean(r.counter_trend),
+    htfBias: r.htf_bias,
   };
 }
 
@@ -97,6 +103,8 @@ export const recordSignalScore = createServerFn({ method: "POST" })
         stop: data.stop,
         tp1: data.tp1,
         planned_r: plannedR,
+        counter_trend: data.counterTrend ?? false,
+        htf_bias: data.htfBias ?? null,
       })
       .select("id")
       .single();

@@ -710,6 +710,8 @@ export async function runPlanner(
     dataFetchedAt: snap.fetchedAt,
     candleCount: snap.candles.length,
     refPrice: snap.lastPrice,
+    counterTrend: counterTrend.counterTrend,
+    htfBias: dailyBias,
   };
 }
 
