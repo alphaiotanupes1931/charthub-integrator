@@ -172,6 +172,11 @@ function ScoreboardPage() {
             <BucketTable title="By timeframe" buckets={board.byTimeframe} empty="No timeframes yet." />
             <BucketTable title="By confidence" buckets={board.byConfidence} empty="No confidence data yet." />
             <BucketTable
+              title="Counter-trend vs with-trend"
+              buckets={board.byTrendContext}
+              empty="No trend context recorded yet."
+            />
+            <BucketTable
               title="By strategy"
               buckets={board.byStrategy}
               empty="No strategy attached to your scans yet. Pick a playbook in the dashboard top bar and it will be tracked here."
@@ -189,6 +194,11 @@ function ScoreboardPage() {
                   <span className="text-muted-foreground">{tfLabel(r.timeframe)}</span>
                   <span className="font-mono text-muted-foreground">@ {r.entry}</span>
                   {r.taken && <span className="rounded-xl border border-border/60 px-2 py-0.5 text-[10px]">Taken</span>}
+                  {r.counterTrend && (
+                    <span className="rounded-xl border border-amber-500/50 px-2 py-0.5 text-[10px] text-amber-400">
+                      Counter-trend
+                    </span>
+                  )}
                   <span className="flex items-center gap-1">
                     {r.status === "target" && (
                       <>

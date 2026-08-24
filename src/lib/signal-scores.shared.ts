@@ -134,6 +134,10 @@ export function buildScoreboard(rows: SignalScoreRow[]): Scoreboard {
   const byTimeframe = group(rows, (r) => tfLabel(r.timeframe));
   const byStrategy = group(rows, (r) => r.strategyId);
   const byConfidence = group(rows, (r) => confidenceBand(r.confidence));
+  // Counter-trend vs with-trend, split by grade so "counter-trend B" shows up
+  // as its own measured line instead of hiding inside the B bucket.
+  const byTrendContext = group(rows, (r) =>
+    `${r.counterTrend ? "Counter-trend" : "With-trend"} ${r.grade}`);
 
   const worstSymbol = bySymbol.filter((b) => b.resolved >= 4).sort((a, b) => a.expectancyR - b.expectancyR)[0];
   const bestSymbol = bySymbol.filter((b) => b.resolved >= 4).sort((a, b) => b.expectancyR - a.expectancyR)[0];
@@ -158,6 +162,15 @@ export function buildScoreboard(rows: SignalScoreRow[]): Scoreboard {
     notes.push(`The signals you skipped resolved better than the ones you took (${skippedRate}% vs ${takenRate}%). Your selection is filtering out the good ones.`);
   }
 
+  const counter = bucket("counter", rows.filter((r) => r.counterTrend));
+  const withTrend = bucket("with", rows.filter((r) => !r.counterTrend));
+  if (counter.resolved >= 4) {
+    notes.push(
+      `Counter-trend scans (fighting the Daily and 4H): ${counter.hitRate}% hit rate, ${counter.expectancyR}R average over ${counter.resolved} resolved signals` +
+        (withTrend.resolved >= 4 ? `, against ${withTrend.hitRate}% and ${withTrend.expectancyR}R with the trend.` : "."),
+    );
+  }
+
   if (overall.resolved < 10) {
     notes.push("Fewer than 10 resolved signals so far. Numbers here get meaningful after a few weeks of scanning.");
   }
@@ -176,6 +189,7 @@ export function buildScoreboard(rows: SignalScoreRow[]): Scoreboard {
     byTimeframe,
     byStrategy,
     byConfidence,
+    byTrendContext,
     takenHitRate: takenRate,
     skippedHitRate: skippedRate,
     notes,
