@@ -390,6 +390,7 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
               dataSource={grade.dataSource ?? "feed unknown"}
               candleCount={grade.candleCount ?? 0}
             />
+            <ScanVersionHistory symbol={symbol} interval={interval} className="w-full order-last" />
             <div className="flex-1" />
             <AutoBacktestVerify
               symbol={symbol}
