@@ -167,6 +167,9 @@ export const getChatMessages = createServerFn({ method: "POST" })
       .eq("thread_id", data.threadId)
       .order("created_at", { ascending: true });
     if (error) throw new Error(error.message);
+    // Only true duplicates (the same stored message id) are collapsed. Content
+    // dedupe used to silently drop repeat scans of the same instrument, which
+    // made past scans disappear from history.
     const seen = new Set<string>();
     return (rows ?? [])
       .map((r) => ({
@@ -177,9 +180,8 @@ export const getChatMessages = createServerFn({ method: "POST" })
         parts: (r.parts ?? []) as Array<{ type: string; text?: string }>,
       }))
       .filter((m) => {
-        const key = `${m.role}:${JSON.stringify(m.parts)}`;
-        if (seen.has(key)) return false;
-        seen.add(key);
+        if (seen.has(m.id)) return false;
+        seen.add(m.id);
         return true;
       });
   });
