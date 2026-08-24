@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Archive, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
-import { Select } from "@/components/ui/select";
+
 import {
   RETENTION_OPTIONS,
   applyRetentionNow,
