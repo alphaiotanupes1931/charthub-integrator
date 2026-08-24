@@ -6,6 +6,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { takeTrade } from "@/lib/signalHistory";
 import type { ChartGrade } from "@/lib/chartAnnotations";
 import { ScanStamp } from "@/components/ScanStamp";
+import { ScanVersionHistory } from "@/components/ScanVersionHistory";
 import { AutoBacktestVerify } from "@/components/AutoBacktestVerify";
 import { useTradeLogged } from "@/hooks/useTradeLogged";
 import { useTimezone } from "@/hooks/useTimezone";
