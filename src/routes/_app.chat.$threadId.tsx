@@ -33,6 +33,7 @@ import { toast } from "sonner";
 import { buildLearningPromptBlock } from "@/lib/signalLearning";
 import { parseAiPayload, type ChartGrade } from "@/lib/chartAnnotations";
 import { ScanStamp } from "@/components/ScanStamp";
+import { AiContextInspector } from "@/components/AiContextInspector";
 
 
 export const Route = createFileRoute("/_app/chat/$threadId")({
@@ -274,6 +275,9 @@ function ChatThreadInner({
           {activeModel?.label ?? "AI"}
         </span>
       </div>
+      {messages.length > 0 && (
+        <AiContextInspector messages={messages} className="mx-4 md:mx-8 mt-2 max-w-3xl md:mx-auto w-auto" />
+      )}
       <Conversation className="flex-1 min-h-0">
         <ConversationContent className="px-4 md:px-8 py-6 max-w-3xl mx-auto w-full">
           {messages.length === 0 && (
