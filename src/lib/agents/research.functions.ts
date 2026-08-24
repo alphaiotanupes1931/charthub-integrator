@@ -74,6 +74,9 @@ export const runResearchPlan = createServerFn({ method: "POST" })
     let scoreDesc = "";
     let gradeCap: "A+" | "A" | "B" | "C" | null = null;
     let capReason: string | null = null;
+    // Applies only if the plan that comes back is itself counter-trend.
+    let counterCap: "A+" | "A" | "B" | "C" | null = null;
+    let counterCapReason: string | null = null;
     try {
       const auth = getRequestHeader("authorization") ?? getRequestHeader("Authorization");
       const token = auth?.toLowerCase().startsWith("bearer ") ? auth.slice(7).trim() : null;
@@ -158,6 +161,8 @@ export const runResearchPlan = createServerFn({ method: "POST" })
             if (ev.prompt) scoreDesc = ev.prompt;
             gradeCap = ev.cap;
             capReason = ev.reason;
+            counterCap = ev.counterCap ?? null;
+            counterCapReason = ev.counterReason ?? null;
           } catch { /* scoreboard feedback is best-effort */ }
 
           // If the user just passed a journal-performance summary, fold it in.
@@ -189,14 +194,16 @@ export const runResearchPlan = createServerFn({ method: "POST" })
 
     // Hard self-correction: the measured record outranks the model's own
     // opinion of the setup, so the grade is clamped after the fact too.
-    if (gradeCap) {
+    const effectiveCap = plan.counterTrend && counterCap ? counterCap : gradeCap;
+    const effectiveReason = plan.counterTrend && counterCap ? counterCapReason : capReason;
+    if (effectiveCap) {
       const { applyGradeCap } = await import("@/lib/signal-evidence.server");
-      const capped = applyGradeCap(plan.grade, gradeCap);
+      const capped = applyGradeCap(plan.grade, effectiveCap);
       if (capped !== plan.grade) {
         return {
           ...plan,
           grade: capped as TradePlan["grade"],
-          details: capReason ? `${plan.details} ${capReason}` : plan.details,
+          details: effectiveReason ? `${plan.details} ${effectiveReason}` : plan.details,
         };
       }
     }
