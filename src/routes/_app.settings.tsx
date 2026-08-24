@@ -9,6 +9,8 @@ import { useTimezone, TIMEZONE_OPTIONS, AUTO_TZ } from "@/hooks/useTimezone";
 import { exportMyData, deleteMyAccount } from "@/lib/privacy.functions";
 import { cancelMySubscription, createPortalSession, getMySubscription } from "@/lib/billing.functions";
 import { FreeTierUsagePanel } from "@/components/FreeTierUsagePanel";
+import { RetentionSettingsPanel } from "@/components/RetentionSettingsPanel";
+
 import { toast } from "sonner";
 
 import {
