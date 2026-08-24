@@ -74,6 +74,9 @@ export const runResearchPlan = createServerFn({ method: "POST" })
     let scoreDesc = "";
     let gradeCap: "A+" | "A" | "B" | "C" | null = null;
     let capReason: string | null = null;
+    // Applies only if the plan that comes back is itself counter-trend.
+    let counterCap: "A+" | "A" | "B" | "C" | null = null;
+    let counterCapReason: string | null = null;
     try {
       const auth = getRequestHeader("authorization") ?? getRequestHeader("Authorization");
       const token = auth?.toLowerCase().startsWith("bearer ") ? auth.slice(7).trim() : null;
@@ -158,6 +161,8 @@ export const runResearchPlan = createServerFn({ method: "POST" })
             if (ev.prompt) scoreDesc = ev.prompt;
             gradeCap = ev.cap;
             capReason = ev.reason;
+            counterCap = ev.counterCap ?? null;
+            counterCapReason = ev.counterReason ?? null;
           } catch { /* scoreboard feedback is best-effort */ }
 
           // If the user just passed a journal-performance summary, fold it in.
@@ -189,14 +194,23 @@ export const runResearchPlan = createServerFn({ method: "POST" })
 
     // Hard self-correction: the measured record outranks the model's own
     // opinion of the setup, so the grade is clamped after the fact too.
-    if (gradeCap) {
+    const useCounter = Boolean(plan.counterTrend && counterCap);
+    if (gradeCap || useCounter) {
       const { applyGradeCap } = await import("@/lib/signal-evidence.server");
-      const capped = applyGradeCap(plan.grade, gradeCap);
+      // Worst applicable cap wins; the counter-trend record only bites when
+      // this particular setup is fighting the higher timeframes.
+      let capped = applyGradeCap(plan.grade, gradeCap);
+      let effectiveReason = capped !== plan.grade ? capReason : null;
+      if (useCounter) {
+        const c2 = applyGradeCap(capped, counterCap);
+        if (c2 !== capped) effectiveReason = counterCapReason;
+        capped = c2;
+      }
       if (capped !== plan.grade) {
         return {
           ...plan,
           grade: capped as TradePlan["grade"],
-          details: capReason ? `${plan.details} ${capReason}` : plan.details,
+          details: effectiveReason ? `${plan.details} ${effectiveReason}` : plan.details,
         };
       }
     }

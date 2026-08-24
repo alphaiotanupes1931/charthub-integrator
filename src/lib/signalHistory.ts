@@ -28,6 +28,10 @@ export type SignalRecord = {
   refPrice?: number | null;
   /** Feed the bars came from, kept for version compares. */
   dataSource?: string | null;
+  /** True when the scan fought the Daily and 4H direction. */
+  counterTrend?: boolean | null;
+  /** Daily bias at scan time. */
+  htfBias?: string | null;
 };
 
 /** One scan of a symbol/timeframe, numbered oldest-first, with its deltas. */
@@ -186,6 +190,8 @@ export function recordSignal(input: Omit<SignalRecord, "id" | "at">): SignalReco
             entry: input.entry as number,
             stop: input.stop as number,
             tp1: input.tp1 as number,
+            counterTrend: input.counterTrend ?? false,
+            htfBias: input.htfBias ?? null,
           },
         }),
       )
