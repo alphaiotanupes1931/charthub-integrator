@@ -213,6 +213,9 @@ type ScanResult = {
   dataFetchedAt?: string;
   candleCount?: number;
   refPrice?: number;
+  counterTrend?: boolean;
+  htfBias?: "bullish" | "bearish" | "neutral";
+
 };
 
 function fmtPrice(n: number, decimals: number): string {
