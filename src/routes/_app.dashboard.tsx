@@ -1194,6 +1194,8 @@ function Dashboard() {
       strategyId: readActiveStrategy() ?? null,
       refPrice: typeof plan.refPrice === "number" ? plan.refPrice : (snapshot?.lastPrice ?? null),
       dataSource: plan.dataSource ?? null,
+      counterTrend: plan.counterTrend ?? false,
+      htfBias: plan.htfBias ?? null,
     });
 
   };

@@ -24,6 +24,10 @@ export type SignalScoreRow = {
   resolvedAt: string | null;
   taken: boolean;
   createdAt: string;
+  /** True when the scan fought the Daily and 4H direction. */
+  counterTrend?: boolean;
+  /** Daily bias recorded at scan time. */
+  htfBias?: string | null;
 };
 
 export type ScoreBucket = {
@@ -51,6 +55,8 @@ export type Scoreboard = {
   byTimeframe: ScoreBucket[];
   byStrategy: ScoreBucket[];
   byConfidence: ScoreBucket[];
+  /** Counter-trend vs with-trend, measured from real bars. */
+  byTrendContext: ScoreBucket[];
   takenHitRate: number | null;
   skippedHitRate: number | null;
   notes: string[];
