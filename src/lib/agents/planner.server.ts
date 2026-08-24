@@ -665,14 +665,18 @@ export async function runPlanner(
   }
   const isNoEntry = grade === "NO ENTRY";
 
+  const counterTrend = counterTrendRead(bias, snap);
+
   // `notes` already carries the thesis ("why take this trade"), so the details
   // block must NOT repeat it. It is the read-out of the evidence itself:
   // market structure, order flow and volume, volatility and levels, then a
   // short takeaway in the active coach's voice, then trade management.
-  const dataNote = snap.mtf
+  const dataNote = (snap.mtf
     ? ""
-    : " Higher-timeframe data was incomplete on this scan, so the grade is capped at C until the feed fills in.";
+    : " Higher-timeframe data was incomplete on this scan, so the grade is capped at C until the feed fills in.")
+    + (counterTrend.reason ? ` ${counterTrend.reason}` : "");
   const details = buildDetails(snap, memo, finalPlan, dec, coach, bias, grade, newsWarning, dataNote);
+
 
 
 
