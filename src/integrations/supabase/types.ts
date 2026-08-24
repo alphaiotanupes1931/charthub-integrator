@@ -528,6 +528,7 @@ export type Database = {
       }
       chat_threads: {
         Row: {
+          archived_at: string | null
           client_id: string
           created_at: string
           id: string
@@ -536,6 +537,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          archived_at?: string | null
           client_id: string
           created_at?: string
           id?: string
@@ -544,6 +546,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          archived_at?: string | null
           client_id?: string
           created_at?: string
           id?: string
@@ -1171,6 +1174,7 @@ export type Database = {
           onboarded: boolean
           recovery_code_hash: string | null
           referral_source: string | null
+          scan_retention_days: number
           tour_completed_at: string | null
           updated_at: string
           username: string | null
@@ -1193,6 +1197,7 @@ export type Database = {
           onboarded?: boolean
           recovery_code_hash?: string | null
           referral_source?: string | null
+          scan_retention_days?: number
           tour_completed_at?: string | null
           updated_at?: string
           username?: string | null
@@ -1215,6 +1220,7 @@ export type Database = {
           onboarded?: boolean
           recovery_code_hash?: string | null
           referral_source?: string | null
+          scan_retention_days?: number
           tour_completed_at?: string | null
           updated_at?: string
           username?: string | null
@@ -1774,6 +1780,7 @@ export type Database = {
           role: string
         }[]
       }
+      archive_expired_chat_threads: { Args: never; Returns: number }
       bump_ai_usage: {
         Args: { _cap: number; _user_id: string }
         Returns: number
