@@ -1284,18 +1284,21 @@ function Dashboard() {
       setChatPanelView("conversation");
       setMobileView("scan");
     }
-    // Always start a fresh chat thread per scan so each scan gets its own
-    // history entry tagged with the scanned instrument - matches behavior
-    // when running a scan from within a new chat.
-    let scanThreadId: string | null = null;
-    try {
-      const t = await createChatThreadFn({ data: { title: `${historyInstrumentTitle(symbol)} Scan` } });
-      if (t?.id) {
-        scanThreadId = t.id;
-        setActiveThreadId(t.id);
+    // Keep the scan in the conversation the trader is already having. Starting a
+    // fresh thread per scan split trade-management chats across many history
+    // entries and wiped the coach's memory of what was just discussed, so a new
+    // thread is only created when there is no active conversation yet.
+    let scanThreadId: string | null = activeThreadId;
+    if (!scanThreadId) {
+      try {
+        const t = await createChatThreadFn({ data: { title: `${historyInstrumentTitle(symbol)} Scan` } });
+        if (t?.id) {
+          scanThreadId = t.id;
+          setActiveThreadId(t.id);
+        }
+      } catch {
+        // non-fatal - fall through with existing thread
       }
-    } catch {
-      // non-fatal - fall through with existing thread
     }
     // Always post the scan prompt to chat so the user sees activity immediately.
     sendToChat(prompt, { focusChat: from === "chat", targetThreadId: scanThreadId });
