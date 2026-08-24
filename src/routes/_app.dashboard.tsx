@@ -585,6 +585,19 @@ function ScanTicket({
         </div>
       )}
 
+      {/* Audit line plus the earlier scans of this instrument, so a changed
+          grade can be traced to the price and moment it was measured against. */}
+      <div className="space-y-2">
+        <ScanStamp
+          fetchedAt={result.dataFetchedAt}
+          refPrice={result.refPrice}
+          dataSource={result.dataSource ?? "feed unknown"}
+          candleCount={result.candleCount ?? 0}
+        />
+        <ScanVersionHistory symbol={symbol.ticker} interval={interval} className="w-full" />
+      </div>
+
+
       {/* When to enter, when to give up on the entry, when to be flat, and how
           to scale out by R multiple. Times follow the trader's timezone. */}
       {!isNoEntry && panelTiming && (
