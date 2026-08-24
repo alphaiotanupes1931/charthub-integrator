@@ -210,6 +210,7 @@ type ScanResult = {
   dataSource?: string;
   dataFetchedAt?: string;
   candleCount?: number;
+  refPrice?: number;
 };
 
 function fmtPrice(n: number, decimals: number): string {
@@ -1147,6 +1148,7 @@ function Dashboard() {
       dataSource: plan.dataSource,
       dataFetchedAt: plan.dataFetchedAt,
       candleCount: plan.candleCount,
+      refPrice: typeof plan.refPrice === "number" ? plan.refPrice : last,
     });
     if (entry && stop && tp1 && tp2 && bias !== "neutral") {
       setAiAnnotationsRaw(buildLevelAnnotations(bias, entry, stop, tp1, tp2, last));
@@ -1210,6 +1212,7 @@ function Dashboard() {
       dataSource: plan.dataSource,
       dataFetchedAt: plan.dataFetchedAt,
       candleCount: plan.candleCount,
+      refPrice: typeof plan.refPrice === "number" ? plan.refPrice : last,
     };
     const levelLines = plan.grade === "NO ENTRY"
       ? ["No entry - stand down until the setup improves."]
@@ -1228,7 +1231,7 @@ function Dashboard() {
         ];
     return [
       `${scanSymbol.name} scan: ${plan.grade} ${plan.bias}. Confidence ${plan.confidence}%.`,
-      `Market data: ${plan.dataSource ?? "unavailable"}, ${plan.candleCount ?? 0} real candles, fetched ${plan.dataFetchedAt ?? "unknown"}.`,
+      `Market data: ${plan.dataSource ?? "unavailable"}, ${plan.candleCount ?? 0} real candles, fetched ${plan.dataFetchedAt ?? "unknown"}, market price used ${typeof (plan.refPrice ?? last) === "number" ? fmtPrice((plan.refPrice ?? last) as number, dec) : "unknown"}.`,
       ...levelLines,
       `Why take this trade: ${plan.notes}`,
       ...(plan.details && plan.details !== plan.notes ? [`Risk and invalidation: ${plan.details}`] : []),

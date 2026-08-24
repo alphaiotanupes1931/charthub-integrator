@@ -654,6 +654,7 @@ export async function runPlanner(
     dataSource: snap.source,
     dataFetchedAt: snap.fetchedAt,
     candleCount: snap.candles.length,
+    refPrice: snap.lastPrice,
   };
 }
 
