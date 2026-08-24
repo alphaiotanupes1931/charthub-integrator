@@ -32,6 +32,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { buildLearningPromptBlock } from "@/lib/signalLearning";
 import { parseAiPayload, type ChartGrade } from "@/lib/chartAnnotations";
+import { ScanStamp } from "@/components/ScanStamp";
 
 
 export const Route = createFileRoute("/_app/chat/$threadId")({
@@ -65,6 +66,14 @@ function ThreadGradeCard({ grade }: { grade: ChartGrade }) {
         <span className="rounded border border-border/60 bg-background/60 px-1.5 py-0.5 text-[10px] font-bold">
           {grade.grade.toUpperCase()}
         </span>
+        <div className="flex-1" />
+        <ScanStamp
+          fetchedAt={grade.dataFetchedAt}
+          refPrice={grade.refPrice}
+          dataSource={grade.dataSource}
+          candleCount={grade.candleCount}
+          className="justify-end text-right"
+        />
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2">
         {rows.map(([label, value]) => (
