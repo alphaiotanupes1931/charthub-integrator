@@ -1014,6 +1014,8 @@ export const Route = createFileRoute("/api/chat")({
         } catch (e) {
           console.warn(`[chat] req=${reqId} methodology_failed`, (e as Error).message);
         }
+        const priorScans = priorScansBlock(messages);
+        if (priorScans) liveSystem = `${liveSystem}\n\n${priorScans}`;
 
         // Claude is used when the key passes the health check, unless this account
         // is pinned: "claude" skips the fallback entirely, "fallback" never uses it.
