@@ -61,6 +61,65 @@ function lastUserText(messages: UIMessage[]): { text: string; hasImage: boolean 
   return { text: "", hasImage: false };
 }
 
+/**
+ * Pulls every scan already in this thread (the fenced chart-grade blocks the
+ * dashboard and the coach emit) into a plain-text recap. Without this the model
+ * treats those blocks as opaque JSON and answers "I don't have the previous
+ * scan" when the trader asks a follow-up about it.
+ */
+function priorScansBlock(messages: UIMessage[]): string {
+  type Scan = Record<string, unknown>;
+  const scans: Array<{ turn: number; scan: Scan }> = [];
+  messages.forEach((m, i) => {
+    if (m.role !== "assistant") return;
+    const text = ((m.parts ?? []) as Array<{ type: string; text?: string }>)
+      .filter((p) => p.type === "text")
+      .map((p) => p.text ?? "")
+      .join("\n");
+    const re = /```chart-grade\s*([\s\S]*?)```/g;
+    let match: RegExpExecArray | null;
+    while ((match = re.exec(text)) !== null) {
+      try {
+        const parsed = JSON.parse(match[1]) as Scan;
+        if (parsed && typeof parsed === "object") scans.push({ turn: i + 1, scan: parsed });
+      } catch {
+        /* ignore malformed block */
+      }
+    }
+  });
+  if (scans.length === 0) return "";
+
+  const recent = scans.slice(-6);
+  const lines = recent.map(({ turn, scan }, idx) => {
+    const get = (k: string) => {
+      const v = scan[k];
+      return v === null || v === undefined || v === "" ? null : String(v);
+    };
+    const bits = [
+      get("symbol") ?? get("ticker"),
+      get("timeframe") ?? get("interval"),
+      get("grade") ? `grade ${get("grade")}` : null,
+      get("bias") ? `bias ${get("bias")}` : null,
+      get("confidence") ? `confidence ${get("confidence")}` : null,
+      get("entry") ? `entry ${get("entry")}` : null,
+      get("stop") ? `stop ${get("stop")}` : null,
+      get("tp1") ? `TP1 ${get("tp1")}` : null,
+      get("tp2") ? `TP2 ${get("tp2")}` : null,
+      get("rr") ? `R:R ${get("rr")}` : null,
+      get("synopsis") ?? get("rationale") ?? get("reason"),
+    ].filter(Boolean);
+    const label = idx === recent.length - 1 ? "most recent scan" : `scan ${idx + 1}`;
+    return `- [${label}, message ${turn}] ${bits.join(", ")}`;
+  });
+
+  return [
+    "PREVIOUS SCANS IN THIS THREAD (you DO have this - never say you lack the previous scan):",
+    ...lines,
+    "When the trader references \"the scan\", \"that setup\", or \"the grade\", they mean the most recent entry above. Quote its actual numbers.",
+    "Grades and levels are point-in-time reads. If a fresh scan disagrees with an earlier one, say plainly that the market moved and what changed, do not pretend the earlier read never happened.",
+  ].join("\n");
+}
+
 /** Coaches with a strongly stylized voice always need the stronger model, or
  *  the cheap model flattens them all into the same neutral analyst tone. */
 const STYLIZED_COACHES = new Set([
@@ -955,6 +1014,8 @@ export const Route = createFileRoute("/api/chat")({
         } catch (e) {
           console.warn(`[chat] req=${reqId} methodology_failed`, (e as Error).message);
         }
+        const priorScans = priorScansBlock(messages);
+        if (priorScans) liveSystem = `${liveSystem}\n\n${priorScans}`;
 
         // Claude is used when the key passes the health check, unless this account
         // is pinned: "claude" skips the fallback entirely, "fallback" never uses it.
