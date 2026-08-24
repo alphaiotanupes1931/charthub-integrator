@@ -37,6 +37,7 @@ import { coalesceUiMessageStream, textFromUiMessageParts, friendlyChatError } fr
 import { ConceptDiagram } from "@/components/ConceptDiagram";
 import { buildLearningPromptBlock } from "@/lib/signalLearning";
 import { takeTrade } from "@/lib/signalHistory";
+import { AiContextInspector } from "@/components/AiContextInspector";
 import { AiCreditNotice } from "@/components/AiCreditNotice";
 
 
@@ -799,6 +800,10 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
         </div>
 
         <AiCreditNotice />
+
+        {messages.length > 0 && (
+          <AiContextInspector messages={messages} className="mx-3 mb-1" />
+        )}
 
         <Conversation className="flex-1 min-h-0">
           <ConversationContent className="px-3 py-4">
