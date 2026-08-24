@@ -342,6 +342,14 @@ function GradeCard({ grade, lastPrice, symbol, interval }: { grade: ChartGrade; 
           Order type: <span className={biasTone}>{orderType}</span>
         </div>
       )}
+      <div className="border-b border-border/60 px-3 py-1">
+        <ScanStamp
+          fetchedAt={grade.dataFetchedAt}
+          refPrice={typeof grade.refPrice === "number" ? grade.refPrice : lastPrice}
+          dataSource={grade.dataSource}
+          candleCount={grade.candleCount}
+        />
+      </div>
       <div className="grid grid-cols-4 divide-x divide-border/60 text-center">
         {(["entry","stop","tp1","tp2"] as const).map((k) => (
           <div key={k} className="p-2">
