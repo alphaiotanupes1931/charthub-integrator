@@ -1,0 +1,3 @@
+ALTER TABLE public.signal_scores
+  ADD COLUMN IF NOT EXISTS counter_trend BOOLEAN NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS htf_bias TEXT;
