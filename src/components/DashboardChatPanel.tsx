@@ -561,10 +561,24 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
     const appendAssistantMessage = useCallback((text: string) => {
       // Persist it too: this message is generated client-side (the Analysis
       // engine's grade card), so without this the setup disappears when the
-      // thread is reopened from history.
+      // thread is reopened from history. Retried, because a transient save
+      // failure used to silently lose the scan from history.
       const id = crypto.randomUUID();
       if (UUID_RE.test(threadId)) {
-        void persistAssistant({ data: { threadId, text, msgId: id } }).catch(() => { /* best-effort */ });
+        const save = async (attempt = 0): Promise<void> => {
+          try {
+            await persistAssistant({ data: { threadId, text, msgId: id } });
+          } catch (e) {
+            if (attempt >= 3) {
+              console.warn("[chat] scan card not saved to history", e);
+              return;
+            }
+            try { await supabase.auth.refreshSession(); } catch { /* ignore */ }
+            await new Promise((r) => setTimeout(r, 600 * (attempt + 1)));
+            return save(attempt + 1);
+          }
+        };
+        void save();
       }
       setMessages((prev) => [
         ...prev,
