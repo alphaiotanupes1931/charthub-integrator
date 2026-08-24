@@ -84,15 +84,17 @@ export function RetentionSettingsPanel() {
         time from Archived in the chat sidebar.
       </p>
       <div className="max-w-sm mb-3">
-        <Select
+        <select
           value={String(days)}
           disabled={busy || !loaded}
           onChange={(e) => handleChange(Number(e.target.value))}
+          className="w-full h-11 rounded-2xl bg-background/60 border border-border/60 px-3.5 text-sm focus:outline-none focus:border-primary/50"
         >
           {RETENTION_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
-        </Select>
+        </select>
+
       </div>
       <div className="flex flex-wrap items-center gap-3">
         <button
