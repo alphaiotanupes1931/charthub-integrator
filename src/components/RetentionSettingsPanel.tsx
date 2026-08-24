@@ -4,12 +4,13 @@ import { Archive, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 
+import { RETENTION_OPTIONS } from "@/lib/retention";
 import {
-  RETENTION_OPTIONS,
   applyRetentionNow,
   getRetentionSettings,
   setRetentionSettings,
 } from "@/lib/retention.functions";
+
 
 /**
  * Lets a trader choose how long scan history and scan cards stay in the active
