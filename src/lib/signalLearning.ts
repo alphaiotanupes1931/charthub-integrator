@@ -7,6 +7,8 @@
 // repeating setups that have historically lost.
 
 import { listSignals, type SignalRecord } from "./signalHistory";
+import { journalAsSignalRecords, journalUntaggedCount } from "./journalLearning";
+
 
 export type Bucket = {
   key: string;
