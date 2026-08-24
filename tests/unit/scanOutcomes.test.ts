@@ -14,7 +14,7 @@ const row = (over: Partial<SignalScoreRow>): SignalScoreRow =>
 const stubClient = (rows: unknown[]) => {
   const chain: Record<string, unknown> = {};
   const self = () => chain;
-  for (const k of ["select", "eq", "gt", "order", "limit", "in", "not"]) chain[k] = self;
+  for (const k of ["select", "eq", "gt", "order", "limit", "in", "not", "neq"]) chain[k] = self;
   (chain as { then: unknown }).then = (resolve: (v: unknown) => unknown) =>
     Promise.resolve({ data: rows, error: null }).then(resolve);
   return { from: () => chain } as never;
