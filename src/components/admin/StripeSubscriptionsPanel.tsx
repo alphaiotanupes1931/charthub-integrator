@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Loader2, RefreshCw, CreditCard } from "lucide-react";
-import { listSubscribers } from "@/lib/billing.functions";
+import { Loader2, RefreshCw, CreditCard, Tags } from "lucide-react";
+import { listSubscribers, syncStripePrices } from "@/lib/billing.functions";
 
 type Data = Awaited<ReturnType<typeof listSubscribers>>;
 type Row = Data["subscribers"][number];
