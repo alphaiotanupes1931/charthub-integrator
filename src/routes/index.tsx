@@ -188,7 +188,7 @@ function Landing() {
 
             <motion.div
               variants={heroItem}
-              className="mt-6 flex flex-col sm:flex-row items-center lg:justify-start justify-center gap-x-4 gap-y-3"
+              className="mt-5 sm:mt-6 flex flex-col sm:flex-row items-center lg:justify-start justify-center gap-x-4 gap-y-3"
             >
               <div className="flex items-center gap-2">
                 <div className="flex -space-x-2">
@@ -212,7 +212,7 @@ function Landing() {
             </motion.div>
 
             {!isAuthed && (
-              <motion.div variants={heroItem} className="mt-5 text-sm text-muted-foreground">
+              <motion.div variants={heroItem} className="mt-4 sm:mt-5 text-sm text-muted-foreground">
                 Already have an account?{" "}
                 <Link
                   to="/auth"
@@ -226,7 +226,7 @@ function Landing() {
 
             <motion.div
               variants={heroItem}
-              className="mt-6 flex flex-wrap items-center lg:justify-start justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground"
+              className="mt-5 sm:mt-6 flex flex-col sm:flex-row sm:flex-wrap items-center lg:justify-start justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground"
             >
               <Bullet>{freeTier ? "Free plan, no card" : "7-day free trial"}</Bullet>
               <Bullet>{freeTier ? "3 signal grades a month, free" : "Cancel anytime"}</Bullet>
@@ -234,8 +234,8 @@ function Landing() {
             </motion.div>
           </div>
 
-          <motion.div variants={heroItem} className="relative">
-            <div className="rounded-2xl border border-border/60 bg-card overflow-hidden">
+          <motion.div variants={heroItem} className="relative -mx-5 sm:mx-0">
+            <div className="border-y sm:border sm:rounded-2xl border-border/60 bg-card overflow-hidden">
               <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/60">
                 <img src={logoAsset.url} alt="" className="h-5 w-5 rounded-full" loading="lazy" />
                 <span className="text-xs font-semibold tracking-tight">Dashboard</span>
