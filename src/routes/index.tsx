@@ -152,7 +152,7 @@ function Landing() {
 
             <motion.h1
               variants={heroItem}
-              className="font-display font-semibold tracking-[-0.03em] leading-[1.05] mt-6 text-[2rem] sm:text-[2.5rem] lg:text-[2.9rem] xl:text-[3.2rem]"
+              className="font-display font-semibold tracking-[-0.03em] leading-[1.05] mt-5 sm:mt-6 text-[1.9rem] sm:text-[2.5rem] lg:text-[2.9rem] xl:text-[3.2rem]"
             >
               Grade the setup.
               <br />
@@ -161,7 +161,7 @@ function Landing() {
 
             <motion.p
               variants={heroItem}
-              className="mt-5 text-base sm:text-[17px] text-muted-foreground max-w-md mx-auto lg:mx-0 leading-relaxed"
+              className="mt-3.5 sm:mt-5 text-[15px] sm:text-[17px] text-muted-foreground max-w-md mx-auto lg:mx-0 leading-relaxed"
             >
               TradeMind scores every setup on structure, risk, and confluence, so you take the
               ones that meet your rules and skip the rest.
@@ -169,7 +169,7 @@ function Landing() {
 
             <motion.div
               variants={heroItem}
-              className="mt-8 flex flex-col sm:flex-row items-center lg:justify-start justify-center gap-3"
+              className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center lg:justify-start justify-center gap-2.5 sm:gap-3"
             >
               <a
                 href={dashboardHref}
