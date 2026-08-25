@@ -719,7 +719,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
 
     return (
       <div
-        className="flex h-full min-h-0 flex-col overflow-visible bg-background sm:rounded-2xl border-y sm:border border-border/50 relative"
+        className="flex h-full min-h-0 flex-col overflow-hidden bg-background sm:rounded-2xl border-y sm:border border-border/50 relative"
         onPaste={(e) => {
           const items = e.clipboardData?.items;
           if (!items) return;
@@ -950,7 +950,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
         </Conversation>
 
         <div
-          className="shrink-0 overflow-visible border-t border-border/50 bg-background p-2.5"
+          className="sticky bottom-0 z-20 shrink-0 overflow-visible border-t border-border/50 bg-background p-2.5 shadow-[0_-4px_12px_rgba(0,0,0,0.04)]"
           style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
         >
           {pendingImage && (
