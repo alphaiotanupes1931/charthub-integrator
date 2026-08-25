@@ -807,7 +807,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
 
         {/* Reading room. Keeps a real minimum height so replies never collapse
             to a two-line sliver when the composer and chips are on screen. */}
-        <Conversation className="flex-1 min-h-[220px]">
+        <Conversation className="flex-1 min-h-0 overflow-y-auto">
           <ConversationContent className="px-3 py-4">
             {messages.length === 0 && (
               <div className="py-10 px-4 flex flex-col items-center gap-2 text-center">
@@ -950,7 +950,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
         </Conversation>
 
         <div
-          className="border-t border-border/50 bg-background p-2.5"
+          className="shrink-0 border-t border-border/50 bg-background p-2.5"
           style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
         >
           {pendingImage && (
@@ -1000,8 +1000,8 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={pendingImage ? "Add a note (optional) and send…" : "Ask your coach, or paste a screenshot…"}
-              rows={3}
-              className="min-h-[96px] py-3 text-sm leading-relaxed border border-border/60 bg-card rounded-2xl"
+              rows={2}
+              className="min-h-[72px] max-h-[140px] py-2.5 text-sm leading-relaxed border border-border/60 bg-card rounded-2xl"
             />
             <PromptInputFooter className="justify-between">
               <div className="flex items-center gap-1.5">
