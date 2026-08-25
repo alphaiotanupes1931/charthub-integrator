@@ -244,7 +244,7 @@ function Landing() {
               <img
                 src={dashboardPreview.url}
                 alt="TradeMind dashboard preview showing the gold chart, timeframes, and sidebar navigation"
-                className="block w-full h-[260px] object-cover object-[68%_35%] sm:h-auto sm:object-contain"
+                className="block w-full h-[230px] object-cover object-[62%_28%] sm:h-auto sm:object-contain"
                 loading="lazy"
               />
             </div>
