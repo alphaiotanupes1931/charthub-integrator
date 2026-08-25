@@ -50,14 +50,45 @@ async def assert_composer_visible(page, viewport) -> None:
     await page.set_viewport_size({"width": viewport["width"], "height": viewport["height"]})
     await page.goto(f"{BASE_URL}/dashboard", wait_until="domcontentloaded")
 
-    chat_tab = page.get_by_role("button", name="Chat", exact=True).last
-    if await chat_tab.is_visible():
-        await chat_tab.click()
+    chat_tabs = page.get_by_role("button", name="Chat", exact=True)
+    for index in range(await chat_tabs.count()):
+        tab = chat_tabs.nth(index)
+        if await tab.is_visible():
+            await tab.click()
+            break
 
-    composer = page.get_by_test_id("dashboard-chat-composer").last
-    textarea = page.get_by_role("textbox", name="Message your AI coach").last
-    messages = page.get_by_test_id("dashboard-chat-messages").last
+    async def visible_locator(test_id):
+        matches = page.get_by_test_id(test_id)
+        for index in range(await matches.count()):
+            match = matches.nth(index)
+            if await match.is_visible():
+                return match
+        return matches.first
+
+    composer = await visible_locator("dashboard-chat-composer")
+    messages = await visible_locator("dashboard-chat-messages")
+    textareas = page.get_by_role("textbox", name="Message your AI coach")
+    textarea = textareas.first
+    for index in range(await textareas.count()):
+        candidate = textareas.nth(index)
+        if await candidate.is_visible():
+            textarea = candidate
+            break
     await composer.wait_for(state="visible")
+
+    await messages.evaluate(
+        """element => {
+          const content = element.firstElementChild;
+          if (!content) return;
+          for (let i = 0; i < 40; i += 1) {
+            const row = document.createElement('div');
+            row.textContent = `Responsive test message ${i + 1}`;
+            row.style.minHeight = '40px';
+            content.appendChild(row);
+          }
+          element.scrollTop = element.scrollHeight;
+        }"""
+    )
 
     metrics = await page.evaluate(
         """([composer, textarea, messages]) => {
