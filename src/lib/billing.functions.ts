@@ -398,3 +398,20 @@ export const syncSubscribersFromStripe = createServerFn({ method: "POST" })
 
     return { synced, unmatched };
   });
+
+/**
+ * Admin-only: reconcile Stripe price objects with the tier amounts published on
+ * /pricing (USD monthly), archiving any wrong-currency or stale price.
+ */
+export const syncStripePrices = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: isAdmin } = await supabaseAdmin.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin) throw new Error("Forbidden");
+    const { syncPlanPrices } = await import("@/lib/stripe.server");
+    return { prices: await syncPlanPrices() };
+  });
