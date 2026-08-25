@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { priorScansBlock } from "@/lib/ai-context";
+import { levelCheckBlock, parseStatedLevels } from "@/lib/levelValidation";
 import { convertToModelMessages, streamText, type StreamTextTransform, type ToolSet, type UIMessage } from "ai";
 import { createClient } from "@supabase/supabase-js";
 import { createAnthropic } from "@ai-sdk/anthropic";
@@ -968,6 +969,27 @@ ATTACHED CHART OVERRIDE (this message has an image):
 - The attached image plus any entry the trader states in this message are the ONLY source for entry/stop/TP. Prior scans above are history for context, never a source of levels.
 - If the trader drew or named an entry, echo that exact number as "entry" in the chart-grade block. Never replace it with a level from an earlier scan or from the live chart panel.
 - If you cannot read their entry, ask for it in one line instead of inventing one.`;
+        }
+
+        // Deterministic sanity check on levels the trader typed themselves, so
+        // decimal-place typos, wrong-side stops and sub-1R plans get explained
+        // with a concrete correction instead of graded as if they were real.
+        try {
+          const stated = parseStatedLevels(lastUserText(messages).text);
+          if (stated.entry != null || stated.stop != null || stated.target != null) {
+            const snap = enrichedChart?.snapshot as { lastPrice?: number; atr?: number } | undefined;
+            const check = levelCheckBlock({
+              side: stated.side,
+              entry: stated.entry ?? null,
+              stop: stated.stop ?? null,
+              target: stated.target ?? null,
+              lastPrice: typeof snap?.lastPrice === "number" ? snap.lastPrice : null,
+              atr: typeof snap?.atr === "number" ? snap.atr : null,
+            });
+            if (check) liveSystem = `${liveSystem}\n\n${check}`;
+          }
+        } catch (e) {
+          console.warn(`[chat] req=${reqId} level_check_failed`, (e as Error).message);
         }
 
         // Claude is used when the key passes the health check, unless this account
