@@ -127,12 +127,12 @@ function Landing() {
       <Nav isAuthed={isAuthed} />
 
       {/* COVER — Instagram-style: compact split, product shot on the right, pill actions. */}
-      <section className="px-5 sm:px-6 pt-14 sm:pt-20 pb-14 sm:pb-20 border-b border-border/60">
+      <section className="px-5 sm:px-6 pt-10 sm:pt-20 pb-12 sm:pb-20 border-b border-border/60">
         <motion.div
           variants={heroContainer}
           initial="hidden"
           animate="show"
-          className="max-w-6xl mx-auto grid lg:grid-cols-[1fr_minmax(0,1.05fr)] gap-12 lg:gap-16 items-center"
+          className="max-w-6xl mx-auto grid lg:grid-cols-[1fr_minmax(0,1.05fr)] gap-8 sm:gap-12 lg:gap-16 items-center"
         >
           <div className="text-center lg:text-left">
             <motion.div
