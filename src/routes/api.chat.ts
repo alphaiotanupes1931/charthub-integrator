@@ -958,6 +958,17 @@ export const Route = createFileRoute("/api/chat")({
         }
         const priorScans = priorScansBlock(messages);
         if (priorScans) liveSystem = `${liveSystem}\n\n${priorScans}`;
+        // An attached chart replaces the earlier scan. Without this the model
+        // keeps re-serving the entry from its own previous scan of the same
+        // instrument instead of the entry the trader drew or typed.
+        if (lastUserText(messages).hasImage) {
+          liveSystem = `${liveSystem}
+
+ATTACHED CHART OVERRIDE (this message has an image):
+- The attached image plus any entry the trader states in this message are the ONLY source for entry/stop/TP. Prior scans above are history for context, never a source of levels.
+- If the trader drew or named an entry, echo that exact number as "entry" in the chart-grade block. Never replace it with a level from an earlier scan or from the live chart panel.
+- If you cannot read their entry, ask for it in one line instead of inventing one.`;
+        }
 
         // Claude is used when the key passes the health check, unless this account
         // is pinned: "claude" skips the fallback entirely, "fallback" never uses it.
