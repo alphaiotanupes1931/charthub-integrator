@@ -751,7 +751,8 @@ export async function runPlanner(
   const dataNote = (snap.mtf
     ? ""
     : " Higher-timeframe data was incomplete on this scan, so the grade is capped at C until the feed fills in.")
-    + (counterTrend.reason ? ` ${counterTrend.reason}` : "");
+    + (counterTrend.reason ? ` ${counterTrend.reason}` : "")
+    + (comboGate.reason ? ` ${comboGate.reason}` : "");
   const details = buildDetails(snap, memo, finalPlan, dec, coach, bias, grade, newsWarning, dataNote);
 
 
