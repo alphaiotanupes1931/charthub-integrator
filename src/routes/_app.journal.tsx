@@ -27,6 +27,8 @@ import {
   RefreshCw,
   Ban,
 } from "lucide-react";
+import { LevelWarnings } from "@/components/LevelWarnings";
+import { validateLevels } from "@/lib/levelValidation";
 import { MentalStatePanel, upsertMentalEntry, SCORE_META, loadMental, type MentalEntry } from "@/components/MentalStatePanel";
 import JournalReviewPanel from "@/components/JournalReviewPanel";
 
@@ -1498,6 +1500,18 @@ function TradeFormModal({
   const [exit, setExit] = useState<string>(editing ? String(editing.exit) : "");
   const [stop, setStop] = useState<string>(editing ? String(editing.stop) : prefill?.stop != null ? String(prefill.stop) : "");
   const [takeProfit, setTakeProfit] = useState<string>(editing?.takeProfit != null ? String(editing.takeProfit) : prefill?.tp1 != null ? String(prefill.tp1) : "");
+  // Unrealistic entry / stop / target combinations get explained inline instead
+  // of silently saving a plan whose R math cannot be right.
+  const levelIssues = useMemo(
+    () =>
+      validateLevels({
+        side,
+        entry: entry.trim() ? Number(entry) : null,
+        stop: stop.trim() ? Number(stop) : null,
+        target: takeProfit.trim() ? Number(takeProfit) : null,
+      }),
+    [side, entry, stop, takeProfit],
+  );
   const [size, setSize] = useState<string>(editing ? String(editing.size) : "1");
   const [fees, setFees] = useState<string>(editing?.fees != null ? String(editing.fees) : "");
   const [pointValue, setPointValue] = useState<string>(editing?.pointValue != null ? String(editing.pointValue) : "");
@@ -1735,6 +1749,18 @@ function TradeFormModal({
               <input inputMode="decimal" value={exit} onChange={(e) => setExit(e.target.value)} className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm" />
             </Field>
           </div>
+
+          {/* Sanity check on the levels the trader typed, with a one-tap fix. */}
+          <LevelWarnings
+            issues={levelIssues}
+            onApply={(i) => {
+              if (i.suggestedValue == null) return;
+              const v = String(i.suggestedValue);
+              if (i.field === "entry") setEntry(v);
+              else if (i.field === "stop") setStop(v);
+              else setTakeProfit(v);
+            }}
+          />
 
           <div className="grid grid-cols-2 gap-3">
             <Field label="Size (units / contracts)">
