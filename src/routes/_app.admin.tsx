@@ -17,6 +17,7 @@ import { AiAveragesPanel } from "@/components/admin/AiAveragesPanel";
 import { ImageUsagePanel } from "@/components/admin/ImageUsagePanel";
 import { DateRangeSelector, monthToDateRange, type AdminRange } from "@/components/admin/DateRangeSelector";
 import { UserUsageDrawer } from "@/components/admin/UserUsageDrawer";
+import { TestChecklistPanel } from "@/components/admin/TestChecklistPanel";
 
 
 
@@ -25,7 +26,7 @@ export const Route = createFileRoute("/_app/admin")({
   component: AdminPage,
 });
 
-type AdminTab = "profit" | "ai" | "image" | "people";
+type AdminTab = "profit" | "ai" | "image" | "people" | "checks";
 
 const ADMIN_TABS: { value: AdminTab; label: string }[] = [
   { value: "profit", label: "Profit" },
@@ -33,6 +34,9 @@ const ADMIN_TABS: { value: AdminTab; label: string }[] = [
   { value: "image", label: "Image usage" },
   { value: "people", label: "People and settings" },
 ];
+
+// Only admins get the QA checklist tab.
+const CHECKS_TAB: { value: AdminTab; label: string } = { value: "checks", label: "Test checklist" };
 
 type ReferralRow = { source: string; count: number };
 type UserRow = {
@@ -181,7 +185,7 @@ function AdminPage() {
       )}
 
       <div className="flex flex-wrap items-center gap-1.5 border-b border-border/60 pb-3">
-        {ADMIN_TABS.map((t) => (
+        {(isAdmin ? [...ADMIN_TABS, CHECKS_TAB] : ADMIN_TABS).map((t) => (
           <button
             key={t.value}
             onClick={() => setTab(t.value)}
@@ -245,6 +249,8 @@ function AdminPage() {
       )}
 
       {tab === "image" && <ImageUsagePanel />}
+
+      {tab === "checks" && isAdmin && <TestChecklistPanel />}
 
       {tab === "people" && (
       <>
