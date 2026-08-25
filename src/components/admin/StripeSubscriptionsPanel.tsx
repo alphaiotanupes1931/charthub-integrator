@@ -18,6 +18,25 @@ export function StripeSubscriptionsPanel({
   const [data, setData] = useState<Data | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [priceNote, setPriceNote] = useState<string | null>(null);
+
+  const syncPrices = async () => {
+    setSyncing(true);
+    setPriceNote(null);
+    try {
+      const res = await syncStripePrices();
+      const lines = res.prices.map(
+        (p) => `${p.tier} $${(p.amount / 100).toFixed(0)} USD ${p.action}`,
+      );
+      setPriceNote(`Checkout prices in sync: ${lines.join(", ")}.`);
+    } catch (e) {
+      setPriceNote((e as Error).message);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
 
   const load = async () => {
     setBusy(true);
