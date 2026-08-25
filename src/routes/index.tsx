@@ -260,7 +260,7 @@ function Landing() {
       </div>
 
       {/* HOW IT WORKS */}
-      <section id="product" className="px-5 sm:px-6 py-16 sm:py-24 border-b border-border/60 scroll-mt-24">
+      <section id="product" className="px-5 sm:px-6 py-12 sm:py-24 border-b border-border/60 scroll-mt-24">
         <div className="max-w-6xl mx-auto">
           <SectionEyebrow>How it works</SectionEyebrow>
           <h2 className="font-display font-semibold tracking-[-0.03em] text-[1.75rem] sm:text-4xl md:text-[2.75rem] text-center leading-tight">
@@ -270,7 +270,7 @@ function Landing() {
             Under thirty seconds from a chart to a grade you can act on.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-14">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 sm:mt-14">
             {[
               {
                 step: "01",
@@ -290,7 +290,7 @@ function Landing() {
             ].map((s) => (
               <div
                 key={s.step}
-                className="rounded-xl border border-border/60 bg-card p-6 sm:p-8"
+                className="rounded-xl border border-border/60 bg-card p-5 sm:p-8"
               >
                 <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Step {s.step}</div>
                 <h3 className="font-display text-xl sm:text-2xl mt-4">{s.title}</h3>
@@ -302,7 +302,7 @@ function Landing() {
       </section>
 
       {/* GRADING SECTION */}
-      <section className="px-5 sm:px-6 py-16 sm:py-24 border-b border-border/60">
+      <section className="px-5 sm:px-6 py-12 sm:py-24 border-b border-border/60">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div>
             <SectionEyebrow align="left">Signal grading</SectionEyebrow>
@@ -332,7 +332,7 @@ function Landing() {
       </section>
 
       {/* PRICING */}
-      <section id="pricing" className="px-5 sm:px-6 py-16 sm:py-24 border-b border-border/60 scroll-mt-24">
+      <section id="pricing" className="px-5 sm:px-6 py-12 sm:py-24 border-b border-border/60 scroll-mt-24">
         <div className="max-w-6xl mx-auto">
           <SectionEyebrow>Pricing</SectionEyebrow>
           <h2 className="font-display font-semibold tracking-[-0.03em] text-[1.75rem] sm:text-4xl md:text-[2.75rem] text-center leading-tight">
@@ -346,7 +346,7 @@ function Landing() {
             {PRICING.map((p) => (
               <div
                 key={p.name}
-                className={`relative rounded-xl border p-6 sm:p-8 bg-card ${
+                className={`relative rounded-xl border p-5 sm:p-8 bg-card ${
                   p.popular ? "border-primary" : "border-border/60"
                 }`}
               >
@@ -358,7 +358,7 @@ function Landing() {
                 <div className="text-muted-foreground text-sm">{p.name}</div>
                 <div className="mt-4 flex items-baseline gap-1">
                   <span className="text-2xl text-muted-foreground">$</span>
-                  <span className="font-display text-5xl sm:text-6xl">{p.price}</span>
+                  <span className="font-display text-4xl sm:text-6xl">{p.price}</span>
                   <span className="text-sm text-muted-foreground ml-1">/month</span>
                 </div>
                 <a
@@ -386,7 +386,7 @@ function Landing() {
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="px-5 sm:px-6 py-16 sm:py-24 border-b border-border/60 scroll-mt-24">
+      <section id="faq" className="px-5 sm:px-6 py-12 sm:py-24 border-b border-border/60 scroll-mt-24">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
             <SectionEyebrow>FAQ</SectionEyebrow>
@@ -427,7 +427,7 @@ function Landing() {
       </section>
 
       {/* FINAL CTA */}
-      <section className="px-5 sm:px-6 py-20 sm:py-28 border-b border-border/60">
+      <section className="px-5 sm:px-6 py-14 sm:py-28 border-b border-border/60">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="font-display font-semibold tracking-[-0.03em] text-[2rem] sm:text-4xl md:text-[3rem] leading-tight">
             Grade the next trade.
@@ -544,7 +544,7 @@ function Footer({ dashboardHref }: { dashboardHref: string }) {
     },
   ];
   return (
-    <footer className="px-5 sm:px-6 pt-14 pb-10 bg-card">
+    <footer className="px-5 sm:px-6 pt-12 pb-10 bg-card">
       <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-10">
         <div className="col-span-2 md:col-span-1">
           <div className="flex items-center gap-2">
