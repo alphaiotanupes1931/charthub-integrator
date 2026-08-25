@@ -74,6 +74,8 @@ async def assert_composer_visible(page, viewport) -> None:
         if await candidate.is_visible():
             textarea = candidate
             break
+    if not await composer.is_visible():
+        print("debug", viewport["name"], page.url, await page.locator("body").inner_text()[:1000])
     await composer.wait_for(state="visible")
 
     await messages.evaluate(
