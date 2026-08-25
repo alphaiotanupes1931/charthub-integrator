@@ -1986,7 +1986,7 @@ function Dashboard() {
         </div>
 
         {rightOpen && !isChartFullscreen && (
-          <aside className={`hidden lg:flex shrink-0 border-l border-border/50 bg-background flex-col ${
+          <aside className={`hidden h-full min-h-0 max-h-full shrink-0 overflow-hidden border-l border-border/50 bg-background lg:flex lg:flex-col ${
             panelWidth === "narrow" ? "w-[280px]" : panelWidth === "wide" ? "w-[560px]" : "w-[400px]"
           }`}>
             {/* Header: tabs row, then a quiet meta row for width + model */}
@@ -2087,7 +2087,7 @@ function Dashboard() {
                     </button>
                   </div>
                   {chatPanelView === "conversation" ? (
-                    <div className="flex-1 min-h-0 flex flex-col">
+                    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
 
 
                       <DashboardChatPanel
@@ -2132,7 +2132,7 @@ function Dashboard() {
       {/* Mobile panel: Analysis / Chat. Only visible when the mobile view
           switcher is on Scan or Chat, and expands to fill the remaining height so it
           isn't squished under the chart. */}
-      <div className={`lg:hidden ${mobileView === "chart" ? "hidden" : "flex-1 min-h-0 flex flex-col"} bg-card`} data-tour="scan">
+      <div className={`overflow-hidden bg-card lg:hidden ${mobileView === "chart" ? "hidden" : "flex min-h-0 flex-1 flex-col"}`} data-tour="scan">
         <div className="shrink-0 flex items-center gap-0.5 border-b border-border/60 px-2 py-2 overflow-x-auto no-scrollbar">
           <button
             onClick={() => setRightTab("analysis")}
@@ -2199,7 +2199,7 @@ function Dashboard() {
               </button>
             </div>
             {chatPanelView === "conversation" ? (
-              <div className="flex-1 min-h-0 flex flex-col">
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
 
 
                 <DashboardChatPanel
