@@ -994,7 +994,10 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               void sendMessage({ text });
             }}
           />
-          <PromptInput onSubmit={handleSubmit} className="overflow-visible">
+          <PromptInput
+            onSubmit={handleSubmit}
+            className="overflow-visible [&_[data-slot=input-group]]:overflow-visible"
+          >
             <PromptInputTextarea
               ref={textareaRef}
               value={input}
