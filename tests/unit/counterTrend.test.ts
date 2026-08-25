@@ -25,7 +25,8 @@ describe("counter-trend guard", () => {
     const read = counterTrendRead("Short", s);
     expect(read.counterTrend).toBe(true);
     expect(read.cap).toBe("C");
-    expect(gradeFromEvidence("Short", 90, s)).toBe("C");
+    // Time Frame Combo is now a hard gate: fighting the 4H direction is no trade.
+    expect(gradeFromEvidence("Short", 90, s)).toBe("NO ENTRY");
   });
 
   it("allows up to A when higher-timeframe structure has broken bearish", () => {
