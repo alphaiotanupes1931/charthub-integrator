@@ -719,7 +719,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
 
     return (
       <div
-        className="flex h-full min-h-0 flex-col overflow-visible bg-background sm:rounded-2xl border-y sm:border border-border/50 relative"
+        className="flex h-full min-h-0 flex-col overflow-hidden bg-background sm:rounded-2xl border-y sm:border border-border/50 relative"
         onPaste={(e) => {
           const items = e.clipboardData?.items;
           if (!items) return;
