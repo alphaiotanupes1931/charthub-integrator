@@ -1991,26 +1991,32 @@ function Dashboard() {
           }`}>
             {/* Header: tabs row, then a quiet meta row for width + model */}
             <div className="border-b border-border/50">
-              <div className="flex items-center gap-2 px-3 py-2.5">
-                <div className="flex items-center gap-1 flex-1 min-w-0">
+              <div className={`grid min-w-0 items-center gap-2 px-3 py-2.5 ${
+                panelWidth === "narrow"
+                  ? "grid-cols-[minmax(0,1fr)_auto]"
+                  : "grid-cols-[minmax(0,1fr)_auto_auto]"
+              }`}>
+                <div className="flex min-w-0 items-center gap-1 overflow-hidden">
                   <button
                     onClick={() => setRightTab("analysis")}
-                    className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                    className={`inline-flex min-w-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
                       rightTab === "analysis" ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                     }`}
                   >
-                    <BarChart3 className="h-3.5 w-3.5" /> Analysis
+                    <BarChart3 className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">Analysis</span>
                   </button>
                   <button
                     onClick={() => { setRightTab("chat"); setChatPanelView("conversation"); }}
-                    className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                    className={`inline-flex min-w-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
                       rightTab === "chat" ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                     }`}
                   >
-                    <MessageSquare className="h-3.5 w-3.5" /> Chat
+                    <MessageSquare className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">Chat</span>
                   </button>
                 </div>
-                <div className="flex shrink-0 items-center gap-0.5 rounded-full bg-accent/50 p-0.5" title="Panel width">
+                <div className={`shrink-0 items-center gap-0.5 rounded-full bg-accent/50 p-0.5 ${
+                  panelWidth === "narrow" ? "col-span-2 row-start-2 flex justify-self-center" : "flex"
+                }`} title="Panel width">
                   {(["narrow", "default", "wide"] as const).map((w) => (
                     <button
                       key={w}
