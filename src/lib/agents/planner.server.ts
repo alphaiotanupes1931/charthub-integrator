@@ -372,12 +372,13 @@ export function gradeFromEvidence(
   // Missing higher-timeframe data means the counters had little to work with.
   if (!snap.mtf && grade !== "C") grade = "C";
 
-  // Counter-trend setups are capped last so nothing can lift them back up.
+  // Counter-trend setups and the Time Frame Combo are capped last so nothing can
+  // lift them back up.
+  const order: string[] = ["NO ENTRY", "C", "B", "A", "A+"];
   const ct = counterTrendRead(bias, snap);
-  if (ct.cap) {
-    const order: string[] = ["NO ENTRY", "C", "B", "A", "A+"];
-    if (order.indexOf(grade) > order.indexOf(ct.cap)) grade = ct.cap;
-  }
+  if (ct.cap && order.indexOf(grade) > order.indexOf(ct.cap)) grade = ct.cap;
+  const combo = timeFrameComboGate(bias, snap);
+  if (combo.cap && order.indexOf(grade) > order.indexOf(combo.cap)) grade = combo.cap;
   return grade;
 }
 
