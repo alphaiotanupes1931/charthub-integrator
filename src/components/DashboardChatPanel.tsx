@@ -805,7 +805,9 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
           <AiContextInspector messages={messages} className="mx-3 mb-1" />
         )}
 
-        <Conversation className="flex-1 min-h-0">
+        {/* Reading room. Keeps a real minimum height so replies never collapse
+            to a two-line sliver when the composer and chips are on screen. */}
+        <Conversation className="flex-1 min-h-[220px]">
           <ConversationContent className="px-3 py-4">
             {messages.length === 0 && (
               <div className="py-10 px-4 flex flex-col items-center gap-2 text-center">
@@ -998,7 +1000,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={pendingImage ? "Add a note (optional) and send…" : "Ask your coach, or paste a screenshot…"}
-              rows={2}
+              rows={1}
             />
             <PromptInputFooter className="justify-between">
               <div className="flex items-center gap-1.5">
@@ -1049,7 +1051,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               <PromptInputSubmit status={status} onStop={stopScan} disabled={!input.trim() && !pendingImage && !loading} />
             </PromptInputFooter>
           </PromptInput>
-          <p className="mt-2 text-center text-[10px] text-muted-foreground/80">
+          <p className="mt-1 text-center text-[10px] text-muted-foreground/80">
             Educational analysis only, not financial advice.
           </p>
         </div>
