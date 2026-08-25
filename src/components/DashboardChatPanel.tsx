@@ -810,10 +810,10 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
         {/* This is the panel's only scrolling region. Everything below it stays
             in normal flow so the composer can never be clipped off screen. */}
         <Conversation
-          className="min-h-0 overflow-y-auto overscroll-contain"
+          className="min-h-0 min-w-0 overflow-x-hidden overflow-y-auto overscroll-contain"
           data-testid="dashboard-chat-messages"
         >
-          <ConversationContent className="px-3 py-4">
+          <ConversationContent className="min-w-0 max-w-full overflow-x-hidden px-3 py-4 [&_*]:max-w-full">
             {messages.length === 0 && (
               <div className="py-10 px-4 flex flex-col items-center gap-2 text-center">
                 <MessageSquare className="h-5 w-5 text-muted-foreground/70" />
@@ -831,20 +831,20 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                   ? `${(g.bias || "neutral").toString().toUpperCase()} setup - Grade ${g.grade.toUpperCase()}${typeof g.entry === "number" ? ` · Entry ${formatPrice(g.entry, chart?.snapshot?.lastPrice)}` : ""}${typeof g.stop === "number" ? ` · Stop ${formatPrice(g.stop, chart?.snapshot?.lastPrice)}` : ""}`
                   : null;
                 return (
-                  <Message key={m.id} from={m.role}>
-                    <div className="flex flex-col gap-2 max-w-full">
+                  <Message key={m.id} from={m.role} className="min-w-0 max-w-full overflow-hidden">
+                    <div className="flex min-w-0 max-w-full flex-col gap-2 overflow-hidden break-words">
                       {/* Who is speaking. Traders switch coaches to hear a different
                           voice, so every reply is attributed on screen. */}
-                      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                      <div className="flex min-w-0 items-center gap-1.5 overflow-hidden text-[11px] text-muted-foreground">
                         <span className={`inline-flex h-4 w-4 items-center justify-center rounded-full ${coachMeta.iconBg} ${coachMeta.iconText}`}>
                           <CoachIcon className="h-2.5 w-2.5" />
                         </span>
-                        <span className="font-medium text-foreground/80">{activeCoach}</span>
-                        <span className="text-muted-foreground/60">· {coachMeta.tagline}</span>
+                        <span className="shrink-0 font-medium text-foreground/80">{activeCoach}</span>
+                        <span className="truncate text-muted-foreground/60">· {coachMeta.tagline}</span>
                       </div>
                       {g && <GradeCard grade={g} lastPrice={chart?.snapshot?.lastPrice} symbol={chart?.ticker} />}
                       {summary && (
-                        <div className="text-sm text-foreground/90 leading-snug">{summary}</div>
+                        <div className="min-w-0 break-words text-sm leading-snug text-foreground/90">{summary}</div>
                       )}
                       {parsed.concept && <ConceptDiagram concept={parsed.concept} />}
                       {parsed.annotations.length > 0 && (
@@ -855,7 +855,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                       {parsed.cleanText && (
                         g ? (
                           <details
-                            className="group rounded-2xl border border-border/50 bg-card"
+                            className="group min-w-0 max-w-full overflow-hidden rounded-2xl border border-border/50 bg-card"
                             onToggle={(e) => {
                               const el = e.currentTarget as HTMLDetailsElement;
                               if (el.open) {
@@ -900,7 +900,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                                 <span className="text-[10px] opacity-60 hidden group-open:inline">Hide</span>
                               </span>
                             </summary>
-                            <div className="px-3 pb-3 pt-1 border-t border-border/60">
+                            <div className="min-w-0 overflow-x-auto break-words border-t border-border/60 px-3 pb-3 pt-1">
                               <MessageResponse>{parsed.cleanText}</MessageResponse>
                             </div>
                           </details>
@@ -940,8 +940,8 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               const displayMatch = raw.match(/^<<<SCAN_DISPLAY:([^>]*)>>>/);
               const userText = displayMatch ? displayMatch[1] : raw;
               return (
-                <Message key={m.id} from={m.role}>
-                  <MessageContent>{userText}</MessageContent>
+                <Message key={m.id} from={m.role} className="min-w-0 max-w-full overflow-hidden">
+                  <MessageContent className="min-w-0 max-w-full break-words">{userText}</MessageContent>
                 </Message>
               );
             })}
