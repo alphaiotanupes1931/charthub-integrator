@@ -719,7 +719,8 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
 
     return (
       <div
-        className="flex h-full min-h-0 flex-col overflow-hidden bg-background sm:rounded-2xl border-y sm:border border-border/50 relative"
+        className="relative grid h-full max-h-full min-h-0 grid-rows-[auto_auto_minmax(0,1fr)_auto] overflow-hidden border-y border-border/50 bg-background sm:rounded-2xl sm:border"
+        data-testid="dashboard-chat-panel"
         onPaste={(e) => {
           const items = e.clipboardData?.items;
           if (!items) return;
@@ -799,15 +800,19 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
           </div>
         </div>
 
-        <AiCreditNotice />
-
-        {messages.length > 0 && (
-          <AiContextInspector messages={messages} className="mx-3 mb-1" />
-        )}
+        <div className="min-h-0 shrink-0">
+          <AiCreditNotice />
+          {messages.length > 0 && (
+            <AiContextInspector messages={messages} className="mx-3 mb-1" />
+          )}
+        </div>
 
         {/* This is the panel's only scrolling region. Everything below it stays
             in normal flow so the composer can never be clipped off screen. */}
-        <Conversation className="min-h-0 flex-1 overscroll-contain overflow-y-auto">
+        <Conversation
+          className="min-h-0 overflow-y-auto overscroll-contain"
+          data-testid="dashboard-chat-messages"
+        >
           <ConversationContent className="px-3 py-4">
             {messages.length === 0 && (
               <div className="py-10 px-4 flex flex-col items-center gap-2 text-center">
@@ -950,7 +955,8 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
         </Conversation>
 
         <div
-          className="sticky bottom-0 z-20 shrink-0 overflow-visible border-t border-border/50 bg-background p-2.5 shadow-[0_-4px_12px_rgba(0,0,0,0.04)]"
+          className="sticky bottom-0 z-20 min-w-0 shrink-0 overflow-visible border-t border-border/50 bg-background p-2.5 shadow-[0_-4px_12px_rgba(0,0,0,0.04)] [@media(max-height:700px)]:py-2"
+          data-testid="dashboard-chat-composer"
           style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
         >
           {pendingImage && (
@@ -996,7 +1002,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
           />
           <PromptInput
             onSubmit={handleSubmit}
-            className="overflow-visible [&_[data-slot=input-group]]:overflow-visible"
+            className="min-w-0 overflow-visible [&_[data-slot=input-group]]:overflow-visible"
           >
             <PromptInputTextarea
               ref={textareaRef}
@@ -1004,7 +1010,8 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               onChange={(e) => setInput(e.target.value)}
               placeholder={pendingImage ? "Add a note (optional), then send" : "Ask your coach or paste a chart screenshot"}
               rows={3}
-              className="min-h-[88px] max-h-[140px] whitespace-pre-wrap py-2.5 text-sm leading-relaxed placeholder:whitespace-normal placeholder:text-muted-foreground placeholder:opacity-100 border border-border/60 bg-card rounded-2xl"
+              aria-label="Message your AI coach"
+              className="min-h-[88px] max-h-[140px] whitespace-pre-wrap rounded-2xl border border-border/60 bg-card py-2.5 text-sm leading-relaxed placeholder:whitespace-normal placeholder:text-muted-foreground placeholder:opacity-100 [@media(max-height:700px)]:min-h-[72px] [@media(max-height:700px)]:max-h-[96px]"
             />
             <PromptInputFooter className="flex-wrap justify-between gap-2">
               <div className="flex min-w-0 flex-wrap items-center gap-1.5">
