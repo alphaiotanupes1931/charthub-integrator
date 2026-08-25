@@ -950,7 +950,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
         </Conversation>
 
         <div
-          className="border-t border-border/50 bg-background p-2.5"
+          className="shrink-0 border-t border-border/50 bg-background p-2.5"
           style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
         >
           {pendingImage && (
