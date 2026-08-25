@@ -719,7 +719,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
 
     return (
       <div
-        className="flex flex-col h-full min-h-0 bg-background overflow-hidden sm:rounded-2xl border-y sm:border border-border/50 relative"
+        className="flex h-full min-h-0 flex-col overflow-visible bg-background sm:rounded-2xl border-y sm:border border-border/50 relative"
         onPaste={(e) => {
           const items = e.clipboardData?.items;
           if (!items) return;
@@ -752,7 +752,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
         )}
         {/* Header */}
         <div
-          className="flex items-center justify-between gap-2 border-b border-border/60 px-3 py-2.5 bg-card/95 backdrop-blur"
+          className="flex shrink-0 items-center justify-between gap-2 border-b border-border/60 px-3 py-2.5 bg-card/95 backdrop-blur"
           style={{ paddingTop: "max(0.625rem, env(safe-area-inset-top))" }}
         >
           <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -805,9 +805,9 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
           <AiContextInspector messages={messages} className="mx-3 mb-1" />
         )}
 
-        {/* Reading room. Keeps a real minimum height so replies never collapse
-            to a two-line sliver when the composer and chips are on screen. */}
-        <Conversation className="flex-1 min-h-0 overflow-y-auto">
+        {/* This is the panel's only scrolling region. Everything below it stays
+            in normal flow so the composer can never be clipped off screen. */}
+        <Conversation className="min-h-0 flex-1 overscroll-contain overflow-y-auto">
           <ConversationContent className="px-3 py-4">
             {messages.length === 0 && (
               <div className="py-10 px-4 flex flex-col items-center gap-2 text-center">
@@ -950,7 +950,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
         </Conversation>
 
         <div
-          className="shrink-0 border-t border-border/50 bg-background p-2.5"
+          className="shrink-0 overflow-visible border-t border-border/50 bg-background p-2.5"
           style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
         >
           {pendingImage && (
@@ -994,17 +994,17 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               void sendMessage({ text });
             }}
           />
-          <PromptInput onSubmit={handleSubmit}>
+          <PromptInput onSubmit={handleSubmit} className="overflow-visible">
             <PromptInputTextarea
               ref={textareaRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder={pendingImage ? "Add a note (optional) and send…" : "Ask your coach, or paste a screenshot…"}
-              rows={2}
-              className="min-h-[72px] max-h-[140px] py-2.5 text-sm leading-relaxed border border-border/60 bg-card rounded-2xl"
+              placeholder={pendingImage ? "Add a note (optional), then send" : "Ask your coach or paste a chart screenshot"}
+              rows={3}
+              className="min-h-[88px] max-h-[140px] whitespace-pre-wrap py-2.5 text-sm leading-relaxed placeholder:whitespace-normal placeholder:text-muted-foreground placeholder:opacity-100 border border-border/60 bg-card rounded-2xl"
             />
-            <PromptInputFooter className="justify-between">
-              <div className="flex items-center gap-1.5">
+            <PromptInputFooter className="flex-wrap justify-between gap-2">
+              <div className="flex min-w-0 flex-wrap items-center gap-1.5">
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
