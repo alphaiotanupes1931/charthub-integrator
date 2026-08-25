@@ -805,7 +805,9 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
           <AiContextInspector messages={messages} className="mx-3 mb-1" />
         )}
 
-        <Conversation className="flex-1 min-h-0">
+        {/* Reading room. Keeps a real minimum height so replies never collapse
+            to a two-line sliver when the composer and chips are on screen. */}
+        <Conversation className="flex-1 min-h-[220px]">
           <ConversationContent className="px-3 py-4">
             {messages.length === 0 && (
               <div className="py-10 px-4 flex flex-col items-center gap-2 text-center">
