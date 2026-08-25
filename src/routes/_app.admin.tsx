@@ -250,7 +250,12 @@ function AdminPage() {
 
       {tab === "image" && <ImageUsagePanel />}
 
-      {tab === "checks" && isAdmin && <TestChecklistPanel />}
+      {tab === "checks" && isAdmin && (
+        <>
+          <PlanDebugPanel />
+          <TestChecklistPanel />
+        </>
+      )}
 
       {tab === "people" && (
       <>
