@@ -743,6 +743,7 @@ export async function runPlanner(
   const isNoEntry = grade === "NO ENTRY";
 
   const counterTrend = counterTrendRead(bias, snap);
+  const comboGate = timeFrameComboGate(bias, snap);
 
   // `notes` already carries the thesis ("why take this trade"), so the details
   // block must NOT repeat it. It is the read-out of the evidence itself:
