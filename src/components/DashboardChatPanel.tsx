@@ -1000,7 +1000,8 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={pendingImage ? "Add a note (optional) and send…" : "Ask your coach, or paste a screenshot…"}
-              rows={1}
+              rows={2}
+              className="min-h-[72px] py-2.5 text-sm leading-relaxed"
             />
             <PromptInputFooter className="justify-between">
               <div className="flex items-center gap-1.5">
