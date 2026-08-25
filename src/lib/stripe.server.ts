@@ -42,6 +42,33 @@ async function ensureProduct(stripe: Stripe): Promise<string> {
 
 const priceCache: Partial<Record<PlanTier, string>> = {};
 
+/** A price is only usable if it is USD, monthly, and matches the published amount. */
+function priceMatchesPlan(price: Stripe.Price, plan: { amount: number }): boolean {
+  return (
+    price.active === true &&
+    price.currency === "usd" &&
+    price.unit_amount === plan.amount &&
+    price.recurring?.interval === "month" &&
+    (price.recurring?.interval_count ?? 1) === 1
+  );
+}
+
+async function createPlanPrice(stripe: Stripe, tier: PlanTier): Promise<string> {
+  const plan = PLANS[tier];
+  const productId = await ensureProduct(stripe);
+  const created = await stripe.prices.create({
+    unit_amount: plan.amount,
+    currency: "usd",
+    recurring: { interval: "month" },
+    product: productId,
+    lookup_key: plan.lookupKey,
+    // Take over the lookup key from any stale price that still holds it.
+    transfer_lookup_key: true,
+    metadata: { tier, app: "trademind" },
+  });
+  return created.id;
+}
+
 export async function getPriceIdForTier(tier: PlanTier): Promise<string> {
   if (priceCache[tier]) return priceCache[tier]!;
   const stripe = getStripe();
@@ -50,25 +77,69 @@ export async function getPriceIdForTier(tier: PlanTier): Promise<string> {
   const list = await stripe.prices.list({
     lookup_keys: [plan.lookupKey],
     active: true,
-    limit: 1,
+    limit: 10,
   });
-  if (list.data.length) {
-    priceCache[tier] = list.data[0].id;
-    return list.data[0].id;
+  const good = list.data.find((p) => priceMatchesPlan(p, plan));
+  if (good) {
+    priceCache[tier] = good.id;
+    return good.id;
   }
 
-  const productId = await ensureProduct(stripe);
-  const created = await stripe.prices.create({
-    unit_amount: plan.amount,
-    currency: "usd",
-    recurring: { interval: "month" },
-    product: productId,
-    lookup_key: plan.lookupKey,
-    metadata: { tier, app: "trademind" },
-  });
-  priceCache[tier] = created.id;
-  return created.id;
+  // Wrong currency or stale amount on the existing price: archive it so it can
+  // never be presented at checkout again, then mint a correct USD price.
+  for (const stale of list.data) {
+    try {
+      await stripe.prices.update(stale.id, { active: false });
+    } catch {
+      /* ignore: archiving is best effort */
+    }
+  }
+
+  const id = await createPlanPrice(stripe, tier);
+  priceCache[tier] = id;
+  return id;
 }
+
+/**
+ * Reconcile every tier's Stripe price with the amounts shown on /pricing.
+ * Safe to run repeatedly: correct prices are left untouched.
+ */
+export async function syncPlanPrices(): Promise<
+  Array<{ tier: PlanTier; priceId: string; amount: number; currency: string; action: "kept" | "recreated" }>
+> {
+  const stripe = getStripe();
+  const out: Array<{
+    tier: PlanTier;
+    priceId: string;
+    amount: number;
+    currency: string;
+    action: "kept" | "recreated";
+  }> = [];
+
+  for (const tier of Object.keys(PLANS) as PlanTier[]) {
+    const plan = PLANS[tier];
+    const list = await stripe.prices.list({ lookup_keys: [plan.lookupKey], active: true, limit: 10 });
+    const good = list.data.find((p) => priceMatchesPlan(p, plan));
+    if (good) {
+      priceCache[tier] = good.id;
+      out.push({ tier, priceId: good.id, amount: plan.amount, currency: "usd", action: "kept" });
+      continue;
+    }
+    for (const stale of list.data) {
+      try {
+        await stripe.prices.update(stale.id, { active: false });
+      } catch {
+        /* ignore */
+      }
+    }
+    const id = await createPlanPrice(stripe, tier);
+    priceCache[tier] = id;
+    out.push({ tier, priceId: id, amount: plan.amount, currency: "usd", action: "recreated" });
+  }
+
+  return out;
+}
+
 
 export function tierFromPrice(price: Stripe.Price | null | undefined): PlanTier | null {
   const key = price?.lookup_key ?? null;
