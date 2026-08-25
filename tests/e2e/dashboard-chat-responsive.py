@@ -49,6 +49,11 @@ async def restore_session(context, page) -> None:
 async def assert_composer_visible(page, viewport) -> None:
     await page.set_viewport_size({"width": viewport["width"], "height": viewport["height"]})
     await page.goto(f"{BASE_URL}/dashboard", wait_until="domcontentloaded")
+    await page.wait_for_function(
+        """() => [...document.querySelectorAll('[data-testid="dashboard-chat-panel"]')]
+          .some((element) => element.getBoundingClientRect().height > 0)""",
+        timeout=45_000,
+    )
 
     chat_tabs = page.get_by_role("button", name="Chat", exact=True)
     for index in range(await chat_tabs.count()):
@@ -74,8 +79,6 @@ async def assert_composer_visible(page, viewport) -> None:
         if await candidate.is_visible():
             textarea = candidate
             break
-    if not await composer.is_visible():
-        print("debug", viewport["name"], page.url, (await page.locator("body").inner_text())[:1000])
     await composer.wait_for(state="visible")
 
     await messages.evaluate(
