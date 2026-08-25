@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Loader2, RefreshCw, CreditCard } from "lucide-react";
-import { listSubscribers } from "@/lib/billing.functions";
+import { Loader2, RefreshCw, CreditCard, Tags } from "lucide-react";
+import { listSubscribers, syncStripePrices } from "@/lib/billing.functions";
 
 type Data = Awaited<ReturnType<typeof listSubscribers>>;
 type Row = Data["subscribers"][number];
@@ -18,6 +18,25 @@ export function StripeSubscriptionsPanel({
   const [data, setData] = useState<Data | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [priceNote, setPriceNote] = useState<string | null>(null);
+
+  const syncPrices = async () => {
+    setSyncing(true);
+    setPriceNote(null);
+    try {
+      const res = await syncStripePrices();
+      const lines = res.prices.map(
+        (p) => `${p.tier} $${(p.amount / 100).toFixed(0)} USD ${p.action}`,
+      );
+      setPriceNote(`Checkout prices in sync: ${lines.join(", ")}.`);
+    } catch (e) {
+      setPriceNote((e as Error).message);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
 
   const load = async () => {
     setBusy(true);
@@ -61,16 +80,30 @@ export function StripeSubscriptionsPanel({
           <CreditCard className="h-4 w-4 text-muted-foreground" />
           <h2 className="text-sm font-semibold tracking-tight">Stripe subscriptions</h2>
         </div>
-        <button
-          type="button"
-          onClick={() => void load()}
-          disabled={busy}
-          className="inline-flex items-center gap-1.5 rounded-full border border-border/60 px-3 py-1.5 text-xs font-semibold hover:bg-muted disabled:opacity-50"
-        >
-          <RefreshCw className={`h-3.5 w-3.5 ${busy ? "animate-spin" : ""}`} />
-          Refresh
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => void syncPrices()}
+            disabled={syncing}
+            className="inline-flex items-center gap-1.5 rounded-full border border-border/60 px-3 py-1.5 text-xs font-semibold hover:bg-muted disabled:opacity-50"
+          >
+            {syncing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Tags className="h-3.5 w-3.5" />}
+            Sync prices
+          </button>
+          <button
+            type="button"
+            onClick={() => void load()}
+            disabled={busy}
+            className="inline-flex items-center gap-1.5 rounded-full border border-border/60 px-3 py-1.5 text-xs font-semibold hover:bg-muted disabled:opacity-50"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${busy ? "animate-spin" : ""}`} />
+            Refresh
+          </button>
+        </div>
       </div>
+
+      {priceNote && <div className="mt-3 text-xs text-muted-foreground">{priceNote}</div>}
+
 
       {err && <div className="mt-3 text-xs text-destructive">{err}</div>}
 
