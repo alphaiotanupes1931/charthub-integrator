@@ -415,3 +415,205 @@ export const syncStripePrices = createServerFn({ method: "POST" })
     const { syncPlanPrices } = await import("@/lib/stripe.server");
     return { prices: await syncPlanPrices() };
   });
+
+export type PlanDebugSnapshot = {
+  user: { id: string; email: string | null };
+  freeTierFlag: boolean;
+  isAdmin: boolean;
+  db: {
+    status: string | null;
+    tier: string | null;
+    current_period_end: string | null;
+    trial_end: string | null;
+    cancel_at_period_end: boolean;
+    stripe_customer_id: string | null;
+    stripe_subscription_id: string | null;
+    updated_at: string | null;
+  } | null;
+  stripe: {
+    subscriptionId: string;
+    status: string;
+    priceId: string | null;
+    lookupKey: string | null;
+    tier: string | null;
+    amountCents: number | null;
+    currency: string | null;
+    interval: string | null;
+    cancelAtPeriodEnd: boolean;
+    currentPeriodEnd: string | null;
+  } | null;
+  stripeError: string | null;
+  resolved: { tier: string; isPaid: boolean; onLegacyTrial: boolean; gradeLimit: number | null; capabilities: string[]; coachAllowance: number };
+  quota: { active: boolean; used: number; limit: number; remaining: number; exhausted: boolean; month: string; timezone: string };
+  mismatches: string[];
+};
+
+/**
+ * Admin-only plan debug: the DB subscription row, the live Stripe price it maps
+ * to, the tier that resolves from it, and the remaining grade quota — side by
+ * side so a gating complaint can be diagnosed in one look. Defaults to the
+ * calling admin; pass an email or user id to inspect another account.
+ */
+export const adminPlanDebug = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ email: z.string().trim().optional(), userId: z.string().uuid().optional() }).parse(input ?? {}),
+  )
+  .handler(async ({ data, context }): Promise<PlanDebugSnapshot> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: callerIsAdmin } = await supabaseAdmin.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!callerIsAdmin) throw new Error("Forbidden");
+
+    const { resolveEntitlements, quotaView, monthKey } = await import("@/lib/entitlements");
+
+    // Resolve which account we are inspecting.
+    let userId = data.userId ?? context.userId;
+    let email: string | null = (context.claims?.email as string | undefined) ?? null;
+    if (data.email) {
+      const wanted = data.email.toLowerCase();
+      const { data: page } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+      const found = page?.users.find((u) => u.email?.toLowerCase() === wanted);
+      if (!found) throw new Error(`No account found for ${data.email}`);
+      userId = found.id;
+      email = found.email ?? null;
+    } else if (data.userId) {
+      const { data: got } = await supabaseAdmin.auth.admin.getUserById(data.userId);
+      email = got?.user?.email ?? null;
+    }
+
+    const [{ data: flag }, { data: row }, { data: adminRow }, { data: prefs }] = await Promise.all([
+      supabaseAdmin.from("app_flags").select("enabled").eq("key", "free_tier_enabled").maybeSingle(),
+      supabaseAdmin
+        .from("subscriptions")
+        .select(
+          "status,tier,current_period_end,trial_end,cancel_at_period_end,stripe_customer_id,stripe_subscription_id,updated_at",
+        )
+        .eq("user_id", userId)
+        .maybeSingle(),
+      supabaseAdmin.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle(),
+      supabaseAdmin.from("briefing_prefs").select("timezone").eq("user_id", userId).maybeSingle(),
+    ]);
+
+    const isAdmin = !!adminRow;
+    const entitlements = resolveEntitlements({
+      flagEnabled: !!flag?.enabled,
+      isAdmin,
+      subscription: row ? { status: row.status, tier: row.tier, trialEnd: row.trial_end } : null,
+    });
+
+    const timezone = prefs?.timezone || "UTC";
+    const month = monthKey(timezone);
+    let used = 0;
+    if (entitlements.freeTierActive) {
+      const { data: quotaRow } = await supabaseAdmin
+        .from("free_tier_quota")
+        .select("grades_used")
+        .eq("user_id", userId)
+        .eq("month", month)
+        .maybeSingle();
+      used = quotaRow?.grades_used ?? 0;
+    }
+    const quota = quotaView(entitlements, used);
+
+    // Live Stripe read: the price object is the ground truth for the tier.
+    let stripe: PlanDebugSnapshot["stripe"] = null;
+    let stripeError: string | null = null;
+    try {
+      const { getStripe, tierFromPrice } = await import("@/lib/stripe.server");
+      const client = getStripe();
+      let sub: import("stripe").default.Subscription | null = null;
+
+      if (row?.stripe_subscription_id) {
+        sub = await client.subscriptions.retrieve(row.stripe_subscription_id, {
+          expand: ["items.data.price"],
+        });
+      } else {
+        const customerId =
+          row?.stripe_customer_id ??
+          (email ? (await client.customers.list({ email, limit: 1 })).data[0]?.id : undefined);
+        if (customerId) {
+          const list = await client.subscriptions.list({
+            customer: customerId,
+            status: "all",
+            limit: 10,
+            expand: ["data.items.data.price"],
+          });
+          sub =
+            list.data.find((s) => s.status === "active" || s.status === "trialing" || s.status === "past_due") ??
+            list.data[0] ??
+            null;
+        }
+      }
+
+      if (sub) {
+        const price = sub.items.data[0]?.price ?? null;
+        const cpe = (sub as unknown as { current_period_end?: number }).current_period_end;
+        stripe = {
+          subscriptionId: sub.id,
+          status: sub.status,
+          priceId: price?.id ?? null,
+          lookupKey: price?.lookup_key ?? null,
+          tier: tierFromPrice(price),
+          amountCents: price?.unit_amount ?? null,
+          currency: price?.currency ?? null,
+          interval: price?.recurring?.interval ?? null,
+          cancelAtPeriodEnd: !!sub.cancel_at_period_end,
+          currentPeriodEnd: cpe ? new Date(cpe * 1000).toISOString() : null,
+        };
+      }
+    } catch (e) {
+      stripeError = e instanceof Error ? e.message : "Stripe lookup failed";
+    }
+
+    // Anything here means the DB row and Stripe disagree, which is what causes
+    // "I paid but it still gates me" reports.
+    const mismatches: string[] = [];
+    if (stripe && row) {
+      if (stripe.status !== row.status) mismatches.push(`Status: Stripe ${stripe.status} vs saved ${row.status ?? "none"}`);
+      const savedTier = row.tier ?? null;
+      if (stripe.tier !== savedTier && !["canceled", "incomplete_expired", "unpaid"].includes(stripe.status)) {
+        mismatches.push(`Tier: Stripe ${stripe.tier ?? "unknown price"} vs saved ${savedTier ?? "none"}`);
+      }
+      if (stripe.cancelAtPeriodEnd !== row.cancel_at_period_end) mismatches.push("Scheduled cancellation flag differs");
+      if (stripe.currency && stripe.currency !== "usd") mismatches.push(`Price currency is ${stripe.currency.toUpperCase()}, not USD`);
+      if (stripe.interval && stripe.interval !== "month") mismatches.push(`Price interval is ${stripe.interval}, not month`);
+      if (!stripe.tier) mismatches.push("Stripe price has no recognised plan lookup key");
+    } else if (stripe && !row) {
+      mismatches.push("Stripe has a subscription but nothing is saved for this account");
+    } else if (!stripe && row?.status && !["canceled", "incomplete_expired", "unpaid"].includes(row.status)) {
+      mismatches.push(`Saved status ${row.status} but no matching Stripe subscription was found`);
+    }
+
+    return {
+      user: { id: userId, email },
+      freeTierFlag: !!flag?.enabled,
+      isAdmin,
+      db: row
+        ? {
+            status: row.status ?? null,
+            tier: row.tier ?? null,
+            current_period_end: row.current_period_end ?? null,
+            trial_end: row.trial_end ?? null,
+            cancel_at_period_end: !!row.cancel_at_period_end,
+            stripe_customer_id: row.stripe_customer_id ?? null,
+            stripe_subscription_id: row.stripe_subscription_id ?? null,
+            updated_at: row.updated_at ?? null,
+          }
+        : null,
+      stripe,
+      stripeError,
+      resolved: {
+        tier: entitlements.tier,
+        isPaid: entitlements.isPaid,
+        onLegacyTrial: entitlements.onLegacyTrial,
+        gradeLimit: entitlements.gradeLimit,
+        capabilities: entitlements.capabilities,
+        coachAllowance: entitlements.coachAllowance,
+      },
+      quota: { ...quota, remaining: Number.isFinite(quota.remaining) ? quota.remaining : -1, month, timezone },
+      mismatches,
+    };
+  });
