@@ -1051,7 +1051,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               <PromptInputSubmit status={status} onStop={stopScan} disabled={!input.trim() && !pendingImage && !loading} />
             </PromptInputFooter>
           </PromptInput>
-          <p className="mt-2 text-center text-[10px] text-muted-foreground/80">
+          <p className="mt-1 text-center text-[10px] text-muted-foreground/80">
             Educational analysis only, not financial advice.
           </p>
         </div>
