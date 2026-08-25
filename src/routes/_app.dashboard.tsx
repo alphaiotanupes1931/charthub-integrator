@@ -2010,6 +2010,19 @@ function Dashboard() {
                     <MessageSquare className="h-3.5 w-3.5" /> Chat
                   </button>
                 </div>
+                <div className="flex shrink-0 items-center gap-0.5 rounded-full bg-accent/50 p-0.5" title="Panel width">
+                  {(["narrow", "default", "wide"] as const).map((w) => (
+                    <button
+                      key={w}
+                      onClick={() => setPanelWidth(w)}
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-medium capitalize transition ${
+                        panelWidth === w ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {w}
+                    </button>
+                  ))}
+                </div>
                 <button
                   onClick={() => setRightOpen(false)}
                   className="h-8 w-8 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-accent/60 transition shrink-0"
@@ -2018,21 +2031,6 @@ function Dashboard() {
                 >
                   <X className="h-4 w-4" />
                 </button>
-              </div>
-              <div className="flex items-center justify-between gap-2 px-3 pb-2.5">
-                <div className="flex shrink-0 items-center gap-0.5 rounded-full bg-accent/50 p-0.5" title="Panel width">
-                  {(["narrow", "default", "wide"] as const).map((w) => (
-                    <button
-                      key={w}
-                      onClick={() => setPanelWidth(w)}
-                      className={`rounded-full px-2.5 py-0.5 text-[10px] font-medium capitalize transition ${
-                        panelWidth === w ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {w}
-                    </button>
-                  ))}
-                </div>
               </div>
             </div>
 
