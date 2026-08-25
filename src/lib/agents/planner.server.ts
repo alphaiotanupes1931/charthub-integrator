@@ -266,6 +266,82 @@ export function counterTrendRead(
   };
 }
 
+// ---------- Hard-coded Time Frame Combo ----------
+// 4H = DIRECTION, 1H = LIQUIDITY, 15m = BOS/ChoCH, 5m = execution.
+// This is a gate, not a hint: a setup that fights the 4H direction is NO ENTRY,
+// and a setup without 1H liquidity plus a 15m break cannot reach a high grade.
+export type ComboGate = {
+  /** "NO ENTRY" kills the trade outright; otherwise the highest grade allowed. */
+  cap: typeof GRADES[number] | null;
+  reason: string | null;
+  checks: { h4: boolean; h1: boolean; m15: boolean };
+};
+
+export function timeFrameComboGate(
+  bias: typeof BIASES[number],
+  snap: MarketSnapshot,
+): ComboGate {
+  if (bias === "Neutral") {
+    return { cap: "NO ENTRY", reason: "No 4H direction to trade with.", checks: { h4: false, h1: false, m15: false } };
+  }
+  const wanted = bias === "Long" ? "bullish" : "bearish";
+  const opposite = wanted === "bullish" ? "bearish" : "bullish";
+  const m = snap.mtf;
+  const ladder = m?.ladder ?? [];
+  const h4Row = ladder.find((r) => r.label === "4H");
+  const h4Dir = m?.h4.direction ?? h4Row?.bias ?? "neutral";
+  const h4Trend = m?.h4.trend ?? h4Row?.trend ?? "range";
+
+  // Step 1 - 4H direction. Trading against it is not a lower grade, it is no trade.
+  if (h4Dir === opposite || h4Trend === (wanted === "bullish" ? "down" : "up")) {
+    const broken = h4Row?.structure === wanted;
+    if (!broken) {
+      return {
+        cap: "NO ENTRY",
+        reason: `Time Frame Combo step 1 failed: the 4H direction is ${h4Dir}/${h4Trend}, so a ${bias.toLowerCase()} here is counter-trend. No entry until the 4H breaks structure ${wanted}.`,
+        checks: { h4: false, h1: false, m15: false },
+      };
+    }
+  }
+  const h4Ok = h4Dir === wanted;
+
+  // Step 2 - 1H liquidity: a pool to run into or a 1H break/reversal in our direction.
+  const liq = m?.h1.liquidity;
+  const pools = (bias === "Long" ? liq?.sellside : liq?.buyside) ?? [];
+  const h1Ok =
+    pools.length > 0 || m?.h1.structureBreak === wanted || m?.h1.reversal === wanted;
+
+  // Step 3 - 15m BOS / ChoCH confirmation.
+  const m15 = m?.m15.confirmation ?? "none";
+  const m15Ok = m15 === wanted;
+
+  if (m15 === opposite) {
+    return {
+      cap: "C",
+      reason: `Time Frame Combo step 3 failed: the 15m break is ${m15}, against this ${bias.toLowerCase()}. Wait for a 15m BOS/ChoCH in your direction before executing on the 5m.`,
+      checks: { h4: h4Ok, h1: h1Ok, m15: false },
+    };
+  }
+  if (!h4Ok || !h1Ok) {
+    return {
+      cap: "B",
+      reason: !h4Ok
+        ? `Time Frame Combo: the 4H direction is ${h4Dir} (not clearly ${wanted}), so this caps at B.`
+        : `Time Frame Combo step 2 weak: no 1H liquidity pool or 1H break in the ${bias.toLowerCase()} direction yet, so this caps at B.`,
+      checks: { h4: h4Ok, h1: h1Ok, m15: m15Ok },
+    };
+  }
+  if (!m15Ok) {
+    return {
+      cap: "B",
+      reason: "Time Frame Combo step 3 pending: no 15m BOS/ChoCH yet, so this caps at B until the 15m confirms.",
+      checks: { h4: true, h1: true, m15: false },
+    };
+  }
+  return { cap: null, reason: null, checks: { h4: true, h1: true, m15: true } };
+}
+
+
 // ---------- Deterministic grade ----------
 // Grade is a function of counted evidence, not model sampling. Objective risk
 // controls can cap it later, but the model's habitual grade must not flatten
@@ -296,12 +372,13 @@ export function gradeFromEvidence(
   // Missing higher-timeframe data means the counters had little to work with.
   if (!snap.mtf && grade !== "C") grade = "C";
 
-  // Counter-trend setups are capped last so nothing can lift them back up.
+  // Counter-trend setups and the Time Frame Combo are capped last so nothing can
+  // lift them back up.
+  const order: string[] = ["NO ENTRY", "C", "B", "A", "A+"];
   const ct = counterTrendRead(bias, snap);
-  if (ct.cap) {
-    const order: string[] = ["NO ENTRY", "C", "B", "A", "A+"];
-    if (order.indexOf(grade) > order.indexOf(ct.cap)) grade = ct.cap;
-  }
+  if (ct.cap && order.indexOf(grade) > order.indexOf(ct.cap)) grade = ct.cap;
+  const combo = timeFrameComboGate(bias, snap);
+  if (combo.cap && order.indexOf(grade) > order.indexOf(combo.cap)) grade = combo.cap;
   return grade;
 }
 
@@ -666,6 +743,7 @@ export async function runPlanner(
   const isNoEntry = grade === "NO ENTRY";
 
   const counterTrend = counterTrendRead(bias, snap);
+  const comboGate = timeFrameComboGate(bias, snap);
 
   // `notes` already carries the thesis ("why take this trade"), so the details
   // block must NOT repeat it. It is the read-out of the evidence itself:
@@ -674,7 +752,8 @@ export async function runPlanner(
   const dataNote = (snap.mtf
     ? ""
     : " Higher-timeframe data was incomplete on this scan, so the grade is capped at C until the feed fills in.")
-    + (counterTrend.reason ? ` ${counterTrend.reason}` : "");
+    + (counterTrend.reason ? ` ${counterTrend.reason}` : "")
+    + (comboGate.reason ? ` ${comboGate.reason}` : "");
   const details = buildDetails(snap, memo, finalPlan, dec, coach, bias, grade, newsWarning, dataNote);
 
 
