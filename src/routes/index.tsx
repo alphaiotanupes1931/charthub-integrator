@@ -3,6 +3,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "motion/react";
 import { ArrowRight, Check, Menu } from "lucide-react";
 import { TickerTape } from "@/components/TickerTape";
+import { TerrainScene } from "@/components/landing/TerrainScene";
+
 import { MiniChart, SymbolOverview } from "@/components/MiniChart";
 import {
   Accordion,
