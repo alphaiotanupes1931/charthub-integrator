@@ -1863,7 +1863,23 @@ function Dashboard() {
       {/* Chart area */}
       <div ref={chartAreaRef} className={`flex-1 min-h-0 bg-card overflow-hidden ${mobileView === "chart" ? "flex" : "hidden"} lg:flex`} data-tour="chart">
 
-        <div className="flex-1 min-w-0 flex flex-col">
+        {/* Chart column. Minimized (collapsed to a restore rail) when the chat is maximized. */}
+        {chatHalf && rightOpen && !isChartFullscreen && (
+          <div className="hidden lg:flex w-10 shrink-0 flex-col items-center gap-2 border-r border-border/50 bg-card py-3">
+            <button
+              type="button"
+              onClick={() => setLayout("split")}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-accent/60 hover:text-foreground transition"
+              title="Restore chart"
+              aria-label="Restore chart"
+            >
+              <LineChart className="h-4 w-4" />
+            </button>
+            <span className="mt-1 text-[10px] font-semibold tracking-widest text-muted-foreground [writing-mode:vertical-rl]">CHART</span>
+          </div>
+        )}
+
+        <div className={`flex-1 min-w-0 flex-col ${chatHalf && rightOpen && !isChartFullscreen ? "flex lg:hidden" : "flex"}`}>
 
           {/* Scan output preview + live performance strip */}
           {!isChartFullscreen && (
