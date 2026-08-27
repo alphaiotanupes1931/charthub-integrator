@@ -1658,7 +1658,7 @@ function Dashboard() {
       </div>
 
       {/* Row 2: Live / Setup segmented control + chart controls */}
-      <div className="shrink-0 flex items-center gap-3 px-5 py-3 border-b border-border/50 bg-background text-xs">
+      <div className={`shrink-0 items-center gap-3 px-5 py-3 border-b border-border/50 bg-background text-xs ${chatHalf ? "flex lg:hidden" : "flex"}`}>
         <div className="inline-flex items-center rounded-full bg-accent/60 p-1">
           <button
             onClick={() => setChartTab("live")}
