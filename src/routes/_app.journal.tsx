@@ -47,6 +47,8 @@ import {
   deleteTradeImages,
   compressImageFile,
 } from "@/lib/journalImages";
+import { ImportClosedTradesPanel } from "@/components/ImportClosedTradesPanel";
+import type { ParsedClosedTrade } from "@/lib/journal-import.functions";
 
 export const Route = createFileRoute("/_app/journal")({
   head: () => ({ meta: [{ title: "Trade Journal, TradeMind" }] }),
