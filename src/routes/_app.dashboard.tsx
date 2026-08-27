@@ -2005,21 +2005,20 @@ function Dashboard() {
 
         </div>
 
-        {/* Minimized chat rail — chat is never destroyed, just collapsed. */}
+        {/* Minimized chat — floating bubble, bottom-right. Chat is never destroyed, just collapsed. */}
         {!rightOpen && !isChartFullscreen && (
-          <div className="hidden lg:flex w-10 shrink-0 flex-col items-center gap-2 border-l border-border/50 bg-card py-3">
-            <button
-              type="button"
-              onClick={() => { setRightOpen(true); setLayout("split"); }}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-accent/60 hover:text-foreground transition"
-              title="Restore chat"
-              aria-label="Restore chat"
-            >
-              <MessageSquare className="h-4 w-4" />
-            </button>
-            <span className="mt-1 text-[10px] font-semibold tracking-widest text-muted-foreground [writing-mode:vertical-rl]">CHAT</span>
-          </div>
+          <button
+            type="button"
+            onClick={() => { setRightOpen(true); setLayout("split"); }}
+            title="Open chat"
+            aria-label="Open chat"
+            className="hidden lg:inline-flex fixed bottom-6 right-6 z-40 items-center gap-2 rounded-full bg-primary px-4 py-3 text-primary-foreground shadow-lg shadow-black/30 transition hover:brightness-110 active:scale-95"
+          >
+            <MessageSquare className="h-5 w-5" />
+            <span className="text-sm font-semibold">Chat</span>
+          </button>
         )}
+
 
         {/* Kept mounted while hidden so the live conversation (including the
             reply that is still streaming) survives Hide Chat / Open Chat. */}
