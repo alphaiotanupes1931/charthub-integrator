@@ -115,6 +115,22 @@
   --shadow-inset-gold: none;
 }
 
+/* Cover page: darker cinematic scope for the scroll-driven 3D scene.
+   Scoped so the app itself keeps the standard flat palette. */
+.landing-cinematic {
+  --background: oklch(0.06 0.004 250);
+  --card: oklch(0.10 0.004 250);
+  --card-foreground: oklch(0.98 0 0);
+  --muted: oklch(0.13 0.004 250);
+  --muted-foreground: oklch(0.70 0.01 250);
+  --accent: oklch(0.16 0.004 250);
+  --border: oklch(0.26 0.008 250);
+  --primary: oklch(0.86 0.14 88);
+  --primary-foreground: oklch(0.07 0 0);
+}
+
+
+
 
 @layer base {
   * { border-color: var(--color-border); }
