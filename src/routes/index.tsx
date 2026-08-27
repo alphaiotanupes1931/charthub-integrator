@@ -731,12 +731,22 @@ function CascadePanel({
 }) {
   const span = 1 / total;
   const start = index * span;
-  const opacity = useTransform(
-    progress,
-    [start - span * 0.5, start + span * 0.2, start + span * 0.85, start + span * 1.3],
-    [0, 1, 1, 0],
-  );
-  const y = useTransform(progress, [start - span * 0.5, start + span * 0.4], [40, 0]);
+  // Keyframe offsets must stay inside [0,1] and strictly increase, otherwise the
+  // animation engine rejects them and the section fails to render.
+  const stops = ((): [number, number, number, number] => {
+    const clamp = (n: number) => Math.min(1, Math.max(0, n));
+    let a = clamp(start - span * 0.35);
+    let b = clamp(start + span * 0.2);
+    let c = clamp(start + span * 0.85);
+    let d = clamp(start + span * 1.2);
+    const eps = 0.001;
+    b = Math.max(b, a + eps);
+    c = Math.max(c, b + eps);
+    d = Math.max(d, c + eps);
+    return [a, b, Math.min(c, 1), Math.min(d, 1 + eps * 3)];
+  })();
+  const opacity = useTransform(progress, stops, [0, 1, 1, 0]);
+  const y = useTransform(progress, [stops[0], stops[1]], [40, 0]);
 
   return (
     <motion.div
