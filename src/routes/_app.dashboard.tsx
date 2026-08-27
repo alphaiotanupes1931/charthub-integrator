@@ -7,7 +7,7 @@ import { NativeChart, LEVEL_META, type LevelKey, type ChartSnapshot } from "@/co
 import { CANDLE_STYLES, CANDLE_STYLE_MAP, type CandleStyleId } from "@/lib/candleStyles";
 
 import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
-import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Clock, MessageSquare, X, Plug, Square, Paperclip, ChevronUp, PanelRightClose, PanelRightOpen, BarChart3, ThumbsUp, ThumbsDown, Brain, LineChart, Settings2, Maximize, Minimize, BookOpen, FlaskConical, Zap } from "lucide-react";
+import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Clock, MessageSquare, X, Plug, Square, Paperclip, ChevronUp, PanelRightClose, PanelRightOpen, BarChart3, ThumbsUp, ThumbsDown, Brain, LineChart, Settings2, Maximize, Minimize, Maximize2, Minimize2, BookOpen, FlaskConical, Zap } from "lucide-react";
 
 
 import { useCoachVoice } from "@/hooks/useCoachVoice";
@@ -866,6 +866,7 @@ function Dashboard() {
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
   const viewMenuRef = useRef<HTMLDivElement>(null);
   const [panelWidth, setPanelWidth] = useState<"narrow" | "default" | "wide">("default");
+  const [chatHalf, setChatHalf] = useState(false);
 
   useEffect(() => {
     if (activeThreadId) writeLastThreadId(activeThreadId);
@@ -1993,7 +1994,7 @@ function Dashboard() {
             className={`hidden h-full min-h-0 max-h-full shrink-0 overflow-hidden border-l border-border/50 bg-background ${
               rightOpen && !isChartFullscreen ? "lg:flex lg:flex-col" : ""
             } ${
-              panelWidth === "narrow" ? "w-[280px]" : panelWidth === "wide" ? "w-[560px]" : "w-[400px]"
+              chatHalf ? "w-[50vw]" : panelWidth === "narrow" ? "w-[280px]" : panelWidth === "wide" ? "w-[560px]" : "w-[400px]"
             }`}
           >
             {/* Header: tabs row, then a quiet meta row for width + model */}
