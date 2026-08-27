@@ -2099,8 +2099,9 @@ function Dashboard() {
                       <Clock className="h-3.5 w-3.5" /> History
                     </button>
                   </div>
-                  {chatPanelView === "conversation" ? (
-                    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                  {/* The conversation stays mounted while History is open so
+                      switching back never loses the latest reply. */}
+                  <div className={chatPanelView === "conversation" ? "flex min-h-0 flex-1 flex-col overflow-hidden" : "hidden"}>
 
 
                       <DashboardChatPanel
