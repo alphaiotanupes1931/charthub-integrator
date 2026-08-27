@@ -2005,15 +2005,33 @@ function Dashboard() {
 
         </div>
 
+        {/* Minimized chat rail — chat is never destroyed, just collapsed. */}
+        {!rightOpen && !isChartFullscreen && (
+          <div className="hidden lg:flex w-10 shrink-0 flex-col items-center gap-2 border-l border-border/50 bg-card py-3">
+            <button
+              type="button"
+              onClick={() => setRightOpen(true)}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-accent/60 hover:text-foreground transition"
+              title="Restore chat"
+              aria-label="Restore chat"
+            >
+              <MessageSquare className="h-4 w-4" />
+            </button>
+            <span className="mt-1 text-[10px] font-semibold tracking-widest text-muted-foreground [writing-mode:vertical-rl]">CHAT</span>
+          </div>
+        )}
+
         {/* Kept mounted while hidden so the live conversation (including the
             reply that is still streaming) survives Hide Chat / Open Chat. */}
 
           <aside
             aria-hidden={!(rightOpen && !isChartFullscreen)}
-            className={`hidden h-full min-h-0 max-h-full shrink-0 overflow-hidden border-l border-border/50 bg-background ${
+            className={`hidden h-full min-h-0 max-h-full overflow-hidden border-l border-border/50 bg-background ${
               rightOpen && !isChartFullscreen ? "lg:flex lg:flex-col" : ""
             } ${
-              chatHalf ? "w-[50vw]" : panelWidth === "narrow" ? "w-[280px]" : panelWidth === "wide" ? "w-[560px]" : "w-[400px]"
+              chatHalf
+                ? "w-full flex-1 min-w-0 lg:[&_p]:text-[15px] lg:[&_p]:leading-7 lg:[&_li]:text-[15px]"
+                : `shrink-0 ${panelWidth === "narrow" ? "w-[280px]" : panelWidth === "wide" ? "w-[560px]" : "w-[400px]"}`
             }`}
           >
             {/* Header: tabs row, then a quiet meta row for width + model */}
