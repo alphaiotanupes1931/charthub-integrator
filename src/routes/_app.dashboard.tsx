@@ -2050,21 +2050,36 @@ function Dashboard() {
         {/* Kept mounted while hidden so the live conversation (including the
             reply that is still streaming) survives Hide Chat / Open Chat. */}
 
+          {/* Drag handle: grab and pull to give the conversation as much room as you want. */}
+          {rightOpen && !isChartFullscreen && !chatHalf && (
+            <div
+              onPointerDown={startResize}
+              onDoubleClick={() => setChatWidth(460)}
+              role="separator"
+              aria-orientation="vertical"
+              title="Drag to resize the chat (double-click to reset)"
+              className={`hidden lg:flex w-2 shrink-0 cursor-col-resize items-center justify-center border-l border-border/50 bg-card/60 hover:bg-accent transition ${resizing ? "bg-accent" : ""}`}
+            >
+              <span className="h-10 w-0.5 rounded-full bg-border" />
+            </div>
+          )}
+
           <aside
             aria-hidden={!(rightOpen && !isChartFullscreen)}
+            style={chatHalf ? undefined : { width: chatWidth }}
             className={`hidden h-full min-h-0 max-h-full overflow-hidden border-l border-border/50 bg-background ${
               rightOpen && !isChartFullscreen ? "lg:flex lg:flex-col" : ""
             } ${
               chatHalf
-                ? "w-full flex-1 min-w-0 lg:[&_p]:text-[15px] lg:[&_p]:leading-7 lg:[&_li]:text-[15px]"
-                : `shrink-0 ${panelWidth === "narrow" ? "w-[280px]" : panelWidth === "wide" ? "w-[560px]" : "w-[400px]"}`
-            }`}
+                ? "w-full flex-1 min-w-0"
+                : "shrink-0"
+            } lg:[&_p]:text-[15px] lg:[&_p]:leading-7 lg:[&_li]:text-[15px]`}
           >
             {/* Header: tabs row, then a quiet meta row for width + model */}
             <div className="border-b border-border/50">
               <div className={`grid min-w-0 items-center gap-2 px-3 py-2.5 ${
-                panelWidth === "narrow"
-                  ? "grid-cols-[minmax(0,1fr)_auto]"
+                narrowPanel && !chatHalf
+                  ? "grid-cols-[minmax(0,1fr)_auto_auto]"
                   : "grid-cols-[minmax(0,1fr)_auto_auto]"
               }`}>
                 <div className="flex min-w-0 items-center gap-1 overflow-hidden">
@@ -2085,21 +2100,7 @@ function Dashboard() {
                     <MessageSquare className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">Chat</span>
                   </button>
                 </div>
-                <div className={`shrink-0 items-center gap-0.5 rounded-full bg-accent/50 p-0.5 ${
-                  panelWidth === "narrow" ? "col-span-2 row-start-2 flex justify-self-center" : "flex"
-                }`} title="Panel width">
-                  {(["narrow", "default", "wide"] as const).map((w) => (
-                    <button
-                      key={w}
-                      onClick={() => setPanelWidth(w)}
-                      className={`rounded-full px-2 py-0.5 text-[10px] font-medium capitalize transition ${
-                        panelWidth === w ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {w}
-                    </button>
-                  ))}
-                </div>
+
                 <button
                   onClick={() => setLayout((m) => (m === "chat" ? "split" : "chat"))}
                   className="h-8 w-8 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-accent/60 transition shrink-0"
