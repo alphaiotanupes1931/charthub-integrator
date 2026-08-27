@@ -137,7 +137,7 @@ function Landing() {
           <div className="text-center lg:text-left">
             <motion.div
               variants={heroItem}
-              className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card px-3 py-1.5"
+              className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/70 backdrop-blur-md px-3 py-1.5"
             >
               <img
                 src={logoAsset.url}
@@ -180,7 +180,7 @@ function Landing() {
               </a>
               <a
                 href={signupHref}
-                className="inline-flex w-full sm:w-auto items-center justify-center rounded-full border border-border/60 bg-card px-6 py-3 text-sm font-semibold hover:bg-muted/60 transition-colors"
+                className="inline-flex w-full sm:w-auto items-center justify-center rounded-full border border-border/60 bg-card/70 backdrop-blur-md px-6 py-3 text-sm font-semibold hover:bg-muted/60 transition-colors"
               >
                 {freeTier ? "Create free account" : "Start free trial"}
               </a>
@@ -235,7 +235,7 @@ function Landing() {
           </div>
 
           <motion.div variants={heroItem} className="relative -mx-5 sm:mx-0">
-            <div className="border-y sm:border sm:rounded-2xl border-border/60 bg-card overflow-hidden">
+            <div className="border-y sm:border sm:rounded-2xl border-border/60 bg-card/70 backdrop-blur-md overflow-hidden">
               <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/60">
                 <img src={logoAsset.url} alt="" className="h-5 w-5 rounded-full" loading="lazy" />
                 <span className="text-xs font-semibold tracking-tight">Dashboard</span>
@@ -255,7 +255,7 @@ function Landing() {
 
 
       {/* TICKER */}
-      <div className="border-b border-border/60 bg-card">
+      <div className="border-b border-border/60 bg-card/70 backdrop-blur-md">
         <TickerTape symbols={TICKER} />
       </div>
 
@@ -290,7 +290,7 @@ function Landing() {
             ].map((s) => (
               <div
                 key={s.step}
-                className="rounded-xl border border-border/60 bg-card p-5 sm:p-8"
+                className="rounded-xl border border-border/60 bg-card/70 backdrop-blur-md p-5 sm:p-8"
               >
                 <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Step {s.step}</div>
                 <h3 className="font-display text-xl sm:text-2xl mt-4">{s.title}</h3>
@@ -320,7 +320,7 @@ function Landing() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-border/60 bg-card p-2 sm:p-3">
+          <div className="rounded-xl border border-border/60 bg-card/70 backdrop-blur-md p-2 sm:p-3">
             <img
               src={gradeCard.url}
               alt="TradeMind grade card showing a B grade XAU/USD long setup with entry, stop, TP1, TP2, confidence, trend, volume, order flow, and volatility readings"
@@ -346,7 +346,7 @@ function Landing() {
             {PRICING.map((p) => (
               <div
                 key={p.name}
-                className={`relative rounded-xl border p-5 sm:p-8 bg-card ${
+                className={`relative rounded-xl border p-5 sm:p-8 bg-card/70 backdrop-blur-md ${
                   p.popular ? "border-primary" : "border-border/60"
                 }`}
               >
@@ -395,7 +395,7 @@ function Landing() {
             </h2>
           </div>
 
-          <div className="rounded-xl border border-border/60 bg-card p-2 sm:p-4">
+          <div className="rounded-xl border border-border/60 bg-card/70 backdrop-blur-md p-2 sm:p-4">
             <Accordion type="single" collapsible className="w-full">
               {FAQS.map((item, i) => (
                 <AccordionItem
@@ -417,7 +417,7 @@ function Landing() {
           <div className="mt-10 text-center">
             <Link
               to="/faq"
-              className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card px-5 py-2.5 text-sm font-medium hover:bg-muted/60 transition-colors"
+              className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/70 backdrop-blur-md px-5 py-2.5 text-sm font-medium hover:bg-muted/60 transition-colors"
             >
               View all FAQ
               <ArrowRight className="size-4" />
@@ -453,7 +453,7 @@ function Landing() {
 function Nav({ isAuthed }: { isAuthed: boolean }) {
   const dashboardHref = isAuthed ? "/dashboard" : "/auth?mode=signin&redirect=%2Fdashboard";
   return (
-    <header className="sticky top-0 z-40 bg-background border-b border-border/60">
+    <header className="sticky top-0 z-40 bg-background/70 backdrop-blur-xl border-b border-border/60">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
         <Link to="/" className="flex items-center gap-2 min-w-0">
           <img src={logoAsset.url} alt="TradeMind" className="h-8 w-8 object-contain shrink-0" />
@@ -469,7 +469,7 @@ function Nav({ isAuthed }: { isAuthed: boolean }) {
           <Sheet>
             <SheetTrigger asChild>
               <button
-                className="sm:hidden inline-flex items-center justify-center rounded-full border border-border/60 bg-card p-2"
+                className="sm:hidden inline-flex items-center justify-center rounded-full border border-border/60 bg-card/70 backdrop-blur-md p-2"
                 aria-label="Open menu"
               >
                 <Menu className="size-5" />
@@ -544,7 +544,7 @@ function Footer({ dashboardHref }: { dashboardHref: string }) {
     },
   ];
   return (
-    <footer className="px-5 sm:px-6 pt-12 pb-10 bg-card">
+    <footer className="px-5 sm:px-6 pt-12 pb-10 bg-card/70 backdrop-blur-md">
       <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-10">
         <div className="col-span-2 md:col-span-1">
           <div className="flex items-center gap-2">
@@ -601,7 +601,7 @@ function Footer({ dashboardHref }: { dashboardHref: string }) {
 function SectionEyebrow({ children, align = "center" }: { children: React.ReactNode; align?: "center" | "left" }) {
   return (
     <div className={`mb-6 flex ${align === "center" ? "justify-center" : "justify-start"}`}>
-      <span className="inline-flex items-center rounded-full border border-border/60 bg-card px-3 py-1 text-[11px] font-semibold tracking-tight text-muted-foreground">
+      <span className="inline-flex items-center rounded-full border border-border/60 bg-card/70 backdrop-blur-md px-3 py-1 text-[11px] font-semibold tracking-tight text-muted-foreground">
         {children}
       </span>
     </div>
@@ -641,7 +641,7 @@ function GradeChip({
   label: string;
 }) {
   return (
-    <div className={`rounded-xl border ${border} p-4 text-center bg-card`}>
+    <div className={`rounded-xl border ${border} p-4 text-center bg-card/70 backdrop-blur-md`}>
       <div className={`font-display text-3xl ${color}`}>{grade}</div>
       <div className="text-[10px] font-medium tracking-tight text-muted-foreground mt-2">{label}</div>
     </div>
