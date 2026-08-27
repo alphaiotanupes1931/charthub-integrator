@@ -81,7 +81,7 @@ function Terrain({ segments }: { segments: number }) {
     <group position={[0, -1.6, -4]}>
       <lineSegments>
         <wireframeGeometry args={[geometry]} />
-        <lineBasicMaterial color={GOLD} transparent opacity={0.4} blending={THREE.AdditiveBlending} />
+        <lineBasicMaterial color={GOLD} transparent opacity={0.26} blending={THREE.AdditiveBlending} />
       </lineSegments>
     </group>
   );
@@ -127,7 +127,7 @@ function CandleField({ count, side }: { count: number; side: "bull" | "bear" }) 
       <meshBasicMaterial
         color={side === "bull" ? BULL : BEAR}
         transparent
-        opacity={side === "bull" ? 0.95 : 0.85}
+        opacity={side === "bull" ? 0.5 : 0.44}
       />
     </instancedMesh>
   );
@@ -156,7 +156,7 @@ function SignalNodes({ count }: { count: number }) {
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
-      <pointsMaterial color={GOLD} size={0.06} transparent opacity={0.8} sizeAttenuation />
+      <pointsMaterial color={GOLD} size={0.055} transparent opacity={0.6} sizeAttenuation />
     </points>
   );
 }
@@ -242,6 +242,13 @@ export function TerrainScene() {
         <CandleField count={small ? 60 : 130} side="bear" />
         <SignalNodes count={small ? 140 : 300} />
       </Canvas>
-    </div>
+      {/* Readability scrim: keeps hero copy legible over the moving scene. */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(120% 90% at 18% 45%, rgba(5,7,10,0.92) 0%, rgba(5,7,10,0.62) 38%, rgba(5,7,10,0.18) 70%, rgba(5,7,10,0) 100%)",
+        }}
+      />
   );
 }
