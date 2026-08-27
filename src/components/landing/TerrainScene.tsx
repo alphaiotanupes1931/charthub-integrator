@@ -81,7 +81,7 @@ function Terrain({ segments }: { segments: number }) {
     <group position={[0, -1.6, -4]}>
       <lineSegments>
         <wireframeGeometry args={[geometry]} />
-        <lineBasicMaterial color={GOLD} transparent opacity={0.16} />
+        <lineBasicMaterial color={GOLD} transparent opacity={0.4} blending={THREE.AdditiveBlending} />
       </lineSegments>
     </group>
   );
@@ -127,7 +127,7 @@ function CandleField({ count, side }: { count: number; side: "bull" | "bear" }) 
       <meshBasicMaterial
         color={side === "bull" ? BULL : BEAR}
         transparent
-        opacity={side === "bull" ? 0.75 : 0.6}
+        opacity={side === "bull" ? 0.95 : 0.85}
       />
     </instancedMesh>
   );
@@ -156,7 +156,7 @@ function SignalNodes({ count }: { count: number }) {
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
-      <pointsMaterial color={GOLD} size={0.045} transparent opacity={0.5} sizeAttenuation />
+      <pointsMaterial color={GOLD} size={0.06} transparent opacity={0.8} sizeAttenuation />
     </points>
   );
 }
@@ -235,7 +235,7 @@ export function TerrainScene() {
         camera={{ fov: 55, position: [0, 2.6, 11], near: 0.1, far: 120 }}
       >
         <color attach="background" args={[VOID_COLOR]} />
-        <fog attach="fog" args={[VOID_COLOR, 10, 34]} />
+        <fog attach="fog" args={[VOID_COLOR, 14, 44]} />
         <Rig progressRef={progressRef} />
         <Terrain segments={small ? 40 : 64} />
         <CandleField count={small ? 90 : 180} side="bull" />
