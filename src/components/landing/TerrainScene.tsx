@@ -250,5 +250,6 @@ export function TerrainScene() {
             "radial-gradient(120% 90% at 18% 45%, rgba(5,7,10,0.92) 0%, rgba(5,7,10,0.62) 38%, rgba(5,7,10,0.18) 70%, rgba(5,7,10,0) 100%)",
         }}
       />
+    </div>
   );
 }
