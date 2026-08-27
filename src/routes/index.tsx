@@ -263,6 +263,10 @@ function Landing() {
         <TickerTape symbols={TICKER} />
       </div>
 
+      {/* PINNED CASCADE — the camera flies over the terrain while these panels advance. */}
+      <PinnedCascade />
+
+
       {/* HOW IT WORKS */}
       <section id="product" className="px-5 sm:px-6 py-12 sm:py-24 border-b border-border/60 scroll-mt-24">
         <div className="max-w-6xl mx-auto">
