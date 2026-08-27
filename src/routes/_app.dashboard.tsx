@@ -866,7 +866,10 @@ function Dashboard() {
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
   const viewMenuRef = useRef<HTMLDivElement>(null);
   const [panelWidth, setPanelWidth] = useState<"narrow" | "default" | "wide">("default");
-  const [chatHalf, setChatHalf] = useState(false);
+  // "split" = chart + chat side by side. "chat" = chart minimized, chat full width.
+  // "chart" = chat minimized to a rail, chart full width.
+  const [layout, setLayout] = useState<"split" | "chat" | "chart">("split");
+  const chatHalf = layout === "chat";
 
   useEffect(() => {
     if (activeThreadId) writeLastThreadId(activeThreadId);
@@ -1860,7 +1863,23 @@ function Dashboard() {
       {/* Chart area */}
       <div ref={chartAreaRef} className={`flex-1 min-h-0 bg-card overflow-hidden ${mobileView === "chart" ? "flex" : "hidden"} lg:flex`} data-tour="chart">
 
-        <div className="flex-1 min-w-0 flex flex-col">
+        {/* Chart column. Minimized (collapsed to a restore rail) when the chat is maximized. */}
+        {chatHalf && rightOpen && !isChartFullscreen && (
+          <div className="hidden lg:flex w-10 shrink-0 flex-col items-center gap-2 border-r border-border/50 bg-card py-3">
+            <button
+              type="button"
+              onClick={() => setLayout("split")}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-accent/60 hover:text-foreground transition"
+              title="Restore chart"
+              aria-label="Restore chart"
+            >
+              <LineChart className="h-4 w-4" />
+            </button>
+            <span className="mt-1 text-[10px] font-semibold tracking-widest text-muted-foreground [writing-mode:vertical-rl]">CHART</span>
+          </div>
+        )}
+
+        <div className={`flex-1 min-w-0 flex-col ${chatHalf && rightOpen && !isChartFullscreen ? "flex lg:hidden" : "flex"}`}>
 
           {/* Scan output preview + live performance strip */}
           {!isChartFullscreen && (
@@ -1986,15 +2005,33 @@ function Dashboard() {
 
         </div>
 
+        {/* Minimized chat rail — chat is never destroyed, just collapsed. */}
+        {!rightOpen && !isChartFullscreen && (
+          <div className="hidden lg:flex w-10 shrink-0 flex-col items-center gap-2 border-l border-border/50 bg-card py-3">
+            <button
+              type="button"
+              onClick={() => { setRightOpen(true); setLayout("split"); }}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-accent/60 hover:text-foreground transition"
+              title="Restore chat"
+              aria-label="Restore chat"
+            >
+              <MessageSquare className="h-4 w-4" />
+            </button>
+            <span className="mt-1 text-[10px] font-semibold tracking-widest text-muted-foreground [writing-mode:vertical-rl]">CHAT</span>
+          </div>
+        )}
+
         {/* Kept mounted while hidden so the live conversation (including the
             reply that is still streaming) survives Hide Chat / Open Chat. */}
 
           <aside
             aria-hidden={!(rightOpen && !isChartFullscreen)}
-            className={`hidden h-full min-h-0 max-h-full shrink-0 overflow-hidden border-l border-border/50 bg-background ${
+            className={`hidden h-full min-h-0 max-h-full overflow-hidden border-l border-border/50 bg-background ${
               rightOpen && !isChartFullscreen ? "lg:flex lg:flex-col" : ""
             } ${
-              chatHalf ? "w-[50vw]" : panelWidth === "narrow" ? "w-[280px]" : panelWidth === "wide" ? "w-[560px]" : "w-[400px]"
+              chatHalf
+                ? "w-full flex-1 min-w-0 lg:[&_p]:text-[15px] lg:[&_p]:leading-7 lg:[&_li]:text-[15px]"
+                : `shrink-0 ${panelWidth === "narrow" ? "w-[280px]" : panelWidth === "wide" ? "w-[560px]" : "w-[400px]"}`
             }`}
           >
             {/* Header: tabs row, then a quiet meta row for width + model */}
@@ -2038,18 +2075,18 @@ function Dashboard() {
                   ))}
                 </div>
                 <button
-                  onClick={() => setChatHalf((v) => !v)}
+                  onClick={() => setLayout((m) => (m === "chat" ? "split" : "chat"))}
                   className="h-8 w-8 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-accent/60 transition shrink-0"
-                  title={chatHalf ? "Shrink chat back" : "Expand chat to half the screen"}
-                  aria-label={chatHalf ? "Shrink chat back" : "Expand chat to half the screen"}
+                  title={chatHalf ? "Restore chart" : "Maximize chat (minimize chart)"}
+                  aria-label={chatHalf ? "Restore chart" : "Maximize chat"}
                 >
                   {chatHalf ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
                 </button>
                 <button
-                  onClick={() => setRightOpen(false)}
+                  onClick={() => { setRightOpen(false); setLayout("chart"); }}
                   className="h-8 w-8 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-accent/60 transition shrink-0"
-                  title="Close panel"
-                  aria-label="Close panel"
+                  title="Minimize chat"
+                  aria-label="Minimize chat"
                 >
                   <X className="h-4 w-4" />
                 </button>
