@@ -47,6 +47,8 @@ import {
   deleteTradeImages,
   compressImageFile,
 } from "@/lib/journalImages";
+import { ImportClosedTradesPanel } from "@/components/ImportClosedTradesPanel";
+import type { ParsedClosedTrade } from "@/lib/journal-import.functions";
 
 export const Route = createFileRoute("/_app/journal")({
   head: () => ({ meta: [{ title: "Trade Journal, TradeMind" }] }),
@@ -537,6 +539,63 @@ function JournalPage() {
     });
     emitFirstWeekEvent("journal-log");
   };
+  // Screenshot import: turn parsed rows into real journal trades.
+  const handleScreenshotImport = (parsed: ParsedClosedTrade[], shots: Blob[]) => {
+    const created: Trade[] = [];
+    for (const p of parsed) {
+      const entry = Number.isFinite(p.entry ?? NaN) ? (p.entry as number) : 0;
+      const exit = Number.isFinite(p.exit ?? NaN) ? (p.exit as number) : entry;
+      const stop = Number.isFinite(p.stop ?? NaN) ? (p.stop as number) : 0;
+      const size = Number.isFinite(p.size ?? NaN) && (p.size as number) > 0 ? (p.size as number) : 1;
+      const fees = Number.isFinite(p.fees ?? NaN) ? Math.abs(p.fees as number) : 0;
+      const dir = p.side === "Long" ? 1 : -1;
+      const move = (exit - entry) * dir * size;
+      // Trust the P&L printed on the screenshot: back out the contract
+      // multiplier so the journal's own maths lands on the same number.
+      let pointValue: number | undefined;
+      if (p.pnl !== null && Number.isFinite(p.pnl) && move !== 0) {
+        const pv = (p.pnl + fees) / move;
+        if (Number.isFinite(pv) && pv > 0) pointValue = Math.round(pv * 1e6) / 1e6;
+      }
+      const netPnl = p.pnl ?? move * (pointValue ?? 1) - fees;
+      const tf = (TIMEFRAMES as readonly string[]).includes(p.timeframe ?? "")
+        ? (p.timeframe as Timeframe)
+        : "15m";
+      const id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+      created.push({
+        id,
+        date: p.date ?? todayYmd(),
+        timeframe: tf,
+        symbol: p.symbol,
+        side: p.side,
+        entry,
+        exit,
+        stop,
+        takeProfit: Number.isFinite(p.takeProfit ?? NaN) ? (p.takeProfit as number) : undefined,
+        size,
+        fees,
+        pointValue,
+        notes: [p.notes, "Imported from a closed-session screenshot."].filter(Boolean).join(" "),
+        executed: true,
+        executedAt: Date.now(),
+        result: netPnl > 0 ? "tp" : netPnl < 0 ? "stop" : "breakeven",
+        resultSource: "manual",
+        resultNote: "Read from the closed-trades screenshot.",
+        resultCheckedAt: Date.now(),
+        hasImage: shots.length > 0,
+        imageCount: shots.length || undefined,
+        createdAt: Date.now(),
+      });
+    }
+    if (!created.length) return;
+    setTrades((prev) => [...created, ...prev]);
+    for (const t of created) {
+      if (shots.length) void putTradeImages(t.id, shots);
+      markTradeLogged({ tradeId: t.id, symbol: t.symbol, entry: t.entry, date: t.date });
+    }
+    emitFirstWeekEvent("journal-log");
+  };
+
   const handleDelete = (id: string) => {
     setTrades((prev) => prev.filter((p) => p.id !== id));
     unmarkTradeLogged(id);
@@ -659,6 +718,8 @@ function JournalPage() {
           </div>
         </div>
       )}
+
+      {tab === "trades" && <ImportClosedTradesPanel onImport={handleScreenshotImport} />}
 
       {tab === "trades" && <PassedSetupsPanel />}
 

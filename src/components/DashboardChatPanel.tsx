@@ -3,7 +3,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { Link } from "@tanstack/react-router";
-import { MessageSquare, ExternalLink, X, Minus, Volume2, VolumeX, Crosshair, Square, Paperclip, ImageIcon, ThumbsUp, ThumbsDown, HelpCircle, BookOpen, Zap } from "lucide-react";
+import { MessageSquare, ExternalLink, X, Minus, Volume2, VolumeX, Crosshair, Square, Paperclip, ImageIcon, ThumbsUp, ThumbsDown, HelpCircle, BookOpen, Zap, FileDown } from "lucide-react";
+import { downloadChatPdf } from "@/lib/chat-pdf";
 import { ScanStamp } from "@/components/ScanStamp";
 import { recordHermesFeedback } from "@/lib/agents/hermes.functions";
 import { COACH_ICON_META, DEFAULT_COACH_ICON } from "@/lib/coachMeta";
@@ -779,6 +780,19 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                 {activeModel.label}
               </span>
             )}
+            <button
+              type="button"
+              onClick={() => {
+                if (!messages.length) return;
+                void downloadChatPdf(messages, { coach: activeCoach, instrument: headerInstrument });
+              }}
+              disabled={!messages.length}
+              className="h-9 w-9 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-accent/60 transition disabled:opacity-40"
+              title="Download this conversation as a PDF"
+              aria-label="Download conversation PDF"
+            >
+              <FileDown className="h-4 w-4" />
+            </button>
             <Link
               to="/chat"
               className="hidden sm:inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-accent/60 transition"

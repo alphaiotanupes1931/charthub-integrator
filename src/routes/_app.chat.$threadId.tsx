@@ -3,7 +3,8 @@ import { useEffect, useState, useRef } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { Volume2, VolumeX } from "lucide-react";
+import { Volume2, VolumeX, FileDown } from "lucide-react";
+import { downloadChatPdf } from "@/lib/chat-pdf";
 import {
   Conversation,
   ConversationContent,
@@ -271,9 +272,24 @@ function ChatThreadInner({
             </span>
           )}
         </div>
-        <span className="text-[9px] font-semibold tracking-tight text-primary px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20 shrink-0">
-          {activeModel?.label ?? "AI"}
-        </span>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <span className="text-[9px] font-semibold tracking-tight text-primary px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20">
+            {activeModel?.label ?? "AI"}
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              if (!messages.length) return;
+              void downloadChatPdf(messages, { coach: activeCoach, instrument: ctx.chart?.ticker ?? null });
+            }}
+            disabled={!messages.length}
+            className="h-8 w-8 inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition disabled:opacity-40"
+            title="Download this conversation as a PDF"
+            aria-label="Download conversation PDF"
+          >
+            <FileDown className="h-4 w-4" />
+          </button>
+        </div>
       </div>
       {messages.length > 0 && (
         <AiContextInspector messages={messages} className="mx-4 md:mx-8 mt-2 max-w-3xl md:mx-auto w-auto" />
