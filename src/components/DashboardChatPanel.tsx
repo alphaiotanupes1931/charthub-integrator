@@ -1025,7 +1025,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               placeholder={pendingImage ? "Add a note (optional), then send" : "Ask your coach or paste a chart screenshot"}
               rows={3}
               aria-label="Message your AI coach"
-              className="min-h-[88px] max-h-[140px] whitespace-pre-wrap rounded-2xl border border-border/60 bg-card py-2.5 text-sm leading-relaxed placeholder:whitespace-normal placeholder:text-muted-foreground placeholder:opacity-100 [@media(max-height:700px)]:min-h-[72px] [@media(max-height:700px)]:max-h-[96px]"
+              className="min-h-[60px] max-h-[120px] whitespace-pre-wrap rounded-2xl border border-border/60 bg-card py-2.5 text-sm leading-relaxed placeholder:whitespace-normal placeholder:text-muted-foreground placeholder:opacity-100 [@media(max-height:700px)]:min-h-[48px] [@media(max-height:700px)]:max-h-[88px]"
             />
             <PromptInputFooter className="flex-wrap justify-between gap-2">
               <div className="flex min-w-0 flex-wrap items-center gap-1.5">
