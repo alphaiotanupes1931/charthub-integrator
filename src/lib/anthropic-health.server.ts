@@ -50,6 +50,9 @@ function classify(httpStatus: number, body: string): { status: AnthropicHealthSt
     }
     return { status: "invalid_key", detail: "Anthropic rejected the key. Use a model key (sk-ant-api...), not an admin or billing key." };
   }
+  if (httpStatus === 400 && (text.includes("credit") || text.includes("billing"))) {
+    return { status: "no_credits", detail: "Anthropic rejected the key for billing reasons: add credits to the Claude account." };
+  }
   if (httpStatus === 400 && (text.includes("model") || text.includes("not_found"))) {
     return { status: "no_model_access", detail: `The key cannot call ${PROBE_MODEL}. Check model access on the Claude account.` };
   }
