@@ -743,7 +743,7 @@ function CascadePanel({
     b = Math.max(b, a + eps);
     c = Math.max(c, b + eps);
     d = Math.max(d, c + eps);
-    return [a, b, Math.min(c, 1), Math.min(d, 1 + eps * 3)];
+    return [a, b, Math.min(c, 1), Math.min(d, 1)];
   })();
   const opacity = useTransform(progress, stops, [0, 1, 1, 0]);
   const y = useTransform(progress, [stops[0], stops[1]], [40, 0]);
