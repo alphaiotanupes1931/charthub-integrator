@@ -719,6 +719,8 @@ function JournalPage() {
         </div>
       )}
 
+      {tab === "trades" && <ImportClosedTradesPanel onImport={handleScreenshotImport} />}
+
       {tab === "trades" && <PassedSetupsPanel />}
 
       {tab === "trades" && (
