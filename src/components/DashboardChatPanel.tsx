@@ -779,6 +779,19 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                 {activeModel.label}
               </span>
             )}
+            <button
+              type="button"
+              onClick={() => {
+                if (!messages.length) return;
+                void downloadChatPdf(messages, { coach: activeCoach, instrument: headerInstrument });
+              }}
+              disabled={!messages.length}
+              className="h-9 w-9 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-accent/60 transition disabled:opacity-40"
+              title="Download this conversation as a PDF"
+              aria-label="Download conversation PDF"
+            >
+              <FileDown className="h-4 w-4" />
+            </button>
             <Link
               to="/chat"
               className="hidden sm:inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-accent/60 transition"
