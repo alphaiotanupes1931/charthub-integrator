@@ -2010,7 +2010,7 @@ function Dashboard() {
           <div className="hidden lg:flex w-10 shrink-0 flex-col items-center gap-2 border-l border-border/50 bg-card py-3">
             <button
               type="button"
-              onClick={() => setRightOpen(true)}
+              onClick={() => { setRightOpen(true); setLayout("split"); }}
               className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-accent/60 hover:text-foreground transition"
               title="Restore chat"
               aria-label="Restore chat"
