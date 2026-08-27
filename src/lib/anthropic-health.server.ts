@@ -5,7 +5,7 @@
 // call before chat is allowed to use Claude, classifies *why* it failed, and
 // caches the verdict so we don't probe on every request.
 
-const PROBE_MODEL = "claude-haiku-4-5";
+const PROBE_MODEL = "claude-haiku-4-5-20251001";
 const PROBE_TIMEOUT_MS = 6_000;
 
 /** How long a failed verdict sticks before we re-probe. */
