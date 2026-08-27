@@ -5,7 +5,7 @@
 // call before chat is allowed to use Claude, classifies *why* it failed, and
 // caches the verdict so we don't probe on every request.
 
-const PROBE_MODEL = "claude-haiku-4-5";
+const PROBE_MODEL = "claude-haiku-4-5-20251001";
 const PROBE_TIMEOUT_MS = 6_000;
 
 /** How long a failed verdict sticks before we re-probe. */
@@ -49,6 +49,9 @@ function classify(httpStatus: number, body: string): { status: AnthropicHealthSt
       return { status: "no_credits", detail: "Anthropic rejected the key for billing reasons: add credits to the Claude account." };
     }
     return { status: "invalid_key", detail: "Anthropic rejected the key. Use a model key (sk-ant-api...), not an admin or billing key." };
+  }
+  if (httpStatus === 400 && (text.includes("credit") || text.includes("billing"))) {
+    return { status: "no_credits", detail: "Anthropic rejected the key for billing reasons: add credits to the Claude account." };
   }
   if (httpStatus === 400 && (text.includes("model") || text.includes("not_found"))) {
     return { status: "no_model_access", detail: `The key cannot call ${PROBE_MODEL}. Check model access on the Claude account.` };
