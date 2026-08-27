@@ -2075,18 +2075,18 @@ function Dashboard() {
                   ))}
                 </div>
                 <button
-                  onClick={() => setChatHalf((v) => !v)}
+                  onClick={() => setLayout((m) => (m === "chat" ? "split" : "chat"))}
                   className="h-8 w-8 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-accent/60 transition shrink-0"
-                  title={chatHalf ? "Shrink chat back" : "Expand chat to half the screen"}
-                  aria-label={chatHalf ? "Shrink chat back" : "Expand chat to half the screen"}
+                  title={chatHalf ? "Restore chart" : "Maximize chat (minimize chart)"}
+                  aria-label={chatHalf ? "Restore chart" : "Maximize chat"}
                 >
                   {chatHalf ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
                 </button>
                 <button
-                  onClick={() => setRightOpen(false)}
+                  onClick={() => { setRightOpen(false); setLayout("chart"); }}
                   className="h-8 w-8 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-accent/60 transition shrink-0"
-                  title="Close panel"
-                  aria-label="Close panel"
+                  title="Minimize chat"
+                  aria-label="Minimize chat"
                 >
                   <X className="h-4 w-4" />
                 </button>
