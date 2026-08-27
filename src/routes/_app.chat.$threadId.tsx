@@ -3,7 +3,8 @@ import { useEffect, useState, useRef } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { Volume2, VolumeX } from "lucide-react";
+import { Volume2, VolumeX, FileDown } from "lucide-react";
+import { downloadChatPdf } from "@/lib/chat-pdf";
 import {
   Conversation,
   ConversationContent,
