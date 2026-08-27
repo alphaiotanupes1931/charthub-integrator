@@ -125,7 +125,7 @@ function Landing() {
     };
   }, []);
   return (
-    <div className="landing-cinematic relative min-h-screen w-full bg-background text-foreground">
+    <div className="landing-cinematic relative isolate min-h-screen w-full bg-background text-foreground">
       <TerrainScene />
       <Nav isAuthed={isAuthed} />
 
