@@ -7,7 +7,7 @@ import { NativeChart, LEVEL_META, type LevelKey, type ChartSnapshot } from "@/co
 import { CANDLE_STYLES, CANDLE_STYLE_MAP, type CandleStyleId } from "@/lib/candleStyles";
 
 import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
-import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Clock, MessageSquare, X, Plug, Square, Paperclip, ChevronUp, PanelRightClose, PanelRightOpen, BarChart3, ThumbsUp, ThumbsDown, Brain, LineChart, Settings2, Maximize, Minimize, BookOpen, FlaskConical, Zap } from "lucide-react";
+import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Clock, MessageSquare, X, Plug, Square, Paperclip, ChevronUp, PanelRightClose, PanelRightOpen, BarChart3, ThumbsUp, ThumbsDown, Brain, LineChart, Settings2, Maximize, Minimize, Maximize2, Minimize2, BookOpen, FlaskConical, Zap } from "lucide-react";
 
 
 import { useCoachVoice } from "@/hooks/useCoachVoice";
@@ -302,7 +302,7 @@ function buildLevelAnnotations(
       else orderType = entry < last ? "STOP" : "LIMIT";
     }
   }
-  const entryColor = bias === "long" ? "var(--bull)" : "#ef4444";
+  const entryColor = bias === "long" ? "#22c55e" : "#ef4444";
   const band = risk * 0.12;
   const r1 = Math.abs(tp1 - entry) / risk;
   const r2 = Math.abs(tp2 - entry) / risk;
@@ -321,8 +321,8 @@ function buildLevelAnnotations(
       color: entryColor,
     },
     { kind: "hline", price: stop, label: `STOP ${fmt(stop)} (-1R)`, color: "#ef4444", dashed: true },
-    { kind: "hline", price: tp1, label: `TP1 ${fmt(tp1)} (${r1.toFixed(1)}R)`, color: "var(--bull)", dashed: true },
-    { kind: "hline", price: tp2, label: `TP2 ${fmt(tp2)} (${r2.toFixed(1)}R)`, color: "var(--bull)", dashed: true },
+    { kind: "hline", price: tp1, label: `TP1 ${fmt(tp1)} (${r1.toFixed(1)}R)`, color: "#22c55e", dashed: true },
+    { kind: "hline", price: tp2, label: `TP2 ${fmt(tp2)} (${r2.toFixed(1)}R)`, color: "#22c55e", dashed: true },
   ];
 }
 
@@ -866,6 +866,7 @@ function Dashboard() {
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
   const viewMenuRef = useRef<HTMLDivElement>(null);
   const [panelWidth, setPanelWidth] = useState<"narrow" | "default" | "wide">("default");
+  const [chatHalf, setChatHalf] = useState(false);
 
   useEffect(() => {
     if (activeThreadId) writeLastThreadId(activeThreadId);
@@ -1993,7 +1994,7 @@ function Dashboard() {
             className={`hidden h-full min-h-0 max-h-full shrink-0 overflow-hidden border-l border-border/50 bg-background ${
               rightOpen && !isChartFullscreen ? "lg:flex lg:flex-col" : ""
             } ${
-              panelWidth === "narrow" ? "w-[280px]" : panelWidth === "wide" ? "w-[560px]" : "w-[400px]"
+              chatHalf ? "w-[50vw]" : panelWidth === "narrow" ? "w-[280px]" : panelWidth === "wide" ? "w-[560px]" : "w-[400px]"
             }`}
           >
             {/* Header: tabs row, then a quiet meta row for width + model */}
@@ -2036,6 +2037,14 @@ function Dashboard() {
                     </button>
                   ))}
                 </div>
+                <button
+                  onClick={() => setChatHalf((v) => !v)}
+                  className="h-8 w-8 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-accent/60 transition shrink-0"
+                  title={chatHalf ? "Shrink chat back" : "Expand chat to half the screen"}
+                  aria-label={chatHalf ? "Shrink chat back" : "Expand chat to half the screen"}
+                >
+                  {chatHalf ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                </button>
                 <button
                   onClick={() => setRightOpen(false)}
                   className="h-8 w-8 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-accent/60 transition shrink-0"
