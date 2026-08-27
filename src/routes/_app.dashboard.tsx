@@ -1987,7 +1987,7 @@ function Dashboard() {
 
         {/* Kept mounted while hidden so the live conversation (including the
             reply that is still streaming) survives Hide Chat / Open Chat. */}
-        {true && (
+
           <aside
             aria-hidden={!(rightOpen && !isChartFullscreen)}
             className={`hidden h-full min-h-0 max-h-full shrink-0 overflow-hidden border-l border-border/50 bg-background ${
@@ -2138,7 +2138,7 @@ function Dashboard() {
               </div>
             </div>
           </aside>
-        )}
+
 
       </div>
 
