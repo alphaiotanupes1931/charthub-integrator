@@ -865,11 +865,38 @@ function Dashboard() {
   const [rightOpen, setRightOpen] = useState(true);
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
   const viewMenuRef = useRef<HTMLDivElement>(null);
-  const [panelWidth, setPanelWidth] = useState<"narrow" | "default" | "wide">("default");
+  // Chat panel width is a free drag (Claude-style): the trader decides how much
+  // room the conversation gets versus the chart. Persisted per browser.
+  const [chatWidth, setChatWidth] = useState<number>(() => {
+    if (typeof window === "undefined") return 460;
+    const raw = Number(window.localStorage.getItem("tm_chat_panel_w"));
+    return Number.isFinite(raw) && raw >= 280 ? raw : 460;
+  });
+  const [resizing, setResizing] = useState(false);
+  useEffect(() => {
+    if (typeof window !== "undefined") window.localStorage.setItem("tm_chat_panel_w", String(Math.round(chatWidth)));
+  }, [chatWidth]);
+  const startResize = (e: React.PointerEvent) => {
+    e.preventDefault();
+    setResizing(true);
+    const onMove = (ev: PointerEvent) => {
+      const max = Math.max(360, window.innerWidth - 360);
+      setChatWidth(Math.min(max, Math.max(300, window.innerWidth - ev.clientX)));
+    };
+    const onUp = () => {
+      setResizing(false);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+  };
+  const narrowPanel = chatWidth < 360;
   // "split" = chart + chat side by side. "chat" = chart minimized, chat full width.
   // "chart" = chat minimized to a rail, chart full width.
   const [layout, setLayout] = useState<"split" | "chat" | "chart">("split");
   const chatHalf = layout === "chat";
+
 
   useEffect(() => {
     if (activeThreadId) writeLastThreadId(activeThreadId);
