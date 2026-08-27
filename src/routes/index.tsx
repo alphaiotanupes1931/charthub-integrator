@@ -123,17 +123,19 @@ function Landing() {
     };
   }, []);
   return (
-    <div className="min-h-screen w-full text-foreground">
+    <div className="landing-cinematic relative min-h-screen w-full bg-background text-foreground">
+      <TerrainScene />
       <Nav isAuthed={isAuthed} />
 
-      {/* COVER — Instagram-style: compact split, product shot on the right, pill actions. */}
-      <section className="px-5 sm:px-6 pt-10 sm:pt-20 pb-12 sm:pb-20 border-b border-border/60">
+      {/* COVER — full-viewport 3D stage. Copy floats over the scroll-driven scene. */}
+      <section className="relative px-5 sm:px-6 min-h-[100svh] flex items-center pt-16 pb-24 sm:pt-24 sm:pb-28">
         <motion.div
           variants={heroContainer}
           initial="hidden"
           animate="show"
           className="max-w-6xl mx-auto grid lg:grid-cols-[1fr_minmax(0,1.05fr)] gap-8 sm:gap-12 lg:gap-16 items-center"
         >
+
           <div className="text-center lg:text-left">
             <motion.div
               variants={heroItem}
