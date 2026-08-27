@@ -302,7 +302,7 @@ function buildLevelAnnotations(
       else orderType = entry < last ? "STOP" : "LIMIT";
     }
   }
-  const entryColor = bias === "long" ? "var(--bull)" : "#ef4444";
+  const entryColor = bias === "long" ? "#22c55e" : "#ef4444";
   const band = risk * 0.12;
   const r1 = Math.abs(tp1 - entry) / risk;
   const r2 = Math.abs(tp2 - entry) / risk;
@@ -321,8 +321,8 @@ function buildLevelAnnotations(
       color: entryColor,
     },
     { kind: "hline", price: stop, label: `STOP ${fmt(stop)} (-1R)`, color: "#ef4444", dashed: true },
-    { kind: "hline", price: tp1, label: `TP1 ${fmt(tp1)} (${r1.toFixed(1)}R)`, color: "var(--bull)", dashed: true },
-    { kind: "hline", price: tp2, label: `TP2 ${fmt(tp2)} (${r2.toFixed(1)}R)`, color: "var(--bull)", dashed: true },
+    { kind: "hline", price: tp1, label: `TP1 ${fmt(tp1)} (${r1.toFixed(1)}R)`, color: "#22c55e", dashed: true },
+    { kind: "hline", price: tp2, label: `TP2 ${fmt(tp2)} (${r2.toFixed(1)}R)`, color: "#22c55e", dashed: true },
   ];
 }
 
