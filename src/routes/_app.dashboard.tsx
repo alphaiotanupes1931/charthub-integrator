@@ -2212,8 +2212,7 @@ function Dashboard() {
                 <Clock className="h-3.5 w-3.5" /> History
               </button>
             </div>
-            {chatPanelView === "conversation" ? (
-              <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <div className={chatPanelView === "conversation" ? "flex min-h-0 flex-1 flex-col overflow-hidden" : "hidden"}>
 
 
                 <DashboardChatPanel
@@ -2235,8 +2234,8 @@ function Dashboard() {
                     snapshot: snapshot ?? undefined,
                   }}
                 />
-              </div>
-            ) : (
+            </div>
+            {chatPanelView === "history" && (
               <div className="flex-1 min-h-0 overflow-y-auto">
                 <ChatHistoryList
                   activeThreadId={activeThreadId}
