@@ -1985,10 +1985,17 @@ function Dashboard() {
 
         </div>
 
-        {rightOpen && !isChartFullscreen && (
-          <aside className={`hidden h-full min-h-0 max-h-full shrink-0 overflow-hidden border-l border-border/50 bg-background lg:flex lg:flex-col ${
-            panelWidth === "narrow" ? "w-[280px]" : panelWidth === "wide" ? "w-[560px]" : "w-[400px]"
-          }`}>
+        {/* Kept mounted while hidden so the live conversation (including the
+            reply that is still streaming) survives Hide Chat / Open Chat. */}
+        {true && (
+          <aside
+            aria-hidden={!(rightOpen && !isChartFullscreen)}
+            className={`hidden h-full min-h-0 max-h-full shrink-0 overflow-hidden border-l border-border/50 bg-background ${
+              rightOpen && !isChartFullscreen ? "lg:flex lg:flex-col" : ""
+            } ${
+              panelWidth === "narrow" ? "w-[280px]" : panelWidth === "wide" ? "w-[560px]" : "w-[400px]"
+            }`}
+          >
             {/* Header: tabs row, then a quiet meta row for width + model */}
             <div className="border-b border-border/50">
               <div className={`grid min-w-0 items-center gap-2 px-3 py-2.5 ${
