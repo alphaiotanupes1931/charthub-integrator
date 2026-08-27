@@ -2124,8 +2124,8 @@ function Dashboard() {
                           snapshot: snapshot ?? undefined,
                         }}
                       />
-                    </div>
-                  ) : (
+                  </div>
+                  {chatPanelView === "history" && (
                     <div className="flex-1 min-h-0 overflow-y-auto">
                       <ChatHistoryList
                         activeThreadId={activeThreadId}
