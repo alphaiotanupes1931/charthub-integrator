@@ -227,7 +227,7 @@ export function NotificationBell() {
                 disabled={unread === 0 || mAll.isPending}
                 className="font-medium text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed transition"
               >
-                Mark all read
+                Clear
               </button>
               <button
                 onClick={() => mClr.mutate()}
