@@ -866,7 +866,10 @@ function Dashboard() {
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
   const viewMenuRef = useRef<HTMLDivElement>(null);
   const [panelWidth, setPanelWidth] = useState<"narrow" | "default" | "wide">("default");
-  const [chatHalf, setChatHalf] = useState(false);
+  // "split" = chart + chat side by side. "chat" = chart minimized, chat full width.
+  // "chart" = chat minimized to a rail, chart full width.
+  const [layout, setLayout] = useState<"split" | "chat" | "chart">("split");
+  const chatHalf = layout === "chat";
 
   useEffect(() => {
     if (activeThreadId) writeLastThreadId(activeThreadId);
