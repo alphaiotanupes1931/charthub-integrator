@@ -8,8 +8,6 @@ import { useNavigate } from "@tanstack/react-router";
 import {
   Bell,
   BellRing,
-  Check,
-  Trash2,
   X,
   Activity,
   TrendingUp,
