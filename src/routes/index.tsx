@@ -314,22 +314,62 @@ function Landing() {
             <p className="text-sm sm:text-base text-muted-foreground mt-5 leading-relaxed max-w-md">
               Structure, momentum, risk, confluence, session, and your own track record. Only A and A+ setups earn real capital.
             </p>
-            <div className="grid grid-cols-4 gap-3 mt-10 max-w-md">
-              <GradeChip grade="A+" color="text-primary" border="border-primary" label="Take it" />
-              <GradeChip grade="A" color="text-bull" border="border-border/60" label="Strong" />
-              <GradeChip grade="B" color="text-foreground/80" border="border-border/60" label="Optional" />
-              <GradeChip grade="C" color="text-destructive" border="border-border/60" label="Skip" />
+            <div className="grid grid-cols-2 gap-x-6 gap-y-3 mt-8 max-w-md">
+              {["Structure", "Momentum", "Risk", "Confluence", "Session", "Track record"].map((d) => (
+                <div key={d} className="flex items-center gap-2 text-sm">
+                  <Check className="size-3.5 text-primary shrink-0" />
+                  <span>{d}</span>
+                </div>
+              ))}
             </div>
           </div>
 
-          <div className="rounded-xl border border-border/60 bg-card/70 backdrop-blur-md p-2 sm:p-3">
-            <img
-              src={gradeCard.url}
-              alt="TradeMind grade card showing a B grade XAU/USD long setup with entry, stop, TP1, TP2, confidence, trend, volume, order flow, and volatility readings"
-              className="block w-full h-auto rounded-lg"
-              loading="lazy"
-            />
+          {/* Grade card, drawn in the design system instead of a screenshot. */}
+          <div className="rounded-2xl border border-border/60 bg-card/70 backdrop-blur-md p-5 sm:p-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="font-mono text-[11px] tracking-[0.14em] text-muted-foreground">
+                  XAU/USD · LONG
+                </div>
+                <div className="font-display text-5xl font-semibold mt-1 text-primary leading-none">B</div>
+              </div>
+              <span className="rounded-full border border-border/60 px-3 py-1 text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+                Optional
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5 mt-6">
+              {[
+                { k: "Entry", v: "4,045.48", c: "text-foreground" },
+                { k: "Stop", v: "4,034.76", c: "text-destructive" },
+                { k: "TP1", v: "4,066.61", c: "text-bull" },
+                { k: "TP2", v: "4,085.72", c: "text-bull" },
+              ].map((x) => (
+                <div key={x.k} className="rounded-xl border border-border/60 bg-background/40 px-3.5 py-3">
+                  <div className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">{x.k}</div>
+                  <div className={`font-mono text-base mt-1 ${x.c}`}>{x.v}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 space-y-4">
+              {[
+                { k: "Confidence · R:R 1 : 3.8", v: "72%", w: "72%", bar: "bg-primary" },
+                { k: "Trend alignment", v: "4H · 1H · 15m", w: "88%", bar: "bg-bull" },
+              ].map((row) => (
+                <div key={row.k}>
+                  <div className="flex items-baseline justify-between text-xs">
+                    <span className="text-muted-foreground">{row.k}</span>
+                    <span className="font-mono">{row.v}</span>
+                  </div>
+                  <div className="mt-2 h-1 rounded-full bg-muted overflow-hidden">
+                    <div className={`h-full rounded-full ${row.bar}`} style={{ width: row.w }} />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
+
         </div>
       </section>
 
