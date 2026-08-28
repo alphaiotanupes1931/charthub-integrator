@@ -2038,11 +2038,25 @@ function TradeFormModal({
         <div className="flex items-center justify-end gap-2 p-5 border-t border-border/60">
           <button onClick={onClose} className="rounded-xl px-3 py-2 text-sm text-muted-foreground hover:text-foreground">Cancel</button>
           <button
-            disabled={!canSave}
-            onClick={submit}
-            className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!canSave || saving}
+            onClick={async () => {
+              if (saving) return;
+              setSaving(true);
+              try {
+                await Promise.resolve(submit());
+              } finally {
+                setSaving(false);
+              }
+            }}
+            className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {editing ? "Save changes" : "Log trade"}
+            {saving ? (
+              <ActionLoader label={editing ? "Saving changes" : "Logging trade"} size="sm" inline />
+            ) : editing ? (
+              "Save changes"
+            ) : (
+              "Log trade"
+            )}
           </button>
         </div>
       </div>
