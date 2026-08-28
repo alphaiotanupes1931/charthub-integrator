@@ -211,7 +211,7 @@ function AppLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   return (
     <AppShell>
-      <div key={pathname} className="animate-fade-in">
+      <div key={pathname} className="animate-fade-in flex h-full min-h-0 w-full flex-col">
         <Outlet />
       </div>
     </AppShell>
