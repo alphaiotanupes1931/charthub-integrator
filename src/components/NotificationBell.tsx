@@ -8,8 +8,6 @@ import { useNavigate } from "@tanstack/react-router";
 import {
   Bell,
   BellRing,
-  Check,
-  Trash2,
   X,
   Activity,
   TrendingUp,
@@ -146,9 +144,13 @@ export function NotificationBell() {
 
 
   const mRead = useMutation({ mutationFn: (id: string) => markReadFn({ data: { id } }), onSuccess: invalidate });
-  const mAll = useMutation({ mutationFn: () => markAllFn(), onSuccess: invalidate });
   const mDel = useMutation({ mutationFn: (id: string) => deleteFn({ data: { id } }), onSuccess: invalidate });
-  const mClr = useMutation({ mutationFn: () => clearReadFn(), onSuccess: invalidate });
+  // One button: mark everything read, then drop it all from the inbox.
+  const mClearAll = useMutation({
+    mutationFn: async () => { await markAllFn(); await clearReadFn(); },
+    onSuccess: invalidate,
+  });
+
 
   const navigate = useNavigate();
 
@@ -223,21 +225,15 @@ export function NotificationBell() {
             {/* Action bar */}
             <div className="shrink-0 flex items-center gap-3 px-4 py-2 border-b border-border/60 text-xs">
               <button
-                onClick={() => mAll.mutate()}
-                disabled={unread === 0 || mAll.isPending}
+                onClick={() => mClearAll.mutate()}
+                disabled={rows.length === 0 || mClearAll.isPending}
                 className="font-medium text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed transition"
               >
                 Clear
               </button>
-              <button
-                onClick={() => mClr.mutate()}
-                disabled={!hasRead || mClr.isPending}
-                className="font-medium text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed transition"
-              >
-                Clear read
-              </button>
               <div className="flex-1" />
             </div>
+
 
 
             {/* List */}
@@ -293,27 +289,18 @@ export function NotificationBell() {
                           </button>
                           <div className="flex items-center gap-1 shrink-0">
                             {isUnread && (
-                              <span className="h-2 w-2 rounded-full bg-primary mt-1.5 sm:group-hover:hidden" aria-label="Unread" />
+                              <span className="h-2 w-2 rounded-full bg-primary mt-1.5" aria-label="Unread" />
                             )}
-                            <div className="hidden sm:group-hover:flex items-center gap-1">
-                              {isUnread && (
-                                <button
-                                  onClick={() => mRead.mutate(n.id)}
-                                  className="h-7 w-7 rounded-xl hover:bg-background flex items-center justify-center text-muted-foreground hover:text-foreground transition"
-                                  title="Mark read"
-                                >
-                                  <Check className="h-3.5 w-3.5" />
-                                </button>
-                              )}
-                              <button
-                                onClick={() => mDel.mutate(n.id)}
-                                className="h-7 w-7 rounded-xl hover:bg-background flex items-center justify-center text-muted-foreground hover:text-destructive transition"
-                                title="Delete"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
-                            </div>
+                            <button
+                              onClick={() => mDel.mutate(n.id)}
+                              className="h-7 w-7 rounded-xl hover:bg-background flex items-center justify-center text-muted-foreground hover:text-destructive transition"
+                              title="Remove"
+                              aria-label="Remove notification"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
                           </div>
+
                         </div>
 
                       </li>
