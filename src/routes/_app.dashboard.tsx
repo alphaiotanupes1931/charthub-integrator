@@ -25,6 +25,7 @@ import { findStrategyByName, allStrategies } from "@/lib/customStrategies";
 import { StrategyPresetCard } from "@/components/StrategyPresetCard";
 import { readActiveStrategy, writeActiveStrategy } from "@/lib/chat-client";
 import { SCAN_LENSES, readActiveLensId, writeActiveLensId, findLens, type ScanLensId } from "@/lib/scanLens";
+import { ActionLoader } from "@/components/ActionLoader";
 import { clearLastThreadId, readActiveCoach, writeActiveCoach, COACH_KEY, writeLastChart, readLastThreadId, writeLastThreadId } from "@/lib/chat-client";
 import { voiceForCoach } from "@/lib/coachVoices";
 import { COACH_ICON_META, DEFAULT_COACH_ICON } from "@/lib/coachMeta";
