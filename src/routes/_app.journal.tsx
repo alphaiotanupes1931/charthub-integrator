@@ -466,9 +466,13 @@ function JournalPage() {
     };
 
     void sweep();
-    const id = window.setInterval(() => { void sweep(); }, 15 * 60_000);
+    // Refresh outcomes every 3 minutes while the journal is open, plus whenever
+    // the tab or window regains focus, so opening the page always re-checks.
+    const id = window.setInterval(() => { void sweep(); }, 3 * 60_000);
     const onVisible = () => { if (document.visibilityState === "visible") void sweep(); };
     document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+
     return () => {
       window.clearInterval(id);
       document.removeEventListener("visibilitychange", onVisible);
