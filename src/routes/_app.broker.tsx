@@ -63,6 +63,7 @@ function BrokerPage() {
   const [status, setStatus] = useState<Status | null>(null);
   const [positions, setPositions] = useState<Position[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [placing, setPlacing] = useState(false);
 
   // Order form
@@ -83,6 +84,7 @@ function BrokerPage() {
     try {
       const s = await fetchStatus();
       setStatus(s);
+      setLoadError(null);
       if (s.connected) {
         const [p, po] = await Promise.all([
           fetchPositions().catch(() => []),
@@ -92,11 +94,14 @@ function BrokerPage() {
         setPending(po);
       }
     } catch (e) {
-      if (!silent) toast.error((e as Error).message);
+      const message = (e as Error).message || "Could not reach your broker connection";
+      setLoadError(message);
+      if (!silent) toast.error(message);
     } finally {
       if (!silent) setLoading(false);
     }
   }
+
 
   useEffect(() => { refresh(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
 
@@ -210,7 +215,23 @@ function BrokerPage() {
       </div>
       <PageInstructions className="mb-6" />
 
+      {loadError && (
+        <div className="mb-6 rounded-xl border border-red-500/40 bg-red-500/10 p-4 animate-fade-in">
+          <div className="text-sm font-semibold text-foreground">Broker connection failed</div>
+          <p className="mt-1 text-xs text-muted-foreground">{loadError}</p>
+          <button
+            onClick={() => refresh()}
+            disabled={loading}
+            className="mt-3 inline-flex items-center gap-1.5 rounded-xl border border-border/60 px-3 py-1.5 text-xs font-medium hover:bg-muted disabled:opacity-50 press-in"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+            {loading ? "Retrying…" : "Retry connection"}
+          </button>
+        </div>
+      )}
+
       <OandaConnectPanel onChange={() => refresh()} />
+
 
 
 

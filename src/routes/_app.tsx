@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { logGate } from "@/lib/gateLog";
@@ -203,9 +203,18 @@ export const Route = createFileRoute("/_app")({
 
   },
 
-  component: () => (
-    <AppShell>
-      <Outlet />
-    </AppShell>
-  ),
+  component: AppLayout,
 });
+
+/** Each navigation fades its page in, so route changes feel continuous. */
+function AppLayout() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  return (
+    <AppShell>
+      <div key={pathname} className="animate-fade-in flex h-full min-h-0 w-full flex-col">
+        <Outlet />
+      </div>
+    </AppShell>
+  );
+}
+
