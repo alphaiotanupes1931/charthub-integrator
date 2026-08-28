@@ -925,8 +925,15 @@ function CheckResultButton({ t, onUpdate }: { t: Trade; onUpdate: (t: Trade) => 
           since: t.createdAt || parseYmd(t.date).getTime(),
         },
       });
+      // The verifier reads real bars and returns the price the trade resolved
+      // at. Without writing it back to `exit`, the row keeps showing +0.00 and
+      // R:R 0.00 even though the stop or target actually printed.
+      const resolved = res.status === "tp" || res.status === "stop" || res.status === "breakeven" || res.status === "partial";
+      const manualExit = t.exit != null && Number.isFinite(t.exit) && t.exit !== 0 && t.exit !== t.entry && t.resultSource === "manual";
+      const exit = resolved && res.price != null && Number.isFinite(res.price) && !manualExit ? res.price : t.exit;
       onUpdate({
         ...t,
+        exit,
         result: res.status,
         resultSource: "auto",
         resultR: res.r,
