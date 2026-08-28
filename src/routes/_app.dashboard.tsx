@@ -2366,9 +2366,7 @@ function ScanBody({
   if (scanning) {
     return (
       <div className="flex flex-col items-center text-center gap-3 py-2">
-        <Loader2 className="h-6 w-6 text-primary animate-spin" />
-        <div className="font-semibold">Scanning {symbol.ticker}…</div>
-        <p className="text-sm text-muted-foreground">Reading structure, sweeps, BOS, retests.</p>
+        <ActionLoader label={`Scanning ${symbol.ticker}`} hint="Reading structure, sweeps, BOS, retests." />
         <button
           onClick={onStopScan}
           className="mt-1 inline-flex items-center gap-1.5 rounded-xl border border-destructive/40 bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/15 transition"
