@@ -25,6 +25,7 @@ import { Shimmer } from "@/components/ai-elements/shimmer";
 import { supabase } from "@/integrations/supabase/client";
 import { useTimezone, formatInTimezone } from "@/hooks/useTimezone";
 import { getOrCreateDashboardThread, getChatMessages, getActiveModel, appendAssistantChatMessage, type ActiveModelInfo } from "@/lib/chat.functions";
+import { ActionLoader } from "@/components/ActionLoader";
 import { clearLastThreadId, readJournal, readActiveCoach, writeActiveCoach, readActiveStrategy, readLastThreadId, writeLastThreadId } from "@/lib/chat-client";
 import { findStrategyByName } from "@/lib/customStrategies";
 import { readActiveLensId, findLens } from "@/lib/scanLens";
@@ -235,8 +236,7 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
   if (!threadId || initial === null) {
     return (
       <div className="flex h-full min-h-0 flex-col items-center justify-center gap-2 bg-card text-xs text-muted-foreground sm:rounded-xl border-y sm:border border-border/60">
-        <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-        Loading chat history…
+        <ActionLoader label="Loading your conversation" hint="Bringing back your last replies and scans." />
       </div>
     );
   }
