@@ -15,8 +15,6 @@ import {
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import logoAsset from "@/assets/logo.png.asset.json";
-import dashboardPreview from "@/assets/dashboard-preview.png.asset.json";
-import gradeCard from "@/assets/grade-card.png.asset.json";
 import trader1 from "@/assets/trader-1.jpg";
 import trader2 from "@/assets/trader-2.jpg";
 import trader3 from "@/assets/trader-3.jpg";
@@ -667,25 +665,6 @@ function WatchRow({ symbol, label }: { symbol: string; label: string }) {
       <div className="flex-1 min-w-0">
         <MiniChart symbol={symbol} height={36} dateRange="1D" />
       </div>
-    </div>
-  );
-}
-
-function GradeChip({
-  grade,
-  color,
-  border,
-  label,
-}: {
-  grade: string;
-  color: string;
-  border: string;
-  label: string;
-}) {
-  return (
-    <div className={`rounded-xl border ${border} p-4 text-center bg-card/70 backdrop-blur-md`}>
-      <div className={`font-display text-3xl ${color}`}>{grade}</div>
-      <div className="text-[10px] font-medium tracking-tight text-muted-foreground mt-2">{label}</div>
     </div>
   );
 }
