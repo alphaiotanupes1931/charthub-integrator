@@ -49,6 +49,7 @@ import {
 } from "@/lib/journalImages";
 import { ImportClosedTradesPanel } from "@/components/ImportClosedTradesPanel";
 import type { ParsedClosedTrade } from "@/lib/journal-import.functions";
+import { ActionLoader } from "@/components/ActionLoader";
 
 export const Route = createFileRoute("/_app/journal")({
   head: () => ({ meta: [{ title: "Trade Journal, TradeMind" }] }),
@@ -953,7 +954,13 @@ function CheckResultButton({ t, onUpdate }: { t: Trade; onUpdate: (t: Trade) => 
       className="shrink-0 inline-flex items-center gap-1 rounded-xl border border-border/60 px-2 py-1 text-[10px] font-semibold text-muted-foreground hover:text-foreground hover:bg-accent/40 disabled:opacity-50"
       title="Check this trade against live price history"
     >
-      <RefreshCw className={`h-3 w-3 ${busy ? "animate-spin" : ""}`} /> {busy ? "Checking" : "Check result"}
+      {busy ? (
+        <ActionLoader label="Checking real bars" size="sm" inline />
+      ) : (
+        <>
+          <RefreshCw className="h-3 w-3" /> Check result
+        </>
+      )}
     </button>
   );
 }
