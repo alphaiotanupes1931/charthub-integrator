@@ -5,13 +5,37 @@ import { logGate } from "@/lib/gateLog";
 
 const GATE_STEP_TIMEOUT_MS = 12_000;
 
+const PAGE_LABELS: Array<[RegExp, string]> = [
+  [/^\/dashboard/, "Opening the dashboard"],
+  [/^\/chat/, "Loading your conversation"],
+  [/^\/journal/, "Loading your trade journal"],
+  [/^\/analytics/, "Crunching your analytics"],
+  [/^\/backtest/, "Preparing the backtester"],
+  [/^\/testing/, "Setting up your test account"],
+  [/^\/broker/, "Connecting to your broker"],
+  [/^\/academy/, "Loading the academy"],
+  [/^\/admin/, "Loading the admin panel"],
+  [/^\/settings/, "Loading your settings"],
+  [/^\/levels/, "Loading your levels"],
+  [/^\/coaches/, "Loading your coaches"],
+];
+
+function describeDestination(pathname: string): string {
+  for (const [pattern, label] of PAGE_LABELS) {
+    if (pattern.test(pathname)) return label;
+  }
+  return "Loading your workspace";
+}
+
 function GatePending() {
+  const pathname = typeof window !== "undefined" ? window.location.pathname : "";
+  const destination = describeDestination(pathname);
   return (
     <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-4">
       <div className="w-full max-w-sm rounded-2xl border border-border/60 bg-card p-6 text-center shadow-sm">
         <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        <h1 className="mt-4 text-lg font-semibold">Opening your dashboard</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Checking your session and access.</p>
+        <h1 className="mt-4 text-lg font-semibold">{destination}</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Verifying your session, then loading your data.</p>
       </div>
     </div>
   );
