@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { logGate } from "@/lib/gateLog";
