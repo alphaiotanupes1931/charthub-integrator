@@ -25,7 +25,7 @@ import { Shimmer } from "@/components/ai-elements/shimmer";
 import { supabase } from "@/integrations/supabase/client";
 import { useTimezone, formatInTimezone } from "@/hooks/useTimezone";
 import { getOrCreateDashboardThread, getChatMessages, getActiveModel, appendAssistantChatMessage, type ActiveModelInfo } from "@/lib/chat.functions";
-import { clearLastThreadId, readJournal, readActiveCoach, writeActiveCoach, readActiveStrategy, writeLastThreadId } from "@/lib/chat-client";
+import { clearLastThreadId, readJournal, readActiveCoach, writeActiveCoach, readActiveStrategy, readLastThreadId, writeLastThreadId } from "@/lib/chat-client";
 import { findStrategyByName } from "@/lib/customStrategies";
 import { readActiveLensId, findLens } from "@/lib/scanLens";
 import { useCoachVoice } from "@/hooks/useCoachVoice";
