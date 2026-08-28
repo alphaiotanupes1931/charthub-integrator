@@ -291,27 +291,18 @@ export function NotificationBell() {
                           </button>
                           <div className="flex items-center gap-1 shrink-0">
                             {isUnread && (
-                              <span className="h-2 w-2 rounded-full bg-primary mt-1.5 sm:group-hover:hidden" aria-label="Unread" />
+                              <span className="h-2 w-2 rounded-full bg-primary mt-1.5" aria-label="Unread" />
                             )}
-                            <div className="hidden sm:group-hover:flex items-center gap-1">
-                              {isUnread && (
-                                <button
-                                  onClick={() => mRead.mutate(n.id)}
-                                  className="h-7 w-7 rounded-xl hover:bg-background flex items-center justify-center text-muted-foreground hover:text-foreground transition"
-                                  title="Mark read"
-                                >
-                                  <Check className="h-3.5 w-3.5" />
-                                </button>
-                              )}
-                              <button
-                                onClick={() => mDel.mutate(n.id)}
-                                className="h-7 w-7 rounded-xl hover:bg-background flex items-center justify-center text-muted-foreground hover:text-destructive transition"
-                                title="Delete"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
-                            </div>
+                            <button
+                              onClick={() => mDel.mutate(n.id)}
+                              className="h-7 w-7 rounded-xl hover:bg-background flex items-center justify-center text-muted-foreground hover:text-destructive transition"
+                              title="Remove"
+                              aria-label="Remove notification"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
                           </div>
+
                         </div>
 
                       </li>
