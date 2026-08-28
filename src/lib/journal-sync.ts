@@ -69,12 +69,18 @@ export async function pushAll(trades: SyncTrade[]): Promise<void> {
       trade_date: typeof t.date === "string" ? t.date : null,
     }));
 
-  if (rows.length) {
-    await supabase.from("journal_trades").upsert(rows, { onConflict: "user_id,id" });
-  }
+  // Never treat an empty local list as "delete my whole account journal": a
+  // fresh device starts empty, and wiping the cloud copy here is exactly how
+  // trades disappeared when signing in on a phone.
+  if (!rows.length) return;
+
+  await supabase.from("journal_trades").upsert(rows, { onConflict: "user_id,id" });
 
   const keep = rows.map((r) => r.id);
-  let del = supabase.from("journal_trades").delete().eq("user_id", userId);
-  if (keep.length) del = del.not("id", "in", `(${keep.map((id) => `"${id}"`).join(",")})`);
-  await del;
+  await supabase
+    .from("journal_trades")
+    .delete()
+    .eq("user_id", userId)
+    .not("id", "in", `(${keep.map((id) => `"${id}"`).join(",")})`);
 }
+

@@ -354,6 +354,7 @@ function JournalPage() {
   });
   const [trades, setTrades] = useState<Trade[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const [synced, setSynced] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [formDate, setFormDate] = useState<string>(todayYmd());
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -381,14 +382,19 @@ function JournalPage() {
         setTrades(merged as unknown as Trade[]);
         backfill(merged as unknown as Trade[]);
       })
-      .catch(() => undefined);
+      .catch(() => undefined)
+      // Only start mirroring upwards once we know what the account already
+      // holds, otherwise a new device pushes its empty list first.
+      .finally(() => setSynced(true));
   }, []);
   useEffect(() => {
     if (!hydrated) return;
     saveTrades(trades);
+    if (!synced) return;
     const timer = setTimeout(() => { void pushAll(trades as unknown as SyncTrade[]).catch(() => undefined); }, 400);
     return () => clearTimeout(timer);
-  }, [hydrated, trades]);
+  }, [hydrated, synced, trades]);
+
 
   // ---- Automatic outcome checking -------------------------------------------
   // The server sweeps every unresolved trade on a 15-minute cron and writes the
