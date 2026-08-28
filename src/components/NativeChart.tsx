@@ -368,7 +368,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
   const { colors: candleColors } = useCandleColors();
   const { colors: chartBg } = useChartBackground();
 
-  const { data: liveOhlc, isLoading, isError } = useQuery<OhlcResponse>({
+  const { data: liveOhlc, isLoading, isError, refetch, isFetching } = useQuery<OhlcResponse>({
     queryKey: ["ohlc", ticker, interval],
     queryFn: async () => {
       const params = new URLSearchParams({ ticker, interval });
@@ -481,9 +481,20 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
   tzRef.current = resolvedTimezone;
   hour12Ref.current = timeFormat === "12h";
 
+  // Axis ticks: intraday shows the clock, but a tick that lands on a new day (or
+  // any daily/weekly/monthly interval) shows the date. Without this a 1H chart
+  // spanning a week printed "00:00" for every label with no date anywhere.
+  const intervalRef = useRef<string>(interval);
+  intervalRef.current = interval;
   const fmtTime = useCallback((t: number) => {
     const d = new Date(t * 1000);
-    return d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", hour12: hour12Ref.current, timeZone: tzRef.current });
+    const tz = tzRef.current;
+    const dateOnly = ["D", "W", "M", "240"].includes(intervalRef.current);
+    const parts = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: tz });
+    if (dateOnly || parts === "00:00") {
+      return d.toLocaleDateString(undefined, { month: "short", day: "2-digit", timeZone: tz });
+    }
+    return d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", hour12: hour12Ref.current, timeZone: tz });
   }, []);
   const fmtDateTime = useCallback((t: number) => {
     const d = new Date(t * 1000);
@@ -605,7 +616,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
         localization: { timeFormatter: (time: number) => fmtDateTime(time) },
       } as never);
     } catch { /* ignore */ }
-  }, [ready, resolvedTimezone, timeFormat, fmtTime, fmtDateTime]);
+  }, [ready, resolvedTimezone, timeFormat, interval, fmtTime, fmtDateTime]);
 
 
 
@@ -1464,13 +1475,21 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
         </div>
       )}
       {noLiveSource && !showLoader && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/60 backdrop-blur-sm">
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/60 backdrop-blur-sm animate-fade-in">
           <div className="max-w-xs text-center text-xs text-muted-foreground">
             <p className="font-medium text-foreground mb-1">Live chart data not loading</p>
-            <p>We can’t show {ticker} right now because the live feed is unavailable. Please check your connection or try again shortly.</p>
+            <p>We can’t reach the {ticker} feed right now. Check your connection, then retry.</p>
+            <button
+              type="button"
+              onClick={() => { void refetch(); }}
+              className="mt-3 rounded-full border border-border/60 bg-background/80 px-3 py-1.5 text-[11px] font-medium text-foreground transition-colors duration-200 hover:bg-muted"
+            >
+              {isFetching ? "Retrying…" : "Retry"}
+            </button>
           </div>
         </div>
       )}
+
       {/* Live clock: local + UTC, honours 12h/24h preference */}
       <div className="absolute right-2 top-2 sm:right-3 sm:top-3 z-10 max-w-[42%] rounded-xl border border-border/60 bg-background/70 backdrop-blur px-1.5 py-1 sm:px-2 text-[9px] sm:text-[10px] font-mono text-muted-foreground flex flex-wrap items-center justify-end gap-x-1.5 gap-y-0.5">
         <span className="text-foreground/90">{now.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: timeFormat === "12h", timeZone: resolvedTimezone })}</span>
