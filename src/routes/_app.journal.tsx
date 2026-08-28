@@ -49,6 +49,7 @@ import {
 } from "@/lib/journalImages";
 import { ImportClosedTradesPanel } from "@/components/ImportClosedTradesPanel";
 import type { ParsedClosedTrade } from "@/lib/journal-import.functions";
+import { ActionLoader } from "@/components/ActionLoader";
 
 export const Route = createFileRoute("/_app/journal")({
   head: () => ({ meta: [{ title: "Trade Journal, TradeMind" }] }),
@@ -925,8 +926,15 @@ function CheckResultButton({ t, onUpdate }: { t: Trade; onUpdate: (t: Trade) => 
           since: t.createdAt || parseYmd(t.date).getTime(),
         },
       });
+      // The verifier reads real bars and returns the price the trade resolved
+      // at. Without writing it back to `exit`, the row keeps showing +0.00 and
+      // R:R 0.00 even though the stop or target actually printed.
+      const resolved = res.status === "tp" || res.status === "stop" || res.status === "breakeven" || res.status === "partial";
+      const manualExit = t.exit != null && Number.isFinite(t.exit) && t.exit !== 0 && t.exit !== t.entry && t.resultSource === "manual";
+      const exit = resolved && res.price != null && Number.isFinite(res.price) && !manualExit ? res.price : t.exit;
       onUpdate({
         ...t,
+        exit,
         result: res.status,
         resultSource: "auto",
         resultR: res.r,
@@ -946,7 +954,13 @@ function CheckResultButton({ t, onUpdate }: { t: Trade; onUpdate: (t: Trade) => 
       className="shrink-0 inline-flex items-center gap-1 rounded-xl border border-border/60 px-2 py-1 text-[10px] font-semibold text-muted-foreground hover:text-foreground hover:bg-accent/40 disabled:opacity-50"
       title="Check this trade against live price history"
     >
-      <RefreshCw className={`h-3 w-3 ${busy ? "animate-spin" : ""}`} /> {busy ? "Checking" : "Check result"}
+      {busy ? (
+        <ActionLoader label="Checking real bars" size="sm" inline />
+      ) : (
+        <>
+          <RefreshCw className="h-3 w-3" /> Check result
+        </>
+      )}
     </button>
   );
 }
@@ -1701,6 +1715,7 @@ function TradeFormModal({
 
   // Exit is optional: an open trade can be logged in one click.
   const canSave = !!(symbol.trim() && entry !== "" && stop !== "" && date);
+  const [saving, setSaving] = useState(false);
 
   const submit = async () => {
     if (!canSave) return;
@@ -2024,11 +2039,25 @@ function TradeFormModal({
         <div className="flex items-center justify-end gap-2 p-5 border-t border-border/60">
           <button onClick={onClose} className="rounded-xl px-3 py-2 text-sm text-muted-foreground hover:text-foreground">Cancel</button>
           <button
-            disabled={!canSave}
-            onClick={submit}
-            className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!canSave || saving}
+            onClick={async () => {
+              if (saving) return;
+              setSaving(true);
+              try {
+                await Promise.resolve(submit());
+              } finally {
+                setSaving(false);
+              }
+            }}
+            className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {editing ? "Save changes" : "Log trade"}
+            {saving ? (
+              <ActionLoader label={editing ? "Saving changes" : "Logging trade"} size="sm" inline />
+            ) : editing ? (
+              "Save changes"
+            ) : (
+              "Log trade"
+            )}
           </button>
         </div>
       </div>

@@ -25,7 +25,8 @@ import { Shimmer } from "@/components/ai-elements/shimmer";
 import { supabase } from "@/integrations/supabase/client";
 import { useTimezone, formatInTimezone } from "@/hooks/useTimezone";
 import { getOrCreateDashboardThread, getChatMessages, getActiveModel, appendAssistantChatMessage, type ActiveModelInfo } from "@/lib/chat.functions";
-import { clearLastThreadId, readJournal, readActiveCoach, writeActiveCoach, readActiveStrategy, writeLastThreadId } from "@/lib/chat-client";
+import { ActionLoader } from "@/components/ActionLoader";
+import { clearLastThreadId, readJournal, readActiveCoach, writeActiveCoach, readActiveStrategy, readLastThreadId, writeLastThreadId } from "@/lib/chat-client";
 import { findStrategyByName } from "@/lib/customStrategies";
 import { readActiveLensId, findLens } from "@/lib/scanLens";
 import { useCoachVoice } from "@/hooks/useCoachVoice";
@@ -181,18 +182,23 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
         return;
       }
 
-      // If a specific thread was requested, just load its messages.
-      if (threadIdOverride) {
+      // If a specific thread was requested, just load its messages. When none
+      // was passed, fall back to the last thread this browser used: the chat
+      // API retitles the scratch thread after the instrument on the chart, so
+      // looking it up by its original title would create a fresh empty thread
+      // and the previous replies would look deleted.
+      const preferredThreadId = threadIdOverride ?? readLastThreadId();
+      if (preferredThreadId) {
         try {
-          const rows = await getMsgs({ data: { threadId: threadIdOverride } });
+          const rows = await getMsgs({ data: { threadId: preferredThreadId } });
           if (!cancelled) {
-            setThreadId(threadIdOverride);
+            setThreadId(preferredThreadId);
             setInitial(rows as UIMessage[]);
           }
           return;
         } catch (e) {
           console.warn("[chat] load thread failed", e);
-          clearLastThreadId(threadIdOverride);
+          clearLastThreadId(preferredThreadId);
         }
       }
 
@@ -230,8 +236,7 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
   if (!threadId || initial === null) {
     return (
       <div className="flex h-full min-h-0 flex-col items-center justify-center gap-2 bg-card text-xs text-muted-foreground sm:rounded-xl border-y sm:border border-border/60">
-        <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-        Loading chat history…
+        <ActionLoader label="Loading your conversation" hint="Bringing back your last replies and scans." />
       </div>
     );
   }
