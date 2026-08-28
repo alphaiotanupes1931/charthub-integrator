@@ -476,7 +476,9 @@ function JournalPage() {
     return () => {
       window.clearInterval(id);
       document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
     };
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated]);
 
