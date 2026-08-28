@@ -181,18 +181,23 @@ export const DashboardChatPanel = forwardRef<DashboardChatHandle, Props>(functio
         return;
       }
 
-      // If a specific thread was requested, just load its messages.
-      if (threadIdOverride) {
+      // If a specific thread was requested, just load its messages. When none
+      // was passed, fall back to the last thread this browser used: the chat
+      // API retitles the scratch thread after the instrument on the chart, so
+      // looking it up by its original title would create a fresh empty thread
+      // and the previous replies would look deleted.
+      const preferredThreadId = threadIdOverride ?? readLastThreadId();
+      if (preferredThreadId) {
         try {
-          const rows = await getMsgs({ data: { threadId: threadIdOverride } });
+          const rows = await getMsgs({ data: { threadId: preferredThreadId } });
           if (!cancelled) {
-            setThreadId(threadIdOverride);
+            setThreadId(preferredThreadId);
             setInitial(rows as UIMessage[]);
           }
           return;
         } catch (e) {
           console.warn("[chat] load thread failed", e);
-          clearLastThreadId(threadIdOverride);
+          clearLastThreadId(preferredThreadId);
         }
       }
 
