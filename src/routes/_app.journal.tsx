@@ -412,7 +412,7 @@ function JournalPage() {
             isFinite(t.entry) &&
             isFinite(t.stop) &&
             t.entry !== t.stop &&
-            Date.now() - (t.resultCheckedAt ?? 0) > 10 * 60_000,
+            Date.now() - (t.resultCheckedAt ?? 0) > 2 * 60_000,
         );
         const updates = new Map<string, Trade>();
         for (const t of pending.slice(0, 12)) {
@@ -428,14 +428,20 @@ function JournalPage() {
                 since: t.createdAt || parseYmd(t.date).getTime(),
               },
             });
+            // Write the resolved price into `exit` so P&L and R:R stop showing 0.
+            const resolved = res.status === "tp" || res.status === "stop" || res.status === "breakeven" || res.status === "partial";
+            const manualExit = t.exit != null && Number.isFinite(t.exit) && t.exit !== 0 && t.exit !== t.entry && t.resultSource === "manual";
+            const exit = resolved && res.price != null && Number.isFinite(res.price) && !manualExit ? res.price : t.exit;
             updates.set(t.id, {
               ...t,
+              exit,
               result: res.status,
               resultSource: "auto",
               resultR: res.r,
               resultNote: res.note,
               resultCheckedAt: Date.now(),
             });
+
             if (res.status !== "open") {
               const label = RESULT_META[res.status].label;
               const rTxt = res.r == null ? "" : ` ${res.r > 0 ? "+" : ""}${res.r}R`;
