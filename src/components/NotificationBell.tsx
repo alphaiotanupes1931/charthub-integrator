@@ -223,21 +223,15 @@ export function NotificationBell() {
             {/* Action bar */}
             <div className="shrink-0 flex items-center gap-3 px-4 py-2 border-b border-border/60 text-xs">
               <button
-                onClick={() => mAll.mutate()}
-                disabled={unread === 0 || mAll.isPending}
+                onClick={() => mClearAll.mutate()}
+                disabled={rows.length === 0 || mClearAll.isPending}
                 className="font-medium text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed transition"
               >
                 Clear
               </button>
-              <button
-                onClick={() => mClr.mutate()}
-                disabled={!hasRead || mClr.isPending}
-                className="font-medium text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed transition"
-              >
-                Clear read
-              </button>
               <div className="flex-1" />
             </div>
+
 
 
             {/* List */}
