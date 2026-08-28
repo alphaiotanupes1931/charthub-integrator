@@ -83,6 +83,7 @@ function BrokerPage() {
     try {
       const s = await fetchStatus();
       setStatus(s);
+      setLoadError(null);
       if (s.connected) {
         const [p, po] = await Promise.all([
           fetchPositions().catch(() => []),
@@ -92,11 +93,14 @@ function BrokerPage() {
         setPending(po);
       }
     } catch (e) {
-      if (!silent) toast.error((e as Error).message);
+      const message = (e as Error).message || "Could not reach your broker connection";
+      setLoadError(message);
+      if (!silent) toast.error(message);
     } finally {
       if (!silent) setLoading(false);
     }
   }
+
 
   useEffect(() => { refresh(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
 
