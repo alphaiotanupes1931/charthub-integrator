@@ -15,8 +15,6 @@ import {
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import logoAsset from "@/assets/logo.png.asset.json";
-import dashboardPreview from "@/assets/dashboard-preview.png.asset.json";
-import gradeCard from "@/assets/grade-card.png.asset.json";
 import trader1 from "@/assets/trader-1.jpg";
 import trader2 from "@/assets/trader-2.jpg";
 import trader3 from "@/assets/trader-3.jpg";
@@ -129,132 +127,126 @@ function Landing() {
       <TerrainScene />
       <Nav isAuthed={isAuthed} />
 
-      {/* COVER — full-viewport 3D stage. Copy floats over the scroll-driven scene. */}
-      <section className="relative px-5 sm:px-6 min-h-[100svh] flex items-center pt-16 pb-24 sm:pt-24 sm:pb-28">
+      {/* COVER — full-viewport 3D stage. One centered column, no screenshots. */}
+      <section className="relative px-5 sm:px-6 min-h-[100svh] flex items-center pt-24 pb-24">
         <motion.div
           variants={heroContainer}
           initial="hidden"
           animate="show"
-          className="max-w-6xl mx-auto grid lg:grid-cols-[1fr_minmax(0,1.05fr)] gap-8 sm:gap-12 lg:gap-16 items-center"
+          className="max-w-3xl mx-auto w-full text-center"
         >
+          <motion.div
+            variants={heroItem}
+            className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/60 backdrop-blur-md px-3 py-1.5"
+          >
+            <img src={logoAsset.url} alt="TradeMind" className="h-5 w-5 rounded-full" loading="eager" />
+            <span className="text-[11px] font-semibold tracking-tight">TradeMind</span>
+            <span className="h-1 w-1 rounded-full bg-border" />
+            <span className="text-[11px] text-muted-foreground">Public beta</span>
+          </motion.div>
 
-          <div className="text-center lg:text-left">
-            <motion.div
-              variants={heroItem}
-              className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/70 backdrop-blur-md px-3 py-1.5"
-            >
-              <img
-                src={logoAsset.url}
-                alt="TradeMind"
-                className="h-5 w-5 rounded-full"
-                loading="eager"
-              />
-              <span className="text-[11px] font-semibold tracking-tight">TradeMind</span>
-              <span className="h-1 w-1 rounded-full bg-border" />
-              <span className="text-[11px] text-muted-foreground">Public beta</span>
-            </motion.div>
+          <motion.h1
+            variants={heroItem}
+            className="font-display font-semibold tracking-[-0.035em] leading-[1.02] mt-7 text-[2.4rem] sm:text-[3.6rem] lg:text-[4.5rem]"
+          >
+            Grade the setup.
+            <br />
+            <span className="text-primary">Take the trade.</span>
+          </motion.h1>
 
-            <motion.h1
-              variants={heroItem}
-              className="font-display font-semibold tracking-[-0.03em] leading-[1.05] mt-5 sm:mt-6 text-[1.9rem] sm:text-[2.5rem] lg:text-[2.9rem] xl:text-[3.2rem]"
-            >
-              Grade the setup.
-              <br />
-              Take the trade.
-            </motion.h1>
+          <motion.p
+            variants={heroItem}
+            className="mt-5 sm:mt-6 text-[15px] sm:text-[18px] text-muted-foreground max-w-xl mx-auto leading-relaxed"
+          >
+            Every setup scored on structure, risk, and confluence. Take the ones that meet your
+            rules. Skip the rest.
+          </motion.p>
 
-            <motion.p
-              variants={heroItem}
-              className="mt-3.5 sm:mt-5 text-[15px] sm:text-[17px] text-muted-foreground max-w-md mx-auto lg:mx-0 leading-relaxed"
+          <motion.div
+            variants={heroItem}
+            className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-3"
+          >
+            <a
+              href={signupHref}
+              className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-7 py-3.5 text-sm font-semibold hover:opacity-90 transition-opacity"
             >
-              TradeMind scores every setup on structure, risk, and confluence, so you take the
-              ones that meet your rules and skip the rest.
-            </motion.p>
+              {freeTier ? "Create free account" : "Start free trial"}
+              <ArrowRight className="size-4" />
+            </a>
+            <a
+              href={dashboardHref}
+              className="inline-flex w-full sm:w-auto items-center justify-center rounded-full border border-border/60 bg-card/60 backdrop-blur-md px-7 py-3.5 text-sm font-semibold hover:bg-muted/60 transition-colors"
+            >
+              Open dashboard
+            </a>
+          </motion.div>
 
-            <motion.div
-              variants={heroItem}
-              className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center lg:justify-start justify-center gap-2.5 sm:gap-3"
-            >
-              <a
-                href={dashboardHref}
-                className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3 text-sm font-semibold hover:opacity-90 transition-opacity"
+          <motion.div
+            variants={heroItem}
+            className="mt-7 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground"
+          >
+            <Bullet>{freeTier ? "Free plan, no card" : "7-day free trial"}</Bullet>
+            <Bullet>{freeTier ? "3 signal grades a month" : "Cancel anytime"}</Bullet>
+            <Bullet>{freeTier ? "Journal and Academy free forever" : "No card to browse"}</Bullet>
+          </motion.div>
+
+          {/* Grade rail: the product's core idea, drawn rather than screenshotted. */}
+          <motion.div
+            variants={heroItem}
+            className="mt-12 grid grid-cols-4 gap-2 sm:gap-3 max-w-lg mx-auto"
+          >
+            {[
+              { g: "A+", l: "Take it", cls: "text-primary border-primary/60" },
+              { g: "A", l: "Strong", cls: "text-bull border-border/60" },
+              { g: "B", l: "Optional", cls: "text-foreground/70 border-border/60" },
+              { g: "C", l: "Skip", cls: "text-destructive border-border/60" },
+            ].map((x) => (
+              <div
+                key={x.g}
+                className={`rounded-xl border bg-card/50 backdrop-blur-md px-2 py-4 ${x.cls}`}
               >
-                Open dashboard
-                <ArrowRight className="size-4" />
-              </a>
-              <a
-                href={signupHref}
-                className="inline-flex w-full sm:w-auto items-center justify-center rounded-full border border-border/60 bg-card/70 backdrop-blur-md px-6 py-3 text-sm font-semibold hover:bg-muted/60 transition-colors"
-              >
-                {freeTier ? "Create free account" : "Start free trial"}
-              </a>
-            </motion.div>
-
-            <motion.div
-              variants={heroItem}
-              className="mt-5 sm:mt-6 flex flex-col sm:flex-row items-center lg:justify-start justify-center gap-x-4 gap-y-3"
-            >
-              <div className="flex items-center gap-2">
-                <div className="flex -space-x-2">
-                  {TRADER_AVATARS.map((src, i) => (
-                    <img
-                      key={src}
-                      src={src}
-                      alt={`TradeMind trader ${i + 1}`}
-                      width={512}
-                      height={512}
-                      loading="lazy"
-                      className="h-7 w-7 rounded-full border-2 border-background object-cover bg-muted"
-                    />
-                  ))}
+                <div className="font-display text-2xl sm:text-3xl font-semibold leading-none">{x.g}</div>
+                <div className="mt-2 text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+                  {x.l}
                 </div>
-
-                <span className="text-xs text-muted-foreground">
-                  Traders grading setups daily
-                </span>
               </div>
-            </motion.div>
+            ))}
+          </motion.div>
 
+          <motion.div
+            variants={heroItem}
+            className="mt-8 flex items-center justify-center gap-2.5"
+          >
+            <div className="flex -space-x-2">
+              {TRADER_AVATARS.map((src, i) => (
+                <img
+                  key={src}
+                  src={src}
+                  alt={`TradeMind trader ${i + 1}`}
+                  width={512}
+                  height={512}
+                  loading="lazy"
+                  className="h-7 w-7 rounded-full border-2 border-background object-cover bg-muted"
+                />
+              ))}
+            </div>
+            <span className="text-xs text-muted-foreground">Traders grading setups daily</span>
             {!isAuthed && (
-              <motion.div variants={heroItem} className="mt-4 sm:mt-5 text-sm text-muted-foreground">
-                Already have an account?{" "}
+              <>
+                <span className="h-1 w-1 rounded-full bg-border" />
                 <Link
                   to="/auth"
                   search={{ mode: "signin" }}
-                  className="text-primary font-semibold hover:underline"
+                  className="text-xs text-primary font-semibold hover:underline"
                 >
                   Log in
                 </Link>
-              </motion.div>
+              </>
             )}
-
-            <motion.div
-              variants={heroItem}
-              className="mt-5 sm:mt-6 flex flex-col sm:flex-row sm:flex-wrap items-center lg:justify-start justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground"
-            >
-              <Bullet>{freeTier ? "Free plan, no card" : "7-day free trial"}</Bullet>
-              <Bullet>{freeTier ? "3 signal grades a month, free" : "Cancel anytime"}</Bullet>
-              <Bullet>{freeTier ? "Journal and Academy free forever" : "No card to browse"}</Bullet>
-            </motion.div>
-          </div>
-
-          <motion.div variants={heroItem} className="relative -mx-5 sm:mx-0">
-            <div className="border-y sm:border sm:rounded-2xl border-border/60 bg-card/70 backdrop-blur-md overflow-hidden">
-              <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/60">
-                <img src={logoAsset.url} alt="" className="h-5 w-5 rounded-full" loading="lazy" />
-                <span className="text-xs font-semibold tracking-tight">Dashboard</span>
-                <span className="ml-auto text-[10px] text-muted-foreground">Live</span>
-              </div>
-              <img
-                src={dashboardPreview.url}
-                alt="TradeMind dashboard preview showing the gold chart, timeframes, and sidebar navigation"
-                className="block w-full h-[230px] object-cover object-[62%_28%] sm:h-auto sm:object-contain"
-                loading="lazy"
-              />
-            </div>
           </motion.div>
         </motion.div>
       </section>
+
 
 
 
@@ -320,22 +312,62 @@ function Landing() {
             <p className="text-sm sm:text-base text-muted-foreground mt-5 leading-relaxed max-w-md">
               Structure, momentum, risk, confluence, session, and your own track record. Only A and A+ setups earn real capital.
             </p>
-            <div className="grid grid-cols-4 gap-3 mt-10 max-w-md">
-              <GradeChip grade="A+" color="text-primary" border="border-primary" label="Take it" />
-              <GradeChip grade="A" color="text-bull" border="border-border/60" label="Strong" />
-              <GradeChip grade="B" color="text-foreground/80" border="border-border/60" label="Optional" />
-              <GradeChip grade="C" color="text-destructive" border="border-border/60" label="Skip" />
+            <div className="grid grid-cols-2 gap-x-6 gap-y-3 mt-8 max-w-md">
+              {["Structure", "Momentum", "Risk", "Confluence", "Session", "Track record"].map((d) => (
+                <div key={d} className="flex items-center gap-2 text-sm">
+                  <Check className="size-3.5 text-primary shrink-0" />
+                  <span>{d}</span>
+                </div>
+              ))}
             </div>
           </div>
 
-          <div className="rounded-xl border border-border/60 bg-card/70 backdrop-blur-md p-2 sm:p-3">
-            <img
-              src={gradeCard.url}
-              alt="TradeMind grade card showing a B grade XAU/USD long setup with entry, stop, TP1, TP2, confidence, trend, volume, order flow, and volatility readings"
-              className="block w-full h-auto rounded-lg"
-              loading="lazy"
-            />
+          {/* Grade card, drawn in the design system instead of a screenshot. */}
+          <div className="rounded-2xl border border-border/60 bg-card/70 backdrop-blur-md p-5 sm:p-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="font-mono text-[11px] tracking-[0.14em] text-muted-foreground">
+                  XAU/USD · LONG
+                </div>
+                <div className="font-display text-5xl font-semibold mt-1 text-primary leading-none">B</div>
+              </div>
+              <span className="rounded-full border border-border/60 px-3 py-1 text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+                Optional
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5 mt-6">
+              {[
+                { k: "Entry", v: "4,045.48", c: "text-foreground" },
+                { k: "Stop", v: "4,034.76", c: "text-destructive" },
+                { k: "TP1", v: "4,066.61", c: "text-bull" },
+                { k: "TP2", v: "4,085.72", c: "text-bull" },
+              ].map((x) => (
+                <div key={x.k} className="rounded-xl border border-border/60 bg-background/40 px-3.5 py-3">
+                  <div className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">{x.k}</div>
+                  <div className={`font-mono text-base mt-1 ${x.c}`}>{x.v}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 space-y-4">
+              {[
+                { k: "Confidence · R:R 1 : 3.8", v: "72%", w: "72%", bar: "bg-primary" },
+                { k: "Trend alignment", v: "4H · 1H · 15m", w: "88%", bar: "bg-bull" },
+              ].map((row) => (
+                <div key={row.k}>
+                  <div className="flex items-baseline justify-between text-xs">
+                    <span className="text-muted-foreground">{row.k}</span>
+                    <span className="font-mono">{row.v}</span>
+                  </div>
+                  <div className="mt-2 h-1 rounded-full bg-muted overflow-hidden">
+                    <div className={`h-full rounded-full ${row.bar}`} style={{ width: row.w }} />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
+
         </div>
       </section>
 
@@ -633,25 +665,6 @@ function WatchRow({ symbol, label }: { symbol: string; label: string }) {
       <div className="flex-1 min-w-0">
         <MiniChart symbol={symbol} height={36} dateRange="1D" />
       </div>
-    </div>
-  );
-}
-
-function GradeChip({
-  grade,
-  color,
-  border,
-  label,
-}: {
-  grade: string;
-  color: string;
-  border: string;
-  label: string;
-}) {
-  return (
-    <div className={`rounded-xl border ${border} p-4 text-center bg-card/70 backdrop-blur-md`}>
-      <div className={`font-display text-3xl ${color}`}>{grade}</div>
-      <div className="text-[10px] font-medium tracking-tight text-muted-foreground mt-2">{label}</div>
     </div>
   );
 }
