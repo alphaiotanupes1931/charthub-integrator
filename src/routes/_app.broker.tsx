@@ -63,6 +63,7 @@ function BrokerPage() {
   const [status, setStatus] = useState<Status | null>(null);
   const [positions, setPositions] = useState<Position[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [placing, setPlacing] = useState(false);
 
   // Order form
