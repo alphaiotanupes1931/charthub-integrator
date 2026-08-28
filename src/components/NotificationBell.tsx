@@ -146,9 +146,13 @@ export function NotificationBell() {
 
 
   const mRead = useMutation({ mutationFn: (id: string) => markReadFn({ data: { id } }), onSuccess: invalidate });
-  const mAll = useMutation({ mutationFn: () => markAllFn(), onSuccess: invalidate });
   const mDel = useMutation({ mutationFn: (id: string) => deleteFn({ data: { id } }), onSuccess: invalidate });
-  const mClr = useMutation({ mutationFn: () => clearReadFn(), onSuccess: invalidate });
+  // One button: mark everything read, then drop it all from the inbox.
+  const mClearAll = useMutation({
+    mutationFn: async () => { await markAllFn(); await clearReadFn(); },
+    onSuccess: invalidate,
+  });
+
 
   const navigate = useNavigate();
 
