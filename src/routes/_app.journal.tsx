@@ -1715,6 +1715,7 @@ function TradeFormModal({
 
   // Exit is optional: an open trade can be logged in one click.
   const canSave = !!(symbol.trim() && entry !== "" && stop !== "" && date);
+  const [saving, setSaving] = useState(false);
 
   const submit = async () => {
     if (!canSave) return;
