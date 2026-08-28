@@ -215,7 +215,23 @@ function BrokerPage() {
       </div>
       <PageInstructions className="mb-6" />
 
+      {loadError && (
+        <div className="mb-6 rounded-xl border border-red-500/40 bg-red-500/10 p-4 animate-fade-in">
+          <div className="text-sm font-semibold text-foreground">Broker connection failed</div>
+          <p className="mt-1 text-xs text-muted-foreground">{loadError}</p>
+          <button
+            onClick={() => refresh()}
+            disabled={loading}
+            className="mt-3 inline-flex items-center gap-1.5 rounded-xl border border-border/60 px-3 py-1.5 text-xs font-medium hover:bg-muted disabled:opacity-50 press-in"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+            {loading ? "Retrying…" : "Retry connection"}
+          </button>
+        </div>
+      )}
+
       <OandaConnectPanel onChange={() => refresh()} />
+
 
 
 
