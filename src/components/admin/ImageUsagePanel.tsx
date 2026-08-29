@@ -111,25 +111,19 @@ export function ImageUsagePanel({ imageCap = 5 }: { imageCap?: number }) {
 
           <div className="mt-4 rounded-xl border border-border/60 bg-muted/40 p-4">
             <div className="text-xs text-muted-foreground">How it feeds into real profit</div>
-            <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+            <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               <div>
-                <div className="text-[11px] text-muted-foreground">Money in (monthly)</div>
-                <div className="mt-0.5 text-xl font-semibold tabular-nums">{usd(data.breakdown.gross_monthly_usd)}</div>
+                <div className="text-[11px] text-muted-foreground">All AI cost</div>
+                <div className="mt-0.5 text-xl font-semibold tabular-nums">{usd(data.breakdown.total_ai_cost_usd)}</div>
               </div>
               <div>
-                <div className="text-[11px] text-muted-foreground">Minus all AI cost</div>
-                <div className="mt-0.5 text-xl font-semibold tabular-nums">-{usd(data.breakdown.total_ai_cost_usd)}</div>
-              </div>
-              <div>
-                <div className="text-[11px] text-muted-foreground">Real profit</div>
-                <div className={`mt-0.5 text-xl font-semibold tabular-nums ${data.breakdown.real_profit_usd < 0 ? "text-destructive" : ""}`}>
-                  {usd(data.breakdown.real_profit_usd)}
-                </div>
+                <div className="text-[11px] text-muted-foreground">Screenshot share of it</div>
+                <div className="mt-0.5 text-xl font-semibold tabular-nums">{usd(data.breakdown.image_cost_usd)}</div>
               </div>
             </div>
             <div className="mt-3 text-[11px] text-muted-foreground">
               Images are {data.breakdown.image_share_pct}% of that AI cost, so every {data.breakdown.reads_per_dollar || 0} screenshot
-              reads costs about $1 of profit.
+              reads costs about $1. Income is shown live from Stripe on the Profit tab.
             </div>
           </div>
         </div>
