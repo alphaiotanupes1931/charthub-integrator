@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Loader2, X } from "lucide-react";
 import { adminImageUsage } from "@/lib/admin.functions";
-import { listManualRevenue } from "@/lib/revenue.functions";
+import { listSubscribers } from "@/lib/billing.functions";
 import { AccountControls } from "./AccountControls";
 
 const usd = (n: number) => `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -39,13 +39,17 @@ export function UserUsageDrawer({
     adminImageUsage({ data: { days: 30 } })
       .then(setImages)
       .catch(() => setImages(null));
-    listManualRevenue()
-      .then((rows) => {
+    // What they pay comes from Stripe only.
+    listSubscribers()
+      .then((res) => {
         const email = (user.email ?? "").trim().toLowerCase();
-        const match = (rows ?? []).find(
-          (r) => r.active && (r.email ?? "").trim().toLowerCase() === email && email !== "",
+        const match = (res.subscribers ?? []).find(
+          (r) =>
+            (r.status === "active" || r.status === "trialing") &&
+            email !== "" &&
+            (r.email ?? "").trim().toLowerCase() === email,
         );
-        setPays(match ? Number(match.monthly_amount_cents) / 100 : 0);
+        setPays(match ? Number(match.amount ?? 0) / 100 : 0);
       })
       .catch(() => setPays(0));
   }, [user.id, user.email]);
