@@ -1711,6 +1711,10 @@ export type Database = {
           output_tokens: number
         }[]
       }
+      admin_force_password_change: {
+        Args: { _required?: boolean; _user_id: string }
+        Returns: undefined
+      }
       admin_referral_stats: {
         Args: never
         Returns: {
@@ -1718,8 +1722,16 @@ export type Database = {
           source: string
         }[]
       }
+      admin_reset_free_quota: {
+        Args: { _month: string; _user_id: string }
+        Returns: undefined
+      }
       admin_set_ai_model_pref: {
         Args: { _pref: string; _user_id: string }
+        Returns: undefined
+      }
+      admin_set_banned: {
+        Args: { _banned: boolean; _reason?: string; _user_id: string }
         Returns: undefined
       }
       admin_set_flag: {
