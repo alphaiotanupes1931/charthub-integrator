@@ -123,12 +123,11 @@ export const adminImageUsage = createServerFn({ method: "GET" })
 
     const since = new Date(Date.now() - data.days * 86_400_000).toISOString().slice(0, 10);
 
-    const [usageRes, profilesRes, adminsRes, costRes, revenueRes] = await Promise.all([
+    const [usageRes, profilesRes, adminsRes, costRes] = await Promise.all([
       supabaseAdmin.from("ai_usage").select("user_id, day, count, image_count").gte("day", since),
       supabaseAdmin.from("profiles").select("id, email, display_name"),
       supabaseAdmin.from("user_roles").select("user_id").eq("role", "admin"),
       supabaseAdmin.from("ai_cost_log").select("cost_usd, input_tokens, created_at").gte("created_at", new Date(Date.now() - data.days * 86_400_000).toISOString()),
-      supabaseAdmin.from("manual_revenue").select("monthly_amount_cents, active").eq("active", true),
     ]);
     if (usageRes.error) throw new Error(usageRes.error.message);
 
@@ -176,7 +175,8 @@ export const adminImageUsage = createServerFn({ method: "GET" })
     })).sort((a, b) => b.images - a.images);
 
     const imageCost = Number((totalImages * estCostPerImage).toFixed(4));
-    const grossMonthly = ((revenueRes.data ?? []).reduce((s, r) => s + Number(r.monthly_amount_cents ?? 0), 0)) / 100;
+    // Income is reported from Stripe in the money panels, not from this usage read.
+    const grossMonthly = 0;
 
     return {
       days: data.days,
