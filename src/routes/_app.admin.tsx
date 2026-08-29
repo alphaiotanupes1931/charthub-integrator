@@ -427,6 +427,10 @@ function AdminPage() {
               (!!r.email && !!detailUser.email && r.email.trim().toLowerCase() === detailUser.email.trim().toLowerCase()),
           )}
           onClose={() => setDetailUser(null)}
+          onUserChanged={(patch) => {
+            setDetailUser((prev) => (prev ? { ...prev, ...patch } : prev));
+            setUsers((prev) => prev?.map((x) => (x.id === detailUser.id ? { ...x, ...patch } : x)) ?? prev);
+          }}
         />
       )}
 

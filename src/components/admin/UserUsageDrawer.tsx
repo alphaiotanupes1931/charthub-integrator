@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Loader2, X } from "lucide-react";
 import { adminImageUsage } from "@/lib/admin.functions";
 import { listManualRevenue } from "@/lib/revenue.functions";
+import { AccountControls } from "./AccountControls";
 
 const usd = (n: number) => `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -10,6 +11,8 @@ export type DrawerUser = {
   email: string | null;
   display_name: string | null;
   role?: string | null;
+  banned?: boolean;
+  ai_model_pref?: string | null;
 };
 
 export type DrawerAiSpend = { cost_usd: number; calls: number; graded_setups?: number } | undefined;
@@ -22,10 +25,12 @@ export function UserUsageDrawer({
   user,
   aiSpend,
   onClose,
+  onUserChanged,
 }: {
   user: DrawerUser;
   aiSpend: DrawerAiSpend;
   onClose: () => void;
+  onUserChanged?: (patch: Partial<DrawerUser>) => void;
 }) {
   const [images, setImages] = useState<Awaited<ReturnType<typeof adminImageUsage>> | null>(null);
   const [pays, setPays] = useState<number | null>(null);
@@ -81,6 +86,8 @@ export function UserUsageDrawer({
             <X className="h-4 w-4" />
           </button>
         </div>
+
+        <AccountControls user={user} onChanged={(patch) => onUserChanged?.(patch)} />
 
         {loading ? (
           <div className="mt-8 flex items-center gap-2 text-sm text-muted-foreground">
