@@ -481,7 +481,8 @@ function sanitizePlan(
   const last = snap.lastPrice;
   const atr = Math.max(snap.stats.atr14 || Math.abs(last) * 0.002, Math.abs(last) * 0.0005);
   // Same rule as systematicPlan: clamp against the side that will be displayed.
-  const bias = forcedBias && forcedBias !== "Neutral" ? forcedBias : normalizeBias(plan.bias);
+  const bias: "Long" | "Short" | "Neutral" =
+    forcedBias && forcedBias !== "Neutral" ? forcedBias : normalizeBias(plan.bias);
   if (bias === "Neutral" || !isFinite(last) || last <= 0) return plan;
 
 
