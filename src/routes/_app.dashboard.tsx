@@ -938,7 +938,7 @@ function Dashboard() {
   // still get sanitized. Either way the entry/stop/target lines are rebuilt
   // from the very numbers shown on the card.
   const handleChatGrade = useCallback((incoming: import("@/lib/chartAnnotations").ChartGrade | null) => {
-    const grade = incoming?.dataSource ? incoming : sanitizeVisibleGrade(incoming);
+    const grade = enforceGradeDirection(incoming?.dataSource ? incoming : sanitizeVisibleGrade(incoming));
     setAiGrade(grade);
     const bias = grade?.bias === "long" || grade?.bias === "short" ? grade.bias : null;
     const num = (v: unknown) => (typeof v === "number" && isFinite(v) ? v : undefined);
@@ -1211,7 +1211,7 @@ function Dashboard() {
     const last = snapshot?.lastPrice;
     const { bias, entry, stop, tp1, tp2 } = levelsForPlan(plan);
 
-    setAiGrade({
+    setAiGrade(enforceGradeDirection({
       grade: plan.grade,
       bias,
       confidence: typeof plan.confidence === "number" ? plan.confidence : undefined,
@@ -1948,7 +1948,7 @@ function Dashboard() {
                 onApplySniper={({ entry, stop, tp1, tp2, notes }) => {
                   const bias = aiGrade?.bias === "short" ? "short" : "long";
 
-                  setAiGrade((prev) => (prev ? { ...prev, entry, stop, tp1, tp2, strength: notes || prev.strength } : prev));
+                  setAiGrade((prev) => (prev ? enforceGradeDirection({ ...prev, entry, stop, tp1, tp2, strength: notes || prev.strength }) : prev));
                   setAiAnnotationsRaw(buildLevelAnnotations(bias, entry, stop, tp1, tp2, snapshot?.lastPrice));
                   setChartTab("setup");
                 }}
