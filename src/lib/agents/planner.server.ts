@@ -472,11 +472,18 @@ function findTargetLevel(bias: "Long" | "Short", entry: number, snap: MarketSnap
 // Sanity-check the model's plan against price/ATR so we don't ship bad pending
 // orders. The default scan experience should not hand older traders a breakout
 // stop order when price has not actually reached the setup yet.
-function sanitizePlan(plan: RawPlan, snap: MarketSnapshot, memo: ResearchMemo): RawPlan {
+function sanitizePlan(
+  plan: RawPlan,
+  snap: MarketSnapshot,
+  memo: ResearchMemo,
+  forcedBias?: RawPlan["bias"],
+): RawPlan {
   const last = snap.lastPrice;
   const atr = Math.max(snap.stats.atr14 || Math.abs(last) * 0.002, Math.abs(last) * 0.0005);
-  const bias = normalizeBias(plan.bias);
+  // Same rule as systematicPlan: clamp against the side that will be displayed.
+  const bias = forcedBias && forcedBias !== "Neutral" ? forcedBias : normalizeBias(plan.bias);
   if (bias === "Neutral" || !isFinite(last) || last <= 0) return plan;
+
 
   let { entry, stop, tp1, tp2 } = plan;
   if (![entry, stop, tp1, tp2].every((n) => Number.isFinite(n) && n > 0)) {
