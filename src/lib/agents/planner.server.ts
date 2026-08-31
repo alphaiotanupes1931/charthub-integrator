@@ -84,7 +84,12 @@ function fallbackPlan(snap: MarketSnapshot, memo: ResearchMemo): z.infer<typeof 
   return systematicPlan(snap, memo, "Model output was incomplete; using the rule-based scan from current price, ATR, CISD, and consensus.");
 }
 
-function systematicPlan(snap: MarketSnapshot, memo: ResearchMemo, thesisPrefix?: string): RawPlan {
+function systematicPlan(
+  snap: MarketSnapshot,
+  memo: ResearchMemo,
+  thesisPrefix?: string,
+  forcedBias?: RawPlan["bias"],
+): RawPlan {
   const last = snap.lastPrice || 1;
   const atr = Math.max(snap.stats.atr14 || Math.abs(last) * 0.002, Math.abs(last) * 0.0005);
   const mtf = snap.mtf;
@@ -95,7 +100,12 @@ function systematicPlan(snap: MarketSnapshot, memo: ResearchMemo, thesisPrefix?:
     : memo.consensus !== "neutral" ? memo.consensus
     : snap.cisd.state !== "none" ? snap.cisd.state
     : snap.cisd.htfBias;
-  const bias: RawPlan["bias"] = directional === "bullish" ? "Long" : directional === "bearish" ? "Short" : "Neutral";
+  // The measured direction (resolveDirection) wins when it is supplied: the
+  // levels below MUST be built for the same side the card is going to show,
+  // otherwise a Short card ships long-shaped entry/stop/targets.
+  const bias: RawPlan["bias"] = forcedBias && forcedBias !== "Neutral"
+    ? forcedBias
+    : directional === "bullish" ? "Long" : directional === "bearish" ? "Short" : "Neutral";
   const aligned = mtf?.alignment === "aligned-long" || mtf?.alignment === "aligned-short";
   const partialAligned = mtf?.alignment === "mixed" && (snap.cisd.state !== "none" || memo.consensus !== "neutral");
   const hasTrigger = snap.cisd.state !== "none";
