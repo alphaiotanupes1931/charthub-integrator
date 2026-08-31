@@ -918,6 +918,11 @@ function Dashboard() {
     try { window.localStorage.setItem("trademind:candleStyle", candleType); } catch { /* ignore */ }
   }, [candleType]);
   const [snapshot, setSnapshot] = useState<ChartSnapshot | null>(null);
+  // Latest market price, readable from stable callbacks without re-creating them.
+  const snapshotPriceRef = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    snapshotPriceRef.current = typeof snapshot?.lastPrice === "number" ? snapshot.lastPrice : undefined;
+  }, [snapshot?.lastPrice]);
   const [aiAnnotationsRaw, setAiAnnotationsRaw] = useState<import("@/lib/chartAnnotations").ChartAnnotation[]>([]);
   const [aiConcept, setAiConcept] = useState<import("@/lib/chartAnnotations").ConceptRef | null>(null);
   const [aiGrade, setAiGrade] = useState<import("@/lib/chartAnnotations").ChartGrade | null>(null);
