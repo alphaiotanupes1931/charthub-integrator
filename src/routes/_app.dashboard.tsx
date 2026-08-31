@@ -926,8 +926,26 @@ function Dashboard() {
     if (annotations.length > 0) setChartTab("setup");
   }, []);
   const handleShowMe = useCallback(() => setChartTab("setup"), []);
-  const handleChatGrade = useCallback((grade: import("@/lib/chartAnnotations").ChartGrade | null) => {
-    setAiGrade(sanitizeVisibleGrade(grade));
+  // A grade card arriving from chat becomes the chart. Scan-engine cards
+  // (they carry a dataSource) are already validated and clamped once inside the
+  // chat panel, so re-clamping them here is what produced a second entry price
+  // that disagreed with the card the trader was reading. Free-form coach cards
+  // still get sanitized. Either way the entry/stop/target lines are rebuilt
+  // from the very numbers shown on the card.
+  const handleChatGrade = useCallback((incoming: import("@/lib/chartAnnotations").ChartGrade | null) => {
+    const grade = incoming?.dataSource ? incoming : sanitizeVisibleGrade(incoming);
+    setAiGrade(grade);
+    const bias = grade?.bias === "long" || grade?.bias === "short" ? grade.bias : null;
+    const num = (v: unknown) => (typeof v === "number" && isFinite(v) ? v : undefined);
+    const entry = num(grade?.entry);
+    const stop = num(grade?.stop);
+    const tp1 = num(grade?.tp1);
+    const tp2 = num(grade?.tp2) ?? (entry && stop ? entry + (entry - stop) * (bias === "short" ? -3 : 3) : undefined);
+    if (bias && entry && stop && tp1 && tp2) {
+      setAiAnnotationsRaw(buildLevelAnnotations(bias, entry, stop, tp1, tp2, snapshotPriceRef.current));
+      setChartTab("setup");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Full-screen chart toggle
