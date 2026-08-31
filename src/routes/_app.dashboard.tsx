@@ -945,7 +945,10 @@ function Dashboard() {
     const entry = num(grade?.entry);
     const stop = num(grade?.stop);
     const tp1 = num(grade?.tp1);
-    const tp2 = num(grade?.tp2) ?? (entry && stop ? entry + (entry - stop) * (bias === "short" ? -3 : 3) : undefined);
+    const risk = entry !== undefined && stop !== undefined ? Math.abs(entry - stop) : undefined;
+    const tp2 =
+      num(grade?.tp2) ??
+      (entry !== undefined && risk ? (bias === "short" ? entry - risk * 3 : entry + risk * 3) : undefined);
     if (bias && entry && stop && tp1 && tp2) {
       setAiAnnotationsRaw(buildLevelAnnotations(bias, entry, stop, tp1, tp2, snapshotPriceRef.current));
       setChartTab("setup");
