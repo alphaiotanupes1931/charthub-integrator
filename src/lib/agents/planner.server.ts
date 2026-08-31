@@ -736,11 +736,32 @@ export async function runPlanner(
   // grade are now measured from the snapshot; the model only writes the words.
   const resolved = resolveDirection(snap, memo, normalizeBias(plan.bias));
 
+  // Whatever produces the plan, its levels are built for `resolved.bias` — the
+  // side the card, the chat text, and the Setup chart all display. Passing the
+  // resolved side down is what stops a "Short" card from carrying a long-shaped
+  // entry below price with the stop underneath it.
   let finalPlan =
     resolved.bias !== "Neutral" && normalizeBias(plan.bias) !== resolved.bias
-      ? systematicPlan(snap, memo, `Direction taken from measured structure (${resolved.reason});`)
+      ? systematicPlan(snap, memo, `Direction taken from measured structure (${resolved.reason});`, resolved.bias)
       : plan;
-  finalPlan = sanitizePlan(finalPlan, snap, memo);
+  finalPlan = sanitizePlan(finalPlan, snap, memo, resolved.bias);
+  // Last guard: if anything still points the wrong way, rebuild from structure.
+  if (resolved.bias !== "Neutral") {
+    const wrongStop = resolved.bias === "Long"
+      ? finalPlan.stop >= finalPlan.entry
+      : finalPlan.stop <= finalPlan.entry;
+    const wrongTarget = resolved.bias === "Long"
+      ? finalPlan.tp1 <= finalPlan.entry
+      : finalPlan.tp1 >= finalPlan.entry;
+    if (wrongStop || wrongTarget) {
+      finalPlan = sanitizePlan(
+        systematicPlan(snap, memo, "Levels rebuilt to match the measured direction;", resolved.bias),
+        snap,
+        memo,
+        resolved.bias,
+      );
+    }
+  }
 
   const bias = resolved.bias;
   const dec = decimalsFor(snap.lastPrice || finalPlan.entry || 1);
