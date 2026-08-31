@@ -34,7 +34,7 @@ import { voiceForCoach } from "@/lib/coachVoices";
 import { useProfile } from "@/hooks/useProfile";
 import { compressImage, getScreenshotQuota, bumpScreenshotQuota } from "@/lib/imageCompress";
 import { toast } from "sonner";
-import { parseAiPayload, type ChartAnnotation, type ChartGrade, type ConceptRef } from "@/lib/chartAnnotations";
+import { parseAiPayload, enforceGradeDirection, type ChartAnnotation, type ChartGrade, type ConceptRef } from "@/lib/chartAnnotations";
 import { coalesceUiMessageStream, textFromUiMessageParts, friendlyChatError } from "@/lib/chat-stream";
 import { ConceptDiagram } from "@/components/ConceptDiagram";
 import { buildLearningPromptBlock } from "@/lib/signalLearning";
