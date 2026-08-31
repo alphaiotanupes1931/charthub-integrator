@@ -1225,7 +1225,7 @@ function Dashboard() {
       dataFetchedAt: plan.dataFetchedAt,
       candleCount: plan.candleCount,
       refPrice: typeof plan.refPrice === "number" ? plan.refPrice : last,
-    });
+    }));
     if (entry && stop && tp1 && tp2 && bias !== "neutral") {
       setAiAnnotationsRaw(buildLevelAnnotations(bias, entry, stop, tp1, tp2, last));
 
