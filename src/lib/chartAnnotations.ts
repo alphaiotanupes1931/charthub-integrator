@@ -120,3 +120,35 @@ export const CONCEPT_LABELS: Record<ConceptId, string> = {
   SR: "Support / Resistance",
   Wyckoff: "Wyckoff Accumulation",
 };
+
+/**
+ * Last line of defence for the grade card: a "short" plan must never display a
+ * stop below entry with targets above it (and vice versa). Any producer — the
+ * scan engine, a coach reply, or the sniper refinement — gets mirrored around
+ * entry here so the card, the written plan, and the Setup chart lines always
+ * describe the same trade.
+ */
+export function enforceGradeDirection(grade: ChartGrade | null): ChartGrade | null {
+  if (!grade) return grade;
+  const bias = grade.bias;
+  if (bias !== "long" && bias !== "short") return grade;
+  const { entry, stop } = grade;
+  if (typeof entry !== "number" || !isFinite(entry) || typeof stop !== "number" || !isFinite(stop)) return grade;
+  const risk = Math.abs(entry - stop);
+  if (risk <= 0) return grade;
+  const stopWrong = bias === "long" ? stop >= entry : stop <= entry;
+  const tp1Wrong =
+    typeof grade.tp1 === "number" && isFinite(grade.tp1)
+      ? bias === "long" ? grade.tp1 <= entry : grade.tp1 >= entry
+      : false;
+  if (!stopWrong && !tp1Wrong) return grade;
+  const dir = bias === "long" ? 1 : -1;
+  const tp1Dist = typeof grade.tp1 === "number" && isFinite(grade.tp1) ? Math.abs(grade.tp1 - entry) : risk * 1.5;
+  const tp2Dist = typeof grade.tp2 === "number" && isFinite(grade.tp2) ? Math.abs(grade.tp2 - entry) : risk * 3;
+  return {
+    ...grade,
+    stop: entry - dir * risk,
+    tp1: entry + dir * Math.max(tp1Dist, risk * 1.5),
+    tp2: entry + dir * Math.max(tp2Dist, risk * 3),
+  };
+}

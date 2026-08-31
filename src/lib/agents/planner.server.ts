@@ -84,7 +84,12 @@ function fallbackPlan(snap: MarketSnapshot, memo: ResearchMemo): z.infer<typeof 
   return systematicPlan(snap, memo, "Model output was incomplete; using the rule-based scan from current price, ATR, CISD, and consensus.");
 }
 
-function systematicPlan(snap: MarketSnapshot, memo: ResearchMemo, thesisPrefix?: string): RawPlan {
+function systematicPlan(
+  snap: MarketSnapshot,
+  memo: ResearchMemo,
+  thesisPrefix?: string,
+  forcedBias?: typeof BIASES[number],
+): RawPlan {
   const last = snap.lastPrice || 1;
   const atr = Math.max(snap.stats.atr14 || Math.abs(last) * 0.002, Math.abs(last) * 0.0005);
   const mtf = snap.mtf;
@@ -95,7 +100,12 @@ function systematicPlan(snap: MarketSnapshot, memo: ResearchMemo, thesisPrefix?:
     : memo.consensus !== "neutral" ? memo.consensus
     : snap.cisd.state !== "none" ? snap.cisd.state
     : snap.cisd.htfBias;
-  const bias: RawPlan["bias"] = directional === "bullish" ? "Long" : directional === "bearish" ? "Short" : "Neutral";
+  // The measured direction (resolveDirection) wins when it is supplied: the
+  // levels below MUST be built for the same side the card is going to show,
+  // otherwise a Short card ships long-shaped entry/stop/targets.
+  const bias: typeof BIASES[number] = forcedBias && forcedBias !== "Neutral"
+    ? forcedBias
+    : directional === "bullish" ? "Long" : directional === "bearish" ? "Short" : "Neutral";
   const aligned = mtf?.alignment === "aligned-long" || mtf?.alignment === "aligned-short";
   const partialAligned = mtf?.alignment === "mixed" && (snap.cisd.state !== "none" || memo.consensus !== "neutral");
   const hasTrigger = snap.cisd.state !== "none";
@@ -462,11 +472,19 @@ function findTargetLevel(bias: "Long" | "Short", entry: number, snap: MarketSnap
 // Sanity-check the model's plan against price/ATR so we don't ship bad pending
 // orders. The default scan experience should not hand older traders a breakout
 // stop order when price has not actually reached the setup yet.
-function sanitizePlan(plan: RawPlan, snap: MarketSnapshot, memo: ResearchMemo): RawPlan {
+function sanitizePlan(
+  plan: RawPlan,
+  snap: MarketSnapshot,
+  memo: ResearchMemo,
+  forcedBias?: typeof BIASES[number],
+): RawPlan {
   const last = snap.lastPrice;
   const atr = Math.max(snap.stats.atr14 || Math.abs(last) * 0.002, Math.abs(last) * 0.0005);
-  const bias = normalizeBias(plan.bias);
+  // Same rule as systematicPlan: clamp against the side that will be displayed.
+  const bias: typeof BIASES[number] =
+    forcedBias && forcedBias !== "Neutral" ? forcedBias : normalizeBias(plan.bias);
   if (bias === "Neutral" || !isFinite(last) || last <= 0) return plan;
+
 
   let { entry, stop, tp1, tp2 } = plan;
   if (![entry, stop, tp1, tp2].every((n) => Number.isFinite(n) && n > 0)) {
@@ -718,11 +736,32 @@ export async function runPlanner(
   // grade are now measured from the snapshot; the model only writes the words.
   const resolved = resolveDirection(snap, memo, normalizeBias(plan.bias));
 
+  // Whatever produces the plan, its levels are built for `resolved.bias` — the
+  // side the card, the chat text, and the Setup chart all display. Passing the
+  // resolved side down is what stops a "Short" card from carrying a long-shaped
+  // entry below price with the stop underneath it.
   let finalPlan =
     resolved.bias !== "Neutral" && normalizeBias(plan.bias) !== resolved.bias
-      ? systematicPlan(snap, memo, `Direction taken from measured structure (${resolved.reason});`)
+      ? systematicPlan(snap, memo, `Direction taken from measured structure (${resolved.reason});`, resolved.bias)
       : plan;
-  finalPlan = sanitizePlan(finalPlan, snap, memo);
+  finalPlan = sanitizePlan(finalPlan, snap, memo, resolved.bias);
+  // Last guard: if anything still points the wrong way, rebuild from structure.
+  if (resolved.bias !== "Neutral") {
+    const wrongStop = resolved.bias === "Long"
+      ? finalPlan.stop >= finalPlan.entry
+      : finalPlan.stop <= finalPlan.entry;
+    const wrongTarget = resolved.bias === "Long"
+      ? finalPlan.tp1 <= finalPlan.entry
+      : finalPlan.tp1 >= finalPlan.entry;
+    if (wrongStop || wrongTarget) {
+      finalPlan = sanitizePlan(
+        systematicPlan(snap, memo, "Levels rebuilt to match the measured direction;", resolved.bias),
+        snap,
+        memo,
+        resolved.bias,
+      );
+    }
+  }
 
   const bias = resolved.bias;
   const dec = decimalsFor(snap.lastPrice || finalPlan.entry || 1);
