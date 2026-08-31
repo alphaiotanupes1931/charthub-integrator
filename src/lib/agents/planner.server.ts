@@ -88,7 +88,7 @@ function systematicPlan(
   snap: MarketSnapshot,
   memo: ResearchMemo,
   thesisPrefix?: string,
-  forcedBias?: RawPlan["bias"],
+  forcedBias?: typeof BIASES[number],
 ): RawPlan {
   const last = snap.lastPrice || 1;
   const atr = Math.max(snap.stats.atr14 || Math.abs(last) * 0.002, Math.abs(last) * 0.0005);
@@ -103,7 +103,7 @@ function systematicPlan(
   // The measured direction (resolveDirection) wins when it is supplied: the
   // levels below MUST be built for the same side the card is going to show,
   // otherwise a Short card ships long-shaped entry/stop/targets.
-  const bias: RawPlan["bias"] = forcedBias && forcedBias !== "Neutral"
+  const bias: typeof BIASES[number] = forcedBias && forcedBias !== "Neutral"
     ? forcedBias
     : directional === "bullish" ? "Long" : directional === "bearish" ? "Short" : "Neutral";
   const aligned = mtf?.alignment === "aligned-long" || mtf?.alignment === "aligned-short";
@@ -476,12 +476,12 @@ function sanitizePlan(
   plan: RawPlan,
   snap: MarketSnapshot,
   memo: ResearchMemo,
-  forcedBias?: RawPlan["bias"],
+  forcedBias?: typeof BIASES[number],
 ): RawPlan {
   const last = snap.lastPrice;
   const atr = Math.max(snap.stats.atr14 || Math.abs(last) * 0.002, Math.abs(last) * 0.0005);
   // Same rule as systematicPlan: clamp against the side that will be displayed.
-  const bias: "Long" | "Short" | "Neutral" =
+  const bias: typeof BIASES[number] =
     forcedBias && forcedBias !== "Neutral" ? forcedBias : normalizeBias(plan.bias);
   if (bias === "Neutral" || !isFinite(last) || last <= 0) return plan;
 
