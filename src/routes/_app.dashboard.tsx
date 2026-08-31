@@ -918,6 +918,11 @@ function Dashboard() {
     try { window.localStorage.setItem("trademind:candleStyle", candleType); } catch { /* ignore */ }
   }, [candleType]);
   const [snapshot, setSnapshot] = useState<ChartSnapshot | null>(null);
+  // Latest market price, readable from stable callbacks without re-creating them.
+  const snapshotPriceRef = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    snapshotPriceRef.current = typeof snapshot?.lastPrice === "number" ? snapshot.lastPrice : undefined;
+  }, [snapshot?.lastPrice]);
   const [aiAnnotationsRaw, setAiAnnotationsRaw] = useState<import("@/lib/chartAnnotations").ChartAnnotation[]>([]);
   const [aiConcept, setAiConcept] = useState<import("@/lib/chartAnnotations").ConceptRef | null>(null);
   const [aiGrade, setAiGrade] = useState<import("@/lib/chartAnnotations").ChartGrade | null>(null);
@@ -926,8 +931,29 @@ function Dashboard() {
     if (annotations.length > 0) setChartTab("setup");
   }, []);
   const handleShowMe = useCallback(() => setChartTab("setup"), []);
-  const handleChatGrade = useCallback((grade: import("@/lib/chartAnnotations").ChartGrade | null) => {
-    setAiGrade(sanitizeVisibleGrade(grade));
+  // A grade card arriving from chat becomes the chart. Scan-engine cards
+  // (they carry a dataSource) are already validated and clamped once inside the
+  // chat panel, so re-clamping them here is what produced a second entry price
+  // that disagreed with the card the trader was reading. Free-form coach cards
+  // still get sanitized. Either way the entry/stop/target lines are rebuilt
+  // from the very numbers shown on the card.
+  const handleChatGrade = useCallback((incoming: import("@/lib/chartAnnotations").ChartGrade | null) => {
+    const grade = incoming?.dataSource ? incoming : sanitizeVisibleGrade(incoming);
+    setAiGrade(grade);
+    const bias = grade?.bias === "long" || grade?.bias === "short" ? grade.bias : null;
+    const num = (v: unknown) => (typeof v === "number" && isFinite(v) ? v : undefined);
+    const entry = num(grade?.entry);
+    const stop = num(grade?.stop);
+    const tp1 = num(grade?.tp1);
+    const risk = entry !== undefined && stop !== undefined ? Math.abs(entry - stop) : undefined;
+    const tp2 =
+      num(grade?.tp2) ??
+      (entry !== undefined && risk ? (bias === "short" ? entry - risk * 3 : entry + risk * 3) : undefined);
+    if (bias && entry && stop && tp1 && tp2) {
+      setAiAnnotationsRaw(buildLevelAnnotations(bias, entry, stop, tp1, tp2, snapshotPriceRef.current));
+      setChartTab("setup");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Full-screen chart toggle

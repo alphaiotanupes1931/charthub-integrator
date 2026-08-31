@@ -627,14 +627,31 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
     const autoShownRef = useRef<string | null>(
       [...initial].reverse().find((m) => m.role === "assistant")?.id ?? null,
     );
+    // Only the newest assistant reply is ever lifted to the chart, and only
+    // once. Re-lifting on unrelated re-renders (history loads, coach switches,
+    // price ticks) is what let an older scan's grade land back on the chart
+    // while the chat bubble showed the newer one.
+    const liftedRef = useRef<string | null>(null);
     useEffect(() => {
       const last = [...messages].reverse().find((m) => m.role === "assistant");
       if (!last) return;
       const text = uiMessageText(last);
       const parsed = parseAiPayload(text);
-      if (onAnnotations) onAnnotations(parsed.annotations);
-      if (onConcept) onConcept(parsed.concept ?? null);
-      if (onGrade && parsed.grade) onGrade(sanitizeGradeForPrice(parsed.grade, chart?.snapshot?.lastPrice));
+      const signature = `${last.id}:${text.length}`;
+      const alreadyLifted = liftedRef.current === signature;
+      if (!alreadyLifted) {
+        liftedRef.current = signature;
+        // An empty annotation list means "this reply drew nothing", not "erase
+        // the setup" - the scan's own entry/stop/target lines must survive a
+        // follow-up coaching reply.
+        if (onAnnotations && parsed.annotations.length > 0) onAnnotations(parsed.annotations);
+        if (onConcept) onConcept(parsed.concept ?? null);
+        // The card the trader reads is sanitized exactly once, here. The
+        // dashboard redraws the chart from these same numbers, so the lines and
+        // the card can never quote different entries.
+        if (onGrade && parsed.grade) onGrade(sanitizeGradeForPrice(parsed.grade, chart?.snapshot?.lastPrice));
+      }
+
 
       // Auto "show me": once a reply finishes and it carries something drawable
       // (levels or a graded plan), flip the chart to Setup so the trader sees
