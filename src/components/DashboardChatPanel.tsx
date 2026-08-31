@@ -274,7 +274,8 @@ function sanitizeGradeForPrice(grade: ChartGrade, lastPrice?: number): ChartGrad
   // Only round trusted scan levels for display; sanitize free-form coach cards.
   if (grade.dataSource) {
     const r = (n?: number) => (typeof n === "number" && isFinite(n) ? roundPrice(n, lastPrice) : n);
-    return { ...grade, entry: r(grade.entry), stop: r(grade.stop), tp1: r(grade.tp1), tp2: r(grade.tp2) };
+    const g = enforceGradeDirection(grade) ?? grade;
+    return { ...g, entry: r(g.entry), stop: r(g.stop), tp1: r(g.tp1), tp2: r(g.tp2) };
   }
   // Risk and pullback distance both get a sane ceiling so the chat card can
   // never show an entry parked far away from where price actually is.
@@ -302,7 +303,8 @@ function sanitizeGradeForPrice(grade: ChartGrade, lastPrice?: number): ChartGrad
     tp2 = typeof tp2 === "number" && isFinite(tp2) ? Math.min(tp2, tp1 - risk * 1.5, entry - risk * 3) : entry - risk * 3;
   }
   const r = (n?: number) => (typeof n === "number" && isFinite(n) ? roundPrice(n, lastPrice) : n);
-  return { ...grade, entry: r(entry), stop: r(stop), tp1: r(tp1), tp2: r(tp2) };
+  const out = enforceGradeDirection({ ...grade, entry, stop, tp1, tp2 }) ?? grade;
+  return { ...out, entry: r(out.entry), stop: r(out.stop), tp1: r(out.tp1), tp2: r(out.tp2) };
 }
 
 
