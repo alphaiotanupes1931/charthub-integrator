@@ -976,7 +976,7 @@ export const Route = createFileRoute("/api/chat")({
 
         const staticSystem = staticSystemPrompt();
         const forceDraw = shouldForceChartDraw(messages);
-        let liveSystem = dynamicSystemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens), learningCtx, newsCtx, scoreCtx, forceDraw, previousCoach);
+        let liveSystem = dynamicSystemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens), learningCtx, newsCtx, scoreCtx, forceDraw, previousCoach, hermesCtx);
         // Retrieved methodology / psychology reference for this exact question.
         try {
           const { methodologyContextBlock } = await import("@/lib/agents/methodology-kb");
