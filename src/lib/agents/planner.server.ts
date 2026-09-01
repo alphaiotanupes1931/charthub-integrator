@@ -6,6 +6,15 @@ import { z } from "zod";
 import { createAiGatewayProvider } from "@/lib/ai-gateway.server";
 import type { MarketSnapshot, OrderFlow, ResearchMemo, TradePlan } from "./types";
 import { formatOrderFlow } from "./order-flow.server";
+import { computeOrderBlocks } from "@/lib/orderBlocks";
+import {
+  readSessionVolume,
+  sessionStopAtr,
+  readMitigatedEntry,
+  type SessionVolumeRead,
+  type MitigatedBlockRead,
+} from "@/lib/sessionVolume";
+
 
 const MODEL = "google/gemini-3-flash-preview";
 
