@@ -978,7 +978,9 @@ function buildDetails(
   grade: string,
   newsWarning: string,
   dataNote: string,
+  volRead?: SessionVolumeRead | null,
 ): string {
+
   const l = snap.mtf?.ladder ?? [];
   const rung = (label: string) => l.find((r) => r.label === label);
   const of = snap.orderFlow;
