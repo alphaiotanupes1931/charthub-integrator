@@ -486,7 +486,10 @@ function sanitizePlan(
   snap: MarketSnapshot,
   memo: ResearchMemo,
   forcedBias?: typeof BIASES[number],
+  /** Minimum stop distance in ATR multiples. Widened in thin sessions. */
+  stopFloorAtr = 0.6,
 ): RawPlan {
+
   const last = snap.lastPrice;
   const atr = Math.max(snap.stats.atr14 || Math.abs(last) * 0.002, Math.abs(last) * 0.0005);
   // Same rule as systematicPlan: clamp against the side that will be displayed.
