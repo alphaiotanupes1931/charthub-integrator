@@ -1049,6 +1049,11 @@ function buildDetails(
   if (structure.length) sections.push(`Market structure: ${structure.join(" ")}`);
 
   // 2. Order flow and volume, from the real metrics.
+  const sessionLine = volRead
+    ? volRead.unavailable
+      ? ` ${volRead.label}, so session participation could not be checked.`
+      : ` Session check: ${volRead.label} over the last ${volRead.bars} ${volRead.session} bars${volRead.thin ? " - thin conditions, so levels hold less often and stops need room." : " - normal participation for this session."}`
+    : "";
   if (of) {
     const flow = [
       `Delta is ${of.delta >= 0 ? "+" : ""}${of.delta.toFixed(0)} against a ${of.deltaAvg.toFixed(0)} average and CVD is ${of.cvdSlope >= 0 ? "rising" : "falling"}, so ${of.cvdSlope >= 0 ? "buyers" : "sellers"} are the ones paying up over the last ${of.bars} bars.`,
@@ -1061,10 +1066,11 @@ function buildDetails(
         ? "This feed does not publish volume for the instrument, so these figures come from bar range and close position - treat them as directional, not exact."
         : "",
     ].filter(Boolean);
-    sections.push(`Order flow and volume: ${flow.join(" ")} Net order-flow bias is ${of.bias}.`);
+    sections.push(`Order flow and volume: ${flow.join(" ")} Net order-flow bias is ${of.bias}.${sessionLine}`);
   } else {
-    sections.push("Order flow and volume: no volume data was published for this instrument on this timeframe, so the grade leans entirely on structure.");
+    sections.push(`Order flow and volume: no volume data was published for this instrument on this timeframe, so the grade leans entirely on structure.${sessionLine}`);
   }
+
 
   // 3. Volatility and level geometry, in ATR terms the trader can size with.
   const inAtr = (a: number, b: number) => (atr > 0 ? `${(Math.abs(a - b) / atr).toFixed(1)}x ATR` : "n/a");
