@@ -535,10 +535,13 @@ function sanitizePlan(
   if (bias === "Short" && entry < last + buffer) entry = last + buffer;
 
   // 3. Stop: prefer the structural stop, else the model's distance, clamped to
-  // a sane ATR band so risk is always measurable.
+  // a sane ATR band so risk is always measurable. The floor is session-aware:
+  // thin overnight tape needs 1.2-1.5x ATR, not the 0.6x default.
   const modelStopDist = Math.abs(entry - stop);
   const rawStopDist = structuralStop !== null ? Math.abs(entry - structuralStop) : modelStopDist;
-  const stopDist = Math.min(Math.max(rawStopDist, atr * 0.6), atr * 2.5);
+  const floor = Math.max(0.3, stopFloorAtr);
+  const stopDist = Math.min(Math.max(rawStopDist, atr * floor), atr * Math.max(2.5, floor + 1));
+
   stop = bias === "Long" ? entry - stopDist : entry + stopDist;
 
   // 4. Targets: use the first opposing structure level if it pays at least 1.2R,
