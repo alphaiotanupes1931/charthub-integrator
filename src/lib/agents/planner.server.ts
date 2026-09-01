@@ -872,13 +872,15 @@ export async function runPlanner(
   const ladder = snap.mtf?.ladder ?? [];
   const dailyBias = ladder.find((r) => r.label === "Daily")?.bias ?? snap.cisd.htfBias;
   const currentTrend = ladder.find((r) => r.label === "4H")?.trend ?? snap.mtf?.h4.trend ?? "range";
-  const synopsis = buildSynopsis(snap, memo, grade, bias, dailyBias, currentTrend) + newsWarning;
+  const synopsis = buildSynopsis(snap, memo, grade, bias, dailyBias, currentTrend)
+    + newsWarning
+    + (standDown ? ` ${standDown}` : warnings.length ? ` ${warnings[0]}` : "");
 
   return {
     grade,
     bias,
     confidence,
-    notes: finalPlan.thesis,
+    notes: finalPlan.thesis + (warnings.length ? ` ${warnings.join(" ")}` : ""),
     entry: isNoEntry ? "-" : fmt(finalPlan.entry, dec),
     stop:  isNoEntry ? "-" : fmt(finalPlan.stop,  dec),
     tp1:   isNoEntry ? "-" : fmt(finalPlan.tp1,   dec),
@@ -896,7 +898,21 @@ export async function runPlanner(
     refPrice: snap.lastPrice,
     counterTrend: counterTrend.counterTrend,
     htfBias: dailyBias,
+    warnings: warnings.length ? warnings : undefined,
+    sessionVolume: volRead && !volRead.unavailable
+      ? {
+          session: volRead.session,
+          ratio: Number(volRead.ratio.toFixed(2)),
+          thin: volRead.thin,
+          label: volRead.label,
+          stopAtr: stopFloorAtr,
+        }
+      : undefined,
+    mitigatedEntry: mitigation?.mitigated
+      ? { mitigations: mitigation.mitigations, warning: mitigation.warning ?? "" }
+      : undefined,
   };
+
 }
 
 /**
