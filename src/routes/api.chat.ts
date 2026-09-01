@@ -943,6 +943,27 @@ export const Route = createFileRoute("/api/chat")({
             console.warn(`[chat] req=${reqId} score_record_failed`, (e as Error).message);
           }
         }
+        // Hermes long-term memory: lessons distilled from this trader's past
+        // feedback (any thread, scan or review), so the chat coach carries the
+        // same corrections the scan planner already gets.
+        let hermesCtx: string | undefined;
+        if (sb && userId) {
+          try {
+            const { formatLessonsForPrompt } = await import("@/lib/agents/hermes.server");
+            const { data: lessons } = await sb
+              .from("hermes_lessons")
+              .select("*")
+              .or(`user_id.eq.${userId},user_id.is.null`)
+              .order("weight", { ascending: false })
+              .order("created_at", { ascending: false })
+              .limit(12);
+            const block = formatLessonsForPrompt((lessons ?? []) as never);
+            if (block) hermesCtx = block;
+          } catch (e) {
+            console.warn(`[chat] req=${reqId} hermes_failed`, (e as Error).message);
+          }
+        }
+
 
         // Forex Factory economic calendar for the instrument on screen.
         let newsCtx: string | undefined;
