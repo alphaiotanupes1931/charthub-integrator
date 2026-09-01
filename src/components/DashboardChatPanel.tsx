@@ -466,7 +466,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
       setFeedbackByMsg((prev) => ({ ...prev, [msgId]: rating }));
       try {
         await submitFeedback({ data: {
-          kind: "scan",
+          kind: grade ? "scan" : "chat",
           ticker: chartRef.current?.ticker ?? null,
           interval: chartRef.current?.intervalLabel ?? null,
           lens: readActiveLensId(),
