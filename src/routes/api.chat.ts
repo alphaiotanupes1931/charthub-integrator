@@ -559,7 +559,7 @@ SCREENSHOT ANALYSIS RULES (when the user attaches an image):
 }
 
 // The per-request half: coach voice plus every live context block.
-function dynamicSystemPrompt(coach: string | undefined, journalContext: string, chartCtx: string, strategyCtx: string, lensCtx: string, learningCtx: string, newsCtx?: string, scoreCtx?: string, forceDraw?: boolean, previousCoach?: string | null) {
+function dynamicSystemPrompt(coach: string | undefined, journalContext: string, chartCtx: string, strategyCtx: string, lensCtx: string, learningCtx: string, newsCtx?: string, scoreCtx?: string, forceDraw?: boolean, previousCoach?: string | null, hermesCtx?: string) {
   const switched = !!previousCoach && !!coach && previousCoach !== coach;
   const switchBlock = switched
     ? `\n=== COACH SWITCH (applies to THIS reply) ===
@@ -600,6 +600,13 @@ Use these measured numbers when the trader asks how they are doing, whether a se
 ${scoreCtx ?? "No past scans on this instrument have resolved yet, so there is no measured scan record. Say so plainly if asked, and do not claim a hit rate."}
 Self-correct against this. If the record is negative or the hit rate on past A grades is weak, downgrade what you would otherwise call a high-quality setup, say in one clause that past scans here have not paid, and tell the trader to cut size or stand aside. If the record is positive, you may back a high grade with more conviction. Never quote a hit rate that is not in this block.
 === END SCAN TRACK RECORD ===
+
+=== HERMES MEMORY (lessons carried across every past conversation, scan and journal review) ===
+${hermesCtx ?? "No lessons have been distilled from this trader's feedback yet. If they ask whether you remember past sessions, say your long-term memory holds their journal outcomes, measured signal backtest and past corrections, and that rating replies teaches you faster - do not claim you have no memory at all."}
+Apply these lessons silently in this reply. Never restate them verbatim, and never claim you cannot learn between chats: these lessons, the journal, the signal backtest and the scan track record all persist across conversations.
+=== END HERMES MEMORY ===
+
+
 
 === NEWS AND ECONOMIC CALENDAR ===
 ${newsCtx ?? "No economic calendar data is loaded right now. Say so plainly if the trader asks about news, and do not invent releases or times."}
@@ -936,6 +943,27 @@ export const Route = createFileRoute("/api/chat")({
             console.warn(`[chat] req=${reqId} score_record_failed`, (e as Error).message);
           }
         }
+        // Hermes long-term memory: lessons distilled from this trader's past
+        // feedback (any thread, scan or review), so the chat coach carries the
+        // same corrections the scan planner already gets.
+        let hermesCtx: string | undefined;
+        if (sb && userId) {
+          try {
+            const { formatLessonsForPrompt } = await import("@/lib/agents/hermes.server");
+            const { data: lessons } = await sb
+              .from("hermes_lessons")
+              .select("*")
+              .or(`user_id.eq.${userId},user_id.is.null`)
+              .order("weight", { ascending: false })
+              .order("created_at", { ascending: false })
+              .limit(12);
+            const block = formatLessonsForPrompt((lessons ?? []) as never);
+            if (block) hermesCtx = block;
+          } catch (e) {
+            console.warn(`[chat] req=${reqId} hermes_failed`, (e as Error).message);
+          }
+        }
+
 
         // Forex Factory economic calendar for the instrument on screen.
         let newsCtx: string | undefined;
@@ -948,7 +976,7 @@ export const Route = createFileRoute("/api/chat")({
 
         const staticSystem = staticSystemPrompt();
         const forceDraw = shouldForceChartDraw(messages);
-        let liveSystem = dynamicSystemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens), learningCtx, newsCtx, scoreCtx, forceDraw, previousCoach);
+        let liveSystem = dynamicSystemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens), learningCtx, newsCtx, scoreCtx, forceDraw, previousCoach, hermesCtx);
         // Retrieved methodology / psychology reference for this exact question.
         try {
           const { methodologyContextBlock } = await import("@/lib/agents/methodology-kb");
