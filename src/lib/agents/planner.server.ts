@@ -751,6 +751,12 @@ export async function runPlanner(
   // grade are now measured from the snapshot; the model only writes the words.
   const resolved = resolveDirection(snap, memo, normalizeBias(plan.bias));
 
+  // ---- Session volume filter -------------------------------------------
+  // Measured before the levels are finalised, because the stop floor depends
+  // on it: 0.6x ATR in normal conditions, 1.2-1.5x when the session is thin.
+  const volRead = readSessionVolume(snap.candles);
+  const stopFloorAtr = sessionStopAtr(volRead);
+
   // Whatever produces the plan, its levels are built for `resolved.bias` — the
   // side the card, the chat text, and the Setup chart all display. Passing the
   // resolved side down is what stops a "Short" card from carrying a long-shaped
@@ -759,7 +765,7 @@ export async function runPlanner(
     resolved.bias !== "Neutral" && normalizeBias(plan.bias) !== resolved.bias
       ? systematicPlan(snap, memo, `Direction taken from measured structure (${resolved.reason});`, resolved.bias)
       : plan;
-  finalPlan = sanitizePlan(finalPlan, snap, memo, resolved.bias);
+  finalPlan = sanitizePlan(finalPlan, snap, memo, resolved.bias, stopFloorAtr);
   // Last guard: if anything still points the wrong way, rebuild from structure.
   if (resolved.bias !== "Neutral") {
     const wrongStop = resolved.bias === "Long"
@@ -774,9 +780,11 @@ export async function runPlanner(
         snap,
         memo,
         resolved.bias,
+        stopFloorAtr,
       );
     }
   }
+
 
   const bias = resolved.bias;
   const dec = decimalsFor(snap.lastPrice || finalPlan.entry || 1);
