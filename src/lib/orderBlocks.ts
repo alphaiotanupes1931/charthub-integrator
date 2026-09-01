@@ -88,6 +88,7 @@ export function computeOrderBlocks(candles: ObCandle[], opts?: { max?: number; s
       time: origin.time,
       mitigatedTime: null,
       mitigated: false,
+      mitigations: 0,
       strength: Number((body / a).toFixed(2)),
       breakLevel: bullBreak ? priorHigh : priorLow,
     };
@@ -99,12 +100,24 @@ export function computeOrderBlocks(candles: ObCandle[], opts?: { max?: number; s
       block.bot = origin.low;
     }
 
-    // mitigation: price trades back into the block after the displacement
+    // mitigation: price trades back into the block after the displacement.
+    // Count each separate visit (price must leave the block before the next one
+    // counts) so a level that keeps getting run through reads as worn out.
+    let inside = false;
     for (let k = i + 1; k < candles.length; k++) {
       const f = candles[k];
       const touched = block.kind === "bullish" ? f.low <= block.top : f.high >= block.bot;
-      if (touched) { block.mitigatedTime = f.time; block.mitigated = true; break; }
+      if (touched) {
+        if (!inside) {
+          block.mitigations += 1;
+          if (!block.mitigated) { block.mitigatedTime = f.time; block.mitigated = true; }
+        }
+        inside = true;
+      } else {
+        inside = false;
+      }
     }
+
 
     // de-duplicate overlapping blocks of the same direction
     const dup = blocks.some(
