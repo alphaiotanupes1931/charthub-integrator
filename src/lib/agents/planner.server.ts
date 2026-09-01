@@ -793,7 +793,7 @@ export async function runPlanner(
   const rr = `1 : ${(reward / risk).toFixed(1)}`;
 
   // Conviction is counted from evidence that is actually present in the data.
-  const confidence = bias === "Neutral" ? 0 : countEvidence(snap, memo, "B", bias, reward / risk);
+  let confidence = bias === "Neutral" ? 0 : countEvidence(snap, memo, "B", bias, reward / risk);
   let grade = gradeFromEvidence(bias, confidence, snap);
   // Calendar risk is measurable and therefore remains a valid hard cap. The
   // user's scorecard cap is applied by the authenticated server-function
@@ -802,6 +802,41 @@ export async function runPlanner(
     if (grade === "A+") grade = "A";
     else if (grade === "A") grade = "B";
   }
+
+  // ---- Session filters as hard grade controls ---------------------------
+  const warnings: string[] = [];
+  const downgradeOne = (g: typeof GRADES[number]): typeof GRADES[number] =>
+    g === "A+" ? "A" : g === "A" ? "B" : g === "B" ? "C" : g;
+
+  // Thin overnight tape (Sydney/Tokyo) is a stand-down, not a grade: the
+  // structure can be perfect and still get chopped out on a 0.6x ATR stop.
+  let standDown: string | null = null;
+  if (volRead?.overnightThin && grade !== "NO ENTRY") {
+    standDown = `NO ENTRY - thin overnight session, wait for London open. ${volRead.label} (${volRead.bars}-bar median), which is not enough participation to hold a level.`;
+    grade = "NO ENTRY";
+    warnings.push(standDown);
+  } else if (volRead?.thin && grade !== "NO ENTRY") {
+    grade = downgradeOne(grade);
+    warnings.push(
+      `Thin volume - widen stops or reduce size. ${volRead.label}, so the stop was widened to ${stopFloorAtr.toFixed(1)}x ATR and the grade dropped a letter.`,
+    );
+  }
+
+  // Mitigated order block at the entry: a block price already ran through
+  // holds less often, and one tested twice or more usually fails outright.
+  let mitigation: MitigatedBlockRead | null = null;
+  if (grade !== "NO ENTRY" && bias !== "Neutral") {
+    try {
+      const blocks = computeOrderBlocks(snap.candles, { max: 10 });
+      mitigation = readMitigatedEntry(finalPlan.entry, bias, blocks);
+      if (mitigation.warning) {
+        warnings.push(mitigation.warning);
+        confidence = Math.max(10, confidence - mitigation.confidencePenalty);
+        if (mitigation.mitigations >= 2) grade = downgradeOne(grade);
+      }
+    } catch { /* block detection is best-effort */ }
+  }
+
   const isNoEntry = grade === "NO ENTRY";
 
   const counterTrend = counterTrendRead(bias, snap);
@@ -815,8 +850,16 @@ export async function runPlanner(
     ? ""
     : " Higher-timeframe data was incomplete on this scan, so the grade is capped at C until the feed fills in.")
     + (counterTrend.reason ? ` ${counterTrend.reason}` : "")
-    + (comboGate.reason ? ` ${comboGate.reason}` : "");
-  const details = buildDetails(snap, memo, finalPlan, dec, coach, bias, grade, newsWarning, dataNote);
+    + (comboGate.reason ? ` ${comboGate.reason}` : "")
+    + (warnings.length ? ` ${warnings.join(" ")}` : "")
+    + (volRead && !volRead.unavailable && !volRead.thin
+      ? ` Session volume is normal (${volRead.label}), so the standard ${stopFloorAtr.toFixed(1)}x ATR minimum stop applies.`
+      : "")
+    + (volRead?.thin && !volRead.overnightThin
+      ? ` Stop widened to ${stopFloorAtr.toFixed(1)}x ATR due to the thin ${volRead.session} session.`
+      : "");
+  const details = buildDetails(snap, memo, finalPlan, dec, coach, bias, grade, newsWarning, dataNote, volRead);
+
 
 
 
