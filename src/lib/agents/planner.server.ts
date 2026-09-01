@@ -6,6 +6,15 @@ import { z } from "zod";
 import { createAiGatewayProvider } from "@/lib/ai-gateway.server";
 import type { MarketSnapshot, OrderFlow, ResearchMemo, TradePlan } from "./types";
 import { formatOrderFlow } from "./order-flow.server";
+import { computeOrderBlocks } from "@/lib/orderBlocks";
+import {
+  readSessionVolume,
+  sessionStopAtr,
+  readMitigatedEntry,
+  type SessionVolumeRead,
+  type MitigatedBlockRead,
+} from "@/lib/sessionVolume";
+
 
 const MODEL = "google/gemini-3-flash-preview";
 
@@ -477,7 +486,10 @@ function sanitizePlan(
   snap: MarketSnapshot,
   memo: ResearchMemo,
   forcedBias?: typeof BIASES[number],
+  /** Minimum stop distance in ATR multiples. Widened in thin sessions. */
+  stopFloorAtr = 0.6,
 ): RawPlan {
+
   const last = snap.lastPrice;
   const atr = Math.max(snap.stats.atr14 || Math.abs(last) * 0.002, Math.abs(last) * 0.0005);
   // Same rule as systematicPlan: clamp against the side that will be displayed.
@@ -523,10 +535,13 @@ function sanitizePlan(
   if (bias === "Short" && entry < last + buffer) entry = last + buffer;
 
   // 3. Stop: prefer the structural stop, else the model's distance, clamped to
-  // a sane ATR band so risk is always measurable.
+  // a sane ATR band so risk is always measurable. The floor is session-aware:
+  // thin overnight tape needs 1.2-1.5x ATR, not the 0.6x default.
   const modelStopDist = Math.abs(entry - stop);
   const rawStopDist = structuralStop !== null ? Math.abs(entry - structuralStop) : modelStopDist;
-  const stopDist = Math.min(Math.max(rawStopDist, atr * 0.6), atr * 2.5);
+  const floor = Math.max(0.3, stopFloorAtr);
+  const stopDist = Math.min(Math.max(rawStopDist, atr * floor), atr * Math.max(2.5, floor + 1));
+
   stop = bias === "Long" ? entry - stopDist : entry + stopDist;
 
   // 4. Targets: use the first opposing structure level if it pays at least 1.2R,
@@ -736,6 +751,12 @@ export async function runPlanner(
   // grade are now measured from the snapshot; the model only writes the words.
   const resolved = resolveDirection(snap, memo, normalizeBias(plan.bias));
 
+  // ---- Session volume filter -------------------------------------------
+  // Measured before the levels are finalised, because the stop floor depends
+  // on it: 0.6x ATR in normal conditions, 1.2-1.5x when the session is thin.
+  const volRead = readSessionVolume(snap.candles);
+  const stopFloorAtr = sessionStopAtr(volRead);
+
   // Whatever produces the plan, its levels are built for `resolved.bias` — the
   // side the card, the chat text, and the Setup chart all display. Passing the
   // resolved side down is what stops a "Short" card from carrying a long-shaped
@@ -744,7 +765,7 @@ export async function runPlanner(
     resolved.bias !== "Neutral" && normalizeBias(plan.bias) !== resolved.bias
       ? systematicPlan(snap, memo, `Direction taken from measured structure (${resolved.reason});`, resolved.bias)
       : plan;
-  finalPlan = sanitizePlan(finalPlan, snap, memo, resolved.bias);
+  finalPlan = sanitizePlan(finalPlan, snap, memo, resolved.bias, stopFloorAtr);
   // Last guard: if anything still points the wrong way, rebuild from structure.
   if (resolved.bias !== "Neutral") {
     const wrongStop = resolved.bias === "Long"
@@ -759,9 +780,11 @@ export async function runPlanner(
         snap,
         memo,
         resolved.bias,
+        stopFloorAtr,
       );
     }
   }
+
 
   const bias = resolved.bias;
   const dec = decimalsFor(snap.lastPrice || finalPlan.entry || 1);
@@ -770,7 +793,7 @@ export async function runPlanner(
   const rr = `1 : ${(reward / risk).toFixed(1)}`;
 
   // Conviction is counted from evidence that is actually present in the data.
-  const confidence = bias === "Neutral" ? 0 : countEvidence(snap, memo, "B", bias, reward / risk);
+  let confidence = bias === "Neutral" ? 0 : countEvidence(snap, memo, "B", bias, reward / risk);
   let grade = gradeFromEvidence(bias, confidence, snap);
   // Calendar risk is measurable and therefore remains a valid hard cap. The
   // user's scorecard cap is applied by the authenticated server-function
@@ -779,6 +802,41 @@ export async function runPlanner(
     if (grade === "A+") grade = "A";
     else if (grade === "A") grade = "B";
   }
+
+  // ---- Session filters as hard grade controls ---------------------------
+  const warnings: string[] = [];
+  const downgradeOne = (g: typeof GRADES[number]): typeof GRADES[number] =>
+    g === "A+" ? "A" : g === "A" ? "B" : g === "B" ? "C" : g;
+
+  // Thin overnight tape (Sydney/Tokyo) is a stand-down, not a grade: the
+  // structure can be perfect and still get chopped out on a 0.6x ATR stop.
+  let standDown: string | null = null;
+  if (volRead?.overnightThin && grade !== "NO ENTRY") {
+    standDown = `NO ENTRY - thin overnight session, wait for London open. ${volRead.label} (${volRead.bars}-bar median), which is not enough participation to hold a level.`;
+    grade = "NO ENTRY";
+    warnings.push(standDown);
+  } else if (volRead?.thin && grade !== "NO ENTRY") {
+    grade = downgradeOne(grade);
+    warnings.push(
+      `Thin volume - widen stops or reduce size. ${volRead.label}, so the stop was widened to ${stopFloorAtr.toFixed(1)}x ATR and the grade dropped a letter.`,
+    );
+  }
+
+  // Mitigated order block at the entry: a block price already ran through
+  // holds less often, and one tested twice or more usually fails outright.
+  let mitigation: MitigatedBlockRead | null = null;
+  if (grade !== "NO ENTRY" && bias !== "Neutral") {
+    try {
+      const blocks = computeOrderBlocks(snap.candles, { max: 10 });
+      mitigation = readMitigatedEntry(finalPlan.entry, bias, blocks);
+      if (mitigation.warning) {
+        warnings.push(mitigation.warning);
+        confidence = Math.max(10, confidence - mitigation.confidencePenalty);
+        if (mitigation.mitigations >= 2) grade = downgradeOne(grade);
+      }
+    } catch { /* block detection is best-effort */ }
+  }
+
   const isNoEntry = grade === "NO ENTRY";
 
   const counterTrend = counterTrendRead(bias, snap);
@@ -792,8 +850,16 @@ export async function runPlanner(
     ? ""
     : " Higher-timeframe data was incomplete on this scan, so the grade is capped at C until the feed fills in.")
     + (counterTrend.reason ? ` ${counterTrend.reason}` : "")
-    + (comboGate.reason ? ` ${comboGate.reason}` : "");
-  const details = buildDetails(snap, memo, finalPlan, dec, coach, bias, grade, newsWarning, dataNote);
+    + (comboGate.reason ? ` ${comboGate.reason}` : "")
+    + (warnings.length ? ` ${warnings.join(" ")}` : "")
+    + (volRead && !volRead.unavailable && !volRead.thin
+      ? ` Session volume is normal (${volRead.label}), so the standard ${stopFloorAtr.toFixed(1)}x ATR minimum stop applies.`
+      : "")
+    + (volRead?.thin && !volRead.overnightThin
+      ? ` Stop widened to ${stopFloorAtr.toFixed(1)}x ATR due to the thin ${volRead.session} session.`
+      : "");
+  const details = buildDetails(snap, memo, finalPlan, dec, coach, bias, grade, newsWarning, dataNote, volRead);
+
 
 
 
@@ -806,13 +872,15 @@ export async function runPlanner(
   const ladder = snap.mtf?.ladder ?? [];
   const dailyBias = ladder.find((r) => r.label === "Daily")?.bias ?? snap.cisd.htfBias;
   const currentTrend = ladder.find((r) => r.label === "4H")?.trend ?? snap.mtf?.h4.trend ?? "range";
-  const synopsis = buildSynopsis(snap, memo, grade, bias, dailyBias, currentTrend) + newsWarning;
+  const synopsis = buildSynopsis(snap, memo, grade, bias, dailyBias, currentTrend)
+    + newsWarning
+    + (standDown ? ` ${standDown}` : warnings.length ? ` ${warnings[0]}` : "");
 
   return {
     grade,
     bias,
     confidence,
-    notes: finalPlan.thesis,
+    notes: finalPlan.thesis + (warnings.length ? ` ${warnings.join(" ")}` : ""),
     entry: isNoEntry ? "-" : fmt(finalPlan.entry, dec),
     stop:  isNoEntry ? "-" : fmt(finalPlan.stop,  dec),
     tp1:   isNoEntry ? "-" : fmt(finalPlan.tp1,   dec),
@@ -830,7 +898,21 @@ export async function runPlanner(
     refPrice: snap.lastPrice,
     counterTrend: counterTrend.counterTrend,
     htfBias: dailyBias,
+    warnings: warnings.length ? warnings : undefined,
+    sessionVolume: volRead && !volRead.unavailable
+      ? {
+          session: volRead.session,
+          ratio: Number(volRead.ratio.toFixed(2)),
+          thin: volRead.thin,
+          label: volRead.label,
+          stopAtr: stopFloorAtr,
+        }
+      : undefined,
+    mitigatedEntry: mitigation?.mitigated
+      ? { mitigations: mitigation.mitigations, warning: mitigation.warning ?? "" }
+      : undefined,
   };
+
 }
 
 /**
@@ -896,7 +978,9 @@ function buildDetails(
   grade: string,
   newsWarning: string,
   dataNote: string,
+  volRead?: SessionVolumeRead | null,
 ): string {
+
   const l = snap.mtf?.ladder ?? [];
   const rung = (label: string) => l.find((r) => r.label === label);
   const of = snap.orderFlow;
@@ -965,6 +1049,11 @@ function buildDetails(
   if (structure.length) sections.push(`Market structure: ${structure.join(" ")}`);
 
   // 2. Order flow and volume, from the real metrics.
+  const sessionLine = volRead
+    ? volRead.unavailable
+      ? ` ${volRead.label}, so session participation could not be checked.`
+      : ` Session check: ${volRead.label} over the last ${volRead.bars} ${volRead.session} bars${volRead.thin ? " - thin conditions, so levels hold less often and stops need room." : " - normal participation for this session."}`
+    : "";
   if (of) {
     const flow = [
       `Delta is ${of.delta >= 0 ? "+" : ""}${of.delta.toFixed(0)} against a ${of.deltaAvg.toFixed(0)} average and CVD is ${of.cvdSlope >= 0 ? "rising" : "falling"}, so ${of.cvdSlope >= 0 ? "buyers" : "sellers"} are the ones paying up over the last ${of.bars} bars.`,
@@ -977,10 +1066,11 @@ function buildDetails(
         ? "This feed does not publish volume for the instrument, so these figures come from bar range and close position - treat them as directional, not exact."
         : "",
     ].filter(Boolean);
-    sections.push(`Order flow and volume: ${flow.join(" ")} Net order-flow bias is ${of.bias}.`);
+    sections.push(`Order flow and volume: ${flow.join(" ")} Net order-flow bias is ${of.bias}.${sessionLine}`);
   } else {
-    sections.push("Order flow and volume: no volume data was published for this instrument on this timeframe, so the grade leans entirely on structure.");
+    sections.push(`Order flow and volume: no volume data was published for this instrument on this timeframe, so the grade leans entirely on structure.${sessionLine}`);
   }
+
 
   // 3. Volatility and level geometry, in ATR terms the trader can size with.
   const inAtr = (a: number, b: number) => (atr > 0 ? `${(Math.abs(a - b) / atr).toFixed(1)}x ATR` : "n/a");

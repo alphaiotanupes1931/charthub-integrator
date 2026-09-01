@@ -145,4 +145,19 @@ export type TradePlan = {
   counterTrend?: boolean;
   /** Higher-timeframe (Daily) bias at scan time. */
   htfBias?: "bullish" | "bearish" | "neutral";
+  /** Session/execution warnings the trader must see (thin volume, mitigated block). */
+  warnings?: string[];
+  /** Session volume read for the last bar and the stop floor it produced. */
+  sessionVolume?: {
+    session: "Sydney" | "Tokyo" | "London" | "New York";
+    /** last bar volume as a multiple of the session median */
+    ratio: number;
+    thin: boolean;
+    label: string;
+    /** minimum stop distance applied, in ATR multiples */
+    stopAtr: number;
+  };
+  /** Set when the entry sits inside an order block price has already tested. */
+  mitigatedEntry?: { mitigations: number; warning: string };
+
 };
