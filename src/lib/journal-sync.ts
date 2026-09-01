@@ -22,7 +22,10 @@ export async function pullAndMerge(local: SyncTrade[]): Promise<SyncTrade[]> {
     .from("journal_trades")
     .select("id,data,updated_at")
     .eq("user_id", userId);
-  if (error || !data) return local;
+  // A failed read must NOT look like "the cloud matches local": the caller
+  // would then mirror this device's list up and delete every cloud-only trade.
+  if (error || !data) throw new Error(error?.message ?? "Could not read the cloud journal");
+
 
   const merged = new Map<string, SyncTrade>();
   for (const row of data) {

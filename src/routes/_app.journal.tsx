@@ -381,11 +381,12 @@ function JournalPage() {
       .then((merged) => {
         setTrades(merged as unknown as Trade[]);
         backfill(merged as unknown as Trade[]);
+        // Only start mirroring upwards once we know what the account already
+        // holds, otherwise this device's list would overwrite the cloud copy.
+        setSynced(true);
       })
-      .catch(() => undefined)
-      // Only start mirroring upwards once we know what the account already
-      // holds, otherwise a new device pushes its empty list first.
-      .finally(() => setSynced(true));
+      .catch(() => undefined);
+
   }, []);
   useEffect(() => {
     if (!hydrated) return;
