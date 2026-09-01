@@ -14,6 +14,9 @@ export type OrderBlock = {
   /** time price first traded back into the block (null = still fresh) */
   mitigatedTime: number | null;
   mitigated: boolean;
+  /** how many separate times price has traded back into the block */
+  mitigations: number;
+
   /** displacement size in ATR multiples — bigger = stronger */
   strength: number;
   /** structure level the displacement leg broke */
