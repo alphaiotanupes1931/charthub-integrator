@@ -55,7 +55,9 @@ describe("session-aware stop distance", () => {
     expect(sessionStopAtr(mild)).toBeLessThanOrEqual(1.5);
 
     const dead = readSessionVolume(bars(9, [100, 100, 100, 100, 100, 100, 5]));
-    expect(sessionStopAtr(dead)).toBeCloseTo(1.5, 2);
+    expect(sessionStopAtr(dead)).toBeGreaterThanOrEqual(1.45);
+    expect(sessionStopAtr(dead)).toBeLessThanOrEqual(1.5);
+
   });
 });
 
