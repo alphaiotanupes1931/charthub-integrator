@@ -349,13 +349,33 @@ function slope(closes: number[]): number {
 function h4Analysis(candles: Candle[]): MtfContext["h4"] {
   const closes = candles.map((c) => c.close);
   const last = closes.at(-1) ?? 0;
-  const recent = closes.slice(-40);
+  const atrV = atr(candles) || Math.max(last * 0.002, 1e-9);
+
+  // Trend is read off recent swing structure first (last ~24 bars = ~4 days),
+  // then a SHORT regression (14 bars = ~2 days) only as a tie-breaker. The old
+  // version fit a line through 40 bars, so a multi-day rally still printed
+  // "down" because the prior week's selloff dominated the fit.
+  const struct = swingTrend(candles.slice(-24));
+  const recent = closes.slice(-14);
   const sl = slope(recent);
   const magnitude = Math.abs(sl) / Math.max(last, 1e-9);
-  const trend: "up" | "down" | "range" = magnitude < 0.0002 ? "range" : sl > 0 ? "up" : "down";
+  let trend: "up" | "down" | "range" =
+    struct !== "range" ? struct : magnitude < 0.0002 ? "range" : sl > 0 ? "up" : "down";
+
+  // Recency guard: a decisive move over the last ~1.5 days outranks any older
+  // label. Without this the read stays stuck on stale direction after a flip.
+  if (closes.length >= 8) {
+    const net = last - closes[closes.length - 8];
+    if (Math.abs(net) > atrV * 1.5) {
+      if (net > 0 && trend === "down") trend = "up";
+      else if (net < 0 && trend === "up") trend = "down";
+    }
+  }
+
   const cisd = detectCisd(candles);
   const bias = detectHtfBias(candles);
   const direction = bias !== "neutral" ? bias : cisd.state !== "none" ? cisd.state : "neutral";
+
 
   // Key swing levels: last few swing highs/lows via 3-bar fractal.
   const supports: number[] = [];
