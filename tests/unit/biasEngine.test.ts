@@ -6,7 +6,7 @@
 import { test } from 'vitest';
 import assert from 'node:assert/strict';
 import {
-  Candle, Zone, Grade, ScanInput,
+  type Candle, type Zone, type Grade, type ScanInput,
   detect4hReversal, classifyTrend, recomputeMtfBias, orderFlowBias, imbalanceRead,
   validEntryZone, gradeScan, voidPriorScans, shiftGrade, capGrade, INSTRUMENTS,
   getInstrumentConfig, DEFAULT_CONFIG,
@@ -210,7 +210,7 @@ test('14. NAS100 carries the widened 1.3x ATR entry gate from the v2 NAS note', 
 });
 
 test('15. an unknown symbol falls back conservatively, it does not borrow GBP/USD', () => {
-  const { cfg, known } = getInstrumentConfig('SOL_USD');
+  const { cfg, known } = getInstrumentConfig('TSLA') // SOL_USD is now a shipped symbol and lives in INSTRUMENTS;
   assert.equal(known, false);
   assert.equal(cfg.stopBufferAtr, DEFAULT_CONFIG.stopBufferAtr, 'wider stop buffer');
   assert.equal(cfg.maxEntryDistanceAtr, 1.0, 'tighter entry gate than any tuned instrument');
