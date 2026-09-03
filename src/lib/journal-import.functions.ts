@@ -254,3 +254,63 @@ export const parseTradeSetupScreenshot = createServerFn({ method: "POST" })
       return { ...EMPTY_SETUP, note: "The screenshot reader is unavailable right now. Try again shortly." };
     }
   });
+
+/**
+ * Same extraction as the screenshot reader, but from pasted text: a broker
+ * fill confirmation, a Discord signal, or a trader's own write-up.
+ */
+export const parseTradeSetupText = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { text: string }) =>
+    z.object({ text: z.string().min(4).max(4000) }).parse(input),
+  )
+  .handler(async ({ data }): Promise<ParsedTradeSetup> => {
+    const apiKey = process.env['LOVABLE_API_KEY'];
+    if (!apiKey) return { ...EMPTY_SETUP, note: "Text reading is not configured on this deployment." };
+
+    const { generateText, Output, NoObjectGeneratedError } = await import("ai");
+    const { createAiGatewayProvider } = await import("@/lib/ai-gateway.server");
+
+    try {
+      const res = await generateText({
+        model: createAiGatewayProvider(apiKey)("google/gemini-3.7-flash"),
+        output: Output.object({ schema: SetupSchema }),
+        system: [
+          "You read pasted trading text (broker fill, signal message, or a trader's own notes) and extract the trade levels.",
+          "Keep the symbol as written, uppercase.",
+          "timeframe must be one of 1m, 5m, 15m, 30m, 1H, 4H, 1D, 1W when stated, otherwise null.",
+          "side is Long for buy/long wording and Short for sell/short wording.",
+          "Copy prices exactly as written, respecting decimals. If several targets are listed use the first one as takeProfit.",
+          "exit is only set when the text says the trade was already closed at a price; otherwise null.",
+          "Never invent a value: use null for anything not stated.",
+          "notes is at most two short factual sentences, no emoji, no hype.",
+          "confidence is 0-1 for how reliably the values were read. note is one short plain sentence.",
+        ].join(" "),
+        messages: [{ role: "user", content: `Extract the trade details from this text:\n\n${data.text}` }],
+      });
+
+      const o = res.output;
+      const tf = (o.timeframe || "").trim();
+      return {
+        symbol: o.symbol ? o.symbol.toUpperCase().slice(0, 24) : null,
+        side: o.side ? (/short|sell/i.test(o.side) ? "Short" : "Long") : null,
+        timeframe: /^(1m|5m|15m|30m|1H|4H|1D|1W)$/i.test(tf) ? tf : null,
+        entry: o.entry,
+        stop: o.stop,
+        takeProfit: o.takeProfit,
+        exit: o.exit,
+        size: o.size,
+        notes: o.notes ? o.notes.slice(0, 300) : null,
+        confidence: o.confidence,
+        note: (o.note || "").slice(0, 300),
+      };
+    } catch (e) {
+      if (NoObjectGeneratedError.isInstance(e)) {
+        return { ...EMPTY_SETUP, note: "No trade details could be read from that text." };
+      }
+      const message = e instanceof Error ? e.message : "";
+      if (/429/.test(message)) return { ...EMPTY_SETUP, note: "Too many requests right now. Wait a moment and retry." };
+      if (/402/.test(message)) return { ...EMPTY_SETUP, note: "AI credits are exhausted for this workspace." };
+      return { ...EMPTY_SETUP, note: "The text reader is unavailable right now. Try again shortly." };
+    }
+  });
