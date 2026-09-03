@@ -1176,6 +1176,9 @@ function Dashboard() {
       if (search.scan === "1") setPendingScanTicker(match.ticker);
     }
     navigate({ to: "/dashboard", search: (prev: DashboardSearch) => ({ ...prev, symbol: undefined, scan: undefined }), replace: true });
+  }, [search.symbol, search.scan, navigate]);
+
+
 
   // One conversation per instrument. Switching the instrument on the chart opens
   // a brand new chat titled after that instrument, so a Gold conversation never
