@@ -2367,7 +2367,7 @@ function Dashboard() {
                 <ChatHistoryList
                   activeThreadId={activeThreadId}
                   currentTitle={historyInstrumentTitle(symbol)}
-                  onPick={(id, sym) => { const s = findSymbolFromTag(sym); if (s) setSymbol(s); setActiveThreadId(id); setChatPanelView("conversation"); }}
+                  onPick={(id, sym) => { const s = findSymbolFromTag(sym); if (s) { threadSymbolRef.current = s.ticker; setSymbol(s); } setActiveThreadId(id); setChatPanelView("conversation"); }}
                   onNew={(id) => { setActiveThreadId(id); setChatPanelView("conversation"); }}
                 />
               </div>
