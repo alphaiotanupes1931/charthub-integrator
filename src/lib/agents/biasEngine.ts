@@ -91,6 +91,17 @@ export const INSTRUMENTS: Record<string, InstrumentConfig> = {
   USD_CAD: { symbol: 'USD_CAD', entryBuffer: 0, stopBufferAtr: 0.5, maxEntryDistanceAtr: 1.5, minRR: 2, volumeSource: 'tick' },
   USD_CHF: { symbol: 'USD_CHF', entryBuffer: 0, stopBufferAtr: 0.5, maxEntryDistanceAtr: 1.5, minRR: 2, volumeSource: 'tick' },
   NZD_USD: { symbol: 'NZD_USD', entryBuffer: 0, stopBufferAtr: 0.5, maxEntryDistanceAtr: 1.5, minRR: 2, volumeSource: 'tick' },
+
+  // remaining TradeMind watchlist symbols. Added here rather than left on the
+  // conservative default, because every one of them is already shipped to users.
+  GER40: { symbol: 'GER40', entryBuffer: 5, stopBufferAtr: 0.5, maxEntryDistanceAtr: 1.5, minRR: 2, volumeSource: 'tick' },
+  UK100: { symbol: 'UK100', entryBuffer: 4, stopBufferAtr: 0.5, maxEntryDistanceAtr: 1.5, minRR: 2, volumeSource: 'tick' },
+  JPN225: { symbol: 'JPN225', entryBuffer: 15, stopBufferAtr: 0.5, maxEntryDistanceAtr: 1.5, minRR: 2, volumeSource: 'tick' },
+  BCO_USD: { symbol: 'BCO_USD', entryBuffer: 0.03, stopBufferAtr: 0.6, maxEntryDistanceAtr: 1.5, minRR: 2, volumeSource: 'tick' },
+  NATGAS_USD: { symbol: 'NATGAS_USD', entryBuffer: 0.005, stopBufferAtr: 0.75, maxEntryDistanceAtr: 1.5, minRR: 2, volumeSource: 'tick' },
+  XRP_USD: { symbol: 'XRP_USD', entryBuffer: 0.001, stopBufferAtr: 0.75, maxEntryDistanceAtr: 1.5, minRR: 2, volumeSource: 'tick' },
+  SOL_USD: { symbol: 'SOL_USD', entryBuffer: 0.05, stopBufferAtr: 0.75, maxEntryDistanceAtr: 1.5, minRR: 2, volumeSource: 'tick' },
+  DOGE_USD: { symbol: 'DOGE_USD', entryBuffer: 0.0002, stopBufferAtr: 0.75, maxEntryDistanceAtr: 1.5, minRR: 2, volumeSource: 'tick' },
 };
 
 /**
@@ -103,10 +114,28 @@ export const DEFAULT_CONFIG: InstrumentConfig = {
   symbol: 'UNKNOWN', entryBuffer: 0, stopBufferAtr: 0.75, maxEntryDistanceAtr: 1.0, minRR: 2, volumeSource: 'tick',
 };
 
+/**
+ * TradeMind stores canonical display tickers ("XAU/USD", "NAS100", "WTI Oil").
+ * The engine keys off broker-style symbols, so translate before looking up config.
+ */
+const PLATFORM_SYMBOLS: Record<string, string> = {
+  'XAU/USD': 'XAU_USD', 'XAG/USD': 'XAG_USD', 'XPT/USD': 'XPT_USD', 'XPD/USD': 'XPD_USD',
+  'EUR/USD': 'EUR_USD', 'GBP/USD': 'GBP_USD', 'USD/JPY': 'USD_JPY', 'AUD/USD': 'AUD_USD',
+  'USD/CAD': 'USD_CAD', 'USD/CHF': 'USD_CHF', 'NZD/USD': 'NZD_USD',
+  'BTC/USD': 'BTC_USD', 'ETH/USD': 'ETH_USD', 'XRP/USD': 'XRP_USD', 'SOL/USD': 'SOL_USD', 'DOGE/USD': 'DOGE_USD',
+  'WTI Oil': 'WTICO_USD', 'Brent Oil': 'BCO_USD', NATGAS: 'NATGAS_USD',
+};
+
+export function engineSymbolFor(ticker: string): string {
+  const t = (ticker ?? '').trim();
+  return PLATFORM_SYMBOLS[t] ?? t.toUpperCase().replace(/[\/\s-]+/g, '_');
+}
+
 export function getInstrumentConfig(symbol: string): { cfg: InstrumentConfig; known: boolean } {
-  const cfg = INSTRUMENTS[symbol];
+  const cfg = INSTRUMENTS[engineSymbolFor(symbol)] ?? INSTRUMENTS[symbol];
   return cfg ? { cfg, known: true } : { cfg: { ...DEFAULT_CONFIG, symbol }, known: false };
 }
+
 
 // ---------------------------------------------------------------------------
 // grade arithmetic
