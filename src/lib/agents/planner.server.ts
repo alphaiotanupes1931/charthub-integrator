@@ -652,7 +652,7 @@ function memoBlock(
 async function logBiasMetric(props: Record<string, unknown>) {
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await supabaseAdmin.from("product_events").insert({ event: "scan_bias", props });
+    await supabaseAdmin.from("product_events").insert({ event: "scan_bias", props: props as never });
   } catch { /* metrics are best-effort */ }
 }
 
@@ -894,7 +894,7 @@ export async function runPlanner(
     alignment: biasRead.result.mtf.alignmentScore,
     maxGrade: biasRead.result.mtf.maxGrade,
     engineStatus: biasRead.result.status,
-    reversal: biasRead.result.mtf.fourH.reversal,
+    reversal: biasRead.result.mtf.reversal ?? "none",
     computedAt: new Date(biasRead.result.mtf.computedAt).toISOString(),
   });
 
