@@ -2013,7 +2013,23 @@ function TradeFormModal({
               <span>{images.length ? "Add another screenshot" : "Upload screenshots or paste from clipboard"}</span>
               <span className="text-[10px]">Pick several at once, or paste an image and text together · stored only on your device</span>
             </button>
+            {images.length > 0 && (
+              <div className="mt-2">
+                <button
+                  type="button"
+                  disabled={autofilling}
+                  onClick={() => void autofillFromScreenshot()}
+                  className="w-full rounded-xl border border-primary/40 bg-primary/10 px-3 py-2.5 text-sm font-semibold text-primary hover:bg-primary/15 transition disabled:opacity-60"
+                >
+                  {autofilling ? "Reading the chart…" : "Fill fields from screenshot"}
+                </button>
+                {autofillNote && (
+                  <div className="mt-1.5 text-[11px] text-muted-foreground">{autofillNote}</div>
+                )}
+              </div>
+            )}
           </Field>
+
 
           <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
             <div className="flex items-center gap-2 mb-2">
