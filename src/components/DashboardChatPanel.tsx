@@ -1107,6 +1107,19 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                 >
                   <HelpCircle className="h-3 w-3" /> Show Me
                 </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!messages.length) return;
+                    void downloadChatPdf(messages, { coach: activeCoach, instrument: headerInstrument });
+                  }}
+                  disabled={!messages.length}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-accent/60 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition disabled:opacity-40"
+                  title="Download this conversation as a PDF"
+                  aria-label="Download conversation PDF"
+                >
+                  <FileDown className="h-3 w-3" /> PDF
+                </button>
               </div>
               <PromptInputSubmit status={status} onStop={stopScan} disabled={!input.trim() && !pendingImages.length && !loading} />
             </PromptInputFooter>
