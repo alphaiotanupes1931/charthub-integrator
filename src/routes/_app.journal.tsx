@@ -1,3 +1,4 @@
+import { InfoTip } from "@/components/InfoTip";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
@@ -2190,10 +2191,21 @@ function TradeFormModal({
   );
 }
 
+const FIELD_TIPS: Record<string, string> = {
+  "Entry": "entry",
+  "Stop": "stop",
+  "Take profit": "tp1",
+  "Timeframe": "htf",
+  "Size (units / contracts)": "r",
+  "Setup / pattern (optional)": "orderBlock",
+  "Result of this trade": "pnl",
+};
+
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  const tip = FIELD_TIPS[label];
   return (
     <label className="block">
-      <div className="text-[10px] tracking-[0.2em] text-muted-foreground mb-1.5">{label}</div>
+      <div className="flex items-center gap-1 text-[10px] tracking-[0.2em] text-muted-foreground mb-1.5">{label}{tip ? <InfoTip id={tip} /> : null}</div>
       {children}
     </label>
   );
