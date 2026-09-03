@@ -50,7 +50,7 @@ import {
 } from "@/lib/journalImages";
 import { ImportClosedTradesPanel } from "@/components/ImportClosedTradesPanel";
 import type { ParsedClosedTrade } from "@/lib/journal-import.functions";
-import { parseTradeSetupScreenshot } from "@/lib/journal-import.functions";
+import { parseTradeSetupScreenshot, parseTradeSetupText } from "@/lib/journal-import.functions";
 
 import { ActionLoader } from "@/components/ActionLoader";
 
@@ -1711,9 +1711,42 @@ function TradeFormModal({
     }
   };
 
-
-
   const [pasteBox, setPasteBox] = useState("");
+  const [textFilling, setTextFilling] = useState(false);
+  const [textNote, setTextNote] = useState("");
+
+  // Same idea as the screenshot reader, but for pasted text: broker fills,
+  // signal messages, or the trader's own write-up.
+  const autofillFromText = async () => {
+    const text = pasteBox.trim();
+    if (text.length < 4 || textFilling) return;
+    setTextFilling(true);
+    setTextNote("");
+    try {
+      const out = await parseTradeSetupText({ data: { text: text.slice(0, 4000) } });
+      if (out.symbol) setSymbol(out.symbol);
+      if (out.side) setSide(out.side);
+      if (out.timeframe && TIMEFRAMES.includes(out.timeframe as Timeframe)) setTimeframe(out.timeframe as Timeframe);
+      if (out.entry != null) setEntry(String(out.entry));
+      if (out.stop != null) setStop(String(out.stop));
+      if (out.takeProfit != null) setTakeProfit(String(out.takeProfit));
+      if (out.exit != null) setExit(String(out.exit));
+      if (out.size != null && out.size > 0) setSize(String(out.size));
+      setNotes((prev) => (prev.trim() ? `${prev.replace(/\s+$/, "")}\n${text}` : text));
+      const filled = out.entry != null || out.stop != null || out.takeProfit != null;
+      const conf = out.confidence != null ? ` Confidence ${Math.round(out.confidence * 100)}%.` : "";
+      setTextNote(
+        filled
+          ? `${out.note || "Levels read from your text."}${conf} Check the numbers before saving.`
+          : out.note || "No levels could be read from that text.",
+      );
+      if (filled) setPasteBox("");
+    } catch {
+      setTextNote("Could not read that text. Try again in a moment.");
+    } finally {
+      setTextFilling(false);
+    }
+  };
 
   const removeImageAt = (i: number) => {
     setImages((prev) => {
@@ -1875,37 +1908,9 @@ function TradeFormModal({
               className="w-full rounded-xl border border-dashed border-border/60 bg-background/40 px-3 py-5 text-sm text-muted-foreground hover:border-primary/40 hover:text-foreground transition flex flex-col items-center gap-1.5"
             >
               <Upload className="h-4 w-4" />
-              <span>{images.length ? "Add another screenshot" : "Upload or paste a TradingView screenshot"}</span>
+              <span>{images.length ? "Add another screenshot" : "Upload a TradingView screenshot"}</span>
               <span className="text-[10px]">We read entry, stop, target and size off the image. Stays on this device.</span>
             </button>
-            {/* Right-click paste only works inside an editable box, so give the
-                clipboard a real target for both images and text. */}
-            <textarea
-              rows={2}
-              value={pasteBox}
-              onChange={(e) => setPasteBox(e.target.value)}
-              onPaste={(e) => {
-                const files = Array.from(e.clipboardData?.items ?? [])
-                  .filter((i) => i.kind === "file" && i.type.startsWith("image/"))
-                  .map((i) => i.getAsFile())
-                  .filter((f): f is File => !!f);
-                if (files.length) {
-                  e.preventDefault();
-                  void handlePickFiles(files);
-                }
-              }}
-              onBlur={() => {
-                const text = pasteBox.trim();
-                if (!text) return;
-                setNotes((prev) => (prev.trim() ? `${prev.replace(/\s+$/, "")}\n${text}` : text));
-                setPasteBox("");
-              }}
-              placeholder="Click here and paste (Ctrl+V / right-click) an image or text"
-              className="mt-2 w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm placeholder:text-muted-foreground"
-            />
-            {pasteBox.trim() && (
-              <div className="mt-1 text-[10px] text-muted-foreground">Text moves into Notes when you click away.</div>
-            )}
             {images.length > 0 && (
               <div className="mt-2">
                 <button
@@ -1921,6 +1926,39 @@ function TradeFormModal({
                 )}
               </div>
             )}
+
+            {/* Paste text: broker fill, signal message or your own write-up.
+                Right-click paste only works inside an editable box, so this
+                textarea also doubles as an image paste target. */}
+            <div className="mt-3">
+              <div className="text-[11px] text-muted-foreground mb-1">Or paste trade text</div>
+              <textarea
+                rows={3}
+                value={pasteBox}
+                onChange={(e) => setPasteBox(e.target.value)}
+                onPaste={(e) => {
+                  const files = Array.from(e.clipboardData?.items ?? [])
+                    .filter((i) => i.kind === "file" && i.type.startsWith("image/"))
+                    .map((i) => i.getAsFile())
+                    .filter((f): f is File => !!f);
+                  if (files.length) {
+                    e.preventDefault();
+                    void handlePickFiles(files);
+                  }
+                }}
+                placeholder="Paste your fill, signal or notes here (Ctrl+V). Images paste here too."
+                className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm placeholder:text-muted-foreground"
+              />
+              <button
+                type="button"
+                disabled={textFilling || pasteBox.trim().length < 4}
+                onClick={() => void autofillFromText()}
+                className="mt-2 w-full rounded-xl border border-primary/40 bg-primary/10 px-3 py-2.5 text-sm font-semibold text-primary hover:bg-primary/15 transition disabled:opacity-50"
+              >
+                {textFilling ? "Reading the text…" : "Fill fields from text"}
+              </button>
+              {textNote && <div className="mt-1.5 text-[11px] text-muted-foreground">{textNote}</div>}
+            </div>
           </Field>
 
           <div className="grid grid-cols-2 gap-3">
