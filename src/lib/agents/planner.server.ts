@@ -7,6 +7,8 @@ import { createAiGatewayProvider } from "@/lib/ai-gateway.server";
 import type { MarketSnapshot, OrderFlow, ResearchMemo, TradePlan } from "./types";
 import { formatOrderFlow } from "./order-flow.server";
 import { computeOrderBlocks } from "@/lib/orderBlocks";
+import { computeBias } from "./bias-adapter.server";
+
 import {
   readSessionVolume,
   sessionStopAtr,
