@@ -1541,7 +1541,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
               onClick={() => { setDrawTool(k); setDrawMode(k !== "cursor"); }}
               title={label}
               aria-label={label}
-              className={`inline-flex items-center justify-center rounded p-1.5 transition ${drawTool === k ? "bg-primary/20 text-primary" : "text-foreground/80 hover:bg-muted"}`}
+              className={`inline-flex items-center justify-center rounded p-1.5 transition ${(k === "cursor" ? !drawMode : drawMode && drawTool === k) ? "bg-primary/20 text-primary" : "text-foreground/80 hover:bg-muted"}`}
             >
               <Icon className="h-4 w-4" />
             </button>
