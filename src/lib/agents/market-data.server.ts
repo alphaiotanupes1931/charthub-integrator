@@ -550,14 +550,34 @@ function readTimeframe(label: TimeframeRead["label"], interval: string, candles:
   if (candles.length < 6) return null;
   const closes = candles.map((c) => c.close);
   const last = closes.at(-1) ?? 0;
-  const window = closes.slice(-40);
-  const sl = slope(window);
+
+  // Same rules as h4Analysis: swing structure first, a SHORT slope as tie-breaker,
+  // then a recency override. The ladder used to fit a line through 40 bars, so
+  // every rung could print last week's direction after price had already flipped -
+  // and the model, seeing "4H bias=bearish trend=down" next to a bullish 4H block,
+  // would hedge into NO ENTRY. Gold sat in that state for two days.
+  const atrV = atr(candles) || Math.max(last * 0.002, 1e-9);
+  const struct = swingTrend(candles.slice(-24));
+  const sl = slope(closes.slice(-14));
   const magnitude = Math.abs(sl) / Math.max(last, 1e-9);
-  const trend: TimeframeRead["trend"] = magnitude < 0.0002 ? "range" : sl > 0 ? "up" : "down";
+  let trend: TimeframeRead["trend"] =
+    struct !== "range" ? struct : magnitude < 0.0002 ? "range" : sl > 0 ? "up" : "down";
+  if (closes.length >= 8) {
+    const net = last - closes[closes.length - 8];
+    if (Math.abs(net) > atrV * 1.5) {
+      if (net > 0 && trend === "down") trend = "up";
+      else if (net < 0 && trend === "up") trend = "down";
+    }
+  }
+
   const cisd = detectCisd(candles);
   const htf = detectHtfBias(candles);
-  const bias: TimeframeRead["bias"] =
+  let bias: TimeframeRead["bias"] =
     htf !== "neutral" ? htf : cisd.state !== "none" ? cisd.state : trend === "up" ? "bullish" : trend === "down" ? "bearish" : "neutral";
+  // A stale flip never outranks live structure on the same rung.
+  if (bias === "bearish" && trend === "up") bias = "bullish";
+  else if (bias === "bullish" && trend === "down") bias = "bearish";
+
   const ref = closes.length >= 20 ? closes[closes.length - 20] : closes[0];
   return {
     label,
@@ -572,6 +592,7 @@ function readTimeframe(label: TimeframeRead["label"], interval: string, candles:
     bars: candles.length,
   };
 }
+
 
 /**
  * Monthly → 1m read of the same instrument.
