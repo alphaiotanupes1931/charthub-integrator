@@ -880,7 +880,13 @@ export async function runPlanner(
     } catch { /* block detection is best-effort */ }
   }
 
-  const isNoEntry = grade === "NO ENTRY";
+  // A session stand-down is a timing block, not a broken read: the structure and
+  // the levels are still valid, they just cannot be traded until the tape wakes
+  // up. Blanking them to "-" for hours is what made gold look dead for two days,
+  // so on a stand-down the plan keeps its levels and only the grade says wait.
+  const standDownOnly = !!standDown && bias !== "Neutral";
+  const isNoEntry = grade === "NO ENTRY" && !standDownOnly;
+
 
   // Regression metrics for the v3 fix. This change can fail in the opposite
   // direction (everything NEUTRAL), so neutral rate, bias flips, and grade
