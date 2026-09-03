@@ -54,6 +54,10 @@ export type MarketSnapshot = {
   fetchedAt: string;
   mtf?: MtfContext;
   orderFlow?: OrderFlow;
+  /** Closed 4H candles, the anchor series the bias engine reads. */
+  candles4h?: Candle[];
+  /** ATR(14) of the 4H series, used for every ATR gate in the bias engine. */
+  atr4h?: number;
 };
 
 // Multi-timeframe context (4H → 1H → 15m cascade).
