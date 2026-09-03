@@ -494,18 +494,27 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
       return true;
     }, [isAdmin]);
 
-    const ingestFile = useCallback(async (file: File) => {
-      if (!file.type.startsWith("image/")) {
-        toast.error("Only image files can be attached");
+    const ingestFiles = useCallback(async (input: FileList | File[] | null | undefined) => {
+      const all = Array.from(input ?? []);
+      const files = all.filter((f) => f.type.startsWith("image/"));
+      if (!files.length) {
+        if (all.length) toast.error("Only image files can be attached");
         return;
       }
-      if (!checkAndReserveQuota()) return;
-      try {
-        const { dataUrl, name, mediaType } = await compressImage(file);
-        setPendingImage({ url: dataUrl, name, mediaType });
-      } catch (e) {
-        console.error(e);
-        toast.error("Could not read that image");
+      let added = 0;
+      for (const file of files) {
+        let full = false;
+        setPendingImages((prev) => { full = prev.length + added >= MAX_IMAGES; return prev; });
+        if (full) { toast.error(`Up to ${MAX_IMAGES} images per message - send these first`); break; }
+        if (!checkAndReserveQuota()) break;
+        try {
+          const { dataUrl, name, mediaType } = await compressImage(file);
+          added += 1;
+          setPendingImages((prev) => (prev.length >= MAX_IMAGES ? prev : [...prev, { url: dataUrl, name, mediaType }]));
+        } catch (e) {
+          console.error(e);
+          toast.error("Could not read that image");
+        }
       }
     }, [checkAndReserveQuota]);
 
