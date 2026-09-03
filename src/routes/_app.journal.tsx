@@ -1712,6 +1712,8 @@ function TradeFormModal({
 
 
 
+  const [pasteBox, setPasteBox] = useState("");
+
   const removeImageAt = (i: number) => {
     setImages((prev) => {
       const target = prev[i];
