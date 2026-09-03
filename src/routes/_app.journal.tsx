@@ -1711,9 +1711,42 @@ function TradeFormModal({
     }
   };
 
-
-
   const [pasteBox, setPasteBox] = useState("");
+  const [textFilling, setTextFilling] = useState(false);
+  const [textNote, setTextNote] = useState("");
+
+  // Same idea as the screenshot reader, but for pasted text: broker fills,
+  // signal messages, or the trader's own write-up.
+  const autofillFromText = async () => {
+    const text = pasteBox.trim();
+    if (text.length < 4 || textFilling) return;
+    setTextFilling(true);
+    setTextNote("");
+    try {
+      const out = await parseTradeSetupText({ data: { text: text.slice(0, 4000) } });
+      if (out.symbol) setSymbol(out.symbol);
+      if (out.side) setSide(out.side);
+      if (out.timeframe && TIMEFRAMES.includes(out.timeframe as Timeframe)) setTimeframe(out.timeframe as Timeframe);
+      if (out.entry != null) setEntry(String(out.entry));
+      if (out.stop != null) setStop(String(out.stop));
+      if (out.takeProfit != null) setTakeProfit(String(out.takeProfit));
+      if (out.exit != null) setExit(String(out.exit));
+      if (out.size != null && out.size > 0) setSize(String(out.size));
+      setNotes((prev) => (prev.trim() ? `${prev.replace(/\s+$/, "")}\n${text}` : text));
+      const filled = out.entry != null || out.stop != null || out.takeProfit != null;
+      const conf = out.confidence != null ? ` Confidence ${Math.round(out.confidence * 100)}%.` : "";
+      setTextNote(
+        filled
+          ? `${out.note || "Levels read from your text."}${conf} Check the numbers before saving.`
+          : out.note || "No levels could be read from that text.",
+      );
+      if (filled) setPasteBox("");
+    } catch {
+      setTextNote("Could not read that text. Try again in a moment.");
+    } finally {
+      setTextFilling(false);
+    }
+  };
 
   const removeImageAt = (i: number) => {
     setImages((prev) => {
