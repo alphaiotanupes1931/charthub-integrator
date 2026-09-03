@@ -49,6 +49,30 @@ const MAX_IMAGES = 4;
 const MAX_CHARS = 6_000_000; // ~4.5MB of base64 per request
 
 /**
+ * Ask the model for JSON and parse it ourselves. The gateway's Gemini route
+ * does not honour provider structured output, so a schema-constrained call
+ * comes back as prose and throws. Requesting raw JSON works on every model.
+ */
+async function readJson<T>(
+  schema: { parse: (v: unknown) => T },
+  args: { apiKey: string; system: string; messages: any[] },
+): Promise<T> {
+  const { generateText } = await import("ai");
+  const { createAiGatewayProvider } = await import("@/lib/ai-gateway.server");
+  const res = await generateText({
+    model: createAiGatewayProvider(args.apiKey)("google/gemini-3.7-flash"),
+    system: `${args.system} Reply with a single minified JSON object only. No prose, no markdown fences.`,
+    messages: args.messages,
+  });
+  const text = res.text || "";
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  if (start === -1 || end <= start) throw new Error("NO_JSON");
+  return schema.parse(JSON.parse(text.slice(start, end + 1)));
+}
+
+
+/**
  * Read closed positions out of one or more screenshots (broker history, MT5
  * "closed positions", TradingView trade list) so they can be logged in the
  * journal without retyping every number.
