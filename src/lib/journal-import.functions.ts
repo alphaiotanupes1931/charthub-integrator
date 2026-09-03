@@ -59,16 +59,32 @@ async function readJson<T>(
 ): Promise<T> {
   const { generateText } = await import("ai");
   const { createAiGatewayProvider } = await import("@/lib/ai-gateway.server");
-  const res = await generateText({
-    model: createAiGatewayProvider(args.apiKey)("google/gemini-3.7-flash"),
-    system: `${args.system} Reply with a single minified JSON object only. No prose, no markdown fences.`,
-    messages: args.messages,
-  });
-  const text = res.text || "";
-  const start = text.indexOf("{");
-  const end = text.lastIndexOf("}");
-  if (start === -1 || end <= start) throw new Error("NO_JSON");
-  return schema.parse(JSON.parse(text.slice(start, end + 1)));
+  const model = createAiGatewayProvider(args.apiKey)("google/gemini-3.7-flash");
+  let last = "";
+  // The model occasionally answers in prose or truncates the object; one retry
+  // with a blunter instruction clears almost every case.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const res = await generateText({
+      model,
+      system:
+        `${args.system} Reply with a single minified JSON object only. No prose, no explanation, no markdown fences.` +
+        (attempt === 0 ? "" : " Your previous reply was not valid JSON. Output only the JSON object now."),
+      messages: args.messages,
+    });
+    const text = res.text || "";
+    last = text.slice(0, 200);
+    const start = text.indexOf("{");
+    const end = text.lastIndexOf("}");
+    if (start === -1 || end <= start) continue;
+    try {
+      return schema.parse(JSON.parse(text.slice(start, end + 1)));
+    } catch {
+      continue;
+    }
+  }
+  console.warn("[journal-import] unparsable model reply", last);
+  throw new Error("NO_JSON");
+
 }
 
 
