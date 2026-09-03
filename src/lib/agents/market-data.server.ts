@@ -267,11 +267,22 @@ function detectCisd(candles: Candle[]) {
   return empty;
 }
 
+/**
+ * Higher-timeframe bias from aggregated candles.
+ *
+ * The grouping is anchored to the NEWEST candle, not the oldest. Anchoring at
+ * index 0 silently threw away the newest 1-3 candles whenever the series length
+ * was not a multiple of the group size, which is how a +300pt NAS100 day could
+ * still read "bearish" off Tuesday's bars.
+ */
 function detectHtfBias(candles: Candle[]): "bullish" | "bearish" | "neutral" {
   if (candles.length < 20) return "neutral";
-  const g = 4, agg: Candle[] = [];
-  for (let i = 0; i + g <= candles.length; i += g) {
-    const chunk = candles.slice(i, i + g);
+  const g = 4;
+  const window = candles.slice(-48); // ~8 trading days of 4H, recent only
+  const start = window.length % g;   // drop the OLDEST remainder, keep the newest bar
+  const agg: Candle[] = [];
+  for (let i = start; i + g <= window.length; i += g) {
+    const chunk = window.slice(i, i + g);
     agg.push({
       time: chunk[0].time,
       open: chunk[0].open,
@@ -283,6 +294,31 @@ function detectHtfBias(candles: Candle[]): "bullish" | "bearish" | "neutral" {
   const c = detectCisd(agg);
   return c.state === "none" ? "neutral" : c.state;
 }
+
+/**
+ * Trend from swing structure: higher highs + higher lows = up, lower highs +
+ * lower lows = down, anything else = range. Structure beats a regression line
+ * because a regression over a week of bars keeps quoting last week's direction
+ * after price has already broken the other way.
+ */
+function swingTrend(candles: Candle[]): "up" | "down" | "range" {
+  if (candles.length < 8) return "range";
+  const highs: number[] = [];
+  const lows: number[] = [];
+  for (let i = 2; i < candles.length - 2; i++) {
+    const c = candles[i];
+    if (c.high > candles[i - 1].high && c.high > candles[i - 2].high && c.high > candles[i + 1].high && c.high > candles[i + 2].high) highs.push(c.high);
+    if (c.low < candles[i - 1].low && c.low < candles[i - 2].low && c.low < candles[i + 1].low && c.low < candles[i + 2].low) lows.push(c.low);
+  }
+  const hh = highs.length >= 2 && highs.at(-1)! > highs.at(-2)!;
+  const lh = highs.length >= 2 && highs.at(-1)! < highs.at(-2)!;
+  const hl = lows.length >= 2 && lows.at(-1)! > lows.at(-2)!;
+  const ll = lows.length >= 2 && lows.at(-1)! < lows.at(-2)!;
+  if (hh && hl) return "up";
+  if (lh && ll) return "down";
+  return "range";
+}
+
 
 function activeSessions(nowUtcH: number): string[] {
   const out: string[] = [];
@@ -313,13 +349,42 @@ function slope(closes: number[]): number {
 function h4Analysis(candles: Candle[]): MtfContext["h4"] {
   const closes = candles.map((c) => c.close);
   const last = closes.at(-1) ?? 0;
-  const recent = closes.slice(-40);
+  const atrV = atr(candles) || Math.max(last * 0.002, 1e-9);
+
+  // Trend is read off recent swing structure first (last ~24 bars = ~4 days),
+  // then a SHORT regression (14 bars = ~2 days) only as a tie-breaker. The old
+  // version fit a line through 40 bars, so a multi-day rally still printed
+  // "down" because the prior week's selloff dominated the fit.
+  const struct = swingTrend(candles.slice(-24));
+  const recent = closes.slice(-14);
   const sl = slope(recent);
   const magnitude = Math.abs(sl) / Math.max(last, 1e-9);
-  const trend: "up" | "down" | "range" = magnitude < 0.0002 ? "range" : sl > 0 ? "up" : "down";
+  let trend: "up" | "down" | "range" =
+    struct !== "range" ? struct : magnitude < 0.0002 ? "range" : sl > 0 ? "up" : "down";
+
+  // Recency guard: a decisive move over the last ~1.5 days outranks any older
+  // label. Without this the read stays stuck on stale direction after a flip.
+  if (closes.length >= 8) {
+    const net = last - closes[closes.length - 8];
+    if (Math.abs(net) > atrV * 1.5) {
+      if (net > 0 && trend === "down") trend = "up";
+      else if (net < 0 && trend === "up") trend = "down";
+    }
+  }
+
   const cisd = detectCisd(candles);
   const bias = detectHtfBias(candles);
-  const direction = bias !== "neutral" ? bias : cisd.state !== "none" ? cisd.state : "neutral";
+  let direction: "bullish" | "bearish" | "neutral" =
+    bias !== "neutral" ? bias : cisd.state !== "none" ? cisd.state : "neutral";
+
+  // A CISD flip can sit in the series for days. When the live swing structure
+  // says the opposite, the older flip is stale and the structure wins - that is
+  // the whole point of the 2026-09-03 index miss, where a Tuesday sell flip kept
+  // the read bearish through a 600pt US30 rally.
+  if (direction === "bearish" && trend === "up") direction = "bullish";
+  else if (direction === "bullish" && trend === "down") direction = "bearish";
+
+
 
   // Key swing levels: last few swing highs/lows via 3-bar fractal.
   const supports: number[] = [];
