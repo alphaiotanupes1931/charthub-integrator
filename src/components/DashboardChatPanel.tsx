@@ -413,7 +413,9 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
   function ChatInner({ threadId, initial, chart, onClose, onMinimize, onRunScan, onStopScan, scanning, onAnnotations, onConcept, onGrade, onShowMe }, ref) {
 
     const [input, setInput] = useState("");
-    const [pendingImage, setPendingImage] = useState<{ url: string; name: string; mediaType: string } | null>(null);
+    // Up to 5 screenshots per message, like ChatGPT - send, then attach more.
+    const MAX_IMAGES = 5;
+    const [pendingImages, setPendingImages] = useState<Array<{ url: string; name: string; mediaType: string }>>([]);
     const [dragging, setDragging] = useState(false);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const [activeCoach, setActiveCoach] = useState<string>(() => readActiveCoach());
