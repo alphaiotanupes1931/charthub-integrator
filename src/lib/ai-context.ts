@@ -104,8 +104,13 @@ export function extractPriorScans(messages: ChatLikeMessage[]): PriorScan[] {
 }
 
 /**
- * Plain-text recap of the scans already in this thread. Without it the model
- * treats the fenced JSON as opaque and claims it lacks the previous scan.
+ * Plain-text recap of the scans already in this thread.
+ *
+ * Grades and directions are deliberately NOT included. That is rule 6 of the v3
+ * bias fix: on 2026-09-03 GBP/USD stayed short for three scans because the model
+ * could read its own earlier SHORT verdicts. Levels are kept, because a trader
+ * managing an open position needs the entry and stop they were given; direction
+ * and grade come only from the freshly computed bias block.
  */
 export function priorScansBlock(messages: ChatLikeMessage[]): string {
   const included = extractPriorScans(messages).filter((s) => s.included);
@@ -115,26 +120,49 @@ export function priorScansBlock(messages: ChatLikeMessage[]): string {
     const bits = [
       s.symbol,
       s.timeframe,
-      s.grade ? `grade ${s.grade}` : null,
-      s.bias ? `bias ${s.bias}` : null,
-      s.confidence ? `confidence ${s.confidence}` : null,
       s.entry ? `entry ${s.entry}` : null,
       s.stop ? `stop ${s.stop}` : null,
       s.tp1 ? `TP1 ${s.tp1}` : null,
       s.tp2 ? `TP2 ${s.tp2}` : null,
-      s.rr ? `R:R ${s.rr}` : null,
       s.refPrice ? `price used ${s.refPrice}` : null,
       s.scannedAt ? `scanned ${s.scannedAt}` : null,
-      s.synopsis,
     ].filter(Boolean);
     const label = idx === included.length - 1 ? "most recent scan" : `scan ${idx + 1}`;
     return `- [${label}, message ${s.turn}] ${bits.join(", ")}`;
   });
 
   return [
-    "PREVIOUS SCANS IN THIS THREAD (you DO have this - never say you lack the previous scan):",
+    "LEVELS FROM EARLIER SCANS IN THIS THREAD (you DO have these - never say you lack the previous scan):",
     ...lines,
-    "When the trader references \"the scan\", \"that setup\", or \"the grade\", they mean the most recent entry above. Quote its actual numbers.",
-    "Grades and levels are point-in-time reads. If a fresh scan disagrees with an earlier one, say plainly that the market moved and what changed, do not pretend the earlier read never happened.",
+    "When the trader references \"the scan\", \"that setup\", or \"the grade\", they mean the most recent entry above. Quote its actual levels.",
+    "The DIRECTION and GRADE of every earlier scan are VOID and are not shown to you on purpose. Never restate or defend an earlier bias. Direction comes only from the authoritative bias block computed for this turn.",
+    "If the current computed bias disagrees with a setup the trader is already in, say plainly that the market moved and what changed.",
   ].join("\n");
 }
+
+const SCAN_BLOCK_RE = /```chart-grade\s*[\s\S]*?```/g;
+
+/**
+ * Removes prior scan payloads and directional verdict lines from assistant turns
+ * before the transcript is handed to the model. The trader still sees the full
+ * history in the UI; only the model's copy is scrubbed.
+ */
+export function voidPriorScanVerdicts<T extends { role: string; parts?: unknown }>(messages: T[]): T[] {
+  return messages.map((m) => {
+    if (m.role !== "assistant" || !Array.isArray(m.parts)) return m;
+    let touched = false;
+    const parts = (m.parts as Array<{ type: string; text?: string }>).map((p) => {
+      if (p.type !== "text" || typeof p.text !== "string") return p;
+      let text = p.text.replace(SCAN_BLOCK_RE, "[prior scan payload removed. Its bias and grade are void.]");
+      // "Gold Spot scan: B Short." style verdict headers carry the same lock.
+      text = text.replace(
+        /^(.{1,40}?) scan:\s*(A\+|A|B|C|D|F|NO ENTRY)?\s*(long|short|neutral)?\.?/gim,
+        "$1 scan: [earlier verdict void]",
+      );
+      if (text !== p.text) touched = true;
+      return { ...p, text };
+    });
+    return touched ? ({ ...m, parts } as T) : m;
+  });
+}
+
