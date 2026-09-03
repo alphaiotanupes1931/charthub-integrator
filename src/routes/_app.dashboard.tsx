@@ -33,7 +33,7 @@ import { COACH_ICON_META, DEFAULT_COACH_ICON } from "@/lib/coachMeta";
 import { reportSystemNotice } from "@/lib/notifications.functions";
 import { runResearchPlan } from "@/lib/agents/research.functions";
 import { recordHermesFeedback } from "@/lib/agents/hermes.functions";
-import { listChatThreads, createChatThread, deleteChatThread } from "@/lib/chat.functions";
+import { listChatThreads, createChatThread, deleteChatThread, renameChatThread } from "@/lib/chat.functions";
 import type { ResearchMemo, OrderFlow } from "@/lib/agents/types";
 import { Link } from "@tanstack/react-router";
 import { useTradeLogged } from "@/hooks/useTradeLogged";
@@ -1101,6 +1101,7 @@ function Dashboard() {
   const runPlan = useServerFn(runResearchPlan);
   const reportSystemNoticeFn = useServerFn(reportSystemNotice);
   const createChatThreadFn = useServerFn(createChatThread);
+  const renameChatThreadFn = useServerFn(renameChatThread);
 
   // Free-plan grade quota. Paid and admin accounts get an inactive quota, so the
   // badge and paywall below simply never render for them.
@@ -1177,6 +1178,32 @@ function Dashboard() {
     }
     navigate({ to: "/dashboard", search: (prev: DashboardSearch) => ({ ...prev, symbol: undefined, scan: undefined }), replace: true });
   }, [search.symbol, search.scan, navigate]);
+
+
+
+  // One conversation per instrument. Switching the instrument on the chart opens
+  // a brand new chat titled after that instrument, so a Gold conversation never
+  // continues into a NAS100 scan and history entries stay identifiable.
+  const threadSymbolRef = useRef<string>(symbol.ticker);
+  useEffect(() => {
+    if (threadSymbolRef.current === symbol.ticker) return;
+    threadSymbolRef.current = symbol.ticker;
+    const title = historyInstrumentTitle(symbol);
+    let cancelled = false;
+    setChatPanelView("conversation");
+    (async () => {
+      try {
+        const t = await createChatThreadFn({ data: { title } });
+        if (!cancelled && t?.id) setActiveThreadId(t.id);
+      } catch {
+        // non-fatal: the next scan/message still creates a thread
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [symbol.ticker]);
+
+
 
 
   // Honor ?thread= deep links (e.g. "AI chat" button on a journal trade)
@@ -1384,7 +1411,7 @@ function Dashboard() {
     let scanThreadId: string | null = activeThreadId;
     if (!scanThreadId) {
       try {
-        const t = await createChatThreadFn({ data: { title: `${historyInstrumentTitle(symbol)} Scan` } });
+        const t = await createChatThreadFn({ data: { title: historyInstrumentTitle(symbol) } });
         if (t?.id) {
           scanThreadId = t.id;
           setActiveThreadId(t.id);
@@ -1392,6 +1419,10 @@ function Dashboard() {
       } catch {
         // non-fatal - fall through with existing thread
       }
+    } else {
+      // History entries are always named after the instrument that was scanned,
+      // never after a casual first message.
+      try { await renameChatThreadFn({ data: { threadId: scanThreadId, title: historyInstrumentTitle(symbol) } }); } catch { /* non-fatal */ }
     }
     // Always post the scan prompt to chat so the user sees activity immediately.
     sendToChat(prompt, { focusChat: from === "chat", targetThreadId: scanThreadId });
@@ -2231,7 +2262,7 @@ function Dashboard() {
                       <ChatHistoryList
                         activeThreadId={activeThreadId}
                         currentTitle={historyInstrumentTitle(symbol)}
-                        onPick={(id, sym) => { const s = findSymbolFromTag(sym); if (s) setSymbol(s); setActiveThreadId(id); setChatPanelView("conversation"); }}
+                        onPick={(id, sym) => { const s = findSymbolFromTag(sym); if (s) { threadSymbolRef.current = s.ticker; setSymbol(s); } setActiveThreadId(id); setChatPanelView("conversation"); }}
                         onNew={(id) => { setActiveThreadId(id); setChatPanelView("conversation"); }}
                       />
                     </div>
@@ -2341,7 +2372,7 @@ function Dashboard() {
                 <ChatHistoryList
                   activeThreadId={activeThreadId}
                   currentTitle={historyInstrumentTitle(symbol)}
-                  onPick={(id, sym) => { const s = findSymbolFromTag(sym); if (s) setSymbol(s); setActiveThreadId(id); setChatPanelView("conversation"); }}
+                  onPick={(id, sym) => { const s = findSymbolFromTag(sym); if (s) { threadSymbolRef.current = s.ticker; setSymbol(s); } setActiveThreadId(id); setChatPanelView("conversation"); }}
                   onNew={(id) => { setActiveThreadId(id); setChatPanelView("conversation"); }}
                 />
               </div>
