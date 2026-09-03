@@ -1517,8 +1517,9 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
         }}
       />
 
-      {/* TradingView-style tool rail (visible when drawMode is on) */}
-      {drawMode && (
+      {/* TradingView-style tool rail: always pinned to the left of the chart.
+          Picking any tool other than the cursor turns drawing on. */}
+      {!hidden && (
         <div className="absolute left-1.5 top-1/2 -translate-y-1/2 sm:left-2 z-40 flex max-h-[92%] flex-col items-center gap-0.5 overflow-y-auto rounded-xl border border-border/60 bg-background/95 backdrop-blur px-1 py-1.5 shadow-lg">
           {([
             { k: "cursor", Icon: MousePointer2, label: "Cursor (pan chart)" },
