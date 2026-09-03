@@ -33,7 +33,7 @@ import { COACH_ICON_META, DEFAULT_COACH_ICON } from "@/lib/coachMeta";
 import { reportSystemNotice } from "@/lib/notifications.functions";
 import { runResearchPlan } from "@/lib/agents/research.functions";
 import { recordHermesFeedback } from "@/lib/agents/hermes.functions";
-import { listChatThreads, createChatThread, deleteChatThread } from "@/lib/chat.functions";
+import { listChatThreads, createChatThread, deleteChatThread, renameChatThread } from "@/lib/chat.functions";
 import type { ResearchMemo, OrderFlow } from "@/lib/agents/types";
 import { Link } from "@tanstack/react-router";
 import { useTradeLogged } from "@/hooks/useTradeLogged";
@@ -1101,6 +1101,7 @@ function Dashboard() {
   const runPlan = useServerFn(runResearchPlan);
   const reportSystemNoticeFn = useServerFn(reportSystemNotice);
   const createChatThreadFn = useServerFn(createChatThread);
+  const renameChatThreadFn = useServerFn(renameChatThread);
 
   // Free-plan grade quota. Paid and admin accounts get an inactive quota, so the
   // badge and paywall below simply never render for them.
