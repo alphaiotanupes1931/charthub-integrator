@@ -1664,6 +1664,52 @@ function TradeFormModal({
     setImagesDirty(true);
   };
 
+  // Read the numbers off an uploaded chart screenshot and drop them into the
+  // form. Existing values are only overwritten when the reader found something.
+  const [autofilling, setAutofilling] = useState(false);
+  const [autofillNote, setAutofillNote] = useState("");
+  const autofillFromScreenshot = async () => {
+    if (!images.length || autofilling) return;
+    setAutofilling(true);
+    setAutofillNote("");
+    try {
+      const dataUrls = await Promise.all(
+        images.slice(0, 3).map(
+          (img) =>
+            new Promise<string>((resolve, reject) => {
+              const r = new FileReader();
+              r.onload = () => resolve(String(r.result || ""));
+              r.onerror = reject;
+              r.readAsDataURL(img.blob);
+            }),
+        ),
+      );
+      const out = await parseTradeSetupScreenshot({ data: { images: dataUrls, hint: notes.trim() || undefined } });
+      if (out.symbol) setSymbol(out.symbol);
+      if (out.side) setSide(out.side);
+      if (out.timeframe && TIMEFRAMES.includes(out.timeframe as Timeframe)) setTimeframe(out.timeframe as Timeframe);
+      if (out.entry != null) setEntry(String(out.entry));
+      if (out.stop != null) setStop(String(out.stop));
+      if (out.takeProfit != null) setTakeProfit(String(out.takeProfit));
+      if (out.exit != null) setExit(String(out.exit));
+      if (out.size != null && out.size > 0) setSize(String(out.size));
+      if (out.notes) setNotes((prev) => (prev.trim() ? prev : out.notes!));
+      const filled = out.entry != null || out.stop != null || out.takeProfit != null;
+      const conf = out.confidence != null ? ` Confidence ${Math.round(out.confidence * 100)}%.` : "";
+      setAutofillNote(
+        filled
+          ? `${out.note || "Levels read from the chart."}${conf} Check the numbers before saving.`
+          : out.note || "No levels could be read from that screenshot.",
+      );
+    } catch {
+      setAutofillNote("Could not read that screenshot. Try again in a moment.");
+    } finally {
+      setAutofilling(false);
+    }
+  };
+
+
+
   const removeImageAt = (i: number) => {
     setImages((prev) => {
       const target = prev[i];
