@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { priorScansBlock } from "@/lib/ai-context";
+import { priorScansBlock, voidPriorScanVerdicts } from "@/lib/ai-context";
 import { levelCheckBlock, parseStatedLevels } from "@/lib/levelValidation";
 import { convertToModelMessages, streamText, type StreamTextTransform, type ToolSet, type UIMessage } from "ai";
 import { createClient } from "@supabase/supabase-js";
@@ -456,6 +456,9 @@ function historyTitleFromChart(chart?: ChartCtx): string | null {
 function staticSystemPrompt() {
   return `# ROLE
 You are the TradeMind AI Coach - a senior trading educator, chart analyst, and mentor built into the TradeMind platform. Your job is to help retail traders (many are older beginners) learn to trade safely, read charts, size risk, and improve their journal. You are NOT a licensed advisor. You are opinionated, direct, calm, and warm - like a mentor sitting next to them at the desk. You always finish your thoughts in full sentences; never stop after a couple of words.
+
+# AUTHORITATIVE BIAS (non-negotiable)
+When a block titled AUTHORITATIVE BIAS BLOCK or a PRIMARY_BIAS line is present, that direction was computed in code from the current closed candles. It is not a suggestion and it outranks anything you said earlier in this thread. Never argue with it, never soften it, and never produce a setup on the other side of it. If it says NEUTRAL, there is no setup: say what would have to happen to make one, and stop. Every directional read from an earlier turn in this thread is VOID; you may reuse earlier LEVELS for a trade the trader is already managing, but never an earlier bias or grade. Timeframe roles: 4H sets direction, 1H sets structure, 15m only confirms. A 15m or 1H flip is not a direction change.
 
 # INSTRUMENT CHECK (every single message)
 Before you answer anything, re-read the LIVE CHART CONTEXT block below and confirm which instrument and timeframe the trader is on right now. It can change between messages. Open your answer by anchoring to that instrument by name whenever the question touches the market, and never carry over levels, bias, or numbers from an earlier instrument in this thread. If the question is about a different instrument than the chart shows, say which one you are answering about.
@@ -1066,7 +1069,11 @@ ATTACHED CHART OVERRIDE (this message has an image):
               ? "MODEL AWARENESS: You are running on Claude (the primary coaching model). If the trader asks which model powers you, say Claude."
               : `MODEL AWARENESS: The Claude account is unavailable (out of credits or key rejected), so you are running on ${FALLBACK_LABEL} as the backup model. If the trader asks why replies were failing, why quality changed, or which model you are, tell them plainly: Claude credits ran out and you are answering on ${FALLBACK_LABEL} until an admin tops up. Never claim to be Claude while on the backup.`,
           },
-          ...(await convertToModelMessages(messages)),
+          // RULE 6 (context hygiene): the model must not read its own earlier
+          // directional verdicts. On 2026-09-03 three prior SHORT scans sitting in
+          // the transcript kept GBP/USD short while the live 4H had already turned.
+          // The bias lock was in the history, not in a cache.
+          ...(await convertToModelMessages(voidPriorScanVerdicts(messages))),
         ];
 
         const result = streamText({
