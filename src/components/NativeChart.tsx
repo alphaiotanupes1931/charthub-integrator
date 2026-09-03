@@ -1152,7 +1152,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
         ctx.fillText(s.text || "", a.x, a.y);
       } else if (s.tool === "hline") {
         ctx.beginPath(); ctx.moveTo(0, a.y); ctx.lineTo(cssW, a.y); ctx.stroke();
-        ctx.fillText(priceOf(0).toFixed(decimals(priceOf(0))), drawMode ? 46 : 8, a.y - 4);
+        ctx.fillText(priceOf(0).toFixed(decimals(priceOf(0))), 46, a.y - 4);
       } else if (s.tool === "vline") {
         ctx.beginPath(); ctx.moveTo(a.x, 0); ctx.lineTo(a.x, cssH); ctx.stroke();
       } else if (pts.length >= 2) {
@@ -1517,8 +1517,9 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
         }}
       />
 
-      {/* TradingView-style tool rail (visible when drawMode is on) */}
-      {drawMode && (
+      {/* TradingView-style tool rail: always pinned to the left of the chart.
+          Picking any tool other than the cursor turns drawing on. */}
+      {!hidden && (
         <div className="absolute left-1.5 top-1/2 -translate-y-1/2 sm:left-2 z-40 flex max-h-[92%] flex-col items-center gap-0.5 overflow-y-auto rounded-xl border border-border/60 bg-background/95 backdrop-blur px-1 py-1.5 shadow-lg">
           {([
             { k: "cursor", Icon: MousePointer2, label: "Cursor (pan chart)" },
@@ -1537,10 +1538,10 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
             <button
               key={k}
               type="button"
-              onClick={() => setDrawTool(k)}
+              onClick={() => { setDrawTool(k); setDrawMode(k !== "cursor"); }}
               title={label}
               aria-label={label}
-              className={`inline-flex items-center justify-center rounded p-1.5 transition ${drawTool === k ? "bg-primary/20 text-primary" : "text-foreground/80 hover:bg-muted"}`}
+              className={`inline-flex items-center justify-center rounded p-1.5 transition ${(k === "cursor" ? !drawMode : drawMode && drawTool === k) ? "bg-primary/20 text-primary" : "text-foreground/80 hover:bg-muted"}`}
             >
               <Icon className="h-4 w-4" />
             </button>
