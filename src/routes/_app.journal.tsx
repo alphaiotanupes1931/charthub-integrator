@@ -1841,6 +1841,57 @@ function TradeFormModal({
         </div>
 
         <div className="p-5 space-y-4">
+          <Field label="Upload image to capture numbers">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => { void handlePickFiles(e.target.files); e.target.value = ""; }}
+            />
+            {images.length > 0 && (
+              <div className="grid grid-cols-2 gap-2 mb-2">
+                {images.map((img, i) => (
+                  <div key={img.url} className="relative rounded-xl border border-border/60 overflow-hidden bg-background">
+                    <img src={img.url} alt={`Trade screenshot ${i + 1}`} className="w-full max-h-48 object-contain" />
+                    <button
+                      type="button"
+                      onClick={() => removeImageAt(i)}
+                      className="absolute top-1.5 right-1.5 rounded bg-background/80 px-2 py-1 text-[10px] font-medium border border-border/60 text-destructive hover:bg-destructive/10"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full rounded-xl border border-dashed border-border/60 bg-background/40 px-3 py-5 text-sm text-muted-foreground hover:border-primary/40 hover:text-foreground transition flex flex-col items-center gap-1.5"
+            >
+              <Upload className="h-4 w-4" />
+              <span>{images.length ? "Add another screenshot" : "Upload or paste a TradingView screenshot"}</span>
+              <span className="text-[10px]">We read entry, stop, target and size off the image. Stays on this device.</span>
+            </button>
+            {images.length > 0 && (
+              <div className="mt-2">
+                <button
+                  type="button"
+                  disabled={autofilling}
+                  onClick={() => void autofillFromScreenshot()}
+                  className="w-full rounded-xl border border-primary/40 bg-primary/10 px-3 py-2.5 text-sm font-semibold text-primary hover:bg-primary/15 transition disabled:opacity-60"
+                >
+                  {autofilling ? "Reading the chart…" : "Fill fields from screenshot"}
+                </button>
+                {autofillNote && (
+                  <div className="mt-1.5 text-[11px] text-muted-foreground">{autofillNote}</div>
+                )}
+              </div>
+            )}
+          </Field>
+
           <div className="grid grid-cols-2 gap-3">
             <Field label="Date">
               <input
@@ -2025,57 +2076,6 @@ function TradeFormModal({
               placeholder="What was the setup? What did you see? Paste text or a screenshot here."
               className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:border-primary/50"
             />
-          </Field>
-
-          <Field label="Chart screenshots (stay on this device)">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              multiple
-              className="hidden"
-              onChange={(e) => { void handlePickFiles(e.target.files); e.target.value = ""; }}
-            />
-            {images.length > 0 && (
-              <div className="grid grid-cols-2 gap-2 mb-2">
-                {images.map((img, i) => (
-                  <div key={img.url} className="relative rounded-xl border border-border/60 overflow-hidden bg-background">
-                    <img src={img.url} alt={`Trade screenshot ${i + 1}`} className="w-full max-h-48 object-contain" />
-                    <button
-                      type="button"
-                      onClick={() => removeImageAt(i)}
-                      className="absolute top-1.5 right-1.5 rounded bg-background/80 px-2 py-1 text-[10px] font-medium border border-border/60 text-destructive hover:bg-destructive/10"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full rounded-xl border border-dashed border-border/60 bg-background/40 px-3 py-5 text-sm text-muted-foreground hover:border-primary/40 hover:text-foreground transition flex flex-col items-center gap-1.5"
-            >
-              <Upload className="h-4 w-4" />
-              <span>{images.length ? "Add another screenshot" : "Upload screenshots or paste from clipboard"}</span>
-              <span className="text-[10px]">Pick several at once, or paste an image and text together · stored only on your device</span>
-            </button>
-            {images.length > 0 && (
-              <div className="mt-2">
-                <button
-                  type="button"
-                  disabled={autofilling}
-                  onClick={() => void autofillFromScreenshot()}
-                  className="w-full rounded-xl border border-primary/40 bg-primary/10 px-3 py-2.5 text-sm font-semibold text-primary hover:bg-primary/15 transition disabled:opacity-60"
-                >
-                  {autofilling ? "Reading the chart…" : "Fill fields from screenshot"}
-                </button>
-                {autofillNote && (
-                  <div className="mt-1.5 text-[11px] text-muted-foreground">{autofillNote}</div>
-                )}
-              </div>
-            )}
           </Field>
 
 
