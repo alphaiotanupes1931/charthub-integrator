@@ -171,6 +171,7 @@ const SYMBOLS: Symbol[] = [
   { tv: "BINANCE:BTCUSDT",   ticker: "BTC/USD", name: "Bitcoin",          venue: "Binance"   },
   { tv: "BINANCE:ETHUSDT",   ticker: "ETH/USD", name: "Ethereum",         venue: "Binance"   },
   { tv: "BINANCE:XRPUSDT",   ticker: "XRP/USD", name: "Ripple",           venue: "Binance"   },
+  { tv: "BINANCE:SOLUSDT",   ticker: "SOL/USD", name: "Solana",           venue: "Binance"   },
 ];
 
 // Resolve a chat-history "symbol" tag (e.g. "XAU Gold", "SPX500", "BTC")
