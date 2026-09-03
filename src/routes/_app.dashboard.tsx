@@ -1176,7 +1176,30 @@ function Dashboard() {
       if (search.scan === "1") setPendingScanTicker(match.ticker);
     }
     navigate({ to: "/dashboard", search: (prev: DashboardSearch) => ({ ...prev, symbol: undefined, scan: undefined }), replace: true });
-  }, [search.symbol, search.scan, navigate]);
+
+  // One conversation per instrument. Switching the instrument on the chart opens
+  // a brand new chat titled after that instrument, so a Gold conversation never
+  // continues into a NAS100 scan and history entries stay identifiable.
+  const threadSymbolRef = useRef<string>(symbol.ticker);
+  useEffect(() => {
+    if (threadSymbolRef.current === symbol.ticker) return;
+    threadSymbolRef.current = symbol.ticker;
+    const title = historyInstrumentTitle(symbol);
+    let cancelled = false;
+    setChatPanelView("conversation");
+    (async () => {
+      try {
+        const t = await createChatThreadFn({ data: { title } });
+        if (!cancelled && t?.id) setActiveThreadId(t.id);
+      } catch {
+        // non-fatal: the next scan/message still creates a thread
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [symbol.ticker]);
+
+
 
 
   // Honor ?thread= deep links (e.g. "AI chat" button on a journal trade)
