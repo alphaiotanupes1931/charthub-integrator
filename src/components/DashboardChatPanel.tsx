@@ -1039,7 +1039,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
           <QuickPrompts
             ticker={chart?.ticker}
             intervalLabel={chart?.intervalLabel}
-            hasImage={!!pendingImage}
+            hasImage={pendingImages.length > 0}
             lastAssistant={[...messages].reverse().find((m) => m.role === "assistant") ?? null}
             disabled={chatBusy}
             onPick={(text) => {
@@ -1057,7 +1057,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               ref={textareaRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder={pendingImage ? "Add a note (optional), then send" : "Ask your coach or paste a chart screenshot"}
+              placeholder={pendingImages.length ? "Add a note (optional), then send" : "Ask your coach or paste a chart screenshot"}
               rows={3}
               aria-label="Message your AI coach"
               className="min-h-[60px] max-h-[120px] whitespace-pre-wrap rounded-2xl border border-border/60 bg-card py-2.5 text-sm leading-relaxed placeholder:whitespace-normal placeholder:text-muted-foreground placeholder:opacity-100 [@media(max-height:700px)]:min-h-[48px] [@media(max-height:700px)]:max-h-[88px]"
@@ -1108,7 +1108,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                   <HelpCircle className="h-3 w-3" /> Show Me
                 </button>
               </div>
-              <PromptInputSubmit status={status} onStop={stopScan} disabled={!input.trim() && !pendingImage && !loading} />
+              <PromptInputSubmit status={status} onStop={stopScan} disabled={!input.trim() && !pendingImages.length && !loading} />
             </PromptInputFooter>
           </PromptInput>
           <p className="mt-1 text-center text-[10px] text-muted-foreground/80">
