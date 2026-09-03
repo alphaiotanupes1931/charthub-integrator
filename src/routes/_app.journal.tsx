@@ -1712,6 +1712,8 @@ function TradeFormModal({
 
 
 
+  const [pasteBox, setPasteBox] = useState("");
+
   const removeImageAt = (i: number) => {
     setImages((prev) => {
       const target = prev[i];
@@ -1875,6 +1877,34 @@ function TradeFormModal({
               <span>{images.length ? "Add another screenshot" : "Upload or paste a TradingView screenshot"}</span>
               <span className="text-[10px]">We read entry, stop, target and size off the image. Stays on this device.</span>
             </button>
+            {/* Right-click paste only works inside an editable box, so give the
+                clipboard a real target for both images and text. */}
+            <textarea
+              rows={2}
+              value={pasteBox}
+              onChange={(e) => setPasteBox(e.target.value)}
+              onPaste={(e) => {
+                const files = Array.from(e.clipboardData?.items ?? [])
+                  .filter((i) => i.kind === "file" && i.type.startsWith("image/"))
+                  .map((i) => i.getAsFile())
+                  .filter((f): f is File => !!f);
+                if (files.length) {
+                  e.preventDefault();
+                  void handlePickFiles(files);
+                }
+              }}
+              onBlur={() => {
+                const text = pasteBox.trim();
+                if (!text) return;
+                setNotes((prev) => (prev.trim() ? `${prev.replace(/\s+$/, "")}\n${text}` : text));
+                setPasteBox("");
+              }}
+              placeholder="Click here and paste (Ctrl+V / right-click) an image or text"
+              className="mt-2 w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm placeholder:text-muted-foreground"
+            />
+            {pasteBox.trim() && (
+              <div className="mt-1 text-[10px] text-muted-foreground">Text moves into Notes when you click away.</div>
+            )}
             {images.length > 0 && (
               <div className="mt-2">
                 <button

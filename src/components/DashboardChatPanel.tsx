@@ -413,7 +413,9 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
   function ChatInner({ threadId, initial, chart, onClose, onMinimize, onRunScan, onStopScan, scanning, onAnnotations, onConcept, onGrade, onShowMe }, ref) {
 
     const [input, setInput] = useState("");
-    const [pendingImage, setPendingImage] = useState<{ url: string; name: string; mediaType: string } | null>(null);
+    // Up to 5 screenshots per message, like ChatGPT - send, then attach more.
+    const MAX_IMAGES = 5;
+    const [pendingImages, setPendingImages] = useState<Array<{ url: string; name: string; mediaType: string }>>([]);
     const [dragging, setDragging] = useState(false);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const [activeCoach, setActiveCoach] = useState<string>(() => readActiveCoach());
@@ -492,18 +494,27 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
       return true;
     }, [isAdmin]);
 
-    const ingestFile = useCallback(async (file: File) => {
-      if (!file.type.startsWith("image/")) {
-        toast.error("Only image files can be attached");
+    const ingestFiles = useCallback(async (input: FileList | File[] | null | undefined) => {
+      const all = Array.from(input ?? []);
+      const files = all.filter((f) => f.type.startsWith("image/"));
+      if (!files.length) {
+        if (all.length) toast.error("Only image files can be attached");
         return;
       }
-      if (!checkAndReserveQuota()) return;
-      try {
-        const { dataUrl, name, mediaType } = await compressImage(file);
-        setPendingImage({ url: dataUrl, name, mediaType });
-      } catch (e) {
-        console.error(e);
-        toast.error("Could not read that image");
+      let added = 0;
+      for (const file of files) {
+        let full = false;
+        setPendingImages((prev) => { full = prev.length + added >= MAX_IMAGES; return prev; });
+        if (full) { toast.error(`Up to ${MAX_IMAGES} images per message - send these first`); break; }
+        if (!checkAndReserveQuota()) break;
+        try {
+          const { dataUrl, name, mediaType } = await compressImage(file);
+          added += 1;
+          setPendingImages((prev) => (prev.length >= MAX_IMAGES ? prev : [...prev, { url: dataUrl, name, mediaType }]));
+        } catch (e) {
+          console.error(e);
+          toast.error("Could not read that image");
+        }
       }
     }, [checkAndReserveQuota]);
 
@@ -723,19 +734,19 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
 
     const handleSubmit = () => {
       const text = input.trim();
-      const img = pendingImage;
-      if (!text && !img) return;
+      const imgs = pendingImages;
+      if (!text && !imgs.length) return;
       if (chatBusy) return;
       if (voice.enabled) voice.prime();
       // "show me ..." means the coach will draw on the chart - jump to Setup view.
       if (text && /\bshow\s*me\b/i.test(text)) onShowMe?.();
       setInput("");
-      setPendingImage(null);
-      if (img) {
-        if (!isAdmin) bumpScreenshotQuota();
+      setPendingImages([]);
+      if (imgs.length) {
+        if (!isAdmin) for (let i = 0; i < imgs.length; i++) bumpScreenshotQuota();
         void sendMessage({
-          text: text || "Scan THIS SCREENSHOT I just attached (ignore the live chart context above - analyze only what is in the image). IMPORTANT: The horizontal line at the current price cursor is NOT the entry - it is just where price is right now. Determine entry from actual structure visible in the image: order blocks, FVGs, swing highs/lows, liquidity pools, trendline touches, or a labeled level the user drew. If the user drew entry/SL/TP lines on the chart, read those literally. Otherwise propose entry at a structural level (not at current price unless it is also a valid structural level), place stop beyond the invalidation structure (swing high/low or opposite side of the zone), and set TP1/TP2 at the next liquidity or structural targets visible. State bias, entry, stop, TP1, TP2, R:R, and a 1-2 sentence rationale that references the specific structure you saw.",
-          files: [{ type: "file", mediaType: img.mediaType, url: img.url, filename: img.name }],
+          text: text || `Scan ${imgs.length > 1 ? `THESE ${imgs.length} SCREENSHOTS` : "THIS SCREENSHOT"} I just attached (ignore the live chart context above - analyze only what is in the image${imgs.length > 1 ? "s, treating them as the same idea across timeframes/views" : ""}). IMPORTANT: The horizontal line at the current price cursor is NOT the entry - it is just where price is right now. Determine entry from actual structure visible in the image: order blocks, FVGs, swing highs/lows, liquidity pools, trendline touches, or a labeled level the user drew. If the user drew entry/SL/TP lines on the chart, read those literally. Otherwise propose entry at a structural level (not at current price unless it is also a valid structural level), place stop beyond the invalidation structure (swing high/low or opposite side of the zone), and set TP1/TP2 at the next liquidity or structural targets visible. State bias, entry, stop, TP1, TP2, R:R, and a 1-2 sentence rationale that references the specific structure you saw.`,
+          files: imgs.map((img) => ({ type: "file" as const, mediaType: img.mediaType, url: img.url, filename: img.name })),
         });
       } else {
         void sendMessage({ text });
@@ -747,19 +758,15 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
         className="relative grid h-full max-h-full min-h-0 grid-rows-[auto_auto_minmax(0,1fr)_auto] overflow-hidden border-y border-border/50 bg-background sm:rounded-2xl sm:border"
         data-testid="dashboard-chat-panel"
         onPaste={(e) => {
-          const items = e.clipboardData?.items;
-          if (!items) return;
-          for (let i = 0; i < items.length; i++) {
-            const it = items[i];
-            if (it.kind === "file" && it.type.startsWith("image/")) {
-              const f = it.getAsFile();
-              if (f) {
-                e.preventDefault();
-                ingestFile(f);
-                toast.success("Screenshot attached");
-                return;
-              }
-            }
+          const items = Array.from(e.clipboardData?.items ?? []);
+          const files = items
+            .filter((it) => it.kind === "file" && it.type.startsWith("image/"))
+            .map((it) => it.getAsFile())
+            .filter((f): f is File => !!f);
+          if (files.length) {
+            e.preventDefault();
+            void ingestFiles(files);
+            toast.success(files.length > 1 ? `${files.length} screenshots attached` : "Screenshot attached");
           }
         }}
         onDragOver={(e) => { e.preventDefault(); if (!dragging) setDragging(true); }}
@@ -767,8 +774,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
         onDrop={(e) => {
           e.preventDefault();
           setDragging(false);
-          const f = e.dataTransfer?.files?.[0];
-          if (f) ingestFile(f);
+          void ingestFiles(e.dataTransfer?.files);
         }}
       >
         {dragging && (
@@ -997,38 +1003,43 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
           data-testid="dashboard-chat-composer"
           style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
         >
-          {pendingImage && (
-            <div className="mb-2 flex items-center gap-2 rounded-2xl border border-border/50 bg-card p-2">
-              <img src={pendingImage.url} alt="attachment preview" className="h-12 w-12 rounded-xl object-cover border border-border/50" />
-              <div className="flex-1 min-w-0">
-                <div className="text-xs font-medium truncate">{pendingImage.name}</div>
-                <div className="text-[10px] text-muted-foreground">Ready to scan - press send</div>
+          {pendingImages.length > 0 && (
+            <div className="mb-2 rounded-2xl border border-border/50 bg-card p-2">
+              <div className="flex flex-wrap gap-2">
+                {pendingImages.map((img, i) => (
+                  <div key={img.url} className="relative">
+                    <img src={img.url} alt={`attachment ${i + 1}`} className="h-14 w-14 rounded-xl object-cover border border-border/50" />
+                    <button
+                      type="button"
+                      onClick={() => setPendingImages((prev) => prev.filter((_, idx) => idx !== i))}
+                      className="absolute -top-1.5 -right-1.5 h-5 w-5 inline-flex items-center justify-center rounded-full bg-background border border-border/60 text-muted-foreground hover:text-destructive transition"
+                      aria-label={`Remove attachment ${i + 1}`}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
               </div>
-              <button
-                type="button"
-                onClick={() => setPendingImage(null)}
-                className="h-7 w-7 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-accent/60 transition"
-                aria-label="Remove attachment"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
+              <div className="mt-1.5 text-[10px] text-muted-foreground">
+                {pendingImages.length}/{MAX_IMAGES} images - press send{pendingImages.length >= MAX_IMAGES ? " (max reached, send then add more)" : ""}
+              </div>
             </div>
           )}
           <input
             ref={fileInputRef}
             type="file"
             accept="image/*"
+            multiple
             className="hidden"
             onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) ingestFile(f);
+              void ingestFiles(e.target.files);
               e.target.value = "";
             }}
           />
           <QuickPrompts
             ticker={chart?.ticker}
             intervalLabel={chart?.intervalLabel}
-            hasImage={!!pendingImage}
+            hasImage={pendingImages.length > 0}
             lastAssistant={[...messages].reverse().find((m) => m.role === "assistant") ?? null}
             disabled={chatBusy}
             onPick={(text) => {
@@ -1046,7 +1057,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               ref={textareaRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder={pendingImage ? "Add a note (optional), then send" : "Ask your coach or paste a chart screenshot"}
+              placeholder={pendingImages.length ? "Add a note (optional), then send" : "Ask your coach or paste a chart screenshot"}
               rows={3}
               aria-label="Message your AI coach"
               className="min-h-[60px] max-h-[120px] whitespace-pre-wrap rounded-2xl border border-border/60 bg-card py-2.5 text-sm leading-relaxed placeholder:whitespace-normal placeholder:text-muted-foreground placeholder:opacity-100 [@media(max-height:700px)]:min-h-[48px] [@media(max-height:700px)]:max-h-[88px]"
@@ -1097,7 +1108,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                   <HelpCircle className="h-3 w-3" /> Show Me
                 </button>
               </div>
-              <PromptInputSubmit status={status} onStop={stopScan} disabled={!input.trim() && !pendingImage && !loading} />
+              <PromptInputSubmit status={status} onStop={stopScan} disabled={!input.trim() && !pendingImages.length && !loading} />
             </PromptInputFooter>
           </PromptInput>
           <p className="mt-1 text-center text-[10px] text-muted-foreground/80">
