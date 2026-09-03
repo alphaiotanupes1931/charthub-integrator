@@ -9,6 +9,8 @@ import type { MarketSnapshot } from "./types";
 import {
   gradeScan,
   buildScanContext,
+  classifyTrend,
+  detect4hReversal,
   engineSymbolFor,
   getInstrumentConfig,
   type BiasState,
@@ -138,6 +140,16 @@ export function computeBias(snap: MarketSnapshot, baseGrade: Grade = "A"): BiasR
   const atr4h = snap.atr4h && snap.atr4h > 0 ? snap.atr4h : atrOf(candles4h);
   const ladderRow = (label: string) => snap.mtf?.ladder?.find((r) => r.label === label);
 
+  // 4H trend: the engine's own swing read is strict (it needs two clean swings
+  // inside a 20-candle window and a span over 1.5x ATR), and on live FX it returns
+  // 'range' most of the time, which would push nearly every scan to NEUTRAL. When
+  // it finds no structure we fall back to the platform's own deterministic 4H trend
+  // read from the same candles. Reversal detection is never overridden: an
+  // invalidated 4H still forces NEUTRAL.
+  const engineTrend = classifyTrend(candles4h, Math.max(atr4h, 1e-9));
+  const platformTrend = snap.mtf?.h4.trend === "up" ? "up" : snap.mtf?.h4.trend === "down" ? "down" : "range";
+  const fourHTrend = engineTrend !== "range" ? engineTrend : platformTrend;
+
   const result = gradeScan({
     instrument: symbol,
     price: snap.lastPrice,
@@ -158,6 +170,7 @@ export function computeBias(snap: MarketSnapshot, baseGrade: Grade = "A"): BiasR
       daily: toBias(ladderRow("Daily")?.bias ?? snap.cisd.htfBias),
       oneH: toBias(ladderRow("1H")?.bias ?? snap.mtf?.h1.structureBreak),
       fifteenM: toBias(snap.mtf?.m15.confirmation),
+      fourH: { trend: fourHTrend, reversal: detect4hReversal(candles4h, Math.max(atr4h, 1e-9)) },
       computedAt: Date.now(),
     },
     baseGrade,
