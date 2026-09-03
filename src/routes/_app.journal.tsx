@@ -49,6 +49,8 @@ import {
 } from "@/lib/journalImages";
 import { ImportClosedTradesPanel } from "@/components/ImportClosedTradesPanel";
 import type { ParsedClosedTrade } from "@/lib/journal-import.functions";
+import { parseTradeSetupScreenshot } from "@/lib/journal-import.functions";
+
 import { ActionLoader } from "@/components/ActionLoader";
 
 export const Route = createFileRoute("/_app/journal")({
@@ -1664,6 +1666,52 @@ function TradeFormModal({
     setImagesDirty(true);
   };
 
+  // Read the numbers off an uploaded chart screenshot and drop them into the
+  // form. Existing values are only overwritten when the reader found something.
+  const [autofilling, setAutofilling] = useState(false);
+  const [autofillNote, setAutofillNote] = useState("");
+  const autofillFromScreenshot = async () => {
+    if (!images.length || autofilling) return;
+    setAutofilling(true);
+    setAutofillNote("");
+    try {
+      const dataUrls = await Promise.all(
+        images.slice(0, 3).map(
+          (img) =>
+            new Promise<string>((resolve, reject) => {
+              const r = new FileReader();
+              r.onload = () => resolve(String(r.result || ""));
+              r.onerror = reject;
+              r.readAsDataURL(img.blob);
+            }),
+        ),
+      );
+      const out = await parseTradeSetupScreenshot({ data: { images: dataUrls, hint: notes.trim() || undefined } });
+      if (out.symbol) setSymbol(out.symbol);
+      if (out.side) setSide(out.side);
+      if (out.timeframe && TIMEFRAMES.includes(out.timeframe as Timeframe)) setTimeframe(out.timeframe as Timeframe);
+      if (out.entry != null) setEntry(String(out.entry));
+      if (out.stop != null) setStop(String(out.stop));
+      if (out.takeProfit != null) setTakeProfit(String(out.takeProfit));
+      if (out.exit != null) setExit(String(out.exit));
+      if (out.size != null && out.size > 0) setSize(String(out.size));
+      if (out.notes) setNotes((prev) => (prev.trim() ? prev : out.notes!));
+      const filled = out.entry != null || out.stop != null || out.takeProfit != null;
+      const conf = out.confidence != null ? ` Confidence ${Math.round(out.confidence * 100)}%.` : "";
+      setAutofillNote(
+        filled
+          ? `${out.note || "Levels read from the chart."}${conf} Check the numbers before saving.`
+          : out.note || "No levels could be read from that screenshot.",
+      );
+    } catch {
+      setAutofillNote("Could not read that screenshot. Try again in a moment.");
+    } finally {
+      setAutofilling(false);
+    }
+  };
+
+
+
   const removeImageAt = (i: number) => {
     setImages((prev) => {
       const target = prev[i];
@@ -2013,7 +2061,23 @@ function TradeFormModal({
               <span>{images.length ? "Add another screenshot" : "Upload screenshots or paste from clipboard"}</span>
               <span className="text-[10px]">Pick several at once, or paste an image and text together · stored only on your device</span>
             </button>
+            {images.length > 0 && (
+              <div className="mt-2">
+                <button
+                  type="button"
+                  disabled={autofilling}
+                  onClick={() => void autofillFromScreenshot()}
+                  className="w-full rounded-xl border border-primary/40 bg-primary/10 px-3 py-2.5 text-sm font-semibold text-primary hover:bg-primary/15 transition disabled:opacity-60"
+                >
+                  {autofilling ? "Reading the chart…" : "Fill fields from screenshot"}
+                </button>
+                {autofillNote && (
+                  <div className="mt-1.5 text-[11px] text-muted-foreground">{autofillNote}</div>
+                )}
+              </div>
+            )}
           </Field>
+
 
           <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
             <div className="flex items-center gap-2 mb-2">
