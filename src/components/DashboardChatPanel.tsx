@@ -758,19 +758,15 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
         className="relative grid h-full max-h-full min-h-0 grid-rows-[auto_auto_minmax(0,1fr)_auto] overflow-hidden border-y border-border/50 bg-background sm:rounded-2xl sm:border"
         data-testid="dashboard-chat-panel"
         onPaste={(e) => {
-          const items = e.clipboardData?.items;
-          if (!items) return;
-          for (let i = 0; i < items.length; i++) {
-            const it = items[i];
-            if (it.kind === "file" && it.type.startsWith("image/")) {
-              const f = it.getAsFile();
-              if (f) {
-                e.preventDefault();
-                ingestFile(f);
-                toast.success("Screenshot attached");
-                return;
-              }
-            }
+          const items = Array.from(e.clipboardData?.items ?? []);
+          const files = items
+            .filter((it) => it.kind === "file" && it.type.startsWith("image/"))
+            .map((it) => it.getAsFile())
+            .filter((f): f is File => !!f);
+          if (files.length) {
+            e.preventDefault();
+            void ingestFiles(files);
+            toast.success(files.length > 1 ? `${files.length} screenshots attached` : "Screenshot attached");
           }
         }}
         onDragOver={(e) => { e.preventDefault(); if (!dragging) setDragging(true); }}
@@ -778,8 +774,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
         onDrop={(e) => {
           e.preventDefault();
           setDragging(false);
-          const f = e.dataTransfer?.files?.[0];
-          if (f) ingestFile(f);
+          void ingestFiles(e.dataTransfer?.files);
         }}
       >
         {dragging && (
