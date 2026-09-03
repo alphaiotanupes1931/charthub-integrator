@@ -49,6 +49,8 @@ import {
 } from "@/lib/journalImages";
 import { ImportClosedTradesPanel } from "@/components/ImportClosedTradesPanel";
 import type { ParsedClosedTrade } from "@/lib/journal-import.functions";
+import { parseTradeSetupScreenshot } from "@/lib/journal-import.functions";
+
 import { ActionLoader } from "@/components/ActionLoader";
 
 export const Route = createFileRoute("/_app/journal")({
