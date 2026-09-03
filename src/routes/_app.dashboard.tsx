@@ -804,27 +804,20 @@ function Dashboard() {
 
   const [lastUpdatedText, setLastUpdatedText] = useState<string>("");
 
-  // Persist scan result per symbol so switching tabs/symbols keeps the last analysis visible.
+  // Switching instrument always starts from a blank analysis: no stale card
+  // from another ticker, and no old result for this one either. Run a fresh
+  // scan to populate it.
+  const firstSymbolRenderRef = useRef(true);
   useEffect(() => {
+    if (firstSymbolRenderRef.current) {
+      firstSymbolRenderRef.current = false;
+      return;
+    }
+    setResult(null);
     if (typeof window === "undefined") return;
     try {
-      const key = `trademind.scanResult.${symbol.ticker}`;
-      const raw = window.sessionStorage.getItem(key);
-      if (!raw) {
-        setResult(null);
-        return;
-      }
-      const saved = JSON.parse(raw) as ScanResult;
-      // Older builds could write the previous instrument's result into the new
-      // instrument's storage key during the symbol-change render. Never display
-      // or preserve a result unless its research memo belongs to this symbol.
-      if (saved.memo?.ticker !== symbol.ticker) {
-        window.sessionStorage.removeItem(key);
-        setResult(null);
-        return;
-      }
-      setResult(saved);
-    } catch { setResult(null); }
+      window.sessionStorage.removeItem(`trademind.scanResult.${symbol.ticker}`);
+    } catch { /* ignore */ }
   }, [symbol.ticker]);
 
   // Clear any stale AI signal/annotations when the user switches symbols so
