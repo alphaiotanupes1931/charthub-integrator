@@ -378,11 +378,11 @@ function h4Analysis(candles: Candle[]): MtfContext["h4"] {
     bias !== "neutral" ? bias : cisd.state !== "none" ? cisd.state : "neutral";
 
   // A CISD flip can sit in the series for days. When the live swing structure
-  // says the opposite, the older flip is stale: step to neutral rather than
-  // handing the planner a direction the last two days of price contradict.
-  if ((direction === "bearish" && trend === "up") || (direction === "bullish" && trend === "down")) {
-    direction = "neutral";
-  }
+  // says the opposite, the older flip is stale and the structure wins - that is
+  // the whole point of the 2026-09-03 index miss, where a Tuesday sell flip kept
+  // the read bearish through a 600pt US30 rally.
+  if (direction === "bearish" && trend === "up") direction = "bullish";
+  else if (direction === "bullish" && trend === "down") direction = "bearish";
 
 
 
