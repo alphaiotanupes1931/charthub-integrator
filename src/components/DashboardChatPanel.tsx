@@ -734,19 +734,19 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
 
     const handleSubmit = () => {
       const text = input.trim();
-      const img = pendingImage;
-      if (!text && !img) return;
+      const imgs = pendingImages;
+      if (!text && !imgs.length) return;
       if (chatBusy) return;
       if (voice.enabled) voice.prime();
       // "show me ..." means the coach will draw on the chart - jump to Setup view.
       if (text && /\bshow\s*me\b/i.test(text)) onShowMe?.();
       setInput("");
-      setPendingImage(null);
-      if (img) {
-        if (!isAdmin) bumpScreenshotQuota();
+      setPendingImages([]);
+      if (imgs.length) {
+        if (!isAdmin) for (let i = 0; i < imgs.length; i++) bumpScreenshotQuota();
         void sendMessage({
-          text: text || "Scan THIS SCREENSHOT I just attached (ignore the live chart context above - analyze only what is in the image). IMPORTANT: The horizontal line at the current price cursor is NOT the entry - it is just where price is right now. Determine entry from actual structure visible in the image: order blocks, FVGs, swing highs/lows, liquidity pools, trendline touches, or a labeled level the user drew. If the user drew entry/SL/TP lines on the chart, read those literally. Otherwise propose entry at a structural level (not at current price unless it is also a valid structural level), place stop beyond the invalidation structure (swing high/low or opposite side of the zone), and set TP1/TP2 at the next liquidity or structural targets visible. State bias, entry, stop, TP1, TP2, R:R, and a 1-2 sentence rationale that references the specific structure you saw.",
-          files: [{ type: "file", mediaType: img.mediaType, url: img.url, filename: img.name }],
+          text: text || `Scan ${imgs.length > 1 ? `THESE ${imgs.length} SCREENSHOTS` : "THIS SCREENSHOT"} I just attached (ignore the live chart context above - analyze only what is in the image${imgs.length > 1 ? "s, treating them as the same idea across timeframes/views" : ""}). IMPORTANT: The horizontal line at the current price cursor is NOT the entry - it is just where price is right now. Determine entry from actual structure visible in the image: order blocks, FVGs, swing highs/lows, liquidity pools, trendline touches, or a labeled level the user drew. If the user drew entry/SL/TP lines on the chart, read those literally. Otherwise propose entry at a structural level (not at current price unless it is also a valid structural level), place stop beyond the invalidation structure (swing high/low or opposite side of the zone), and set TP1/TP2 at the next liquidity or structural targets visible. State bias, entry, stop, TP1, TP2, R:R, and a 1-2 sentence rationale that references the specific structure you saw.`,
+          files: imgs.map((img) => ({ type: "file" as const, mediaType: img.mediaType, url: img.url, filename: img.name })),
         });
       } else {
         void sendMessage({ text });
