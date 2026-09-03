@@ -1410,7 +1410,7 @@ function Dashboard() {
     let scanThreadId: string | null = activeThreadId;
     if (!scanThreadId) {
       try {
-        const t = await createChatThreadFn({ data: { title: `${historyInstrumentTitle(symbol)} Scan` } });
+        const t = await createChatThreadFn({ data: { title: historyInstrumentTitle(symbol) } });
         if (t?.id) {
           scanThreadId = t.id;
           setActiveThreadId(t.id);
@@ -1418,6 +1418,10 @@ function Dashboard() {
       } catch {
         // non-fatal - fall through with existing thread
       }
+    } else {
+      // History entries are always named after the instrument that was scanned,
+      // never after a casual first message.
+      try { await renameChatThreadFn({ data: { threadId: scanThreadId, title: historyInstrumentTitle(symbol) } }); } catch { /* non-fatal */ }
     }
     // Always post the scan prompt to chat so the user sees activity immediately.
     sendToChat(prompt, { focusChat: from === "chat", targetThreadId: scanThreadId });
