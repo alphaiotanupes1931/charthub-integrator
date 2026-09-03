@@ -1680,11 +1680,23 @@ function TradeFormModal({
         .map((i) => i.getAsFile())
         .filter((f): f is File => !!f);
       if (files.length) void handlePickFiles(files);
+
+      // Pasted text lands in Notes so a screenshot and the write-up can be
+      // dropped in together. Skipped when the cursor is already in a field,
+      // so normal typing/pasting into inputs still behaves normally.
+      const el = e.target as HTMLElement | null;
+      const inField = !!el?.closest?.("input, textarea, select, [contenteditable='true']");
+      const text = e.clipboardData?.getData("text/plain")?.trim() ?? "";
+      if (!inField && text) {
+        e.preventDefault();
+        setNotes((prev) => (prev.trim() ? `${prev.replace(/\s+$/, "")}\n${text}` : text));
+      }
     };
     window.addEventListener("paste", onPaste);
     return () => window.removeEventListener("paste", onPaste);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
 
   const hasImage = images.length > 0;
 
@@ -1962,7 +1974,7 @@ function TradeFormModal({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              placeholder="What was the setup? What did you see?"
+              placeholder="What was the setup? What did you see? Paste text or a screenshot here."
               className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:border-primary/50"
             />
           </Field>
@@ -1999,7 +2011,7 @@ function TradeFormModal({
             >
               <Upload className="h-4 w-4" />
               <span>{images.length ? "Add another screenshot" : "Upload screenshots or paste from clipboard"}</span>
-              <span className="text-[10px]">You can pick several at once · stored only on your device</span>
+              <span className="text-[10px]">Pick several at once, or paste an image and text together · stored only on your device</span>
             </button>
           </Field>
 
