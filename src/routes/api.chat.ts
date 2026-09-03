@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { priorScansBlock } from "@/lib/ai-context";
+import { priorScansBlock, voidPriorScanVerdicts } from "@/lib/ai-context";
 import { levelCheckBlock, parseStatedLevels } from "@/lib/levelValidation";
 import { convertToModelMessages, streamText, type StreamTextTransform, type ToolSet, type UIMessage } from "ai";
 import { createClient } from "@supabase/supabase-js";
@@ -1066,7 +1066,11 @@ ATTACHED CHART OVERRIDE (this message has an image):
               ? "MODEL AWARENESS: You are running on Claude (the primary coaching model). If the trader asks which model powers you, say Claude."
               : `MODEL AWARENESS: The Claude account is unavailable (out of credits or key rejected), so you are running on ${FALLBACK_LABEL} as the backup model. If the trader asks why replies were failing, why quality changed, or which model you are, tell them plainly: Claude credits ran out and you are answering on ${FALLBACK_LABEL} until an admin tops up. Never claim to be Claude while on the backup.`,
           },
-          ...(await convertToModelMessages(messages)),
+          // RULE 6 (context hygiene): the model must not read its own earlier
+          // directional verdicts. On 2026-09-03 three prior SHORT scans sitting in
+          // the transcript kept GBP/USD short while the live 4H had already turned.
+          // The bias lock was in the history, not in a cache.
+          ...(await convertToModelMessages(voidPriorScanVerdicts(messages))),
         ];
 
         const result = streamText({
