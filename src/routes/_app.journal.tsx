@@ -1680,11 +1680,23 @@ function TradeFormModal({
         .map((i) => i.getAsFile())
         .filter((f): f is File => !!f);
       if (files.length) void handlePickFiles(files);
+
+      // Pasted text lands in Notes so a screenshot and the write-up can be
+      // dropped in together. Skipped when the cursor is already in a field,
+      // so normal typing/pasting into inputs still behaves normally.
+      const el = e.target as HTMLElement | null;
+      const inField = !!el?.closest?.("input, textarea, select, [contenteditable='true']");
+      const text = e.clipboardData?.getData("text/plain")?.trim() ?? "";
+      if (!inField && text) {
+        e.preventDefault();
+        setNotes((prev) => (prev.trim() ? `${prev.replace(/\s+$/, "")}\n${text}` : text));
+      }
     };
     window.addEventListener("paste", onPaste);
     return () => window.removeEventListener("paste", onPaste);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
 
   const hasImage = images.length > 0;
 
