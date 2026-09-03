@@ -267,11 +267,22 @@ function detectCisd(candles: Candle[]) {
   return empty;
 }
 
+/**
+ * Higher-timeframe bias from aggregated candles.
+ *
+ * The grouping is anchored to the NEWEST candle, not the oldest. Anchoring at
+ * index 0 silently threw away the newest 1-3 candles whenever the series length
+ * was not a multiple of the group size, which is how a +300pt NAS100 day could
+ * still read "bearish" off Tuesday's bars.
+ */
 function detectHtfBias(candles: Candle[]): "bullish" | "bearish" | "neutral" {
   if (candles.length < 20) return "neutral";
-  const g = 4, agg: Candle[] = [];
-  for (let i = 0; i + g <= candles.length; i += g) {
-    const chunk = candles.slice(i, i + g);
+  const g = 4;
+  const window = candles.slice(-48); // ~8 trading days of 4H, recent only
+  const start = window.length % g;   // drop the OLDEST remainder, keep the newest bar
+  const agg: Candle[] = [];
+  for (let i = start; i + g <= window.length; i += g) {
+    const chunk = window.slice(i, i + g);
     agg.push({
       time: chunk[0].time,
       open: chunk[0].open,
@@ -283,6 +294,31 @@ function detectHtfBias(candles: Candle[]): "bullish" | "bearish" | "neutral" {
   const c = detectCisd(agg);
   return c.state === "none" ? "neutral" : c.state;
 }
+
+/**
+ * Trend from swing structure: higher highs + higher lows = up, lower highs +
+ * lower lows = down, anything else = range. Structure beats a regression line
+ * because a regression over a week of bars keeps quoting last week's direction
+ * after price has already broken the other way.
+ */
+function swingTrend(candles: Candle[]): "up" | "down" | "range" {
+  if (candles.length < 8) return "range";
+  const highs: number[] = [];
+  const lows: number[] = [];
+  for (let i = 2; i < candles.length - 2; i++) {
+    const c = candles[i];
+    if (c.high > candles[i - 1].high && c.high > candles[i - 2].high && c.high > candles[i + 1].high && c.high > candles[i + 2].high) highs.push(c.high);
+    if (c.low < candles[i - 1].low && c.low < candles[i - 2].low && c.low < candles[i + 1].low && c.low < candles[i + 2].low) lows.push(c.low);
+  }
+  const hh = highs.length >= 2 && highs.at(-1)! > highs.at(-2)!;
+  const lh = highs.length >= 2 && highs.at(-1)! < highs.at(-2)!;
+  const hl = lows.length >= 2 && lows.at(-1)! > lows.at(-2)!;
+  const ll = lows.length >= 2 && lows.at(-1)! < lows.at(-2)!;
+  if (hh && hl) return "up";
+  if (lh && ll) return "down";
+  return "range";
+}
+
 
 function activeSessions(nowUtcH: number): string[] {
   const out: string[] = [];
