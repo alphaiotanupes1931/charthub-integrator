@@ -1102,17 +1102,24 @@ ATTACHED CHART OVERRIDE (this message has an image):
             if (!shouldPersist || !thread) return;
             try {
               if (!sb || !userId) return;
-              const rows = finalMessages
-                .filter((m) => Array.isArray(m.parts) && m.parts.length > 0)
-                .map((m) => ({
+              const byId = new Map<string, { thread_id: string; user_id: string; client_id: string; msg_id: string; role: string; parts: Json }>();
+              for (const m of finalMessages) {
+                if (!Array.isArray(m.parts) || m.parts.length === 0) continue;
+                if (typeof m.id !== "string" || !m.id) continue;
+                // Postgres aborts the whole ON CONFLICT batch if two rows share
+                // the conflict key, so keep only the last row per msg_id.
+                byId.set(m.id, {
                   thread_id: threadId,
                   user_id: userId as string,
                   client_id: userId as string, // legacy NOT NULL column
                   msg_id: m.id,
                   role: m.role,
                   parts: m.parts as unknown as Json,
-                }));
+                });
+              }
+              const rows = [...byId.values()];
               if (rows.length > 0) {
+
                 const { error } = await sb
                   .from("chat_messages")
                   .upsert(rows as never, { onConflict: "thread_id,msg_id" });
