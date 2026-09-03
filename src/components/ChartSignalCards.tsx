@@ -5,6 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { takeTrade } from "@/lib/signalHistory";
 import type { ChartGrade } from "@/lib/chartAnnotations";
+import { InfoTip } from "@/components/InfoTip";
 import { ScanStamp } from "@/components/ScanStamp";
 import { ScanVersionHistory } from "@/components/ScanVersionHistory";
 import { AutoBacktestVerify } from "@/components/AutoBacktestVerify";
@@ -136,12 +137,12 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
   });
   const tzTag = tzAbbrev(tz);
 
-  const rows: Array<{ key: string; label: string; value?: number; tone: string; icon: React.ComponentType<{ className?: string }>; from?: number }> = [
+  const rows: Array<{ key: string; label: string; value?: number; tone: string; icon: React.ComponentType<{ className?: string }>; from?: number; tip: string }> = [
 
-    { key: "entry", label: "Entry", value: grade.entry, tone: "text-foreground", icon: Target, from: lastPrice },
-    { key: "stop", label: "Stop", value: grade.stop, tone: "text-red-300", icon: Shield, from: grade.entry },
-    { key: "tp1", label: "TP1", value: grade.tp1, tone: "text-bull", icon: Flag, from: grade.entry },
-    { key: "tp2", label: "TP2", value: grade.tp2, tone: "text-bull", icon: Flag, from: grade.entry },
+    { key: "entry", label: "Entry", value: grade.entry, tone: "text-foreground", icon: Target, from: lastPrice, tip: "entry" },
+    { key: "stop", label: "Stop", value: grade.stop, tone: "text-red-300", icon: Shield, from: grade.entry, tip: "stop" },
+    { key: "tp1", label: "TP1", value: grade.tp1, tone: "text-bull", icon: Flag, from: grade.entry, tip: "tp1" },
+    { key: "tp2", label: "TP2", value: grade.tp2, tone: "text-bull", icon: Flag, from: grade.entry, tip: "tp2" },
   ];
 
   return (
@@ -152,6 +153,7 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
           <BiasIcon className={`h-3 w-3 ${biasText}`} />
           <span className={`text-[10px] font-bold tracking-wider ${biasText}`}>{actionLabel}</span>
           <span className={`text-[10px] font-bold ${biasText}`}>{grade.grade.toUpperCase()}</span>
+          <InfoTip id="grade" />
         </span>
         {orderType && (
           <span
@@ -159,6 +161,7 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
             title={orderHelp}
           >
             {orderType}
+            <InfoTip id={orderType.includes("STOP") ? "buyStop" : orderType.includes("LIMIT") ? "buyLimit" : "entry"} className="ml-1" />
           </span>
         )}
 
@@ -311,7 +314,7 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
                 { k: "risk", label: "Risk per unit", v: `${fmt(sniper.riskAfter)} (was ${fmt(sniper.riskBefore)})`, tone: "text-foreground" },
               ].map((c) => (
                 <div key={c.k} className="flex flex-col gap-0.5 rounded-xl border border-border/50 bg-background/40 px-2 py-1.5">
-                  <span className="text-[9px] uppercase tracking-wider text-muted-foreground">{c.label}</span>
+                  <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wider text-muted-foreground">{c.label}{c.k === "rr" ? <InfoTip id="rr" /> : null}</span>
                   <span className={`font-mono text-[11px] ${c.tone}`}>{c.v}</span>
                 </div>
               ))}
@@ -332,6 +335,7 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
                 <div className="flex items-center gap-1.5 min-w-0">
                   <Icon className={`h-3 w-3 shrink-0 ${r.tone}`} />
                   <span className="text-[10px] tracking-tight text-muted-foreground truncate">{r.label}</span>
+                  <InfoTip id={r.tip} />
                 </div>
                 <div className="flex items-baseline gap-1.5 shrink-0">
                   <span className={`font-mono text-[11px] ${r.tone}`}>{fmt(r.value)}</span>
@@ -345,6 +349,7 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
               <div className="flex items-center gap-1.5">
                 <Clock className="h-3 w-3 text-muted-foreground" />
                 <span className="text-[10px] font-bold tracking-wider text-foreground">TIMING</span>
+                <InfoTip id="session" />
                 <span className="text-[10px] text-muted-foreground">
                   {timing.session} · all times {tz}{tzTag ? ` (${tzTag})` : ""}
                 </span>
@@ -366,6 +371,7 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
                 Expected hold: <span className="text-foreground">{timing.holdTime}</span>. Targets pay{" "}
                 <span className="text-foreground">{timing.tp1R.toFixed(1)}R</span> at TP1 and{" "}
                 <span className="text-foreground">{timing.tp2R.toFixed(1)}R</span> at TP2.
+                <InfoTip id="r" className="ml-1" />
               </div>
               <div className="text-[10px] text-foreground">{timing.ratioAdvice}</div>
               <div className="space-y-1">

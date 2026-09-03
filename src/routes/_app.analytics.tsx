@@ -1,3 +1,4 @@
+import { InfoTip } from "@/components/InfoTip";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
@@ -342,6 +343,8 @@ function AnalyticsPage() {
     );
   }
 
+  const KPI_TIPS: Record<string, string> = {"Net P&L": "pnl", "Win Rate": "winRate", "Avg R:R": "rr", "Expectancy": "expectancy", "Max Drawdown": "drawdown", "Win rate": "winRate", "Net R": "r"};
+
   const kpis = [
     { label: "Net P&L", value: `${stats?.netPnl ?? 0 >= 0 ? "+" : ""}${(stats?.netPnl ?? 0).toFixed(2)}`, icon: stats?.netPnl ?? 0 >= 0 ? TrendingUp : TrendingDown, positive: (stats?.netPnl ?? 0) >= 0 },
     { label: "Win Rate", value: `${(stats?.winRate ?? 0).toFixed(1)}%`, icon: Target, positive: (stats?.winRate ?? 0) >= 50 },
@@ -374,6 +377,7 @@ function AnalyticsPage() {
             <div key={k.label} className="rounded-xl border border-border/60 bg-card p-4">
               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
                 <Icon className="h-3.5 w-3.5" /> {k.label}
+                <InfoTip id={KPI_TIPS[k.label]} />
               </div>
               <div className={`text-xl font-semibold ${k.positive ? "text-bull" : "text-destructive"}`}>{k.value}</div>
             </div>
