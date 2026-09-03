@@ -25,28 +25,68 @@ export type ParseClosedTradesResult = {
 };
 
 const TradeSchema = z.object({
-  symbol: z.string(),
-  side: z.string(),
-  entry: z.number().nullable(),
-  exit: z.number().nullable(),
-  stop: z.number().nullable(),
-  takeProfit: z.number().nullable(),
-  size: z.number().nullable(),
-  pnl: z.number().nullable(),
-  fees: z.number().nullable(),
-  date: z.string().nullable(),
-  timeframe: z.string().nullable(),
-  notes: z.string().nullable(),
-  confidence: z.number().nullable(),
+  symbol: z.string().nullish(),
+  side: z.string().nullish(),
+  entry: z.number().nullish(),
+  exit: z.number().nullish(),
+  stop: z.number().nullish(),
+  takeProfit: z.number().nullish(),
+  size: z.number().nullish(),
+  pnl: z.number().nullish(),
+  fees: z.number().nullish(),
+  date: z.string().nullish(),
+  timeframe: z.string().nullish(),
+  notes: z.string().nullish(),
+  confidence: z.number().nullish(),
 });
 
 const OutSchema = z.object({
-  trades: z.array(TradeSchema),
-  note: z.string(),
+  trades: z.array(TradeSchema).nullish(),
+  note: z.string().nullish(),
 });
 
 const MAX_IMAGES = 4;
 const MAX_CHARS = 6_000_000; // ~4.5MB of base64 per request
+
+/**
+ * Ask the model for JSON and parse it ourselves. The gateway's Gemini route
+ * does not honour provider structured output, so a schema-constrained call
+ * comes back as prose and throws. Requesting raw JSON works on every model.
+ */
+async function readJson<T>(
+  schema: { parse: (v: unknown) => T },
+  args: { apiKey: string; system: string; messages: any[] },
+): Promise<T> {
+  const { generateText } = await import("ai");
+  const { createAiGatewayProvider } = await import("@/lib/ai-gateway.server");
+  const model = createAiGatewayProvider(args.apiKey)("google/gemini-3.7-flash");
+  let last = "";
+  // The model occasionally answers in prose or truncates the object; one retry
+  // with a blunter instruction clears almost every case.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const res = await generateText({
+      model,
+      system:
+        `${args.system} Reply with a single minified JSON object only. No prose, no explanation, no markdown fences.` +
+        (attempt === 0 ? "" : " Your previous reply was not valid JSON. Output only the JSON object now."),
+      messages: args.messages,
+    });
+    const text = res.text || "";
+    last = text.slice(0, 200);
+    const start = text.indexOf("{");
+    const end = text.lastIndexOf("}");
+    if (start === -1 || end <= start) continue;
+    try {
+      return schema.parse(JSON.parse(text.slice(start, end + 1)));
+    } catch {
+      continue;
+    }
+  }
+  console.warn("[journal-import] unparsable model reply", last);
+  throw new Error("NO_JSON");
+
+}
+
 
 /**
  * Read closed positions out of one or more screenshots (broker history, MT5
@@ -74,13 +114,9 @@ export const parseClosedTradesScreenshot = createServerFn({ method: "POST" })
       return { trades: [], note: "Screenshot reading is not configured on this deployment." };
     }
 
-    const { generateText, Output, NoObjectGeneratedError } = await import("ai");
-    const { createAiGatewayProvider } = await import("@/lib/ai-gateway.server");
-
     try {
-      const res = await generateText({
-        model: createAiGatewayProvider(apiKey)("google/gemini-3.7-flash"),
-        output: Output.object({ schema: OutSchema }),
+      const out = await readJson(OutSchema, {
+        apiKey,
         system: [
           "You read screenshots of trading platform history and extract CLOSED trades only.",
           "Return one entry per closed position. Skip open positions, pending orders, deposits, withdrawals and totals rows.",
@@ -91,6 +127,7 @@ export const parseClosedTradesScreenshot = createServerFn({ method: "POST" })
           "symbol is the instrument ticker as printed, uppercase, no broker suffix noise.",
           "confidence is 0-1: how sure you are that this row was read correctly.",
           "note is one short plain sentence about what you saw, no emoji, no marketing tone.",
+          'Shape: {"trades":[{"symbol":"","side":"Long","entry":0,"exit":0,"stop":null,"takeProfit":null,"size":null,"pnl":null,"fees":null,"date":null,"timeframe":null,"notes":null,"confidence":0.9}],"note":""}',
         ].join(" "),
         messages: [
           {
@@ -106,28 +143,29 @@ export const parseClosedTradesScreenshot = createServerFn({ method: "POST" })
         ],
       });
 
-      const trades: ParsedClosedTrade[] = res.output.trades.slice(0, 60).map((t) => ({
+      const trades: ParsedClosedTrade[] = (out.trades ?? []).slice(0, 60).map((t) => ({
         symbol: (t.symbol || "").toUpperCase().slice(0, 24),
-        side: /short|sell/i.test(t.side) ? "Short" : "Long",
-        entry: t.entry,
-        exit: t.exit,
-        stop: t.stop,
-        takeProfit: t.takeProfit,
-        size: t.size,
-        pnl: t.pnl,
-        fees: t.fees,
+        side: /short|sell/i.test(t.side || "") ? "Short" : "Long",
+        entry: t.entry ?? null,
+        exit: t.exit ?? null,
+        stop: t.stop ?? null,
+        takeProfit: t.takeProfit ?? null,
+        size: t.size ?? null,
+        pnl: t.pnl ?? null,
+        fees: t.fees ?? null,
         date: t.date && /^\d{4}-\d{2}-\d{2}$/.test(t.date) ? t.date : null,
         timeframe: t.timeframe ? t.timeframe.slice(0, 6) : null,
         notes: t.notes ? t.notes.slice(0, 300) : null,
-        confidence: t.confidence,
+        confidence: t.confidence ?? null,
       }));
 
       return {
         trades: trades.filter((t) => t.symbol),
-        note: res.output.note.slice(0, 300),
+        note: (out.note || "Read the closed trades off that screenshot.").slice(0, 300),
       };
     } catch (e) {
-      if (NoObjectGeneratedError.isInstance(e)) {
+      const raw = e instanceof Error ? e.message : "";
+      if (/NO_JSON|JSON|invalid_type|Unexpected/i.test(raw)) {
         return { trades: [], note: "The screenshot could not be read. Crop tighter to the closed-trades table and retry." };
       }
       const message = e instanceof Error ? e.message : "";
@@ -153,17 +191,17 @@ export type ParsedTradeSetup = {
 };
 
 const SetupSchema = z.object({
-  symbol: z.string().nullable(),
-  side: z.string().nullable(),
-  timeframe: z.string().nullable(),
-  entry: z.number().nullable(),
-  stop: z.number().nullable(),
-  takeProfit: z.number().nullable(),
-  exit: z.number().nullable(),
-  size: z.number().nullable(),
-  notes: z.string().nullable(),
-  confidence: z.number().nullable(),
-  note: z.string(),
+  symbol: z.string().nullish(),
+  side: z.string().nullish(),
+  timeframe: z.string().nullish(),
+  entry: z.number().nullish(),
+  stop: z.number().nullish(),
+  takeProfit: z.number().nullish(),
+  exit: z.number().nullish(),
+  size: z.number().nullish(),
+  notes: z.string().nullish(),
+  confidence: z.number().nullish(),
+  note: z.string().nullish(),
 });
 
 const EMPTY_SETUP: ParsedTradeSetup = {
@@ -195,13 +233,9 @@ export const parseTradeSetupScreenshot = createServerFn({ method: "POST" })
     const apiKey = process.env['LOVABLE_API_KEY'];
     if (!apiKey) return { ...EMPTY_SETUP, note: "Screenshot reading is not configured on this deployment." };
 
-    const { generateText, Output, NoObjectGeneratedError } = await import("ai");
-    const { createAiGatewayProvider } = await import("@/lib/ai-gateway.server");
-
     try {
-      const res = await generateText({
-        model: createAiGatewayProvider(apiKey)("google/gemini-3.7-flash"),
-        output: Output.object({ schema: SetupSchema }),
+      const o = await readJson(SetupSchema, {
+        apiKey,
         system: [
           "You read a single trading chart screenshot (usually TradingView) and extract the trade levels shown on it.",
           "The symbol and timeframe are normally printed in the top-left corner; keep the symbol as printed, uppercase.",
@@ -214,6 +248,7 @@ export const parseTradeSetupScreenshot = createServerFn({ method: "POST" })
           "notes is at most two short factual sentences about what the chart shows, no emoji, no hype.",
           "confidence is 0-1 for how reliably the levels were read.",
           "note is one short plain sentence about what you read.",
+          'Shape: {"symbol":"","side":"Long","timeframe":"4H","entry":0,"stop":0,"takeProfit":0,"exit":null,"size":null,"notes":null,"confidence":0.9,"note":""}',
         ].join(" "),
         messages: [
           {
@@ -229,26 +264,25 @@ export const parseTradeSetupScreenshot = createServerFn({ method: "POST" })
         ],
       });
 
-      const o = res.output;
       const tf = (o.timeframe || "").trim();
       return {
         symbol: o.symbol ? o.symbol.toUpperCase().slice(0, 24) : null,
         side: o.side ? (/short|sell/i.test(o.side) ? "Short" : "Long") : null,
         timeframe: /^(1m|5m|15m|30m|1H|4H|1D|1W)$/i.test(tf) ? tf : null,
-        entry: o.entry,
-        stop: o.stop,
-        takeProfit: o.takeProfit,
-        exit: o.exit,
-        size: o.size,
+        entry: o.entry ?? null,
+        stop: o.stop ?? null,
+        takeProfit: o.takeProfit ?? null,
+        exit: o.exit ?? null,
+        size: o.size ?? null,
         notes: o.notes ? o.notes.slice(0, 300) : null,
-        confidence: o.confidence,
+        confidence: o.confidence ?? null,
         note: (o.note || "").slice(0, 300),
       };
     } catch (e) {
-      if (NoObjectGeneratedError.isInstance(e)) {
+      const message = e instanceof Error ? e.message : "";
+      if (/NO_JSON|JSON|invalid_type|Unexpected/i.test(message)) {
         return { ...EMPTY_SETUP, note: "That chart could not be read. Crop tighter to the position tool and retry." };
       }
-      const message = e instanceof Error ? e.message : "";
       if (/429/.test(message)) return { ...EMPTY_SETUP, note: "Too many requests right now. Wait a moment and retry." };
       if (/402/.test(message)) return { ...EMPTY_SETUP, note: "AI credits are exhausted for this workspace." };
       return { ...EMPTY_SETUP, note: "The screenshot reader is unavailable right now. Try again shortly." };
@@ -268,13 +302,9 @@ export const parseTradeSetupText = createServerFn({ method: "POST" })
     const apiKey = process.env['LOVABLE_API_KEY'];
     if (!apiKey) return { ...EMPTY_SETUP, note: "Text reading is not configured on this deployment." };
 
-    const { generateText, Output, NoObjectGeneratedError } = await import("ai");
-    const { createAiGatewayProvider } = await import("@/lib/ai-gateway.server");
-
     try {
-      const res = await generateText({
-        model: createAiGatewayProvider(apiKey)("google/gemini-3.7-flash"),
-        output: Output.object({ schema: SetupSchema }),
+      const o = await readJson(SetupSchema, {
+        apiKey,
         system: [
           "You read pasted trading text (broker fill, signal message, or a trader's own notes) and extract the trade levels.",
           "Keep the symbol as written, uppercase.",
@@ -285,30 +315,30 @@ export const parseTradeSetupText = createServerFn({ method: "POST" })
           "Never invent a value: use null for anything not stated.",
           "notes is at most two short factual sentences, no emoji, no hype.",
           "confidence is 0-1 for how reliably the values were read. note is one short plain sentence.",
+          'Shape: {"symbol":"","side":"Long","timeframe":"4H","entry":0,"stop":0,"takeProfit":0,"exit":null,"size":null,"notes":null,"confidence":0.9,"note":""}',
         ].join(" "),
         messages: [{ role: "user", content: `Extract the trade details from this text:\n\n${data.text}` }],
       });
 
-      const o = res.output;
       const tf = (o.timeframe || "").trim();
       return {
         symbol: o.symbol ? o.symbol.toUpperCase().slice(0, 24) : null,
         side: o.side ? (/short|sell/i.test(o.side) ? "Short" : "Long") : null,
         timeframe: /^(1m|5m|15m|30m|1H|4H|1D|1W)$/i.test(tf) ? tf : null,
-        entry: o.entry,
-        stop: o.stop,
-        takeProfit: o.takeProfit,
-        exit: o.exit,
-        size: o.size,
+        entry: o.entry ?? null,
+        stop: o.stop ?? null,
+        takeProfit: o.takeProfit ?? null,
+        exit: o.exit ?? null,
+        size: o.size ?? null,
         notes: o.notes ? o.notes.slice(0, 300) : null,
-        confidence: o.confidence,
+        confidence: o.confidence ?? null,
         note: (o.note || "").slice(0, 300),
       };
     } catch (e) {
-      if (NoObjectGeneratedError.isInstance(e)) {
+      const message = e instanceof Error ? e.message : "";
+      if (/NO_JSON|JSON|invalid_type|Unexpected/i.test(message)) {
         return { ...EMPTY_SETUP, note: "No trade details could be read from that text." };
       }
-      const message = e instanceof Error ? e.message : "";
       if (/429/.test(message)) return { ...EMPTY_SETUP, note: "Too many requests right now. Wait a moment and retry." };
       if (/402/.test(message)) return { ...EMPTY_SETUP, note: "AI credits are exhausted for this workspace." };
       return { ...EMPTY_SETUP, note: "The text reader is unavailable right now. Try again shortly." };
