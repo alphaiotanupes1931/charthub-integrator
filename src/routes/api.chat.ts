@@ -756,17 +756,21 @@ export const Route = createFileRoute("/api/chat")({
           // Save the incoming turn(s) right away so a refresh mid-stream never
           // loses what the trader typed. Deduped on (thread_id, msg_id).
           if (sb && userId) {
-            const rows = (messages as Array<{ id?: string; role: string; parts: unknown }>)
-              .filter((m) => m && typeof m.id === "string" && m.id && Array.isArray(m.parts))
-              .map((m) => ({
+            const preById = new Map<string, { thread_id: string; user_id: string; client_id: string; msg_id: string; role: string; parts: Json }>();
+            for (const m of messages as Array<{ id?: string; role: string; parts: unknown }>) {
+              if (!m || typeof m.id !== "string" || !m.id || !Array.isArray(m.parts)) continue;
+              preById.set(m.id, {
                 thread_id: threadId,
                 user_id: userId as string,
                 client_id: userId as string,
-                msg_id: m.id as string,
+                msg_id: m.id,
                 role: m.role,
                 parts: m.parts as unknown as Json,
-              }));
+              });
+            }
+            const rows = [...preById.values()];
             if (rows.length > 0) {
+
               const { error: preErr } = await sb
                 .from("chat_messages")
                 .upsert(rows as never, { onConflict: "thread_id,msg_id", ignoreDuplicates: true });
