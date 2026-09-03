@@ -45,7 +45,8 @@ const OutSchema = z.object({
   note: z.string().nullish(),
 });
 
-const MAX_IMAGES = 4;
+// Five frames per read covers the 4H / 1H / 15m / 5m / 1m stack a trader pastes.
+const MAX_IMAGES = 5;
 const MAX_CHARS = 6_000_000; // ~4.5MB of base64 per request
 
 /**
