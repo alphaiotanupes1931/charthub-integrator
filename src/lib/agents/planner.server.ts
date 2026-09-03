@@ -894,7 +894,7 @@ export async function runPlanner(
     alignment: biasRead.result.mtf.alignmentScore,
     maxGrade: biasRead.result.mtf.maxGrade,
     engineStatus: biasRead.result.status,
-    reversal: biasRead.result.mtf.reversal ?? "none",
+    htfOpposed: biasRead.result.mtf.htfOpposed,
     computedAt: new Date(biasRead.result.mtf.computedAt).toISOString(),
   });
 
