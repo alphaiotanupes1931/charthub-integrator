@@ -216,8 +216,8 @@ test('15. an unknown symbol falls back conservatively, it does not borrow GBP/US
   assert.equal(cfg.maxEntryDistanceAtr, 1.0, 'tighter entry gate than any tuned instrument');
   assert.notEqual(cfg.entryBuffer, INSTRUMENTS.SPX500.entryBuffer);
 
-  const r = gradeScan(baseScan({ instrument: 'SOL_USD' }));
-  assert.ok(r.notes.some((n) => /No tuned config for SOL_USD/.test(n)), 'must warn, not fail silently');
+  const r = gradeScan(baseScan({ instrument: 'TSLA' }));
+  assert.ok(r.notes.some((n) => /No tuned config for TSLA/.test(n)), 'must warn, not fail silently');
 });
 
 test('16. every instrument in the table is self-consistent', () => {
