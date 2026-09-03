@@ -98,13 +98,9 @@ export const parseClosedTradesScreenshot = createServerFn({ method: "POST" })
       return { trades: [], note: "Screenshot reading is not configured on this deployment." };
     }
 
-    const { generateText, Output, NoObjectGeneratedError } = await import("ai");
-    const { createAiGatewayProvider } = await import("@/lib/ai-gateway.server");
-
     try {
-      const res = await generateText({
-        model: createAiGatewayProvider(apiKey)("google/gemini-3.7-flash"),
-        output: Output.object({ schema: OutSchema }),
+      const out = await readJson(OutSchema, {
+        apiKey,
         system: [
           "You read screenshots of trading platform history and extract CLOSED trades only.",
           "Return one entry per closed position. Skip open positions, pending orders, deposits, withdrawals and totals rows.",
@@ -115,6 +111,7 @@ export const parseClosedTradesScreenshot = createServerFn({ method: "POST" })
           "symbol is the instrument ticker as printed, uppercase, no broker suffix noise.",
           "confidence is 0-1: how sure you are that this row was read correctly.",
           "note is one short plain sentence about what you saw, no emoji, no marketing tone.",
+          'Shape: {"trades":[{"symbol":"","side":"Long","entry":0,"exit":0,"stop":null,"takeProfit":null,"size":null,"pnl":null,"fees":null,"date":null,"timeframe":null,"notes":null,"confidence":0.9}],"note":""}',
         ].join(" "),
         messages: [
           {
@@ -130,9 +127,9 @@ export const parseClosedTradesScreenshot = createServerFn({ method: "POST" })
         ],
       });
 
-      const trades: ParsedClosedTrade[] = res.output.trades.slice(0, 60).map((t) => ({
+      const trades: ParsedClosedTrade[] = (out.trades ?? []).slice(0, 60).map((t) => ({
         symbol: (t.symbol || "").toUpperCase().slice(0, 24),
-        side: /short|sell/i.test(t.side) ? "Short" : "Long",
+        side: /short|sell/i.test(t.side || "") ? "Short" : "Long",
         entry: t.entry,
         exit: t.exit,
         stop: t.stop,
@@ -148,10 +145,11 @@ export const parseClosedTradesScreenshot = createServerFn({ method: "POST" })
 
       return {
         trades: trades.filter((t) => t.symbol),
-        note: res.output.note.slice(0, 300),
+        note: (out.note || "Read the closed trades off that screenshot.").slice(0, 300),
       };
     } catch (e) {
-      if (NoObjectGeneratedError.isInstance(e)) {
+      const raw = e instanceof Error ? e.message : "";
+      if (/NO_JSON|JSON|invalid_type|Unexpected/i.test(raw)) {
         return { trades: [], note: "The screenshot could not be read. Crop tighter to the closed-trades table and retry." };
       }
       const message = e instanceof Error ? e.message : "";
