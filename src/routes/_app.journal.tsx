@@ -1974,7 +1974,7 @@ function TradeFormModal({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              placeholder="What was the setup? What did you see?"
+              placeholder="What was the setup? What did you see? Paste text or a screenshot here."
               className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:border-primary/50"
             />
           </Field>
@@ -2011,7 +2011,7 @@ function TradeFormModal({
             >
               <Upload className="h-4 w-4" />
               <span>{images.length ? "Add another screenshot" : "Upload screenshots or paste from clipboard"}</span>
-              <span className="text-[10px]">You can pick several at once · stored only on your device</span>
+              <span className="text-[10px]">Pick several at once, or paste an image and text together · stored only on your device</span>
             </button>
           </Field>
 
