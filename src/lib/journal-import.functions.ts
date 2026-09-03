@@ -136,3 +136,121 @@ export const parseClosedTradesScreenshot = createServerFn({ method: "POST" })
       return { trades: [], note: "The screenshot reader is unavailable right now. Try again shortly." };
     }
   });
+
+/** One planned/open setup read out of a chart screenshot (TradingView etc.). */
+export type ParsedTradeSetup = {
+  symbol: string | null;
+  side: "Long" | "Short" | null;
+  timeframe: string | null;
+  entry: number | null;
+  stop: number | null;
+  takeProfit: number | null;
+  exit: number | null;
+  size: number | null;
+  notes: string | null;
+  confidence: number | null;
+  note: string;
+};
+
+const SetupSchema = z.object({
+  symbol: z.string().nullable(),
+  side: z.string().nullable(),
+  timeframe: z.string().nullable(),
+  entry: z.number().nullable(),
+  stop: z.number().nullable(),
+  takeProfit: z.number().nullable(),
+  exit: z.number().nullable(),
+  size: z.number().nullable(),
+  notes: z.string().nullable(),
+  confidence: z.number().nullable(),
+  note: z.string(),
+});
+
+const EMPTY_SETUP: ParsedTradeSetup = {
+  symbol: null, side: null, timeframe: null, entry: null, stop: null,
+  takeProfit: null, exit: null, size: null, notes: null, confidence: null, note: "",
+};
+
+/**
+ * Read the numbers off a chart screenshot (TradingView long/short position
+ * tool, broker order ticket) so the journal form can be filled in without
+ * retyping entry, stop and target by hand.
+ */
+export const parseTradeSetupScreenshot = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { images: string[]; hint?: string }) =>
+    z
+      .object({
+        images: z.array(z.string().min(32)).min(1).max(MAX_IMAGES),
+        hint: z.string().max(400).optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }): Promise<ParsedTradeSetup> => {
+    const total = data.images.reduce((n, i) => n + i.length, 0);
+    if (total > MAX_CHARS) {
+      return { ...EMPTY_SETUP, note: "That screenshot is too large. Crop it to the chart and try again." };
+    }
+
+    const apiKey = process.env['LOVABLE_API_KEY'];
+    if (!apiKey) return { ...EMPTY_SETUP, note: "Screenshot reading is not configured on this deployment." };
+
+    const { generateText, Output, NoObjectGeneratedError } = await import("ai");
+    const { createAiGatewayProvider } = await import("@/lib/ai-gateway.server");
+
+    try {
+      const res = await generateText({
+        model: createAiGatewayProvider(apiKey)("google/gemini-3.7-flash"),
+        output: Output.object({ schema: SetupSchema }),
+        system: [
+          "You read a single trading chart screenshot (usually TradingView) and extract the trade levels shown on it.",
+          "The symbol and timeframe are normally printed in the top-left corner; keep the symbol as printed, uppercase.",
+          "timeframe must be one of 1m, 5m, 15m, 30m, 1H, 4H, 1D, 1W when it can be read, otherwise null.",
+          "If a long/short position tool is drawn: the entry line is the middle line, the red/loss zone is the stop, the green/profit zone is the target.",
+          "A green profit zone above the entry means side is Long; below the entry means Short. Buy/long labels are Long, sell/short labels are Short.",
+          "Read prices off the price axis or the printed labels. Copy digits exactly and respect the instrument's decimal places.",
+          "exit is only set when the screenshot clearly shows the trade already closed at a price; otherwise null.",
+          "Never invent a value: use null for anything not visible on the image.",
+          "notes is at most two short factual sentences about what the chart shows, no emoji, no hype.",
+          "confidence is 0-1 for how reliably the levels were read.",
+          "note is one short plain sentence about what you read.",
+        ].join(" "),
+        messages: [
+          {
+            role: "user",
+            content: [
+              ...data.images.map((image) => ({ type: "image" as const, image })),
+              {
+                type: "text" as const,
+                text: `Read the symbol, timeframe, direction, entry, stop and target off this chart.${data.hint ? ` Trader note: ${data.hint}` : ""}`,
+              },
+            ],
+          },
+        ],
+      });
+
+      const o = res.output;
+      const tf = (o.timeframe || "").trim();
+      return {
+        symbol: o.symbol ? o.symbol.toUpperCase().slice(0, 24) : null,
+        side: o.side ? (/short|sell/i.test(o.side) ? "Short" : "Long") : null,
+        timeframe: /^(1m|5m|15m|30m|1H|4H|1D|1W)$/i.test(tf) ? tf : null,
+        entry: o.entry,
+        stop: o.stop,
+        takeProfit: o.takeProfit,
+        exit: o.exit,
+        size: o.size,
+        notes: o.notes ? o.notes.slice(0, 300) : null,
+        confidence: o.confidence,
+        note: (o.note || "").slice(0, 300),
+      };
+    } catch (e) {
+      if (NoObjectGeneratedError.isInstance(e)) {
+        return { ...EMPTY_SETUP, note: "That chart could not be read. Crop tighter to the position tool and retry." };
+      }
+      const message = e instanceof Error ? e.message : "";
+      if (/429/.test(message)) return { ...EMPTY_SETUP, note: "Too many requests right now. Wait a moment and retry." };
+      if (/402/.test(message)) return { ...EMPTY_SETUP, note: "AI credits are exhausted for this workspace." };
+      return { ...EMPTY_SETUP, note: "The screenshot reader is unavailable right now. Try again shortly." };
+    }
+  });
