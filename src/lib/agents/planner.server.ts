@@ -646,6 +646,23 @@ function memoBlock(
   ].filter(Boolean).join("\n");
 }
 
+/**
+ * Engine grade is a CAP, not the final grade. Our pipeline anchors entries with
+ * sanitizePlan()/systematicPlan(), which finds levels the engine's own zone list
+ * may not carry, so an engine 'F' from a missing zone must not force NO ENTRY.
+ * A neutral engine bias, by contrast, is absolute: that is rule 6.
+ */
+function capToEngine(
+  grade: typeof GRADES[number],
+  cap: import("./biasEngine").Grade,
+): typeof GRADES[number] {
+  const order = ["NO ENTRY", "C", "B", "A", "A+"];
+  const capLetter = cap === "F" || cap === "D" ? "C" : cap;
+  return order.indexOf(grade) > order.indexOf(capLetter)
+    ? (capLetter as typeof GRADES[number])
+    : grade;
+}
+
 export async function runPlanner(
   apiKey: string,
   snap: MarketSnapshot,
@@ -682,7 +699,14 @@ export async function runPlanner(
     // calendar unavailable; plan on price structure alone
   }
 
-  const ctx = memoBlock(memo, snap, lensDesc, strategyDesc, perfDesc, scoreDesc) + (newsBlock ? `\n\n${newsBlock}` : "");
+  // RULE 6: direction is computed here, from the closed candles of this scan,
+  // and handed to the model as a block it is not allowed to contradict. Nothing
+  // is cached, so a fresh bullish 4H close can never lose to a stale label.
+  const biasRead = computeBias(snap);
+  const ctx = biasRead.contextBlock
+    + "\n\n"
+    + memoBlock(memo, snap, lensDesc, strategyDesc, perfDesc, scoreDesc)
+    + (newsBlock ? `\n\n${newsBlock}` : "");
   const memoryLine = (hermesMemory ? `\n\n${hermesMemory}` : "")
     + (perfDesc ? `\n\nWeight the measured edge: if this playbook has a negative expectancy on this instrument, cap the grade at C and say why. If it has a positive expectancy over 20+ trades, you may keep a high grade when structure agrees.` : "")
     + (coach && COACH_TONE[coach] ? `\n\nCoach voice: you are ${coach}. ${COACH_TONE[coach]}` : "");
@@ -749,7 +773,13 @@ export async function runPlanner(
   // The model used to own both, so two identical scans could come back "B" for
   // one trader and "NO ENTRY" for another purely on sampling luck. Direction and
   // grade are now measured from the snapshot; the model only writes the words.
-  const resolved = resolveDirection(snap, memo, normalizeBias(plan.bias));
+  // The model no longer gets a vote on direction, not even as a tie-breaker.
+  // resolveDirection() stays as the descriptive fallback for the rare scan with
+  // no 4H series at all (feed outage), where the engine has nothing to read.
+  const engineBias = biasRead.platformBias;
+  const resolved = (snap.candles4h?.length ?? 0) >= 20
+    ? { bias: engineBias, reason: `bias engine: ${biasRead.result.mtf.reason}` }
+    : resolveDirection(snap, memo, "Neutral");
 
   // ---- Session volume filter -------------------------------------------
   // Measured before the levels are finalised, because the stop floor depends
@@ -795,6 +825,9 @@ export async function runPlanner(
   // Conviction is counted from evidence that is actually present in the data.
   let confidence = bias === "Neutral" ? 0 : countEvidence(snap, memo, "B", bias, reward / risk);
   let grade = gradeFromEvidence(bias, confidence, snap);
+  // Alignment cap from the engine. 4/4 keeps A+ available; 2/4 can never be
+  // better than C no matter how confident the narrative sounds.
+  grade = capToEngine(grade, biasRead.result.mtf.maxGrade);
   // Calendar risk is measurable and therefore remains a valid hard cap. The
   // user's scorecard cap is applied by the authenticated server-function
   // wrapper after this planner returns.
