@@ -185,6 +185,7 @@ function findSymbolFromTag(tag?: string | null): Symbol | null {
     BTC: "BTC/USD", BTCUSD: "BTC/USD",
     ETH: "ETH/USD", ETHUSD: "ETH/USD",
     XRP: "XRP/USD", XRPUSD: "XRP/USD",
+    SOL: "SOL/USD", SOLUSD: "SOL/USD", SOLANA: "SOL/USD", SOLUSDT: "SOL/USD",
     NAS100: "NAS100", NDX: "NAS100", QQQ: "NAS100",
     US30: "US30", DJI: "US30", DIA: "US30",
     SPX500: "SPX500", SPX: "SPX500", GSPC: "SPX500", SPY: "SPX500",
