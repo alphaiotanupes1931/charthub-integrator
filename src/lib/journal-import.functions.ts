@@ -25,24 +25,24 @@ export type ParseClosedTradesResult = {
 };
 
 const TradeSchema = z.object({
-  symbol: z.string(),
-  side: z.string(),
-  entry: z.number().nullable(),
-  exit: z.number().nullable(),
-  stop: z.number().nullable(),
-  takeProfit: z.number().nullable(),
-  size: z.number().nullable(),
-  pnl: z.number().nullable(),
-  fees: z.number().nullable(),
-  date: z.string().nullable(),
-  timeframe: z.string().nullable(),
-  notes: z.string().nullable(),
-  confidence: z.number().nullable(),
+  symbol: z.string().nullish(),
+  side: z.string().nullish(),
+  entry: z.number().nullish(),
+  exit: z.number().nullish(),
+  stop: z.number().nullish(),
+  takeProfit: z.number().nullish(),
+  size: z.number().nullish(),
+  pnl: z.number().nullish(),
+  fees: z.number().nullish(),
+  date: z.string().nullish(),
+  timeframe: z.string().nullish(),
+  notes: z.string().nullish(),
+  confidence: z.number().nullish(),
 });
 
 const OutSchema = z.object({
-  trades: z.array(TradeSchema),
-  note: z.string(),
+  trades: z.array(TradeSchema).nullish(),
+  note: z.string().nullish(),
 });
 
 const MAX_IMAGES = 4;
@@ -177,17 +177,17 @@ export type ParsedTradeSetup = {
 };
 
 const SetupSchema = z.object({
-  symbol: z.string().nullable(),
-  side: z.string().nullable(),
-  timeframe: z.string().nullable(),
-  entry: z.number().nullable(),
-  stop: z.number().nullable(),
-  takeProfit: z.number().nullable(),
-  exit: z.number().nullable(),
-  size: z.number().nullable(),
-  notes: z.string().nullable(),
-  confidence: z.number().nullable(),
-  note: z.string(),
+  symbol: z.string().nullish(),
+  side: z.string().nullish(),
+  timeframe: z.string().nullish(),
+  entry: z.number().nullish(),
+  stop: z.number().nullish(),
+  takeProfit: z.number().nullish(),
+  exit: z.number().nullish(),
+  size: z.number().nullish(),
+  notes: z.string().nullish(),
+  confidence: z.number().nullish(),
+  note: z.string().nullish(),
 });
 
 const EMPTY_SETUP: ParsedTradeSetup = {
