@@ -374,7 +374,16 @@ function h4Analysis(candles: Candle[]): MtfContext["h4"] {
 
   const cisd = detectCisd(candles);
   const bias = detectHtfBias(candles);
-  const direction = bias !== "neutral" ? bias : cisd.state !== "none" ? cisd.state : "neutral";
+  let direction: "bullish" | "bearish" | "neutral" =
+    bias !== "neutral" ? bias : cisd.state !== "none" ? cisd.state : "neutral";
+
+  // A CISD flip can sit in the series for days. When the live swing structure
+  // says the opposite, the older flip is stale: step to neutral rather than
+  // handing the planner a direction the last two days of price contradict.
+  if ((direction === "bearish" && trend === "up") || (direction === "bullish" && trend === "down")) {
+    direction = "neutral";
+  }
+
 
 
   // Key swing levels: last few swing highs/lows via 3-bar fractal.
