@@ -648,6 +648,14 @@ function memoBlock(
   ].filter(Boolean).join("\n");
 }
 
+/** Fire-and-forget metric row. Never blocks or fails a scan. */
+async function logBiasMetric(props: Record<string, unknown>) {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("product_events").insert({ event: "scan_bias", props });
+  } catch { /* metrics are best-effort */ }
+}
+
 /**
  * Engine grade is a CAP, not the final grade. Our pipeline anchors entries with
  * sanitizePlan()/systematicPlan(), which finds levels the engine's own zone list
@@ -873,6 +881,22 @@ export async function runPlanner(
   }
 
   const isNoEntry = grade === "NO ENTRY";
+
+  // Regression metrics for the v3 fix. This change can fail in the opposite
+  // direction (everything NEUTRAL), so neutral rate, bias flips, and grade
+  // distribution have to be observable per instrument and per day.
+  void logBiasMetric({
+    symbol: snap.ticker,
+    interval: snap.interval,
+    bias,
+    grade,
+    neutral: bias === "Neutral",
+    alignment: biasRead.result.mtf.alignmentScore,
+    maxGrade: biasRead.result.mtf.maxGrade,
+    engineStatus: biasRead.result.status,
+    reversal: biasRead.result.mtf.fourH.reversal,
+    computedAt: new Date(biasRead.result.mtf.computedAt).toISOString(),
+  });
 
   const counterTrend = counterTrendRead(bias, snap);
   const comboGate = timeFrameComboGate(bias, snap);
