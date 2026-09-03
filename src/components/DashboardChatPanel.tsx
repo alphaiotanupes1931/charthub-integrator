@@ -1003,31 +1003,36 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
           data-testid="dashboard-chat-composer"
           style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
         >
-          {pendingImage && (
-            <div className="mb-2 flex items-center gap-2 rounded-2xl border border-border/50 bg-card p-2">
-              <img src={pendingImage.url} alt="attachment preview" className="h-12 w-12 rounded-xl object-cover border border-border/50" />
-              <div className="flex-1 min-w-0">
-                <div className="text-xs font-medium truncate">{pendingImage.name}</div>
-                <div className="text-[10px] text-muted-foreground">Ready to scan - press send</div>
+          {pendingImages.length > 0 && (
+            <div className="mb-2 rounded-2xl border border-border/50 bg-card p-2">
+              <div className="flex flex-wrap gap-2">
+                {pendingImages.map((img, i) => (
+                  <div key={img.url} className="relative">
+                    <img src={img.url} alt={`attachment ${i + 1}`} className="h-14 w-14 rounded-xl object-cover border border-border/50" />
+                    <button
+                      type="button"
+                      onClick={() => setPendingImages((prev) => prev.filter((_, idx) => idx !== i))}
+                      className="absolute -top-1.5 -right-1.5 h-5 w-5 inline-flex items-center justify-center rounded-full bg-background border border-border/60 text-muted-foreground hover:text-destructive transition"
+                      aria-label={`Remove attachment ${i + 1}`}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
               </div>
-              <button
-                type="button"
-                onClick={() => setPendingImage(null)}
-                className="h-7 w-7 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-accent/60 transition"
-                aria-label="Remove attachment"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
+              <div className="mt-1.5 text-[10px] text-muted-foreground">
+                {pendingImages.length}/{MAX_IMAGES} images - press send{pendingImages.length >= MAX_IMAGES ? " (max reached, send then add more)" : ""}
+              </div>
             </div>
           )}
           <input
             ref={fileInputRef}
             type="file"
             accept="image/*"
+            multiple
             className="hidden"
             onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) ingestFile(f);
+              void ingestFiles(e.target.files);
               e.target.value = "";
             }}
           />
