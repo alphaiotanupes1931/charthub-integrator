@@ -508,19 +508,19 @@ function readTimeframe(label: TimeframeRead["label"], interval: string, candles:
   };
 }
 
-const ladderCache = new Map<string, { at: number; data: TimeframeRead[] }>();
-const LADDER_TTL_MS = 60_000;
-
-/** Monthly → 1m read of the same instrument. Cached briefly so chat turns are cheap. */
+/**
+ * Monthly → 1m read of the same instrument.
+ *
+ * Deliberately NOT cached. Every rung of this ladder feeds the directional bias,
+ * and a stale rung is exactly how the 2026-09-03 GBP/USD bias lock happened: the
+ * narrative kept quoting a "4H bearish" label that the live candles had already
+ * invalidated. recomputeMtfBias() is cheap arithmetic, so it runs every scan.
+ */
 export async function getTimeframeLadder(ticker: string): Promise<TimeframeRead[]> {
-  const hit = ladderCache.get(ticker);
-  if (hit && Date.now() - hit.at < LADDER_TTL_MS) return hit.data;
   const rows = await Promise.all(
     LADDER.map(async (tf) => readTimeframe(tf.label, tf.interval, await loadCandlesSafe(ticker, tf.interval))),
   );
-  const data = rows.filter((r): r is TimeframeRead => r !== null);
-  if (data.length) ladderCache.set(ticker, { at: Date.now(), data });
-  return data;
+  return rows.filter((r): r is TimeframeRead => r !== null);
 }
 
 export function formatLadder(rows: TimeframeRead[]): string {
@@ -535,14 +535,18 @@ export function formatLadder(rows: TimeframeRead[]): string {
   ].join("\n");
 }
 
-async function buildMtf(ticker: string, primaryInterval: string, primaryCandles: Candle[]): Promise<MtfContext | undefined> {
+async function buildMtf(
+  ticker: string,
+  primaryInterval: string,
+  primaryCandles: Candle[],
+): Promise<{ mtf: MtfContext; candles4h: Candle[] } | undefined> {
   const useH4 = primaryInterval === "240" ? primaryCandles : await loadCandlesSafe(ticker, "240");
   const useH1 = primaryInterval === "60"  ? primaryCandles : await loadCandlesSafe(ticker, "60");
   const use15 = primaryInterval === "15"  ? primaryCandles : await loadCandlesSafe(ticker, "15");
   if (useH4.length < 20 || useH1.length < 20 || use15.length < 10) return undefined;
   const base = { h4: h4Analysis(useH4), h1: h1Analysis(useH1), m15: m15Confirmation(use15) };
   const ladder = await getTimeframeLadder(ticker).catch(() => [] as TimeframeRead[]);
-  return { ...base, alignment: computeAlignment(base), ladder };
+  return { mtf: { ...base, alignment: computeAlignment(base), ladder }, candles4h: useH4 };
 }
 
 
@@ -593,7 +597,9 @@ export async function getSnapshot(rawTicker: string, interval: string): Promise<
   const htfBias = detectHtfBias(candles);
   const cisd = { ...cisdRaw, htfBias };
 
-  const mtf = source === "unavailable" ? undefined : await buildMtf(ticker, interval, candles).catch(() => undefined);
+  const mtfRead = source === "unavailable" ? undefined : await buildMtf(ticker, interval, candles).catch(() => undefined);
+  const mtf = mtfRead?.mtf;
+  const candles4h = mtfRead?.candles4h ?? (interval === "240" ? candles : []);
 
   return {
     ticker,
@@ -613,5 +619,7 @@ export async function getSnapshot(rawTicker: string, interval: string): Promise<
     fetchedAt: new Date().toISOString(),
     mtf,
     orderFlow: computeOrderFlow(candles),
+    candles4h,
+    atr4h: candles4h.length > 1 ? atr(candles4h) : undefined,
   };
 }
