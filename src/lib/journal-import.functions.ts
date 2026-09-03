@@ -217,13 +217,9 @@ export const parseTradeSetupScreenshot = createServerFn({ method: "POST" })
     const apiKey = process.env['LOVABLE_API_KEY'];
     if (!apiKey) return { ...EMPTY_SETUP, note: "Screenshot reading is not configured on this deployment." };
 
-    const { generateText, Output, NoObjectGeneratedError } = await import("ai");
-    const { createAiGatewayProvider } = await import("@/lib/ai-gateway.server");
-
     try {
-      const res = await generateText({
-        model: createAiGatewayProvider(apiKey)("google/gemini-3.7-flash"),
-        output: Output.object({ schema: SetupSchema }),
+      const o = await readJson(SetupSchema, {
+        apiKey,
         system: [
           "You read a single trading chart screenshot (usually TradingView) and extract the trade levels shown on it.",
           "The symbol and timeframe are normally printed in the top-left corner; keep the symbol as printed, uppercase.",
@@ -236,6 +232,7 @@ export const parseTradeSetupScreenshot = createServerFn({ method: "POST" })
           "notes is at most two short factual sentences about what the chart shows, no emoji, no hype.",
           "confidence is 0-1 for how reliably the levels were read.",
           "note is one short plain sentence about what you read.",
+          'Shape: {"symbol":"","side":"Long","timeframe":"4H","entry":0,"stop":0,"takeProfit":0,"exit":null,"size":null,"notes":null,"confidence":0.9,"note":""}',
         ].join(" "),
         messages: [
           {
@@ -251,7 +248,6 @@ export const parseTradeSetupScreenshot = createServerFn({ method: "POST" })
         ],
       });
 
-      const o = res.output;
       const tf = (o.timeframe || "").trim();
       return {
         symbol: o.symbol ? o.symbol.toUpperCase().slice(0, 24) : null,
@@ -267,10 +263,10 @@ export const parseTradeSetupScreenshot = createServerFn({ method: "POST" })
         note: (o.note || "").slice(0, 300),
       };
     } catch (e) {
-      if (NoObjectGeneratedError.isInstance(e)) {
+      const message = e instanceof Error ? e.message : "";
+      if (/NO_JSON|JSON|invalid_type|Unexpected/i.test(message)) {
         return { ...EMPTY_SETUP, note: "That chart could not be read. Crop tighter to the position tool and retry." };
       }
-      const message = e instanceof Error ? e.message : "";
       if (/429/.test(message)) return { ...EMPTY_SETUP, note: "Too many requests right now. Wait a moment and retry." };
       if (/402/.test(message)) return { ...EMPTY_SETUP, note: "AI credits are exhausted for this workspace." };
       return { ...EMPTY_SETUP, note: "The screenshot reader is unavailable right now. Try again shortly." };
@@ -290,13 +286,9 @@ export const parseTradeSetupText = createServerFn({ method: "POST" })
     const apiKey = process.env['LOVABLE_API_KEY'];
     if (!apiKey) return { ...EMPTY_SETUP, note: "Text reading is not configured on this deployment." };
 
-    const { generateText, Output, NoObjectGeneratedError } = await import("ai");
-    const { createAiGatewayProvider } = await import("@/lib/ai-gateway.server");
-
     try {
-      const res = await generateText({
-        model: createAiGatewayProvider(apiKey)("google/gemini-3.7-flash"),
-        output: Output.object({ schema: SetupSchema }),
+      const o = await readJson(SetupSchema, {
+        apiKey,
         system: [
           "You read pasted trading text (broker fill, signal message, or a trader's own notes) and extract the trade levels.",
           "Keep the symbol as written, uppercase.",
@@ -307,11 +299,11 @@ export const parseTradeSetupText = createServerFn({ method: "POST" })
           "Never invent a value: use null for anything not stated.",
           "notes is at most two short factual sentences, no emoji, no hype.",
           "confidence is 0-1 for how reliably the values were read. note is one short plain sentence.",
+          'Shape: {"symbol":"","side":"Long","timeframe":"4H","entry":0,"stop":0,"takeProfit":0,"exit":null,"size":null,"notes":null,"confidence":0.9,"note":""}',
         ].join(" "),
         messages: [{ role: "user", content: `Extract the trade details from this text:\n\n${data.text}` }],
       });
 
-      const o = res.output;
       const tf = (o.timeframe || "").trim();
       return {
         symbol: o.symbol ? o.symbol.toUpperCase().slice(0, 24) : null,
@@ -327,10 +319,10 @@ export const parseTradeSetupText = createServerFn({ method: "POST" })
         note: (o.note || "").slice(0, 300),
       };
     } catch (e) {
-      if (NoObjectGeneratedError.isInstance(e)) {
+      const message = e instanceof Error ? e.message : "";
+      if (/NO_JSON|JSON|invalid_type|Unexpected/i.test(message)) {
         return { ...EMPTY_SETUP, note: "No trade details could be read from that text." };
       }
-      const message = e instanceof Error ? e.message : "";
       if (/429/.test(message)) return { ...EMPTY_SETUP, note: "Too many requests right now. Wait a moment and retry." };
       if (/402/.test(message)) return { ...EMPTY_SETUP, note: "AI credits are exhausted for this workspace." };
       return { ...EMPTY_SETUP, note: "The text reader is unavailable right now. Try again shortly." };
