@@ -897,9 +897,9 @@ function Dashboard() {
     if (activeThreadId) writeLastThreadId(activeThreadId);
   }, [activeThreadId]);
 
-  // Our own OANDA-fed chart is the default: the TradingView embed is blocked in
-  // some browsers/networks and painted a black panel, so it is now opt-in.
-  const [chartTab, setChartTab] = useState<"live" | "setup">("setup");
+  // The live (TradingView-style) price chart is what traders see first.
+  // The setup view with our own analysis engine remains one click away.
+  const [chartTab, setChartTab] = useState<"live" | "setup">("live");
   // Mobile-only: which pane is visible full-height (chart / scan / chat). On >=lg
   // both are shown side-by-side and this state is ignored.
   const [mobileView, setMobileView] = useState<"chart" | "scan" | "chat">("chart");
