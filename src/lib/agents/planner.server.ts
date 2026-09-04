@@ -947,7 +947,7 @@ export async function runPlanner(
   const currentTrend = ladder.find((r) => r.label === "4H")?.trend ?? snap.mtf?.h4.trend ?? "range";
   const synopsis = buildSynopsis(snap, memo, grade, bias, dailyBias, currentTrend)
     + newsWarning
-    + (standDown ? ` ${standDown}` : warnings.length ? ` ${warnings[0]}` : "");
+    + (timingGate ? ` ${timingGate}` : warnings.length ? ` ${warnings[0]}` : "");
 
   return {
     grade,
