@@ -229,6 +229,7 @@ type ScanResult = {
   refPrice?: number;
   counterTrend?: boolean;
   htfBias?: "bullish" | "bearish" | "neutral";
+  autoStrategy?: { name: string; slug: string; regime: string; reason: string };
 
 };
 
@@ -1356,6 +1357,9 @@ function Dashboard() {
       candleCount: plan.candleCount,
       refPrice: round(typeof plan.refPrice === "number" ? plan.refPrice : last),
     };
+    const autoLine = plan.autoStrategy
+      ? `Strategy chosen for you: ${plan.autoStrategy.name} (${plan.autoStrategy.regime}). ${plan.autoStrategy.reason}`
+      : null;
     const levelLines = plan.grade === "NO ENTRY"
       ? ["No entry - stand down until the setup improves."]
       : [
