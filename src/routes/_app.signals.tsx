@@ -20,6 +20,8 @@ import { InfoTip } from "@/components/InfoTip";
 import { InstrumentEdgePanel } from "@/components/InstrumentEdgePanel";
 import { useSignalOutcomes, outcomeLabel } from "@/hooks/useSignalOutcomes";
 import type { SignalScoreRow } from "@/lib/signal-scores.shared";
+import { ENGINE_FIX_LABEL } from "@/lib/signal-engine-version";
+
 
 
 export const Route = createFileRoute("/_app/signals")({
@@ -233,6 +235,15 @@ function SignalHistory({ records, onOpen }: { records: SignalRecord[]; onOpen: (
             </>
           ) : null}
         </span>
+        {totals.sinceFix.hitRate != null ? (
+          <span className="inline-flex flex-wrap items-center gap-1 font-mono">
+            {ENGINE_FIX_LABEL}: {totals.sinceFix.hitRate}% hit rate
+            {totals.sinceFix.aGradeHitRate != null ? ` · ${totals.sinceFix.aGradeHitRate}% on A grades` : ""}
+            {totals.sinceFix.avgR != null ? ` · ${totals.sinceFix.avgR}R avg` : ""}
+            {` (${totals.sinceFix.decided} resolved)`}
+          </span>
+        ) : null}
+
         {totals.updatedAt && (
           <span title={totals.updatedAt.toISOString()}>
             Updated {totals.updatedAt.toLocaleString()}

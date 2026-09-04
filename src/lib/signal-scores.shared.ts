@@ -5,6 +5,8 @@
 // target printed first, so hit rates are measured from real bars instead of
 // the trader remembering to tag an outcome.
 
+import { ENGINE_FIX_LABEL, isAfterEngineFix } from "@/lib/signal-engine-version";
+
 export type SignalScoreStatus = "open" | "target" | "stop" | "expired";
 
 export type SignalScoreRow = {
@@ -168,6 +170,14 @@ export function buildScoreboard(rows: SignalScoreRow[]): Scoreboard {
     notes.push(
       `Counter-trend scans (fighting the Daily and 4H): ${counter.hitRate}% hit rate, ${counter.expectancyR}R average over ${counter.resolved} resolved signals` +
         (withTrend.resolved >= 4 ? `, against ${withTrend.hitRate}% and ${withTrend.expectancyR}R with the trend.` : "."),
+    );
+  }
+
+  const fresh = rows.filter((r) => isAfterEngineFix(r.createdAt));
+  const freshBucket = bucket("since-fix", fresh);
+  if (freshBucket.targets + freshBucket.stops >= 3) {
+    notes.push(
+      `Measured ${ENGINE_FIX_LABEL}: ${freshBucket.hitRate}% hit rate and ${freshBucket.expectancyR}R average over ${freshBucket.resolved} resolved signals, against ${overall.hitRate}% and ${overall.expectancyR}R all time.`,
     );
   }
 
