@@ -1027,33 +1027,62 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
 
 
 
-  const handleScreenshot = useCallback(() => {
+  /** Chart pixels plus the drawing layer, so saved levels are in the image. */
+  const captureChartPng = useCallback((): string | null => {
     const chart = chartRef.current;
-    if (!chart) return;
+    if (!chart) return null;
     try {
       const chartCanvas = chart.takeScreenshot();
       const out = document.createElement("canvas");
       out.width = chartCanvas.width;
       out.height = chartCanvas.height;
       const ctx = out.getContext("2d");
-      if (!ctx) return;
+      if (!ctx) return null;
       ctx.drawImage(chartCanvas, 0, 0);
       const draw = drawCanvasRef.current;
       if (draw && draw.width > 0 && draw.height > 0) {
         ctx.drawImage(draw, 0, 0, out.width, out.height);
       }
-      const url = out.toDataURL("image/png");
-      const a = document.createElement("a");
-      const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-      a.href = url;
-      a.download = `${ticker.replace(/[^\w]+/g, "_")}_${interval}_${stamp}.png`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      return out.toDataURL("image/png");
     } catch (e) {
       console.error("screenshot failed", e);
+      return null;
     }
-  }, [ticker, interval]);
+  }, []);
+
+  const handleScreenshot = useCallback(() => {
+    const url = captureChartPng();
+    if (!url) return;
+    const a = document.createElement("a");
+    const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+    a.href = url;
+    a.download = `${ticker.replace(/[^\w]+/g, "_")}_${interval}_${stamp}.png`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }, [ticker, interval, captureChartPng]);
+
+  /**
+   * Hand the marked-up chart to the journal. The image is parked in
+   * localStorage and the journal picks it up on its next load, so this works
+   * whether the trader opens the journal now or in a minute.
+   */
+  const handleSendToJournal = useCallback(() => {
+    const url = captureChartPng();
+    if (!url) return;
+    try {
+      localStorage.setItem(
+        "tm_pending_chart_shot",
+        JSON.stringify({ dataUrl: url, ticker, interval, at: Date.now() }),
+      );
+      toast.success("Chart saved for the journal", {
+        description: "Open Trade Journal - it attaches to your next entry.",
+      });
+    } catch {
+      toast.error("Could not stage that chart. The image may be too large.");
+    }
+  }, [captureChartPng, ticker, interval]);
+
 
   // ---- Drawing layer (TradingView-style tools, anchored to price/time) ----
   type DrawTool =
