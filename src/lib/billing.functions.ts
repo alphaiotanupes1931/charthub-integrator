@@ -467,7 +467,7 @@ export const adminPlanDebug = createServerFn({ method: "POST" })
     });
     if (!callerIsAdmin) throw new Error("Forbidden");
 
-    const { resolveEntitlements, quotaView, monthKey } = await import("@/lib/entitlements");
+    const { resolveEntitlements, quotaView, dayKey } = await import("@/lib/entitlements");
 
     // Resolve which account we are inspecting.
     let userId = data.userId ?? context.userId;
@@ -505,7 +505,7 @@ export const adminPlanDebug = createServerFn({ method: "POST" })
     });
 
     const timezone = prefs?.timezone || "UTC";
-    const month = monthKey(timezone);
+    const month = dayKey(timezone);
     let used = 0;
     if (entitlements.freeTierActive) {
       const { data: quotaRow } = await supabaseAdmin

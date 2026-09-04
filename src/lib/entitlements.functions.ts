@@ -3,7 +3,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { consumeGradeFlow, type QuotaStore } from "@/lib/quota-flow";
 import {
   FREE_GRADES_PER_MONTH,
-  monthKey,
+  dayKey,
   quotaView,
   resolveEntitlements,
   scanCacheKey,
@@ -48,7 +48,7 @@ export const getEntitlements = createServerFn({ method: "GET" })
         : null,
     });
 
-    const month = monthKey(timezone);
+    const month = dayKey(timezone);
     let used = 0;
     if (entitlements.freeTierActive) {
       const { data: quotaRow } = await supabaseAdmin

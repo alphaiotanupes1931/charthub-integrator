@@ -11,7 +11,7 @@
 import {
   FREE_GRADES_PER_MONTH,
   isCacheFresh,
-  monthKey,
+  dayKey,
   quotaView,
   scanCacheKey,
   shouldConsumeGrade,
@@ -59,7 +59,8 @@ export async function consumeGradeFlow(args: {
   const { entitlements, timezone, store, input } = args;
   const now = args.now ?? new Date();
   const limit = args.limit ?? FREE_GRADES_PER_MONTH;
-  const month = monthKey(timezone, now);
+  // The quota period is a day; the stored column is text, so the same row keying works.
+  const month = dayKey(timezone, now);
 
   // Paid, trialing and admin accounts short-circuit before any quota code runs.
   if (!entitlements.freeTierActive) {
