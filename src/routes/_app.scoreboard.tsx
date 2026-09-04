@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { RefreshCw, Target, XCircle, Clock } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
+
 import { getSignalScoreboard, resolveMySignalScores } from "@/lib/signal-scores.functions";
 import { tfLabel, type ScoreBucket } from "@/lib/signal-scores.shared";
 
@@ -182,6 +183,7 @@ function ScoreboardPage() {
               empty="No strategy attached to your scans yet. Pick a playbook in the dashboard top bar and it will be tracked here."
             />
           </div>
+
 
           <section className="mt-4 rounded-xl border border-border/60 bg-card p-5">
             <h2 className="text-sm font-semibold tracking-wide text-muted-foreground">Recent signals</h2>
