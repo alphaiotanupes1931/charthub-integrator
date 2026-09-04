@@ -1,6 +1,7 @@
-// Local-only image store for trade screenshots.
-// Images are kept in the user's IndexedDB on this device. They never touch
-// the network or our database - keeps storage costs at zero.
+// Image store for trade screenshots.
+// Images are cached in this device's IndexedDB for instant reads and mirrored
+// into a private cloud bucket per user, so a trade logged on one device shows
+// its charts on every other device the trader signs in on.
 
 const DB_NAME = "trademind.journal";
 const STORE = "images";
@@ -74,6 +75,13 @@ export async function putTradeImages(tradeId: string, blobs: Blob[]): Promise<vo
     const blob = blobs[i];
     if (blob) await putTradeImage(tradeImageKey(tradeId, i), blob);
   }
+  // Mirror to the cloud so the same trade shows its charts on every device.
+  try {
+    const { uploadTradeImages } = await import("./journalImagesCloud");
+    void uploadTradeImages(tradeId, blobs);
+  } catch {
+    /* signed out or offline: the device copy is enough */
+  }
 }
 
 /** Read every stored screenshot for a trade, in order. */
@@ -84,6 +92,22 @@ export async function getTradeImages(tradeId: string, count: number): Promise<Bl
     const blob = await getTradeImage(tradeImageKey(tradeId, i));
     if (blob) out.push(blob);
   }
+  if (out.length >= total) return out;
+  // Nothing (or not everything) on this device: fall back to the cloud copies
+  // and cache them locally so the next open is instant.
+  try {
+    const { downloadTradeImages } = await import("./journalImagesCloud");
+    const remote = await downloadTradeImages(tradeId, total);
+    if (remote.length > out.length) {
+      for (let i = 0; i < remote.length; i += 1) {
+        const blob = remote[i];
+        if (blob) await putTradeImage(tradeImageKey(tradeId, i), blob);
+      }
+      return remote;
+    }
+  } catch {
+    /* offline: return whatever this device has */
+  }
   return out;
 }
 
@@ -91,5 +115,11 @@ export async function getTradeImages(tradeId: string, count: number): Promise<Bl
 export async function deleteTradeImages(tradeId: string, count = 12): Promise<void> {
   for (let i = 0; i < Math.max(1, count); i += 1) {
     await deleteTradeImage(tradeImageKey(tradeId, i));
+  }
+  try {
+    const { removeTradeImages } = await import("./journalImagesCloud");
+    void removeTradeImages(tradeId, count);
+  } catch {
+    /* ignore */
   }
 }

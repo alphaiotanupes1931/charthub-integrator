@@ -13,6 +13,9 @@ import {
   readSessionVolume,
   sessionStopAtr,
   readMitigatedEntry,
+  timingGateFor,
+  assetClassFor,
+
   type SessionVolumeRead,
   type MitigatedBlockRead,
 } from "@/lib/sessionVolume";
@@ -851,19 +854,24 @@ export async function runPlanner(
   const downgradeOne = (g: typeof GRADES[number]): typeof GRADES[number] =>
     g === "A+" ? "A" : g === "A" ? "B" : g === "B" ? "C" : g;
 
-  // Thin overnight tape (Sydney/Tokyo) is a stand-down, not a grade: the
-  // structure can be perfect and still get chopped out on a 0.6x ATR stop.
-  let standDown: string | null = null;
-  if (volRead?.overnightThin && grade !== "NO ENTRY") {
-    standDown = `NO ENTRY - thin overnight session, wait for London open. ${volRead.label} (${volRead.bars}-bar median), which is not enough participation to hold a level.`;
-    grade = "NO ENTRY";
-    warnings.push(standDown);
-  } else if (volRead?.thin && grade !== "NO ENTRY") {
+  // Thin overnight tape used to be a hard NO ENTRY. That is what made gold read
+  // "no entry" for two days and hid index setups that ran the moment New York
+  // opened. It is a timing problem, so the setup keeps its grade path and levels
+  // and only carries the window to wait for. Crypto is exempt entirely: a quiet
+  // Tokyo hour on a 24/7 market is not thin participation.
+  const gate = timingGateFor(snap.ticker, volRead);
+  let timingGate: string | null = null;
+  if (gate && grade !== "NO ENTRY") {
+    timingGate = gate.message;
+    grade = downgradeOne(grade);
+    warnings.push(timingGate);
+  } else if (volRead?.thin && !gate && grade !== "NO ENTRY" && assetClassFor(snap.ticker) !== "crypto") {
     grade = downgradeOne(grade);
     warnings.push(
       `Thin volume - widen stops or reduce size. ${volRead.label}, so the stop was widened to ${stopFloorAtr.toFixed(1)}x ATR and the grade dropped a letter.`,
     );
   }
+
 
   // Mitigated order block at the entry: a block price already ran through
   // holds less often, and one tested twice or more usually fails outright.
@@ -880,12 +888,12 @@ export async function runPlanner(
     } catch { /* block detection is best-effort */ }
   }
 
-  // A session stand-down is a timing block, not a broken read: the structure and
-  // the levels are still valid, they just cannot be traded until the tape wakes
-  // up. Blanking them to "-" for hours is what made gold look dead for two days,
-  // so on a stand-down the plan keeps its levels and only the grade says wait.
-  const standDownOnly = !!standDown && bias !== "Neutral";
+  // A timing gate is not a broken read: the structure and the levels are still
+  // valid, they just should not be executed until the tape wakes up. Blanking
+  // them to "-" for hours is what made gold look dead for two days.
+  const standDownOnly = !!timingGate && bias !== "Neutral";
   const isNoEntry = grade === "NO ENTRY" && !standDownOnly;
+
 
 
   // Regression metrics for the v3 fix. This change can fail in the opposite
@@ -939,7 +947,7 @@ export async function runPlanner(
   const currentTrend = ladder.find((r) => r.label === "4H")?.trend ?? snap.mtf?.h4.trend ?? "range";
   const synopsis = buildSynopsis(snap, memo, grade, bias, dailyBias, currentTrend)
     + newsWarning
-    + (standDown ? ` ${standDown}` : warnings.length ? ` ${warnings[0]}` : "");
+    + (timingGate ? ` ${timingGate}` : warnings.length ? ` ${warnings[0]}` : "");
 
   return {
     grade,
