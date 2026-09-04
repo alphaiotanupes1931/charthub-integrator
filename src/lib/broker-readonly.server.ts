@@ -226,6 +226,60 @@ async function tradeLockerSnapshot(userId: string): Promise<BrokerSnapshot | nul
     /* read-only: a failed position read must not break the snapshot */
   }
 
+  // Closed positions come back either as objects or as the ordered arrays
+  // TradeLocker uses elsewhere, so both shapes are read defensively.
+  let recentCloses: ReadOnlyClose[] = [];
+  try {
+    const res = await fetch(
+      `${base}/trade/reports/closed-positions?accountId=${encodeURIComponent(accId)}`,
+      { headers },
+    );
+    if (res.ok) {
+      const body = (await res.json()) as { d?: unknown };
+      const d = body?.d as Record<string, unknown> | unknown[] | undefined;
+      const rows: unknown[] = Array.isArray(d)
+        ? d
+        : Array.isArray((d as Record<string, unknown>)?.["positions"])
+          ? ((d as Record<string, unknown>)["positions"] as unknown[])
+          : Array.isArray((d as Record<string, unknown>)?.["closedPositions"])
+            ? ((d as Record<string, unknown>)["closedPositions"] as unknown[])
+            : [];
+      recentCloses = rows
+        .map((row): ReadOnlyClose | null => {
+          if (Array.isArray(row)) {
+            if (row.length < 6) return null;
+            const qty = num(row[4]);
+            return {
+              symbol: prettySymbol(String(row[1] ?? "")),
+              side: String(row[3] ?? "").toLowerCase() === "sell" ? "short" : "long",
+              units: Math.abs(qty),
+              price: num(row[6] ?? row[5]),
+              realizedPL: num(row[7]),
+              closedAt: row[2] ? new Date(num(row[2]) || String(row[2])).toISOString() : null,
+            };
+          }
+          const o = row as Record<string, unknown>;
+          const symbol = prettySymbol(String(o["tradableInstrumentName"] ?? o["instrument"] ?? o["symbol"] ?? ""));
+          if (!symbol) return null;
+          const qty = num(o["qty"] ?? o["quantity"] ?? o["units"]);
+          const closed = o["closeTime"] ?? o["closedAt"] ?? o["dateClosed"];
+          return {
+            symbol,
+            side: String(o["side"] ?? "").toLowerCase() === "sell" ? "short" : "long",
+            units: Math.abs(qty),
+            price: num(o["closePrice"] ?? o["avgPrice"] ?? o["price"]),
+            realizedPL: num(o["netPnl"] ?? o["realizedPl"] ?? o["pnl"]),
+            closedAt: closed ? new Date(num(closed) || String(closed)).toISOString() : null,
+          };
+        })
+        .filter((c): c is ReadOnlyClose => !!c)
+        .sort((a, b) => Date.parse(b.closedAt ?? "") - Date.parse(a.closedAt ?? ""))
+        .slice(0, 20);
+    }
+  } catch {
+    /* read-only: closed history is optional */
+  }
+
   return {
     broker: "tradelocker",
     env: creds.env,
@@ -235,10 +289,11 @@ async function tradeLockerSnapshot(userId: string): Promise<BrokerSnapshot | nul
     equity: null,
     unrealizedPL: positions.reduce((s, p) => s + p.unrealizedPL, 0) || null,
     positions,
-    recentCloses: [],
+    recentCloses,
     fetchedAt: Date.now(),
   };
 }
+
 
 /** Every read-only snapshot we can build for this user. Never throws. */
 export async function buildBrokerSnapshots(userId: string): Promise<BrokerSnapshotResult> {
