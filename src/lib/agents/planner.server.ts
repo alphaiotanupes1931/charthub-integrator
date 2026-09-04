@@ -476,7 +476,7 @@ function findEntryAnchor(
  * levels price has to fight through next, and without them the only structure
  * the planner can see is 4H shelves, which are always far away.
  */
-function swingLevels(snap: MarketSnapshot, want: "high" | "low"): number[] {
+export function swingLevels(snap: MarketSnapshot, want: "high" | "low"): number[] {
   const c = snap.candles;
   if (c.length < 10) return [];
   const out: number[] = [];
@@ -499,7 +499,7 @@ function swingLevels(snap: MarketSnapshot, want: "high" | "low"): number[] {
  * decided by market structure; R multiples only describe the result and are a
  * last resort when an instrument has no mapped structure at all.
  */
-function findTargetLevels(bias: "Long" | "Short", entry: number, snap: MarketSnapshot): number[] {
+export function findTargetLevels(bias: "Long" | "Short", entry: number, snap: MarketSnapshot): number[] {
   const m = snap.mtf;
   const s = snap.stats;
   const pool: number[] = bias === "Long"
@@ -541,7 +541,7 @@ function findTargetLevels(bias: "Long" | "Short", entry: number, snap: MarketSna
  * scan timeframe. TP1 beyond this is why targets "never get hit": a 4H
  * resistance shelf can sit 4x ATR away and never print inside the hold window.
  */
-function reachAtr(interval: string): number {
+export function reachAtr(interval: string): number {
   switch (interval) {
     case "1":
     case "5":
