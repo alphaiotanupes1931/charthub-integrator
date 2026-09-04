@@ -1655,15 +1655,24 @@ function TradeFormModal({
     return () => { active = false; urls.forEach((u) => URL.revokeObjectURL(u)); };
   }, [editing?.id, editing?.hasImage, editing?.imageCount]);
 
+  // Five frames per trade: 4H, 1H, 15m, 5m, 1m. More than that is noise and the
+  // reader cannot use it, so extra files are dropped with a note.
+  const MAX_TRADE_IMAGES = 5;
   const handlePickFiles = async (files: FileList | File[] | null | undefined) => {
     const list = Array.from(files ?? []).filter((f) => f.type.startsWith("image/"));
     if (!list.length) return;
     const added: { blob: Blob; url: string }[] = [];
-    for (const file of list.slice(0, 12)) {
+    for (const file of list.slice(0, MAX_TRADE_IMAGES)) {
       const compressed = await compressImageFile(file);
       added.push({ blob: compressed, url: URL.createObjectURL(compressed) });
     }
-    setImages((prev) => [...prev, ...added].slice(0, 12));
+    setImages((prev) => {
+      const next = [...prev, ...added].slice(0, MAX_TRADE_IMAGES);
+      if (prev.length + added.length > MAX_TRADE_IMAGES) {
+        setAutofillNote(`Up to ${MAX_TRADE_IMAGES} images per trade (4H, 1H, 15m, 5m, 1m). The extras were skipped.`);
+      }
+      return next;
+    });
     setImagesDirty(true);
   };
 
