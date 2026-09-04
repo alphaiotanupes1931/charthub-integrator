@@ -77,19 +77,19 @@ function zigzagUp(legs = 5, start = 20000, step = 60): Candle[] {
   const out: Candle[] = [];
   let price = start;
   let t = 1_756_000_000;
-  const push = (open: number, close: number) => {
+  const push = (open: number, close: number, wick = step * 0.2) => {
     out.push({
       time: (t += 3600),
       open,
-      high: Math.max(open, close) + step * 0.2,
-      low: Math.min(open, close) - step * 0.2,
+      high: Math.max(open, close) + wick,
+      low: Math.min(open, close) - wick,
       close,
       complete: true,
     });
   };
   for (let leg = 0; leg < legs; leg++) {
     for (let i = 0; i < 5; i++) { const open = price; price += step; push(open, price); }
-    for (let i = 0; i < 2; i++) { const open = price; price -= step * 0.4; push(open, price); }
+    for (let i = 0; i < 2; i++) { const open = price; price -= step * 0.4; push(open, price, 0); }
   }
   return out;
 }
