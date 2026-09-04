@@ -576,7 +576,13 @@ function sanitizePlan(
 
   let { entry, stop, tp1, tp2 } = plan;
   if (![entry, stop, tp1, tp2].every((n) => Number.isFinite(n) && n > 0)) {
-    return systematicPlan(snap, memo, "Model returned invalid numbers; using systematic plan.");
+    // Run the rule-based plan back through this same validator so its flat R
+    // multiples still get replaced by real structure.
+    return sanitizePlan(
+      systematicPlan(snap, memo, "Model returned invalid numbers; using systematic plan.", forcedBias),
+      snap, memo, forcedBias, stopFloorAtr,
+    );
+
   }
 
   const buffer = Math.max(atr * 0.15, last * 0.0005);
