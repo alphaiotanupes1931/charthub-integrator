@@ -17,6 +17,7 @@ import {
   type Candle as BiasCandle,
   type Grade,
   type ImbalanceStack,
+  type InstrumentConfig,
   type ScanResult,
   type Zone,
 } from "./biasEngine";
@@ -134,7 +135,11 @@ const toBias = (v: string | undefined): BiasState =>
  * Computes the authoritative bias for this scan. No cache, no TTL: this is
  * arithmetic over candles that already sit in memory.
  */
-export function computeBias(snap: MarketSnapshot, baseGrade: Grade = "A"): BiasReadout {
+export function computeBias(
+  snap: MarketSnapshot,
+  baseGrade: Grade = "A",
+  configOverride?: InstrumentConfig,
+): BiasReadout {
   const symbol = engineSymbolFor(snap.ticker);
   const candles4h = toEngineCandles(snap.candles4h?.length ? snap.candles4h : snap.candles);
   const atr4h = snap.atr4h && snap.atr4h > 0 ? snap.atr4h : atrOf(candles4h);
@@ -174,6 +179,7 @@ export function computeBias(snap: MarketSnapshot, baseGrade: Grade = "A"): BiasR
       computedAt: Date.now(),
     },
     baseGrade,
+    configOverride,
   });
 
   return {

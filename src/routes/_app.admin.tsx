@@ -17,6 +17,7 @@ import { ImageUsagePanel } from "@/components/admin/ImageUsagePanel";
 import { DateRangeSelector, monthToDateRange, type AdminRange } from "@/components/admin/DateRangeSelector";
 import { UserUsageDrawer } from "@/components/admin/UserUsageDrawer";
 import { TestChecklistPanel } from "@/components/admin/TestChecklistPanel";
+import { InstrumentProfilePanel } from "@/components/admin/InstrumentProfilePanel";
 import { PlanDebugPanel } from "@/components/admin/PlanDebugPanel";
 
 
@@ -250,6 +251,7 @@ Live from Stripe, {totalUsers} accounts
       {tab === "checks" && isAdmin && (
         <>
           <PlanDebugPanel />
+          <InstrumentProfilePanel />
           <TestChecklistPanel />
         </>
       )}
