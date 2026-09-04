@@ -471,17 +471,70 @@ function findEntryAnchor(
   return valid[0];
 }
 
-// Collect opposing levels/liquidity pools beyond entry, nearest first, so
-// targets sit where price actually reacts rather than at a flat 1.5R.
+/**
+ * Swing highs/lows on the scan timeframe: 2-bar fractal pivots. These are the
+ * levels price has to fight through next, and without them the only structure
+ * the planner can see is 4H shelves, which are always far away.
+ */
+function swingLevels(snap: MarketSnapshot, want: "high" | "low"): number[] {
+  const c = snap.candles;
+  if (c.length < 10) return [];
+  const out: number[] = [];
+  const from = Math.max(2, c.length - 120);
+  for (let i = from; i < c.length - 2; i++) {
+    const bar = c[i]!;
+    if (want === "high") {
+      const hi = bar.high;
+      if (hi > c[i - 1]!.high && hi > c[i - 2]!.high && hi > c[i + 1]!.high && hi > c[i + 2]!.high) out.push(hi);
+    } else {
+      const lo = bar.low;
+      if (lo < c[i - 1]!.low && lo < c[i - 2]!.low && lo < c[i + 1]!.low && lo < c[i + 2]!.low) out.push(lo);
+    }
+  }
+  return out;
+}
+
+/**
+ * Every level price must trade through beyond entry, nearest first. Targets are
+ * decided by market structure; R multiples only describe the result and are a
+ * last resort when an instrument has no mapped structure at all.
+ */
 function findTargetLevels(bias: "Long" | "Short", entry: number, snap: MarketSnapshot): number[] {
   const m = snap.mtf;
-  if (!m) return [];
-  const pool = bias === "Long"
-    ? [...m.h4.keyLevels.resistance, ...m.h1.liquidity.buyside, ...m.h4.supplyDemand.supply.map((z) => Math.min(z[0], z[1]))]
-    : [...m.h4.keyLevels.support, ...m.h1.liquidity.sellside, ...m.h4.supplyDemand.demand.map((z) => Math.max(z[0], z[1]))];
+  const s = snap.stats;
+  const pool: number[] = bias === "Long"
+    ? [
+        // Near-term structure on the timeframe being scanned.
+        ...swingLevels(snap, "high"),
+        s.high20, s.high50,
+        // Higher-timeframe shelves, liquidity and the near edge of supply.
+        ...(m ? m.h4.keyLevels.resistance : []),
+        ...(m ? m.h1.liquidity.buyside : []),
+        ...(m ? m.h4.supplyDemand.supply.map((z) => Math.min(z[0], z[1])) : []),
+        ...(m ? m.h1.orderBlocks.bear.map((z) => Math.min(z[0], z[1])) : []),
+        ...(m ? m.h1.fvg.bear.map((z) => Math.min(z[0], z[1])) : []),
+      ]
+    : [
+        ...swingLevels(snap, "low"),
+        s.low20, s.low50,
+        ...(m ? m.h4.keyLevels.support : []),
+        ...(m ? m.h1.liquidity.sellside : []),
+        ...(m ? m.h4.supplyDemand.demand.map((z) => Math.max(z[0], z[1])) : []),
+        ...(m ? m.h1.orderBlocks.bull.map((z) => Math.max(z[0], z[1])) : []),
+        ...(m ? m.h1.fvg.bull.map((z) => Math.max(z[0], z[1])) : []),
+      ];
   const beyond = pool.filter((p) => Number.isFinite(p) && p > 0 && (bias === "Long" ? p > entry : p < entry));
-  return [...new Set(beyond)].sort((a, b) => Math.abs(a - entry) - Math.abs(b - entry));
+  const sorted = [...new Set(beyond)].sort((a, b) => Math.abs(a - entry) - Math.abs(b - entry));
+  // Collapse clusters: levels within 15% of the nearest one's distance are the
+  // same shelf, so they should not both become targets.
+  const kept: number[] = [];
+  for (const lvl of sorted) {
+    const d = Math.abs(lvl - entry);
+    if (kept.every((k) => Math.abs(Math.abs(k - entry) - d) > d * 0.15)) kept.push(lvl);
+  }
+  return kept;
 }
+
 
 /**
  * How far price realistically travels before the setup is stale, in ATR of the
