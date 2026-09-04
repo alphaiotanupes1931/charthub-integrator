@@ -567,21 +567,36 @@ function sanitizePlan(
 
   stop = bias === "Long" ? entry - stopDist : entry + stopDist;
 
-  // 4. Targets: use the first opposing structure level if it pays at least 1.2R,
-  // otherwise fall back to fixed R multiples.
-  const levelTarget = findTargetLevel(bias, entry, snap);
-  const levelR = levelTarget !== null ? Math.abs(levelTarget - entry) / stopDist : 0;
-  if (bias === "Long") {
-    tp1 = levelTarget !== null && levelR >= 1.2 && levelR <= 4
-      ? levelTarget
-      : entry + stopDist * 1.5;
-    tp2 = Math.max(tp1 + stopDist * 1.2, entry + stopDist * 3);
-  } else {
-    tp1 = levelTarget !== null && levelR >= 1.2 && levelR <= 4
-      ? levelTarget
-      : entry - stopDist * 1.5;
-    tp2 = Math.min(tp1 - stopDist * 1.2, entry - stopDist * 3);
-  }
+  // 4. Targets. TP1 must be both structural and reachable: the nearest opposing
+  // level that pays at least 1.2R and sits inside the timeframe's realistic
+  // travel (reachAtr x ATR). Anything further becomes TP2 instead of TP1, and
+  // TP1 falls back to a measured-reach target rather than a fixed 1.5R, which on
+  // wide stops used to push TP1 3-4x ATR away and out of reach.
+  const dir = bias === "Long" ? 1 : -1;
+  const levels = findTargetLevels(bias, entry, snap);
+  const reach = atr * reachAtr(snap.interval);
+  const minR = stopDist * 1.2;
+
+  const tp1Level = levels.find((l) => {
+    const d = Math.abs(l - entry);
+    return d >= minR && d <= reach;
+  });
+  const tp1Dist = tp1Level !== undefined
+    ? Math.abs(tp1Level - entry)
+    // Reachable fallback: 1.5R, but never further than the timeframe's reach,
+    // and never tighter than 1.2R so the trade still pays for its risk.
+    : Math.max(minR, Math.min(stopDist * 1.5, reach));
+  tp1 = entry + dir * tp1Dist;
+
+  // TP2 is the runner: the next structural level beyond TP1, capped at 3R so a
+  // far shelf cannot turn the second target into a lottery ticket.
+  const tp2Level = levels.find((l) => Math.abs(l - entry) > tp1Dist * 1.15);
+  const tp2Dist = Math.min(
+    Math.max(tp2Level !== undefined ? Math.abs(tp2Level - entry) : tp1Dist * 1.8, tp1Dist * 1.2),
+    stopDist * 3,
+  );
+  tp2 = entry + dir * Math.max(tp2Dist, tp1Dist * 1.2);
+
 
   const dec = decimalsFor(last);
   // Once deterministic validation changes an AI-proposed level, the old thesis
