@@ -759,6 +759,72 @@ export type Database = {
           },
         ]
       }
+      instrument_profiles: {
+        Row: {
+          atr_4h: number
+          atr_pct: number
+          bars_sampled: number
+          best_session: string
+          created_at: string
+          deep_pullback: number
+          entry_buffer: number | null
+          lookback: string
+          max_entry_distance_atr: number | null
+          measured_at: string
+          median_pullback: number
+          min_rr: number | null
+          sessions: Json
+          source: string | null
+          stop_buffer_atr: number | null
+          symbol: string
+          tune_reason: string | null
+          tuned: boolean
+          updated_at: string
+        }
+        Insert: {
+          atr_4h?: number
+          atr_pct?: number
+          bars_sampled?: number
+          best_session?: string
+          created_at?: string
+          deep_pullback?: number
+          entry_buffer?: number | null
+          lookback?: string
+          max_entry_distance_atr?: number | null
+          measured_at?: string
+          median_pullback?: number
+          min_rr?: number | null
+          sessions?: Json
+          source?: string | null
+          stop_buffer_atr?: number | null
+          symbol: string
+          tune_reason?: string | null
+          tuned?: boolean
+          updated_at?: string
+        }
+        Update: {
+          atr_4h?: number
+          atr_pct?: number
+          bars_sampled?: number
+          best_session?: string
+          created_at?: string
+          deep_pullback?: number
+          entry_buffer?: number | null
+          lookback?: string
+          max_entry_distance_atr?: number | null
+          measured_at?: string
+          median_pullback?: number
+          min_rr?: number | null
+          sessions?: Json
+          source?: string | null
+          stop_buffer_atr?: number | null
+          symbol?: string
+          tune_reason?: string | null
+          tuned?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       journal_reviews: {
         Row: {
           correlations: Json
