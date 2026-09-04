@@ -10,7 +10,7 @@ import {
   academyModuleAllowed,
   coachAllowed,
   can,
-  FREE_GRADES_PER_MONTH,
+  FREE_GRADES_PER_DAY,
   type SubscriptionState,
 } from "../../src/lib/entitlements";
 
@@ -113,16 +113,16 @@ describe("analytics gating per tier", () => {
 });
 
 describe("grade quota per tier", () => {
-  it("caps free at 3 grades a month with a visible counter", async () => {
+  it("caps free at 2 grades a day with a visible counter", async () => {
     const free = await asTier("free");
-    expect(free.gradeLimit).toBe(FREE_GRADES_PER_MONTH);
+    expect(free.gradeLimit).toBe(FREE_GRADES_PER_DAY);
     const fresh = quotaView(free, 0);
-    expect(fresh).toMatchObject({ active: true, used: 0, remaining: 3, exhausted: false });
-    expect(quotaLabel(fresh)).toBe("3 of 3 grades left this month");
-    expect(quotaView(free, 2)).toMatchObject({ remaining: 1, exhausted: false });
-    expect(quotaView(free, 3).exhausted).toBe(true);
+    expect(fresh).toMatchObject({ active: true, used: 0, remaining: 2, exhausted: false });
+    expect(quotaLabel(fresh)).toBe("2 of 2 grades left today");
+    expect(quotaView(free, 1)).toMatchObject({ remaining: 1, exhausted: false });
+    expect(quotaView(free, 2).exhausted).toBe(true);
     // Overshoot from a race can never report a negative balance.
-    expect(quotaView(free, 9)).toMatchObject({ used: 3, remaining: 0, exhausted: true });
+    expect(quotaView(free, 9)).toMatchObject({ used: 2, remaining: 0, exhausted: true });
   });
 
   it("removes the quota entirely on every paid tier", async () => {
@@ -142,7 +142,7 @@ describe("grade quota per tier", () => {
     await syncSubscription(stripeSub("canceled", "pro"), NOW + 60);
     const ent = entitlements();
     expect(ent.tier).toBe("free");
-    expect(quotaView(ent, 0)).toMatchObject({ active: true, limit: 3 });
+    expect(quotaView(ent, 0)).toMatchObject({ active: true, limit: 2 });
   });
 
   it("does not re-impose the quota during past_due retries", async () => {
