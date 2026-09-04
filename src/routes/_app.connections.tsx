@@ -162,6 +162,8 @@ function ConnectionsPage() {
       </header>
       <PageInstructions className="mb-6" />
 
+      <BrokerAccountPanel className="mb-6" />
+
       <div className="mb-6 flex flex-wrap gap-2">
         {(["all", ...BROKER_GROUPS] as const).map((g) => (
           <button
