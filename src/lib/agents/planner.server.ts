@@ -662,8 +662,9 @@ function sanitizePlan(
   // can no longer be trusted to name the entry anchor. Replace it rather than
   // appending to it, otherwise the same explanation can claim two entries.
   const thesis = anchorLabel
-    ? `The planned entry is ${fmt(entry, dec)}, anchored to the ${anchorLabel}. The stop is ${fmt(stop, dec)}, giving ${fmt(stopDist, dec)} of risk (${(stopDist / atr).toFixed(2)}x ATR). Other mapped zones are supporting structure or invalidation unless they contain ${fmt(entry, dec)}.`
-    : plan.thesis;
+    ? `The planned entry is ${fmt(entry, dec)}, anchored to the ${anchorLabel}. The stop is ${fmt(stop, dec)}, giving ${fmt(stopDist, dec)} of risk (${(stopDist / atr).toFixed(2)}x ATR). ${targetNote} Other mapped zones are supporting structure or invalidation unless they contain ${fmt(entry, dec)}.`
+    : `${plan.thesis} ${targetNote}`;
+
 
   return { ...plan, entry, stop, tp1, tp2, thesis };
 }
