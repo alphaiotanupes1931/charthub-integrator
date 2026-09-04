@@ -67,14 +67,14 @@ describe("§7 migration — paid accounts are untouched", () => {
     expect(after.gradeLimit).toBe(FREE_GRADES_PER_DAY);
   });
 
-  it("an expired trial that never paid lands on free with a full 3 grades", () => {
+  it("an expired trial that never paid lands on free with a full daily allowance", () => {
     const ent = resolveEntitlements({
       flagEnabled: true,
       subscription: { status: "canceled", tier: null, trialEnd: "2026-07-01T00:00:00Z" },
       now: NOW,
     });
     expect(ent.tier).toBe("free");
-    expect(quotaView(ent, 0)).toMatchObject({ used: 0, remaining: 3, exhausted: false });
+    expect(quotaView(ent, 0)).toMatchObject({ used: 0, remaining: 2, exhausted: false });
   });
 
   it("a brand-new account with no subscription row is free", () => {
