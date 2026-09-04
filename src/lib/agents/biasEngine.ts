@@ -495,6 +495,8 @@ export interface ScanInput {
   ladder: Omit<LadderInput, 'fourH'> & { fourH?: Partial<LadderInput['fourH']> };
   baseGrade: Grade; // from the existing 12-point v2 rubric
   override?: { entry?: number; stop?: number; targets?: number[] }; // for regression tests only
+  /** Measured per-instrument constants (Phase 4). Rules never change, only these numbers. */
+  configOverride?: InstrumentConfig;
 }
 
 export interface ScanResult {
@@ -513,8 +515,13 @@ export interface ScanResult {
 }
 
 export function gradeScan(input: ScanInput): ScanResult {
-  const { cfg, known } = getInstrumentConfig(input.instrument);
+  const lookup = getInstrumentConfig(input.instrument);
+  const cfg = input.configOverride ?? lookup.cfg;
+  const known = lookup.known || Boolean(input.configOverride);
   const notes: string[] = [];
+  if (input.configOverride) {
+    notes.push(`Using measured constants for ${input.instrument}: entry buffer ${cfg.entryBuffer}, stop buffer ${cfg.stopBufferAtr}x ATR, entry gate ${cfg.maxEntryDistanceAtr}x ATR.`);
+  }
   if (!known) {
     notes.push(`No tuned config for ${input.instrument}. Using conservative defaults (1.0x ATR entry gate, 0.75x ATR stop buffer). Add it to INSTRUMENTS before promoting it.`);
   }

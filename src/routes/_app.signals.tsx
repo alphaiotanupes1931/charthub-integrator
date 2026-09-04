@@ -17,6 +17,7 @@ import {
 } from "@/lib/signalHistory";
 import { CapabilityGate } from "@/components/CapabilityGate";
 import { InfoTip } from "@/components/InfoTip";
+import { InstrumentEdgePanel } from "@/components/InstrumentEdgePanel";
 import { useSignalOutcomes, outcomeLabel } from "@/hooks/useSignalOutcomes";
 import type { SignalScoreRow } from "@/lib/signal-scores.shared";
 
@@ -147,6 +148,8 @@ function SignalsPage() {
           <SignalColumn title="HOLD" tone="hold" signals={grouped.HOLD} onClick={(t) => navigate({ to: "/dashboard", search: { symbol: t, scan: "1" } as never })} />
         </div>
       )}
+
+      <InstrumentEdgePanel />
 
       <SignalHistory
         records={history}
