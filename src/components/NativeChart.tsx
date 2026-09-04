@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import {
   Camera, Pencil, Minus as LineIcon, Square as RectIcon, ArrowUpRight, Undo2, Trash2,
   Eraser as EraserIcon, X as CloseIcon, MousePointer2, TrendingUp as TrendIcon, MoveUpRight,
