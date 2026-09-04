@@ -35,6 +35,9 @@ export const GLOSSARY: Record<string, { term: string; text: string }> = {
   mtf: { term: "MTF alignment", text: "4H, 1H and 15m all pointing the same way. Setups only grade high when they agree." },
   drawdown: { term: "Drawdown", text: "How far your account fell from its highest point - the pain a strategy puts you through." },
   winRate: { term: "Win rate", text: "The share of trades that closed profitable. On its own it means little without R:R." },
+  hitRate: { term: "Hit rate", text: "Of the scans that have finished, the share that reached take profit before the stop. Measured from real price bars, not from trades you logged." },
+  avgR: { term: "Avg R", text: "The average result per finished scan, measured in risk units. +0.5R means each scan made half of what it risked, on average." },
+  gradeA: { term: "A-grade hit rate", text: "Hit rate counting only A and A+ setups - the ones where every rule lined up. It is normally well above the all-grades number." },
   expectancy: { term: "Expectancy", text: "Average profit per trade in R, combining win rate and reward to risk." },
 };
 
