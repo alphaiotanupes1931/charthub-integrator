@@ -123,6 +123,9 @@ type Trade = {
   resultCheckedAt?: number;
   /** AI chat thread that produced this setup, so the trade links back to it. */
   threadId?: string;
+  /** Coaching conversation attached from the dashboard chat ("To journal"). */
+  chatLog?: string;
+  chatLogSavedAt?: number;
   createdAt: number;
 };
 
@@ -1656,6 +1659,7 @@ function TradeFormModal({
   const [fees, setFees] = useState<string>(editing?.fees != null ? String(editing.fees) : "");
   const [pointValue, setPointValue] = useState<string>(editing?.pointValue != null ? String(editing.pointValue) : "");
   const [notes, setNotes] = useState(editing?.notes ?? prefill?.notes ?? "");
+  const [chatLog, setChatLog] = useState(editing?.chatLog ?? "");
   const [setup, setSetup] = useState(editing?.setup ?? prefill?.setup ?? "");
   const [ruleBroken, setRuleBroken] = useState<boolean>(editing?.ruleBroken ?? false);
   const [ruleBrokenNote, setRuleBrokenNote] = useState<string>(editing?.ruleBrokenNote ?? "");
@@ -1862,6 +1866,19 @@ function TradeFormModal({
   }, []);
 
 
+  // A conversation staged by the "To journal" button in the coach chat is
+  // attached to this entry once, so the reasoning behind the trade is saved
+  // with it and syncs to every device.
+  useEffect(() => {
+    const pending = takePendingChatLog();
+    if (!pending) return;
+    setChatLog((prev) => (prev.trim() ? prev : pending.text));
+    setAutofillNote(
+      `Attached your ${pending.instrument ?? "coach"} conversation to this trade.`,
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const hasImage = images.length > 0;
 
   // A trade you just took has no exit yet. Treat a blank exit as "still open"
@@ -1901,6 +1918,8 @@ function TradeFormModal({
       result && result !== editing?.result ? "Result set by hand in the journal." : editing?.resultNote,
     resultCheckedAt: result ? Date.now() : editing?.resultCheckedAt,
     threadId: editing?.threadId ?? prefill?.threadId,
+    chatLog: chatLog.trim() || undefined,
+    chatLogSavedAt: chatLog.trim() ? editing?.chatLogSavedAt ?? Date.now() : undefined,
     createdAt: editing?.createdAt ?? Date.now(),
   };
   const previewPnl = tradePnl(preview);
@@ -2226,6 +2245,26 @@ function TradeFormModal({
               className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:border-primary/50"
             />
           </Field>
+
+          {chatLog.trim() && (
+            <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <NotebookPen className="h-4 w-4 text-primary" />
+                <div className="text-sm font-semibold">Coaching conversation</div>
+                <button
+                  type="button"
+                  onClick={() => setChatLog("")}
+                  className="ml-auto text-[11px] text-muted-foreground hover:text-foreground"
+                >
+                  Remove
+                </button>
+              </div>
+              <pre className="max-h-40 overflow-y-auto whitespace-pre-wrap break-words text-[11px] leading-relaxed text-muted-foreground">
+                {chatLog}
+              </pre>
+              <p className="mt-2 text-[10px] text-muted-foreground">Saved with this trade and synced to your other devices.</p>
+            </div>
+          )}
 
 
           <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
