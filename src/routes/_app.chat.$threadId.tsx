@@ -24,6 +24,7 @@ import {
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { readJournal, readActiveCoach, readActiveStrategy, readLastChart, writeLastThreadId, type LastChart } from "@/lib/chat-client";
 import { findStrategyByName } from "@/lib/customStrategies";
+import { isAutoStrategy } from "@/lib/strategyAuto";
 import { findLens, readActiveLensId } from "@/lib/scanLens";
 import { getChatMessages, getActiveModel, type ActiveModelInfo } from "@/lib/chat.functions";
 import { useCoachVoice } from "@/hooks/useCoachVoice";
@@ -202,7 +203,7 @@ function ChatThreadInner({
       },
       prepareSendMessagesRequest: ({ messages, id }) => {
         const stratName = readActiveStrategy();
-        const strategy = stratName ? findStrategyByName(stratName) ?? { name: stratName } : null;
+        const strategy = stratName && !isAutoStrategy(stratName) ? findStrategyByName(stratName) ?? { name: stratName } : null;
         const lens = findLens(readActiveLensId());
         const lastChart = readLastChart();
         const coach = readActiveCoach();
