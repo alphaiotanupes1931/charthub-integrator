@@ -16,6 +16,7 @@ import {
   type SignalRecord,
 } from "@/lib/signalHistory";
 import { CapabilityGate } from "@/components/CapabilityGate";
+import { InfoTip } from "@/components/InfoTip";
 import { useSignalOutcomes, outcomeLabel } from "@/hooks/useSignalOutcomes";
 import type { SignalScoreRow } from "@/lib/signal-scores.shared";
 
@@ -205,13 +206,38 @@ function SignalHistory({ records, onOpen }: { records: SignalRecord[]; onOpen: (
         <span>
           Outcomes are measured from real price bars, so you do not have to log a trade for a scan to count.
         </span>
-        <span className="font-mono">
+        <span className="inline-flex flex-wrap items-center gap-1 font-mono">
           <span className="text-bull">{totals.targets} hit TP</span> · <span className="text-red-500">{totals.stops} stopped</span> · {totals.open} open
-          {totals.hitRate != null ? ` · ${totals.hitRate}% hit rate` : ""}
-          {totals.avgR != null ? ` · ${totals.avgR}R avg` : ""}
+          {totals.hitRate != null ? (
+            <>
+              {" · "}
+              <span>{totals.hitRate}% hit rate</span>
+              <InfoTip id="hitRate" />
+            </>
+          ) : null}
+          {totals.aGradeHitRate != null ? (
+            <>
+              {" · "}
+              <span>{totals.aGradeHitRate}% on A grades</span>
+              <InfoTip id="gradeA" />
+            </>
+          ) : null}
+          {totals.avgR != null ? (
+            <>
+              {" · "}
+              <span>{totals.avgR}R avg</span>
+              <InfoTip id="avgR" />
+            </>
+          ) : null}
         </span>
+        {totals.updatedAt && (
+          <span title={totals.updatedAt.toISOString()}>
+            Updated {totals.updatedAt.toLocaleString()}
+          </span>
+        )}
         <Link to="/scoreboard" className="text-primary underline">Full scoreboard</Link>
       </div>
+
 
       {records.length === 0 ? (
         <div className="px-4 py-8 text-center text-sm text-muted-foreground">

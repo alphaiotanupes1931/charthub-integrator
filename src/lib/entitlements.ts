@@ -6,7 +6,14 @@
 
 export type Tier = "free" | "basic" | "pro" | "elite";
 
-export const FREE_GRADES_PER_MONTH = 3;
+/**
+ * Free tier: 2 signal grades per calendar day in the account's own timezone.
+ * Daily rather than monthly so a free user has a reason to open the app every
+ * day, and so hitting the wall prompts the upgrade while they are still trading.
+ */
+export const FREE_GRADES_PER_DAY = 2;
+/** Legacy name kept so older call sites keep compiling; same daily number. */
+export const FREE_GRADES_PER_MONTH = FREE_GRADES_PER_DAY;
 
 /** Scan-result debounce window: an identical re-run inside this costs nothing. */
 export const SCAN_DEBOUNCE_MS = 10 * 60 * 1000;
@@ -191,7 +198,7 @@ export function resolveEntitlements(input: {
     isPaid: false,
     isAdmin: false,
     freeTierActive: true,
-    gradeLimit: FREE_GRADES_PER_MONTH,
+    gradeLimit: FREE_GRADES_PER_DAY,
     capabilities: TIER_CAPABILITIES.free,
     coachAllowance: COACH_ALLOWANCE.free,
   };
@@ -209,6 +216,16 @@ export function monthKey(timezone: string | null | undefined, at: Date = new Dat
     return parts.slice(0, 7);
   } catch {
     return new Intl.DateTimeFormat("en-CA", { timeZone: "UTC", year: "numeric", month: "2-digit" }).format(at).slice(0, 7);
+  }
+}
+
+/** Calendar day key in the account's timezone, e.g. "2026-09-03". UTC fallback. */
+export function dayKey(timezone: string | null | undefined, at: Date = new Date()): string {
+  const tz = timezone || "UTC";
+  try {
+    return new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(at);
+  } catch {
+    return new Intl.DateTimeFormat("en-CA", { timeZone: "UTC", year: "numeric", month: "2-digit", day: "2-digit" }).format(at);
   }
 }
 
@@ -235,10 +252,10 @@ export function quotaView(ent: Entitlements, used: number): QuotaView {
   };
 }
 
-/** "2 of 3 grades left this month" — shown from the first grade, not at the limit. */
+/** "1 of 2 grades left today" - shown from the first grade, not at the limit. */
 export function quotaLabel(view: QuotaView): string | null {
   if (!view.active) return null;
-  return `${view.remaining} of ${view.limit} grades left this month`;
+  return `${view.remaining} of ${view.limit} grades left today`;
 }
 
 /** Only a real, delivered answer costs a grade (§4). */

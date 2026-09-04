@@ -1655,15 +1655,24 @@ function TradeFormModal({
     return () => { active = false; urls.forEach((u) => URL.revokeObjectURL(u)); };
   }, [editing?.id, editing?.hasImage, editing?.imageCount]);
 
+  // Five frames per trade: 4H, 1H, 15m, 5m, 1m. More than that is noise and the
+  // reader cannot use it, so extra files are dropped with a note.
+  const MAX_TRADE_IMAGES = 5;
   const handlePickFiles = async (files: FileList | File[] | null | undefined) => {
     const list = Array.from(files ?? []).filter((f) => f.type.startsWith("image/"));
     if (!list.length) return;
     const added: { blob: Blob; url: string }[] = [];
-    for (const file of list.slice(0, 12)) {
+    for (const file of list.slice(0, MAX_TRADE_IMAGES)) {
       const compressed = await compressImageFile(file);
       added.push({ blob: compressed, url: URL.createObjectURL(compressed) });
     }
-    setImages((prev) => [...prev, ...added].slice(0, 12));
+    setImages((prev) => {
+      const next = [...prev, ...added].slice(0, MAX_TRADE_IMAGES);
+      if (prev.length + added.length > MAX_TRADE_IMAGES) {
+        setAutofillNote(`Up to ${MAX_TRADE_IMAGES} images per trade (4H, 1H, 15m, 5m, 1m). The extras were skipped.`);
+      }
+      return next;
+    });
     setImagesDirty(true);
   };
 
@@ -1677,7 +1686,7 @@ function TradeFormModal({
     setAutofillNote("");
     try {
       const dataUrls = await Promise.all(
-        images.slice(0, 3).map(
+        images.slice(0, MAX_TRADE_IMAGES).map(
           (img) =>
             new Promise<string>((resolve, reject) => {
               const r = new FileReader();
@@ -1778,6 +1787,34 @@ function TradeFormModal({
     };
     window.addEventListener("paste", onPaste);
     return () => window.removeEventListener("paste", onPaste);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // A chart captured on the dashboard ("Journal" button on the live chart) is
+  // parked in localStorage; pull it in once, with its levels already drawn on.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const raw = localStorage.getItem("tm_pending_chart_shot");
+        if (!raw) return;
+        localStorage.removeItem("tm_pending_chart_shot");
+        const parsed = JSON.parse(raw) as { dataUrl?: string; ticker?: string; interval?: string };
+        if (!parsed?.dataUrl?.startsWith("data:image/")) return;
+        const blob = await (await fetch(parsed.dataUrl)).blob();
+        if (cancelled) return;
+        const file = new File([blob], "trademind-chart.png", { type: blob.type || "image/png" });
+        await handlePickFiles([file]);
+        setAutofillNote(
+          `Attached your ${parsed.ticker ?? "chart"}${parsed.interval ? ` ${parsed.interval}` : ""} capture with levels.`,
+        );
+      } catch {
+        // A stale or oversized entry is not worth interrupting the page for.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

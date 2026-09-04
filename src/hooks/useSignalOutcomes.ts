@@ -63,6 +63,15 @@ export function useSignalOutcomes() {
     const decided = targets + stops;
     const resolvedRows = rows.filter((r) => r.status !== "open");
     const rSum = resolvedRows.reduce((acc, r) => acc + (r.realizedR ?? 0), 0);
+    // A-grade only, because that is the number traders actually act on: the
+    // all-grades figure includes C setups the coach told them to skip.
+    const aRows = rows.filter((r) => String(r.grade ?? "").toUpperCase().startsWith("A"));
+    const aTargets = aRows.filter((r) => r.status === "target").length;
+    const aDecided = aTargets + aRows.filter((r) => r.status === "stop").length;
+    // Newest resolution timestamp, so the header can show when stats last moved.
+    const stamps = rows
+      .map((r) => Date.parse(String(r.resolvedAt ?? r.createdAt ?? "")))
+      .filter((t) => Number.isFinite(t));
     return {
       filed: rows.length,
       targets,
@@ -70,7 +79,10 @@ export function useSignalOutcomes() {
       open,
       expired,
       hitRate: decided ? Math.round((targets / decided) * 1000) / 10 : null,
+      aGradeHitRate: aDecided ? Math.round((aTargets / aDecided) * 1000) / 10 : null,
+      aGradeDecided: aDecided,
       avgR: resolvedRows.length ? Math.round((rSum / resolvedRows.length) * 100) / 100 : null,
+      updatedAt: stamps.length ? new Date(Math.max(...stamps)) : null,
     };
   }, [rows]);
 
