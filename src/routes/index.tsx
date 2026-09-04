@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion, useScroll, useTransform, type MotionValue } from "motion/react";
 import { ArrowRight, Check, Menu } from "lucide-react";
 import { TickerTape } from "@/components/TickerTape";
-import { TerrainScene } from "@/components/landing/TerrainScene";
+import { MarketTapeScene } from "@/components/landing/MarketTapeScene";
 
 import { MiniChart, SymbolOverview } from "@/components/MiniChart";
 import {
@@ -52,6 +52,17 @@ const TICKER = [
   { proName: "FOREXCOM:DJI", title: "US30" },
   { proName: "FX:EURUSD", title: "EUR/USD" },
 ];
+
+const FREE_PLAN = {
+  name: "Free",
+  price: 0,
+  features: [
+    "2 signal grades a day",
+    "Trade journal, unlimited trades",
+    "Risk calculator and alerts",
+    "Academy basics",
+  ],
+};
 
 const PRICING = [
   {
@@ -124,7 +135,7 @@ function Landing() {
   }, []);
   return (
     <div className="landing-cinematic relative isolate min-h-screen w-full bg-background text-foreground">
-      <TerrainScene />
+      <MarketTapeScene />
       <Nav isAuthed={isAuthed} />
 
       {/* COVER — full-viewport 3D stage. One centered column, no screenshots. */}
@@ -379,10 +390,36 @@ function Landing() {
             Plans that scale with your trading.
           </h2>
           <p className="text-center text-sm sm:text-base text-muted-foreground mt-4">
-            Start on Basic. Move up when the trades pay for it.
+            {freeTier
+              ? "Start free, no card. Move up when the trades pay for it."
+              : "Start on Basic. Move up when the trades pay for it."}
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-14 items-start">
+          <div className={`grid grid-cols-1 gap-4 mt-14 items-start ${freeTier ? "md:grid-cols-2 lg:grid-cols-4" : "md:grid-cols-3"}`}>
+            {freeTier && (
+              <div className="relative rounded-xl border border-border/60 p-5 sm:p-8 bg-card/70 backdrop-blur-md">
+                <div className="text-muted-foreground text-sm">{FREE_PLAN.name}</div>
+                <div className="mt-4 flex items-baseline gap-1">
+                  <span className="text-2xl text-muted-foreground">$</span>
+                  <span className="font-display text-4xl sm:text-6xl">{FREE_PLAN.price}</span>
+                  <span className="text-sm text-muted-foreground ml-1">/month</span>
+                </div>
+                <a
+                  href={isAuthed ? "/dashboard" : signupHref}
+                  className="mt-6 block text-center rounded-full px-5 py-3 text-sm font-semibold border border-border/60 text-foreground"
+                >
+                  Create free account
+                </a>
+                <ul className="mt-6 space-y-3 pt-5 border-t border-border/60">
+                  {FREE_PLAN.features.map((f) => (
+                    <li key={f} className="flex items-center gap-2.5 text-sm">
+                      <Check className="size-4 text-bull shrink-0" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             {PRICING.map((p) => (
               <div
                 key={p.name}
