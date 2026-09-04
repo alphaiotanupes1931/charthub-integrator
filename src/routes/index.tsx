@@ -20,6 +20,7 @@ import trader2 from "@/assets/trader-2.jpg";
 import trader3 from "@/assets/trader-3.jpg";
 import trader4 from "@/assets/trader-4.jpg";
 import { useFreeTierFlag } from "@/hooks/useFreeTierFlag";
+import { EmailCaptureForm } from "@/components/EmailCaptureForm";
 
 const TRADER_AVATARS: string[] = [trader1, trader2, trader3, trader4];
 
@@ -197,7 +198,7 @@ function Landing() {
             className="mt-7 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground"
           >
             <Bullet>{freeTier ? "Free plan, no card" : "7-day free trial"}</Bullet>
-            <Bullet>{freeTier ? "3 signal grades a month" : "Cancel anytime"}</Bullet>
+            <Bullet>{freeTier ? "2 signal grades a day" : "Cancel anytime"}</Bullet>
             <Bullet>{freeTier ? "Journal and Academy free forever" : "No card to browse"}</Bullet>
           </motion.div>
 
@@ -510,7 +511,8 @@ function Landing() {
             Grade the next trade.
           </h2>
           <p className="text-sm sm:text-base text-muted-foreground mt-5">{freeTier ? "Free plan, no card required." : "Free for 7 days. Cancel anytime."}</p>
-          <div className="mt-10">
+          <EmailCaptureForm source="landing_final_cta" className="mt-8" />
+          <div className="mt-8">
             <a
               href={dashboardHref}
               className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-7 py-3.5 text-sm font-semibold hover:opacity-90 transition-opacity"

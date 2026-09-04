@@ -235,9 +235,13 @@ describe("middleware chain: free account never reaches the handler", () => {
 });
 
 describe("public webhook routes stay signature-verified", () => {
+  // One-click unsubscribe links are authenticated by the random single-use token
+  // in the URL itself, which is the whole point: mail clients cannot sign requests.
+  const TOKEN_AUTHENTICATED = new Set(["api.public.lead-unsubscribe.ts"]);
+
   const publicRoutes = fs
     .readdirSync(path.join(process.cwd(), "src/routes"))
-    .filter((f) => f.startsWith("api.public."));
+    .filter((f) => f.startsWith("api.public.") && !TOKEN_AUTHENTICATED.has(f));
 
   it("has public routes to check", () => {
     expect(publicRoutes.length).toBeGreaterThan(0);

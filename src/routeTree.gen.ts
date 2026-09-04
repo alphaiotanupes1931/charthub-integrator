@@ -71,6 +71,7 @@ import { Route as AppAcademyIndexRouteImport } from './routes/_app.academy.index
 import { Route as BrokerAlpacaCallbackRouteImport } from './routes/broker.alpaca.callback'
 import { Route as ApiTradelockerImportRouteImport } from './routes/api.tradelocker.import'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api.public.stripe-webhook'
+import { Route as ApiPublicLeadUnsubscribeRouteImport } from './routes/api.public.lead-unsubscribe'
 import { Route as ApiPublicBridgeRouteImport } from './routes/api.public.bridge'
 import { Route as AppStrategiesStrategyIdRouteImport } from './routes/_app.strategies.$strategyId'
 import { Route as AppChatThreadIdRouteImport } from './routes/_app.chat.$threadId'
@@ -94,6 +95,7 @@ import { Route as ApiPublicHooksReconcilePaperRouteImport } from './routes/api.p
 import { Route as ApiPublicHooksPriceAlertsTickRouteImport } from './routes/api.public.hooks.price-alerts-tick'
 import { Route as ApiPublicHooksJournalVerifyTickRouteImport } from './routes/api.public.hooks.journal-verify-tick'
 import { Route as ApiPublicHooksJournalDailyCheckinRouteImport } from './routes/api.public.hooks.journal-daily-checkin'
+import { Route as ApiPublicHooksDripEmailsRouteImport } from './routes/api.public.hooks.drip-emails'
 import { Route as ApiPublicHooksAutopilotTickRouteImport } from './routes/api.public.hooks.autopilot-tick'
 import { Route as ApiPublicHooksAiCreditsRouteImport } from './routes/api.public.hooks.ai-credits'
 import { Route as AppAcademyCertificateModuleIdRouteImport } from './routes/_app.academy.certificate.$moduleId'
@@ -410,6 +412,12 @@ const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
   path: '/api/public/stripe-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicLeadUnsubscribeRoute =
+  ApiPublicLeadUnsubscribeRouteImport.update({
+    id: '/api/public/lead-unsubscribe',
+    path: '/api/public/lead-unsubscribe',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicBridgeRoute = ApiPublicBridgeRouteImport.update({
   id: '/api/public/bridge',
   path: '/api/public/bridge',
@@ -537,6 +545,12 @@ const ApiPublicHooksJournalDailyCheckinRoute =
     path: '/api/public/hooks/journal-daily-checkin',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksDripEmailsRoute =
+  ApiPublicHooksDripEmailsRouteImport.update({
+    id: '/api/public/hooks/drip-emails',
+    path: '/api/public/hooks/drip-emails',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksAutopilotTickRoute =
   ApiPublicHooksAutopilotTickRouteImport.update({
     id: '/api/public/hooks/autopilot-tick',
@@ -627,6 +641,7 @@ export interface FileRoutesByFullPath {
   '/chat/$threadId': typeof AppChatThreadIdRoute
   '/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
   '/api/public/bridge': typeof ApiPublicBridgeRoute
+  '/api/public/lead-unsubscribe': typeof ApiPublicLeadUnsubscribeRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/broker/alpaca/callback': typeof BrokerAlpacaCallbackRoute
@@ -637,6 +652,7 @@ export interface FileRoutesByFullPath {
   '/academy/certificate/$moduleId': typeof AppAcademyCertificateModuleIdRoute
   '/api/public/hooks/ai-credits': typeof ApiPublicHooksAiCreditsRoute
   '/api/public/hooks/autopilot-tick': typeof ApiPublicHooksAutopilotTickRoute
+  '/api/public/hooks/drip-emails': typeof ApiPublicHooksDripEmailsRoute
   '/api/public/hooks/journal-daily-checkin': typeof ApiPublicHooksJournalDailyCheckinRoute
   '/api/public/hooks/journal-verify-tick': typeof ApiPublicHooksJournalVerifyTickRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
@@ -713,6 +729,7 @@ export interface FileRoutesByTo {
   '/chat/$threadId': typeof AppChatThreadIdRoute
   '/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
   '/api/public/bridge': typeof ApiPublicBridgeRoute
+  '/api/public/lead-unsubscribe': typeof ApiPublicLeadUnsubscribeRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/broker/alpaca/callback': typeof BrokerAlpacaCallbackRoute
@@ -723,6 +740,7 @@ export interface FileRoutesByTo {
   '/academy/certificate/$moduleId': typeof AppAcademyCertificateModuleIdRoute
   '/api/public/hooks/ai-credits': typeof ApiPublicHooksAiCreditsRoute
   '/api/public/hooks/autopilot-tick': typeof ApiPublicHooksAutopilotTickRoute
+  '/api/public/hooks/drip-emails': typeof ApiPublicHooksDripEmailsRoute
   '/api/public/hooks/journal-daily-checkin': typeof ApiPublicHooksJournalDailyCheckinRoute
   '/api/public/hooks/journal-verify-tick': typeof ApiPublicHooksJournalVerifyTickRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
@@ -805,6 +823,7 @@ export interface FileRoutesById {
   '/_app/chat/$threadId': typeof AppChatThreadIdRoute
   '/_app/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
   '/api/public/bridge': typeof ApiPublicBridgeRoute
+  '/api/public/lead-unsubscribe': typeof ApiPublicLeadUnsubscribeRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/broker/alpaca/callback': typeof BrokerAlpacaCallbackRoute
@@ -815,6 +834,7 @@ export interface FileRoutesById {
   '/_app/academy/certificate/$moduleId': typeof AppAcademyCertificateModuleIdRoute
   '/api/public/hooks/ai-credits': typeof ApiPublicHooksAiCreditsRoute
   '/api/public/hooks/autopilot-tick': typeof ApiPublicHooksAutopilotTickRoute
+  '/api/public/hooks/drip-emails': typeof ApiPublicHooksDripEmailsRoute
   '/api/public/hooks/journal-daily-checkin': typeof ApiPublicHooksJournalDailyCheckinRoute
   '/api/public/hooks/journal-verify-tick': typeof ApiPublicHooksJournalVerifyTickRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
@@ -897,6 +917,7 @@ export interface FileRouteTypes {
     | '/chat/$threadId'
     | '/strategies/$strategyId'
     | '/api/public/bridge'
+    | '/api/public/lead-unsubscribe'
     | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
     | '/broker/alpaca/callback'
@@ -907,6 +928,7 @@ export interface FileRouteTypes {
     | '/academy/certificate/$moduleId'
     | '/api/public/hooks/ai-credits'
     | '/api/public/hooks/autopilot-tick'
+    | '/api/public/hooks/drip-emails'
     | '/api/public/hooks/journal-daily-checkin'
     | '/api/public/hooks/journal-verify-tick'
     | '/api/public/hooks/price-alerts-tick'
@@ -983,6 +1005,7 @@ export interface FileRouteTypes {
     | '/chat/$threadId'
     | '/strategies/$strategyId'
     | '/api/public/bridge'
+    | '/api/public/lead-unsubscribe'
     | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
     | '/broker/alpaca/callback'
@@ -993,6 +1016,7 @@ export interface FileRouteTypes {
     | '/academy/certificate/$moduleId'
     | '/api/public/hooks/ai-credits'
     | '/api/public/hooks/autopilot-tick'
+    | '/api/public/hooks/drip-emails'
     | '/api/public/hooks/journal-daily-checkin'
     | '/api/public/hooks/journal-verify-tick'
     | '/api/public/hooks/price-alerts-tick'
@@ -1074,6 +1098,7 @@ export interface FileRouteTypes {
     | '/_app/chat/$threadId'
     | '/_app/strategies/$strategyId'
     | '/api/public/bridge'
+    | '/api/public/lead-unsubscribe'
     | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
     | '/broker/alpaca/callback'
@@ -1084,6 +1109,7 @@ export interface FileRouteTypes {
     | '/_app/academy/certificate/$moduleId'
     | '/api/public/hooks/ai-credits'
     | '/api/public/hooks/autopilot-tick'
+    | '/api/public/hooks/drip-emails'
     | '/api/public/hooks/journal-daily-checkin'
     | '/api/public/hooks/journal-verify-tick'
     | '/api/public/hooks/price-alerts-tick'
@@ -1126,11 +1152,13 @@ export interface RootRouteChildren {
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicBridgeRoute: typeof ApiPublicBridgeRoute
+  ApiPublicLeadUnsubscribeRoute: typeof ApiPublicLeadUnsubscribeRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
   ApiTradelockerImportRoute: typeof ApiTradelockerImportRoute
   BrokerAlpacaCallbackRoute: typeof BrokerAlpacaCallbackRoute
   ApiPublicHooksAiCreditsRoute: typeof ApiPublicHooksAiCreditsRoute
   ApiPublicHooksAutopilotTickRoute: typeof ApiPublicHooksAutopilotTickRoute
+  ApiPublicHooksDripEmailsRoute: typeof ApiPublicHooksDripEmailsRoute
   ApiPublicHooksJournalDailyCheckinRoute: typeof ApiPublicHooksJournalDailyCheckinRoute
   ApiPublicHooksJournalVerifyTickRoute: typeof ApiPublicHooksJournalVerifyTickRoute
   ApiPublicHooksPriceAlertsTickRoute: typeof ApiPublicHooksPriceAlertsTickRoute
@@ -1581,6 +1609,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicStripeWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/lead-unsubscribe': {
+      id: '/api/public/lead-unsubscribe'
+      path: '/api/public/lead-unsubscribe'
+      fullPath: '/api/public/lead-unsubscribe'
+      preLoaderRoute: typeof ApiPublicLeadUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/bridge': {
       id: '/api/public/bridge'
       path: '/api/public/bridge'
@@ -1740,6 +1775,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/hooks/journal-daily-checkin'
       fullPath: '/api/public/hooks/journal-daily-checkin'
       preLoaderRoute: typeof ApiPublicHooksJournalDailyCheckinRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/drip-emails': {
+      id: '/api/public/hooks/drip-emails'
+      path: '/api/public/hooks/drip-emails'
+      fullPath: '/api/public/hooks/drip-emails'
+      preLoaderRoute: typeof ApiPublicHooksDripEmailsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/autopilot-tick': {
@@ -1957,11 +1999,13 @@ const rootRouteChildren: RootRouteChildren = {
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicBridgeRoute: ApiPublicBridgeRoute,
+  ApiPublicLeadUnsubscribeRoute: ApiPublicLeadUnsubscribeRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
   ApiTradelockerImportRoute: ApiTradelockerImportRoute,
   BrokerAlpacaCallbackRoute: BrokerAlpacaCallbackRoute,
   ApiPublicHooksAiCreditsRoute: ApiPublicHooksAiCreditsRoute,
   ApiPublicHooksAutopilotTickRoute: ApiPublicHooksAutopilotTickRoute,
+  ApiPublicHooksDripEmailsRoute: ApiPublicHooksDripEmailsRoute,
   ApiPublicHooksJournalDailyCheckinRoute:
     ApiPublicHooksJournalDailyCheckinRoute,
   ApiPublicHooksJournalVerifyTickRoute: ApiPublicHooksJournalVerifyTickRoute,
