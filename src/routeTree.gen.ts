@@ -71,6 +71,7 @@ import { Route as AppAcademyIndexRouteImport } from './routes/_app.academy.index
 import { Route as BrokerAlpacaCallbackRouteImport } from './routes/broker.alpaca.callback'
 import { Route as ApiTradelockerImportRouteImport } from './routes/api.tradelocker.import'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api.public.stripe-webhook'
+import { Route as ApiPublicLeadUnsubscribeRouteImport } from './routes/api.public.lead-unsubscribe'
 import { Route as ApiPublicBridgeRouteImport } from './routes/api.public.bridge'
 import { Route as AppStrategiesStrategyIdRouteImport } from './routes/_app.strategies.$strategyId'
 import { Route as AppChatThreadIdRouteImport } from './routes/_app.chat.$threadId'
@@ -411,6 +412,12 @@ const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
   path: '/api/public/stripe-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicLeadUnsubscribeRoute =
+  ApiPublicLeadUnsubscribeRouteImport.update({
+    id: '/api/public/lead-unsubscribe',
+    path: '/api/public/lead-unsubscribe',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicBridgeRoute = ApiPublicBridgeRouteImport.update({
   id: '/api/public/bridge',
   path: '/api/public/bridge',
@@ -634,6 +641,7 @@ export interface FileRoutesByFullPath {
   '/chat/$threadId': typeof AppChatThreadIdRoute
   '/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
   '/api/public/bridge': typeof ApiPublicBridgeRoute
+  '/api/public/lead-unsubscribe': typeof ApiPublicLeadUnsubscribeRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/broker/alpaca/callback': typeof BrokerAlpacaCallbackRoute
@@ -721,6 +729,7 @@ export interface FileRoutesByTo {
   '/chat/$threadId': typeof AppChatThreadIdRoute
   '/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
   '/api/public/bridge': typeof ApiPublicBridgeRoute
+  '/api/public/lead-unsubscribe': typeof ApiPublicLeadUnsubscribeRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/broker/alpaca/callback': typeof BrokerAlpacaCallbackRoute
@@ -814,6 +823,7 @@ export interface FileRoutesById {
   '/_app/chat/$threadId': typeof AppChatThreadIdRoute
   '/_app/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
   '/api/public/bridge': typeof ApiPublicBridgeRoute
+  '/api/public/lead-unsubscribe': typeof ApiPublicLeadUnsubscribeRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/broker/alpaca/callback': typeof BrokerAlpacaCallbackRoute
@@ -907,6 +917,7 @@ export interface FileRouteTypes {
     | '/chat/$threadId'
     | '/strategies/$strategyId'
     | '/api/public/bridge'
+    | '/api/public/lead-unsubscribe'
     | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
     | '/broker/alpaca/callback'
@@ -994,6 +1005,7 @@ export interface FileRouteTypes {
     | '/chat/$threadId'
     | '/strategies/$strategyId'
     | '/api/public/bridge'
+    | '/api/public/lead-unsubscribe'
     | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
     | '/broker/alpaca/callback'
@@ -1086,6 +1098,7 @@ export interface FileRouteTypes {
     | '/_app/chat/$threadId'
     | '/_app/strategies/$strategyId'
     | '/api/public/bridge'
+    | '/api/public/lead-unsubscribe'
     | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
     | '/broker/alpaca/callback'
@@ -1139,6 +1152,7 @@ export interface RootRouteChildren {
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicBridgeRoute: typeof ApiPublicBridgeRoute
+  ApiPublicLeadUnsubscribeRoute: typeof ApiPublicLeadUnsubscribeRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
   ApiTradelockerImportRoute: typeof ApiTradelockerImportRoute
   BrokerAlpacaCallbackRoute: typeof BrokerAlpacaCallbackRoute
@@ -1595,6 +1609,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicStripeWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/lead-unsubscribe': {
+      id: '/api/public/lead-unsubscribe'
+      path: '/api/public/lead-unsubscribe'
+      fullPath: '/api/public/lead-unsubscribe'
+      preLoaderRoute: typeof ApiPublicLeadUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/bridge': {
       id: '/api/public/bridge'
       path: '/api/public/bridge'
@@ -1978,6 +1999,7 @@ const rootRouteChildren: RootRouteChildren = {
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicBridgeRoute: ApiPublicBridgeRoute,
+  ApiPublicLeadUnsubscribeRoute: ApiPublicLeadUnsubscribeRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
   ApiTradelockerImportRoute: ApiTradelockerImportRoute,
   BrokerAlpacaCallbackRoute: BrokerAlpacaCallbackRoute,
