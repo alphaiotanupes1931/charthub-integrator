@@ -506,6 +506,16 @@ function ScanTicket({
             <div className={`font-display text-5xl leading-none tracking-tight ${gradeColor[result.grade]}`}>
               {result.grade}
             </div>
+            {result.autoStrategy && (
+              <div className="mt-2 rounded-xl border border-primary/25 bg-primary/5 px-2.5 py-1.5">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-primary">
+                  Strategy chosen for you · {result.autoStrategy.name}
+                </div>
+                <div className="text-[11px] leading-snug text-muted-foreground mt-0.5">
+                  {result.autoStrategy.regime} — {result.autoStrategy.reason}
+                </div>
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-2 shrink-0">
             {voiceSpeaking && (
@@ -1007,7 +1017,17 @@ function Dashboard() {
   const strategyRef = useRef<HTMLDivElement>(null);
   const [strategyOpen, setStrategyOpen] = useState(false);
   const [activeStrategy, setActiveStrategy] = useState<string | null>(null);
-  useEffect(() => { setActiveStrategy(readActiveStrategy()); }, []);
+  useEffect(() => {
+    // New traders default to Auto: the platform reads conditions and picks the
+    // playbook, then tells them which one it used on the scan card.
+    const stored = readActiveStrategy();
+    if (!stored) {
+      writeActiveStrategy(AUTO_STRATEGY);
+      setActiveStrategy(AUTO_STRATEGY);
+      return;
+    }
+    setActiveStrategy(stored);
+  }, []);
   const strategyOptions = useMemo(
     () => allStrategies().map((s) => ({ name: s.name, blurb: s.description ?? "" })),
     [strategyOpen],
@@ -1678,6 +1698,25 @@ function Dashboard() {
             </button>
             {strategyOpen && (
               <div role="listbox" className="absolute right-0 mt-2 w-72 max-h-96 overflow-y-auto rounded-2xl border border-border/60 bg-card shadow-xl z-50">
+                <button
+                  role="option"
+                  aria-selected={isAutoStrategy(activeStrategy)}
+                  onClick={() => {
+                    writeActiveStrategy(AUTO_STRATEGY);
+                    setActiveStrategy(AUTO_STRATEGY);
+                    setStrategyOpen(false);
+                    toast.success("The platform will pick the strategy from current market conditions");
+                  }}
+                  className={`w-full text-left px-3 py-2.5 text-sm border-b border-border/40 hover:bg-accent/40 transition ${isAutoStrategy(activeStrategy) ? "bg-primary/10 text-primary" : ""}`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-medium truncate">{AUTO_STRATEGY}</span>
+                    {isAutoStrategy(activeStrategy) && <Check className="h-3.5 w-3.5 shrink-0" />}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                    Reads trend, volatility and volume right now, then grades with the playbook that fits. Named on every scan.
+                  </div>
+                </button>
                 <button
                   role="option"
                   aria-selected={!activeStrategy}
