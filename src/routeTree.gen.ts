@@ -94,6 +94,7 @@ import { Route as ApiPublicHooksReconcilePaperRouteImport } from './routes/api.p
 import { Route as ApiPublicHooksPriceAlertsTickRouteImport } from './routes/api.public.hooks.price-alerts-tick'
 import { Route as ApiPublicHooksJournalVerifyTickRouteImport } from './routes/api.public.hooks.journal-verify-tick'
 import { Route as ApiPublicHooksJournalDailyCheckinRouteImport } from './routes/api.public.hooks.journal-daily-checkin'
+import { Route as ApiPublicHooksDripEmailsRouteImport } from './routes/api.public.hooks.drip-emails'
 import { Route as ApiPublicHooksAutopilotTickRouteImport } from './routes/api.public.hooks.autopilot-tick'
 import { Route as ApiPublicHooksAiCreditsRouteImport } from './routes/api.public.hooks.ai-credits'
 import { Route as AppAcademyCertificateModuleIdRouteImport } from './routes/_app.academy.certificate.$moduleId'
@@ -537,6 +538,12 @@ const ApiPublicHooksJournalDailyCheckinRoute =
     path: '/api/public/hooks/journal-daily-checkin',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksDripEmailsRoute =
+  ApiPublicHooksDripEmailsRouteImport.update({
+    id: '/api/public/hooks/drip-emails',
+    path: '/api/public/hooks/drip-emails',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksAutopilotTickRoute =
   ApiPublicHooksAutopilotTickRouteImport.update({
     id: '/api/public/hooks/autopilot-tick',
@@ -637,6 +644,7 @@ export interface FileRoutesByFullPath {
   '/academy/certificate/$moduleId': typeof AppAcademyCertificateModuleIdRoute
   '/api/public/hooks/ai-credits': typeof ApiPublicHooksAiCreditsRoute
   '/api/public/hooks/autopilot-tick': typeof ApiPublicHooksAutopilotTickRoute
+  '/api/public/hooks/drip-emails': typeof ApiPublicHooksDripEmailsRoute
   '/api/public/hooks/journal-daily-checkin': typeof ApiPublicHooksJournalDailyCheckinRoute
   '/api/public/hooks/journal-verify-tick': typeof ApiPublicHooksJournalVerifyTickRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
@@ -723,6 +731,7 @@ export interface FileRoutesByTo {
   '/academy/certificate/$moduleId': typeof AppAcademyCertificateModuleIdRoute
   '/api/public/hooks/ai-credits': typeof ApiPublicHooksAiCreditsRoute
   '/api/public/hooks/autopilot-tick': typeof ApiPublicHooksAutopilotTickRoute
+  '/api/public/hooks/drip-emails': typeof ApiPublicHooksDripEmailsRoute
   '/api/public/hooks/journal-daily-checkin': typeof ApiPublicHooksJournalDailyCheckinRoute
   '/api/public/hooks/journal-verify-tick': typeof ApiPublicHooksJournalVerifyTickRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
@@ -815,6 +824,7 @@ export interface FileRoutesById {
   '/_app/academy/certificate/$moduleId': typeof AppAcademyCertificateModuleIdRoute
   '/api/public/hooks/ai-credits': typeof ApiPublicHooksAiCreditsRoute
   '/api/public/hooks/autopilot-tick': typeof ApiPublicHooksAutopilotTickRoute
+  '/api/public/hooks/drip-emails': typeof ApiPublicHooksDripEmailsRoute
   '/api/public/hooks/journal-daily-checkin': typeof ApiPublicHooksJournalDailyCheckinRoute
   '/api/public/hooks/journal-verify-tick': typeof ApiPublicHooksJournalVerifyTickRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
@@ -907,6 +917,7 @@ export interface FileRouteTypes {
     | '/academy/certificate/$moduleId'
     | '/api/public/hooks/ai-credits'
     | '/api/public/hooks/autopilot-tick'
+    | '/api/public/hooks/drip-emails'
     | '/api/public/hooks/journal-daily-checkin'
     | '/api/public/hooks/journal-verify-tick'
     | '/api/public/hooks/price-alerts-tick'
@@ -993,6 +1004,7 @@ export interface FileRouteTypes {
     | '/academy/certificate/$moduleId'
     | '/api/public/hooks/ai-credits'
     | '/api/public/hooks/autopilot-tick'
+    | '/api/public/hooks/drip-emails'
     | '/api/public/hooks/journal-daily-checkin'
     | '/api/public/hooks/journal-verify-tick'
     | '/api/public/hooks/price-alerts-tick'
@@ -1084,6 +1096,7 @@ export interface FileRouteTypes {
     | '/_app/academy/certificate/$moduleId'
     | '/api/public/hooks/ai-credits'
     | '/api/public/hooks/autopilot-tick'
+    | '/api/public/hooks/drip-emails'
     | '/api/public/hooks/journal-daily-checkin'
     | '/api/public/hooks/journal-verify-tick'
     | '/api/public/hooks/price-alerts-tick'
@@ -1131,6 +1144,7 @@ export interface RootRouteChildren {
   BrokerAlpacaCallbackRoute: typeof BrokerAlpacaCallbackRoute
   ApiPublicHooksAiCreditsRoute: typeof ApiPublicHooksAiCreditsRoute
   ApiPublicHooksAutopilotTickRoute: typeof ApiPublicHooksAutopilotTickRoute
+  ApiPublicHooksDripEmailsRoute: typeof ApiPublicHooksDripEmailsRoute
   ApiPublicHooksJournalDailyCheckinRoute: typeof ApiPublicHooksJournalDailyCheckinRoute
   ApiPublicHooksJournalVerifyTickRoute: typeof ApiPublicHooksJournalVerifyTickRoute
   ApiPublicHooksPriceAlertsTickRoute: typeof ApiPublicHooksPriceAlertsTickRoute
@@ -1742,6 +1756,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksJournalDailyCheckinRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/drip-emails': {
+      id: '/api/public/hooks/drip-emails'
+      path: '/api/public/hooks/drip-emails'
+      fullPath: '/api/public/hooks/drip-emails'
+      preLoaderRoute: typeof ApiPublicHooksDripEmailsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/autopilot-tick': {
       id: '/api/public/hooks/autopilot-tick'
       path: '/api/public/hooks/autopilot-tick'
@@ -1962,6 +1983,7 @@ const rootRouteChildren: RootRouteChildren = {
   BrokerAlpacaCallbackRoute: BrokerAlpacaCallbackRoute,
   ApiPublicHooksAiCreditsRoute: ApiPublicHooksAiCreditsRoute,
   ApiPublicHooksAutopilotTickRoute: ApiPublicHooksAutopilotTickRoute,
+  ApiPublicHooksDripEmailsRoute: ApiPublicHooksDripEmailsRoute,
   ApiPublicHooksJournalDailyCheckinRoute:
     ApiPublicHooksJournalDailyCheckinRoute,
   ApiPublicHooksJournalVerifyTickRoute: ApiPublicHooksJournalVerifyTickRoute,
