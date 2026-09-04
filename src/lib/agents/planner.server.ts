@@ -471,18 +471,35 @@ function findEntryAnchor(
   return valid[0];
 }
 
-// Pick the first opposing level/liquidity pool beyond entry as a realistic TP1,
-// so targets sit where price actually reacts rather than at a flat 1.5R.
-function findTargetLevel(bias: "Long" | "Short", entry: number, snap: MarketSnapshot): number | null {
+// Collect opposing levels/liquidity pools beyond entry, nearest first, so
+// targets sit where price actually reacts rather than at a flat 1.5R.
+function findTargetLevels(bias: "Long" | "Short", entry: number, snap: MarketSnapshot): number[] {
   const m = snap.mtf;
-  if (!m) return null;
+  if (!m) return [];
   const pool = bias === "Long"
     ? [...m.h4.keyLevels.resistance, ...m.h1.liquidity.buyside, ...m.h4.supplyDemand.supply.map((z) => Math.min(z[0], z[1]))]
     : [...m.h4.keyLevels.support, ...m.h1.liquidity.sellside, ...m.h4.supplyDemand.demand.map((z) => Math.max(z[0], z[1]))];
   const beyond = pool.filter((p) => Number.isFinite(p) && p > 0 && (bias === "Long" ? p > entry : p < entry));
-  if (!beyond.length) return null;
-  return bias === "Long" ? Math.min(...beyond) : Math.max(...beyond);
+  return [...new Set(beyond)].sort((a, b) => Math.abs(a - entry) - Math.abs(b - entry));
 }
+
+/**
+ * How far price realistically travels before the setup is stale, in ATR of the
+ * scan timeframe. TP1 beyond this is why targets "never get hit": a 4H
+ * resistance shelf can sit 4x ATR away and never print inside the hold window.
+ */
+function reachAtr(interval: string): number {
+  switch (interval) {
+    case "1":
+    case "5":
+    case "15": return 1.3;
+    case "30":
+    case "60": return 1.5;
+    case "240": return 1.8;
+    default: return 2.2; // D / W
+  }
+}
+
 
 // Sanity-check the model's plan against price/ATR so we don't ship bad pending
 // orders. The default scan experience should not hand older traders a breakout
@@ -550,21 +567,36 @@ function sanitizePlan(
 
   stop = bias === "Long" ? entry - stopDist : entry + stopDist;
 
-  // 4. Targets: use the first opposing structure level if it pays at least 1.2R,
-  // otherwise fall back to fixed R multiples.
-  const levelTarget = findTargetLevel(bias, entry, snap);
-  const levelR = levelTarget !== null ? Math.abs(levelTarget - entry) / stopDist : 0;
-  if (bias === "Long") {
-    tp1 = levelTarget !== null && levelR >= 1.2 && levelR <= 4
-      ? levelTarget
-      : entry + stopDist * 1.5;
-    tp2 = Math.max(tp1 + stopDist * 1.2, entry + stopDist * 3);
-  } else {
-    tp1 = levelTarget !== null && levelR >= 1.2 && levelR <= 4
-      ? levelTarget
-      : entry - stopDist * 1.5;
-    tp2 = Math.min(tp1 - stopDist * 1.2, entry - stopDist * 3);
-  }
+  // 4. Targets. TP1 must be both structural and reachable: the nearest opposing
+  // level that pays at least 1.2R and sits inside the timeframe's realistic
+  // travel (reachAtr x ATR). Anything further becomes TP2 instead of TP1, and
+  // TP1 falls back to a measured-reach target rather than a fixed 1.5R, which on
+  // wide stops used to push TP1 3-4x ATR away and out of reach.
+  const dir = bias === "Long" ? 1 : -1;
+  const levels = findTargetLevels(bias, entry, snap);
+  const reach = atr * reachAtr(snap.interval);
+  const minR = stopDist * 1.2;
+
+  const tp1Level = levels.find((l) => {
+    const d = Math.abs(l - entry);
+    return d >= minR && d <= reach;
+  });
+  const tp1Dist = tp1Level !== undefined
+    ? Math.abs(tp1Level - entry)
+    // Reachable fallback: 1.5R, but never further than the timeframe's reach,
+    // and never tighter than 1.2R so the trade still pays for its risk.
+    : Math.max(minR, Math.min(stopDist * 1.5, reach));
+  tp1 = entry + dir * tp1Dist;
+
+  // TP2 is the runner: the next structural level beyond TP1, capped at 3R so a
+  // far shelf cannot turn the second target into a lottery ticket.
+  const tp2Level = levels.find((l) => Math.abs(l - entry) > tp1Dist * 1.15);
+  const tp2Dist = Math.min(
+    Math.max(tp2Level !== undefined ? Math.abs(tp2Level - entry) : tp1Dist * 1.8, tp1Dist * 1.2),
+    stopDist * 3,
+  );
+  tp2 = entry + dir * Math.max(tp2Dist, tp1Dist * 1.2);
+
 
   const dec = decimalsFor(last);
   // Once deterministic validation changes an AI-proposed level, the old thesis
