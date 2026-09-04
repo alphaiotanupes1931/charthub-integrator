@@ -10,7 +10,8 @@ type Props = {
   onImport: (trades: ParsedClosedTrade[], shots: Blob[]) => void;
 };
 
-const MAX_SHOTS = 4;
+// 4H / 1H / 15m / 5m / 1m is the stack traders paste, so five per read.
+const MAX_SHOTS = 5;
 
 function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -88,7 +89,7 @@ export function ImportClosedTradesPanel({ onImport }: Props) {
         <div className="min-w-0 flex-1">
           <div className="text-sm font-semibold text-foreground">Log closed trades from a screenshot</div>
           <div className="text-[11px] text-muted-foreground">
-            Drop a screenshot of your broker history or closed positions. The numbers are read out and logged for you.
+            Paste, drop or upload up to five screenshots of your broker history or closed positions. The numbers are read out, matched to your open trades and the P&L is logged for you.
           </div>
         </div>
         <button
