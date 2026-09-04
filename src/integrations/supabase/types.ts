@@ -643,6 +643,78 @@ export type Database = {
         }
         Relationships: []
       }
+      engine_replay_stats: {
+        Row: {
+          a_expectancy_r: number
+          a_trades: number
+          a_win_rate: number
+          bars: number
+          created_at: string
+          expectancy_r: number
+          from_ts: string | null
+          id: string
+          lookback: string
+          max_dd_pct: number
+          net_r: number
+          notes: string | null
+          profit_factor: number | null
+          source: string
+          symbol: string
+          timeframe: string
+          to_ts: string | null
+          trades: number
+          updated_at: string
+          win_rate: number
+          wins: number
+        }
+        Insert: {
+          a_expectancy_r?: number
+          a_trades?: number
+          a_win_rate?: number
+          bars?: number
+          created_at?: string
+          expectancy_r?: number
+          from_ts?: string | null
+          id?: string
+          lookback?: string
+          max_dd_pct?: number
+          net_r?: number
+          notes?: string | null
+          profit_factor?: number | null
+          source?: string
+          symbol: string
+          timeframe: string
+          to_ts?: string | null
+          trades?: number
+          updated_at?: string
+          win_rate?: number
+          wins?: number
+        }
+        Update: {
+          a_expectancy_r?: number
+          a_trades?: number
+          a_win_rate?: number
+          bars?: number
+          created_at?: string
+          expectancy_r?: number
+          from_ts?: string | null
+          id?: string
+          lookback?: string
+          max_dd_pct?: number
+          net_r?: number
+          notes?: string | null
+          profit_factor?: number | null
+          source?: string
+          symbol?: string
+          timeframe?: string
+          to_ts?: string | null
+          trades?: number
+          updated_at?: string
+          win_rate?: number
+          wins?: number
+        }
+        Relationships: []
+      }
       free_tier_quota: {
         Row: {
           created_at: string
