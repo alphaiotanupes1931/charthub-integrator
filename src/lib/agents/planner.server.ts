@@ -471,18 +471,35 @@ function findEntryAnchor(
   return valid[0];
 }
 
-// Pick the first opposing level/liquidity pool beyond entry as a realistic TP1,
-// so targets sit where price actually reacts rather than at a flat 1.5R.
-function findTargetLevel(bias: "Long" | "Short", entry: number, snap: MarketSnapshot): number | null {
+// Collect opposing levels/liquidity pools beyond entry, nearest first, so
+// targets sit where price actually reacts rather than at a flat 1.5R.
+function findTargetLevels(bias: "Long" | "Short", entry: number, snap: MarketSnapshot): number[] {
   const m = snap.mtf;
-  if (!m) return null;
+  if (!m) return [];
   const pool = bias === "Long"
     ? [...m.h4.keyLevels.resistance, ...m.h1.liquidity.buyside, ...m.h4.supplyDemand.supply.map((z) => Math.min(z[0], z[1]))]
     : [...m.h4.keyLevels.support, ...m.h1.liquidity.sellside, ...m.h4.supplyDemand.demand.map((z) => Math.max(z[0], z[1]))];
   const beyond = pool.filter((p) => Number.isFinite(p) && p > 0 && (bias === "Long" ? p > entry : p < entry));
-  if (!beyond.length) return null;
-  return bias === "Long" ? Math.min(...beyond) : Math.max(...beyond);
+  return [...new Set(beyond)].sort((a, b) => Math.abs(a - entry) - Math.abs(b - entry));
 }
+
+/**
+ * How far price realistically travels before the setup is stale, in ATR of the
+ * scan timeframe. TP1 beyond this is why targets "never get hit": a 4H
+ * resistance shelf can sit 4x ATR away and never print inside the hold window.
+ */
+function reachAtr(interval: string): number {
+  switch (interval) {
+    case "1":
+    case "5":
+    case "15": return 1.3;
+    case "30":
+    case "60": return 1.5;
+    case "240": return 1.8;
+    default: return 2.2; // D / W
+  }
+}
+
 
 // Sanity-check the model's plan against price/ATR so we don't ship bad pending
 // orders. The default scan experience should not hand older traders a breakout
