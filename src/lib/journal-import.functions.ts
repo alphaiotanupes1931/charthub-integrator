@@ -167,7 +167,7 @@ export const parseClosedTradesScreenshot = createServerFn({ method: "POST" })
     } catch (e) {
       const raw = e instanceof Error ? e.message : "";
       if (/NO_JSON|JSON|invalid_type|Unexpected/i.test(raw)) {
-        return { trades: [], note: "The screenshot could not be read. Crop tighter to the closed-trades table and retry." };
+        return { trades: [], note: "Could not read that image cleanly. Crop to the closed-trades table and retry, or type the numbers into the trade form and the rest will still be logged." };
       }
       const message = e instanceof Error ? e.message : "";
       if (/429/.test(message)) return { trades: [], note: "Too many requests right now. Wait a moment and retry." };
