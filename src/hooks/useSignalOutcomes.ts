@@ -4,6 +4,8 @@ import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listSignalScores, resolveMySignalScores } from "@/lib/signal-scores.functions";
 import type { SignalScoreRow } from "@/lib/signal-scores.shared";
+import { isAfterEngineFix } from "@/lib/signal-engine-version";
+
 import type { SignalRecord } from "@/lib/signalHistory";
 
 /**
@@ -72,6 +74,14 @@ export function useSignalOutcomes() {
     const stamps = rows
       .map((r) => Date.parse(String(r.resolvedAt ?? r.createdAt ?? "")))
       .filter((t) => Number.isFinite(t));
+    // Same numbers again, counting only scans produced by the current engine.
+    const fresh = rows.filter((r) => isAfterEngineFix(r.createdAt));
+    const fTargets = fresh.filter((r) => r.status === "target").length;
+    const fDecided = fTargets + fresh.filter((r) => r.status === "stop").length;
+    const fResolved = fresh.filter((r) => r.status !== "open");
+    const fA = fresh.filter((r) => String(r.grade ?? "").toUpperCase().startsWith("A"));
+    const fATargets = fA.filter((r) => r.status === "target").length;
+    const fADecided = fATargets + fA.filter((r) => r.status === "stop").length;
     return {
       filed: rows.length,
       targets,
@@ -83,7 +93,17 @@ export function useSignalOutcomes() {
       aGradeDecided: aDecided,
       avgR: resolvedRows.length ? Math.round((rSum / resolvedRows.length) * 100) / 100 : null,
       updatedAt: stamps.length ? new Date(Math.max(...stamps)) : null,
+      sinceFix: {
+        filed: fresh.length,
+        decided: fDecided,
+        hitRate: fDecided ? Math.round((fTargets / fDecided) * 1000) / 10 : null,
+        aGradeHitRate: fADecided ? Math.round((fATargets / fADecided) * 1000) / 10 : null,
+        avgR: fResolved.length
+          ? Math.round((fResolved.reduce((acc, r) => acc + (r.realizedR ?? 0), 0) / fResolved.length) * 100) / 100
+          : null,
+      },
     };
+
   }, [rows]);
 
   return { rows, outcomeFor, totals, loading: query.isLoading, recheck };
