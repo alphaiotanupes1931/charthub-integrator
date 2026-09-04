@@ -4,7 +4,7 @@ import {
   Camera, Pencil, Minus as LineIcon, Square as RectIcon, ArrowUpRight, Undo2, Trash2,
   Eraser as EraserIcon, X as CloseIcon, MousePointer2, TrendingUp as TrendIcon, MoveUpRight,
   SeparatorVertical as VLineIcon, AlignHorizontalJustifyStart as FibIcon, Ruler as RulerIcon,
-  Type as TypeIcon, Magnet as MagnetIcon, Lock, Unlock, Eye, EyeOff,
+  Type as TypeIcon, Magnet as MagnetIcon, Lock, Unlock, Eye, EyeOff, NotebookPen,
 } from "lucide-react";
 import { useCandleColors } from "@/hooks/useCandleColors";
 import { useChartBackground } from "@/hooks/useChartBackground";
@@ -1652,6 +1652,16 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
         >
           <Camera className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">Save</span>
+        </button>
+        <button
+          type="button"
+          onClick={handleSendToJournal}
+          title="Send this chart, with your levels, to the trade journal"
+          aria-label="Send chart to journal"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-border/60 bg-background/80 hover:bg-background backdrop-blur px-2 py-1.5 text-[10px] font-mono tracking-tight text-foreground/90 hover:text-foreground transition-colors"
+        >
+          <NotebookPen className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">Journal</span>
         </button>
       </div>
       {sessions && (
