@@ -16,6 +16,7 @@ import {
   type SignalRecord,
 } from "@/lib/signalHistory";
 import { CapabilityGate } from "@/components/CapabilityGate";
+import { InfoTip } from "@/components/InfoTip";
 import { useSignalOutcomes, outcomeLabel } from "@/hooks/useSignalOutcomes";
 import type { SignalScoreRow } from "@/lib/signal-scores.shared";
 
