@@ -154,3 +154,49 @@ export function readMitigatedEntry(
       : "Entry is in a mitigated block - expect weaker hold, consider tighter size or skip.",
   };
 }
+
+/** Instrument families that need different session treatment. */
+export type AssetClass = "crypto" | "index" | "fx-metal";
+
+const CRYPTO_BASES = new Set([
+  "BTC", "ETH", "XRP", "SOL", "DOGE", "ADA", "LTC", "BCH", "LINK", "AVAX",
+  "DOT", "MATIC", "TRX", "XLM", "ATOM", "UNI", "ETC", "FIL", "NEAR", "APT",
+  "ARB", "OP", "SUI", "TON", "SHIB", "PEPE", "PAXG", "BNB",
+]);
+
+const INDEX_SYMBOLS = new Set([
+  "NAS100", "SPX500", "US30", "GER40", "UK100", "JPN225", "US2000", "HK50", "AUS200",
+]);
+
+/**
+ * Which session rules apply to this symbol. Crypto trades round the clock, so a
+ * quiet Tokyo hour is normal, not a reason to stand down. Indices care about the
+ * cash open rather than London.
+ */
+export function assetClassFor(ticker: string): AssetClass {
+  const t = (ticker ?? "").toUpperCase().replace(/\s+/g, "");
+  if (INDEX_SYMBOLS.has(t)) return "index";
+  const head = t.split("/")[0] ?? "";
+  if (CRYPTO_BASES.has(head) || CRYPTO_BASES.has(head.replace(/(USD|USDT)$/, ""))) return "crypto";
+  return "fx-metal";
+}
+
+/**
+ * Thin overnight tape is a timing problem, not a broken setup: the structure and
+ * the levels stand, they just should not be executed until real participation
+ * arrives. Returns the window to wait for, or null when no gate applies.
+ */
+export function timingGateFor(
+  ticker: string,
+  read: SessionVolumeRead | null,
+): { waitFor: string; message: string } | null {
+  if (!read || read.unavailable || !read.overnightThin) return null;
+  const cls = assetClassFor(ticker);
+  // 24/7 market: an overnight session is just another session.
+  if (cls === "crypto") return null;
+  const waitFor = cls === "index" ? "the New York cash open" : "the London open";
+  return {
+    waitFor,
+    message: `Timing gate: the setup and its levels stand, but ${read.label} (${read.bars}-bar median) is too little participation to execute. Wait for ${waitFor} before taking the entry.`,
+  };
+}
