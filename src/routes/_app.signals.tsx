@@ -18,6 +18,7 @@ import {
 import { CapabilityGate } from "@/components/CapabilityGate";
 import { InfoTip } from "@/components/InfoTip";
 import { InstrumentEdgePanel } from "@/components/InstrumentEdgePanel";
+
 import { useSignalOutcomes, outcomeLabel } from "@/hooks/useSignalOutcomes";
 import type { SignalScoreRow } from "@/lib/signal-scores.shared";
 import { ENGINE_FIX_LABEL } from "@/lib/signal-engine-version";
@@ -152,6 +153,7 @@ function SignalsPage() {
       )}
 
       <InstrumentEdgePanel />
+
 
       <SignalHistory
         records={history}
