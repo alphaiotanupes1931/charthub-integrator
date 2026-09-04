@@ -74,7 +74,7 @@ export function MarketTapeScene() {
 
     const candles: Candle[] = [{ o: 0, h: 0.8, l: -0.8, c: 0.2 }];
     const target = Math.ceil(window.innerWidth / STEP) + 4;
-    while (candles.length < target) candles.push(nextCandle(candles[candles.length - 1], rand()));
+    while (candles.length < target) candles.push(nextCandle(candles[candles.length - 1], rand));
 
     let offset = 0;
     let raf = 0;
@@ -93,7 +93,7 @@ export function MarketTapeScene() {
         offset += dt * 22; // px/sec scroll speed
         while (offset >= STEP) {
           offset -= STEP;
-          candles.push(nextCandle(candles[candles.length - 1], rand()));
+          candles.push(nextCandle(candles[candles.length - 1], rand));
           const needed = Math.ceil(width / STEP) + 4;
           while (candles.length > needed) candles.shift();
         }
