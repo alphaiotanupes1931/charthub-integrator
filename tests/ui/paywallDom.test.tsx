@@ -183,9 +183,9 @@ describe("upgrade modal copy and calls to action", () => {
   });
 
   it("grade exhaustion shows the used-of-limit counter and the reset promise", () => {
-    const html = renderToStaticMarkup(<UpgradeModal open onClose={() => {}} reason="grades" used={3} limit={3} />);
-    expect(html).toContain("3 of 3 used this month");
-    expect(html).toMatch(/reset|come back on the 1st/i);
+    const html = renderToStaticMarkup(<UpgradeModal open onClose={() => {}} reason="grades" used={2} limit={2} />);
+    expect(html).toContain("2 of 2 used today");
+    expect(html).toMatch(/reset|come back tomorrow/i);
   });
 
   it("reassures that free surfaces stay free", () => {
