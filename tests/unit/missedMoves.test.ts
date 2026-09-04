@@ -10,7 +10,7 @@ import {
   sessionStopAtr,
   type VolCandle,
 } from "@/lib/sessionVolume";
-import { classifyTrend, findSwingHighs, type Candle } from "@/lib/agents/biasEngine";
+import { classifyTrend, type Candle } from "@/lib/agents/biasEngine";
 
 /** Bars in one UTC hour band, so every bar lands in the same session bucket. */
 function barsAtHour(utcHour: number, volumes: number[], dayStart = Date.UTC(2026, 8, 3)): VolCandle[] {
@@ -72,36 +72,56 @@ describe("timing gate instead of a killed signal", () => {
   });
 });
 
-/** Rally leg: the shape of the NAS100 bounce that should read as an uptrend. */
-function rally(bars: number, start = 20000, step = 60): Candle[] {
-  return Array.from({ length: bars }, (_, i) => {
-    const open = start + i * step;
-    const close = open + step * 0.8;
-    return { time: 1_756_000_000 + i * 3600, open, high: close + step * 0.2, low: open - step * 0.2, close };
-  });
+/** Zigzag advance: impulse legs with pullbacks, so real swing pivots exist. */
+function zigzagUp(legs = 5, start = 20000, step = 60): Candle[] {
+  const out: Candle[] = [];
+  let price = start;
+  let t = 1_756_000_000;
+  const push = (open: number, close: number) => {
+    out.push({
+      time: (t += 3600),
+      open,
+      high: Math.max(open, close) + step * 0.2,
+      low: Math.min(open, close) - step * 0.2,
+      close,
+      complete: true,
+    });
+  };
+  for (let leg = 0; leg < legs; leg++) {
+    for (let i = 0; i < 5; i++) { const open = price; price += step; push(open, price); }
+    for (let i = 0; i < 2; i++) { const open = price; price -= step * 0.4; push(open, price); }
+  }
+  return out;
 }
 
 describe("current structure beats the prior session", () => {
-  it("reads a fresh rally as up even when the series starts lower", () => {
-    const bars = rally(40);
-    const atr = 60;
-    expect(classifyTrend(bars, atr)).toBe("up");
+  it("reads a fresh higher-high/higher-low advance as up", () => {
+    expect(classifyTrend(zigzagUp(), 60)).toBe("up");
   });
 
-  it("flips to up after a swing high is broken, not on a single green candle", () => {
-    // Three down bars then one green bar that does not exceed the prior swing.
+  it("does not flip up on a single green candle after a downtrend", () => {
     const down: Candle[] = Array.from({ length: 24 }, (_, i) => {
       const open = 20000 - i * 60;
       const close = open - 48;
-      return { time: 1_756_000_000 + i * 3600, open, high: open + 12, low: close - 12, close };
+      return { time: 1_756_000_000 + i * 3600, open, high: open + 12, low: close - 12, close, complete: true };
     });
-    const oneGreen = [...down, (() => {
-      const open = down[down.length - 1]!.close;
-      return { time: 1_756_000_000 + 24 * 3600, open, high: open + 40, low: open - 5, close: open + 35 };
-    })()];
+    const lastClose = down[down.length - 1]!.close;
+    const oneGreen = [...down, {
+      time: 1_756_000_000 + 24 * 3600,
+      open: lastClose,
+      high: lastClose + 40,
+      low: lastClose - 5,
+      close: lastClose + 35,
+      complete: true,
+    }];
     expect(classifyTrend(oneGreen, 60)).not.toBe("up");
-    // A real break of the recent swing high does turn it.
-    const broken = [...oneGreen, ...rally(20, Math.max(...findSwingHighs(oneGreen).map((i) => oneGreen[i]!.high), oneGreen[0]!.high))];
-    expect(classifyTrend(broken, 60)).toBe("up");
+    // Structure only turns once higher highs and higher lows are actually printed.
+    expect(classifyTrend(zigzagUp(5, lastClose), 60)).toBe("up");
+  });
+
+  it("ignores the forming candle so nothing flips mid-bar", () => {
+    const bars = zigzagUp();
+    const spike = { ...bars[bars.length - 1]!, close: 100000, high: 100500, complete: false };
+    expect(classifyTrend([...bars, spike], 60)).toBe(classifyTrend(bars, 60));
   });
 });
