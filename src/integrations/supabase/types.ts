@@ -942,6 +942,48 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_leads: {
+        Row: {
+          created_at: string
+          drip_stage: number
+          email: string
+          id: string
+          last_sent_at: string | null
+          next_send_at: string
+          ref: string | null
+          source: string
+          unsubscribed_at: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          drip_stage?: number
+          email: string
+          id?: string
+          last_sent_at?: string | null
+          next_send_at?: string
+          ref?: string | null
+          source?: string
+          unsubscribed_at?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          drip_stage?: number
+          email?: string
+          id?: string
+          last_sent_at?: string | null
+          next_send_at?: string
+          ref?: string | null
+          source?: string
+          unsubscribed_at?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           body: string | null
