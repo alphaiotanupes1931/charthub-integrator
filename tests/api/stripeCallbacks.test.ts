@@ -243,7 +243,7 @@ describe("portal callback: cancel and resume", () => {
     const ent = entitlementsFor("user_1");
     expect(ent.tier).toBe("free");
     expect(ent.isPaid).toBe(false);
-    expect(ent.gradeLimit).toBe(3);
+    expect(ent.gradeLimit).toBe(2);
     expect(ent.capabilities).not.toContain("analytics");
     expect(ent.capabilities).toContain("journal");
   });

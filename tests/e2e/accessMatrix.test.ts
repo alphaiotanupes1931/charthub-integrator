@@ -303,7 +303,7 @@ describe("access matrix — Strategy Library visibility", () => {
 describe("access matrix — quota surfaces follow the same table", () => {
   it("only the free tier gets a grade limit and quota UI", () => {
     expect(personas.free.ent.freeTierActive).toBe(true);
-    expect(personas.free.ent.gradeLimit).toBe(3);
+    expect(personas.free.ent.gradeLimit).toBe(2);
     for (const id of ALL.filter((p) => p !== "free" && p !== "expiredTrial" && p !== "canceled")) {
       expect(personas[id].ent.freeTierActive).toBe(false);
       expect(personas[id].ent.gradeLimit).toBeNull();
