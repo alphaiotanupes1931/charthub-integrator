@@ -25,6 +25,7 @@ import { TodaysRecommendation } from "@/components/TodaysRecommendation";
 import { findStrategyByName, allStrategies } from "@/lib/customStrategies";
 import { StrategyPresetCard } from "@/components/StrategyPresetCard";
 import { readActiveStrategy, writeActiveStrategy } from "@/lib/chat-client";
+import { AUTO_STRATEGY, isAutoStrategy } from "@/lib/strategyAuto";
 import { SCAN_LENSES, readActiveLensId, writeActiveLensId, findLens, type ScanLensId } from "@/lib/scanLens";
 import { ActionLoader } from "@/components/ActionLoader";
 import { clearLastThreadId, readActiveCoach, writeActiveCoach, COACH_KEY, writeLastChart, readLastThreadId, writeLastThreadId } from "@/lib/chat-client";
@@ -48,9 +49,18 @@ import { UpgradeModal } from "@/components/UpgradeModal";
 
 // Scan context: the active strategy playbook is fed to the planner so the
 // Analysis grade is scored against the same rules the chat coach uses.
+function autoStrategyOn(): boolean {
+  return isAutoStrategy(readActiveStrategy());
+}
+
+function activeStrategyId(): string | undefined {
+  const name = readActiveStrategy();
+  return !name || isAutoStrategy(name) ? undefined : name;
+}
+
 function activeStrategyDesc(): string | undefined {
   const name = readActiveStrategy();
-  if (!name) return undefined;
+  if (!name || isAutoStrategy(name)) return undefined;
   const s = findStrategyByName(name);
   if (!s) return name;
   const bits = [
@@ -219,6 +229,7 @@ type ScanResult = {
   refPrice?: number;
   counterTrend?: boolean;
   htfBias?: "bullish" | "bearish" | "neutral";
+  autoStrategy?: { name: string; slug: string; regime: string; reason: string };
 
 };
 
@@ -496,6 +507,16 @@ function ScanTicket({
             <div className={`font-display text-5xl leading-none tracking-tight ${gradeColor[result.grade]}`}>
               {result.grade}
             </div>
+            {result.autoStrategy && (
+              <div className="mt-2 rounded-xl border border-primary/25 bg-primary/5 px-2.5 py-1.5">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-primary">
+                  Strategy chosen for you · {result.autoStrategy.name}
+                </div>
+                <div className="text-[11px] leading-snug text-muted-foreground mt-0.5">
+                  {result.autoStrategy.regime} — {result.autoStrategy.reason}
+                </div>
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-2 shrink-0">
             {voiceSpeaking && (
@@ -997,7 +1018,17 @@ function Dashboard() {
   const strategyRef = useRef<HTMLDivElement>(null);
   const [strategyOpen, setStrategyOpen] = useState(false);
   const [activeStrategy, setActiveStrategy] = useState<string | null>(null);
-  useEffect(() => { setActiveStrategy(readActiveStrategy()); }, []);
+  useEffect(() => {
+    // New traders default to Auto: the platform reads conditions and picks the
+    // playbook, then tells them which one it used on the scan card.
+    const stored = readActiveStrategy();
+    if (!stored) {
+      writeActiveStrategy(AUTO_STRATEGY);
+      setActiveStrategy(AUTO_STRATEGY);
+      return;
+    }
+    setActiveStrategy(stored);
+  }, []);
   const strategyOptions = useMemo(
     () => allStrategies().map((s) => ({ name: s.name, blurb: s.description ?? "" })),
     [strategyOpen],
@@ -1326,6 +1357,9 @@ function Dashboard() {
       candleCount: plan.candleCount,
       refPrice: round(typeof plan.refPrice === "number" ? plan.refPrice : last),
     };
+    const autoLine = plan.autoStrategy
+      ? `Strategy chosen for you: ${plan.autoStrategy.name} (${plan.autoStrategy.regime}). ${plan.autoStrategy.reason}`
+      : null;
     const levelLines = plan.grade === "NO ENTRY"
       ? ["No entry - stand down until the setup improves."]
       : [
@@ -1344,6 +1378,7 @@ function Dashboard() {
     return [
       `${scanSymbol.name} scan: ${plan.grade} ${plan.bias}. Confidence ${plan.confidence}%.`,
       `Market data: ${plan.dataSource ?? "unavailable"}, ${plan.candleCount ?? 0} real candles, fetched ${plan.dataFetchedAt ?? "unknown"}, market price used ${typeof (plan.refPrice ?? last) === "number" ? fmtPrice((plan.refPrice ?? last) as number, dec) : "unknown"}.`,
+      ...(autoLine ? [autoLine] : []),
       ...levelLines,
       `Why take this trade: ${plan.notes}`,
       ...(plan.details && plan.details !== plan.notes ? [`Risk and invalidation: ${plan.details}`] : []),
@@ -1422,7 +1457,7 @@ function Dashboard() {
     // Always post the scan prompt to chat so the user sees activity immediately.
     sendToChat(prompt, { focusChat: from === "chat", targetThreadId: scanThreadId });
 
-    runPlan({ data: { ticker: scanSymbol.ticker, interval: scanInterval, lensDesc: `${lens.name}: ${lens.promptEmphasis}`, strategyDesc: activeStrategyDesc(), strategyId: readActiveStrategy() ?? undefined, coach: readActiveCoach(), journalPerf: formatJournalPerf(scanSymbol.ticker) ?? undefined } })
+    runPlan({ data: { ticker: scanSymbol.ticker, interval: scanInterval, lensDesc: `${lens.name}: ${lens.promptEmphasis}`, strategyDesc: activeStrategyDesc(), autoStrategy: autoStrategyOn(), strategyId: activeStrategyId(), coach: readActiveCoach(), journalPerf: formatJournalPerf(scanSymbol.ticker) ?? undefined } })
       .then((plan) => {
         const r = plan as ScanResult;
         if (requestId !== activeScanRequestRef.current) return;
@@ -1668,6 +1703,25 @@ function Dashboard() {
             </button>
             {strategyOpen && (
               <div role="listbox" className="absolute right-0 mt-2 w-72 max-h-96 overflow-y-auto rounded-2xl border border-border/60 bg-card shadow-xl z-50">
+                <button
+                  role="option"
+                  aria-selected={isAutoStrategy(activeStrategy)}
+                  onClick={() => {
+                    writeActiveStrategy(AUTO_STRATEGY);
+                    setActiveStrategy(AUTO_STRATEGY);
+                    setStrategyOpen(false);
+                    toast.success("The platform will pick the strategy from current market conditions");
+                  }}
+                  className={`w-full text-left px-3 py-2.5 text-sm border-b border-border/40 hover:bg-accent/40 transition ${isAutoStrategy(activeStrategy) ? "bg-primary/10 text-primary" : ""}`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-medium truncate">{AUTO_STRATEGY}</span>
+                    {isAutoStrategy(activeStrategy) && <Check className="h-3.5 w-3.5 shrink-0" />}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                    Reads trend, volatility and volume right now, then grades with the playbook that fits. Named on every scan.
+                  </div>
+                </button>
                 <button
                   role="option"
                   aria-selected={!activeStrategy}
@@ -2197,7 +2251,7 @@ function Dashboard() {
                     setTimeout(() => { chatRef.current?.attach(file, attachPrompt); }, 0);
                     setScanning(true);
                     const lens = findLens(lensId);
-                    runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}`, strategyDesc: activeStrategyDesc(), strategyId: readActiveStrategy() ?? undefined, coach: readActiveCoach() } })
+                    runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}`, strategyDesc: activeStrategyDesc(), autoStrategy: autoStrategyOn(), strategyId: activeStrategyId(), coach: readActiveCoach() } })
                       .then((plan) => { const r = plan as ScanResult; setResult(r); applyPlanToSignalCards(r); })
                       .catch(() => { /* coach chat still runs the vision analysis */ })
                       .finally(() => setScanning(false));
@@ -2310,7 +2364,7 @@ function Dashboard() {
                 setTimeout(() => { chatRef.current?.attach(file, attachPrompt); }, 0);
                 setScanning(true);
                 const lens = findLens(lensId);
-                runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}`, strategyDesc: activeStrategyDesc(), strategyId: readActiveStrategy() ?? undefined, coach: readActiveCoach() } })
+                runPlan({ data: { ticker: symbol.ticker, interval, lensDesc: `${lens.name}: ${lens.promptEmphasis}`, strategyDesc: activeStrategyDesc(), autoStrategy: autoStrategyOn(), strategyId: activeStrategyId(), coach: readActiveCoach() } })
                   .then((plan) => { const r = plan as ScanResult; setResult(r); applyPlanToSignalCards(r); })
                   .catch(() => { /* coach chat still runs the vision analysis */ })
                   .finally(() => setScanning(false));

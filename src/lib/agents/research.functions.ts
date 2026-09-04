@@ -21,6 +21,8 @@ export const runResearchPlan = createServerFn({ method: "POST" })
     lensDesc: z.string().max(500).optional(),
     strategyDesc: z.string().max(800).optional(),
     strategyId: z.string().max(80).optional(),
+    /** True when the trader let the platform pick the playbook. */
+    autoStrategy: z.boolean().optional(),
     coach: z.string().max(60).optional(),
     journalPerf: z.string().max(300).optional(),
   }).parse(raw))
@@ -64,6 +66,18 @@ export const runResearchPlan = createServerFn({ method: "POST" })
           consensusConfidence: 0,
         },
       };
+    }
+
+    // Auto strategy: read live conditions and pick the playbook ourselves, so
+    // the trader is told what is being used instead of having to choose.
+    let strategyDesc = data.strategyDesc;
+    let autoPick: { name: string; slug: string; regime: string; reason: string } | undefined;
+    if (data.autoStrategy) {
+      const { autoStrategyForSnapshot } = await import("./strategy-auto.server");
+      const { regimeLabel } = await import("@/lib/strategyAuto");
+      const { pick, desc } = autoStrategyForSnapshot(snap);
+      strategyDesc = desc;
+      autoPick = { name: pick.name, slug: pick.slug, regime: regimeLabel(pick.regime), reason: pick.reason };
     }
 
     // Load Hermes memory relevant to this ticker / lens.
@@ -182,7 +196,7 @@ export const runResearchPlan = createServerFn({ method: "POST" })
         memo,
         data.lensDesc,
         hermesPrompt || undefined,
-        data.strategyDesc,
+        strategyDesc,
         data.coach,
         perfDesc || undefined,
         scoreDesc || undefined,
@@ -209,11 +223,12 @@ export const runResearchPlan = createServerFn({ method: "POST" })
       if (capped !== plan.grade) {
         return {
           ...plan,
+          autoStrategy: autoPick,
           grade: capped as TradePlan["grade"],
           details: effectiveReason ? `${plan.details} ${effectiveReason}` : plan.details,
         };
       }
     }
-    return plan;
+    return autoPick ? { ...plan, autoStrategy: autoPick } : plan;
   });
 

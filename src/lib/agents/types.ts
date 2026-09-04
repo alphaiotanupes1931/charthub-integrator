@@ -163,5 +163,7 @@ export type TradePlan = {
   };
   /** Set when the entry sits inside an order block price has already tested. */
   mitigatedEntry?: { mitigations: number; warning: string };
+  /** Set when the platform chose the playbook from live market conditions. */
+  autoStrategy?: { name: string; slug: string; regime: string; reason: string };
 
 };
