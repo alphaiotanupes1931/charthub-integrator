@@ -324,6 +324,54 @@ function orderTypeFor(grade: ChartGrade, lastPrice?: number): string | null {
   return null;
 }
 
+/**
+ * The coach note traders read first is one line. Everything else - the full
+ * case for the trade and the risk / invalidation - sits behind "Full analysis",
+ * so the top of the card is not lopsided towards the risk paragraph.
+ */
+function firstSentence(text: string): string {
+  const t = text.trim();
+  const m = t.match(/^.*?[.!?](\s|$)/);
+  const head = (m ? m[0] : t).trim();
+  return head.length > 180 ? `${head.slice(0, 177)}...` : head;
+}
+
+function GradeNarrative({ strength, weakness }: { strength?: string; weakness?: string }) {
+  const [open, setOpen] = useState(false);
+  const note = strength ? firstSentence(strength) : weakness ? firstSentence(weakness) : "";
+  const hasMore =
+    (!!strength && strength.trim() !== note) || (!!weakness && weakness !== strength);
+  return (
+    <div className="border-t border-border/60 p-2 space-y-1.5 text-xs">
+      {note && (
+        <div>
+          <span className="font-semibold text-foreground">Coach note: </span>
+          <span className="text-foreground/90">{note}</span>
+        </div>
+      )}
+      {hasMore && (
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="text-[10px] font-semibold tracking-tight text-primary hover:underline"
+        >
+          {open ? "Hide full analysis" : "Full analysis"}
+        </button>
+      )}
+      {open && (
+        <div className="space-y-1 rounded-xl border border-border/50 bg-background/40 p-2">
+          {strength && (
+            <div><span className="text-bull font-semibold">Why take this trade: </span><span className="text-foreground/90">{strength}</span></div>
+          )}
+          {weakness && weakness !== strength && (
+            <div><span className="text-red-400 font-semibold">Risk and invalidation: </span><span className="text-foreground/90">{weakness}</span></div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function GradeCard({ grade, lastPrice, symbol, interval }: { grade: ChartGrade; lastPrice?: number; symbol?: string; interval?: string }) {
   const g = grade.grade.toUpperCase();
   const tone = g.startsWith("A") ? "text-bull border-bull/40 bg-bull/10"
