@@ -18,6 +18,8 @@ import { DateRangeSelector, monthToDateRange, type AdminRange } from "@/componen
 import { UserUsageDrawer } from "@/components/admin/UserUsageDrawer";
 import { TestChecklistPanel } from "@/components/admin/TestChecklistPanel";
 import { InstrumentProfilePanel } from "@/components/admin/InstrumentProfilePanel";
+import EngineReplayPanel from "@/components/EngineReplayPanel";
+
 import { PlanDebugPanel } from "@/components/admin/PlanDebugPanel";
 
 
@@ -252,6 +254,8 @@ Live from Stripe, {totalUsers} accounts
         <>
           <PlanDebugPanel />
           <InstrumentProfilePanel />
+          <EngineReplayPanel canRefresh />
+
           <TestChecklistPanel />
         </>
       )}
