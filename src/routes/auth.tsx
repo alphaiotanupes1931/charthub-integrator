@@ -4,6 +4,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { signUpConfirmed } from "@/lib/auth.functions";
+import { captureLead, linkLeadToUser } from "@/lib/leads.functions";
 import { signInWithIdentifier } from "@/lib/username-auth.functions";
 import { redeemRecoveryCode } from "@/lib/recovery.functions";
 import { normalizeRecoveryCode } from "@/lib/recoveryCode";
@@ -35,6 +36,7 @@ const searchSchema = z.object({
     z.enum(["signin", "signup"]).optional(),
   ),
   banned: optionalSearchString,
+  email: optionalSearchString,
   force: optionalSearchString,
 });
 
@@ -108,7 +110,7 @@ function AuthPage() {
   const search = useSearch({ from: "/auth" });
   const handledForceSignOut = useRef(false);
   const [mode, setMode] = useState<"signin" | "signup">(search.mode ?? "signin");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(search.email ?? "");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -270,6 +272,14 @@ function AuthPage() {
           hasSession: !!signInData.session,
         });
         toast.success("Account created");
+        // Keep the marketing list in step: capture the address if it never came
+        // through the landing form, and link it to the new account either way.
+        try {
+          await captureLead({ data: { email: parsed.data.email, source: "signup", ref: null } });
+          if (signInData.user?.id) {
+            await linkLeadToUser({ data: { email: parsed.data.email, userId: signInData.user.id } });
+          }
+        } catch { /* marketing list must never block signup */ }
       }
       // Claim the welcome slot IMMEDIATELY so the post-nav WelcomeBackGreeter
       // does not also start its own playback (which caused two overlapping voices).
