@@ -15,7 +15,7 @@ type Props = {
 const COPY: Record<Props["reason"], { title: string; body: string }> = {
   grades: {
     title: "You've used your 2 free grades today",
-    body: "Your journal, risk calculator, alerts and Academy basics stay free. Upgrade for unlimited signal grades, or come back on the 1st when your grades reset.",
+    body: "Your journal, risk calculator, alerts and Academy basics stay free. Upgrade for unlimited signal grades, or come back tomorrow when your grades reset at midnight.",
   },
   analytics: {
     title: "Analytics is part of the paid plan",
