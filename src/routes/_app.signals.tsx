@@ -20,6 +20,8 @@ import { InfoTip } from "@/components/InfoTip";
 import { InstrumentEdgePanel } from "@/components/InstrumentEdgePanel";
 import { useSignalOutcomes, outcomeLabel } from "@/hooks/useSignalOutcomes";
 import type { SignalScoreRow } from "@/lib/signal-scores.shared";
+import { ENGINE_FIX_LABEL } from "@/lib/signal-engine-version";
+
 
 
 export const Route = createFileRoute("/_app/signals")({
