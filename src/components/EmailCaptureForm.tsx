@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowRight, Check } from "lucide-react";
 import { captureLead } from "@/lib/leads.functions";
-import { track } from "@/lib/product-events";
 
 type Props = {
   /** Which surface the address came from, stored with the lead. */
@@ -33,7 +32,6 @@ export function EmailCaptureForm({ source, className = "", cta = "Get free acces
     try {
       const ref = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("ref") : null;
       await submit({ data: { email: value, source, ref } });
-      track("lead_captured", { source });
       setState("done");
     } catch {
       setState("error");
