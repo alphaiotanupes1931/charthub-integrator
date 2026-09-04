@@ -44,8 +44,8 @@ export function FreeTierUsagePanel({ className = "" }: { className?: string }) {
 
       <p className="mt-1 text-xs text-muted-foreground">
         {quota.exhausted
-          ? "You've used all of this month's signal grades."
-          : `${quota.remaining} signal ${quota.remaining === 1 ? "grade" : "grades"} left this month.`}
+          ? "You've used both of today's free signal grades."
+          : `${quota.remaining} signal ${quota.remaining === 1 ? "grade" : "grades"} left today.`}
       </p>
 
       <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-muted">
@@ -86,7 +86,7 @@ export function FreeTierUsagePanel({ className = "" }: { className?: string }) {
                 Running low on grades
               </p>
               <p className="mt-0.5 text-muted-foreground">
-                You have {quota.remaining} grade{quota.remaining === 1 ? "" : "s"} left this month. Upgrade to keep scanning without limits.
+                You have {quota.remaining} grade{quota.remaining === 1 ? "" : "s"} left today. Upgrade to keep scanning without limits.
               </p>
             </div>
           </div>

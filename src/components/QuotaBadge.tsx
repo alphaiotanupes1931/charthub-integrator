@@ -17,7 +17,7 @@ export function QuotaBadge({ quota, className = "" }: { quota: QuotaView; classN
       title="Free plan includes 3 signal grades each calendar month"
     >
       <span className="font-mono tabular-nums">{quota.remaining}/{quota.limit}</span>
-      <span>grades left this month</span>
+      <span>grades left today</span>
     </span>
   );
 }
