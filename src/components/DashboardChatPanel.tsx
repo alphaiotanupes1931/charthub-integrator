@@ -3,8 +3,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { Link } from "@tanstack/react-router";
-import { MessageSquare, ExternalLink, X, Minus, Volume2, VolumeX, Crosshair, Square, Paperclip, ImageIcon, ThumbsUp, ThumbsDown, HelpCircle, BookOpen, Zap, FileDown } from "lucide-react";
+import { MessageSquare, ExternalLink, X, Minus, Volume2, VolumeX, Crosshair, Square, Paperclip, ImageIcon, ThumbsUp, ThumbsDown, HelpCircle, BookOpen, Zap, FileDown, NotebookPen } from "lucide-react";
 import { downloadChatPdf } from "@/lib/chat-pdf";
+import { stageChatForJournal } from "@/lib/chat-to-journal";
 import { ScanStamp } from "@/components/ScanStamp";
 import { recordHermesFeedback } from "@/lib/agents/hermes.functions";
 import { COACH_ICON_META, DEFAULT_COACH_ICON } from "@/lib/coachMeta";
@@ -1148,6 +1149,26 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
                   aria-label="Download conversation PDF"
                 >
                   <FileDown className="h-3 w-3" /> PDF
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!messages.length) return;
+                    const ok = stageChatForJournal(messages, { coach: activeCoach, instrument: headerInstrument });
+                    if (ok) {
+                      toast.success("Conversation saved", {
+                        description: "Open the Journal and log the trade, the chat attaches to that entry.",
+                      });
+                    } else {
+                      toast.error("Could not save this conversation");
+                    }
+                  }}
+                  disabled={!messages.length}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-accent/60 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition disabled:opacity-40"
+                  title="Attach this conversation to your next journal entry"
+                  aria-label="Save conversation to journal"
+                >
+                  <NotebookPen className="h-3 w-3" /> To journal
                 </button>
               </div>
               <PromptInputSubmit status={status} onStop={stopScan} disabled={!input.trim() && !pendingImages.length && !loading} />

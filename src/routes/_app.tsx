@@ -28,7 +28,9 @@ function describeDestination(pathname: string): string {
 }
 
 function GatePending() {
-  const pathname = typeof window !== "undefined" ? window.location.pathname : "";
+  // Router state, not window: reading location during render makes the SSR and
+  // client markup disagree and React throws a hydration error.
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   const destination = describeDestination(pathname);
   return (
     <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-4">
