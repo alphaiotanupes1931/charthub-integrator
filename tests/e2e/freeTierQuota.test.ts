@@ -214,64 +214,64 @@ describe("only real answers decrement quota", () => {
   });
 });
 
-describe("monthly reset happens on the 1st in the account's own timezone", () => {
-  // Each case is an instant that is still the last day of the month locally
-  // while UTC has already rolled over, or the reverse — the two disagree, so a
-  // UTC-only implementation gets exactly one of them wrong.
+describe("the daily reset happens at local midnight in the account's own timezone", () => {
+  // Each case is an instant that is still the previous day locally while UTC has
+  // already rolled over, or the reverse - the two disagree, so a UTC-only
+  // implementation gets exactly one of them wrong.
   const cases = [
     {
       tz: "America/New_York", // UTC-4 in September
-      label: "New York, UTC has rolled over but the local month has not",
-      lastMomentOfMonth: "2026-09-01T03:59:00Z", // 23:59 Aug 31 local
-      firstMomentOfNextMonth: "2026-09-01T04:00:00Z", // 00:00 Sep 1 local
-      endedMonth: "2026-08",
-      newMonth: "2026-09",
+      label: "New York, UTC has rolled over but the local day has not",
+      lastMomentOfDay: "2026-09-01T03:59:00Z", // 23:59 Aug 31 local
+      firstMomentOfNextDay: "2026-09-01T04:00:00Z", // 00:00 Sep 1 local
+      endedDay: "2026-08-31",
+      newDay: "2026-09-01",
     },
     {
       tz: "America/Los_Angeles", // UTC-7
       label: "Los Angeles, seven hours behind UTC",
-      lastMomentOfMonth: "2026-09-01T06:59:00Z",
-      firstMomentOfNextMonth: "2026-09-01T07:00:00Z",
-      endedMonth: "2026-08",
-      newMonth: "2026-09",
+      lastMomentOfDay: "2026-09-01T06:59:00Z",
+      firstMomentOfNextDay: "2026-09-01T07:00:00Z",
+      endedDay: "2026-08-31",
+      newDay: "2026-09-01",
     },
     {
-      tz: "Asia/Tokyo", // UTC+9 — the local month rolls over before UTC does
+      tz: "Asia/Tokyo", // UTC+9 - the local day rolls over before UTC does
       label: "Tokyo, nine hours ahead of UTC",
-      lastMomentOfMonth: "2026-08-31T14:59:00Z", // 23:59 Aug 31 local
-      firstMomentOfNextMonth: "2026-08-31T15:00:00Z", // 00:00 Sep 1 local
-      endedMonth: "2026-08",
-      newMonth: "2026-09",
+      lastMomentOfDay: "2026-08-31T14:59:00Z",
+      firstMomentOfNextDay: "2026-08-31T15:00:00Z",
+      endedDay: "2026-08-31",
+      newDay: "2026-09-01",
     },
     {
       tz: "Pacific/Kiritimati", // UTC+14, the earliest zone on earth
       label: "Kiritimati, fourteen hours ahead of UTC",
-      lastMomentOfMonth: "2026-08-31T09:59:00Z",
-      firstMomentOfNextMonth: "2026-08-31T10:00:00Z",
-      endedMonth: "2026-08",
-      newMonth: "2026-09",
+      lastMomentOfDay: "2026-08-31T09:59:00Z",
+      firstMomentOfNextDay: "2026-08-31T10:00:00Z",
+      endedDay: "2026-08-31",
+      newDay: "2026-09-01",
     },
     {
       tz: "Australia/Adelaide", // UTC+9:30, a half-hour offset
       label: "Adelaide, a half-hour offset",
-      lastMomentOfMonth: "2026-08-31T14:29:00Z",
-      firstMomentOfNextMonth: "2026-08-31T14:30:00Z",
-      endedMonth: "2026-08",
-      newMonth: "2026-09",
+      lastMomentOfDay: "2026-08-31T14:29:00Z",
+      firstMomentOfNextDay: "2026-08-31T14:30:00Z",
+      endedDay: "2026-08-31",
+      newDay: "2026-09-01",
     },
     {
       tz: "Europe/London",
       label: "London, one hour ahead of UTC under summer time",
-      lastMomentOfMonth: "2026-08-31T22:59:00Z",
-      firstMomentOfNextMonth: "2026-08-31T23:00:00Z",
-      endedMonth: "2026-08",
-      newMonth: "2026-09",
+      lastMomentOfDay: "2026-08-31T22:59:00Z",
+      firstMomentOfNextDay: "2026-08-31T23:00:00Z",
+      endedDay: "2026-08-31",
+      newDay: "2026-09-01",
     },
   ] as const;
 
   it.each(cases)("$label", async (c) => {
     const spend = async (tz: string, now: Date) => {
-      for (const symbol of ["XAUUSD", "EURUSD", "US30"]) {
+      for (const symbol of ["XAUUSD", "EURUSD"]) {
         await consumeGradeFlow({
           entitlements: freeAccount(),
           timezone: tz,
@@ -282,15 +282,15 @@ describe("monthly reset happens on the 1st in the account's own timezone", () =>
       }
     };
 
-    const beforeMidnight = new Date(c.lastMomentOfMonth);
-    const afterMidnight = new Date(c.firstMomentOfNextMonth);
+    const beforeMidnight = new Date(c.lastMomentOfDay);
+    const afterMidnight = new Date(c.firstMomentOfNextDay);
 
-    // The month key is the local calendar month, so it flips exactly at local
-    // midnight — never at UTC midnight.
-    expect(dayKey(c.tz, beforeMidnight)).toBe(c.endedMonth);
-    expect(dayKey(c.tz, afterMidnight)).toBe(c.newMonth);
+    // The period key is the local calendar day, so it flips exactly at local
+    // midnight - never at UTC midnight.
+    expect(dayKey(c.tz, beforeMidnight)).toBe(c.endedDay);
+    expect(dayKey(c.tz, afterMidnight)).toBe(c.newDay);
 
-    // Spend the whole allowance in the outgoing local month.
+    // Spend the whole allowance in the outgoing local day.
     await spend(c.tz, beforeMidnight);
     const spent = await consumeGradeFlow({
       entitlements: freeAccount(),
@@ -301,9 +301,9 @@ describe("monthly reset happens on the 1st in the account's own timezone", () =>
     });
     expect(spent.reason).toBe("limit_reached");
     expect(shouldPaywallOnIntent(spent.quota)).toBe(true);
-    expect(db.months.get(c.endedMonth)).toBe(FREE_GRADES_PER_DAY);
+    expect(db.months.get(c.endedDay)).toBe(FREE_GRADES_PER_DAY);
 
-    // One minute later it is the 1st locally: a fresh three grades.
+    // One minute later it is a new day locally: a fresh allowance.
     const afterReset = await consumeGradeFlow({
       entitlements: freeAccount(),
       timezone: c.tz,
@@ -313,22 +313,22 @@ describe("monthly reset happens on the 1st in the account's own timezone", () =>
     });
     expect(afterReset.charged).toBe(true);
     expect(afterReset.quota.used).toBe(1);
-    expect(afterReset.quota.remaining).toBe(2);
+    expect(afterReset.quota.remaining).toBe(1);
     expect(shouldPaywallOnIntent(afterReset.quota)).toBe(false);
-    expect(quotaLabel(afterReset.quota)).toBe("2 of 3 grades left this month");
+    expect(quotaLabel(afterReset.quota)).toBe("1 of 2 grades left today");
 
-    // The old month's record is untouched by the new month's usage.
-    expect(db.months.get(c.endedMonth)).toBe(FREE_GRADES_PER_DAY);
-    expect(db.months.get(c.newMonth)).toBe(1);
+    // Yesterday's record is untouched by today's usage.
+    expect(db.months.get(c.endedDay)).toBe(FREE_GRADES_PER_DAY);
+    expect(db.months.get(c.newDay)).toBe(1);
   });
 
-  it("does not reset on UTC midnight for an account that is still in the old month locally", async () => {
+  it("does not reset on UTC midnight for an account that is still in the old day locally", async () => {
     const tz = "America/New_York";
     const utcMidnight = new Date("2026-09-01T00:30:00Z"); // 20:30 Aug 31 in New York
-    expect(dayKey(tz, utcMidnight)).toBe("2026-08");
-    expect(dayKey("UTC", utcMidnight)).toBe("2026-09"); // UTC has already rolled
+    expect(dayKey(tz, utcMidnight)).toBe("2026-08-31");
+    expect(dayKey("UTC", utcMidnight)).toBe("2026-09-01"); // UTC has already rolled
 
-    db.months.set("2026-08", FREE_GRADES_PER_DAY);
+    db.months.set("2026-08-31", FREE_GRADES_PER_DAY);
     const attempt = await consumeGradeFlow({
       entitlements: freeAccount(),
       timezone: tz,
@@ -338,16 +338,16 @@ describe("monthly reset happens on the 1st in the account's own timezone", () =>
     });
     expect(attempt.charged).toBe(false);
     expect(attempt.reason).toBe("limit_reached");
-    expect(db.months.get("2026-09")).toBeUndefined();
+    expect(db.months.get("2026-09-01")).toBeUndefined();
   });
 
-  it("does not hand an extra allowance to an account that is already in the new month locally", async () => {
+  it("does not hand an extra allowance to an account that is already in the new day locally", async () => {
     const tz = "Asia/Tokyo";
     const beforeUtcRollover = new Date("2026-08-31T20:00:00Z"); // 05:00 Sep 1 in Tokyo
-    expect(dayKey(tz, beforeUtcRollover)).toBe("2026-09");
-    expect(dayKey("UTC", beforeUtcRollover)).toBe("2026-08");
+    expect(dayKey(tz, beforeUtcRollover)).toBe("2026-09-01");
+    expect(dayKey("UTC", beforeUtcRollover)).toBe("2026-08-31");
 
-    db.months.set("2026-08", FREE_GRADES_PER_DAY); // last month is spent
+    db.months.set("2026-08-31", FREE_GRADES_PER_DAY); // yesterday is spent
     for (let i = 1; i <= FREE_GRADES_PER_DAY; i += 1) {
       const res = await consumeGradeFlow({
         entitlements: freeAccount(),
@@ -359,23 +359,24 @@ describe("monthly reset happens on the 1st in the account's own timezone", () =>
       expect(res.charged).toBe(true);
       expect(res.quota.used).toBe(i);
     }
-    const fourth = await consumeGradeFlow({
+    const overLimit = await consumeGradeFlow({
       entitlements: freeAccount(),
       timezone: tz,
       store: db,
-      input: { outcome: "graded", symbol: "SYM4", timeframe: "1h" },
+      input: { outcome: "graded", symbol: "SYM99", timeframe: "1h" },
       now: beforeUtcRollover,
     });
-    expect(fourth.reason).toBe("limit_reached");
-    expect(db.months.get("2026-09")).toBe(FREE_GRADES_PER_DAY);
+    expect(overLimit.reason).toBe("limit_reached");
+    expect(db.months.get("2026-09-01")).toBe(FREE_GRADES_PER_DAY);
   });
 
   it("falls back to UTC when the account has no usable timezone", () => {
     const at = new Date("2026-09-01T00:30:00Z");
-    expect(dayKey(null, at)).toBe("2026-09");
-    expect(dayKey("Not/AZone", at)).toBe("2026-09");
+    expect(dayKey(null, at)).toBe("2026-09-01");
+    expect(dayKey("Not/AZone", at)).toBe("2026-09-01");
   });
 });
+
 
 describe("an identical re-scan inside the 10 minute window is free", () => {
   const sameScan = { symbol: "XAUUSD", timeframe: "15m", methodology: "wyckoff" } as const;
