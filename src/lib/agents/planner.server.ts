@@ -851,19 +851,24 @@ export async function runPlanner(
   const downgradeOne = (g: typeof GRADES[number]): typeof GRADES[number] =>
     g === "A+" ? "A" : g === "A" ? "B" : g === "B" ? "C" : g;
 
-  // Thin overnight tape (Sydney/Tokyo) is a stand-down, not a grade: the
-  // structure can be perfect and still get chopped out on a 0.6x ATR stop.
-  let standDown: string | null = null;
-  if (volRead?.overnightThin && grade !== "NO ENTRY") {
-    standDown = `NO ENTRY - thin overnight session, wait for London open. ${volRead.label} (${volRead.bars}-bar median), which is not enough participation to hold a level.`;
-    grade = "NO ENTRY";
-    warnings.push(standDown);
-  } else if (volRead?.thin && grade !== "NO ENTRY") {
+  // Thin overnight tape used to be a hard NO ENTRY. That is what made gold read
+  // "no entry" for two days and hid index setups that ran the moment New York
+  // opened. It is a timing problem, so the setup keeps its grade path and levels
+  // and only carries the window to wait for. Crypto is exempt entirely: a quiet
+  // Tokyo hour on a 24/7 market is not thin participation.
+  const gate = timingGateFor(snap.ticker, volRead);
+  let timingGate: string | null = null;
+  if (gate && grade !== "NO ENTRY") {
+    timingGate = gate.message;
+    grade = downgradeOne(grade);
+    warnings.push(timingGate);
+  } else if (volRead?.thin && !gate && grade !== "NO ENTRY" && assetClassFor(snap.ticker) !== "crypto") {
     grade = downgradeOne(grade);
     warnings.push(
       `Thin volume - widen stops or reduce size. ${volRead.label}, so the stop was widened to ${stopFloorAtr.toFixed(1)}x ATR and the grade dropped a letter.`,
     );
   }
+
 
   // Mitigated order block at the entry: a block price already ran through
   // holds less often, and one tested twice or more usually fails outright.
