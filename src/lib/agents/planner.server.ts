@@ -8,6 +8,7 @@ import type { MarketSnapshot, OrderFlow, ResearchMemo, TradePlan } from "./types
 import { formatOrderFlow } from "./order-flow.server";
 import { computeOrderBlocks } from "@/lib/orderBlocks";
 import { computeBias } from "./bias-adapter.server";
+import { tunedConfigFor } from "../instrument-profile.server";
 
 import {
   readSessionVolume,
@@ -715,7 +716,16 @@ export async function runPlanner(
   // RULE 6: direction is computed here, from the closed candles of this scan,
   // and handed to the model as a block it is not allowed to contradict. Nothing
   // is cached, so a fresh bullish 4H close can never lose to a stale label.
-  const biasRead = computeBias(snap);
+  // Phase 4: the same rules run with this instrument's measured constants when a
+  // profile has been measured; unknown or thin-sample symbols keep the
+  // conservative shipped defaults.
+  let tunedCfg: Awaited<ReturnType<typeof tunedConfigFor>> = null;
+  try {
+    tunedCfg = await tunedConfigFor(snap.ticker);
+  } catch {
+    tunedCfg = null;
+  }
+  const biasRead = computeBias(snap, "A", tunedCfg ?? undefined);
   const ctx = biasRead.contextBlock
     + "\n\n"
     + memoBlock(memo, snap, lensDesc, strategyDesc, perfDesc, scoreDesc)
