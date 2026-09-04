@@ -14,8 +14,8 @@ type Props = {
 
 const COPY: Record<Props["reason"], { title: string; body: string }> = {
   grades: {
-    title: "You've used your 3 grades this month",
-    body: "Your journal, risk calculator, alerts and Academy basics stay free. Upgrade for unlimited signal grades, or come back on the 1st when your grades reset.",
+    title: "You've used your 2 free grades today",
+    body: "Your journal, risk calculator, alerts and Academy basics stay free. Upgrade for unlimited signal grades, or come back tomorrow when your grades reset at midnight.",
   },
   analytics: {
     title: "Analytics is part of the paid plan",
@@ -69,7 +69,7 @@ export function UpgradeModal({ open, onClose, reason, used, limit }: Props) {
         </div>
 
         {typeof used === "number" && typeof limit === "number" && (
-          <p className="mt-3 font-mono text-xs text-muted-foreground">{used} of {limit} used this month</p>
+          <p className="mt-3 font-mono text-xs text-muted-foreground">{used} of {limit} used today</p>
         )}
 
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground" data-testid="upgrade-body">{copy.body}</p>

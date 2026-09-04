@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
-  FREE_GRADES_PER_MONTH,
+  FREE_GRADES_PER_DAY,
   academyModuleAllowed,
   coachAllowed,
   can,
   isCacheFresh,
-  monthKey,
+  dayKey,
   quotaLabel,
   quotaView,
   resolveEntitlements,
@@ -64,17 +64,17 @@ describe("§7 migration — paid accounts are untouched", () => {
     expect(after.onLegacyTrial).toBe(false);
     expect(after.tier).toBe("free");
     expect(after.freeTierActive).toBe(true);
-    expect(after.gradeLimit).toBe(FREE_GRADES_PER_MONTH);
+    expect(after.gradeLimit).toBe(FREE_GRADES_PER_DAY);
   });
 
-  it("an expired trial that never paid lands on free with a full 3 grades", () => {
+  it("an expired trial that never paid lands on free with a full daily allowance", () => {
     const ent = resolveEntitlements({
       flagEnabled: true,
       subscription: { status: "canceled", tier: null, trialEnd: "2026-07-01T00:00:00Z" },
       now: NOW,
     });
     expect(ent.tier).toBe("free");
-    expect(quotaView(ent, 0)).toMatchObject({ used: 0, remaining: 3, exhausted: false });
+    expect(quotaView(ent, 0)).toMatchObject({ used: 0, remaining: 2, exhausted: false });
   });
 
   it("a brand-new account with no subscription row is free", () => {
@@ -153,15 +153,15 @@ describe("§4 quota mechanics", () => {
   const free = resolveEntitlements({ flagEnabled: true, subscription: null, now: NOW });
 
   it("counts down from the first grade and shows the remaining count", () => {
-    expect(quotaLabel(quotaView(free, 0))).toBe("3 of 3 grades left this month");
-    expect(quotaLabel(quotaView(free, 1))).toBe("2 of 3 grades left this month");
-    expect(quotaLabel(quotaView(free, 3))).toBe("0 of 3 grades left this month");
+    expect(quotaLabel(quotaView(free, 0))).toBe("2 of 2 grades left today");
+    expect(quotaLabel(quotaView(free, 1))).toBe("1 of 2 grades left today");
+    expect(quotaLabel(quotaView(free, 2))).toBe("0 of 2 grades left today");
   });
 
   it("marks the account exhausted at the limit and clamps overshoot", () => {
-    expect(quotaView(free, 2).exhausted).toBe(false);
-    expect(quotaView(free, 3).exhausted).toBe(true);
-    expect(quotaView(free, 9)).toMatchObject({ used: 3, remaining: 0, exhausted: true });
+    expect(quotaView(free, 1).exhausted).toBe(false);
+    expect(quotaView(free, 2).exhausted).toBe(true);
+    expect(quotaView(free, 9)).toMatchObject({ used: 2, remaining: 0, exhausted: true });
   });
 
   it("charges a grade for a real answer, including a legitimate No Entry", () => {
@@ -192,19 +192,19 @@ describe("§4 quota mechanics", () => {
     expect(isCacheFresh("not-a-date")).toBe(false);
   });
 
-  it("resets on the 1st in the account timezone, not UTC", () => {
-    // 2026-09-01 00:30 in New York is still 2026-08-31 in UTC terms of date,
-    // but the account's month has already rolled over.
+  it("resets at local midnight in the account timezone, not UTC", () => {
+    // 00:30 in New York on the 1st is still the previous day in UTC, but the
+    // account's own day has already rolled over.
     const rollover = new Date("2026-09-01T04:30:00Z");
-    expect(monthKey("America/New_York", rollover)).toBe("2026-09");
-    // And just before local midnight it is still August for that account.
-    expect(monthKey("America/New_York", new Date("2026-09-01T03:30:00Z"))).toBe("2026-08");
-    expect(monthKey("UTC", rollover)).toBe("2026-09");
+    expect(dayKey("America/New_York", rollover)).toBe("2026-09-01");
+    // And just before local midnight it is still the 31st for that account.
+    expect(dayKey("America/New_York", new Date("2026-09-01T03:30:00Z"))).toBe("2026-08-31");
+    expect(dayKey("UTC", rollover)).toBe("2026-09-01");
   });
 
   it("falls back to UTC when the timezone is missing or bogus", () => {
-    expect(monthKey(null, NOW)).toBe("2026-08");
-    expect(monthKey("Not/AZone", NOW)).toBe("2026-08");
+    expect(dayKey(null, NOW)).toBe(dayKey("UTC", NOW));
+    expect(dayKey("Not/AZone", NOW)).toBe(dayKey("UTC", NOW));
   });
 });
 

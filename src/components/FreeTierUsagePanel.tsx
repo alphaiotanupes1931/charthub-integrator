@@ -44,8 +44,8 @@ export function FreeTierUsagePanel({ className = "" }: { className?: string }) {
 
       <p className="mt-1 text-xs text-muted-foreground">
         {quota.exhausted
-          ? "You've used all of this month's signal grades."
-          : `${quota.remaining} signal ${quota.remaining === 1 ? "grade" : "grades"} left this month.`}
+          ? "You've used both of today's free signal grades."
+          : `${quota.remaining} signal ${quota.remaining === 1 ? "grade" : "grades"} left today.`}
       </p>
 
       <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-muted">
@@ -56,7 +56,7 @@ export function FreeTierUsagePanel({ className = "" }: { className?: string }) {
       </div>
       <div className="mt-1.5 flex items-center justify-between text-[11px] text-muted-foreground">
         <span>{quota.used} used</span>
-        <span>{quota.limit} per calendar month</span>
+        <span>{quota.limit} per day</span>
       </div>
 
       <div
@@ -65,12 +65,7 @@ export function FreeTierUsagePanel({ className = "" }: { className?: string }) {
       >
         <CalendarClock className="size-4 shrink-0" />
         <span>
-          Resets {reset.label} ({reset.daysAway === 0
-            ? "today"
-            : reset.daysAway === 1
-              ? "tomorrow"
-              : `in ${reset.daysAway} days`}
-          ), your time zone {timezone}.
+          Resets at midnight {reset.label}, your time zone {timezone}.
         </span>
       </div>
 
@@ -86,7 +81,7 @@ export function FreeTierUsagePanel({ className = "" }: { className?: string }) {
                 Running low on grades
               </p>
               <p className="mt-0.5 text-muted-foreground">
-                You have {quota.remaining} grade{quota.remaining === 1 ? "" : "s"} left this month. Upgrade to keep scanning without limits.
+                You have {quota.remaining} grade{quota.remaining === 1 ? "" : "s"} left today. Upgrade to keep scanning without limits.
               </p>
             </div>
           </div>
@@ -104,7 +99,7 @@ export function FreeTierUsagePanel({ className = "" }: { className?: string }) {
   );
 }
 
-/** First day of next month in the user's zone, plus how far away that is. */
+/** Local midnight tonight in the user's zone: when the daily allowance refills. */
 export function nextResetInfo(timezone: string, now: Date = new Date()) {
   const tz = timezone || "UTC";
   let year: number;
@@ -117,19 +112,16 @@ export function nextResetInfo(timezone: string, now: Date = new Date()) {
     year = now.getUTCFullYear();
     month = now.getUTCMonth() + 1;
   }
-  const nextYear = month === 12 ? year + 1 : year;
-  const nextMonth = month === 12 ? 1 : month + 1;
-  const resetUtc = Date.UTC(nextYear, nextMonth - 1, 1);
-  const todayUtc = Date.UTC(year, month - 1, dayOfMonth(tz, now));
-  const daysAway = Math.max(0, Math.round((resetUtc - todayUtc) / 86_400_000));
+  // The allowance refills at the next local midnight, which is the day after
+  // the account's current local date.
+  const resetUtc = Date.UTC(year, month - 1, dayOfMonth(tz, now) + 1);
   return {
     label: new Date(resetUtc).toLocaleDateString(undefined, {
       timeZone: "UTC",
       month: "long",
       day: "numeric",
-      year: "numeric",
     }),
-    daysAway,
+    daysAway: 1,
   };
 }
 

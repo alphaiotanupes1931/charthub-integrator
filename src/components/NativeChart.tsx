@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import {
   Camera, Pencil, Minus as LineIcon, Square as RectIcon, ArrowUpRight, Undo2, Trash2,
   Eraser as EraserIcon, X as CloseIcon, MousePointer2, TrendingUp as TrendIcon, MoveUpRight,
   SeparatorVertical as VLineIcon, AlignHorizontalJustifyStart as FibIcon, Ruler as RulerIcon,
-  Type as TypeIcon, Magnet as MagnetIcon, Lock, Unlock, Eye, EyeOff,
+  Type as TypeIcon, Magnet as MagnetIcon, Lock, Unlock, Eye, EyeOff, NotebookPen,
 } from "lucide-react";
 import { useCandleColors } from "@/hooks/useCandleColors";
 import { useChartBackground } from "@/hooks/useChartBackground";
@@ -1027,33 +1028,62 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
 
 
 
-  const handleScreenshot = useCallback(() => {
+  /** Chart pixels plus the drawing layer, so saved levels are in the image. */
+  const captureChartPng = useCallback((): string | null => {
     const chart = chartRef.current;
-    if (!chart) return;
+    if (!chart) return null;
     try {
       const chartCanvas = chart.takeScreenshot();
       const out = document.createElement("canvas");
       out.width = chartCanvas.width;
       out.height = chartCanvas.height;
       const ctx = out.getContext("2d");
-      if (!ctx) return;
+      if (!ctx) return null;
       ctx.drawImage(chartCanvas, 0, 0);
       const draw = drawCanvasRef.current;
       if (draw && draw.width > 0 && draw.height > 0) {
         ctx.drawImage(draw, 0, 0, out.width, out.height);
       }
-      const url = out.toDataURL("image/png");
-      const a = document.createElement("a");
-      const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-      a.href = url;
-      a.download = `${ticker.replace(/[^\w]+/g, "_")}_${interval}_${stamp}.png`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      return out.toDataURL("image/png");
     } catch (e) {
       console.error("screenshot failed", e);
+      return null;
     }
-  }, [ticker, interval]);
+  }, []);
+
+  const handleScreenshot = useCallback(() => {
+    const url = captureChartPng();
+    if (!url) return;
+    const a = document.createElement("a");
+    const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+    a.href = url;
+    a.download = `${ticker.replace(/[^\w]+/g, "_")}_${interval}_${stamp}.png`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }, [ticker, interval, captureChartPng]);
+
+  /**
+   * Hand the marked-up chart to the journal. The image is parked in
+   * localStorage and the journal picks it up on its next load, so this works
+   * whether the trader opens the journal now or in a minute.
+   */
+  const handleSendToJournal = useCallback(() => {
+    const url = captureChartPng();
+    if (!url) return;
+    try {
+      localStorage.setItem(
+        "tm_pending_chart_shot",
+        JSON.stringify({ dataUrl: url, ticker, interval, at: Date.now() }),
+      );
+      toast.success("Chart saved for the journal", {
+        description: "Open Trade Journal - it attaches to your next entry.",
+      });
+    } catch {
+      toast.error("Could not stage that chart. The image may be too large.");
+    }
+  }, [captureChartPng, ticker, interval]);
+
 
   // ---- Drawing layer (TradingView-style tools, anchored to price/time) ----
   type DrawTool =
@@ -1622,6 +1652,16 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
         >
           <Camera className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">Save</span>
+        </button>
+        <button
+          type="button"
+          onClick={handleSendToJournal}
+          title="Send this chart, with your levels, to the trade journal"
+          aria-label="Send chart to journal"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-border/60 bg-background/80 hover:bg-background backdrop-blur px-2 py-1.5 text-[10px] font-mono tracking-tight text-foreground/90 hover:text-foreground transition-colors"
+        >
+          <NotebookPen className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">Journal</span>
         </button>
       </div>
       {sessions && (
