@@ -1,3 +1,4 @@
+import { BrokerAccountPanel } from "@/components/BrokerAccountPanel";
 import { PageInstructions } from "@/components/PageInstructions";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
@@ -161,6 +162,8 @@ function ConnectionsPage() {
         </p>
       </header>
       <PageInstructions className="mb-6" />
+
+      <BrokerAccountPanel className="mb-6" />
 
       <div className="mb-6 flex flex-wrap gap-2">
         {(["all", ...BROKER_GROUPS] as const).map((g) => (
