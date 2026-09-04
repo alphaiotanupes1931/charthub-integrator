@@ -395,7 +395,7 @@ describe("an identical re-scan inside the 10 minute window is free", () => {
     const first = await rescan(0);
     expect(first.charged).toBe(true);
     expect(first.quota.used).toBe(1);
-    expect(first.quota.remaining).toBe(2);
+    expect(first.quota.remaining).toBe(1);
     const chargesAfterFirst = db.incrementAttempts;
 
     // Hammer the same instrument + timeframe + methodology through the window.
@@ -404,8 +404,8 @@ describe("an identical re-scan inside the 10 minute window is free", () => {
       expect(again.charged).toBe(false);
       expect(again.reason).toBe("not_chargeable");
       expect(again.quota.used).toBe(1);
-      expect(again.quota.remaining).toBe(2);
-      expect(quotaLabel(again.quota)).toBe("2 of 3 grades left this month");
+      expect(again.quota.remaining).toBe(1);
+      expect(quotaLabel(again.quota)).toBe("1 of 2 grades left today");
       expect(shouldPaywallOnIntent(again.quota)).toBe(false);
     }
 
@@ -421,11 +421,11 @@ describe("an identical re-scan inside the 10 minute window is free", () => {
     const atTen = await rescan(10);
     expect(atTen.charged).toBe(true);
     expect(atTen.quota.used).toBe(2);
-    expect(atTen.quota.remaining).toBe(1);
+    expect(atTen.quota.remaining).toBe(0);
   });
 
   it("only an exact instrument + timeframe + methodology match is free", async () => {
-    // A raised limit here so the month cap cannot be confused with the cache.
+    // A raised limit here so the daily cap cannot be confused with the cache.
     expect((await rescan(0, {}, 10)).charged).toBe(true);
     expect((await rescan(1, {}, 10)).charged).toBe(false); // exact match, free
 
@@ -436,11 +436,9 @@ describe("an identical re-scan inside the 10 minute window is free", () => {
     expect(await db.readUsed(dayKey(TZ, db.now))).toBe(4);
   });
 
-  it("free re-scans still work when the last grade of the month was the one that paid for them", async () => {
+  it("free re-scans still work when the last grade of the day was the one that paid for them", async () => {
     // Spend down to the final grade, then buy the answer with it.
-    for (const symbol of ["EURUSD", "US30"]) {
-      expect((await rescan(0, { symbol })).charged).toBe(true);
-    }
+    expect((await rescan(0, { symbol: "EURUSD" })).charged).toBe(true);
     const last = await rescan(0);
     expect(last.charged).toBe(true);
     expect(last.quota.remaining).toBe(0);
