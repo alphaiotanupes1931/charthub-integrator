@@ -1686,7 +1686,7 @@ function TradeFormModal({
     setAutofillNote("");
     try {
       const dataUrls = await Promise.all(
-        images.slice(0, 3).map(
+        images.slice(0, MAX_TRADE_IMAGES).map(
           (img) =>
             new Promise<string>((resolve, reject) => {
               const r = new FileReader();
