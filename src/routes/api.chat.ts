@@ -981,6 +981,18 @@ export const Route = createFileRoute("/api/chat")({
           console.warn(`[chat] req=${reqId} calendar_failed`, (e as Error).message);
         }
 
+        // Read-only live broker positions, so trade-management answers know the
+        // trader's real side, size, stop and open P&L instead of asking.
+        let brokerCtx = "";
+        if (userId) {
+          try {
+            const { buildBrokerSnapshots, brokerContextBlock } = await import("@/lib/broker-readonly.server");
+            brokerCtx = brokerContextBlock(await buildBrokerSnapshots(userId));
+          } catch (e) {
+            console.warn(`[chat] req=${reqId} broker_snapshot_failed`, (e as Error).message);
+          }
+        }
+
         const staticSystem = staticSystemPrompt();
         const forceDraw = shouldForceChartDraw(messages);
         let liveSystem = dynamicSystemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens), learningCtx, newsCtx, scoreCtx, forceDraw, previousCoach, hermesCtx);
@@ -992,6 +1004,7 @@ export const Route = createFileRoute("/api/chat")({
         } catch (e) {
           console.warn(`[chat] req=${reqId} methodology_failed`, (e as Error).message);
         }
+        if (brokerCtx) liveSystem = `${liveSystem}\n\n${brokerCtx}`;
         const priorScans = priorScansBlock(messages);
         if (priorScans) liveSystem = `${liveSystem}\n\n${priorScans}`;
         // An attached chart replaces the earlier scan. Without this the model
