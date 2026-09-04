@@ -620,35 +620,41 @@ function sanitizePlan(
 
   stop = bias === "Long" ? entry - stopDist : entry + stopDist;
 
-  // 4. Targets. TP1 must be both structural and reachable: the nearest opposing
-  // level that pays at least 1.2R and sits inside the timeframe's realistic
-  // travel (reachAtr x ATR). Anything further becomes TP2 instead of TP1, and
-  // TP1 falls back to a measured-reach target rather than a fixed 1.5R, which on
-  // wide stops used to push TP1 3-4x ATR away and out of reach.
+  // 4. Targets are market structure, not an R multiple. TP1 is the first level
+  // price has to fight through that still pays for the risk; TP2 is the next one
+  // beyond it. R:R is only reported, never used to place the target. A flat R
+  // multiple is the last resort for instruments with no mapped structure.
   const dir = bias === "Long" ? 1 : -1;
   const levels = findTargetLevels(bias, entry, snap);
   const reach = atr * reachAtr(snap.interval);
-  const minR = stopDist * 1.2;
+  // Book just in front of the level, not at it, so the reaction does not eat the fill.
+  const skim = Math.max(atr * 0.08, last * 0.0002);
+  const minDist = stopDist * 1.0;
 
-  const tp1Level = levels.find((l) => {
-    const d = Math.abs(l - entry);
-    return d >= minR && d <= reach;
-  });
-  const tp1Dist = tp1Level !== undefined
-    ? Math.abs(tp1Level - entry)
-    // Reachable fallback: 1.5R, but never further than the timeframe's reach,
-    // and never tighter than 1.2R so the trade still pays for its risk.
-    : Math.max(minR, Math.min(stopDist * 1.5, reach));
+  const tp1Level = levels.find((l) => Math.abs(l - entry) - skim >= minDist);
+  let targetNote: string;
+  let tp1Dist: number;
+  if (tp1Level !== undefined) {
+    tp1Dist = Math.abs(tp1Level - entry) - skim;
+    targetNote = tp1Dist > reach
+      ? `TP1 is the next structural level at ${fmt(entry + dir * tp1Dist, decimalsFor(last))}. It sits ${(tp1Dist / atr).toFixed(1)}x ATR away, so this is a swing target: scale out and manage rather than expecting it in one session.`
+      : `TP1 is the next structural level at ${fmt(entry + dir * tp1Dist, decimalsFor(last))}, ${(tp1Dist / atr).toFixed(1)}x ATR from entry.`;
+  } else {
+    // No structure beyond entry pays for the risk: fall back to a reachable
+    // measured move and say so plainly.
+    tp1Dist = Math.max(minDist, Math.min(stopDist * 1.5, reach));
+    targetNote = "No opposing structure sits far enough beyond entry to pay for the risk, so TP1 is a measured move off the stop distance.";
+  }
   tp1 = entry + dir * tp1Dist;
 
-  // TP2 is the runner: the next structural level beyond TP1, capped at 3R so a
-  // far shelf cannot turn the second target into a lottery ticket.
-  const tp2Level = levels.find((l) => Math.abs(l - entry) > tp1Dist * 1.15);
-  const tp2Dist = Math.min(
-    Math.max(tp2Level !== undefined ? Math.abs(tp2Level - entry) : tp1Dist * 1.8, tp1Dist * 1.2),
-    stopDist * 3,
-  );
-  tp2 = entry + dir * Math.max(tp2Dist, tp1Dist * 1.2);
+  // TP2: the next distinct level beyond TP1. Structure decides the distance, so
+  // there is no R cap here; when nothing is mapped it extends by one more leg.
+  const tp2Level = levels.find((l) => Math.abs(l - entry) - skim > tp1Dist * 1.2);
+  const tp2Dist = tp2Level !== undefined
+    ? Math.abs(tp2Level - entry) - skim
+    : tp1Dist + Math.max(stopDist, tp1Dist * 0.6);
+  tp2 = entry + dir * Math.max(tp2Dist, tp1Dist * 1.15);
+
 
 
   const dec = decimalsFor(last);
