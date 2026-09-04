@@ -611,13 +611,56 @@ function JournalPage() {
       });
     }
     if (!created.length) return;
-    setTrades((prev) => [...created, ...prev]);
-    for (const t of created) {
-      if (shots.length) void putTradeImages(t.id, shots);
-      markTradeLogged({ tradeId: t.id, symbol: t.symbol, entry: t.entry, date: t.date });
-    }
+    // A broker screenshot usually closes out trades the trader already logged
+    // from a scan. Match those instead of creating a duplicate: same symbol and
+    // side, entry within a tolerance, and not resolved yet.
+    setTrades((prev) => {
+      const rest = [...prev];
+      const fresh: Trade[] = [];
+      const closedIds: string[] = [];
+      for (const c of created) {
+        const tol = Math.max(Math.abs(c.entry) * 0.002, 1e-6);
+        const idx = rest.findIndex(
+          (t) =>
+            t.symbol.toUpperCase() === c.symbol.toUpperCase() &&
+            t.side === c.side &&
+            (!t.result || t.result === "open") &&
+            Math.abs((t.entry || 0) - c.entry) <= tol,
+        );
+        if (idx >= 0) {
+          const existing = rest[idx]!;
+          rest[idx] = {
+            ...existing,
+            exit: c.exit,
+            size: c.size,
+            fees: c.fees,
+            pointValue: c.pointValue ?? existing.pointValue,
+            takeProfit: existing.takeProfit ?? c.takeProfit,
+            executed: true,
+            executedAt: existing.executedAt ?? c.executedAt,
+            result: c.result,
+            resultSource: "manual",
+            resultNote: "Closed out from a broker screenshot.",
+            resultCheckedAt: Date.now(),
+            notes: [existing.notes, "P&L read from a broker screenshot."].filter(Boolean).join(" ").slice(0, 2000),
+            hasImage: existing.hasImage || shots.length > 0,
+            imageCount: (existing.imageCount ?? 0) + (shots.length || 0) || undefined,
+          };
+          closedIds.push(existing.id);
+        } else {
+          fresh.push(c);
+        }
+      }
+      for (const id of closedIds) if (shots.length) void putTradeImages(id, shots);
+      for (const t of fresh) {
+        if (shots.length) void putTradeImages(t.id, shots);
+        markTradeLogged({ tradeId: t.id, symbol: t.symbol, entry: t.entry, date: t.date });
+      }
+      return [...fresh, ...rest];
+    });
     emitFirstWeekEvent("journal-log");
   };
+
 
   const handleDelete = (id: string) => {
     setTrades((prev) => prev.filter((p) => p.id !== id));
