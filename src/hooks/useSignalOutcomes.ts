@@ -4,6 +4,8 @@ import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listSignalScores, resolveMySignalScores } from "@/lib/signal-scores.functions";
 import type { SignalScoreRow } from "@/lib/signal-scores.shared";
+import { isAfterEngineFix } from "@/lib/signal-engine-version";
+
 import type { SignalRecord } from "@/lib/signalHistory";
 
 /**
