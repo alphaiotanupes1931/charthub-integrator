@@ -22,7 +22,7 @@ export function BrokerAccountPanel({ className = "" }: { className?: string }) {
       <div className="flex items-center gap-2">
         <Activity className="h-4 w-4 text-primary" />
         <h2 className="text-sm font-semibold">Live account</h2>
-        <InfoTip term="Read-only link" definition="We can see your balance, open positions and recent closes. We cannot place, change or close orders from here." />
+        <InfoTip term="Read-only link" text="We can see your balance, open positions and recent closes. We cannot place, change or close orders from here." />
         <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-accent/60 px-2 py-0.5 text-[10px] text-muted-foreground">
           <ShieldCheck className="h-3 w-3" /> Read-only
         </span>
