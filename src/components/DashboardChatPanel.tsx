@@ -28,6 +28,7 @@ import { getOrCreateDashboardThread, getChatMessages, getActiveModel, appendAssi
 import { ActionLoader } from "@/components/ActionLoader";
 import { clearLastThreadId, readJournal, readActiveCoach, writeActiveCoach, readActiveStrategy, readLastThreadId, writeLastThreadId } from "@/lib/chat-client";
 import { findStrategyByName } from "@/lib/customStrategies";
+import { isAutoStrategy } from "@/lib/strategyAuto";
 import { readActiveLensId, findLens } from "@/lib/scanLens";
 import { useCoachVoice } from "@/hooks/useCoachVoice";
 import { voiceForCoach } from "@/lib/coachVoices";
@@ -581,7 +582,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
         },
         prepareSendMessagesRequest: ({ messages, id }) => {
           const stratName = readActiveStrategy();
-          const strategy = stratName ? findStrategyByName(stratName) ?? { name: stratName } : null;
+          const strategy = stratName && !isAutoStrategy(stratName) ? findStrategyByName(stratName) ?? { name: stratName } : null;
           const lens = findLens(readActiveLensId());
           const coach = readActiveCoach();
           const previousCoach = lastSentCoachRef.current;

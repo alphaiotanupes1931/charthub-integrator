@@ -1378,6 +1378,7 @@ function Dashboard() {
     return [
       `${scanSymbol.name} scan: ${plan.grade} ${plan.bias}. Confidence ${plan.confidence}%.`,
       `Market data: ${plan.dataSource ?? "unavailable"}, ${plan.candleCount ?? 0} real candles, fetched ${plan.dataFetchedAt ?? "unknown"}, market price used ${typeof (plan.refPrice ?? last) === "number" ? fmtPrice((plan.refPrice ?? last) as number, dec) : "unknown"}.`,
+      ...(autoLine ? [autoLine] : []),
       ...levelLines,
       `Why take this trade: ${plan.notes}`,
       ...(plan.details && plan.details !== plan.notes ? [`Risk and invalidation: ${plan.details}`] : []),
