@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { Link } from "@tanstack/react-router";
-import { MessageSquare, ExternalLink, X, Minus, Volume2, VolumeX, Crosshair, Square, Paperclip, ImageIcon, ThumbsUp, ThumbsDown, HelpCircle, BookOpen, Zap, FileDown } from "lucide-react";
+import { MessageSquare, ExternalLink, X, Minus, Volume2, VolumeX, Crosshair, Square, Paperclip, ImageIcon, ThumbsUp, ThumbsDown, HelpCircle, BookOpen, Zap, FileDown, NotebookPen } from "lucide-react";
 import { downloadChatPdf } from "@/lib/chat-pdf";
 import { stageChatForJournal } from "@/lib/chat-to-journal";
 import { ScanStamp } from "@/components/ScanStamp";
