@@ -25,6 +25,7 @@ import {
   DatabaseBackup,
   HeartPulse,
   MessageSquare,
+  NotebookPen,
   RefreshCw,
   Ban,
 } from "lucide-react";
@@ -53,6 +54,7 @@ import type { ParsedClosedTrade } from "@/lib/journal-import.functions";
 import { parseTradeSetupScreenshot, parseTradeSetupText } from "@/lib/journal-import.functions";
 
 import { ActionLoader } from "@/components/ActionLoader";
+import { takePendingChatLog } from "@/lib/chat-to-journal";
 
 export const Route = createFileRoute("/_app/journal")({
   head: () => ({ meta: [{ title: "Trade Journal, TradeMind" }] }),
