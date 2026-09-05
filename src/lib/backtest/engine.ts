@@ -423,7 +423,7 @@ export function runBacktest(
       continue;
     }
     const stop = sig.side === "Long" ? entry - stopDist : entry + stopDist;
-    const target = sig.side === "Long" ? entry + stopDist * p.rrTarget : entry - stopDist * p.rrTarget;
+    const { target } = structuralTarget(bars, i, sig.side, entry, stopDist, p);
 
     let exit = fillBar.close;
     let exitTime = fillBar.time;
