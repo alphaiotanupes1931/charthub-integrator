@@ -32,6 +32,7 @@ export const Route = createFileRoute("/api/public/hooks/replay-refresh")({
           ...(num("maxHoldBars") !== undefined ? { maxHoldBars: num("maxHoldBars")! } : {}),
           ...(num("maxExtensionAtr") !== undefined ? { maxExtensionAtr: num("maxExtensionAtr")! } : {}),
           ...(url.searchParams.get("trendFilter") === "0" ? { trendFilter: false } : {}),
+          ...(url.searchParams.get("sessions") ? { sessions: url.searchParams.get("sessions")!.split(",") } : {}),
           ...(url.searchParams.get("minGrade") ? { minGrade: url.searchParams.get("minGrade") as "A+" | "A" | "B" | "C" } : {}),
         };
 
