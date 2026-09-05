@@ -30,7 +30,8 @@ describe.each([...BACKTEST_SYMBOLS])("%s", (symbol) => {
   it("has measured constants, not the unknown-symbol fallback", () => {
     const { cfg, known } = getInstrumentConfig(engineSymbolFor(symbol));
     expect(known).toBe(true);
-    expect(cfg.atr4h).toBeGreaterThan(0);
+    expect(cfg.stopBufferAtr).toBeGreaterThan(0);
+    expect(cfg.maxEntryDistanceAtr).toBeGreaterThan(0);
     expect(cfg.minRR).toBeGreaterThanOrEqual(DEFAULT_CONFIG.minRR);
   });
 
