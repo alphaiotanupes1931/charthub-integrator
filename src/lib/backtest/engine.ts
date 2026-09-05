@@ -55,6 +55,9 @@ export const DEFAULT_PARAMS: BtParams = {
   sessions: [],
   trendFilter: true,
   maxExtensionAtr: 1,
+  structureTargets: true,
+  targetCapR: 3,
+  minStructuralRR: 1,
 };
 
 export type BtTrade = {
