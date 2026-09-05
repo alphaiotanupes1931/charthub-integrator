@@ -30,6 +30,16 @@ export type BtParams = {
   trendFilter: boolean;
   /** Skip triggers stretched more than this many ATR beyond the 10-bar range. */
   maxExtensionAtr: number;
+  /**
+   * When true, targets are placed at the nearest opposing swing level that
+   * still pays for the risk (like the live planner), capped at targetCapR,
+   * instead of a fixed rrTarget multiple.
+   */
+  structureTargets: boolean;
+  /** Hard cap on how far a structural target may sit, in R. */
+  targetCapR: number;
+  /** Minimum reward a structural target must offer to be used. */
+  minStructuralRR: number;
 };
 
 export const DEFAULT_PARAMS: BtParams = {
