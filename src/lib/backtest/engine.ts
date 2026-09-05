@@ -26,6 +26,10 @@ export type BtParams = {
   atrStopMult: number;
   maxHoldBars: number;
   sessions: string[]; // empty = all sessions
+  /** Only take signals that agree with the trend (EMA20/50, EMA50 slope, EMA200). */
+  trendFilter: boolean;
+  /** Skip triggers stretched more than this many ATR beyond the 10-bar range. */
+  maxExtensionAtr: number;
 };
 
 export const DEFAULT_PARAMS: BtParams = {
@@ -36,6 +40,8 @@ export const DEFAULT_PARAMS: BtParams = {
   atrStopMult: 1.2,
   maxHoldBars: 40,
   sessions: [],
+  trendFilter: true,
+  maxExtensionAtr: 1,
 };
 
 export type BtTrade = {
@@ -154,13 +160,16 @@ type Signal = {
   grade: BtGrade;
   score: number;
   reasons: string[];
+  withTrend: boolean;
+  htfAligned: boolean;
+  extensionAtr: number;
 };
 
 function gradeFor(score: number): BtGrade | null {
-  if (score >= 5) return "A+";
-  if (score === 4) return "A";
-  if (score === 3) return "B";
-  if (score === 2) return "C";
+  if (score >= 6) return "A+";
+  if (score === 5) return "A";
+  if (score === 4) return "B";
+  if (score >= 2) return "C";
   return null;
 }
 
@@ -171,6 +180,7 @@ function detect(
   ema50: number[],
   atr: number[],
   volAvg: number[],
+  ema200: number[],
 ): Signal | null {
   const bar = bars[i];
   const prev = bars[i - 1];
@@ -227,9 +237,25 @@ function detect(
     reasons.push(`Closed in the ${wantUp ? "upper" : "lower"} third of its range`);
   }
 
-  const grade = gradeFor(Math.min(score, 5));
+  // Higher-timeframe agreement: price on the right side of the 200 EMA. On the
+  // 1-hour replay this stands in for the 4H bias the live engine computes.
+  const htfAligned = wantUp ? bar.close > ema200[i] : bar.close < ema200[i];
+  if (htfAligned) {
+    score += 1;
+    reasons.push(`Price ${wantUp ? "above" : "below"} the 200 EMA`);
+  }
+
+  const grade = gradeFor(Math.min(score, 6));
   if (!grade) return null;
-  return { side, grade, score: Math.min(score, 5), reasons };
+  return {
+    side,
+    grade,
+    score: Math.min(score, 6),
+    reasons,
+    withTrend: wantUp === trendUp && wantUp === slopeUp,
+    htfAligned,
+    extensionAtr: wantUp ? (bar.close - priorHigh) / a : (priorLow - bar.close) / a,
+  };
 }
 
 // ---------- stats ----------
@@ -276,6 +302,7 @@ export function runBacktest(
   const ema50 = ema(closes, 50);
   const atr = atrSeries(bars, 14);
   const volAvg = ema(bars.map((b) => b.volume ?? 0), 20);
+  const ema200 = ema(closes, 200);
 
   const minRank = GRADE_ORDER.indexOf(p.minGrade);
   const trades: BtTrade[] = [];
@@ -295,8 +322,18 @@ export function runBacktest(
 
   let i = startIndex;
   while (i < bars.length - 2) {
-    const sig = detect(bars, i, ema20, ema50, atr, volAvg);
+    const sig = detect(bars, i, ema20, ema50, atr, volAvg, ema200);
     if (!sig) {
+      i += 1;
+      continue;
+    }
+    // Counter-trend and over-extended triggers are what the live engine caps at
+    // C and refuses to publish; the replay has to refuse them too.
+    if (p.trendFilter && (!sig.withTrend || !sig.htfAligned)) {
+      i += 1;
+      continue;
+    }
+    if (p.maxExtensionAtr > 0 && sig.extensionAtr > p.maxExtensionAtr) {
       i += 1;
       continue;
     }
