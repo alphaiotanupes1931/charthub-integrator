@@ -12,8 +12,7 @@ export const Route = createFileRoute("/api/public/hooks/drip-emails")({
         }
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { dripEmail, unsubscribeUrlFor, STAGE_DELAY_DAYS, SITE_NAME, SENDER_DOMAIN } =
-          await import("@/lib/lead-drip.server");
+        const { enqueueDripStage, STAGE_DELAY_DAYS } = await import("@/lib/lead-drip.server");
 
         const nowIso = new Date().toISOString();
         const { data: leads } = await supabaseAdmin
@@ -52,39 +51,8 @@ export const Route = createFileRoute("/api/public/hooks/drip-emails")({
             }
           }
 
-          const token = crypto.randomUUID();
-          await supabaseAdmin
-            .from("email_unsubscribe_tokens")
-            .insert({ token, email: lead.email });
-
-          const mail = dripEmail(stage, unsubscribeUrlFor(token));
-          const messageId = crypto.randomUUID();
-
           try {
-            await supabaseAdmin.from("email_send_log").insert({
-              message_id: messageId,
-              template_name: mail.label,
-              recipient_email: lead.email,
-              status: "pending",
-            });
-            const { error: qErr } = await supabaseAdmin.rpc("enqueue_email" as never, {
-              queue_name: "transactional_emails",
-              payload: {
-                message_id: messageId,
-                to: lead.email,
-                from: `${SITE_NAME} <noreply@${SENDER_DOMAIN}>`,
-                sender_domain: SENDER_DOMAIN,
-                subject: mail.subject,
-                html: mail.html,
-                text: mail.text,
-                purpose: "marketing",
-                idempotency_key: `drip:${lead.id}:${stage}`,
-                unsubscribe_token: token,
-                label: mail.label,
-                queued_at: new Date().toISOString(),
-              },
-            } as never);
-            if (qErr) throw new Error(qErr.message);
+            await enqueueDripStage(supabaseAdmin as never, lead, stage);
           } catch (e) {
             console.error("[drip] enqueue failed", lead.id, (e as Error).message);
             continue;
