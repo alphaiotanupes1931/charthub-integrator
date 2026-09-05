@@ -315,7 +315,8 @@ export function runBacktest(
   let maxConsec = 0;
   let id = 0;
 
-  const startIndex = 55;
+  // 200-EMA warm-up: earlier bars have no meaningful higher-timeframe read.
+  const startIndex = 210;
   if (bars.length <= startIndex + 5) {
     notes.push("Not enough history was returned to form a signal on this timeframe.");
   }
