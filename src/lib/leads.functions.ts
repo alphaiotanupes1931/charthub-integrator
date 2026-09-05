@@ -29,13 +29,40 @@ export const captureLead = createServerFn({ method: "POST" })
       .maybeSingle();
     if (existing) return { ok: true, created: false as const };
 
-    const { error } = await supabaseAdmin.from("marketing_leads").insert({
-      email,
-      source: data.source || "landing",
-      ref: data.ref ?? null,
-    });
+    const { data: inserted, error } = await supabaseAdmin
+      .from("marketing_leads")
+      .insert({
+        email,
+        source: data.source || "landing",
+        ref: data.ref ?? null,
+      })
+      .select("id")
+      .maybeSingle();
     // A race on the unique index means someone else just captured it.
     if (error && error.code !== "23505") throw new Error(error.message);
+
+    // Send the welcome mail right away instead of waiting for the hourly job,
+    // then park the lead on the next drip stage.
+    if (!error && inserted?.id) {
+      try {
+        const { enqueueDripStage, STAGE_DELAY_DAYS } = await import("@/lib/lead-drip.server");
+        await enqueueDripStage(supabaseAdmin as never, { id: inserted.id, email }, 0);
+        await supabaseAdmin
+          .from("marketing_leads")
+          .update({
+            drip_stage: 1,
+            last_sent_at: new Date().toISOString(),
+            next_send_at: new Date(
+              Date.now() + (STAGE_DELAY_DAYS[1] ?? 2) * 86_400_000,
+            ).toISOString(),
+          })
+          .eq("id", inserted.id);
+      } catch (e) {
+        // Leave the lead at stage 0 so the cron retries the welcome email.
+        console.error("[leads] welcome email failed", (e as Error).message);
+      }
+    }
+
     return { ok: true, created: !error };
   });
 
