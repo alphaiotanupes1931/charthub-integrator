@@ -77,3 +77,49 @@ ${button("See plans", `${SITE_URL}/pricing`)}`,
 export function unsubscribeUrlFor(token: string): string {
   return `${SITE_URL}/api/public/lead-unsubscribe?token=${encodeURIComponent(token)}`;
 }
+
+/**
+ * Queues one drip stage for a lead. The email API rejects sends that carry
+ * neither a run_id nor an idempotency key with purpose=transactional, so both
+ * the immediate welcome and the cron use this single correct payload shape.
+ */
+export async function enqueueDripStage(
+  admin: {
+    from: (t: string) => any;
+    rpc: (fn: string, args: unknown) => Promise<{ error: { message: string } | null }>;
+  },
+  lead: { id: string; email: string },
+  stage: DripStage,
+): Promise<void> {
+  const token = crypto.randomUUID();
+  await admin.from("email_unsubscribe_tokens").insert({ token, email: lead.email });
+
+  const mail = dripEmail(stage, unsubscribeUrlFor(token));
+  const messageId = crypto.randomUUID();
+
+  await admin.from("email_send_log").insert({
+    message_id: messageId,
+    template_name: mail.label,
+    recipient_email: lead.email,
+    status: "pending",
+  });
+
+  const { error } = await admin.rpc("enqueue_email", {
+    queue_name: "transactional_emails",
+    payload: {
+      message_id: messageId,
+      to: lead.email,
+      from: `${SITE_NAME} <noreply@${SENDER_DOMAIN}>`,
+      sender_domain: SENDER_DOMAIN,
+      subject: mail.subject,
+      html: mail.html,
+      text: mail.text,
+      purpose: "transactional",
+      idempotency_key: `drip:${lead.id}:${stage}:${messageId.slice(0, 8)}`,
+      unsubscribe_token: token,
+      label: mail.label,
+      queued_at: new Date().toISOString(),
+    },
+  });
+  if (error) throw new Error(error.message);
+}
