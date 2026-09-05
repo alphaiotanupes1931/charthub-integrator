@@ -304,6 +304,53 @@ function group(trades: BtTrade[], keyOf: (t: BtTrade) => string, order?: string[
   return rows.sort((a, b) => a.key.localeCompare(b.key));
 }
 
+// ---------- structure targets ----------
+
+/**
+ * Opposing swing levels visible at bar `i` (fractal pivots over the last 120
+ * bars plus the 20-bar extreme), sorted nearest-first from `entry` in the
+ * trade's direction. Mirrors how the live planner picks TP1/TP2 from recent
+ * structure instead of a fixed R multiple.
+ */
+function structuralTarget(
+  bars: BtBar[],
+  i: number,
+  side: "Long" | "Short",
+  entry: number,
+  stopDist: number,
+  p: BtParams,
+): { target: number; structural: boolean } {
+  const fallback = side === "Long" ? entry + stopDist * p.rrTarget : entry - stopDist * p.rrTarget;
+  if (!p.structureTargets) return { target: fallback, structural: false };
+
+  const pivots: number[] = [];
+  const from = Math.max(2, i - 120);
+  for (let j = from; j <= i - 2; j++) {
+    const b = bars[j];
+    if (side === "Long") {
+      if (b.high > bars[j - 1].high && b.high > bars[j + 1].high) pivots.push(b.high);
+    } else {
+      if (b.low < bars[j - 1].low && b.low < bars[j + 1].low) pivots.push(b.low);
+    }
+  }
+  // Recent range extreme counts as a level even without a clean pivot.
+  let extreme = side === "Long" ? -Infinity : Infinity;
+  for (let j = Math.max(0, i - 20); j <= i; j++) {
+    extreme = side === "Long" ? Math.max(extreme, bars[j].high) : Math.min(extreme, bars[j].low);
+  }
+  if (Number.isFinite(extreme)) pivots.push(extreme);
+
+  const minDist = stopDist * p.minStructuralRR;
+  const maxDist = stopDist * p.targetCapR;
+  const candidates = pivots
+    .map((lvl) => (side === "Long" ? lvl - entry : entry - lvl))
+    .filter((d) => d >= minDist && d <= maxDist)
+    .sort((a, b) => a - b);
+  if (!candidates.length) return { target: fallback, structural: false };
+  const dist = candidates[0];
+  return { target: side === "Long" ? entry + dist : entry - dist, structural: true };
+}
+
 // ---------- runner ----------
 
 export function runBacktest(
