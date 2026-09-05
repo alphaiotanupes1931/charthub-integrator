@@ -10,8 +10,8 @@ export const BacktestInput = z.object({
   minGrade: z.enum(["A+", "A", "B", "C"]).default("B"),
   direction: z.enum(["both", "long", "short"]).default("both"),
   riskPct: z.coerce.number().min(0.1).max(10).default(1),
-  rrTarget: z.coerce.number().min(0.5).max(10).default(2),
-  atrStopMult: z.coerce.number().min(0.3).max(5).default(1.2),
+  rrTarget: z.coerce.number().min(0.5).max(10).default(1.5),
+  atrStopMult: z.coerce.number().min(0.3).max(5).default(1.5),
   maxHoldBars: z.coerce.number().int().min(3).max(300).default(40),
   sessions: z.array(z.string()).default([]),
 });
