@@ -986,7 +986,7 @@ export const Route = createFileRoute("/api/chat")({
         try {
           const { measuredHitRatePrompt } = await import("@/lib/signal-hitrate.server");
           const sym = chart?.ticker ? (chart.ticker.match(/\(([^)]+)\)\s*$/)?.[1] ?? chart.ticker).trim() : undefined;
-          const block = await measuredHitRatePrompt(sym);
+          const block = await measuredHitRatePrompt(sym, userId);
           if (block) hitRateCtx = block;
         } catch (e) {
           console.warn(`[chat] req=${reqId} hit_rate_failed`, (e as Error).message);
