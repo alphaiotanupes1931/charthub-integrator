@@ -25,6 +25,12 @@ export type OrderFlow = {
   depth: "thin" | "normal" | "deep" | "absorbing";
   lastVolRatio: number;
   bias: "bullish" | "bearish" | "neutral";
+  /**
+   * True when the most recent bar's delta points the opposite way to the
+   * cumulative read (e.g. CVD rising while the live bar sells off hard). The
+   * flow is then not confirming anything, so it cannot back a high grade.
+   */
+  deltaConflict: boolean;
 };
 
 export type MarketSnapshot = {

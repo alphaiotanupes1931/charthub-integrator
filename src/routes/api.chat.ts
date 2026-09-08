@@ -562,6 +562,20 @@ SCREENSHOT ANALYSIS RULES (when the user attaches an image):
 }
 
 // The per-request half: coach voice plus every live context block.
+/** Live clock stamped into every reply so the coach never guesses the day. */
+function nowContextBlock(): string {
+  const now = new Date();
+  const utc = now.toISOString().slice(0, 16).replace("T", " ");
+  const weekday = now.toLocaleDateString("en-US", { weekday: "long", timeZone: "UTC" });
+  const date = now.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+  return `Current date and time: ${weekday}, ${date}, ${utc} UTC.`;
+}
+
 function dynamicSystemPrompt(coach: string | undefined, journalContext: string, chartCtx: string, strategyCtx: string, lensCtx: string, learningCtx: string, newsCtx?: string, scoreCtx?: string, forceDraw?: boolean, previousCoach?: string | null, hermesCtx?: string, hitRateCtx?: string) {
   const switched = !!previousCoach && !!coach && previousCoach !== coach;
   const switchBlock = switched
@@ -569,7 +583,16 @@ function dynamicSystemPrompt(coach: string | undefined, journalContext: string, 
 The trader just switched coaches mid-conversation: earlier assistant turns in this thread were written by ${previousCoach}. You are now ${coach}. Do NOT imitate the earlier voice, structure, openers, or sign-offs from the transcript - they belong to a different coach. Answer this message entirely in your own voice, starting from your signature opener. Keep the factual context (instrument, levels, plan) but re-voice it as ${coach}. Do not announce the switch.
 === END COACH SWITCH ===\n`
     : "";
-  return switchBlock + `# COACH PERSONA
+  return switchBlock + `=== RIGHT NOW (the only clock and calendar you may use) ===
+${nowContextBlock()}
+Rules for time:
+- Every "today", "tomorrow", "in X hours", "later this session" you write must be computed from the timestamp above, never from anything said earlier in this thread and never from a scan printed on a previous day.
+- Before you mention a release, check its weekday and date in the economic calendar block. If it is not on today's date above, say the weekday and date ("CPI is Thursday at 12:30 UTC"), and never say it is minutes or hours away.
+- If an earlier message in this thread quoted a countdown or a session window, treat it as stale: recompute it from the timestamp above or drop it.
+- If a scan block was fetched on an earlier date than today, say plainly that it is stale and tell the trader to rescan before acting on it.
+=== END RIGHT NOW ===
+
+# COACH PERSONA
 ${coachPersona(coach)}
 
 
@@ -607,6 +630,7 @@ Self-correct against this. If the record is negative or the hit rate on past A g
 === MEASURED HIT RATE (the only source for any odds or likelihood statement) ===
 ${hitRateCtx ?? "There is not enough resolved signal history to quote a hit rate yet. If the trader asks how often a grade works, say that plainly instead of estimating."}
 If the trader asks about odds, chances, probability, or how often this grade works, answer with the matching line above, including the sample size, and nothing else. Never estimate, round up, or invent a percentage such as "70% chance".
+Hard ban, whether or not you were asked: no percentage, fraction or odds figure about a trade working may appear in your reply unless it is copied verbatim from this block with its sample size. Do not write a "confidence" number of your own. Do not soften the ban with hedged phrasing either - "more likely", "higher probability", "good chance", "should fill", "usually works" are all forbidden unless a measured line above supports them. If there is no measured line, say there is no measured sample for this bucket yet and describe the structure instead.
 === END MEASURED HIT RATE ===
 
 
