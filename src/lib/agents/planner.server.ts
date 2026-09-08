@@ -1015,10 +1015,10 @@ export async function runPlanner(
   // Calendar risk is measurable and therefore remains a valid hard cap. The
   // user's scorecard cap is applied by the authenticated server-function
   // wrapper after this planner returns.
-  if (newsWarning) {
-    if (grade === "A+") grade = "A";
-    else if (grade === "A") grade = "B";
-  }
+  // A high-impact release inside the expected hold window is a hard cap at B,
+  // not a one-letter nudge: an A on the card told the trader to hold full risk
+  // into CPI, and the stop-hunt before the number is what took the trade out.
+  if (newsWarning && (grade === "A+" || grade === "A")) grade = "B";
 
   // ---- Session filters as hard grade controls ---------------------------
   const warnings: string[] = [];
