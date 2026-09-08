@@ -51,7 +51,8 @@ export function dripEmail(stage: DripStage, unsubUrl: string | null = null): {
 <p style="margin:0 0 12px">You have 2 signal grades every day on the free plan, and they reset at midnight in your own time zone.</p>
 <p style="margin:0 0 12px">The journal, risk calculator, price alerts and Academy basics are free for good.</p>
 <p style="margin:0 0 12px">Pick an instrument, run a scan, and read the grade before you take the trade.</p>
-${button("Run your first scan", `${SITE_URL}/dashboard`)}`,
+${button("Run your first scan", `${SITE_URL}/dashboard`)}
+${footer(unsubUrl)}`,
       ),
 
     };
