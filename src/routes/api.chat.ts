@@ -1120,6 +1120,24 @@ ATTACHED CHART OVERRIDE (this message has an image):
         const response = result.toUIMessageStreamResponse({
           headers: { "X-Request-Id": reqId },
           originalMessages: messages,
+          // Without this the client only ever sees "An error occurred". Billing
+          // failures (Claude out of credits AND the backup gateway returning 402)
+          // are the most common cause, so say so plainly instead of going silent.
+          onError: (error) => {
+            const msg = ((error as Error)?.message ?? String(error)).toLowerCase();
+            if (
+              msg.includes("payment required") ||
+              msg.includes("402") ||
+              msg.includes("credit balance") ||
+              msg.includes("insufficient")
+            ) {
+              return "The coach is out of AI credits right now, so it cannot answer. An admin needs to top up the AI account, then chat works again immediately.";
+            }
+            if (msg.includes("rate limit") || msg.includes("429")) {
+              return "The coach is being rate limited right now. Wait a few seconds and send that again.";
+            }
+            return "The coach could not finish that reply. Try sending it again.";
+          },
           onFinish: async ({ messages: finalMessages, isAborted }) => {
             // Even an aborted stream keeps whatever text was produced, so the
             // partial reply survives a refresh instead of vanishing.
