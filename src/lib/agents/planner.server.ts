@@ -407,7 +407,8 @@ export function orderFlowOppositionRead(
   const of = snap.orderFlow;
   if (!of || bias === "Neutral") return { cap: null, reason: null };
   const wanted = bias === "Long" ? "bullish" : "bearish";
-  if (of.bias === "neutral" || of.bias === wanted) return { cap: null, reason: null };
+  const opposedFlow = wanted === "bullish" ? "bearish" : "bullish";
+  if (of.bias !== opposedFlow) return { cap: null, reason: null };
   const deltaAgainst = bias === "Long" ? of.delta < 0 : of.delta > 0;
   const cvdAgainst = bias === "Long" ? of.cvdSlope < 0 : of.cvdSlope > 0;
   const outsized = Math.abs(of.delta) > Math.max(1, Math.abs(of.deltaAvg) * 2);
