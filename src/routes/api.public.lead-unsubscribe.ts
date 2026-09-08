@@ -38,10 +38,22 @@ async function unsubscribe(token: string | null): Promise<Response> {
   return page(`${row.email} has been removed from TradeMind marketing emails. Account and security emails still come through.`);
 }
 
+function toBrandedPage(request: Request): Response {
+  const token = new URL(request.url).searchParams.get("token");
+  return new Response(null, {
+    status: 302,
+    headers: {
+      location: `https://www.trademindaicoach.com/unsubscribe${token ? `?token=${encodeURIComponent(token)}` : ""}`,
+    },
+  });
+}
+
 export const Route = createFileRoute("/api/public/lead-unsubscribe")({
   server: {
     handlers: {
-      GET: async ({ request }) => unsubscribe(new URL(request.url).searchParams.get("token")),
+      // Older links land here: send them to the branded page instead.
+      GET: async ({ request }) => toBrandedPage(request),
+      // Mail clients that POST the one-click header still get the opt-out done.
       POST: async ({ request }) => unsubscribe(new URL(request.url).searchParams.get("token")),
     },
   },
