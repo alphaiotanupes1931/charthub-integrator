@@ -45,7 +45,7 @@ export function dripEmail(stage: DripStage, unsubUrl: string | null = null): {
     return {
       subject: `Your free ${SITE_NAME} access is ready`,
       label: "drip_welcome",
-      text,
+      text: text + footerText(unsubUrl),
       html: shell(
         `<h1 style="font-size:22px;margin:0 0 16px">Grade your next trade</h1>
 <p style="margin:0 0 12px">You have 2 signal grades every day on the free plan, and they reset at midnight in your own time zone.</p>
