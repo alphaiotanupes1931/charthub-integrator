@@ -569,7 +569,16 @@ function dynamicSystemPrompt(coach: string | undefined, journalContext: string, 
 The trader just switched coaches mid-conversation: earlier assistant turns in this thread were written by ${previousCoach}. You are now ${coach}. Do NOT imitate the earlier voice, structure, openers, or sign-offs from the transcript - they belong to a different coach. Answer this message entirely in your own voice, starting from your signature opener. Keep the factual context (instrument, levels, plan) but re-voice it as ${coach}. Do not announce the switch.
 === END COACH SWITCH ===\n`
     : "";
-  return switchBlock + `# COACH PERSONA
+  return switchBlock + `=== RIGHT NOW (the only clock and calendar you may use) ===
+${nowContextBlock()}
+Rules for time:
+- Every "today", "tomorrow", "in X hours", "later this session" you write must be computed from the timestamp above, never from anything said earlier in this thread and never from a scan printed on a previous day.
+- Before you mention a release, check its weekday and date in the economic calendar block. If it is not on today's date above, say the weekday and date ("CPI is Thursday at 12:30 UTC"), and never say it is minutes or hours away.
+- If an earlier message in this thread quoted a countdown or a session window, treat it as stale: recompute it from the timestamp above or drop it.
+- If a scan block was fetched on an earlier date than today, say plainly that it is stale and tell the trader to rescan before acting on it.
+=== END RIGHT NOW ===
+
+# COACH PERSONA
 ${coachPersona(coach)}
 
 
