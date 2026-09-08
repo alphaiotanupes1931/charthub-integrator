@@ -517,6 +517,9 @@ export function gradeFromEvidence(
   if (ltf.cap && order.indexOf(grade) > order.indexOf(ltf.cap)) grade = ltf.cap;
   const flow = orderFlowOppositionRead(bias, snap);
   if (flow.cap && order.indexOf(grade) > order.indexOf(flow.cap)) grade = flow.cap;
+  // Contradicted flow (live-bar delta against the cumulative read) is not
+  // confirmation, so it cannot sit behind an A.
+  if (snap.orderFlow?.deltaConflict && order.indexOf(grade) > order.indexOf("B")) grade = "B";
   return grade;
 }
 
@@ -1366,7 +1369,9 @@ function buildDetails(
     : "";
   if (of) {
     const flow = [
-      `Delta is ${of.delta >= 0 ? "+" : ""}${of.delta.toFixed(0)} against a ${of.deltaAvg.toFixed(0)} average and CVD is ${of.cvdSlope >= 0 ? "rising" : "falling"}, so ${of.cvdSlope >= 0 ? "buyers" : "sellers"} are the ones paying up over the last ${of.bars} bars.`,
+      of.deltaConflict
+        ? `Delta is ${of.delta >= 0 ? "+" : ""}${of.delta.toFixed(0)} against a ${of.deltaAvg.toFixed(0)} average while CVD over the last ${of.bars} bars is ${of.cvdSlope >= 0 ? "rising" : "falling"} - the live bar and the cumulative read disagree, so flow is confirming nothing here and cannot be counted as support for this side.`
+        : `Delta is ${of.delta >= 0 ? "+" : ""}${of.delta.toFixed(0)} against a ${of.deltaAvg.toFixed(0)} average and CVD is ${of.cvdSlope >= 0 ? "rising" : "falling"}, so ${of.delta >= 0 ? "buyers" : "sellers"} are the ones paying up on the live bar over the last ${of.bars} bars.`,
       `Volume splits ${of.buyPct.toFixed(0)}% buy / ${(100 - of.buyPct).toFixed(0)}% sell, last bar traded ${of.lastVolRatio.toFixed(2)}x its average, and the book reads ${of.depth}.`,
       `Point of control ${of.poc.toLocaleString()} with the value area ${of.valueAreaLow.toLocaleString()} to ${of.valueAreaHigh.toLocaleString()}; price is ${of.priceVsPoc} it, which is ${of.priceVsPoc === "above" ? "where longs get accepted and shorts get squeezed" : of.priceVsPoc === "below" ? "where sellers keep control until price reclaims value" : "balance, so expect chop until one side commits"}.`,
       of.stackedSide !== "none"
