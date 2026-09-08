@@ -503,8 +503,8 @@ export function setupTypeRead(bias: typeof BIASES[number], snap: MarketSnapshot)
   const opposite = wanted === "bullish" ? "bearish" : "bullish";
   const h1 = m.ladder?.find((r) => r.label === "1H");
   const h1Opposes =
-    h1?.bias === opposite || h1?.trend === (opposite === "bullish" ? "up" : "down") || m.h1.structureBreak === opposite;
-  const h4Opposes = m.h4.direction === opposite || m.h4.trend === (opposite === "bullish" ? "up" : "down");
+    h1?.bias === opposite || h1?.trend === (opposite === "bullish" ? "up" : "down") || m.h1?.structureBreak === opposite;
+  const h4Opposes = m.h4?.direction === opposite || m.h4?.trend === (opposite === "bullish" ? "up" : "down");
 
   // 4H itself has turned against the side we were about to trade: a reversal
   // setup, and shorting into a fresh bullish 4H change of character (or the
@@ -514,22 +514,25 @@ export function setupTypeRead(bias: typeof BIASES[number], snap: MarketSnapshot)
       type: "reversal",
       cap: "C",
       flipLevel: null,
-      reason: `Setup type: reversal. The 4H itself now reads ${m.h4.direction}/${m.h4.trend}, against this ${bias.toLowerCase()}, so the structure this grade was built on has changed character. Capped at C - wait for the 4H to break back ${wanted}.`,
+      reason: `Setup type: reversal. The 4H itself now reads ${m.h4?.direction}/${m.h4?.trend}, against this ${bias.toLowerCase()}, so the structure this grade was built on has changed character. Capped at C - wait for the 4H to break back ${wanted}.`,
     };
   }
   if (!h1Opposes) return none;
 
   // Level that kills the fade: the nearest opposing structure beyond price.
-  const last = snap.lastPrice;
+  const last = Number(snap.lastPrice) || 0;
   const cands: number[] = [];
+  // Feeds can deliver a partial ladder, so every branch is read defensively.
+  const nums = (v: unknown): number[] => (Array.isArray(v) ? (v as number[]) : []);
+  const zones = (v: unknown): Array<[number, number]> => (Array.isArray(v) ? (v as Array<[number, number]>) : []);
   if (bias === "Short") {
-    m.h4.keyLevels.resistance.forEach((p) => cands.push(p));
-    m.h1.orderBlocks.bear.forEach((z) => cands.push(Math.max(z[0], z[1])));
-    m.h1.liquidity.buyside.forEach((p) => cands.push(p));
+    nums(m.h4?.keyLevels?.resistance).forEach((p) => cands.push(p));
+    zones(m.h1?.orderBlocks?.bear).forEach((z) => cands.push(Math.max(z[0], z[1])));
+    nums(m.h1?.liquidity?.buyside).forEach((p) => cands.push(p));
   } else {
-    m.h4.keyLevels.support.forEach((p) => cands.push(p));
-    m.h1.orderBlocks.bull.forEach((z) => cands.push(Math.min(z[0], z[1])));
-    m.h1.liquidity.sellside.forEach((p) => cands.push(p));
+    nums(m.h4?.keyLevels?.support).forEach((p) => cands.push(p));
+    zones(m.h1?.orderBlocks?.bull).forEach((z) => cands.push(Math.min(z[0], z[1])));
+    nums(m.h1?.liquidity?.sellside).forEach((p) => cands.push(p));
   }
   const beyond = cands.filter((p) => Number.isFinite(p) && p > 0 && (bias === "Short" ? p > last : p < last));
   beyond.sort((a, b) => Math.abs(a - last) - Math.abs(b - last));
@@ -544,7 +547,7 @@ export function setupTypeRead(bias: typeof BIASES[number], snap: MarketSnapshot)
     type: "fade",
     cap: "B",
     flipLevel,
-    reason: `Setup type: counter-trend fade, not a trend trade. The 4H is ${m.h4.direction} but the 1H reads ${h1?.bias ?? opposite}/${h1?.trend ?? "-"}, so this only works if the 1H push fails. B at best: half size, tighter management. ${levelText}`,
+    reason: `Setup type: counter-trend fade, not a trend trade. The 4H is ${m.h4?.direction} but the 1H reads ${h1?.bias ?? opposite}/${h1?.trend ?? "-"}, so this only works if the 1H push fails. B at best: half size, tighter management. ${levelText}`,
   };
 }
 
