@@ -487,7 +487,7 @@ Rules:
 - Never invent trades that aren't in their journal. If you don't have the data, say so.
 - Never say you are waiting for a live price feed, waiting for live data, or unable to provide levels because the feed has not loaded. If exact live price is unavailable, proceed with approximate/illustrative levels and label them clearly.
 - Do not use emojis or decorative symbols.
-- NEVER state a confidence percentage, probability of success, or "X% chance" for a setup. The platform counts conviction from data and deliberately does not show a percentage. Express conviction as the grade plus the specific evidence that supports it (which timeframes agree, what order flow shows, what the R:R is), not as a number out of 100.
+- NEVER invent a confidence percentage, probability of success, or "X% chance" for a setup. The only percentages you may state are the measured hit rates listed in the MEASURED HIT RATE block, always with the sample size. If that block has no line for the grade or instrument being discussed, say there is not enough resolved history to give a number, then express conviction as the grade plus the specific evidence behind it (which timeframes agree, what order flow shows, what the R:R is).
 - When judging whether a setup is worth taking, use the SIGNAL BACKTEST block below: cite the trader's measured win rate and expectancy for that symbol, grade, direction, timeframe or session. If a bucket has negative expectancy, say so and tell them to skip it or cut size. Never quote performance numbers that are not in that block.
 - Order type must match the entry: entry above current price on a long is a BUY STOP, entry below is a BUY LIMIT; entry below on a short is a SELL STOP, entry above is a SELL LIMIT. Name the order type explicitly whenever you give an entry.
 - Do not use long dashes (em dash or en dash) anywhere in your replies. Use a comma, a colon, or a plain hyphen instead.
@@ -562,7 +562,7 @@ SCREENSHOT ANALYSIS RULES (when the user attaches an image):
 }
 
 // The per-request half: coach voice plus every live context block.
-function dynamicSystemPrompt(coach: string | undefined, journalContext: string, chartCtx: string, strategyCtx: string, lensCtx: string, learningCtx: string, newsCtx?: string, scoreCtx?: string, forceDraw?: boolean, previousCoach?: string | null, hermesCtx?: string) {
+function dynamicSystemPrompt(coach: string | undefined, journalContext: string, chartCtx: string, strategyCtx: string, lensCtx: string, learningCtx: string, newsCtx?: string, scoreCtx?: string, forceDraw?: boolean, previousCoach?: string | null, hermesCtx?: string, hitRateCtx?: string) {
   const switched = !!previousCoach && !!coach && previousCoach !== coach;
   const switchBlock = switched
     ? `\n=== COACH SWITCH (applies to THIS reply) ===
@@ -603,6 +603,12 @@ Use these measured numbers when the trader asks how they are doing, whether a se
 ${scoreCtx ?? "No past scans on this instrument have resolved yet, so there is no measured scan record. Say so plainly if asked, and do not claim a hit rate."}
 Self-correct against this. If the record is negative or the hit rate on past A grades is weak, downgrade what you would otherwise call a high-quality setup, say in one clause that past scans here have not paid, and tell the trader to cut size or stand aside. If the record is positive, you may back a high grade with more conviction. Never quote a hit rate that is not in this block.
 === END SCAN TRACK RECORD ===
+
+=== MEASURED HIT RATE (the only source for any odds or likelihood statement) ===
+${hitRateCtx ?? "There is not enough resolved signal history to quote a hit rate yet. If the trader asks how often a grade works, say that plainly instead of estimating."}
+If the trader asks about odds, chances, probability, or how often this grade works, answer with the matching line above, including the sample size, and nothing else. Never estimate, round up, or invent a percentage such as "70% chance".
+=== END MEASURED HIT RATE ===
+
 
 === HERMES MEMORY (lessons carried across every past conversation, scan and journal review) ===
 ${hermesCtx ?? "No lessons have been distilled from this trader's feedback yet. If they ask whether you remember past sessions, say your long-term memory holds their journal outcomes, measured signal backtest and past corrections, and that rating replies teaches you faster - do not claim you have no memory at all."}
@@ -950,6 +956,17 @@ export const Route = createFileRoute("/api/chat")({
             console.warn(`[chat] req=${reqId} score_record_failed`, (e as Error).message);
           }
         }
+        // Real, resolved hit rates so any odds question is answered with
+        // measured numbers instead of a made-up percentage.
+        let hitRateCtx: string | undefined;
+        try {
+          const { measuredHitRatePrompt } = await import("@/lib/signal-hitrate.server");
+          const sym = chart?.ticker ? (chart.ticker.match(/\(([^)]+)\)\s*$/)?.[1] ?? chart.ticker).trim() : undefined;
+          const block = await measuredHitRatePrompt(sym);
+          if (block) hitRateCtx = block;
+        } catch (e) {
+          console.warn(`[chat] req=${reqId} hit_rate_failed`, (e as Error).message);
+        }
         // Hermes long-term memory: lessons distilled from this trader's past
         // feedback (any thread, scan or review), so the chat coach carries the
         // same corrections the scan planner already gets.
@@ -995,7 +1012,7 @@ export const Route = createFileRoute("/api/chat")({
 
         const staticSystem = staticSystemPrompt();
         const forceDraw = shouldForceChartDraw(messages);
-        let liveSystem = dynamicSystemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens), learningCtx, newsCtx, scoreCtx, forceDraw, previousCoach, hermesCtx);
+        let liveSystem = dynamicSystemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens), learningCtx, newsCtx, scoreCtx, forceDraw, previousCoach, hermesCtx, hitRateCtx);
         // Retrieved methodology / psychology reference for this exact question.
         try {
           const { methodologyContextBlock } = await import("@/lib/agents/methodology-kb");
