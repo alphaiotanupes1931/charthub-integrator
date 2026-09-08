@@ -562,6 +562,20 @@ SCREENSHOT ANALYSIS RULES (when the user attaches an image):
 }
 
 // The per-request half: coach voice plus every live context block.
+/** Live clock stamped into every reply so the coach never guesses the day. */
+function nowContextBlock(): string {
+  const now = new Date();
+  const utc = now.toISOString().slice(0, 16).replace("T", " ");
+  const weekday = now.toLocaleDateString("en-US", { weekday: "long", timeZone: "UTC" });
+  const date = now.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+  return `Current date and time: ${weekday}, ${date}, ${utc} UTC.`;
+}
+
 function dynamicSystemPrompt(coach: string | undefined, journalContext: string, chartCtx: string, strategyCtx: string, lensCtx: string, learningCtx: string, newsCtx?: string, scoreCtx?: string, forceDraw?: boolean, previousCoach?: string | null, hermesCtx?: string, hitRateCtx?: string) {
   const switched = !!previousCoach && !!coach && previousCoach !== coach;
   const switchBlock = switched
