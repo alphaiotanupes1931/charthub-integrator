@@ -185,7 +185,7 @@ export function formatOrderFlow(of: OrderFlow | undefined): string {
     `  Volume Point of Control: ${n(of.poc)} | value area ${n(of.valueAreaLow)} - ${n(of.valueAreaHigh)} | price is ${of.priceVsPoc} POC`,
     `  Volume imbalance: ${of.buyPct.toFixed(1)}% buy / ${(100 - of.buyPct).toFixed(1)}% sell (skew ${of.imbalanceSkew >= 0 ? "+" : ""}${of.imbalanceSkew.toFixed(1)}), ${of.stackedImbalances} stacked ${of.stackedSide} imbalances`,
     `  Market depth: ${of.depth} (last bar volume ${of.lastVolRatio.toFixed(2)}x median)`,
-    `  Order flow read: ${of.bias}`,
+    `  Order flow read: ${of.bias}${of.deltaConflict ? " (the live bar's delta contradicts the cumulative read, so flow confirms nothing right now)" : ""}`,
     `Use these numbers when discussing order flow. Do not substitute generic "directional strength" language.`,
   ].join("\n");
 }
