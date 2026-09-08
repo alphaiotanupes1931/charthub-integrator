@@ -426,6 +426,131 @@ export function orderFlowOppositionRead(
   };
 }
 
+// ---------- Delta expanding against the position ----------
+// The losing USD/JPY A-grade short had delta +4.5K expanding to +6.9K while the
+// cumulative read was still labelled bearish, so `orderFlowOppositionRead` (which
+// keys off that label) stayed silent. Expanding delta against the trade is a
+// warning in its own right: buyers absorbing into a level is what precedes the
+// reversal. This read ignores the label and looks only at the numbers.
+export function deltaAgainstPositionRead(
+  bias: typeof BIASES[number],
+  snap: MarketSnapshot,
+): { cap: typeof GRADES[number] | null; reason: string | null } {
+  const of = snap.orderFlow;
+  if (!of || bias === "Neutral") return { cap: null, reason: null };
+  const against = bias === "Long" ? of.delta < 0 : of.delta > 0;
+  if (!against) return { cap: null, reason: null };
+  const cvdAgainst = bias === "Long" ? of.cvdSlope < 0 : of.cvdSlope > 0;
+  if (!cvdAgainst) return { cap: null, reason: null };
+  // Scaled against this instrument's own average delta, so one rule works on
+  // an index, a currency pair and gold alike.
+  const ratio = Math.abs(of.delta) / Math.max(1, Math.abs(of.deltaAvg));
+  if (ratio < 1.5) return { cap: null, reason: null };
+  const side = bias === "Long" ? "sellers" : "buyers";
+  const shape = `delta ${of.delta > 0 ? "+" : ""}${of.delta.toFixed(0)} (${ratio.toFixed(1)}x its own average) with CVD ${of.cvdSlope > 0 ? "rising" : "falling"}`;
+  if (ratio >= 3 && !of.estimated) {
+    return {
+      cap: "C",
+      reason: `Order flow warning: ${shape} - ${side} are stepping in aggressively against this ${bias.toLowerCase()}, which is absorption, not confirmation. Capped at C. If delta keeps expanding against you after entry, get out rather than waiting for the stop.`,
+    };
+  }
+  return {
+    cap: "B",
+    reason: `Order flow warning: ${shape} against this ${bias.toLowerCase()}, so this caps at B. ${side.charAt(0).toUpperCase() + side.slice(1)} are paying up into your entry - size down and cut it if delta keeps expanding their way.`,
+  };
+}
+
+// ---------- Stale higher-timeframe data ----------
+// A 4H candle closing after the data was pulled can flip the whole structure
+// (a bearish-to-bullish change of character). Grading a short off a 4H that no
+// longer exists is exactly how the USD/JPY trade was invalidated before it
+// started, so a scan built on pre-close data cannot carry a high grade.
+const H4_MS = 4 * 60 * 60 * 1000;
+export function staleHigherTimeframeRead(
+  snap: MarketSnapshot,
+  now: number = Date.now(),
+): { cap: typeof GRADES[number] | null; reason: string | null } {
+  const fetched = Date.parse(snap.fetchedAt ?? "");
+  if (!Number.isFinite(fetched)) return { cap: null, reason: null };
+  // 4H candles close on the UTC 4-hour grid.
+  const lastClose = Math.floor(now / H4_MS) * H4_MS;
+  if (fetched >= lastClose) return { cap: null, reason: null };
+  const closedAt = new Date(lastClose).toISOString().slice(11, 16);
+  const mins = Math.round((now - fetched) / 60000);
+  return {
+    cap: "C",
+    reason: `Data freshness warning: a 4H candle closed at ${closedAt} UTC, after this scan's data was pulled ${mins} minutes ago. The 4H structure behind this grade may already have flipped, so the grade is capped at C - re-scan before risking anything on it.`,
+  };
+}
+
+// ---------- Trend / fade / reversal classifier ----------
+// The trader was told "A grade" on what was structurally a fade: 4H bearish,
+// 1H bullish. An A means everything agrees. Naming the setup type sets the right
+// expectation and forces the opposite scenario to be spelled out.
+export type SetupTypeRead = {
+  type: "trend" | "fade" | "reversal";
+  cap: typeof GRADES[number] | null;
+  reason: string | null;
+  /** Level that kills the thesis and turns the opposite side into the trade. */
+  flipLevel: number | null;
+};
+
+export function setupTypeRead(bias: typeof BIASES[number], snap: MarketSnapshot): SetupTypeRead {
+  const none: SetupTypeRead = { type: "trend", cap: null, reason: null, flipLevel: null };
+  const m = snap.mtf;
+  if (bias === "Neutral" || !m) return none;
+  const wanted = bias === "Long" ? "bullish" : "bearish";
+  const opposite = wanted === "bullish" ? "bearish" : "bullish";
+  const h1 = m.ladder?.find((r) => r.label === "1H");
+  const h1Opposes =
+    h1?.bias === opposite || h1?.trend === (opposite === "bullish" ? "up" : "down") || m.h1?.structureBreak === opposite;
+  const h4Opposes = m.h4?.direction === opposite || m.h4?.trend === (opposite === "bullish" ? "up" : "down");
+
+  // 4H itself has turned against the side we were about to trade: a reversal
+  // setup, and shorting into a fresh bullish 4H change of character (or the
+  // mirror) is never an A.
+  if (h4Opposes) {
+    return {
+      type: "reversal",
+      cap: "C",
+      flipLevel: null,
+      reason: `Setup type: reversal. The 4H itself now reads ${m.h4?.direction}/${m.h4?.trend}, against this ${bias.toLowerCase()}, so the structure this grade was built on has changed character. Capped at C - wait for the 4H to break back ${wanted}.`,
+    };
+  }
+  if (!h1Opposes) return none;
+
+  // Level that kills the fade: the nearest opposing structure beyond price.
+  const last = Number(snap.lastPrice) || 0;
+  const cands: number[] = [];
+  // Feeds can deliver a partial ladder, so every branch is read defensively.
+  const nums = (v: unknown): number[] => (Array.isArray(v) ? (v as number[]) : []);
+  const zones = (v: unknown): Array<[number, number]> => (Array.isArray(v) ? (v as Array<[number, number]>) : []);
+  if (bias === "Short") {
+    nums(m.h4?.keyLevels?.resistance).forEach((p) => cands.push(p));
+    zones(m.h1?.orderBlocks?.bear).forEach((z) => cands.push(Math.max(z[0], z[1])));
+    nums(m.h1?.liquidity?.buyside).forEach((p) => cands.push(p));
+  } else {
+    nums(m.h4?.keyLevels?.support).forEach((p) => cands.push(p));
+    zones(m.h1?.orderBlocks?.bull).forEach((z) => cands.push(Math.min(z[0], z[1])));
+    nums(m.h1?.liquidity?.sellside).forEach((p) => cands.push(p));
+  }
+  const beyond = cands.filter((p) => Number.isFinite(p) && p > 0 && (bias === "Short" ? p > last : p < last));
+  beyond.sort((a, b) => Math.abs(a - last) - Math.abs(b - last));
+  const flipLevel = beyond[0] ?? null;
+  const d = decimalsFor(last);
+  const otherSide = bias === "Short" ? "long" : "short";
+  const levelText = flipLevel
+    ? `If the 1H closes ${bias === "Short" ? "above" : "below"} ${flipLevel.toFixed(d)} and holds, the ${bias.toLowerCase()} thesis is dead and a ${otherSide} becomes the higher-probability trade - be ready to reverse or exit rather than sitting in it.`
+    : `If the 1H holds its ${opposite} push, the ${bias.toLowerCase()} thesis is dead and the ${otherSide} becomes the higher-probability trade.`;
+
+  return {
+    type: "fade",
+    cap: "B",
+    flipLevel,
+    reason: `Setup type: counter-trend fade, not a trend trade. The 4H is ${m.h4?.direction} but the 1H reads ${h1?.bias ?? opposite}/${h1?.trend ?? "-"}, so this only works if the 1H push fails. B at best: half size, tighter management. ${levelText}`,
+  };
+}
+
 // ---------- Near-term override (flip or stand aside) ----------
 // The losing A-grade short had the 1H bullish, the 15m bearish only by stale
 // label, and delta firmly positive. Capping the grade was not enough: a setup
@@ -517,6 +642,12 @@ export function gradeFromEvidence(
   if (ltf.cap && order.indexOf(grade) > order.indexOf(ltf.cap)) grade = ltf.cap;
   const flow = orderFlowOppositionRead(bias, snap);
   if (flow.cap && order.indexOf(grade) > order.indexOf(flow.cap)) grade = flow.cap;
+  const dflow = deltaAgainstPositionRead(bias, snap);
+  if (dflow.cap && order.indexOf(grade) > order.indexOf(dflow.cap)) grade = dflow.cap;
+  const setup = setupTypeRead(bias, snap);
+  if (setup.cap && order.indexOf(grade) > order.indexOf(setup.cap)) grade = setup.cap;
+  const stale = staleHigherTimeframeRead(snap);
+  if (stale.cap && order.indexOf(grade) > order.indexOf(stale.cap)) grade = stale.cap;
   // Contradicted flow (live-bar delta against the cumulative read) is not
   // confirmation, so it cannot sit behind an A.
   if (snap.orderFlow?.deltaConflict && order.indexOf(grade) > order.indexOf("B")) grade = "B";
@@ -909,15 +1040,25 @@ export async function runPlanner(
   // briefings: timing risk is part of whether a setup is worth taking.
   let newsBlock: string | undefined;
   let newsWarning = "";
+  let news48Warning = "";
   try {
     const { calendarContextBlock, fetchCalendar, highImpactAhead, currenciesFor } = await import("@/lib/news.server");
     newsBlock = await calendarContextBlock(snap.ticker);
     const wanted = currenciesFor(snap.ticker);
     // The shared calendar helper includes medium-impact events for display.
     // Only genuinely high-impact releases should reduce a setup's grade.
-    const soon = highImpactAhead(await fetchCalendar(), 4).filter(
+    const cal = await fetchCalendar();
+    const soon = highImpactAhead(cal, 4).filter(
       (e) => wanted.includes(e.country.toUpperCase()) && /^high$/i.test(e.impact.trim()),
     );
+    const within48 = highImpactAhead(cal, 48).filter(
+      (e) => wanted.includes(e.country.toUpperCase()) && /^high$/i.test(e.impact.trim()),
+    );
+    if (!soon.length && within48.length) {
+      const e = within48[0]!;
+      const hrs = Math.max(1, Math.round((new Date(e.date).getTime() - Date.now()) / 3600000));
+      news48Warning = `News risk: ${e.country} HIGH ${e.title} drops in about ${hrs} hours, so this grade is knocked down one letter. If you are not at TP1 before the release, flatten or cut size - do not hold through high-impact data with full risk.`;
+    }
     if (soon.length) {
       const first = soon[0]!;
       const mins = Math.max(0, Math.round((new Date(first.date).getTime() - Date.now()) / 60000));
@@ -1088,6 +1229,13 @@ export async function runPlanner(
   const downgradeOne = (g: typeof GRADES[number]): typeof GRADES[number] =>
     g === "A+" ? "A" : g === "A" ? "B" : g === "B" ? "C" : g;
 
+  // FIX 5: a high-impact release inside two days is real event risk even when it
+  // is not imminent, so it costs one letter and is stated plainly.
+  if (news48Warning) {
+    grade = downgradeOne(grade);
+    warnings.push(news48Warning);
+  }
+
   // Thin overnight tape used to be a hard NO ENTRY. That is what made gold read
   // "no entry" for two days and hid index setups that ran the moment New York
   // opened. It is a timing problem, so the setup keeps its grade path and levels
@@ -1150,6 +1298,16 @@ export async function runPlanner(
   const comboGate = timeFrameComboGate(bias, snap);
   const ltfRead = lowerTimeframeOppositionRead(bias, snap);
   const flowRead = orderFlowOppositionRead(bias, snap);
+  const deltaRead = deltaAgainstPositionRead(bias, snap);
+  const setupRead = setupTypeRead(bias, snap);
+  const staleRead = staleHigherTimeframeRead(snap);
+  const setupFlags = [
+    setupRead.type === "fade" ? "COUNTER_TREND_FADE" : null,
+    setupRead.type === "reversal" ? "HTF_REVERSAL" : null,
+    deltaRead.cap ? "ORDER_FLOW_AGAINST_POSITION" : null,
+    staleRead.cap ? "STALE_DATA_4H_CANDLE_CLOSED" : null,
+    news48Warning ? "HIGH_IMPACT_NEWS_RISK" : null,
+  ].filter((f): f is string => Boolean(f));
 
   // `notes` already carries the thesis ("why take this trade"), so the details
   // block must NOT repeat it. It is the read-out of the evidence itself:
@@ -1164,6 +1322,9 @@ export async function runPlanner(
     + (comboGate.reason ? ` ${comboGate.reason}` : "")
     + (ltfRead.reason ? ` ${ltfRead.reason}` : "")
     + (flowRead.reason ? ` ${flowRead.reason}` : "")
+    + (deltaRead.reason ? ` ${deltaRead.reason}` : "")
+    + (setupRead.reason ? ` ${setupRead.reason}` : "")
+    + (staleRead.reason ? ` ${staleRead.reason}` : "")
     + (warnings.length ? ` ${warnings.join(" ")}` : "")
     + (volRead && !volRead.unavailable && !volRead.thin
       ? ` Session volume is normal (${volRead.label}), so the standard ${stopFloorAtr.toFixed(1)}x ATR minimum stop applies.`
@@ -1186,6 +1347,10 @@ export async function runPlanner(
   const dailyBias = ladder.find((r) => r.label === "Daily")?.bias ?? snap.cisd.htfBias;
   const currentTrend = ladder.find((r) => r.label === "4H")?.trend ?? snap.mtf?.h4.trend ?? "range";
   const synopsis = buildSynopsis(snap, memo, grade, bias, dailyBias, currentTrend)
+    // The opposite scenario has to be stated up front, not buried: this is what
+    // the trader needed on the USD/JPY fade that stopped out.
+    + (setupRead.reason ? ` ${setupRead.reason}` : "")
+    + (staleRead.reason ? ` ${staleRead.reason}` : "")
     + newsWarning
     + (timingGate ? ` ${timingGate}` : warnings.length ? ` ${warnings[0]}` : "");
 
@@ -1210,6 +1375,9 @@ export async function runPlanner(
     candleCount: snap.candles.length,
     refPrice: snap.lastPrice,
     counterTrend: counterTrend.counterTrend,
+    setupType: setupRead.type,
+    flipLevel: setupRead.flipLevel ?? undefined,
+    flags: setupFlags.length ? setupFlags : undefined,
     htfBias: dailyBias,
     warnings: warnings.length ? warnings : undefined,
     sessionVolume: volRead && !volRead.unavailable
