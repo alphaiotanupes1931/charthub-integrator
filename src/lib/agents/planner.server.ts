@@ -1155,7 +1155,9 @@ export async function runPlanner(
   const dataNote = (snap.mtf
     ? ""
     : " Higher-timeframe data was incomplete on this scan, so the grade is capped at C until the feed fills in.")
+    + (nearTerm.bias && nearTerm.reason ? ` Direction check - ${nearTerm.reason}` : "")
     + (counterTrend.reason ? ` ${counterTrend.reason}` : "")
+
     + (comboGate.reason ? ` ${comboGate.reason}` : "")
     + (ltfRead.reason ? ` ${ltfRead.reason}` : "")
     + (flowRead.reason ? ` ${flowRead.reason}` : "")
