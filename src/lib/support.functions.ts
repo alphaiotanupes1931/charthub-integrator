@@ -57,41 +57,41 @@ ${data.sentiment ? `<p style="margin:0 0 8px"><strong>Rating:</strong> ${data.se
 </div>`;
     const text = `${label} from ${data.replyEmail}\n\nSubject: ${data.subject}\n\n${data.message}\n\nTicket ${ticket.id}\nUser ${userId}\nSubmitted ${ticket.created_at}`;
 
-    // Delivery goes through the transactional queue so a mail hiccup never
-    // loses the submission (the row is already saved above).
+    // The ticket row is already saved above, so a mail hiccup never loses the
+    // submission — the notification is best effort.
     let emailQueued = false;
     try {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const messageId = crypto.randomUUID();
-      await supabaseAdmin.from("email_send_log").insert({
-        message_id: messageId,
-        template_name: `support_${data.kind}`,
-        recipient_email: SUPPORT_INBOX,
-        status: "pending",
-      });
-      const { error: qErr } = await supabaseAdmin.rpc("enqueue_email" as never, {
-        queue_name: "transactional_emails",
-        payload: {
-          message_id: messageId,
+      const { sendRawEmail, logEmailSend } = await import("@/lib/email-raw.server");
+      const templateName = `support_${data.kind}`;
+      try {
+        const result = await sendRawEmail({
           to: SUPPORT_INBOX,
-          from: `${SITE_NAME} <noreply@${SENDER_DOMAIN}>`,
-          sender_domain: SENDER_DOMAIN,
           subject: `${SITE_NAME} ${label}: ${data.subject}`,
           html,
           text,
-          purpose: "transactional",
-          idempotency_key: `support:${ticket.id}`,
-          unsubscribe_token: `support-inbox:${SUPPORT_INBOX}`,
-
-          label: `support_${data.kind}`,
-          queued_at: new Date().toISOString(),
-
-        },
-      } as never);
-      if (qErr) throw new Error(qErr.message);
-      emailQueued = true;
+          label: templateName,
+          idempotencyKey: `support:${ticket.id}`,
+          replyTo: data.replyEmail,
+        });
+        await logEmailSend(supabaseAdmin as never, {
+          template_name: templateName,
+          recipient_email: SUPPORT_INBOX,
+          status: result.sent ? "sent" : "suppressed",
+        });
+        emailQueued = result.sent;
+      } catch (e) {
+        const message = (e as Error).message;
+        await logEmailSend(supabaseAdmin as never, {
+          template_name: templateName,
+          recipient_email: SUPPORT_INBOX,
+          status: "failed",
+          error_message: message.slice(0, 1000),
+        });
+        throw e;
+      }
     } catch (e) {
-      console.error("[support] email enqueue failed", (e as Error).message);
+      console.error("[support] email send failed", (e as Error).message);
     }
 
     return { id: ticket.id, emailQueued };

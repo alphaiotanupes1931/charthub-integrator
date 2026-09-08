@@ -1,6 +1,9 @@
 // Server-only: the free-plan drip sequence. Three short emails, plain HTML so
-// they render the same everywhere, each with a working unsubscribe link.
-export const SITE_NAME = "TradeMind";
+// they render the same everywhere. The unsubscribe footer is appended by the
+// email platform, so the copy here never adds one.
+import { SITE_NAME, sendRawEmail, logEmailSend } from "./email-raw.server";
+
+export { SITE_NAME };
 export const SENDER_DOMAIN = "notify.reeddigitalgroup.com";
 const SITE_URL = "https://www.trademindaicoach.com";
 
@@ -9,12 +12,9 @@ export const STAGE_DELAY_DAYS = [0, 2, 4];
 
 export type DripStage = 0 | 1 | 2;
 
-function shell(body: string, unsubscribeUrl: string): string {
+function shell(body: string): string {
   return `<div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#111;max-width:560px">
 ${body}
-<hr style="border:none;border-top:1px solid #e5e5e5;margin:24px 0" />
-<p style="margin:0;color:#777;font-size:12px">You are getting this because you asked for free access to ${SITE_NAME}.
-<a href="${unsubscribeUrl}" style="color:#777">Unsubscribe</a>.</p>
 </div>`;
 }
 
@@ -22,7 +22,7 @@ function button(label: string, href: string): string {
   return `<p style="margin:24px 0"><a href="${href}" style="background:#111;color:#fff;text-decoration:none;padding:12px 20px;border-radius:999px;font-weight:600;display:inline-block">${label}</a></p>`;
 }
 
-export function dripEmail(stage: DripStage, unsubscribeUrl: string): {
+export function dripEmail(stage: DripStage): {
   subject: string;
   html: string;
   text: string;
@@ -40,8 +40,8 @@ export function dripEmail(stage: DripStage, unsubscribeUrl: string): {
 <p style="margin:0 0 12px">The journal, risk calculator, price alerts and Academy basics are free for good.</p>
 <p style="margin:0 0 12px">Pick an instrument, run a scan, and read the grade before you take the trade.</p>
 ${button("Run your first scan", `${SITE_URL}/dashboard`)}`,
-        unsubscribeUrl,
       ),
+
     };
   }
   if (stage === 1) {
@@ -55,8 +55,8 @@ ${button("Run your first scan", `${SITE_URL}/dashboard`)}`,
 <p style="margin:0 0 12px">The grade is computed in code, not written by a chatbot. A and A+ need the 4H, 1H and 15m structure to agree, a stop behind real structure, and at least 2 to 1 reward.</p>
 <p style="margin:0 0 12px">Anything less gets graded down, which is the point: the low grades are the trades that were costing you money.</p>
 ${button("See hit rate by grade", `${SITE_URL}/signals`)}`,
-        unsubscribeUrl,
       ),
+
     };
   }
   const text = `Ready for unlimited grades? Paid plans start at $49 a month and the first 7 days are free when you add a card. You keep the journal and Academy either way. See plans: ${SITE_URL}/pricing`;
@@ -69,82 +69,44 @@ ${button("See hit rate by grade", `${SITE_URL}/signals`)}`,
 <p style="margin:0 0 12px">If you are scanning more than twice a day, the paid plan removes the cap and opens the coaching layer and analytics.</p>
 <p style="margin:0 0 12px">Plans start at $49 a month, and your first 7 days are free when you add a card. Cancel from the billing portal any time.</p>
 ${button("See plans", `${SITE_URL}/pricing`)}`,
-      unsubscribeUrl,
     ),
   };
 }
 
-export function unsubscribeUrlFor(token: string): string {
-  return `${SITE_URL}/api/public/lead-unsubscribe?token=${encodeURIComponent(token)}`;
-}
-
 /**
- * Queues one drip stage for a lead. The email API rejects sends that carry
- * neither a run_id nor an idempotency key with purpose=transactional, so both
- * the immediate welcome and the cron use this single correct payload shape.
+ * Sends one drip stage to a lead through the managed email API. Suppressed
+ * recipients are an expected outcome, not a failure.
  */
 export async function enqueueDripStage(
-  admin: {
-    from: (t: string) => any;
-    rpc: (fn: string, args: unknown) => Promise<{ error: { message: string } | null }>;
-  },
+  admin: { from: (t: string) => any },
   lead: { id: string; email: string },
   stage: DripStage,
 ): Promise<void> {
-  // One unsubscribe token per email address: the table has a UNIQUE(email)
-  // constraint, so inserting a fresh token on stages 1 and 2 silently failed and
-  // shipped a link that resolved to nothing. Reuse the stored token instead.
-  let token: string = crypto.randomUUID();
-  const { data: existing } = await admin
-    .from("email_unsubscribe_tokens")
-    .select("token")
-    .ilike("email", lead.email)
-    .maybeSingle();
-  if (existing?.token) {
-    token = existing.token as string;
-    // Clear any earlier "used" stamp so the link in this send still works.
-    await admin.from("email_unsubscribe_tokens").update({ used_at: null }).eq("token", token);
-  } else {
-    const { error: tokenErr } = await admin
-      .from("email_unsubscribe_tokens")
-      .insert({ token, email: lead.email });
-    if (tokenErr) {
-      const { data: raced } = await admin
-        .from("email_unsubscribe_tokens")
-        .select("token")
-        .ilike("email", lead.email)
-        .maybeSingle();
-      if (!raced?.token) throw new Error(`unsubscribe token failed: ${tokenErr.message}`);
-      token = raced.token as string;
-    }
-  }
+  const mail = dripEmail(stage);
 
-  const mail = dripEmail(stage, unsubscribeUrlFor(token));
-  const messageId = crypto.randomUUID();
-
-  await admin.from("email_send_log").insert({
-    message_id: messageId,
-    template_name: mail.label,
-    recipient_email: lead.email,
-    status: "pending",
-  });
-
-  const { error } = await admin.rpc("enqueue_email", {
-    queue_name: "transactional_emails",
-    payload: {
-      message_id: messageId,
+  try {
+    const result = await sendRawEmail({
       to: lead.email,
-      from: `${SITE_NAME} <noreply@${SENDER_DOMAIN}>`,
-      sender_domain: SENDER_DOMAIN,
       subject: mail.subject,
       html: mail.html,
       text: mail.text,
-      purpose: "transactional",
-      idempotency_key: `drip:${lead.id}:${stage}:${messageId.slice(0, 8)}`,
-      unsubscribe_token: token,
       label: mail.label,
-      queued_at: new Date().toISOString(),
-    },
-  });
-  if (error) throw new Error(error.message);
+      idempotencyKey: `drip:${lead.id}:${stage}`,
+    });
+    await logEmailSend(admin, {
+      template_name: mail.label,
+      recipient_email: lead.email,
+      status: result.sent ? "sent" : "suppressed",
+    });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    await logEmailSend(admin, {
+      template_name: mail.label,
+      recipient_email: lead.email,
+      status: "failed",
+      error_message: message.slice(0, 1000),
+    });
+    throw e;
+  }
 }
+

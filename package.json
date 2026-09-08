@@ -21,7 +21,7 @@
     "@ai-sdk/openai-compatible": "^2.0.51",
     "@ai-sdk/react": "^3.0.210",
     "@hookform/resolvers": "^5.2.2",
-    "@lovable.dev/email-js": "^0.1.2",
+    "@lovable.dev/email-js": "0.1.0",
     "@lovable.dev/mcp-js": "^0.26.2",
     "@lovable.dev/webhooks-js": "^0.0.2",
     "@radix-ui/react-accordion": "^1.2.12",

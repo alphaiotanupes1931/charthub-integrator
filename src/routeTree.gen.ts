@@ -68,6 +68,7 @@ import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]
 import { Route as AppStrategiesIndexRouteImport } from './routes/_app.strategies.index'
 import { Route as AppChatIndexRouteImport } from './routes/_app.chat.index'
 import { Route as AppAcademyIndexRouteImport } from './routes/_app.academy.index'
+import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
 import { Route as BrokerAlpacaCallbackRouteImport } from './routes/broker.alpaca.callback'
 import { Route as ApiTradelockerImportRouteImport } from './routes/api.tradelocker.import'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api.public.stripe-webhook'
@@ -83,7 +84,7 @@ import { Route as AppAcademyModuleIdRouteImport } from './routes/_app.academy.$m
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as AppAcademyModuleIdIndexRouteImport } from './routes/_app.academy.$moduleId.index'
-import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api.public.telegram.webhook'
@@ -398,6 +399,11 @@ const AppAcademyIndexRoute = AppAcademyIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppAcademyRoute,
 } as any)
+const LovableEmailEventsRoute = LovableEmailEventsRouteImport.update({
+  id: '/lovable/email/events',
+  path: '/lovable/email/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BrokerAlpacaCallbackRoute = BrokerAlpacaCallbackRouteImport.update({
   id: '/broker/alpaca/callback',
   path: '/broker/alpaca/callback',
@@ -476,10 +482,10 @@ const AppAcademyModuleIdIndexRoute = AppAcademyModuleIdIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppAcademyModuleIdRoute,
 } as any)
-const LovableEmailQueueProcessRoute =
-  LovableEmailQueueProcessRouteImport.update({
-    id: '/lovable/email/queue/process',
-    path: '/lovable/email/queue/process',
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
     getParentRoute: () => rootRouteImport,
   } as any)
 const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
@@ -652,6 +658,7 @@ export interface FileRoutesByFullPath {
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/broker/alpaca/callback': typeof BrokerAlpacaCallbackRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/academy/': typeof AppAcademyIndexRoute
   '/chat/': typeof AppChatIndexRoute
   '/strategies/': typeof AppStrategiesIndexRoute
@@ -672,7 +679,7 @@ export interface FileRoutesByFullPath {
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
-  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/academy/$moduleId/': typeof AppAcademyModuleIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -741,6 +748,7 @@ export interface FileRoutesByTo {
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/broker/alpaca/callback': typeof BrokerAlpacaCallbackRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/academy': typeof AppAcademyIndexRoute
   '/chat': typeof AppChatIndexRoute
   '/strategies': typeof AppStrategiesIndexRoute
@@ -761,7 +769,7 @@ export interface FileRoutesByTo {
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
-  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/academy/$moduleId': typeof AppAcademyModuleIdIndexRoute
 }
 export interface FileRoutesById {
@@ -836,6 +844,7 @@ export interface FileRoutesById {
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/broker/alpaca/callback': typeof BrokerAlpacaCallbackRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/_app/academy/': typeof AppAcademyIndexRoute
   '/_app/chat/': typeof AppChatIndexRoute
   '/_app/strategies/': typeof AppStrategiesIndexRoute
@@ -856,7 +865,7 @@ export interface FileRoutesById {
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
-  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/_app/academy/$moduleId/': typeof AppAcademyModuleIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -931,6 +940,7 @@ export interface FileRouteTypes {
     | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
     | '/broker/alpaca/callback'
+    | '/lovable/email/events'
     | '/academy/'
     | '/chat/'
     | '/strategies/'
@@ -951,7 +961,7 @@ export interface FileRouteTypes {
     | '/api/public/telegram/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
-    | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
     | '/academy/$moduleId/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -1020,6 +1030,7 @@ export interface FileRouteTypes {
     | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
     | '/broker/alpaca/callback'
+    | '/lovable/email/events'
     | '/academy'
     | '/chat'
     | '/strategies'
@@ -1040,7 +1051,7 @@ export interface FileRouteTypes {
     | '/api/public/telegram/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
-    | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
     | '/academy/$moduleId'
   id:
     | '__root__'
@@ -1114,6 +1125,7 @@ export interface FileRouteTypes {
     | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
     | '/broker/alpaca/callback'
+    | '/lovable/email/events'
     | '/_app/academy/'
     | '/_app/chat/'
     | '/_app/strategies/'
@@ -1134,7 +1146,7 @@ export interface FileRouteTypes {
     | '/api/public/telegram/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
-    | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
     | '/_app/academy/$moduleId/'
   fileRoutesById: FileRoutesById
 }
@@ -1169,6 +1181,7 @@ export interface RootRouteChildren {
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
   ApiTradelockerImportRoute: typeof ApiTradelockerImportRoute
   BrokerAlpacaCallbackRoute: typeof BrokerAlpacaCallbackRoute
+  LovableEmailEventsRoute: typeof LovableEmailEventsRoute
   ApiPublicHooksAiCreditsRoute: typeof ApiPublicHooksAiCreditsRoute
   ApiPublicHooksAutopilotTickRoute: typeof ApiPublicHooksAutopilotTickRoute
   ApiPublicHooksDripEmailsRoute: typeof ApiPublicHooksDripEmailsRoute
@@ -1184,7 +1197,7 @@ export interface RootRouteChildren {
   ApiPublicTelegramWebhookRoute: typeof ApiPublicTelegramWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
-  LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
+  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1602,6 +1615,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAcademyIndexRouteImport
       parentRoute: typeof AppAcademyRoute
     }
+    '/lovable/email/events': {
+      id: '/lovable/email/events'
+      path: '/lovable/email/events'
+      fullPath: '/lovable/email/events'
+      preLoaderRoute: typeof LovableEmailEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/broker/alpaca/callback': {
       id: '/broker/alpaca/callback'
       path: '/broker/alpaca/callback'
@@ -1707,11 +1727,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAcademyModuleIdIndexRouteImport
       parentRoute: typeof AppAcademyModuleIdRoute
     }
-    '/lovable/email/queue/process': {
-      id: '/lovable/email/queue/process'
-      path: '/lovable/email/queue/process'
-      fullPath: '/lovable/email/queue/process'
-      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lovable/email/auth/webhook': {
@@ -2024,6 +2044,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
   ApiTradelockerImportRoute: ApiTradelockerImportRoute,
   BrokerAlpacaCallbackRoute: BrokerAlpacaCallbackRoute,
+  LovableEmailEventsRoute: LovableEmailEventsRoute,
   ApiPublicHooksAiCreditsRoute: ApiPublicHooksAiCreditsRoute,
   ApiPublicHooksAutopilotTickRoute: ApiPublicHooksAutopilotTickRoute,
   ApiPublicHooksDripEmailsRoute: ApiPublicHooksDripEmailsRoute,
@@ -2040,7 +2061,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicTelegramWebhookRoute: ApiPublicTelegramWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
-  LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
+  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
