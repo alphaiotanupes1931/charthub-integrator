@@ -72,36 +72,37 @@ export const adminSetPlatformStatus = createServerFn({ method: "POST" })
         new Set(((people ?? []) as Array<{ email: string | null }>).map((p) => p.email).filter((e): e is string => !!e)),
       );
       const stamp = Date.now();
+      const { sendRawEmail, logEmailSend } = await import("@/lib/email-raw.server");
       for (const to of recipients) {
         try {
-          const messageId = crypto.randomUUID();
-          await supabaseAdmin.from("email_send_log").insert({
-            message_id: messageId,
+          const result = await sendRawEmail({
+            to,
+            subject: mail.subject,
+            html: mail.html,
+            text: mail.text,
+            label: "platform_status",
+            idempotencyKey: `status:${stamp}:${to}`,
+          });
+          await logEmailSend(supabaseAdmin as never, {
             template_name: "platform_status",
             recipient_email: to,
-            status: "pending",
+            status: result.sent ? "sent" : "suppressed",
           });
-          const { error: qErr } = await supabaseAdmin.rpc("enqueue_email" as never, {
-            queue_name: "transactional_emails",
-            payload: {
-              message_id: messageId,
-              to,
-              from: "TradeMind <noreply@notify.reeddigitalgroup.com>",
-              sender_domain: "notify.reeddigitalgroup.com",
-              subject: mail.subject,
-              html: mail.html,
-              text: mail.text,
-              purpose: "transactional",
-              idempotency_key: `status:${stamp}:${to}`,
-              unsubscribe_token: `platform-status:${to}`,
-              label: "platform_status",
-              queued_at: new Date().toISOString(),
-            },
-          } as never);
-          if (qErr) throw new Error(qErr.message);
-          emailed += 1;
+          if (result.sent) emailed += 1;
         } catch (e) {
-          console.error("[status] email enqueue failed", to, (e as Error).message);
+          const message = (e as Error).message;
+          await logEmailSend(supabaseAdmin as never, {
+            template_name: "platform_status",
+            recipient_email: to,
+            status: "failed",
+            error_message: message.slice(0, 1000),
+          });
+          console.error("[status] email send failed", (e as Error).message);
+          // A 429 asks us to back off before the next recipient.
+          const retryAfter = (e as { retryAfterSeconds?: number | null }).retryAfterSeconds;
+          if (typeof retryAfter === "number" && retryAfter > 0) {
+            await new Promise((r) => setTimeout(r, Math.min(retryAfter, 30) * 1000));
+          }
         }
       }
     }
