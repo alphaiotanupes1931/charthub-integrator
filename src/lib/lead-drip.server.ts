@@ -94,7 +94,7 @@ export async function enqueueDripStage(
   // One unsubscribe token per email address: the table has a UNIQUE(email)
   // constraint, so inserting a fresh token on stages 1 and 2 silently failed and
   // shipped a link that resolved to nothing. Reuse the stored token instead.
-  let token = crypto.randomUUID();
+  let token: string = crypto.randomUUID();
   const { data: existing } = await admin
     .from("email_unsubscribe_tokens")
     .select("token")
