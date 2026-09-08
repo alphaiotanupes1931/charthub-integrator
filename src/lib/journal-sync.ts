@@ -79,6 +79,10 @@ export async function pushAll(trades: SyncTrade[]): Promise<void> {
 
   await supabase.from("journal_trades").upsert(rows, { onConflict: "user_id,id" });
 
+  // Tie each journaled trade back to the scan that produced it, so the
+  // scoreboard can report how the trades actually taken performed by grade.
+  void linkTakenSignals(trades);
+
   const keep = rows.map((r) => r.id);
   await supabase
     .from("journal_trades")
@@ -87,3 +91,32 @@ export async function pushAll(trades: SyncTrade[]): Promise<void> {
     .not("id", "in", `(${keep.map((id) => `"${id}"`).join(",")})`);
 }
 
+
+/**
+ * Best-effort: match journaled trades to filed scans and mark those scans as
+ * taken. Failures are silent - this only enriches reporting.
+ */
+async function linkTakenSignals(trades: SyncTrade[]): Promise<void> {
+  try {
+    const payload = trades
+      .filter((t) => typeof t.id === "string" && typeof t["symbol"] === "string" && typeof t["side"] === "string")
+      .slice(-200)
+      .map((t) => ({
+        id: t.id,
+        symbol: String(t["symbol"]),
+        side: String(t["side"]),
+        entry: Number(t["entry"]) || null,
+        takenAt:
+          typeof t.date === "string" && t.date
+            ? new Date(`${t.date}T12:00:00Z`).toISOString()
+            : t.createdAt
+              ? new Date(t.createdAt).toISOString()
+              : null,
+      }));
+    if (!payload.length) return;
+    const { linkJournalTradesToSignals } = await import("@/lib/journal-signal-link.functions");
+    await linkJournalTradesToSignals({ data: { trades: payload } });
+  } catch {
+    /* reporting only */
+  }
+}
