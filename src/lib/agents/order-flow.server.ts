@@ -127,12 +127,21 @@ export function computeOrderFlow(candles: Candle[]): OrderFlow | undefined {
     : lastVolRatio <= 0.6 ? "thin"
     : "normal";
 
-  const bias: OrderFlow["bias"] =
+  const rawBias: OrderFlow["bias"] =
     cvd > 0 && cvdSlope > 0 && imbalanceSkew > 2 ? "bullish"
     : cvd < 0 && cvdSlope < 0 && imbalanceSkew < -2 ? "bearish"
     : imbalanceSkew > 6 ? "bullish"
     : imbalanceSkew < -6 ? "bearish"
     : "neutral";
+
+  // The live bar can sell off hard while the 120-bar cumulative read still
+  // points up (and the reverse). That is a contradiction, not confirmation:
+  // report the flow as neutral and flag it so the grade cannot lean on it.
+  const deltaConflict =
+    rawBias !== "neutral" &&
+    ((rawBias === "bullish" && delta < 0) || (rawBias === "bearish" && delta > 0)) &&
+    Math.abs(delta) >= Math.max(1, Math.abs(deltaAvg));
+  const bias: OrderFlow["bias"] = deltaConflict ? "neutral" : rawBias;
 
   const last = bars.at(-1)!.close;
 
