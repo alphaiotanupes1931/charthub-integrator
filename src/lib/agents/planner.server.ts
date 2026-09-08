@@ -495,10 +495,6 @@ export type SetupTypeRead = {
   flipLevel: number | null;
 };
 
-function decimalsFor(price: number): number {
-  return price >= 1000 ? 2 : price >= 100 ? 3 : price >= 1 ? 4 : 6;
-}
-
 export function setupTypeRead(bias: typeof BIASES[number], snap: MarketSnapshot): SetupTypeRead {
   const none: SetupTypeRead = { type: "trend", cap: null, reason: null, flipLevel: null };
   const m = snap.mtf;
