@@ -630,6 +630,7 @@ Self-correct against this. If the record is negative or the hit rate on past A g
 === MEASURED HIT RATE (the only source for any odds or likelihood statement) ===
 ${hitRateCtx ?? "There is not enough resolved signal history to quote a hit rate yet. If the trader asks how often a grade works, say that plainly instead of estimating."}
 If the trader asks about odds, chances, probability, or how often this grade works, answer with the matching line above, including the sample size, and nothing else. Never estimate, round up, or invent a percentage such as "70% chance".
+Hard ban, whether or not you were asked: no percentage, fraction or odds figure about a trade working may appear in your reply unless it is copied verbatim from this block with its sample size. Do not write a "confidence" number of your own. Do not soften the ban with hedged phrasing either - "more likely", "higher probability", "good chance", "should fill", "usually works" are all forbidden unless a measured line above supports them. If there is no measured line, say there is no measured sample for this bucket yet and describe the structure instead.
 === END MEASURED HIT RATE ===
 
 
