@@ -1,4 +1,5 @@
-// One-click unsubscribe target used by the free-plan drip emails.
+// Legacy unsubscribe target from earlier emails. New emails link to the
+// branded /unsubscribe page; links already in inboxes are redirected there.
 import { createFileRoute } from "@tanstack/react-router";
 
 function page(message: string): Response {
