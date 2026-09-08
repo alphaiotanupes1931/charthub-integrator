@@ -962,9 +962,19 @@ export async function runPlanner(
   // resolveDirection() stays as the descriptive fallback for the rare scan with
   // no 4H series at all (feed outage), where the engine has nothing to read.
   const engineBias = biasRead.platformBias;
-  const resolved = (snap.candles4h?.length ?? 0) >= 20
+  const rawResolved = (snap.candles4h?.length ?? 0) >= 20
     ? { bias: engineBias, reason: `bias engine: ${biasRead.result.mtf.reason}` }
     : resolveDirection(snap, memo, "Neutral");
+  // Near-term override: when the 1H, the 15m and the order flow ALL point the
+  // other way, the old code still printed the higher-timeframe side and let the
+  // trader short into a bid. Either the near-term side is the trade (when the 4H
+  // is not trending against it) or there is no trade at all - never a fighting
+  // one. This is the "why wasn't it a buy where the stop was" case.
+  const nearTerm = nearTermOverrideRead(rawResolved.bias, snap);
+  const resolved = nearTerm.bias
+    ? { bias: nearTerm.bias, reason: nearTerm.reason ?? rawResolved.reason }
+    : rawResolved;
+
 
   // ---- Session volume filter -------------------------------------------
   // Measured before the levels are finalised, because the stop floor depends
