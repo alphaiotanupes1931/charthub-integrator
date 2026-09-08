@@ -1348,6 +1348,10 @@ export async function runPlanner(
   const dailyBias = ladder.find((r) => r.label === "Daily")?.bias ?? snap.cisd.htfBias;
   const currentTrend = ladder.find((r) => r.label === "4H")?.trend ?? snap.mtf?.h4.trend ?? "range";
   const synopsis = buildSynopsis(snap, memo, grade, bias, dailyBias, currentTrend)
+    // The opposite scenario has to be stated up front, not buried: this is what
+    // the trader needed on the USD/JPY fade that stopped out.
+    + (setupRead.reason ? ` ${setupRead.reason}` : "")
+    + (staleRead.reason ? ` ${staleRead.reason}` : "")
     + newsWarning
     + (timingGate ? ` ${timingGate}` : warnings.length ? ` ${warnings[0]}` : "");
 

@@ -153,6 +153,15 @@ export type TradePlan = {
   refPrice?: number;
   /** True when the setup fights the Daily and 4H direction. */
   counterTrend?: boolean;
+  /**
+   * Whether the 4H and 1H agree (trend), disagree (fade, B at best), or the 4H
+   * itself has turned (reversal, C at best).
+   */
+  setupType?: "trend" | "fade" | "reversal";
+  /** On a fade: the level that kills the thesis and turns the other side on. */
+  flipLevel?: number;
+  /** Machine-readable risk flags, e.g. COUNTER_TREND_FADE. */
+  flags?: string[];
   /** Higher-timeframe (Daily) bias at scan time. */
   htfBias?: "bullish" | "bearish" | "neutral";
   /** Session/execution warnings the trader must see (thin volume, mitigated block). */
