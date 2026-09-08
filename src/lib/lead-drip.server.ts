@@ -1,6 +1,9 @@
 // Server-only: the free-plan drip sequence. Three short emails, plain HTML so
-// they render the same everywhere, each with a working unsubscribe link.
-export const SITE_NAME = "TradeMind";
+// they render the same everywhere. The unsubscribe footer is appended by the
+// email platform, so the copy here never adds one.
+import { SITE_NAME, sendRawEmail, logEmailSend } from "./email-raw.server";
+
+export { SITE_NAME };
 export const SENDER_DOMAIN = "notify.reeddigitalgroup.com";
 const SITE_URL = "https://www.trademindaicoach.com";
 
@@ -9,12 +12,9 @@ export const STAGE_DELAY_DAYS = [0, 2, 4];
 
 export type DripStage = 0 | 1 | 2;
 
-function shell(body: string, unsubscribeUrl: string): string {
+function shell(body: string): string {
   return `<div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#111;max-width:560px">
 ${body}
-<hr style="border:none;border-top:1px solid #e5e5e5;margin:24px 0" />
-<p style="margin:0;color:#777;font-size:12px">You are getting this because you asked for free access to ${SITE_NAME}.
-<a href="${unsubscribeUrl}" style="color:#777">Unsubscribe</a>.</p>
 </div>`;
 }
 
@@ -22,7 +22,7 @@ function button(label: string, href: string): string {
   return `<p style="margin:24px 0"><a href="${href}" style="background:#111;color:#fff;text-decoration:none;padding:12px 20px;border-radius:999px;font-weight:600;display:inline-block">${label}</a></p>`;
 }
 
-export function dripEmail(stage: DripStage, unsubscribeUrl: string): {
+export function dripEmail(stage: DripStage): {
   subject: string;
   html: string;
   text: string;
