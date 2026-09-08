@@ -22,7 +22,19 @@ function button(label: string, href: string): string {
   return `<p style="margin:24px 0"><a href="${href}" style="background:#111;color:#fff;text-decoration:none;padding:12px 20px;border-radius:999px;font-weight:600;display:inline-block">${label}</a></p>`;
 }
 
-export function dripEmail(stage: DripStage): {
+/** TradeMind-branded opt-out footer, so the link points at our own page. */
+function footer(unsubUrl: string | null): string {
+  if (!unsubUrl) return "";
+  return `<hr style="border:none;border-top:1px solid #e5e5e5;margin:32px 0 16px" />
+<p style="margin:0;font-size:12px;line-height:1.6;color:#666">You are receiving this because you asked for free ${SITE_NAME} access.
+<a href="${unsubUrl}" style="color:#666">Unsubscribe</a> from ${SITE_NAME} marketing emails. Account and security emails still come through.</p>`;
+}
+
+function footerText(unsubUrl: string | null): string {
+  return unsubUrl ? `\n\nUnsubscribe from ${SITE_NAME} marketing emails: ${unsubUrl}` : "";
+}
+
+export function dripEmail(stage: DripStage, unsubUrl: string | null = null): {
   subject: string;
   html: string;
   text: string;
@@ -33,13 +45,14 @@ export function dripEmail(stage: DripStage): {
     return {
       subject: `Your free ${SITE_NAME} access is ready`,
       label: "drip_welcome",
-      text,
+      text: text + footerText(unsubUrl),
       html: shell(
         `<h1 style="font-size:22px;margin:0 0 16px">Grade your next trade</h1>
 <p style="margin:0 0 12px">You have 2 signal grades every day on the free plan, and they reset at midnight in your own time zone.</p>
 <p style="margin:0 0 12px">The journal, risk calculator, price alerts and Academy basics are free for good.</p>
 <p style="margin:0 0 12px">Pick an instrument, run a scan, and read the grade before you take the trade.</p>
-${button("Run your first scan", `${SITE_URL}/dashboard`)}`,
+${button("Run your first scan", `${SITE_URL}/dashboard`)}
+${footer(unsubUrl)}`,
       ),
 
     };
@@ -49,12 +62,13 @@ ${button("Run your first scan", `${SITE_URL}/dashboard`)}`,
     return {
       subject: `What an A grade actually means`,
       label: "drip_grade",
-      text,
+      text: text + footerText(unsubUrl),
       html: shell(
         `<h1 style="font-size:22px;margin:0 0 16px">Why most setups are not an A</h1>
 <p style="margin:0 0 12px">The grade is computed in code, not written by a chatbot. A and A+ need the 4H, 1H and 15m structure to agree, a stop behind real structure, and at least 2 to 1 reward.</p>
 <p style="margin:0 0 12px">Anything less gets graded down, which is the point: the low grades are the trades that were costing you money.</p>
-${button("See hit rate by grade", `${SITE_URL}/signals`)}`,
+${button("See hit rate by grade", `${SITE_URL}/signals`)}
+${footer(unsubUrl)}`,
       ),
 
     };
@@ -63,12 +77,13 @@ ${button("See hit rate by grade", `${SITE_URL}/signals`)}`,
   return {
     subject: `Unlimited grades, 7 days free`,
     label: "drip_upgrade",
-    text,
+    text: text + footerText(unsubUrl),
     html: shell(
       `<h1 style="font-size:22px;margin:0 0 16px">Two grades a day is a taste</h1>
 <p style="margin:0 0 12px">If you are scanning more than twice a day, the paid plan removes the cap and opens the coaching layer and analytics.</p>
 <p style="margin:0 0 12px">Plans start at $49 a month, and your first 7 days are free when you add a card. Cancel from the billing portal any time.</p>
-${button("See plans", `${SITE_URL}/pricing`)}`,
+${button("See plans", `${SITE_URL}/pricing`)}
+${footer(unsubUrl)}`,
     ),
   };
 }
@@ -82,7 +97,9 @@ export async function enqueueDripStage(
   lead: { id: string; email: string },
   stage: DripStage,
 ): Promise<void> {
-  const mail = dripEmail(stage);
+  const { unsubscribeToken, unsubscribeUrl } = await import("./unsubscribe-link.server");
+  const token = await unsubscribeToken(admin, lead.email);
+  const mail = dripEmail(stage, token ? unsubscribeUrl(token) : null);
 
   try {
     const result = await sendRawEmail({

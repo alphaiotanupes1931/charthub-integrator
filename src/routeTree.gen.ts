@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as StatusRouteImport } from './routes/status'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -103,6 +104,11 @@ import { Route as ApiPublicHooksAiCreditsRouteImport } from './routes/api.public
 import { Route as AppAcademyCertificateModuleIdRouteImport } from './routes/_app.academy.certificate.$moduleId'
 import { Route as AppAcademyModuleIdLessonIdRouteImport } from './routes/_app.academy.$moduleId.$lessonId'
 
+const UnsubscribeRoute = UnsubscribeRouteImport.update({
+  id: '/unsubscribe',
+  path: '/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
@@ -602,6 +608,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/academy': typeof AppAcademyRouteWithChildren
@@ -696,6 +703,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AppAdminRouteWithChildren
@@ -788,6 +796,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_app/academy': typeof AppAcademyRouteWithChildren
@@ -884,6 +893,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/status'
     | '/terms'
+    | '/unsubscribe'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/academy'
@@ -978,6 +988,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/status'
     | '/terms'
+    | '/unsubscribe'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/admin'
@@ -1069,6 +1080,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/status'
     | '/terms'
+    | '/unsubscribe'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/_app/academy'
@@ -1165,6 +1177,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   StatusRoute: typeof StatusRoute
   TermsRoute: typeof TermsRoute
+  UnsubscribeRoute: typeof UnsubscribeRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ApiChatRoute: typeof ApiChatRoute
@@ -1202,6 +1215,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/unsubscribe': {
+      id: '/unsubscribe'
+      path: '/unsubscribe'
+      fullPath: '/unsubscribe'
+      preLoaderRoute: typeof UnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terms': {
       id: '/terms'
       path: '/terms'
@@ -2027,6 +2047,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   StatusRoute: StatusRoute,
   TermsRoute: TermsRoute,
+  UnsubscribeRoute: UnsubscribeRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
