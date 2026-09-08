@@ -68,6 +68,7 @@ import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]
 import { Route as AppStrategiesIndexRouteImport } from './routes/_app.strategies.index'
 import { Route as AppChatIndexRouteImport } from './routes/_app.chat.index'
 import { Route as AppAcademyIndexRouteImport } from './routes/_app.academy.index'
+import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
 import { Route as BrokerAlpacaCallbackRouteImport } from './routes/broker.alpaca.callback'
 import { Route as ApiTradelockerImportRouteImport } from './routes/api.tradelocker.import'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api.public.stripe-webhook'
@@ -399,6 +400,11 @@ const AppAcademyIndexRoute = AppAcademyIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppAcademyRoute,
 } as any)
+const LovableEmailEventsRoute = LovableEmailEventsRouteImport.update({
+  id: '/lovable/email/events',
+  path: '/lovable/email/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BrokerAlpacaCallbackRoute = BrokerAlpacaCallbackRouteImport.update({
   id: '/broker/alpaca/callback',
   path: '/broker/alpaca/callback',
@@ -659,6 +665,7 @@ export interface FileRoutesByFullPath {
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/broker/alpaca/callback': typeof BrokerAlpacaCallbackRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/academy/': typeof AppAcademyIndexRoute
   '/chat/': typeof AppChatIndexRoute
   '/strategies/': typeof AppStrategiesIndexRoute
@@ -749,6 +756,7 @@ export interface FileRoutesByTo {
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/broker/alpaca/callback': typeof BrokerAlpacaCallbackRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/academy': typeof AppAcademyIndexRoute
   '/chat': typeof AppChatIndexRoute
   '/strategies': typeof AppStrategiesIndexRoute
@@ -845,6 +853,7 @@ export interface FileRoutesById {
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/broker/alpaca/callback': typeof BrokerAlpacaCallbackRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/_app/academy/': typeof AppAcademyIndexRoute
   '/_app/chat/': typeof AppChatIndexRoute
   '/_app/strategies/': typeof AppStrategiesIndexRoute
@@ -941,6 +950,7 @@ export interface FileRouteTypes {
     | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
     | '/broker/alpaca/callback'
+    | '/lovable/email/events'
     | '/academy/'
     | '/chat/'
     | '/strategies/'
@@ -1031,6 +1041,7 @@ export interface FileRouteTypes {
     | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
     | '/broker/alpaca/callback'
+    | '/lovable/email/events'
     | '/academy'
     | '/chat'
     | '/strategies'
@@ -1126,6 +1137,7 @@ export interface FileRouteTypes {
     | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
     | '/broker/alpaca/callback'
+    | '/lovable/email/events'
     | '/_app/academy/'
     | '/_app/chat/'
     | '/_app/strategies/'
@@ -1182,6 +1194,7 @@ export interface RootRouteChildren {
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
   ApiTradelockerImportRoute: typeof ApiTradelockerImportRoute
   BrokerAlpacaCallbackRoute: typeof BrokerAlpacaCallbackRoute
+  LovableEmailEventsRoute: typeof LovableEmailEventsRoute
   ApiPublicHooksAiCreditsRoute: typeof ApiPublicHooksAiCreditsRoute
   ApiPublicHooksAutopilotTickRoute: typeof ApiPublicHooksAutopilotTickRoute
   ApiPublicHooksDripEmailsRoute: typeof ApiPublicHooksDripEmailsRoute
@@ -1616,6 +1629,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAcademyIndexRouteImport
       parentRoute: typeof AppAcademyRoute
     }
+    '/lovable/email/events': {
+      id: '/lovable/email/events'
+      path: '/lovable/email/events'
+      fullPath: '/lovable/email/events'
+      preLoaderRoute: typeof LovableEmailEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/broker/alpaca/callback': {
       id: '/broker/alpaca/callback'
       path: '/broker/alpaca/callback'
@@ -2045,6 +2065,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
   ApiTradelockerImportRoute: ApiTradelockerImportRoute,
   BrokerAlpacaCallbackRoute: BrokerAlpacaCallbackRoute,
+  LovableEmailEventsRoute: LovableEmailEventsRoute,
   ApiPublicHooksAiCreditsRoute: ApiPublicHooksAiCreditsRoute,
   ApiPublicHooksAutopilotTickRoute: ApiPublicHooksAutopilotTickRoute,
   ApiPublicHooksDripEmailsRoute: ApiPublicHooksDripEmailsRoute,
