@@ -956,6 +956,17 @@ export const Route = createFileRoute("/api/chat")({
             console.warn(`[chat] req=${reqId} score_record_failed`, (e as Error).message);
           }
         }
+        // Real, resolved hit rates so any odds question is answered with
+        // measured numbers instead of a made-up percentage.
+        let hitRateCtx: string | undefined;
+        try {
+          const { measuredHitRatePrompt } = await import("@/lib/signal-hitrate.server");
+          const sym = chart?.ticker ? (chart.ticker.match(/\(([^)]+)\)\s*$/)?.[1] ?? chart.ticker).trim() : undefined;
+          const block = await measuredHitRatePrompt(sym);
+          if (block) hitRateCtx = block;
+        } catch (e) {
+          console.warn(`[chat] req=${reqId} hit_rate_failed`, (e as Error).message);
+        }
         // Hermes long-term memory: lessons distilled from this trader's past
         // feedback (any thread, scan or review), so the chat coach carries the
         // same corrections the scan planner already gets.
