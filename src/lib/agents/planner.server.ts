@@ -1085,6 +1085,8 @@ export async function runPlanner(
 
   const counterTrend = counterTrendRead(bias, snap);
   const comboGate = timeFrameComboGate(bias, snap);
+  const ltfRead = lowerTimeframeOppositionRead(bias, snap);
+  const flowRead = orderFlowOppositionRead(bias, snap);
 
   // `notes` already carries the thesis ("why take this trade"), so the details
   // block must NOT repeat it. It is the read-out of the evidence itself:
