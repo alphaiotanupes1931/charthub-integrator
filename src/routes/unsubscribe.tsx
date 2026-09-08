@@ -66,7 +66,7 @@ function UnsubscribePage() {
   return (
     <main className="min-h-screen bg-background flex items-center justify-center px-5 py-16">
       <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
-        <img src={logoAsset.url} alt="TradeMind" className="mx-auto h-9 w-auto" />
+        <img src={logoAsset.url} alt="TradeMind" className="mx-auto h-14 w-auto" />
 
         <div className="mt-7 flex justify-center">
           <span className="flex h-14 w-14 items-center justify-center rounded-full bg-muted text-foreground">
