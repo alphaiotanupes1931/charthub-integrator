@@ -61,6 +61,8 @@ export type Scoreboard = {
   byTrendContext: ScoreBucket[];
   takenHitRate: number | null;
   skippedHitRate: number | null;
+  /** Grade record limited to signals the trader actually traded. */
+  takenByGrade: ScoreBucket[];
   notes: string[];
 };
 
@@ -202,6 +204,7 @@ export function buildScoreboard(rows: SignalScoreRow[]): Scoreboard {
     byTrendContext,
     takenHitRate: takenRate,
     skippedHitRate: skippedRate,
+    takenByGrade: group(rows.filter((r) => r.taken), (r) => r.grade),
     notes,
   };
 }
