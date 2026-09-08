@@ -163,6 +163,7 @@ export function computeOrderFlow(candles: Candle[]): OrderFlow | undefined {
     depth,
     lastVolRatio,
     bias,
+    deltaConflict,
   };
 }
 
