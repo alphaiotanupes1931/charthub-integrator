@@ -6,7 +6,7 @@
 // Sample sizes are always included so a 2-trade bucket cannot be sold as an
 // edge, and buckets with too little data are named as such.
 
-type Row = { grade: string; status: string; realized_r: number | string | null };
+type Row = { grade: string; status: string; realized_r: number | string | null; taken?: boolean };
 
 const MIN_SAMPLE = 8;
 
@@ -52,9 +52,10 @@ function lineFor(label: string, rows: Row[]): string | null {
  * Prompt block of real, resolved hit rates. `symbol` is the instrument being
  * discussed; pass undefined for a platform-only read.
  */
-export async function measuredHitRatePrompt(symbol?: string): Promise<string> {
+export async function measuredHitRatePrompt(symbol?: string, userId?: string): Promise<string> {
   let symbolRows: Row[] = [];
   let allRows: Row[] = [];
+  let myRows: Array<Row & { user_id: string; taken: boolean }> = [];
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const res = await (supabaseAdmin as never as {
@@ -67,13 +68,14 @@ export async function measuredHitRatePrompt(symbol?: string): Promise<string> {
       };
     })
       .from("signal_scores")
-      .select("symbol, grade, status, realized_r")
+      .select("symbol, grade, status, realized_r, taken, user_id")
       .neq("status", "open")
       .order("created_at", { ascending: false })
       .limit(4000);
-    const rows = ((res.data ?? []) as Array<Row & { symbol: string }>).filter(Boolean);
+    const rows = ((res.data ?? []) as Array<Row & { symbol: string; user_id: string; taken: boolean }>).filter(Boolean);
     allRows = rows;
     if (symbol) symbolRows = rows.filter((r) => r.symbol === symbol);
+    if (userId) myRows = rows.filter((r) => r.user_id === userId);
   } catch {
     return "";
   }
@@ -99,6 +101,35 @@ export async function measuredHitRatePrompt(symbol?: string): Promise<string> {
     const l = lineFor(`  ${label}`, allRows.filter((r) => gradeKey(r.grade) === key));
     if (l) lines.push(l);
   }
+  // The trader's own filed scans, and the subset they actually traded. This is
+  // the only honest answer to "my A trades keep stopping out".
+  if (myRows.length) {
+    const mine: string[] = [];
+    const myAll = lineFor("  Your filed scans, all grades", myRows);
+    if (myAll) mine.push(myAll);
+    for (const [key, label] of buckets) {
+      const l = lineFor(`  Your filed ${label}`, myRows.filter((r) => gradeKey(r.grade) === key));
+      if (l) mine.push(l);
+    }
+    const taken = myRows.filter((r) => r.taken);
+    if (taken.length) {
+      const t = lineFor("  Trades you actually took, all grades", taken);
+      if (t) mine.push(t);
+      for (const [key, label] of buckets) {
+        const l = lineFor(`  Trades you took, ${label}`, taken.filter((r) => gradeKey(r.grade) === key));
+        if (l) mine.push(l);
+      }
+    } else {
+      mine.push(
+        "  None of this trader's journaled trades are linked to a filed scan yet, so there is NO measured record of how the trades they personally took performed. If they say a grade keeps losing for them, say plainly that their own taken-trade record is not measured yet, quote the filed-scan numbers above instead, and ask them to log their trades so it can be measured.",
+      );
+    }
+    if (mine.length) {
+      lines.push("THIS TRADER'S OWN RECORD:");
+      lines.push(...mine);
+    }
+  }
+
   lines.push(
     "Quote ONLY these numbers when the trader asks about odds, likelihood, or how often a grade works. Never invent a percentage. If the relevant bucket has too little data, say plainly that there is not enough resolved history yet.",
   );

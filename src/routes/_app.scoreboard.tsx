@@ -169,6 +169,11 @@ function ScoreboardPage() {
 
           <div className="mt-4 grid gap-4">
             <BucketTable title="By grade" buckets={board.byGrade} empty="No graded signals yet." />
+            <BucketTable
+              title="By grade, trades you actually took"
+              buckets={board.takenByGrade}
+              empty="None of your journaled trades are linked to a filed scan yet. Log a trade with the same instrument and direction as a scan and it will show up here."
+            />
             <BucketTable title="By instrument" buckets={board.bySymbol} empty="No instruments yet." />
             <BucketTable title="By timeframe" buckets={board.byTimeframe} empty="No timeframes yet." />
             <BucketTable title="By confidence" buckets={board.byConfidence} empty="No confidence data yet." />
