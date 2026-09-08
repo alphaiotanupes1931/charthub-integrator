@@ -32,7 +32,7 @@ async function unsubscribe(token: string | null): Promise<Response> {
     .eq("token", token);
   await supabaseAdmin
     .from("suppressed_emails")
-    .insert({ email: row.email, reason: "unsubscribed" });
+    .upsert({ email: String(row.email).toLowerCase(), reason: "unsubscribe" }, { onConflict: "email" });
 
   return page(`${row.email} has been removed from TradeMind marketing emails. Account and security emails still come through.`);
 }
