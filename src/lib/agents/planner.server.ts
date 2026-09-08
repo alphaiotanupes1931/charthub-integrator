@@ -1097,6 +1097,8 @@ export async function runPlanner(
     : " Higher-timeframe data was incomplete on this scan, so the grade is capped at C until the feed fills in.")
     + (counterTrend.reason ? ` ${counterTrend.reason}` : "")
     + (comboGate.reason ? ` ${comboGate.reason}` : "")
+    + (ltfRead.reason ? ` ${ltfRead.reason}` : "")
+    + (flowRead.reason ? ` ${flowRead.reason}` : "")
     + (warnings.length ? ` ${warnings.join(" ")}` : "")
     + (volRead && !volRead.unavailable && !volRead.thin
       ? ` Session volume is normal (${volRead.label}), so the standard ${stopFloorAtr.toFixed(1)}x ATR minimum stop applies.`
