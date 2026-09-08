@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { MailX, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { confirmUnsubscribe, lookupUnsubscribe } from "@/lib/unsubscribe.functions";
-import logoAsset from "@/assets/logo.png.asset.json";
+import logoAsset from "@/assets/trademind-logo.png.asset.json";
 
 type View = "loading" | "ready" | "already" | "done" | "invalid";
 
