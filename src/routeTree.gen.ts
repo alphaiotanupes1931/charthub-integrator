@@ -71,7 +71,6 @@ import { Route as AppAcademyIndexRouteImport } from './routes/_app.academy.index
 import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
 import { Route as BrokerAlpacaCallbackRouteImport } from './routes/broker.alpaca.callback'
 import { Route as ApiTradelockerImportRouteImport } from './routes/api.tradelocker.import'
-import { Route as ApiPublicTestDripEmailRouteImport } from './routes/api.public.test-drip-email'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api.public.stripe-webhook'
 import { Route as ApiPublicLeadUnsubscribeRouteImport } from './routes/api.public.lead-unsubscribe'
 import { Route as ApiPublicBridgeRouteImport } from './routes/api.public.bridge'
@@ -415,11 +414,6 @@ const ApiTradelockerImportRoute = ApiTradelockerImportRouteImport.update({
   path: '/api/tradelocker/import',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicTestDripEmailRoute = ApiPublicTestDripEmailRouteImport.update({
-  id: '/api/public/test-drip-email',
-  path: '/api/public/test-drip-email',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
   id: '/api/public/stripe-webhook',
   path: '/api/public/stripe-webhook',
@@ -662,7 +656,6 @@ export interface FileRoutesByFullPath {
   '/api/public/bridge': typeof ApiPublicBridgeRoute
   '/api/public/lead-unsubscribe': typeof ApiPublicLeadUnsubscribeRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
-  '/api/public/test-drip-email': typeof ApiPublicTestDripEmailRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/broker/alpaca/callback': typeof BrokerAlpacaCallbackRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
@@ -753,7 +746,6 @@ export interface FileRoutesByTo {
   '/api/public/bridge': typeof ApiPublicBridgeRoute
   '/api/public/lead-unsubscribe': typeof ApiPublicLeadUnsubscribeRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
-  '/api/public/test-drip-email': typeof ApiPublicTestDripEmailRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/broker/alpaca/callback': typeof BrokerAlpacaCallbackRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
@@ -850,7 +842,6 @@ export interface FileRoutesById {
   '/api/public/bridge': typeof ApiPublicBridgeRoute
   '/api/public/lead-unsubscribe': typeof ApiPublicLeadUnsubscribeRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
-  '/api/public/test-drip-email': typeof ApiPublicTestDripEmailRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
   '/broker/alpaca/callback': typeof BrokerAlpacaCallbackRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
@@ -947,7 +938,6 @@ export interface FileRouteTypes {
     | '/api/public/bridge'
     | '/api/public/lead-unsubscribe'
     | '/api/public/stripe-webhook'
-    | '/api/public/test-drip-email'
     | '/api/tradelocker/import'
     | '/broker/alpaca/callback'
     | '/lovable/email/events'
@@ -1038,7 +1028,6 @@ export interface FileRouteTypes {
     | '/api/public/bridge'
     | '/api/public/lead-unsubscribe'
     | '/api/public/stripe-webhook'
-    | '/api/public/test-drip-email'
     | '/api/tradelocker/import'
     | '/broker/alpaca/callback'
     | '/lovable/email/events'
@@ -1134,7 +1123,6 @@ export interface FileRouteTypes {
     | '/api/public/bridge'
     | '/api/public/lead-unsubscribe'
     | '/api/public/stripe-webhook'
-    | '/api/public/test-drip-email'
     | '/api/tradelocker/import'
     | '/broker/alpaca/callback'
     | '/lovable/email/events'
@@ -1191,7 +1179,6 @@ export interface RootRouteChildren {
   ApiPublicBridgeRoute: typeof ApiPublicBridgeRoute
   ApiPublicLeadUnsubscribeRoute: typeof ApiPublicLeadUnsubscribeRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
-  ApiPublicTestDripEmailRoute: typeof ApiPublicTestDripEmailRoute
   ApiTradelockerImportRoute: typeof ApiTradelockerImportRoute
   BrokerAlpacaCallbackRoute: typeof BrokerAlpacaCallbackRoute
   LovableEmailEventsRoute: typeof LovableEmailEventsRoute
@@ -1649,13 +1636,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTradelockerImportRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/test-drip-email': {
-      id: '/api/public/test-drip-email'
-      path: '/api/public/test-drip-email'
-      fullPath: '/api/public/test-drip-email'
-      preLoaderRoute: typeof ApiPublicTestDripEmailRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/stripe-webhook': {
       id: '/api/public/stripe-webhook'
       path: '/api/public/stripe-webhook'
@@ -2062,7 +2042,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicBridgeRoute: ApiPublicBridgeRoute,
   ApiPublicLeadUnsubscribeRoute: ApiPublicLeadUnsubscribeRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
-  ApiPublicTestDripEmailRoute: ApiPublicTestDripEmailRoute,
   ApiTradelockerImportRoute: ApiTradelockerImportRoute,
   BrokerAlpacaCallbackRoute: BrokerAlpacaCallbackRoute,
   LovableEmailEventsRoute: LovableEmailEventsRoute,
