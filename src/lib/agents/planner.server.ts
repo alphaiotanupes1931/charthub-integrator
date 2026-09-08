@@ -366,6 +366,65 @@ export function timeFrameComboGate(
   return { cap: null, reason: null, checks: { h4: true, h1: true, m15: true } };
 }
 
+// ---------- 1H opposition (mixed alignment) ----------
+// A short taken while the 1H is bullish is a mixed-alignment setup, not an
+// aligned one. The old grade path only read h1.structureBreak, so a bullish 1H
+// trend with a stale bearish break still passed the A test. Mixed alignment
+// caps at B; if the 1H has actually broken against us it caps at C.
+export function lowerTimeframeOppositionRead(
+  bias: typeof BIASES[number],
+  snap: MarketSnapshot,
+): { cap: typeof GRADES[number] | null; reason: string | null } {
+  if (bias === "Neutral") return { cap: null, reason: null };
+  const wanted = bias === "Long" ? "bullish" : "bearish";
+  const opposite = wanted === "bullish" ? "bearish" : "bullish";
+  const row = (snap.mtf?.ladder ?? []).find((r) => r.label === "1H");
+  const h1Break = snap.mtf?.h1.structureBreak;
+  const trendAgainst = row?.trend === (wanted === "bullish" ? "down" : "up");
+  const biasAgainst = row?.bias === opposite;
+  const breakAgainst = h1Break === opposite;
+  if (!trendAgainst && !biasAgainst && !breakAgainst) return { cap: null, reason: null };
+  if (breakAgainst) {
+    return {
+      cap: "C",
+      reason: `The 1H has broken structure ${opposite}, against this ${bias.toLowerCase()}, so the grade is capped at C until the 1H breaks back ${wanted}.`,
+    };
+  }
+  return {
+    cap: "B",
+    reason: `Mixed alignment: the 1H reads ${row?.bias ?? opposite}/${row?.trend ?? "-"} against this ${bias.toLowerCase()}, so this is a B at best - you would be trading into a 1H bounce. Half size or wait for the 1H to turn.`,
+  };
+}
+
+// ---------- Order flow opposition ----------
+// Structure sets direction over days; flow decides the next few hours. Deeply
+// positive delta with a rising CVD on a short is buyers defending the entry, so
+// it can no longer sit behind an A grade.
+export function orderFlowOppositionRead(
+  bias: typeof BIASES[number],
+  snap: MarketSnapshot,
+): { cap: typeof GRADES[number] | null; reason: string | null } {
+  const of = snap.orderFlow;
+  if (!of || bias === "Neutral") return { cap: null, reason: null };
+  const wanted = bias === "Long" ? "bullish" : "bearish";
+  if (of.bias === "neutral" || of.bias === wanted) return { cap: null, reason: null };
+  const deltaAgainst = bias === "Long" ? of.delta < 0 : of.delta > 0;
+  const cvdAgainst = bias === "Long" ? of.cvdSlope < 0 : of.cvdSlope > 0;
+  const outsized = Math.abs(of.delta) > Math.max(1, Math.abs(of.deltaAvg) * 2);
+  const strong = !of.estimated && deltaAgainst && cvdAgainst && outsized;
+  const side = bias === "Long" ? "sellers" : "buyers";
+  if (strong) {
+    return {
+      cap: "C",
+      reason: `Order flow opposes the setup: delta ${of.delta.toFixed(0)} against a ${of.deltaAvg.toFixed(0)} average with CVD ${cvdAgainst ? "moving against you" : "flat"} - ${side} are in control of the entry zone, so the grade is capped at C. Wait for flow to flip ${wanted}.`,
+    };
+  }
+  return {
+    cap: "B",
+    reason: `Order flow leans ${of.bias} against this ${bias.toLowerCase()} (${side} paying up near the entry), so this caps at B.`,
+  };
+}
+
 
 // ---------- Deterministic grade ----------
 // Grade is a function of counted evidence, not model sampling. Objective risk
