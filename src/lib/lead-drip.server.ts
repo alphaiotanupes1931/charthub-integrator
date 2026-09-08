@@ -26,13 +26,14 @@ function button(label: string, href: string): string {
 function footer(unsubUrl: string | null): string {
   if (!unsubUrl) return "";
   return `<hr style="border:none;border-top:1px solid #e5e5e5;margin:32px 0 16px" />
-<p style="margin:0 0 6px;font-size:13px;line-height:1.6;color:#111"><a href="${unsubUrl}" style="color:#111;font-weight:700">Unsubscribe from ${SITE_NAME} emails</a></p>
+<p style="margin:0 0 6px;font-size:13px;line-height:1.6;color:#111"><a href="${unsubUrl}" style="display:inline-block;border:1px solid #111;border-radius:999px;padding:6px 14px;color:#111;font-weight:600;text-decoration:none">trademind/unsubscribe</a></p>
 <p style="margin:0;font-size:12px;line-height:1.6;color:#666">You are receiving this because you asked for free ${SITE_NAME} access. Account and security emails still come through. Any other opt-out link below is added automatically by our email provider.</p>`;
 }
 
 function footerText(unsubUrl: string | null): string {
-  return unsubUrl ? `\n\nUnsubscribe from ${SITE_NAME} marketing emails: ${unsubUrl}` : "";
+  return unsubUrl ? `\n\nUnsubscribe: trademind/unsubscribe (${unsubUrl})` : "";
 }
+
 
 export function dripEmail(stage: DripStage, unsubUrl: string | null = null): {
   subject: string;
