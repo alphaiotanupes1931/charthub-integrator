@@ -62,12 +62,13 @@ ${footer(unsubUrl)}`,
     return {
       subject: `What an A grade actually means`,
       label: "drip_grade",
-      text,
+      text: text + footerText(unsubUrl),
       html: shell(
         `<h1 style="font-size:22px;margin:0 0 16px">Why most setups are not an A</h1>
 <p style="margin:0 0 12px">The grade is computed in code, not written by a chatbot. A and A+ need the 4H, 1H and 15m structure to agree, a stop behind real structure, and at least 2 to 1 reward.</p>
 <p style="margin:0 0 12px">Anything less gets graded down, which is the point: the low grades are the trades that were costing you money.</p>
-${button("See hit rate by grade", `${SITE_URL}/signals`)}`,
+${button("See hit rate by grade", `${SITE_URL}/signals`)}
+${footer(unsubUrl)}`,
       ),
 
     };
@@ -76,12 +77,13 @@ ${button("See hit rate by grade", `${SITE_URL}/signals`)}`,
   return {
     subject: `Unlimited grades, 7 days free`,
     label: "drip_upgrade",
-    text,
+    text: text + footerText(unsubUrl),
     html: shell(
       `<h1 style="font-size:22px;margin:0 0 16px">Two grades a day is a taste</h1>
 <p style="margin:0 0 12px">If you are scanning more than twice a day, the paid plan removes the cap and opens the coaching layer and analytics.</p>
 <p style="margin:0 0 12px">Plans start at $49 a month, and your first 7 days are free when you add a card. Cancel from the billing portal any time.</p>
-${button("See plans", `${SITE_URL}/pricing`)}`,
+${button("See plans", `${SITE_URL}/pricing`)}
+${footer(unsubUrl)}`,
     ),
   };
 }
