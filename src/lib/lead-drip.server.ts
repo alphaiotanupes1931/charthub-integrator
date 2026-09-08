@@ -91,8 +91,33 @@ export async function enqueueDripStage(
   lead: { id: string; email: string },
   stage: DripStage,
 ): Promise<void> {
-  const token = crypto.randomUUID();
-  await admin.from("email_unsubscribe_tokens").insert({ token, email: lead.email });
+  // One unsubscribe token per email address: the table has a UNIQUE(email)
+  // constraint, so inserting a fresh token on stages 1 and 2 silently failed and
+  // shipped a link that resolved to nothing. Reuse the stored token instead.
+  let token: string = crypto.randomUUID();
+  const { data: existing } = await admin
+    .from("email_unsubscribe_tokens")
+    .select("token")
+    .ilike("email", lead.email)
+    .maybeSingle();
+  if (existing?.token) {
+    token = existing.token as string;
+    // Clear any earlier "used" stamp so the link in this send still works.
+    await admin.from("email_unsubscribe_tokens").update({ used_at: null }).eq("token", token);
+  } else {
+    const { error: tokenErr } = await admin
+      .from("email_unsubscribe_tokens")
+      .insert({ token, email: lead.email });
+    if (tokenErr) {
+      const { data: raced } = await admin
+        .from("email_unsubscribe_tokens")
+        .select("token")
+        .ilike("email", lead.email)
+        .maybeSingle();
+      if (!raced?.token) throw new Error(`unsubscribe token failed: ${tokenErr.message}`);
+      token = raced.token as string;
+    }
+  }
 
   const mail = dripEmail(stage, unsubscribeUrlFor(token));
   const messageId = crypto.randomUUID();
