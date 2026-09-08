@@ -426,6 +426,55 @@ export function orderFlowOppositionRead(
   };
 }
 
+// ---------- Near-term override (flip or stand aside) ----------
+// The losing A-grade short had the 1H bullish, the 15m bearish only by stale
+// label, and delta firmly positive. Capping the grade was not enough: a setup
+// where the 1H, the 15m and real order flow all oppose the higher-timeframe
+// side is not a trade on that side at all. If the 4H is not actively trending
+// with the original side, the near-term side IS the trade (the stop that got
+// hit was the other side's target). If the 4H is trending with the original
+// side, the two are fighting and the honest answer is no entry.
+export function nearTermOverrideRead(
+  bias: typeof BIASES[number],
+  snap: MarketSnapshot,
+): { bias: typeof BIASES[number] | null; reason: string | null } {
+  if (bias === "Neutral") return { bias: null, reason: null };
+  const mtf = snap.mtf;
+  const of = snap.orderFlow;
+  if (!mtf || !of || of.estimated) return { bias: null, reason: null };
+
+  const wanted = bias === "Long" ? "bullish" : "bearish";
+  const opposite = wanted === "bullish" ? "bearish" : "bullish";
+  const oppositeBias: typeof BIASES[number] = bias === "Long" ? "Short" : "Long";
+  const oppTrend = opposite === "bullish" ? "up" : "down";
+
+  const rows = mtf.ladder ?? [];
+  const h1 = rows.find((r) => r.label === "1H");
+  const h4 = rows.find((r) => r.label === "4H");
+
+  const h1Opposes = h1?.bias === opposite || h1?.trend === oppTrend;
+  const m15Opposes = mtf.m15.confirmation === opposite || rows.find((r) => r.label === "15m")?.trend === oppTrend;
+  const flowOpposes =
+    of.bias === opposite &&
+    (opposite === "bullish" ? of.delta > 0 && of.cvdSlope > 0 : of.delta < 0 && of.cvdSlope < 0);
+
+  if (!(h1Opposes && m15Opposes && flowOpposes)) return { bias: null, reason: null };
+
+  const h4WithOriginal = h4?.trend === (wanted === "bullish" ? "up" : "down");
+  if (h4WithOriginal) {
+    return {
+      bias: "Neutral",
+      reason: `no entry: the 4H still trends ${wanted} but the 1H, the 15m and order flow all read ${opposite} - the two sides are fighting, so neither side is worth risk here.`,
+    };
+  }
+  return {
+    bias: oppositeBias,
+    reason: `near-term override: the 1H, the 15m and live order flow all read ${opposite} while the 4H is not trending ${wanted}, so the trade is the ${oppositeBias.toLowerCase()} side, not the ${bias.toLowerCase()}.`,
+  };
+}
+
+
+
 
 // ---------- Deterministic grade ----------
 // Grade is a function of counted evidence, not model sampling. Objective risk
