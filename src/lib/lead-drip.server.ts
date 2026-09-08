@@ -97,7 +97,9 @@ export async function enqueueDripStage(
   lead: { id: string; email: string },
   stage: DripStage,
 ): Promise<void> {
-  const mail = dripEmail(stage);
+  const { unsubscribeToken, unsubscribeUrl } = await import("./unsubscribe-link.server");
+  const token = await unsubscribeToken(admin, lead.email);
+  const mail = dripEmail(stage, token ? unsubscribeUrl(token) : null);
 
   try {
     const result = await sendRawEmail({
