@@ -366,6 +366,66 @@ export function timeFrameComboGate(
   return { cap: null, reason: null, checks: { h4: true, h1: true, m15: true } };
 }
 
+// ---------- 1H opposition (mixed alignment) ----------
+// A short taken while the 1H is bullish is a mixed-alignment setup, not an
+// aligned one. The old grade path only read h1.structureBreak, so a bullish 1H
+// trend with a stale bearish break still passed the A test. Mixed alignment
+// caps at B; if the 1H has actually broken against us it caps at C.
+export function lowerTimeframeOppositionRead(
+  bias: typeof BIASES[number],
+  snap: MarketSnapshot,
+): { cap: typeof GRADES[number] | null; reason: string | null } {
+  if (bias === "Neutral") return { cap: null, reason: null };
+  const wanted = bias === "Long" ? "bullish" : "bearish";
+  const opposite = wanted === "bullish" ? "bearish" : "bullish";
+  const row = (snap.mtf?.ladder ?? []).find((r) => r.label === "1H");
+  const h1Break = snap.mtf?.h1.structureBreak;
+  const trendAgainst = row?.trend === (wanted === "bullish" ? "down" : "up");
+  const biasAgainst = row?.bias === opposite;
+  const breakAgainst = h1Break === opposite;
+  if (!trendAgainst && !biasAgainst && !breakAgainst) return { cap: null, reason: null };
+  if (breakAgainst) {
+    return {
+      cap: "C",
+      reason: `The 1H has broken structure ${opposite}, against this ${bias.toLowerCase()}, so the grade is capped at C until the 1H breaks back ${wanted}.`,
+    };
+  }
+  return {
+    cap: "B",
+    reason: `Mixed alignment: the 1H reads ${row?.bias ?? opposite}/${row?.trend ?? "-"} against this ${bias.toLowerCase()}, so this is a B at best - you would be trading into a 1H bounce. Half size or wait for the 1H to turn.`,
+  };
+}
+
+// ---------- Order flow opposition ----------
+// Structure sets direction over days; flow decides the next few hours. Deeply
+// positive delta with a rising CVD on a short is buyers defending the entry, so
+// it can no longer sit behind an A grade.
+export function orderFlowOppositionRead(
+  bias: typeof BIASES[number],
+  snap: MarketSnapshot,
+): { cap: typeof GRADES[number] | null; reason: string | null } {
+  const of = snap.orderFlow;
+  if (!of || bias === "Neutral") return { cap: null, reason: null };
+  const wanted = bias === "Long" ? "bullish" : "bearish";
+  const opposedFlow = wanted === "bullish" ? "bearish" : "bullish";
+  if (of.bias !== opposedFlow) return { cap: null, reason: null };
+  const deltaAgainst = bias === "Long" ? of.delta < 0 : of.delta > 0;
+  const cvdAgainst = bias === "Long" ? of.cvdSlope < 0 : of.cvdSlope > 0;
+  const outsized = Math.abs(of.delta) > Math.max(1, Math.abs(of.deltaAvg) * 2);
+  const strong = !of.estimated && deltaAgainst && cvdAgainst && outsized;
+  const side = bias === "Long" ? "sellers" : "buyers";
+  if (strong) {
+    return {
+      cap: "C",
+      reason: `Order flow opposes the setup: delta ${of.delta.toFixed(0)} against a ${of.deltaAvg.toFixed(0)} average with CVD ${cvdAgainst ? "moving against you" : "flat"} - ${side} are in control of the entry zone, so the grade is capped at C. Wait for flow to flip ${wanted}.`,
+    };
+  }
+  return {
+    cap: "B",
+    reason: `Order flow leans ${of.bias} against this ${bias.toLowerCase()} (${side} paying up near the entry), so this caps at B.`,
+  };
+}
+
 
 // ---------- Deterministic grade ----------
 // Grade is a function of counted evidence, not model sampling. Objective risk
@@ -404,6 +464,10 @@ export function gradeFromEvidence(
   if (ct.cap && order.indexOf(grade) > order.indexOf(ct.cap)) grade = ct.cap;
   const combo = timeFrameComboGate(bias, snap);
   if (combo.cap && order.indexOf(grade) > order.indexOf(combo.cap)) grade = combo.cap;
+  const ltf = lowerTimeframeOppositionRead(bias, snap);
+  if (ltf.cap && order.indexOf(grade) > order.indexOf(ltf.cap)) grade = ltf.cap;
+  const flow = orderFlowOppositionRead(bias, snap);
+  if (flow.cap && order.indexOf(grade) > order.indexOf(flow.cap)) grade = flow.cap;
   return grade;
 }
 
@@ -952,10 +1016,10 @@ export async function runPlanner(
   // Calendar risk is measurable and therefore remains a valid hard cap. The
   // user's scorecard cap is applied by the authenticated server-function
   // wrapper after this planner returns.
-  if (newsWarning) {
-    if (grade === "A+") grade = "A";
-    else if (grade === "A") grade = "B";
-  }
+  // A high-impact release inside the expected hold window is a hard cap at B,
+  // not a one-letter nudge: an A on the card told the trader to hold full risk
+  // into CPI, and the stop-hunt before the number is what took the trade out.
+  if (newsWarning && (grade === "A+" || grade === "A")) grade = "B";
 
   // ---- Session filters as hard grade controls ---------------------------
   const warnings: string[] = [];
@@ -1022,6 +1086,8 @@ export async function runPlanner(
 
   const counterTrend = counterTrendRead(bias, snap);
   const comboGate = timeFrameComboGate(bias, snap);
+  const ltfRead = lowerTimeframeOppositionRead(bias, snap);
+  const flowRead = orderFlowOppositionRead(bias, snap);
 
   // `notes` already carries the thesis ("why take this trade"), so the details
   // block must NOT repeat it. It is the read-out of the evidence itself:
@@ -1032,6 +1098,8 @@ export async function runPlanner(
     : " Higher-timeframe data was incomplete on this scan, so the grade is capped at C until the feed fills in.")
     + (counterTrend.reason ? ` ${counterTrend.reason}` : "")
     + (comboGate.reason ? ` ${comboGate.reason}` : "")
+    + (ltfRead.reason ? ` ${ltfRead.reason}` : "")
+    + (flowRead.reason ? ` ${flowRead.reason}` : "")
     + (warnings.length ? ` ${warnings.join(" ")}` : "")
     + (volRead && !volRead.unavailable && !volRead.thin
       ? ` Session volume is normal (${volRead.label}), so the standard ${stopFloorAtr.toFixed(1)}x ATR minimum stop applies.`

@@ -71,13 +71,34 @@ describe("gradeFromEvidence", () => {
     expect(gradeFromEvidence("Long", 40, snap(true))).toBe("C");
   });
 
-  it("does not award A without 4H and 1H agreement", () => {
+  it("caps a setup whose 1H has broken against it", () => {
     const mixed = {
       ...snap(true),
       mtf: { ...snap(true).mtf, alignment: "mixed", h1: { structureBreak: "bearish" } },
     } as MarketSnapshot;
-    expect(gradeFromEvidence("Long", 82, mixed)).toBe("B");
+    expect(gradeFromEvidence("Long", 82, mixed)).toBe("C");
   });
+
+  it("caps a mixed 1H trend at B", () => {
+    const mixed = {
+      ...snap(true),
+      mtf: {
+        ...snap(true).mtf,
+        alignment: "mixed",
+        ladder: [...(snap(true).mtf?.ladder ?? []), { label: "1H", bias: "bearish", trend: "down" }],
+      },
+    } as unknown as MarketSnapshot;
+    expect(gradeFromEvidence("Long", 90, mixed)).toBe("B");
+  });
+
+  it("caps a setup whose order flow opposes it", () => {
+    const against = {
+      ...snap(true),
+      orderFlow: { bias: "bearish", delta: -900, deltaAvg: -100, cvdSlope: -5, estimated: false },
+    } as unknown as MarketSnapshot;
+    expect(gradeFromEvidence("Long", 90, against)).toBe("C");
+  });
+
 
   it("does not let a missing MTF read claim a high grade", () => {
     const withoutMtf = { ...snap(true), mtf: undefined };
