@@ -463,6 +463,10 @@ export function gradeFromEvidence(
   if (ct.cap && order.indexOf(grade) > order.indexOf(ct.cap)) grade = ct.cap;
   const combo = timeFrameComboGate(bias, snap);
   if (combo.cap && order.indexOf(grade) > order.indexOf(combo.cap)) grade = combo.cap;
+  const ltf = lowerTimeframeOppositionRead(bias, snap);
+  if (ltf.cap && order.indexOf(grade) > order.indexOf(ltf.cap)) grade = ltf.cap;
+  const flow = orderFlowOppositionRead(bias, snap);
+  if (flow.cap && order.indexOf(grade) > order.indexOf(flow.cap)) grade = flow.cap;
   return grade;
 }
 
