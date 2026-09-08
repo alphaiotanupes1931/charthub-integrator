@@ -517,6 +517,9 @@ export function gradeFromEvidence(
   if (ltf.cap && order.indexOf(grade) > order.indexOf(ltf.cap)) grade = ltf.cap;
   const flow = orderFlowOppositionRead(bias, snap);
   if (flow.cap && order.indexOf(grade) > order.indexOf(flow.cap)) grade = flow.cap;
+  // Contradicted flow (live-bar delta against the cumulative read) is not
+  // confirmation, so it cannot sit behind an A.
+  if (snap.orderFlow?.deltaConflict && order.indexOf(grade) > order.indexOf("B")) grade = "B";
   return grade;
 }
 
