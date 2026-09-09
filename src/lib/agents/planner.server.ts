@@ -749,19 +749,21 @@ function findEntryAnchor(
   const cands: (EntryAnchor & { tier: number })[] = [];
 
 
+  // tier 0 = a real zone (order block / FVG / supply-demand): price has to trade
+  // into it, so the fill is a discount. tier 1 = a bare level, which is weaker.
   const pushZone = (z: [number, number], label: string) => {
     const top = Math.max(z[0], z[1]);
     const bottom = Math.min(z[0], z[1]);
     if (!Number.isFinite(top) || !Number.isFinite(bottom) || bottom <= 0) return;
     // Enter at the near edge of the zone, keep the far edge for stop placement.
-    if (bias === "Long") cands.push({ entry: top, zoneFar: bottom, label });
-    else cands.push({ entry: bottom, zoneFar: top, label });
+    if (bias === "Long") cands.push({ entry: top, zoneFar: bottom, label, tier: 0 });
+    else cands.push({ entry: bottom, zoneFar: top, label, tier: 0 });
   };
   const pushLevel = (p: number, label: string) => {
     if (!Number.isFinite(p) || p <= 0) return;
     const pad = atr * 0.25;
-    if (bias === "Long") cands.push({ entry: p, zoneFar: p - pad, label });
-    else cands.push({ entry: p, zoneFar: p + pad, label });
+    if (bias === "Long") cands.push({ entry: p, zoneFar: p - pad, label, tier: 1 });
+    else cands.push({ entry: p, zoneFar: p + pad, label, tier: 1 });
   };
 
   if (m) {
@@ -783,15 +785,24 @@ function findEntryAnchor(
     pushLevel(snap.cisd.level, "CISD level");
   }
 
+  const gapOf = (c: EntryAnchor) => (bias === "Long" ? last - c.entry : c.entry - last);
   const valid = cands.filter((c) => {
-    const gap = bias === "Long" ? last - c.entry : c.entry - last;
+    const gap = gapOf(c);
     return gap >= minGap && gap <= maxGap;
   });
   if (!valid.length) return null;
-  // Closest to price = highest fill probability while still a real pullback.
-  valid.sort((a, b) => Math.abs(last - a.entry) - Math.abs(last - b.entry));
-  return valid[0];
+  // Prefer a zone over a bare level, then the shallowest anchor that is still a
+  // genuine retracement. Anything shallower than goodGap is only used when
+  // nothing deeper exists.
+  const rank = (c: EntryAnchor & { tier: number }) => {
+    const gap = gapOf(c);
+    return c.tier * 100 + (gap >= goodGap ? 0 : 10) + gap / Math.max(atr, 1e-9);
+  };
+  valid.sort((a, b) => rank(a) - rank(b));
+  const best = valid[0]!;
+  return { entry: best.entry, zoneFar: best.zoneFar, label: best.label };
 }
+
 
 /**
  * Swing highs/lows on the scan timeframe: 2-bar fractal pivots. These are the
