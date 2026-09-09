@@ -1698,7 +1698,7 @@ function Dashboard() {
               title="Change the strategy playbook your scans are graded against"
             >
               <BookOpen className="h-3.5 w-3.5 text-primary" />
-              <span className="max-w-[9rem] truncate">{activeStrategy ?? "No strategy"}</span>
+              <span className="max-w-[9rem] truncate">{activeStrategy ?? AUTO_STRATEGY}</span>
               <ChevronDown className={`h-3 w-3 transition-transform ${strategyOpen ? "rotate-180" : ""}`} />
             </button>
             {strategyOpen && (
