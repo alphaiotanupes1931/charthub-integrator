@@ -542,8 +542,8 @@ function ScanTicket({
         </div>
 
         {!isNoEntry && result.triggered === false && (
-          <div className="rounded-xl border border-warn/40 bg-warn/10 px-3 py-2">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-warn">
+          <div className="rounded-xl border border-gold/40 bg-gold/10 px-3 py-2">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-gold">
               Not triggered yet — do not take it here
             </div>
             <div className="text-[11px] leading-snug text-foreground/85 mt-0.5">
