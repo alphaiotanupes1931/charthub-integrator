@@ -16,14 +16,38 @@ const OANDA_MAP: Record<string, string> = {
   "USD/CAD": "USD_CAD", "XAU/USD": "XAU_USD", "XAG/USD": "XAG_USD",
   "NAS100": "NAS100_USD", "SPX500": "SPX500_USD", "US30": "US30_USD",
   "WTI OIL": "WTICO_USD",
+  // Display / TradingView aliases that arrive without separators
+  NAS100USD: "NAS100_USD", US100: "NAS100_USD", USTEC: "NAS100_USD", NDX: "NAS100_USD",
+  SPX500USD: "SPX500_USD", US500: "SPX500_USD", SPX: "SPX500_USD", SPY500: "SPX500_USD",
+  US30USD: "US30_USD", DJI: "US30_USD", DOW: "US30_USD", US30CASH: "US30_USD",
+  DE30: "DE30_EUR", DE40: "DE30_EUR", GER40: "DE30_EUR",
+  UK100: "UK100_GBP", JP225: "JP225_USD",
+  USOIL: "WTICO_USD", WTIUSD: "WTICO_USD", WTICOUSD: "WTICO_USD", CL1: "WTICO_USD",
+  UKOIL: "BCO_USD", BRENT: "BCO_USD",
+  XAUUSD: "XAU_USD", GOLD: "XAU_USD", XAGUSD: "XAG_USD", SILVER: "XAG_USD",
 };
 
+const FX_CODES = /^(AUD|CAD|CHF|CNH|CZK|DKK|EUR|GBP|HKD|HUF|JPY|MXN|NOK|NZD|PLN|SEK|SGD|THB|TRY|USD|ZAR|XAU|XAG|XPD|XPT)$/;
+
 function toOandaInstrument(symbol: string): string | null {
-  const s = symbol.trim().toUpperCase();
-  if (OANDA_MAP[s]) return OANDA_MAP[s];
-  if (/^[A-Z]{3}_[A-Z]{3}$/.test(s)) return s;
+  const raw = symbol.trim().toUpperCase();
+  // "Gold (XAU/USD)" -> "XAU/USD"
+  const inner = raw.match(/\(([^)]+)\)/)?.[1]?.trim();
+  const candidates = [raw, inner ?? ""].filter(Boolean);
+  for (const c of candidates) {
+    if (OANDA_MAP[c]) return OANDA_MAP[c];
+    const stripped = c.replace(/^OANDA:/, "").replace(/[^A-Z0-9]/g, "");
+    if (OANDA_MAP[stripped]) return OANDA_MAP[stripped];
+    if (/^[A-Z]{3}_[A-Z]{3}$/.test(c)) return c;
+    if (stripped.length === 6) {
+      const base = stripped.slice(0, 3);
+      const quote = stripped.slice(3);
+      if (FX_CODES.test(base) && FX_CODES.test(quote)) return `${base}_${quote}`;
+    }
+  }
   return null;
 }
+
 
 function hostFor(env: OandaEnv): OandaEndpoint {
   return env === "live"
