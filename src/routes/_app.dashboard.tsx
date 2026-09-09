@@ -1807,15 +1807,16 @@ function Dashboard() {
           >
             <Settings2 className="h-3 w-3" />
             <span>Levels</span>
-            {chartTab === "setup" && enabledCount > 0 && (
+            {enabledCount > 0 && (
               <span className="text-primary">· {enabledCount}</span>
             )}
+
             <ChevronDown className={`h-3 w-3 transition-transform ${viewMenuOpen ? "rotate-180" : ""}`} />
           </button>
           {viewMenuOpen && (
             <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-border/60 bg-card shadow-xl z-50 p-3 space-y-3">
               <div className="text-[10px] text-muted-foreground italic border-b border-border/40 pb-2">
-                Levels apply to Live where supported and fully on Setup.
+                Levels, styles and sessions apply to both Live and Setup.
               </div>
 
               {/* Candle / chart display style — all 21 options */}
@@ -1828,14 +1829,13 @@ function Dashboard() {
                 </div>
                 <div className="max-h-44 overflow-y-auto pr-0.5 grid grid-cols-2 gap-1">
                   {CANDLE_STYLES.map((s) => {
-                    const on = candleType === s.id && chartTab === "setup";
+                    const on = candleType === s.id;
                     return (
                       <button
                         key={s.id}
-                        disabled={chartTab !== "setup"}
                         onClick={() => setCandleType(s.id)}
                         title={s.hint}
-                        className={`text-left rounded-xl border px-2 py-1 text-[11px] font-medium transition disabled:opacity-40 ${
+                        className={`text-left rounded-xl border px-2 py-1 text-[11px] font-medium transition ${
                           on
                             ? "border-primary/40 bg-primary/15 text-primary"
                             : "border-border/60 text-muted-foreground hover:text-foreground"
@@ -1846,9 +1846,6 @@ function Dashboard() {
                     );
                   })}
                 </div>
-                {chartTab !== "setup" && (
-                  <div className="mt-1 text-[10px] text-muted-foreground">Switch to Setup to change the style.</div>
-                )}
               </div>
 
               {/* Sessions */}
@@ -1857,10 +1854,9 @@ function Dashboard() {
                   <Clock className="h-3 w-3" /> Sessions
                 </span>
                 <button
-                  disabled={chartTab !== "setup"}
                   onClick={() => setSessionsOn((v) => !v)}
-                  className={`inline-flex items-center rounded-xl border px-2 py-0.5 text-[11px] font-medium transition disabled:opacity-40 ${
-                    sessionsOn && chartTab === "setup"
+                  className={`inline-flex items-center rounded-xl border px-2 py-0.5 text-[11px] font-medium transition ${
+                    sessionsOn
                       ? "border-bull/40 bg-bull/10 text-bull"
                       : "border-border/60 bg-background/50 text-muted-foreground hover:text-foreground"
                   }`}
@@ -1868,6 +1864,7 @@ function Dashboard() {
                   {sessionsOn ? "On" : "Off"}
                 </button>
               </div>
+
 
               {/* Indicators */}
               <div>
@@ -2048,6 +2045,8 @@ function Dashboard() {
                 interval={interval}
                 enabled={levels}
                 sessions={sessionsOn}
+                candleType={candleType}
+
                 fallback={
                   <NativeChart
                     symbol={symbol.tv}
