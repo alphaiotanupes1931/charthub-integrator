@@ -918,17 +918,18 @@ function sanitizePlan(
 
   }
 
-  const buffer = Math.max(atr * 0.15, last * 0.0005);
+  // Minimum distance a limit order must sit from spot. A 0.15x-ATR buffer fills
+  // instantly at market price, which is the "limit was too shallow" complaint.
+  const buffer = Math.max(atr * 0.4, last * 0.0008);
   const anchor = findEntryAnchor(bias, last, atr, snap);
   let anchorLabel: string | null = null;
   let structuralStop: number | null = null;
 
   if (anchor) {
-    // 1a. Structure-anchored entry. If the model already picked something within
-    // a third of an ATR of the same level, keep the model's price (it may be
-    // more precise); otherwise snap to the level.
+    // 1a. Structure-anchored entry. Keep the model's price only when it is at the
+    // same level AND is itself a real pullback; otherwise snap to the level.
     const modelIsNear = Math.abs(entry - anchor.entry) <= atr * 0.33
-      && (bias === "Long" ? entry <= last - buffer * 0.5 : entry >= last + buffer * 0.5);
+      && (bias === "Long" ? entry <= last - buffer : entry >= last + buffer);
     entry = modelIsNear ? entry : anchor.entry;
     anchorLabel = anchor.label;
     // Stop goes just past the far edge of the zone that gave us the entry.
@@ -937,17 +938,17 @@ function sanitizePlan(
   } else {
     // 1b. No usable structure: clamp runaway entries and fall back to a
     // pullback offset from price.
-    if (Math.abs(entry - last) > atr * 2) {
-      entry = bias === "Long" ? last - atr * 0.5 : last + atr * 0.5;
+    if (Math.abs(entry - last) > atr * 2.2 || Math.abs(entry - last) < buffer) {
+      entry = bias === "Long" ? last - Math.max(atr * 0.5, buffer) : last + Math.max(atr * 0.5, buffer);
       structuralStop = null;
     }
-    if (bias === "Long" && entry > last - buffer) entry = last - buffer;
-    else if (bias === "Short" && entry < last + buffer) entry = last + buffer;
   }
 
-  // 2. Longs must still sit below price, shorts above (limit orders only).
+  // 2. Longs must still sit below price, shorts above, by at least the minimum
+  // pullback distance (limit orders only — never a disguised market order).
   if (bias === "Long" && entry > last - buffer) entry = last - buffer;
   if (bias === "Short" && entry < last + buffer) entry = last + buffer;
+
 
   // 3. Stop: it has to sit BEYOND the swing that invalidates the idea, not a
   // tight ATR fraction from entry. We take the widest of (a) the zone stop,
