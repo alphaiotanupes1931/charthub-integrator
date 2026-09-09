@@ -18,6 +18,7 @@ type LocalTrade = {
   stop: number;
   size: number;
   pointValue?: number;
+  reportedPnl?: number;
   fees?: number;
   createdAt: number;
 };
@@ -32,6 +33,7 @@ function loadTrades(): LocalTrade[] {
 }
 
 function pnl(t: LocalTrade) {
+  if (t.reportedPnl != null && isFinite(t.reportedPnl)) return t.reportedPnl;
   const dir = t.side === "Long" ? 1 : -1;
   const size = t.size || 0;
   const pv = t.pointValue && isFinite(t.pointValue) && t.pointValue > 0 ? t.pointValue : 1;

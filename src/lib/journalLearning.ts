@@ -45,6 +45,7 @@ function readJournalTrades(): RawJournalTrade[] {
 }
 
 function pnlOf(t: RawJournalTrade): number | null {
+  if (typeof t.reportedPnl === "number" && isFinite(t.reportedPnl)) return t.reportedPnl;
   if (typeof t.entry !== "number" || typeof t.exit !== "number") return null;
   if (!isFinite(t.entry) || !isFinite(t.exit)) return null;
   const dir = t.side === "Short" ? -1 : 1;
