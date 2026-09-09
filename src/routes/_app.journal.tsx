@@ -528,11 +528,16 @@ function JournalPage() {
   while (cells.length % 7 !== 0) cells.push(null);
 
   const byDay = useMemo(() => {
-    const map = new Map<string, { count: number; pnl: number }>();
+    const map = new Map<string, { count: number; pnl: number; open: number }>();
     for (const t of trades) {
-      const cur = map.get(t.date) ?? { count: 0, pnl: 0 };
+      const cur = map.get(t.date) ?? { count: 0, pnl: 0, open: 0 };
       cur.count += 1;
       cur.pnl += tradePnl(t);
+      // A trade with no result yet has no profit or loss to show: counting it as
+      // 0.00 makes a live trade look like it finished flat.
+      const settled = t.result && t.result !== "open";
+      const moved = t.exit != null && Number.isFinite(t.exit) && t.exit !== t.entry;
+      if (!settled && !moved) cur.open += 1;
       map.set(t.date, cur);
     }
     return map;
@@ -775,10 +780,13 @@ function JournalPage() {
                   {day && (
                     <div className="mt-1 space-y-0.5">
                       <div className={`text-[10px] sm:text-xs font-semibold ${positive ? "text-bull" : negative ? "text-destructive" : "text-muted-foreground"}`}>
-                        {day.pnl >= 0 ? "+" : ""}{day.pnl.toFixed(2)}
+                        {day.open === day.count
+                          ? day.count === 1 ? "Still running" : "Still running"
+                          : `${day.pnl >= 0 ? "+" : ""}${day.pnl.toFixed(2)}`}
                       </div>
                       <div className="text-[9px] sm:text-[10px] text-muted-foreground">
                         {day.count} {day.count === 1 ? "trade" : "trades"}
+                        {day.open > 0 && day.open !== day.count ? ` · ${day.open} live` : ""}
                       </div>
                     </div>
                   )}
