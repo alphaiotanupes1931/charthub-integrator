@@ -101,48 +101,8 @@ function BrokerPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status?.connected]);
 
-  function sizeFromRisk() {
-    const risk = Number(riskDollars);
-    const sl = Number(stopLoss);
-    const entryHint = Number(search.entry);
-    if (!risk || risk <= 0) { toast.error("Enter a dollar risk amount"); return; }
-    if (!sl || sl <= 0) { toast.error("Enter a stop-loss price first"); return; }
-    if (!entryHint || entryHint <= 0) { toast.error("No entry price yet — run a scan or set entry on the signal card"); return; }
-    const perUnit = Math.abs(entryHint - sl);
-    if (perUnit <= 0) { toast.error("Stop must differ from entry"); return; }
-    const u = Math.max(1, Math.floor(risk / perUnit));
-    setUnits(u);
-    toast.success(`Sized to ${u.toLocaleString()} units for $${risk} risk`);
-  }
 
 
-  async function submitOrder(overrideSide?: "long" | "short") {
-    const useSide = overrideSide ?? side;
-    setPlacing(true);
-    try {
-      const res = await placeOrder({
-        data: {
-          symbol,
-          side: useSide,
-          units,
-          orderType,
-          price: orderType === "market" ? undefined : Number(limitPrice) || undefined,
-          stopLoss: stopLoss ? Number(stopLoss) : undefined,
-          takeProfit: takeProfit ? Number(takeProfit) : undefined,
-        },
-      });
-      toast.success(
-        res.pending
-          ? `Working ${orderType.toUpperCase()} order placed at ${limitPrice}`
-          : `Order filled${res.fillPrice ? ` at ${res.fillPrice}` : ""}`,
-      );
-      refresh();
-    } catch (e) {
-      toast.error((e as Error).message);
-    } finally {
-      setPlacing(false);
-    }
-  }
 
   async function handleClose(id: string, closeUnits?: number) {
     if (!closeUnits && !confirm("Close this trade at market?")) return;
