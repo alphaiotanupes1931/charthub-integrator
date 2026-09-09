@@ -126,22 +126,18 @@ function oandaGranularity(interval: string): string {
   }
 }
 
-async function fetchOandaHost(host: string, apiKey: string, instrument: string, interval: string): Promise<OhlcBar[]> {
+async function fetchOanda(instrument: string, interval: string): Promise<OhlcBar[]> {
+  const { oandaGetJson } = await import("@/lib/oanda-host.server");
   const granularity = oandaGranularity(interval);
-  const url = `https://${host}/v3/instruments/${instrument}/candles?granularity=${granularity}&count=220&price=M`;
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8_000);
-  try {
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json" },
-      signal: controller.signal,
-    });
-    if (!res.ok) throw new Error(`OANDA HTTP ${res.status}`);
-    const json = (await res.json()) as {
-      candles?: Array<{ time: string; complete?: boolean; mid?: { o: string; h: string; l: string; c: string } }>;
-    };
-    if (!json.candles) throw new Error("OANDA: no candles");
-    return cleanBars(json.candles
+  const { json } = await oandaGetJson(
+    `/instruments/${instrument}/candles?granularity=${granularity}&count=220&price=M`,
+  );
+  const candles = (json as {
+    candles?: Array<{ time: string; complete?: boolean; mid?: { o: string; h: string; l: string; c: string } }>;
+  }).candles;
+  if (!candles) throw new Error("OANDA: no candles");
+  return cleanBars(
+    candles
       .filter((c) => c.mid)
       .map((c) => ({
         time: Math.floor(new Date(c.time).getTime() / 1000),
@@ -149,33 +145,9 @@ async function fetchOandaHost(host: string, apiKey: string, instrument: string, 
         high: parseFloat(c.mid!.h),
         low: parseFloat(c.mid!.l),
         close: parseFloat(c.mid!.c),
-      })));
-  } finally {
-    clearTimeout(timeout);
-  }
+      })),
+  );
 }
-
-async function fetchOanda(instrument: string, interval: string): Promise<OhlcBar[]> {
-  const apiKey = process.env.OANDA_API_KEY;
-  if (!apiKey) throw new Error("OANDA_API_KEY not configured");
-  // OANDA_ENV usually not set - the same key type only works against one host,
-  // so try the configured host first, then fall back to the other on 401.
-  const preferred = (process.env.OANDA_ENV ?? "live").toLowerCase() === "practice"
-    ? ["api-fxpractice.oanda.com", "api-fxtrade.oanda.com"]
-    : ["api-fxtrade.oanda.com", "api-fxpractice.oanda.com"];
-  let lastErr: unknown;
-  for (const host of preferred) {
-    try {
-      const bars = await fetchOandaHost(host, apiKey, instrument, interval);
-      if (bars.length > 0) return bars;
-    } catch (e) {
-      lastErr = e;
-    }
-  }
-  throw lastErr instanceof Error ? lastErr : new Error("OANDA unavailable");
-}
-
-
 
 // ----- Twelve Data (FX, metals, indices) -----
 function tdInterval(interval: string): string {

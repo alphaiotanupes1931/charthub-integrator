@@ -108,19 +108,21 @@ async function fromOanda(symbol: string, tf: BacktestTimeframe, lookback: string
   const instrument = OANDA_INSTRUMENT[symbol];
   const apiKey = process.env.OANDA_API_KEY;
   if (!instrument || !apiKey) throw new Error("oanda not configured");
-  const env = (process.env.OANDA_ENV ?? "live").toLowerCase();
-  const host = env === "practice" ? "api-fxpractice.oanda.com" : "api-fxtrade.oanda.com";
   const count = wantedBars(tf, lookback);
-  const url = `https://${host}/v3/instruments/${instrument}/candles?granularity=${oandaGranularity(tf)}&count=${count}&price=M`;
-  const json = await getJson<{
+  // Host is resolved by which one accepts the token, not by OANDA_ENV.
+  const { oandaGetJson } = await import("@/lib/oanda-host.server");
+  const { json } = await oandaGetJson(
+    `/instruments/${instrument}/candles?granularity=${oandaGranularity(tf)}&count=${count}&price=M`,
+    15_000,
+  );
+  const bars = ((json as {
     candles?: Array<{
       time: string;
       complete?: boolean;
       volume?: number;
       mid?: { o: string; h: string; l: string; c: string };
     }>;
-  }>(url, { headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json" } });
-  const bars = (json.candles ?? [])
+  }).candles ?? [])
     .filter((c) => c.complete !== false && c.mid)
     .map((c) => ({
       time: Math.floor(new Date(c.time).getTime() / 1000),
