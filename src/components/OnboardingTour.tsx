@@ -33,10 +33,10 @@ const STEPS: Step[] = [
     cta: { to: "/journal", label: "Open Journal" },
   },
   {
-    title: "Testing mode (paper trading)",
-    body: "Practice with $10,000 fake money. Same charts, same tools, no real risk. A 10% drawdown safety kicks in automatically.",
+    title: "Auto Trading",
+    body: "Connect your broker, then switch Auto Trading on from the home page. Every qualifying setup asks you first, and the trade is managed after it fills.",
     icon: FlaskConical,
-    cta: { to: "/testing", label: "Open Testing" },
+    cta: { to: "/broker", label: "Connect broker" },
   },
   {
     title: "Discord notifications",

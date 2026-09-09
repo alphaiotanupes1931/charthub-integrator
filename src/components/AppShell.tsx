@@ -91,7 +91,6 @@ const NAV_GROUPS: NavGroup[] = [
       { to: "/scoreboard",  label: "Signal Scoreboard", icon: Target },
       { to: "/memory",      label: "Trading Memory", icon: Brain },
       { to: "/news",        label: "News",           icon: Newspaper },
-      { to: "/leaderboard", label: "Leaderboard",    icon: Trophy },
     ],
   },
   {

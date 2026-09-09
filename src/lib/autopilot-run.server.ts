@@ -27,7 +27,6 @@ export function settingsFromRow(row: Record<string, unknown> | null): AutopilotS
   if (!row) return { ...DEFAULT_AUTOPILOT_SETTINGS };
   return {
     mode: row.mode as AutopilotSettings["mode"],
-    accountTarget: row.account_target as AutopilotSettings["accountTarget"],
     minGrade: row.min_grade as AutopilotSettings["minGrade"],
     riskPct: Number(row.risk_pct),
     maxOpenPositions: Number(row.max_open_positions),
@@ -38,30 +37,19 @@ export function settingsFromRow(row: Record<string, unknown> | null): AutopilotS
     pausedReason: (row.paused_reason as string | null) ?? null,
     liveVenue: (row.live_venue as string | null) ?? "oanda",
     manageTrades: row.manage_trades !== false,
+    managePartials: row.manage_partials !== false,
+    trailAfterTp1: row.trail_after_tp1 !== false,
   };
 }
 
-// Realised loss today as a percentage of the account's starting balance.
-export async function dailyLossPct(client: Client, userId: string): Promise<{ pct: number; equity: number }> {
-  const { data: account } = await client
-    .from("paper_accounts")
-    .select("balance, starting_balance")
-    .eq("user_id", userId)
-    .maybeSingle();
-  const equity = account?.balance ? Number(account.balance) : 10_000;
-  const base = account?.starting_balance ? Number(account.starting_balance) : equity || 10_000;
-
-  const dayStart = new Date();
-  dayStart.setUTCHours(0, 0, 0, 0);
-  const { data: closed } = await client
-    .from("paper_trades")
-    .select("pnl")
-    .eq("user_id", userId)
-    .gte("closed_at", dayStart.toISOString());
-  const net = (closed ?? []).reduce((s, t) => s + Number(t.pnl ?? 0), 0);
-  const pct = net < 0 && base > 0 ? (Math.abs(net) / base) * 100 : 0;
-  return { pct: Math.round(pct * 100) / 100, equity };
+// Realised loss today at the trader's live broker account, as a percentage of
+// account equity, plus the equity used for position sizing.
+export async function dailyLossPct(_client: Client, userId: string): Promise<{ pct: number; equity: number }> {
+  const { liveAccountFacts } = await import("@/lib/auto-trade.server");
+  const facts = await liveAccountFacts(userId);
+  return { pct: facts.dailyLossPct, equity: facts.equity };
 }
+
 
 export async function runAutopilotForUser(
   client: Client,
@@ -155,8 +143,7 @@ export async function runAutopilotForUser(
       if (verdict.allowed && settings.mode === "auto" && !draft.triggered) {
         result.skipped.push(`${symbol}: setup filed but not triggered yet`);
       }
-      const autoFill = executable && settings.accountTarget === "paper";
-      const autoLive = executable && settings.accountTarget === "live";
+      const autoLive = executable;
 
       const { data: inserted, error } = await client
         .from("autopilot_proposals")
@@ -173,7 +160,7 @@ export async function runAutopilotForUser(
           units: draft.units,
           risk_pct: settings.riskPct,
           order_type: "market",
-          account_target: settings.accountTarget,
+          account_target: "live",
           reasoning: draft.reasoning,
           status: verdict.allowed ? (executable ? "approved" : "pending") : "blocked",
           rejection_reason: verdict.allowed ? null : verdict.reason,
@@ -211,41 +198,6 @@ export async function runAutopilotForUser(
         },
       );
 
-      if (autoFill) {
-        const size = Math.max(1, Math.floor(draft.units ?? 1));
-        const { error: posError } = await client.from("paper_positions").insert({
-          user_id: userId,
-          symbol: draft.symbol,
-          side: draft.side,
-          size,
-          entry: draft.entry,
-          stop: draft.stopLoss,
-          take_profit: draft.takeProfit,
-          grade: draft.grade,
-        } as never);
-        if (posError) {
-          await client
-            .from("autopilot_proposals")
-            .update({ status: "failed", rejection_reason: posError.message })
-            .eq("id", inserted.id as string);
-          await logAutopilotEvent(userId, "failed", `${draft.symbol} auto-fill failed`, {
-            symbol: draft.symbol,
-            proposalId: inserted.id,
-          });
-        } else {
-          await client
-            .from("autopilot_proposals")
-            .update({ status: "filled" })
-            .eq("id", inserted.id as string);
-          result.executed += 1;
-          openPositions += 1;
-          await logAutopilotEvent(
-            userId,
-            "filled",
-            `${draft.symbol} ${draft.side} auto-filled on paper, ${size} units at ${draft.entry}`,
-            { symbol: draft.symbol, size, entry: draft.entry, proposalId: inserted.id },
-          );
-      }
 
       if (autoLive) {
         const size = Math.max(1, Math.floor(draft.units ?? 1));
@@ -293,7 +245,6 @@ export async function runAutopilotForUser(
           }
         }
       }
-      }
 
     } catch {
       result.skipped.push(`${symbol}: data unavailable`);
@@ -301,15 +252,19 @@ export async function runAutopilotForUser(
   }
 
   // Trade management: protect anything already filled at the live account.
-  if (settings.manageTrades && settings.accountTarget === "live") {
+  if (settings.manageTrades) {
     try {
       const { manageLiveTrades } = await import("@/lib/autopilot-live.server");
-      const managed = await manageLiveTrades(userId, settings.liveVenue);
-      if (managed.movedToBreakEven > 0) {
+      const managed = await manageLiveTrades(userId, settings.liveVenue, {
+        breakEven: true,
+        partials: settings.managePartials,
+        trail: settings.trailAfterTp1,
+      });
+      if (managed.movedToBreakEven + managed.partialsTaken + managed.trailed > 0) {
         await logAutopilotEvent(
           userId,
           "run",
-          `Trade management: ${managed.movedToBreakEven} stop(s) moved to break-even. ${managed.notes.join(" ")}`,
+          `Trade management: ${managed.partialsTaken} partial(s) banked, ${managed.movedToBreakEven} stop(s) at break-even, ${managed.trailed} trailed. ${managed.notes.join(" ")}`,
           { managed },
         );
       }
