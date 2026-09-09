@@ -11,11 +11,36 @@ interface Props {
   interval?: string;
   enabled?: Partial<Record<LevelKey, boolean>>;
   sessions?: boolean;
+  /** Chart display style picked in the Levels menu, mapped to TradingView's own style codes. */
+  candleType?: string;
   /** Called when the embed loads but never streams data (blocked/blank panel). */
   onStall?: () => void;
   /** Rendered in place of the embed when the live feed is blocked or black. */
   fallback?: React.ReactNode;
 }
+
+/** Our style ids → TradingView chart style codes (unsupported ones fall back to candles). */
+const TV_STYLE_MAP: Record<string, string> = {
+  candle: "1",
+  hollow: "9",
+  ha: "8",
+  bars: "0",
+  "hlc-bars": "0",
+  "high-low": "12",
+  line: "2",
+  "line-markers": "13",
+  "step-line": "10",
+  area: "3",
+  "hlc-area": "3",
+  baseline: "14",
+  columns: "12",
+  renko: "4",
+  "line-break": "7",
+  kagi: "5",
+  "point-figure": "6",
+  range: "4",
+};
+
 
 
 const STUDY_MAP: Partial<Record<LevelKey, string>> = {
