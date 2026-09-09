@@ -110,9 +110,9 @@ export function OandaConnectPanel({ onChange }: { onChange?: () => void }) {
 
       {meta?.configured && (
         <div className="space-y-2 mb-4">
-          {meta.accounts.map((a) => (
+          {meta.accounts.filter((a) => a.env === "live").map((a) => (
             <div key={a.env} className="flex items-center gap-2 rounded-xl border border-border/60 px-3 py-2 text-xs">
-              <span className="font-semibold">{a.env === "practice" ? "Demo" : "Live"}</span>
+              <span className="font-semibold">Live</span>
               <span className="font-mono text-muted-foreground truncate">{a.accountId}</span>
               <div className="flex-1" />
               {a.active ? (
@@ -136,8 +136,14 @@ export function OandaConnectPanel({ onChange }: { onChange?: () => void }) {
               </button>
             </div>
           ))}
+          {meta.accounts.every((a) => a.env !== "live") && (
+            <p className="text-xs text-muted-foreground">
+              The token you saved is not a live OANDA account. Paste a live account token below to trade.
+            </p>
+          )}
         </div>
       )}
+
 
       {!showForm ? (
         <button
