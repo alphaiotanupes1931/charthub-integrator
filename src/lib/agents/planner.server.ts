@@ -663,6 +663,74 @@ export function gradeFromEvidence(
 // what makes the fill precise rather than "roughly near price".
 type EntryAnchor = { entry: number; zoneFar: number; label: string };
 
+/**
+ * The last real swing beyond entry on the scanned timeframe, plus a volatility
+ * buffer. A stop that sits in front of this level is the "stop was in a bad
+ * place" failure: price only has to take the swing to remove you.
+ */
+export function swingStopBeyond(
+  bias: "Long" | "Short",
+  entry: number,
+  atr: number,
+  snap: MarketSnapshot,
+): number | null {
+  const c = Array.isArray(snap.candles) ? snap.candles.slice(-24) : [];
+  if (c.length < 6) return null;
+  const pad = Math.max(atr * 0.35, Math.abs(entry) * 0.0006);
+  if (bias === "Long") {
+    const lows = c.map((k) => Number(k.low)).filter((n) => Number.isFinite(n) && n > 0 && n < entry);
+    if (!lows.length) return null;
+    return Math.min(...lows) - pad;
+  }
+  const highs = c.map((k) => Number(k.high)).filter((n) => Number.isFinite(n) && n > entry);
+  if (!highs.length) return null;
+  return Math.max(...highs) + pad;
+}
+
+/**
+ * Confirmation gate. The setup can be structurally valid and still be too early:
+ * until the lower timeframes actually turn, entering is a guess. When nothing has
+ * confirmed we return the price that has to trade before the plan is live.
+ */
+export type EntryTriggerRead = { triggered: boolean; level: number | null; rule: string | null };
+
+export function entryTriggerRead(
+  bias: "Long" | "Short" | "Neutral",
+  snap: MarketSnapshot,
+  atr: number,
+): EntryTriggerRead {
+  if (bias === "Neutral") return { triggered: false, level: null, rule: null };
+  const wanted = bias === "Long" ? "bullish" : "bearish";
+  const m = snap.mtf;
+  const m15 = m?.m15?.confirmation;
+  const h1Break = m?.h1?.structureBreak;
+  if (m15 === wanted || h1Break === wanted) {
+    return {
+      triggered: true,
+      level: null,
+      rule: m15 === wanted
+        ? "Trigger met: the 15m has confirmed in the direction of the setup."
+        : "Trigger met: the 1H has broken structure in the direction of the setup.",
+    };
+  }
+  const c = Array.isArray(snap.candles) ? snap.candles : [];
+  const ref = c.length >= 2 ? c[c.length - 2] : c[c.length - 1];
+  const skim = Math.max(atr * 0.05, Math.abs(snap.lastPrice) * 0.0002);
+  const level = ref
+    ? bias === "Long"
+      ? Number(ref.high) + skim
+      : Number(ref.low) - skim
+    : null;
+  const dir = bias === "Long" ? "above" : "below";
+  return {
+    triggered: false,
+    level: Number.isFinite(level as number) && (level as number) > 0 ? (level as number) : null,
+    rule: `Not triggered yet: neither the 15m nor the 1H has turned ${wanted}. The plan only becomes valid once price closes ${dir} ${
+      level && Number.isFinite(level) ? level : "the last swing"
+    } on the ${snap.interval} chart. Taking it before that is early.`,
+  };
+}
+
 function findEntryAnchor(
   bias: "Long" | "Short",
   last: number,
