@@ -229,6 +229,7 @@ type ScanResult = {
   dailyBias?: "bullish" | "bearish" | "neutral";
   currentTrend?: "up" | "down" | "range";
   synopsis?: string;
+  gradeCaps?: Array<{ label: string; cap: string; reason: string; binding?: boolean }>;
   dataSource?: string;
   dataFetchedAt?: string;
   candleCount?: number;
