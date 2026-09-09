@@ -20,7 +20,9 @@ export const aiCostSummary = createServerFn({ method: "POST" })
         kind: string; model: string; calls: number;
         input_tokens: number; cached_input_tokens: number; output_tokens: number; cost_usd: number;
       }>,
-      byUser: (perUser ?? []) as unknown as Array<{
+      // Unattributed rows (no user) are platform/system gateway usage, not a
+      // person — drop them so they never show as a "System" spender.
+      byUser: ((perUser ?? []) as unknown as Array<{
         user_id: string; email: string | null; calls: number;
         graded_setups: number; cost_usd: number; cost_per_setup: number;
       }>,
