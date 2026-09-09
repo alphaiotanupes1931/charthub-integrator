@@ -634,25 +634,61 @@ export function gradeFromEvidence(
   // Counter-trend setups and the Time Frame Combo are capped last so nothing can
   // lift them back up.
   const order: string[] = ["NO ENTRY", "C", "B", "A", "A+"];
-  const ct = counterTrendRead(bias, snap);
-  if (ct.cap && order.indexOf(grade) > order.indexOf(ct.cap)) grade = ct.cap;
-  const combo = timeFrameComboGate(bias, snap);
-  if (combo.cap && order.indexOf(grade) > order.indexOf(combo.cap)) grade = combo.cap;
-  const ltf = lowerTimeframeOppositionRead(bias, snap);
-  if (ltf.cap && order.indexOf(grade) > order.indexOf(ltf.cap)) grade = ltf.cap;
-  const flow = orderFlowOppositionRead(bias, snap);
-  if (flow.cap && order.indexOf(grade) > order.indexOf(flow.cap)) grade = flow.cap;
-  const dflow = deltaAgainstPositionRead(bias, snap);
-  if (dflow.cap && order.indexOf(grade) > order.indexOf(dflow.cap)) grade = dflow.cap;
-  const setup = setupTypeRead(bias, snap);
-  if (setup.cap && order.indexOf(grade) > order.indexOf(setup.cap)) grade = setup.cap;
-  const stale = staleHigherTimeframeRead(snap);
-  if (stale.cap && order.indexOf(grade) > order.indexOf(stale.cap)) grade = stale.cap;
-  // Contradicted flow (live-bar delta against the cumulative read) is not
-  // confirmation, so it cannot sit behind an A.
-  if (snap.orderFlow?.deltaConflict && order.indexOf(grade) > order.indexOf("B")) grade = "B";
+  for (const c of collectGradeCaps(bias, snap)) {
+    if (order.indexOf(grade) > order.indexOf(c.cap)) grade = c.cap as typeof GRADES[number];
+  }
   return grade;
 }
+
+/** One reason the grade was held down, in the order the caps are applied. */
+export type GradeCapReason = {
+  /** Short label the trader can scan, e.g. "1H against the 4H". */
+  label: string;
+  /** Best grade this check allows. */
+  cap: typeof GRADES[number];
+  /** Full plain-language explanation with the numbers behind it. */
+  reason: string;
+  /** True when this check is the one holding the final grade where it is. */
+  binding?: boolean;
+};
+
+/**
+ * Every deterministic cap that fired on this scan, with its own reason. This is
+ * the answer to "why does it keep showing C": each entry is a rule that was
+ * triggered by the data, and the lowest one sets the grade.
+ */
+export function collectGradeCaps(
+  bias: typeof BIASES[number],
+  snap: MarketSnapshot,
+): GradeCapReason[] {
+  const out: GradeCapReason[] = [];
+  const push = (label: string, r: { cap: typeof GRADES[number] | null; reason: string | null }) => {
+    if (r.cap && r.reason) out.push({ label, cap: r.cap, reason: r.reason });
+  };
+  if (!snap.mtf) {
+    out.push({
+      label: "Higher-timeframe data incomplete",
+      cap: "C",
+      reason: "The 4H/1H/15m ladder did not come back on this scan, so there was nothing to grade the setup against and it is held at C until the feed fills in.",
+    });
+  }
+  push("Counter-trend setup", counterTrendRead(bias, snap));
+  push("Time Frame Combo gate", timeFrameComboGate(bias, snap));
+  push("1H against the higher timeframes", lowerTimeframeOppositionRead(bias, snap));
+  push("Order flow opposing the setup", orderFlowOppositionRead(bias, snap));
+  push("Delta expanding against the position", deltaAgainstPositionRead(bias, snap));
+  push("Setup type", setupTypeRead(bias, snap));
+  push("Stale 4H data", staleHigherTimeframeRead(snap));
+  if (snap.orderFlow?.deltaConflict) {
+    out.push({
+      label: "Order flow contradicts itself",
+      cap: "B",
+      reason: "The live bar's delta is pushing against the cumulative volume delta, so the flow is not confirming anything and cannot sit behind an A.",
+    });
+  }
+  return out;
+}
+
 
 
 
@@ -1395,6 +1431,32 @@ export async function runPlanner(
   const deltaRead = deltaAgainstPositionRead(bias, snap);
   const setupRead = setupTypeRead(bias, snap);
   const staleRead = staleHigherTimeframeRead(snap);
+
+  // Full "why is this grade what it is" breakdown: every deterministic cap that
+  // fired, plus the engine alignment cap, news risk and session timing, with the
+  // binding one marked so the trader sees which single rule is holding it down.
+  const gradeCaps: GradeCapReason[] = collectGradeCaps(bias, snap);
+  const engineMax = biasRead.result.mtf.maxGrade;
+  if (engineMax === "B" || engineMax === "C" || engineMax === "D" || engineMax === "F") {
+    gradeCaps.push({
+      label: "Timeframe alignment",
+      cap: engineMax === "B" ? "B" : "C",
+      reason: `Only ${biasRead.result.mtf.alignmentScore} of the 4 higher timeframes agree with this ${bias.toLowerCase()}, so the alignment cap allows ${engineMax === "B" ? "B" : "C"} at best.`,
+    });
+  }
+  if (newsWarning) {
+    gradeCaps.push({
+      label: "High-impact news inside the hold window",
+      cap: "B",
+      reason: newsWarning.trim(),
+    });
+  }
+  if (news48Warning) gradeCaps.push({ label: "Event risk within 48 hours", cap: grade, reason: `${news48Warning} This costs one grade letter.` });
+  if (timingGate) gradeCaps.push({ label: "Session timing", cap: grade, reason: `${timingGate} This costs one grade letter until the session opens.` });
+  if (mitigation?.warning) gradeCaps.push({ label: "Entry zone already tested", cap: grade, reason: mitigation.warning });
+  const capOrder: string[] = ["NO ENTRY", "C", "B", "A", "A+"];
+  for (const c of gradeCaps) c.binding = c.cap === grade && capOrder.indexOf(c.cap) <= capOrder.indexOf(grade);
+
   const triggerRead = entryTriggerRead(
     bias,
     snap,
@@ -1476,6 +1538,8 @@ export async function runPlanner(
     candleCount: snap.candles.length,
     refPrice: snap.lastPrice,
     counterTrend: counterTrend.counterTrend,
+    gradeCaps: gradeCaps.length ? gradeCaps : undefined,
+
     setupType: setupRead.type,
     flipLevel: setupRead.flipLevel ?? undefined,
     triggered: bias === "Neutral" ? undefined : triggerRead.triggered,

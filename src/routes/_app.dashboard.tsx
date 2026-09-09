@@ -229,6 +229,7 @@ type ScanResult = {
   dailyBias?: "bullish" | "bearish" | "neutral";
   currentTrend?: "up" | "down" | "range";
   synopsis?: string;
+  gradeCaps?: Array<{ label: string; cap: string; reason: string; binding?: boolean }>;
   dataSource?: string;
   dataFetchedAt?: string;
   candleCount?: number;
@@ -744,6 +745,35 @@ function ScanTicket({
             Why this grade
           </div>
           <p className="text-[11px] leading-relaxed text-foreground/90">{result.synopsis}</p>
+        </div>
+      )}
+
+      {/* What is holding the grade down - one line per rule that fired */}
+      {result.gradeCaps && result.gradeCaps.length > 0 && (
+        <div className="rounded-2xl border border-border/60 bg-background/30 p-3 space-y-2">
+          <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-semibold">
+            What is holding this grade at {result.grade}
+          </div>
+          <ul className="space-y-2">
+            {result.gradeCaps.map((c, i) => (
+              <li key={i} className="rounded-xl bg-accent/40 px-2.5 py-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[11px] font-semibold text-foreground/90">{c.label}</span>
+                  <span
+                    className={`text-[10px] font-semibold rounded-full px-2 py-0.5 ${
+                      c.binding ? "text-destructive bg-destructive/12" : "text-foreground/70 bg-background/50"
+                    }`}
+                  >
+                    {c.binding ? `sets the ${c.cap}` : `max ${c.cap}`}
+                  </span>
+                </div>
+                <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{c.reason}</p>
+              </li>
+            ))}
+          </ul>
+          <p className="text-[10px] leading-relaxed text-muted-foreground">
+            The lowest rule above decides the grade. Clear that condition and the grade lifts on the next scan.
+          </p>
         </div>
       )}
 
