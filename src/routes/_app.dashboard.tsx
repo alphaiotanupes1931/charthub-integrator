@@ -2210,12 +2210,7 @@ function Dashboard() {
                     <span className="hidden sm:inline"> · {broker.email} · {broker.accountType}</span>
                   </span>
                 </div>
-              ) : (
-                <div className="flex items-center gap-1.5 text-muted-foreground min-w-0">
-                  <Plug className="h-3.5 w-3.5 shrink-0" />
-                  <span className="truncate">Chart-only mode. <Link to="/broker" className="text-primary hover:underline">Connect broker</Link></span>
-                </div>
-              )}
+              ) : null}
 
             </div>
           )}
