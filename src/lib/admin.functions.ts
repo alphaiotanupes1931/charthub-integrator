@@ -219,7 +219,7 @@ export const adminUsageTrends = createServerFn({ method: "GET" })
     const sinceDay = new Date(sinceMs).toISOString().slice(0, 10);
 
     const [costRes, usageRes] = await Promise.all([
-      supabaseAdmin.from("ai_cost_log").select("cost_usd, created_at").gte("created_at", new Date(sinceMs).toISOString()),
+      supabaseAdmin.from("ai_cost_log").select("cost_usd, created_at").gte("created_at", new Date(sinceMs).toISOString()).not("user_id", "is", null),
       supabaseAdmin.from("ai_usage").select("day, count, image_count").gte("day", sinceDay),
     ]);
     if (costRes.error) throw new Error(costRes.error.message);
