@@ -46,6 +46,12 @@ import { AutoBacktestVerify } from "@/components/AutoBacktestVerify";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { QuotaBadge } from "@/components/QuotaBadge";
 import { UpgradeModal } from "@/components/UpgradeModal";
+import { AutoTradingToggle, AUTO_TRADE_CONTEXT_KEY } from "@/components/AutoTradingToggle";
+import { TradeOfferDialog, type TradeOffer } from "@/components/TradeOfferDialog";
+import { gradeMeets } from "@/lib/autopilot.shared";
+import { getAutoTradeContext } from "@/lib/auto-trade.functions";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn as useServerFnForAutoTrade } from "@tanstack/react-start";
 
 // Scan context: the active strategy playbook is fed to the planner so the
 // Analysis grade is scored against the same rules the chat coach uses.
@@ -1418,6 +1424,39 @@ function Dashboard() {
   };
 
 
+  // Auto Trading: when it is on, a scan at or above the trader's minimum grade
+  // opens an offer popup. Nothing reaches the broker without that tap.
+  const loadAutoTradeContext = useServerFnForAutoTrade(getAutoTradeContext);
+  const autoTradeCtx = useQuery({
+    queryKey: AUTO_TRADE_CONTEXT_KEY,
+    queryFn: () => loadAutoTradeContext(),
+    retry: false,
+    staleTime: 30_000,
+  });
+  const [tradeOffer, setTradeOffer] = useState<TradeOffer | null>(null);
+
+  const maybeOfferTrade = (plan: ScanResult, scanSymbol: Symbol, scanInterval: string) => {
+    const ctx = autoTradeCtx.data;
+    if (!ctx || ctx.settings.mode !== "auto" || !ctx.broker.connected) return;
+    if (!gradeMeets(plan.grade, ctx.settings.minGrade)) return;
+    const { bias, entry, stop, tp1 } = levelsForPlan(plan);
+    if (bias !== "long" && bias !== "short") return;
+    if (typeof entry !== "number" || typeof stop !== "number") return;
+    setTradeOffer({
+      symbol: scanSymbol.ticker,
+      label: symbolLabel(scanSymbol),
+      timeframe: scanInterval,
+      side: bias,
+      grade: plan.grade,
+      confidence: typeof plan.confidence === "number" ? plan.confidence : null,
+      entry,
+      stop,
+      target: typeof tp1 === "number" ? tp1 : null,
+      reasoning: plan.synopsis ?? plan.notes ?? null,
+      decimals: decimalsFor(snapshot?.lastPrice || entry || 1),
+    });
+  };
+
   const runScan = async (from: "chat" | "analysis" = "analysis") => {
     // Free plan: the 4th grade opens the paywall instead of running. Nothing is
     // consumed here - the charge happens only once an answer is delivered.
@@ -1481,6 +1520,7 @@ function Dashboard() {
         }
         setResult(r);
         applyPlanToSignalCards(r);
+        maybeOfferTrade(r, scanSymbol, scanInterval);
         // Single source of truth: the Analysis engine's grade card is always
         // appended to the chat thread so Chat and Analysis never disagree.
         const replyText = scanResultToChatText(r, scanSymbol);
@@ -1946,6 +1986,10 @@ function Dashboard() {
           used={ent.quota.used}
           limit={ent.quota.limit}
         />
+
+        <AutoTradingToggle className="hidden lg:inline-flex" />
+
+        <TradeOfferDialog offer={tradeOffer} onClose={() => setTradeOffer(null)} />
 
         <QuotaBadge quota={ent.quota} className="hidden lg:inline-flex" />
 
