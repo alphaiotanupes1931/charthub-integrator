@@ -145,6 +145,13 @@ export type TradePlan = {
   currentTrend?: "up" | "down" | "range";
   /** Short plain-language synopsis of why this grade was given. */
   synopsis?: string;
+  /** Every rule that capped this grade, with the binding one flagged. */
+  gradeCaps?: Array<{
+    label: string;
+    cap: "A+" | "A" | "B" | "C" | "NO ENTRY";
+    reason: string;
+    binding?: boolean;
+  }>;
   /** Provider and candle audit trail for this exact scan. */
   dataSource?: MarketSnapshot["source"];
   dataFetchedAt?: string;
