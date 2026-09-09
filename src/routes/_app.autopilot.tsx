@@ -50,6 +50,8 @@ export const Route = createFileRoute("/_app/autopilot")({
 type SettingsPatch = {
   mode?: AutopilotMode;
   accountTarget?: "paper" | "live";
+  liveVenue?: string;
+  manageTrades?: boolean;
   minGrade?: AutopilotSettings["minGrade"];
   riskPct?: number;
   maxOpenPositions?: number;
