@@ -49,7 +49,6 @@ type Position = Awaited<ReturnType<typeof listBrokerPositions>>[number];
 type PendingOrder = Awaited<ReturnType<typeof listBrokerPendingOrders>>[number];
 
 function BrokerPage() {
-  const search = Route.useSearch();
   const fetchStatus = useServerFn(getBrokerStatus);
   const fetchPositions = useServerFn(listBrokerPositions);
   const closeTrade = useServerFn(closeBrokerTrade);
