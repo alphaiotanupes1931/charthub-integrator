@@ -1538,6 +1538,8 @@ export async function runPlanner(
     candleCount: snap.candles.length,
     refPrice: snap.lastPrice,
     counterTrend: counterTrend.counterTrend,
+    gradeCaps: gradeCaps.length ? gradeCaps : undefined,
+
     setupType: setupRead.type,
     flipLevel: setupRead.flipLevel ?? undefined,
     triggered: bias === "Neutral" ? undefined : triggerRead.triggered,
