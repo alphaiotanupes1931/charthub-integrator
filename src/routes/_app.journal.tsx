@@ -1126,7 +1126,7 @@ function TradeRow({ t, onEdit, onDelete, onUpdate }: { t: Trade; onEdit: (t: Tra
 
   return (
     <div className="flex items-center gap-4 p-4 hover:bg-accent/20 transition">
-      {t.hasImage && <TradeThumb tradeId={t.id} />}
+      {t.hasImage && <TradeThumb tradeId={t.id} imageCount={t.imageCount ?? 1} />}
       <button onClick={() => onEdit(t)} className="flex-1 min-w-0 text-left">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-semibold">{t.symbol}</span>
@@ -2370,18 +2370,21 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function TradeThumb({ tradeId }: { tradeId: string }) {
-  const [url, setUrl] = useState<string | null>(null);
+function TradeThumb({ tradeId, imageCount = 1 }: { tradeId: string; imageCount?: number }) {
+  const [urls, setUrls] = useState<string[]>([]);
+  const [open, setOpen] = useState(false);
+  const [index, setIndex] = useState(0);
   useEffect(() => {
     let active = true;
-    let created: string | null = null;
-    void getTradeImage(tradeId).then((blob) => {
-      if (!active || !blob) return;
-      created = URL.createObjectURL(blob);
-      setUrl(created);
+    let created: string[] = [];
+    void getTradeImages(tradeId, imageCount).then((blobs) => {
+      if (!active) return;
+      created = blobs.map((b) => URL.createObjectURL(b));
+      setUrls(created);
     });
-    return () => { active = false; if (created) URL.revokeObjectURL(created); };
-  }, [tradeId]);
+    return () => { active = false; created.forEach((u) => URL.revokeObjectURL(u)); };
+  }, [tradeId, imageCount]);
+  const url = urls[0] ?? null;
   if (!url) {
     return (
       <div className="h-12 w-16 rounded border border-border/60 bg-background/40 flex items-center justify-center text-muted-foreground shrink-0">
@@ -2390,10 +2393,63 @@ function TradeThumb({ tradeId }: { tradeId: string }) {
     );
   }
   return (
-    <img
-      src={url}
-      alt="Trade screenshot"
-      className="h-12 w-16 rounded border border-border/60 object-cover shrink-0"
-    />
+    <>
+      <button
+        onClick={(e) => { e.stopPropagation(); setIndex(0); setOpen(true); }}
+        className="relative h-12 w-16 rounded border border-border/60 overflow-hidden shrink-0 hover:border-primary/60 transition cursor-zoom-in"
+        aria-label="View trade screenshot"
+        title="View screenshot"
+      >
+        <img src={url} alt="Trade screenshot" className="h-full w-full object-cover" />
+        {urls.length > 1 && (
+          <span className="absolute bottom-0.5 right-0.5 rounded bg-background/80 px-1 text-[9px] text-muted-foreground">
+            1/{urls.length}
+          </span>
+        )}
+      </button>
+      {open && (
+        <div
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setOpen(false)}
+        >
+          <button
+            onClick={() => setOpen(false)}
+            className="absolute top-4 right-4 h-9 w-9 rounded-full bg-background/20 hover:bg-background/40 text-foreground flex items-center justify-center"
+            aria-label="Close preview"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          {urls.length > 1 && index > 0 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); setIndex((i) => Math.max(0, i - 1)); }}
+              className="absolute left-4 h-9 w-9 rounded-full bg-background/20 hover:bg-background/40 text-foreground flex items-center justify-center"
+              aria-label="Previous screenshot"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+          )}
+          <img
+            src={urls[index]}
+            alt={`Trade screenshot ${index + 1}`}
+            className="max-h-[85vh] max-w-[90vw] rounded-lg border border-border/60 object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+          {urls.length > 1 && index < urls.length - 1 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); setIndex((i) => Math.min(urls.length - 1, i + 1)); }}
+              className="absolute right-4 h-9 w-9 rounded-full bg-background/20 hover:bg-background/40 text-foreground flex items-center justify-center"
+              aria-label="Next screenshot"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          )}
+          {urls.length > 1 && (
+            <div className="absolute bottom-4 rounded-full bg-background/40 px-3 py-1 text-xs text-muted-foreground">
+              {index + 1} / {urls.length}
+            </div>
+          )}
+        </div>
+      )}
+    </>
   );
 }
