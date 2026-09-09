@@ -863,13 +863,20 @@ function sanitizePlan(
   if (bias === "Long" && entry > last - buffer) entry = last - buffer;
   if (bias === "Short" && entry < last + buffer) entry = last + buffer;
 
-  // 3. Stop: prefer the structural stop, else the model's distance, clamped to
-  // a sane ATR band so risk is always measurable. The floor is session-aware:
-  // thin overnight tape needs 1.2-1.5x ATR, not the 0.6x default.
+  // 3. Stop: it has to sit BEYOND the swing that invalidates the idea, not a
+  // tight ATR fraction from entry. We take the widest of (a) the zone stop,
+  // (b) the model's distance and (c) the last real swing beyond entry, each
+  // with a volatility buffer, then clamp to a band wide enough to hold that
+  // swing. The floor is session-aware: thin overnight tape needs more room.
   const modelStopDist = Math.abs(entry - stop);
-  const rawStopDist = structuralStop !== null ? Math.abs(entry - structuralStop) : modelStopDist;
+  const zoneStopDist = structuralStop !== null ? Math.abs(entry - structuralStop) : 0;
+  const swingStop = swingStopBeyond(bias, entry, atr, snap);
+  const swingStopDist = swingStop !== null ? Math.abs(entry - swingStop) : 0;
+  const rawStopDist = Math.max(zoneStopDist, swingStopDist, zoneStopDist ? 0 : modelStopDist);
   const floor = Math.max(0.3, stopFloorAtr);
-  const stopDist = Math.min(Math.max(rawStopDist, atr * floor), atr * Math.max(2.5, floor + 1));
+  // Cap generously so a genuine swing stop is never pulled in front of the swing.
+  const cap = atr * Math.max(3.2, floor + 1.8);
+  const stopDist = Math.min(Math.max(rawStopDist || modelStopDist, atr * floor), cap);
 
   stop = bias === "Long" ? entry - stopDist : entry + stopDist;
 
