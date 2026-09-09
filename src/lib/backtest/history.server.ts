@@ -39,6 +39,53 @@ const TWELVE_SYMBOL: Record<string, string> = {
   "XRP/USD": "XRP/USD",
 };
 
+// Journal rows carry whatever the trader typed or a screenshot produced:
+// "EURAUD", "Pound / Dollar (GBP/USD)", "xauusd". Without normalising these the
+// monitor cannot find price history and the trade stays open at 0.00 forever.
+const CURRENCIES = new Set([
+  "AUD", "CAD", "CHF", "CNH", "CZK", "DKK", "EUR", "GBP", "HKD", "HUF", "JPY", "MXN",
+  "NOK", "NZD", "PLN", "SEK", "SGD", "THB", "TRY", "USD", "ZAR", "XAU", "XAG", "XPT", "XPD",
+]);
+
+const INDEX_ALIAS: Record<string, string> = {
+  NAS100: "NAS100_USD", NDX: "NAS100_USD", US100: "NAS100_USD",
+  SPX500: "SPX500_USD", SPX: "SPX500_USD", US500: "SPX500_USD",
+  US30: "US30_USD", DJI: "US30_USD",
+  GER40: "DE30_EUR", UK100: "UK100_GBP", JP225: "JP225_USD",
+  WTIOIL: "WTICO_USD", WTI: "WTICO_USD", OIL: "WTICO_USD", USOIL: "WTICO_USD",
+  NATGAS: "NATGAS_USD", GOLD: "XAU_USD", SILVER: "XAG_USD",
+};
+
+/** Best-effort symbol -> OANDA instrument, for anything not in the table above. */
+export function normalizeOandaInstrument(symbol: string): string | null {
+  const direct = OANDA_INSTRUMENT[symbol];
+  if (direct) return direct;
+  const raw = String(symbol || "");
+  // A display name like "Pound / Dollar (GBP/USD)" carries the real pair in brackets.
+  const bracket = raw.match(/\(([^)]+)\)/);
+  const core = (bracket ? bracket[1]! : raw).toUpperCase();
+  const mapped = OANDA_INSTRUMENT[core] ?? OANDA_INSTRUMENT[core.replace(/\s+/g, "")];
+  if (mapped) return mapped;
+  const compact = core.replace(/[^A-Z0-9]/g, "");
+  if (INDEX_ALIAS[compact]) return INDEX_ALIAS[compact]!;
+  if (compact.length === 6) {
+    const base = compact.slice(0, 3);
+    const quote = compact.slice(3);
+    if (CURRENCIES.has(base) && CURRENCIES.has(quote)) return `${base}_${quote}`;
+  }
+  if (/^[A-Z]{3}_[A-Z]{3}$/.test(compact.replace(/(\w{3})(\w{3})/, "$1_$2"))) return null;
+  return null;
+}
+
+/** Same idea for TwelveData, which wants "EUR/AUD". */
+function normalizeTwelveSymbol(symbol: string): string | null {
+  const direct = TWELVE_SYMBOL[symbol];
+  if (direct) return direct;
+  const inst = normalizeOandaInstrument(symbol);
+  if (inst && /^[A-Z]{3}_[A-Z]{3}$/.test(inst)) return inst.replace("_", "/");
+  return null;
+}
+
 const BINANCE_SYMBOL: Record<string, string> = {
   "BTC/USD": "BTCUSDT",
   "ETH/USD": "ETHUSDT",
@@ -105,7 +152,7 @@ function oandaGranularity(tf: BacktestTimeframe): string {
 }
 
 async function fromOanda(symbol: string, tf: BacktestTimeframe, lookback: string): Promise<BtBar[]> {
-  const instrument = OANDA_INSTRUMENT[symbol];
+  const instrument = normalizeOandaInstrument(symbol);
   const apiKey = process.env.OANDA_API_KEY;
   if (!instrument || !apiKey) throw new Error("oanda not configured");
   const count = wantedBars(tf, lookback);
@@ -142,7 +189,7 @@ function twelveInterval(tf: BacktestTimeframe): string {
 }
 
 async function fromTwelveData(symbol: string, tf: BacktestTimeframe, lookback: string): Promise<BtBar[]> {
-  const sym = TWELVE_SYMBOL[symbol];
+  const sym = normalizeTwelveSymbol(symbol);
   const key = process.env.TWELVE_DATA_API_KEY;
   if (!sym || !key) throw new Error("twelvedata not configured");
   const url = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(sym)}&interval=${twelveInterval(tf)}&outputsize=${wantedBars(tf, lookback)}&order=ASC&apikey=${key}`;
