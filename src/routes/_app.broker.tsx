@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Wallet, RefreshCw, X, ExternalLink, ArrowUpRight, ArrowDownRight, SlidersHorizontal, Scissors } from "lucide-react";
+import { Wallet, RefreshCw, X, ExternalLink, SlidersHorizontal, Scissors } from "lucide-react";
 import {
   getBrokerStatus,
   listBrokerPositions,
@@ -12,7 +12,6 @@ import {
   modifyBrokerTrade,
   listBrokerPendingOrders,
   cancelBrokerOrder,
-  placeBrokerOrder,
 } from "@/lib/broker-oanda.functions";
 
 type BrokerSearch = {
