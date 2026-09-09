@@ -663,6 +663,74 @@ export function gradeFromEvidence(
 // what makes the fill precise rather than "roughly near price".
 type EntryAnchor = { entry: number; zoneFar: number; label: string };
 
+/**
+ * The last real swing beyond entry on the scanned timeframe, plus a volatility
+ * buffer. A stop that sits in front of this level is the "stop was in a bad
+ * place" failure: price only has to take the swing to remove you.
+ */
+export function swingStopBeyond(
+  bias: "Long" | "Short",
+  entry: number,
+  atr: number,
+  snap: MarketSnapshot,
+): number | null {
+  const c = Array.isArray(snap.candles) ? snap.candles.slice(-24) : [];
+  if (c.length < 6) return null;
+  const pad = Math.max(atr * 0.35, Math.abs(entry) * 0.0006);
+  if (bias === "Long") {
+    const lows = c.map((k) => Number(k.low)).filter((n) => Number.isFinite(n) && n > 0 && n < entry);
+    if (!lows.length) return null;
+    return Math.min(...lows) - pad;
+  }
+  const highs = c.map((k) => Number(k.high)).filter((n) => Number.isFinite(n) && n > entry);
+  if (!highs.length) return null;
+  return Math.max(...highs) + pad;
+}
+
+/**
+ * Confirmation gate. The setup can be structurally valid and still be too early:
+ * until the lower timeframes actually turn, entering is a guess. When nothing has
+ * confirmed we return the price that has to trade before the plan is live.
+ */
+export type EntryTriggerRead = { triggered: boolean; level: number | null; rule: string | null };
+
+export function entryTriggerRead(
+  bias: "Long" | "Short" | "Neutral",
+  snap: MarketSnapshot,
+  atr: number,
+): EntryTriggerRead {
+  if (bias === "Neutral") return { triggered: false, level: null, rule: null };
+  const wanted = bias === "Long" ? "bullish" : "bearish";
+  const m = snap.mtf;
+  const m15 = m?.m15?.confirmation;
+  const h1Break = m?.h1?.structureBreak;
+  if (m15 === wanted || h1Break === wanted) {
+    return {
+      triggered: true,
+      level: null,
+      rule: m15 === wanted
+        ? "Trigger met: the 15m has confirmed in the direction of the setup."
+        : "Trigger met: the 1H has broken structure in the direction of the setup.",
+    };
+  }
+  const c = Array.isArray(snap.candles) ? snap.candles : [];
+  const ref = c.length >= 2 ? c[c.length - 2] : c[c.length - 1];
+  const skim = Math.max(atr * 0.05, Math.abs(snap.lastPrice) * 0.0002);
+  const level = ref
+    ? bias === "Long"
+      ? Number(ref.high) + skim
+      : Number(ref.low) - skim
+    : null;
+  const dir = bias === "Long" ? "above" : "below";
+  return {
+    triggered: false,
+    level: Number.isFinite(level as number) && (level as number) > 0 ? (level as number) : null,
+    rule: `Not triggered yet: neither the 15m nor the 1H has turned ${wanted}. The plan only becomes valid once price closes ${dir} ${
+      level && Number.isFinite(level) ? level : "the last swing"
+    } on the ${snap.interval} chart. Taking it before that is early.`,
+  };
+}
+
 function findEntryAnchor(
   bias: "Long" | "Short",
   last: number,
@@ -863,13 +931,20 @@ function sanitizePlan(
   if (bias === "Long" && entry > last - buffer) entry = last - buffer;
   if (bias === "Short" && entry < last + buffer) entry = last + buffer;
 
-  // 3. Stop: prefer the structural stop, else the model's distance, clamped to
-  // a sane ATR band so risk is always measurable. The floor is session-aware:
-  // thin overnight tape needs 1.2-1.5x ATR, not the 0.6x default.
+  // 3. Stop: it has to sit BEYOND the swing that invalidates the idea, not a
+  // tight ATR fraction from entry. We take the widest of (a) the zone stop,
+  // (b) the model's distance and (c) the last real swing beyond entry, each
+  // with a volatility buffer, then clamp to a band wide enough to hold that
+  // swing. The floor is session-aware: thin overnight tape needs more room.
   const modelStopDist = Math.abs(entry - stop);
-  const rawStopDist = structuralStop !== null ? Math.abs(entry - structuralStop) : modelStopDist;
+  const zoneStopDist = structuralStop !== null ? Math.abs(entry - structuralStop) : 0;
+  const swingStop = swingStopBeyond(bias, entry, atr, snap);
+  const swingStopDist = swingStop !== null ? Math.abs(entry - swingStop) : 0;
+  const rawStopDist = Math.max(zoneStopDist, swingStopDist, zoneStopDist ? 0 : modelStopDist);
   const floor = Math.max(0.3, stopFloorAtr);
-  const stopDist = Math.min(Math.max(rawStopDist, atr * floor), atr * Math.max(2.5, floor + 1));
+  // Cap generously so a genuine swing stop is never pulled in front of the swing.
+  const cap = atr * Math.max(3.2, floor + 1.8);
+  const stopDist = Math.min(Math.max(rawStopDist || modelStopDist, atr * floor), cap);
 
   stop = bias === "Long" ? entry - stopDist : entry + stopDist;
 
@@ -1301,12 +1376,18 @@ export async function runPlanner(
   const deltaRead = deltaAgainstPositionRead(bias, snap);
   const setupRead = setupTypeRead(bias, snap);
   const staleRead = staleHigherTimeframeRead(snap);
+  const triggerRead = entryTriggerRead(
+    bias,
+    snap,
+    Math.max(snap.stats.atr14 || Math.abs(snap.lastPrice) * 0.002, Math.abs(snap.lastPrice) * 0.0005),
+  );
   const setupFlags = [
     setupRead.type === "fade" ? "COUNTER_TREND_FADE" : null,
     setupRead.type === "reversal" ? "HTF_REVERSAL" : null,
     deltaRead.cap ? "ORDER_FLOW_AGAINST_POSITION" : null,
     staleRead.cap ? "STALE_DATA_4H_CANDLE_CLOSED" : null,
     news48Warning ? "HIGH_IMPACT_NEWS_RISK" : null,
+    !triggerRead.triggered && bias !== "Neutral" ? "NOT_TRIGGERED_YET" : null,
   ].filter((f): f is string => Boolean(f));
 
   // `notes` already carries the thesis ("why take this trade"), so the details
@@ -1351,6 +1432,7 @@ export async function runPlanner(
     // the trader needed on the USD/JPY fade that stopped out.
     + (setupRead.reason ? ` ${setupRead.reason}` : "")
     + (staleRead.reason ? ` ${staleRead.reason}` : "")
+    + (!triggerRead.triggered && triggerRead.rule ? ` ${triggerRead.rule}` : "")
     + newsWarning
     + (timingGate ? ` ${timingGate}` : warnings.length ? ` ${warnings[0]}` : "");
 
@@ -1377,6 +1459,9 @@ export async function runPlanner(
     counterTrend: counterTrend.counterTrend,
     setupType: setupRead.type,
     flipLevel: setupRead.flipLevel ?? undefined,
+    triggered: bias === "Neutral" ? undefined : triggerRead.triggered,
+    triggerLevel: triggerRead.level ?? undefined,
+    triggerRule: triggerRead.rule ?? undefined,
     flags: setupFlags.length ? setupFlags : undefined,
     htfBias: dailyBias,
     warnings: warnings.length ? warnings : undefined,
