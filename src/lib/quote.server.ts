@@ -25,29 +25,23 @@ async function fetchOandaSpot(instrument: string): Promise<number | null> {
   const apiKey = process.env.OANDA_API_KEY;
   const accountId = process.env.OANDA_ACCOUNT_ID;
   if (!apiKey || !accountId) return null;
-  const env = (process.env.OANDA_ENV ?? "live").toLowerCase();
-  const host = env === "practice" ? "api-fxpractice.oanda.com" : "api-fxtrade.oanda.com";
-  const url = `https://${host}/v3/accounts/${accountId}/pricing?instruments=${instrument}`;
-  const controller = new AbortController();
-  const to = setTimeout(() => controller.abort(), 6_000);
   try {
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json" },
-      signal: controller.signal,
-    });
-    if (!res.ok) return null;
-    const json = (await res.json()) as {
+    // Host is resolved by token, not by OANDA_ENV: a practice token 401s on the
+    // live host and vice versa, and the hint is often missing.
+    const { oandaGetJson } = await import("@/lib/oanda-host.server");
+    const { json } = await oandaGetJson(
+      `/accounts/${accountId}/pricing?instruments=${instrument}`,
+      6_000,
+    );
+    const p = (json as {
       prices?: Array<{ bids?: Array<{ price: string }>; asks?: Array<{ price: string }> }>;
-    };
-    const p = json.prices?.[0];
+    }).prices?.[0];
     const bid = p?.bids?.[0]?.price ? parseFloat(p.bids[0].price) : null;
     const ask = p?.asks?.[0]?.price ? parseFloat(p.asks[0].price) : null;
     if (bid != null && ask != null) return (bid + ask) / 2;
     return bid ?? ask ?? null;
   } catch {
     return null;
-  } finally {
-    clearTimeout(to);
   }
 }
 
