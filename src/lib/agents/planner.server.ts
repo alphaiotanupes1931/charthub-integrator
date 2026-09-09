@@ -738,9 +738,16 @@ function findEntryAnchor(
   snap: MarketSnapshot,
 ): EntryAnchor | null {
   const m = snap.mtf;
-  const minGap = Math.max(atr * 0.1, last * 0.0003); // must be a real pullback
-  const maxGap = atr * 2;
-  const cands: EntryAnchor[] = [];
+  // A limit that sits a tenth of an ATR from price is a market order wearing a
+  // limit's clothes: it fills instantly at the worst price in the leg. A real
+  // pullback entry has to be a meaningful discount/premium to spot.
+  const minGap = Math.max(atr * 0.4, last * 0.0008);
+  // Preferred depth: this is where a retracement actually pays, so anchors at
+  // least this far away win over anything shallower.
+  const goodGap = Math.max(atr * 0.6, last * 0.0012);
+  const maxGap = atr * 2.2;
+  const cands: (EntryAnchor & { tier: number })[] = [];
+
 
   const pushZone = (z: [number, number], label: string) => {
     const top = Math.max(z[0], z[1]);
