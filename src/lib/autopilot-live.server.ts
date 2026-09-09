@@ -145,15 +145,36 @@ export async function placeLiveOrder(
   };
 }
 
-export type ManageResult = { checked: number; movedToBreakEven: number; notes: string[] };
+export type ManageResult = {
+  checked: number;
+  movedToBreakEven: number;
+  partialsTaken: number;
+  trailed: number;
+  notes: string[];
+};
+
+export type ManageOptions = {
+  /** Move the stop to entry once the trade is ahead by its own risk. */
+  breakEven?: boolean;
+  /** Close half the position at the first target distance (1R). */
+  partials?: boolean;
+  /** Keep trailing the remainder once it is more than 2R ahead. */
+  trail?: boolean;
+};
 
 /**
- * Trade management: as soon as an open trade is ahead by the distance it was
- * risking, the stop moves to entry so the trade cannot lose any more. Targets
- * already rest at the venue and close themselves.
+ * Trade management for filled live trades:
+ *   - at 1R ahead, close half (optional) and move the stop to entry
+ *   - beyond 2R, keep the stop trailing 1R behind price
+ * Targets already rest at the venue and close themselves.
  */
-export async function manageLiveTrades(userId: string, venue = "oanda"): Promise<ManageResult> {
-  const out: ManageResult = { checked: 0, movedToBreakEven: 0, notes: [] };
+export async function manageLiveTrades(
+  userId: string,
+  venue = "oanda",
+  opts: ManageOptions = {},
+): Promise<ManageResult> {
+  const { breakEven = true, partials = false, trail = false } = opts;
+  const out: ManageResult = { checked: 0, movedToBreakEven: 0, partialsTaken: 0, trailed: 0, notes: [] };
   if (venue !== "oanda") return out;
 
   const target = await oandaTarget(userId);
@@ -189,6 +210,7 @@ export async function manageLiveTrades(userId: string, venue = "oanda"): Promise
     const instrument = String(t["instrument"] ?? "");
     const entry = Number(t["price"]);
     const units = Number(t["currentUnits"]);
+    const initialUnits = Number(t["initialUnits"] ?? units);
     const stopOrder = t["stopLossOrder"] as { price?: string } | undefined;
     const stop = Number(stopOrder?.price);
     const last = mid.get(instrument);
@@ -198,20 +220,58 @@ export async function manageLiveTrades(userId: string, venue = "oanda"): Promise
     const long = units > 0;
     const risk = Math.abs(entry - stop);
     if (risk <= 0) continue;
-    const openProfit = long ? (last as number) - entry : entry - (last as number);
-    const alreadyProtected = long ? stop >= entry : stop <= entry;
-    if (alreadyProtected || openProfit < risk) continue;
+    const price = last as number;
+    const openProfit = long ? price - entry : entry - price;
+    if (openProfit < risk) continue;
+
+    const alreadyPartial = Math.abs(units) < Math.abs(initialUnits) - 0.5;
+
+    // 1) Bank half the position the first time it is a full 1R ahead.
+    if (partials && !alreadyPartial) {
+      const half = Math.floor(Math.abs(units) / 2);
+      if (half >= 1) {
+        const res = await oandaSend(
+          target.host,
+          target.creds.apiKey,
+          `/accounts/${target.accountId}/trades/${id}/close`,
+          "PUT",
+          { units: String(half) },
+        );
+        if (res.ok) {
+          out.partialsTaken += 1;
+          out.notes.push(`${instrument}: first target paid, ${half} units closed and the rest left running`);
+        } else {
+          out.notes.push(`${instrument}: could not close part of the trade (HTTP ${res.status})`);
+        }
+      }
+    }
+
+    // 2) Protect the remainder: stop to entry, then trail 1R behind price.
+    let desiredStop: number | null = null;
+    const protectedAlready = long ? stop >= entry : stop <= entry;
+    if (breakEven && !protectedAlready) desiredStop = entry;
+    if (trail && openProfit >= risk * 2) {
+      const trailStop = long ? price - risk : price + risk;
+      const better = long ? trailStop > Math.max(stop, entry) : trailStop < Math.min(stop, entry);
+      if (better) desiredStop = trailStop;
+    }
+    if (desiredStop === null) continue;
 
     const res = await oandaSend(
       target.host,
       target.creds.apiKey,
       `/accounts/${target.accountId}/trades/${id}/orders`,
       "PUT",
-      { stopLoss: { price: priceStr(instrument, entry), timeInForce: "GTC" } },
+      { stopLoss: { price: priceStr(instrument, desiredStop), timeInForce: "GTC" } },
     );
     if (res.ok) {
-      out.movedToBreakEven += 1;
-      out.notes.push(`${instrument}: up more than 1R, stop moved to break-even at ${priceStr(instrument, entry)}`);
+      if (desiredStop === entry) {
+        out.movedToBreakEven += 1;
+        out.notes.push(`${instrument}: up more than 1R, stop moved to break-even at ${priceStr(instrument, entry)}`);
+      } else {
+        out.trailed += 1;
+        out.notes.push(`${instrument}: stop trailed up to ${priceStr(instrument, desiredStop)}`);
+      }
     } else {
       out.notes.push(`${instrument}: could not move the stop (HTTP ${res.status})`);
     }
@@ -219,3 +279,4 @@ export async function manageLiveTrades(userId: string, venue = "oanda"): Promise
 
   return out;
 }
+

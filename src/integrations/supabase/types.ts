@@ -276,6 +276,7 @@ export type Database = {
           created_at: string
           live_acknowledged_at: string | null
           live_venue: string
+          manage_partials: boolean
           manage_trades: boolean
           max_daily_loss_pct: number
           max_open_positions: number
@@ -284,6 +285,7 @@ export type Database = {
           paused_reason: string | null
           risk_pct: number
           session_windows: string[]
+          trail_after_tp1: boolean
           updated_at: string
           user_id: string
         }
@@ -293,6 +295,7 @@ export type Database = {
           created_at?: string
           live_acknowledged_at?: string | null
           live_venue?: string
+          manage_partials?: boolean
           manage_trades?: boolean
           max_daily_loss_pct?: number
           max_open_positions?: number
@@ -301,6 +304,7 @@ export type Database = {
           paused_reason?: string | null
           risk_pct?: number
           session_windows?: string[]
+          trail_after_tp1?: boolean
           updated_at?: string
           user_id: string
         }
@@ -310,6 +314,7 @@ export type Database = {
           created_at?: string
           live_acknowledged_at?: string | null
           live_venue?: string
+          manage_partials?: boolean
           manage_trades?: boolean
           max_daily_loss_pct?: number
           max_open_positions?: number
@@ -318,6 +323,7 @@ export type Database = {
           paused_reason?: string | null
           risk_pct?: number
           session_windows?: string[]
+          trail_after_tp1?: boolean
           updated_at?: string
           user_id?: string
         }

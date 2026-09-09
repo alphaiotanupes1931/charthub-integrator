@@ -18,7 +18,6 @@ import {
   decideAutopilotProposal,
   markAutopilotProposalResult,
   runAutopilotScan,
-  fillAutopilotProposalOnPaper,
   listAutopilotEvents,
   setAutopilotPause,
 } from "@/lib/autopilot.functions";
@@ -49,9 +48,10 @@ export const Route = createFileRoute("/_app/autopilot")({
 
 type SettingsPatch = {
   mode?: AutopilotMode;
-  accountTarget?: "paper" | "live";
   liveVenue?: string;
   manageTrades?: boolean;
+  managePartials?: boolean;
+  trailAfterTp1?: boolean;
   minGrade?: AutopilotSettings["minGrade"];
   riskPct?: number;
   maxOpenPositions?: number;
@@ -99,7 +99,6 @@ function AutopilotPage() {
   const decide = useServerFn(decideAutopilotProposal);
   const markResult = useServerFn(markAutopilotProposalResult);
   const scan = useServerFn(runAutopilotScan);
-  const fillPaper = useServerFn(fillAutopilotProposalOnPaper);
   const placeOrder = useServerFn(placeBrokerOrder);
   const loadEvents = useServerFn(listAutopilotEvents);
   const togglePause = useServerFn(setAutopilotPause);
@@ -143,10 +142,6 @@ function AutopilotPage() {
       const res = await decide({ data: input });
       if (res.status !== "approved" || !res.order) return { status: res.status, filled: false as const, detail: "" };
       const order = res.order;
-      if (order.accountTarget === "paper") {
-        const filled = await fillPaper({ data: { id: input.id } });
-        return { status: res.status, filled: true as const, detail: `Paper fill, ${filled.size} units` };
-      }
       if (!order.units) throw new Error("This proposal has no position size. Size it on the Broker page.");
       const placed = await placeOrder({
         data: {
@@ -290,34 +285,10 @@ function AutopilotPage() {
 
       <section className="mt-4 rounded-xl border border-border/60 bg-card p-5">
         <h2 className="text-sm font-semibold tracking-wide text-muted-foreground">Account</h2>
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          {(["paper", "live"] as const).map((target) => (
-            <button
-              key={target}
-              type="button"
-              onClick={() => {
-                if (target === "live" && !settings.liveAcknowledged) {
-                  setLiveConfirmOpen(true);
-                  return;
-                }
-                save.mutate({ accountTarget: target });
-              }}
-              className={`rounded-xl border px-4 py-2 text-sm ${
-                settings.accountTarget === target ? "border-primary bg-primary/5" : "border-border/60"
-              }`}
-            >
-              {target === "paper" ? "Paper account" : "Live broker account"}
-            </button>
-          ))}
-          <span className="text-xs text-muted-foreground">
-            {settings.accountTarget === "paper"
-              ? "Nothing here touches real money."
-              : settings.mode === "auto"
-                ? "Trades are placed at your connected OANDA account on their own, with the stop and target attached."
-                : "Orders go to your connected OANDA account once you approve them."}
-          </span>
-        </div>
-
+        <p className="mt-2 text-xs text-muted-foreground">
+          Auto trading is live only. Orders are placed at your connected broker account with the stop and target
+          attached. Connect or switch accounts on the Broker page.
+        </p>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <label className="text-xs">
             <span className="text-muted-foreground">Account used for real orders</span>
@@ -347,6 +318,34 @@ function AutopilotPage() {
               </span>
             </span>
           </label>
+          <label className="flex items-start gap-3 rounded-xl border border-border/60 p-3 text-xs">
+            <input
+              type="checkbox"
+              checked={settings.managePartials}
+              onChange={(e) => save.mutate({ managePartials: e.target.checked })}
+              className="mt-0.5"
+            />
+            <span>
+              <span className="block text-sm">Take part of the trade off at the first target</span>
+              <span className="mt-1 block text-muted-foreground">
+                Half the position is closed at the first target so the win is banked, and the stop moves to your entry.
+              </span>
+            </span>
+          </label>
+          <label className="flex items-start gap-3 rounded-xl border border-border/60 p-3 text-xs">
+            <input
+              type="checkbox"
+              checked={settings.trailAfterTp1}
+              onChange={(e) => save.mutate({ trailAfterTp1: e.target.checked })}
+              className="mt-0.5"
+            />
+            <span>
+              <span className="block text-sm">Trail the rest after the first target</span>
+              <span className="mt-1 block text-muted-foreground">
+                The remaining position keeps its stop trailing behind price so a longer run stays open.
+              </span>
+            </span>
+          </label>
         </div>
 
 
@@ -359,13 +358,13 @@ function AutopilotPage() {
             <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
               You are authorizing automated order placement on your own broker account. TradeMind is not a broker,
               advisor, or money manager. You keep full responsibility for every order, and you can revoke this at any
-              time by switching back to the paper account.
+              time by switching auto trading back to Manual.
             </p>
             <div className="mt-3 flex gap-2">
               <button
                 type="button"
                 onClick={() => {
-                  save.mutate({ acknowledgeLive: true, accountTarget: "live" });
+                  save.mutate({ acknowledgeLive: true });
                   setLiveConfirmOpen(false);
                 }}
                 className="rounded-xl border border-red-600/50 px-3 py-1.5 text-xs text-red-300"
@@ -517,10 +516,6 @@ function AutopilotPage() {
                     <div className="text-muted-foreground">Confidence</div>
                     <div className="font-mono">{p.confidence === null ? "-" : `${p.confidence}%`}</div>
                   </div>
-                  <div>
-                    <div className="text-muted-foreground">Account</div>
-                    <div className="font-mono">{p.accountTarget}</div>
-                  </div>
                 </div>
                 {p.reasoning && <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{p.reasoning}</p>}
                 <div className="mt-3 flex gap-2">
@@ -531,7 +526,7 @@ function AutopilotPage() {
                     className="flex items-center gap-1 rounded-xl border border-emerald-600/50 px-3 py-1.5 text-xs text-emerald-400"
                   >
                     <Check className="h-3 w-3" />
-                    {settings.accountTarget === "paper" ? "Approve and fill on paper" : "Approve and send to broker"}
+                    Approve and send to broker
                   </button>
                   <button
                     type="button"
