@@ -1698,7 +1698,7 @@ function Dashboard() {
               title="Change the strategy playbook your scans are graded against"
             >
               <BookOpen className="h-3.5 w-3.5 text-primary" />
-              <span className="max-w-[9rem] truncate">{activeStrategy ?? "No strategy"}</span>
+              <span className="max-w-[9rem] truncate">{activeStrategy ?? AUTO_STRATEGY}</span>
               <ChevronDown className={`h-3 w-3 transition-transform ${strategyOpen ? "rotate-180" : ""}`} />
             </button>
             {strategyOpen && (
@@ -1721,15 +1721,6 @@ function Dashboard() {
                   <div className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
                     Reads trend, volatility and volume right now, then grades with the playbook that fits. Named on every scan.
                   </div>
-                </button>
-                <button
-                  role="option"
-                  aria-selected={!activeStrategy}
-                  onClick={() => { writeActiveStrategy(null); setActiveStrategy(null); setStrategyOpen(false); }}
-                  className={`w-full text-left px-3 py-2.5 text-sm border-b border-border/40 hover:bg-accent/40 transition ${!activeStrategy ? "bg-primary/10 text-primary" : ""}`}
-                >
-                  No strategy
-                  <div className="text-[11px] text-muted-foreground mt-0.5">Grade on raw structure only.</div>
                 </button>
                 {strategyOptions.map((s) => {
                   const isActive = s.name === activeStrategy;
