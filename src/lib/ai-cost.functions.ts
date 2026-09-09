@@ -25,6 +25,6 @@ export const aiCostSummary = createServerFn({ method: "POST" })
       byUser: ((perUser ?? []) as unknown as Array<{
         user_id: string; email: string | null; calls: number;
         graded_setups: number; cost_usd: number; cost_per_setup: number;
-      }>,
+      }>).filter((r) => r.user_id),
     };
   });
