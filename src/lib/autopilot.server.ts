@@ -16,6 +16,9 @@ export type ProposalDraft = {
   takeProfit: number | null;
   units: number | null;
   reasoning: string;
+  /** False when the lower timeframes have not confirmed yet: too early to take. */
+  triggered: boolean;
+  triggerRule: string | null;
 };
 
 export function parseLevel(text: string | null | undefined): number | null {
@@ -67,5 +70,7 @@ export async function buildProposalDraft(
     takeProfit,
     units: sizeUnits(equity, settings.riskPct, entry, stopLoss),
     reasoning: plan.notes ?? "",
+    triggered: plan.triggered !== false,
+    triggerRule: plan.triggerRule ?? null,
   };
 }
