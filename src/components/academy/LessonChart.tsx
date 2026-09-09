@@ -46,19 +46,19 @@ export function LessonChart({ type }: { type: LessonChartType }) {
         <style>{ANIM_CSS}</style>
         <defs>
           <linearGradient id="grid-fade" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="hsl(var(--muted-foreground) / 0.14)" />
-            <stop offset="100%" stopColor="hsl(var(--muted-foreground) / 0.06)" />
+            <stop offset="0%" stopColor="color-mix(in srgb, var(--color-muted-foreground) calc(0.14 * 100%), transparent)" />
+            <stop offset="100%" stopColor="color-mix(in srgb, var(--color-muted-foreground) calc(0.06 * 100%), transparent)" />
           </linearGradient>
         </defs>
         {/* Axes */}
-        <line x1="40" y1="20" x2="40" y2="230" stroke="hsl(var(--muted-foreground) / 0.35)" strokeWidth="1" />
-        <line x1="40" y1="230" x2="580" y2="230" stroke="hsl(var(--muted-foreground) / 0.35)" strokeWidth="1" />
+        <line x1="40" y1="20" x2="40" y2="230" stroke="color-mix(in srgb, var(--color-muted-foreground) calc(0.35 * 100%), transparent)" strokeWidth="1" />
+        <line x1="40" y1="230" x2="580" y2="230" stroke="color-mix(in srgb, var(--color-muted-foreground) calc(0.35 * 100%), transparent)" strokeWidth="1" />
         {/* Grid lines */}
         {[70, 120, 170, 220].map((y) => (
           <line key={y} x1="40" y1={y} x2="580" y2={y} stroke="url(#grid-fade)" strokeDasharray="2 4" />
         ))}
-        <text x="20" y="130" fontSize="10" fill="hsl(var(--muted-foreground))" transform="rotate(-90 20 130)">PRICE</text>
-        <text x="300" y="252" fontSize="10" textAnchor="middle" fill="hsl(var(--muted-foreground))">TIME —&gt;</text>
+        <text x="20" y="130" fontSize="10" fill="var(--color-muted-foreground)" transform="rotate(-90 20 130)">PRICE</text>
+        <text x="300" y="252" fontSize="10" textAnchor="middle" fill="var(--color-muted-foreground)">TIME —&gt;</text>
 
         {renderShape(type)}
       </svg>
@@ -69,7 +69,7 @@ export function LessonChart({ type }: { type: LessonChartType }) {
 
 const BULL = "#22c55e";
 const BEAR = "#ef4444";
-const NEUTRAL = "hsl(var(--muted-foreground))";
+const NEUTRAL = "var(--color-muted-foreground)";
 const ACCENT = "#38bdf8";
 const NEUTRAL_HEX = "#94a3b8";
 

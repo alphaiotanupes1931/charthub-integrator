@@ -22,16 +22,16 @@ function Frame({ title, hint, children }: { title: string; hint?: string; childr
   );
 }
 
-const AXIS = { stroke: "hsl(var(--muted-foreground))", fontSize: 11 } as const;
+const AXIS = { stroke: "var(--color-muted-foreground)", fontSize: 11 } as const;
 const TOOLTIP = {
   contentStyle: {
-    background: "hsl(var(--popover))",
-    border: "1px solid hsl(var(--border))",
+    background: "var(--color-popover)",
+    border: "1px solid var(--color-border)",
     borderRadius: 12,
     fontSize: 12,
-    color: "hsl(var(--popover-foreground))",
+    color: "var(--color-popover-foreground)",
   },
-  labelStyle: { color: "hsl(var(--muted-foreground))" },
+  labelStyle: { color: "var(--color-muted-foreground)" },
 } as const;
 
 /** Daily (or monthly) bars: AI dollars or screenshot reads over the window. */
@@ -81,7 +81,7 @@ export function DailyUsageChart({
       ) : (
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={rows} margin={{ top: 4, right: 8, left: -12, bottom: 0 }}>
-            <CartesianGrid stroke="hsl(var(--border))" vertical={false} />
+            <CartesianGrid stroke="var(--color-border)" vertical={false} />
             <XAxis dataKey="day" tickFormatter={shortDay} tickLine={false} axisLine={false} {...AXIS} minTickGap={16} />
             <YAxis
               tickLine={false}
@@ -93,7 +93,7 @@ export function DailyUsageChart({
               {...TOOLTIP}
               formatter={(v) => [isAi ? usd(Number(v)) : `${Number(v)} reads`, isAi ? "AI cost" : "Reads"]}
             />
-            <Bar dataKey={key} fill="hsl(var(--foreground))" radius={[3, 3, 0, 0]} maxBarSize={22} />
+            <Bar dataKey={key} fill="var(--color-foreground)" radius={[3, 3, 0, 0]} maxBarSize={22} />
           </BarChart>
         </ResponsiveContainer>
       )}
@@ -133,7 +133,7 @@ export function PerPersonChart({
       ) : (
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={top} layout="vertical" margin={{ top: 4, right: 12, left: 8, bottom: 0 }}>
-            <CartesianGrid stroke="hsl(var(--border))" horizontal={false} />
+            <CartesianGrid stroke="var(--color-border)" horizontal={false} />
             <XAxis
               type="number"
               tickLine={false}
@@ -145,7 +145,7 @@ export function PerPersonChart({
             <Tooltip {...TOOLTIP} formatter={(v) => [fmt(Number(v)), format === "usd" ? "Cost" : "Reads"]} />
             <Bar dataKey="value" radius={[0, 3, 3, 0]} maxBarSize={18}>
               {top.map((r) => (
-                <Cell key={r.label} fill={r.isAdmin ? "hsl(var(--muted-foreground))" : "hsl(var(--foreground))"} />
+                <Cell key={r.label} fill={r.isAdmin ? "var(--color-muted-foreground)" : "var(--color-foreground)"} />
               ))}
             </Bar>
           </BarChart>

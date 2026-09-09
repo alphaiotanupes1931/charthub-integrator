@@ -1924,7 +1924,7 @@ function Dashboard() {
                 key={o.value}
                 value={o.value}
                 className="bg-background text-foreground"
-                style={{ backgroundColor: "hsl(var(--background))", color: "hsl(var(--foreground))" }}
+                style={{ backgroundColor: "var(--color-background)", color: "var(--color-foreground)" }}
               >
                 {o.label}
               </option>
