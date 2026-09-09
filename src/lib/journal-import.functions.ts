@@ -186,6 +186,9 @@ export type ParsedTradeSetup = {
   takeProfit: number | null;
   exit: number | null;
   size: number | null;
+  /** Net profit or loss printed on the screenshot / in the text, account currency. */
+  pnl: number | null;
+  fees: number | null;
   notes: string | null;
   confidence: number | null;
   note: string;
@@ -200,6 +203,8 @@ const SetupSchema = z.object({
   takeProfit: z.number().nullish(),
   exit: z.number().nullish(),
   size: z.number().nullish(),
+  pnl: z.number().nullish(),
+  fees: z.number().nullish(),
   notes: z.string().nullish(),
   confidence: z.number().nullish(),
   note: z.string().nullish(),
@@ -207,7 +212,8 @@ const SetupSchema = z.object({
 
 const EMPTY_SETUP: ParsedTradeSetup = {
   symbol: null, side: null, timeframe: null, entry: null, stop: null,
-  takeProfit: null, exit: null, size: null, notes: null, confidence: null, note: "",
+  takeProfit: null, exit: null, size: null, pnl: null, fees: null,
+  notes: null, confidence: null, note: "",
 };
 
 /**
@@ -245,11 +251,13 @@ export const parseTradeSetupScreenshot = createServerFn({ method: "POST" })
           "A green profit zone above the entry means side is Long; below the entry means Short. Buy/long labels are Long, sell/short labels are Short.",
           "Read prices off the price axis or the printed labels. Copy digits exactly and respect the instrument's decimal places.",
           "exit is only set when the screenshot clearly shows the trade already closed at a price; otherwise null.",
+          "pnl is the net profit or loss in account currency exactly as printed on the screenshot (for example 'Profit 50.00' means 50, a red -12.40 means -12.4). Read every digit and the decimal point; never rescale, round or drop digits. null when no money amount is shown.",
+          "fees is the total commission plus swap printed for the trade, otherwise null.",
           "Never invent a value: use null for anything not visible on the image.",
           "notes is at most two short factual sentences about what the chart shows, no emoji, no hype.",
           "confidence is 0-1 for how reliably the levels were read.",
           "note is one short plain sentence about what you read.",
-          'Shape: {"symbol":"","side":"Long","timeframe":"4H","entry":0,"stop":0,"takeProfit":0,"exit":null,"size":null,"notes":null,"confidence":0.9,"note":""}',
+          'Shape: {"symbol":"","side":"Long","timeframe":"4H","entry":0,"stop":0,"takeProfit":0,"exit":null,"size":null,"pnl":null,"fees":null,"notes":null,"confidence":0.9,"note":""}',
         ].join(" "),
         messages: [
           {
@@ -275,6 +283,8 @@ export const parseTradeSetupScreenshot = createServerFn({ method: "POST" })
         takeProfit: o.takeProfit ?? null,
         exit: o.exit ?? null,
         size: o.size ?? null,
+        pnl: o.pnl ?? null,
+        fees: o.fees ?? null,
         notes: o.notes ? o.notes.slice(0, 300) : null,
         confidence: o.confidence ?? null,
         note: (o.note || "").slice(0, 300),
@@ -313,10 +323,12 @@ export const parseTradeSetupText = createServerFn({ method: "POST" })
           "side is Long for buy/long wording and Short for sell/short wording.",
           "Copy prices exactly as written, respecting decimals. If several targets are listed use the first one as takeProfit.",
           "exit is only set when the text says the trade was already closed at a price; otherwise null.",
+          "pnl is the net profit or loss in account currency exactly as stated (a stated profit of 50 dollars is 50, a loss is negative). Never rescale or round. null when no money amount is stated.",
+          "fees is the total commission plus swap stated for the trade, otherwise null.",
           "Never invent a value: use null for anything not stated.",
           "notes is at most two short factual sentences, no emoji, no hype.",
           "confidence is 0-1 for how reliably the values were read. note is one short plain sentence.",
-          'Shape: {"symbol":"","side":"Long","timeframe":"4H","entry":0,"stop":0,"takeProfit":0,"exit":null,"size":null,"notes":null,"confidence":0.9,"note":""}',
+          'Shape: {"symbol":"","side":"Long","timeframe":"4H","entry":0,"stop":0,"takeProfit":0,"exit":null,"size":null,"pnl":null,"fees":null,"notes":null,"confidence":0.9,"note":""}',
         ].join(" "),
         messages: [{ role: "user", content: `Extract the trade details from this text:\n\n${data.text}` }],
       });
@@ -331,6 +343,8 @@ export const parseTradeSetupText = createServerFn({ method: "POST" })
         takeProfit: o.takeProfit ?? null,
         exit: o.exit ?? null,
         size: o.size ?? null,
+        pnl: o.pnl ?? null,
+        fees: o.fees ?? null,
         notes: o.notes ? o.notes.slice(0, 300) : null,
         confidence: o.confidence ?? null,
         note: (o.note || "").slice(0, 300),
