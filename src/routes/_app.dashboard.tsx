@@ -2048,6 +2048,8 @@ function Dashboard() {
                 interval={interval}
                 enabled={levels}
                 sessions={sessionsOn}
+                candleType={candleType}
+
                 fallback={
                   <NativeChart
                     symbol={symbol.tv}
