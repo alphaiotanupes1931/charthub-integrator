@@ -94,8 +94,16 @@ export const Route = createFileRoute("/api/public/hooks/journal-verify-tick")({
           }
           checked += 1;
 
+          // Write the price the trade actually resolved at. Without it the row
+          // keeps its exit equal to the entry, so the journal and the calendar
+          // still read 0.00 even though the stop or target printed.
+          const settled = res.status !== "open";
+          const exit = settled && res.price != null && Number.isFinite(res.price)
+            ? res.price
+            : num(t["exit"]);
           const next = {
             ...t,
+            exit,
             result: res.status,
             resultSource: "auto",
             resultR: res.r,
