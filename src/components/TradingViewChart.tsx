@@ -109,21 +109,32 @@ export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _s
     const params = new URLSearchParams({
       symbol,
       interval: iv,
+      // Full TradingView chrome: drawing rail, top toolbar, symbol search,
+      // indicator picker, date ranges, details and watchlist panels.
       hidesidetoolbar: "0",
+      hide_side_toolbar: "0",
       hidetoptoolbar: "0",
+      hide_top_toolbar: "0",
+      hide_legend: "0",
       symboledit: "1",
-      saveimage: "0",
+      allow_symbol_change: "1",
+      details: "1",
+      hotlist: "1",
+      calendar: "1",
+      hideideas: "1",
+      saveimage: "1",
       toolbarbg: toolbarBg,
       studies: JSON.stringify(studies),
       theme: embedTheme,
-      style: "1",
+      style: (candleType && TV_STYLE_MAP[candleType]) || "1",
       timezone: "Etc/UTC",
       withdateranges: "1",
-      showpopupbutton: "0",
+      showpopupbutton: "1",
       locale: "en",
     });
     return `https://s.tradingview.com/widgetembed/?${params.toString()}`;
-  }, [symbol, interval, studies, embedTheme, toolbarBg]);
+  }, [symbol, interval, studies, embedTheme, toolbarBg, candleType]);
+
 
   // Only a symbol/interval change resets the sticky state; a background retry
   // must not clear it (that is what caused the flicker).
