@@ -2177,13 +2177,16 @@ function Dashboard() {
             )}
           </div>
 
-          {/* Buy / Sell on TradingView - shown under both Live and Setup charts */}
+          {/* Buy / Sell through the connected broker - under both Live and Setup charts */}
           {!isChartFullscreen && (
             <ChartTradeBar
               tvSymbol={symbol.tv}
               ticker={symbol.ticker}
               interval={interval}
               bias={aiGrade?.bias}
+              entry={aiGrade?.entry ?? null}
+              stop={aiGrade?.stop ?? null}
+              takeProfit={aiGrade?.tp1 ?? null}
             />
           )}
 
