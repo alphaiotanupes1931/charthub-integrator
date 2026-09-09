@@ -731,7 +731,7 @@ export function entryTriggerRead(
   };
 }
 
-function findEntryAnchor(
+export function findEntryAnchor(
   bias: "Long" | "Short",
   last: number,
   atr: number,
