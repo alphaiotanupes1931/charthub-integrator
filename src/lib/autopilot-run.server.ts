@@ -300,6 +300,24 @@ export async function runAutopilotForUser(
     }
   }
 
+  // Trade management: protect anything already filled at the live account.
+  if (settings.manageTrades && settings.accountTarget === "live") {
+    try {
+      const { manageLiveTrades } = await import("@/lib/autopilot-live.server");
+      const managed = await manageLiveTrades(userId, settings.liveVenue);
+      if (managed.movedToBreakEven > 0) {
+        await logAutopilotEvent(
+          userId,
+          "run",
+          `Trade management: ${managed.movedToBreakEven} stop(s) moved to break-even. ${managed.notes.join(" ")}`,
+          { managed },
+        );
+      }
+    } catch {
+      // management failure must not fail the run
+    }
+  }
+
   await logAutopilotEvent(
     userId,
     "run",
