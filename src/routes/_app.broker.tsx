@@ -58,26 +58,14 @@ function BrokerPage() {
   const modifyTrade = useServerFn(modifyBrokerTrade);
   const cancelOrder = useServerFn(cancelBrokerOrder);
   const fetchPending = useServerFn(listBrokerPendingOrders);
-  const placeOrder = useServerFn(placeBrokerOrder);
 
   const [status, setStatus] = useState<Status | null>(null);
   const [positions, setPositions] = useState<Position[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [placing, setPlacing] = useState(false);
-
-  // Order form
-  const [symbol, setSymbol] = useState(search.symbol || "EUR/USD");
-  const [side, setSide] = useState<"long" | "short">(search.side ?? "long");
-  const [units, setUnits] = useState(1000);
-  const [orderType, setOrderType] = useState<"market" | "limit" | "stop">("market");
-  const [limitPrice, setLimitPrice] = useState<string>(search.entry != null ? String(search.entry) : "");
   const [pending, setPending] = useState<PendingOrder[]>([]);
-  const [stopLoss, setStopLoss] = useState<string>(search.stop != null ? String(search.stop) : "");
-  const [takeProfit, setTakeProfit] = useState<string>(search.tp != null ? String(search.tp) : "");
 
-  // Risk sizer
-  const [riskDollars, setRiskDollars] = useState<string>("");
+
 
   async function refresh(silent = false) {
     if (!silent) setLoading(true);
