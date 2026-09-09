@@ -245,7 +245,54 @@ export async function runAutopilotForUser(
             `${draft.symbol} ${draft.side} auto-filled on paper, ${size} units at ${draft.entry}`,
             { symbol: draft.symbol, size, entry: draft.entry, proposalId: inserted.id },
           );
+      }
+
+      if (autoLive) {
+        const size = Math.max(1, Math.floor(draft.units ?? 1));
+        const { placeLiveOrder } = await import("@/lib/autopilot-live.server");
+        const sent = await placeLiveOrder(userId, settings.liveVenue, {
+          symbol: draft.symbol,
+          side: draft.side,
+          units: size,
+          entry: draft.entry,
+          stopLoss: draft.stopLoss,
+          takeProfit: draft.takeProfit,
+        });
+        if (!sent.ok) {
+          await client
+            .from("autopilot_proposals")
+            .update({ status: "failed", rejection_reason: sent.detail })
+            .eq("id", inserted.id as string);
+          await logAutopilotEvent(userId, "failed", `${draft.symbol} live order failed: ${sent.detail}`, {
+            symbol: draft.symbol,
+            proposalId: inserted.id,
+          });
+        } else {
+          await client
+            .from("autopilot_proposals")
+            .update({ status: "filled", broker_order_id: sent.orderId ?? null })
+            .eq("id", inserted.id as string);
+          result.executed += 1;
+          openPositions += 1;
+          await logAutopilotEvent(
+            userId,
+            "filled",
+            `${draft.symbol} ${draft.side} placed at your ${settings.liveVenue.toUpperCase()} account, ${size} units. ${sent.detail}`,
+            { symbol: draft.symbol, size, entry: draft.entry, proposalId: inserted.id, live: true },
+          );
+          try {
+            await createNotification({
+              userId,
+              kind: "system",
+              title: `Autopilot placed ${draft.symbol} ${draft.side}`,
+              body: sent.detail,
+              url: "/autopilot",
+            });
+          } catch {
+            // notification failure must not undo a real fill
+          }
         }
+      }
       }
 
     } catch {
