@@ -230,6 +230,9 @@ type ScanResult = {
   counterTrend?: boolean;
   htfBias?: "bullish" | "bearish" | "neutral";
   autoStrategy?: { name: string; slug: string; regime: string; reason: string };
+  triggered?: boolean;
+  triggerLevel?: number;
+  triggerRule?: string;
 
 };
 
