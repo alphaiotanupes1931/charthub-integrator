@@ -1807,9 +1807,10 @@ function Dashboard() {
           >
             <Settings2 className="h-3 w-3" />
             <span>Levels</span>
-            {chartTab === "setup" && enabledCount > 0 && (
+            {enabledCount > 0 && (
               <span className="text-primary">· {enabledCount}</span>
             )}
+
             <ChevronDown className={`h-3 w-3 transition-transform ${viewMenuOpen ? "rotate-180" : ""}`} />
           </button>
           {viewMenuOpen && (
