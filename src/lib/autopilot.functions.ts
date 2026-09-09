@@ -21,7 +21,6 @@ export const getAutopilotSettings = createServerFn({ method: "GET" })
     if (!data) return { ...DEFAULT_AUTOPILOT_SETTINGS };
     return {
       mode: data.mode as AutopilotSettings["mode"],
-      accountTarget: data.account_target as AutopilotSettings["accountTarget"],
       minGrade: data.min_grade as AutopilotSettings["minGrade"],
       riskPct: Number(data.risk_pct),
       maxOpenPositions: Number(data.max_open_positions),
@@ -32,6 +31,8 @@ export const getAutopilotSettings = createServerFn({ method: "GET" })
       pausedReason: data.paused_reason ?? null,
       liveVenue: (data as Record<string, unknown>)["live_venue"] as string ?? "oanda",
       manageTrades: (data as Record<string, unknown>)["manage_trades"] !== false,
+      managePartials: (data as Record<string, unknown>)["manage_partials"] !== false,
+      trailAfterTp1: (data as Record<string, unknown>)["trail_after_tp1"] !== false,
     };
   });
 
@@ -40,10 +41,11 @@ export const updateAutopilotSettings = createServerFn({ method: "POST" })
   .inputValidator((raw: unknown) =>
     z
       .object({
-        mode: z.enum(["manual", "confirm", "auto"]).optional(),
-        accountTarget: z.enum(["paper", "live"]).optional(),
+        mode: z.enum(["manual", "auto"]).optional(),
         liveVenue: z.string().trim().min(2).max(40).optional(),
         manageTrades: z.boolean().optional(),
+        managePartials: z.boolean().optional(),
+        trailAfterTp1: z.boolean().optional(),
         minGrade: z.enum(["A+", "A", "B"]).optional(),
         riskPct: z.number().min(0.1).max(5).optional(),
         maxOpenPositions: z.number().int().min(1).max(20).optional(),
@@ -58,9 +60,10 @@ export const updateAutopilotSettings = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const patch: Record<string, unknown> = { user_id: context.userId };
     if (data.mode !== undefined) patch.mode = data.mode;
-    if (data.accountTarget !== undefined) patch.account_target = data.accountTarget;
     if (data.liveVenue !== undefined) patch.live_venue = data.liveVenue;
     if (data.manageTrades !== undefined) patch.manage_trades = data.manageTrades;
+    if (data.managePartials !== undefined) patch.manage_partials = data.managePartials;
+    if (data.trailAfterTp1 !== undefined) patch.trail_after_tp1 = data.trailAfterTp1;
     if (data.minGrade !== undefined) patch.min_grade = data.minGrade;
     if (data.riskPct !== undefined) patch.risk_pct = data.riskPct;
     if (data.maxOpenPositions !== undefined) patch.max_open_positions = data.maxOpenPositions;
@@ -103,7 +106,6 @@ export const listAutopilotProposals = createServerFn({ method: "GET" })
       takeProfit: p.take_profit === null ? null : Number(p.take_profit),
       units: p.units === null ? null : Number(p.units),
       orderType: p.order_type as string,
-      accountTarget: p.account_target as "paper" | "live",
       reasoning: (p.reasoning as string | null) ?? null,
       status:
         p.status === "pending" && new Date(p.expires_at as string).getTime() < nowMs
@@ -145,7 +147,6 @@ export const createAutopilotProposal = createServerFn({ method: "POST" })
     const settings: AutopilotSettings = row
       ? {
           mode: row.mode as AutopilotSettings["mode"],
-          accountTarget: row.account_target as AutopilotSettings["accountTarget"],
           minGrade: row.min_grade as AutopilotSettings["minGrade"],
           riskPct: Number(row.risk_pct),
           maxOpenPositions: Number(row.max_open_positions),
@@ -156,6 +157,8 @@ export const createAutopilotProposal = createServerFn({ method: "POST" })
           pausedReason: row.paused_reason ?? null,
           liveVenue: ((row as Record<string, unknown>)["live_venue"] as string) ?? "oanda",
           manageTrades: (row as Record<string, unknown>)["manage_trades"] !== false,
+          managePartials: (row as Record<string, unknown>)["manage_partials"] !== false,
+          trailAfterTp1: (row as Record<string, unknown>)["trail_after_tp1"] !== false,
         }
       : { ...DEFAULT_AUTOPILOT_SETTINGS };
 
@@ -186,7 +189,7 @@ export const createAutopilotProposal = createServerFn({ method: "POST" })
         units: data.units ?? null,
         risk_pct: settings.riskPct,
         order_type: data.orderType,
-        account_target: settings.accountTarget,
+        account_target: "live",
         reasoning: data.reasoning ?? null,
         status: verdict.allowed ? "pending" : "blocked",
         rejection_reason: verdict.allowed ? null : verdict.reason,
@@ -251,7 +254,6 @@ export const decideAutopilotProposal = createServerFn({ method: "POST" })
               price: Number(proposal.entry),
               stopLoss: proposal.stop_loss === null ? null : Number(proposal.stop_loss),
               takeProfit: proposal.take_profit === null ? null : Number(proposal.take_profit),
-              accountTarget: proposal.account_target as "paper" | "live",
             }
           : null,
     };
@@ -305,60 +307,6 @@ export const runAutopilotScan = createServerFn({ method: "POST" })
     return await runAutopilotForUser(context.supabase, context.userId, settings, data.timeframe, apiKey);
   });
 
-
-// Execute an approved proposal on the paper account. Live orders go through
-// the broker path on the client so the OANDA margin guard still applies.
-export const fillAutopilotProposalOnPaper = createServerFn({ method: "POST" })
-  .middleware([requireCapability("autopilot")])
-  .inputValidator((raw: unknown) => z.object({ id: z.string().uuid() }).parse(raw))
-  .handler(async ({ data, context }) => {
-    const { data: proposal, error } = await context.supabase
-      .from("autopilot_proposals")
-      .select("*")
-      .eq("id", data.id)
-      .eq("user_id", context.userId)
-      .maybeSingle();
-    if (error) throw new Error(error.message);
-    if (!proposal) throw new Error("Proposal not found");
-    if (proposal.status !== "approved") throw new Error(`Proposal is ${proposal.status}, not approved`);
-
-    const { data: account } = await context.supabase
-      .from("paper_accounts")
-      .select("status")
-      .eq("user_id", context.userId)
-      .maybeSingle();
-    if (account && account.status !== "active") {
-      throw new Error(`Your paper account is ${account.status}. Resume it before filling trades.`);
-    }
-
-    const size = proposal.units === null ? 1 : Math.max(1, Number(proposal.units));
-    const { error: insertError } = await context.supabase.from("paper_positions").insert({
-      user_id: context.userId,
-      symbol: proposal.symbol as string,
-      side: proposal.side as string,
-      size,
-      entry: Number(proposal.entry),
-      stop: proposal.stop_loss === null ? null : Number(proposal.stop_loss),
-      take_profit: proposal.take_profit === null ? null : Number(proposal.take_profit),
-      grade: (proposal.grade as string | null) ?? null,
-    });
-    if (insertError) {
-      await context.supabase
-        .from("autopilot_proposals")
-        .update({ status: "failed", rejection_reason: insertError.message })
-        .eq("id", data.id)
-        .eq("user_id", context.userId);
-      throw new Error(insertError.message);
-    }
-
-    await context.supabase
-      .from("autopilot_proposals")
-      .update({ status: "filled" })
-      .eq("id", data.id)
-      .eq("user_id", context.userId);
-
-    return { ok: true as const, size };
-  });
 
 // ---- Audit log + manual kill switch (phase: autopilot hardening) ----
 

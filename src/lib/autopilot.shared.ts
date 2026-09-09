@@ -1,9 +1,9 @@
-// Shared autopilot types + rail evaluation. Safe to import from client and server.
-export type AutopilotMode = "manual" | "confirm" | "auto";
+// Shared auto-trading types + rail evaluation. Safe to import from client and server.
+// Live only: every order goes to the trader's connected broker account.
+export type AutopilotMode = "manual" | "auto";
 
 export type AutopilotSettings = {
   mode: AutopilotMode;
-  accountTarget: "paper" | "live";
   minGrade: "A+" | "A" | "B";
   riskPct: number;
   maxOpenPositions: number;
@@ -12,15 +12,18 @@ export type AutopilotSettings = {
   sessionWindows: string[];
   liveAcknowledged: boolean;
   pausedReason: string | null;
-  /** Which connected account real orders go to when accountTarget is "live". */
+  /** Which connected account real orders go to. */
   liveVenue: string;
   /** Move the stop to break-even once a filled trade is up by its own risk. */
   manageTrades: boolean;
+  /** Close part of the position at the first target. */
+  managePartials: boolean;
+  /** Trail the remainder behind structure once the first target is paid. */
+  trailAfterTp1: boolean;
 };
 
 export const DEFAULT_AUTOPILOT_SETTINGS: AutopilotSettings = {
   mode: "manual",
-  accountTarget: "paper",
   minGrade: "A",
   riskPct: 0.5,
   maxOpenPositions: 2,
@@ -31,6 +34,8 @@ export const DEFAULT_AUTOPILOT_SETTINGS: AutopilotSettings = {
   pausedReason: null,
   liveVenue: "oanda",
   manageTrades: true,
+  managePartials: true,
+  trailAfterTp1: true,
 };
 
 const GRADE_RANK: Record<string, number> = { "A+": 3, A: 2, B: 1, C: 0, D: 0, F: 0 };
@@ -53,9 +58,9 @@ export function evaluateRails(
     };
   }
   if (settings.pausedReason) {
-    return { allowed: false, reason: `Autopilot paused: ${settings.pausedReason}` };
+    return { allowed: false, reason: `Auto trading paused: ${settings.pausedReason}` };
   }
-  if (settings.accountTarget === "live" && !settings.liveAcknowledged) {
+  if (!settings.liveAcknowledged) {
     return { allowed: false, reason: "Live execution has not been acknowledged" };
   }
   if (settings.allowedSymbols.length > 0 && !settings.allowedSymbols.includes(candidate.symbol)) {
@@ -78,13 +83,9 @@ export const MODE_COPY: Record<AutopilotMode, { label: string; detail: string }>
     label: "Manual",
     detail: "The coach writes the plan. Nothing reaches your broker unless you place it yourself.",
   },
-  confirm: {
-    label: "Confirm",
-    detail: "The coach proposes a trade and it waits here for your approval. Proposals expire after 15 minutes.",
-  },
   auto: {
     label: "Auto",
     detail:
-      "Setups that clear every rail below are placed on their own, on paper or at your connected account, with the stop and target attached. Everything is still logged here.",
+      "When a scan comes back at or above your minimum grade, you get asked whether to place it. Approved trades go to your connected account with the stop and target attached, and are managed from there.",
   },
 };
