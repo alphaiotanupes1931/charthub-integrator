@@ -203,7 +203,7 @@ export function Tutorial() {
             height: rect.height + 16,
             borderRadius: 12,
             boxShadow: "0 0 0 9999px rgba(0,0,0,0.72)",
-            outline: "2px solid hsl(var(--primary))",
+            outline: "2px solid var(--color-primary)",
             outlineOffset: 2,
           }}
         />

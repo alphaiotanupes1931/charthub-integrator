@@ -195,8 +195,8 @@ function VoiceCoachPage() {
           disabled={replying}
           className={`relative h-24 w-24 rounded-full flex items-center justify-center transition ${
             listening
-              ? "bg-primary text-primary-foreground shadow-[0_0_60px_hsl(var(--primary)/0.5)]"
-              : "bg-primary/10 text-primary hover:bg-primary/20 shadow-[0_0_40px_hsl(var(--primary)/0.25)]"
+              ? "bg-primary text-primary-foreground shadow-[0_0_60px_color-mix(in srgb, var(--color-primary) 50%, transparent)]"
+              : "bg-primary/10 text-primary hover:bg-primary/20 shadow-[0_0_40px_color-mix(in srgb, var(--color-primary) 25%, transparent)]"
           }`}
           aria-label={listening ? "Stop listening" : "Start listening"}
         >
