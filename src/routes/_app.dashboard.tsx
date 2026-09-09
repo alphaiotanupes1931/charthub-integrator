@@ -1722,15 +1722,6 @@ function Dashboard() {
                     Reads trend, volatility and volume right now, then grades with the playbook that fits. Named on every scan.
                   </div>
                 </button>
-                <button
-                  role="option"
-                  aria-selected={!activeStrategy}
-                  onClick={() => { writeActiveStrategy(null); setActiveStrategy(null); setStrategyOpen(false); }}
-                  className={`w-full text-left px-3 py-2.5 text-sm border-b border-border/40 hover:bg-accent/40 transition ${!activeStrategy ? "bg-primary/10 text-primary" : ""}`}
-                >
-                  No strategy
-                  <div className="text-[11px] text-muted-foreground mt-0.5">Grade on raw structure only.</div>
-                </button>
                 {strategyOptions.map((s) => {
                   const isActive = s.name === activeStrategy;
                   return (
