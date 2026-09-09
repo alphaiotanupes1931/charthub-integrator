@@ -1432,6 +1432,7 @@ export async function runPlanner(
     // the trader needed on the USD/JPY fade that stopped out.
     + (setupRead.reason ? ` ${setupRead.reason}` : "")
     + (staleRead.reason ? ` ${staleRead.reason}` : "")
+    + (!triggerRead.triggered && triggerRead.rule ? ` ${triggerRead.rule}` : "")
     + newsWarning
     + (timingGate ? ` ${timingGate}` : warnings.length ? ` ${warnings[0]}` : "");
 
