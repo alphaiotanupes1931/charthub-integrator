@@ -175,9 +175,9 @@ export async function runAutopilotForUser(
           order_type: "market",
           account_target: settings.accountTarget,
           reasoning: draft.reasoning,
-          status: verdict.allowed ? (autoFill ? "approved" : "pending") : "blocked",
+          status: verdict.allowed ? (executable ? "approved" : "pending") : "blocked",
           rejection_reason: verdict.allowed ? null : verdict.reason,
-          decided_at: autoFill ? new Date().toISOString() : null,
+          decided_at: executable ? new Date().toISOString() : null,
         } as never)
         .select("id")
         .single();
