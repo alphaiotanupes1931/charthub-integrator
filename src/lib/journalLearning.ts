@@ -23,6 +23,7 @@ type RawJournalTrade = {
   size?: number;
   fees?: number;
   pointValue?: number;
+  reportedPnl?: number;
   result?: "tp" | "stop" | "breakeven" | "partial" | "open";
   resultR?: number | null;
   executed?: boolean;
