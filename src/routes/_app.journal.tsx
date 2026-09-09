@@ -99,6 +99,8 @@ type Trade = {
   size: number;
   fees?: number;          // total commissions + swap for the trade
   pointValue?: number;    // $ per 1.0 price move per unit (contract multiplier / pip value)
+  /** Net P&L in account currency as reported by the broker / screenshot. Wins over the computed figure. */
+  reportedPnl?: number;
   notes: string;
   hasImage?: boolean;
   /** How many screenshots are stored for this trade (1 = legacy single image). */
@@ -170,6 +172,10 @@ function formatYmdHuman(s: string): string {
 // Accurate P&L: gross move x direction x size x point value, minus fees.
 // point value defaults to 1 (matches raw price units for spot / crypto).
 function tradePnl(t: Trade): number {
+  // A figure read off the broker (screenshot, pasted fill, manual entry) is the
+  // truth. Computed P&L only guesses the contract multiplier, so it can be off
+  // by 10x on FX / index lots.
+  if (t.reportedPnl != null && Number.isFinite(t.reportedPnl)) return t.reportedPnl;
   const dir = t.side === "Long" ? 1 : -1;
   const size = t.size || 0;
   const pv = t.pointValue && isFinite(t.pointValue) && t.pointValue > 0 ? t.pointValue : 1;
@@ -590,7 +596,8 @@ function JournalPage() {
         const pv = (p.pnl + fees) / move;
         if (Number.isFinite(pv) && pv > 0) pointValue = Math.round(pv * 1e6) / 1e6;
       }
-      const netPnl = p.pnl ?? move * (pointValue ?? 1) - fees;
+      const reportedPnl = p.pnl != null && Number.isFinite(p.pnl) ? p.pnl : undefined;
+      const netPnl = reportedPnl ?? move * (pointValue ?? 1) - fees;
       const tf = (TIMEFRAMES as readonly string[]).includes(p.timeframe ?? "")
         ? (p.timeframe as Timeframe)
         : "15m";
@@ -608,6 +615,7 @@ function JournalPage() {
         size,
         fees,
         pointValue,
+        reportedPnl,
         notes: [p.notes, "Imported from a closed-session screenshot."].filter(Boolean).join(" "),
         executed: true,
         executedAt: Date.now(),
@@ -645,6 +653,7 @@ function JournalPage() {
             size: c.size,
             fees: c.fees,
             pointValue: c.pointValue ?? existing.pointValue,
+            reportedPnl: c.reportedPnl ?? existing.reportedPnl,
             takeProfit: existing.takeProfit ?? c.takeProfit,
             executed: true,
             executedAt: existing.executedAt ?? c.executedAt,
@@ -1668,6 +1677,7 @@ function TradeFormModal({
   const [size, setSize] = useState<string>(editing ? String(editing.size) : "1");
   const [fees, setFees] = useState<string>(editing?.fees != null ? String(editing.fees) : "");
   const [pointValue, setPointValue] = useState<string>(editing?.pointValue != null ? String(editing.pointValue) : "");
+  const [reportedPnl, setReportedPnl] = useState<string>(editing?.reportedPnl != null ? String(editing.reportedPnl) : "");
   const [notes, setNotes] = useState(editing?.notes ?? prefill?.notes ?? "");
   const [chatLog, setChatLog] = useState(editing?.chatLog ?? "");
   const [setup, setSetup] = useState(editing?.setup ?? prefill?.setup ?? "");
@@ -1762,6 +1772,8 @@ function TradeFormModal({
       if (out.takeProfit != null) setTakeProfit(String(out.takeProfit));
       if (out.exit != null) setExit(String(out.exit));
       if (out.size != null && out.size > 0) setSize(String(out.size));
+      if (out.pnl != null && Number.isFinite(out.pnl)) setReportedPnl(String(out.pnl));
+      if (out.fees != null && Number.isFinite(out.fees)) setFees(String(Math.abs(out.fees)));
       if (out.notes) setNotes((prev) => (prev.trim() ? prev : out.notes!));
       const filled = out.entry != null || out.stop != null || out.takeProfit != null;
       const conf = out.confidence != null ? ` Confidence ${Math.round(out.confidence * 100)}%.` : "";
@@ -1798,6 +1810,8 @@ function TradeFormModal({
       if (out.takeProfit != null) setTakeProfit(String(out.takeProfit));
       if (out.exit != null) setExit(String(out.exit));
       if (out.size != null && out.size > 0) setSize(String(out.size));
+      if (out.pnl != null && Number.isFinite(out.pnl)) setReportedPnl(String(out.pnl));
+      if (out.fees != null && Number.isFinite(out.fees)) setFees(String(Math.abs(out.fees)));
       setNotes((prev) => (prev.trim() ? `${prev.replace(/\s+$/, "")}\n${text}` : text));
       const filled = out.entry != null || out.stop != null || out.takeProfit != null;
       const conf = out.confidence != null ? ` Confidence ${Math.round(out.confidence * 100)}%.` : "";
@@ -1908,6 +1922,8 @@ function TradeFormModal({
     size: Number(size) || 0,
     fees: fees === "" ? undefined : Number(fees),
     pointValue: pointValue === "" ? undefined : Number(pointValue),
+    reportedPnl:
+      reportedPnl.trim() === "" || !Number.isFinite(Number(reportedPnl)) ? undefined : Number(reportedPnl),
 
     notes,
     setup: setup.trim() || undefined,
@@ -2158,6 +2174,19 @@ function TradeFormModal({
           <div className="grid grid-cols-2 gap-3">
             <Field label="Point value ($/unit, optional)">
               <input inputMode="decimal" value={pointValue} onChange={(e) => setPointValue(e.target.value)} placeholder="1 = raw price" className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm" />
+            </Field>
+            <Field label="Net P&L from broker ($, optional)">
+              <input
+                inputMode="decimal"
+                value={reportedPnl}
+                onChange={(e) => setReportedPnl(e.target.value)}
+                placeholder="e.g. 50"
+                className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm"
+              />
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Filled from your screenshot when it shows a money amount. When set, the journal uses
+                this exact figure instead of working P&amp;L out from price and size.
+              </p>
             </Field>
             <Field label="Fees / commission ($)">
               <input inputMode="decimal" value={fees} onChange={(e) => setFees(e.target.value)} placeholder="0" className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm" />
