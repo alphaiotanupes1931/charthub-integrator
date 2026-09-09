@@ -232,6 +232,15 @@ function BrokerPage() {
 
       <OandaConnectPanel onChange={() => refresh()} />
 
+      <div className="rounded-xl border border-border/60 bg-card p-5 mb-6">
+        <div className="text-sm font-semibold">Account used for Auto Trading</div>
+        <p className="mt-1 text-xs text-muted-foreground">
+          OANDA is your default account, so approved setups are placed and managed there. Switch Auto Trading on from
+          the home page; sign out above at any time and nothing can be placed.
+        </p>
+      </div>
+
+
 
 
 
