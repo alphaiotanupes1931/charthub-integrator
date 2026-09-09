@@ -51,7 +51,11 @@ export function OandaConnectPanel({ onChange }: { onChange?: () => void }) {
     setBusy(true);
     try {
       const res = await save({ data: { apiKey: apiKey.trim(), makeActive: true } });
-      toast.success(`Signed in to your OANDA ${res.env === "live" ? "live" : "demo"} account`);
+      if (res.env !== "live") {
+        toast.error("That token is not a live OANDA account. Paste a live account token.");
+      } else {
+        toast.success("Signed in to your live OANDA account");
+      }
       setApiKey("");
       await refresh();
       onChange?.();
@@ -61,6 +65,7 @@ export function OandaConnectPanel({ onChange }: { onChange?: () => void }) {
       setBusy(false);
     }
   }
+
 
   async function handleSwitch(next: "practice" | "live") {
     setBusy(true);
