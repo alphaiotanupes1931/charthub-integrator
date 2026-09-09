@@ -1376,12 +1376,18 @@ export async function runPlanner(
   const deltaRead = deltaAgainstPositionRead(bias, snap);
   const setupRead = setupTypeRead(bias, snap);
   const staleRead = staleHigherTimeframeRead(snap);
+  const triggerRead = entryTriggerRead(
+    bias,
+    snap,
+    Math.max(snap.stats.atr14 || Math.abs(snap.lastPrice) * 0.002, Math.abs(snap.lastPrice) * 0.0005),
+  );
   const setupFlags = [
     setupRead.type === "fade" ? "COUNTER_TREND_FADE" : null,
     setupRead.type === "reversal" ? "HTF_REVERSAL" : null,
     deltaRead.cap ? "ORDER_FLOW_AGAINST_POSITION" : null,
     staleRead.cap ? "STALE_DATA_4H_CANDLE_CLOSED" : null,
     news48Warning ? "HIGH_IMPACT_NEWS_RISK" : null,
+    !triggerRead.triggered && bias !== "Neutral" ? "NOT_TRIGGERED_YET" : null,
   ].filter((f): f is string => Boolean(f));
 
   // `notes` already carries the thesis ("why take this trade"), so the details
