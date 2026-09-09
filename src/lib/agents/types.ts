@@ -160,6 +160,12 @@ export type TradePlan = {
   setupType?: "trend" | "fade" | "reversal";
   /** On a fade: the level that kills the thesis and turns the other side on. */
   flipLevel?: number;
+  /** False when the lower timeframes have not confirmed yet: plan is not live. */
+  triggered?: boolean;
+  /** Price that has to trade/close before the plan is valid. */
+  triggerLevel?: number;
+  /** Plain-language confirmation rule for this setup. */
+  triggerRule?: string;
   /** Machine-readable risk flags, e.g. COUNTER_TREND_FADE. */
   flags?: string[];
   /** Higher-timeframe (Daily) bias at scan time. */
