@@ -61,7 +61,7 @@ type DrawTool = "pen" | "line" | "rect" | "arrow" | "eraser";
 type Pt = { x: number; y: number };
 type Stroke = { tool: DrawTool; color: string; width: number; points: Pt[] };
 
-export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _sessions, onStall, fallback }: Props) {
+export function TradingViewChart({ symbol, interval = "D", enabled, sessions: _sessions, candleType, onStall, fallback }: Props) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
   const drawCanvasRef = useRef<HTMLCanvasElement | null>(null);
