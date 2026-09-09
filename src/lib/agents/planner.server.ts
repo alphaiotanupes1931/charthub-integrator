@@ -731,30 +731,39 @@ export function entryTriggerRead(
   };
 }
 
-function findEntryAnchor(
+export function findEntryAnchor(
   bias: "Long" | "Short",
   last: number,
   atr: number,
   snap: MarketSnapshot,
 ): EntryAnchor | null {
   const m = snap.mtf;
-  const minGap = Math.max(atr * 0.1, last * 0.0003); // must be a real pullback
-  const maxGap = atr * 2;
-  const cands: EntryAnchor[] = [];
+  // A limit that sits a tenth of an ATR from price is a market order wearing a
+  // limit's clothes: it fills instantly at the worst price in the leg. A real
+  // pullback entry has to be a meaningful discount/premium to spot.
+  const minGap = Math.max(atr * 0.4, last * 0.0008);
+  // Preferred depth: this is where a retracement actually pays, so anchors at
+  // least this far away win over anything shallower.
+  const goodGap = Math.max(atr * 0.6, last * 0.0012);
+  const maxGap = atr * 2.2;
+  const cands: (EntryAnchor & { tier: number })[] = [];
 
+
+  // tier 0 = a real zone (order block / FVG / supply-demand): price has to trade
+  // into it, so the fill is a discount. tier 1 = a bare level, which is weaker.
   const pushZone = (z: [number, number], label: string) => {
     const top = Math.max(z[0], z[1]);
     const bottom = Math.min(z[0], z[1]);
     if (!Number.isFinite(top) || !Number.isFinite(bottom) || bottom <= 0) return;
     // Enter at the near edge of the zone, keep the far edge for stop placement.
-    if (bias === "Long") cands.push({ entry: top, zoneFar: bottom, label });
-    else cands.push({ entry: bottom, zoneFar: top, label });
+    if (bias === "Long") cands.push({ entry: top, zoneFar: bottom, label, tier: 0 });
+    else cands.push({ entry: bottom, zoneFar: top, label, tier: 0 });
   };
   const pushLevel = (p: number, label: string) => {
     if (!Number.isFinite(p) || p <= 0) return;
     const pad = atr * 0.25;
-    if (bias === "Long") cands.push({ entry: p, zoneFar: p - pad, label });
-    else cands.push({ entry: p, zoneFar: p + pad, label });
+    if (bias === "Long") cands.push({ entry: p, zoneFar: p - pad, label, tier: 1 });
+    else cands.push({ entry: p, zoneFar: p + pad, label, tier: 1 });
   };
 
   if (m) {
@@ -776,15 +785,24 @@ function findEntryAnchor(
     pushLevel(snap.cisd.level, "CISD level");
   }
 
+  const gapOf = (c: EntryAnchor) => (bias === "Long" ? last - c.entry : c.entry - last);
   const valid = cands.filter((c) => {
-    const gap = bias === "Long" ? last - c.entry : c.entry - last;
+    const gap = gapOf(c);
     return gap >= minGap && gap <= maxGap;
   });
   if (!valid.length) return null;
-  // Closest to price = highest fill probability while still a real pullback.
-  valid.sort((a, b) => Math.abs(last - a.entry) - Math.abs(last - b.entry));
-  return valid[0];
+  // Prefer a zone over a bare level, then the shallowest anchor that is still a
+  // genuine retracement. Anything shallower than goodGap is only used when
+  // nothing deeper exists.
+  const rank = (c: EntryAnchor & { tier: number }) => {
+    const gap = gapOf(c);
+    return c.tier * 100 + (gap >= goodGap ? 0 : 10) + gap / Math.max(atr, 1e-9);
+  };
+  valid.sort((a, b) => rank(a) - rank(b));
+  const best = valid[0]!;
+  return { entry: best.entry, zoneFar: best.zoneFar, label: best.label };
 }
+
 
 /**
  * Swing highs/lows on the scan timeframe: 2-bar fractal pivots. These are the
@@ -900,17 +918,18 @@ function sanitizePlan(
 
   }
 
-  const buffer = Math.max(atr * 0.15, last * 0.0005);
+  // Minimum distance a limit order must sit from spot. A 0.15x-ATR buffer fills
+  // instantly at market price, which is the "limit was too shallow" complaint.
+  const buffer = Math.max(atr * 0.4, last * 0.0008);
   const anchor = findEntryAnchor(bias, last, atr, snap);
   let anchorLabel: string | null = null;
   let structuralStop: number | null = null;
 
   if (anchor) {
-    // 1a. Structure-anchored entry. If the model already picked something within
-    // a third of an ATR of the same level, keep the model's price (it may be
-    // more precise); otherwise snap to the level.
+    // 1a. Structure-anchored entry. Keep the model's price only when it is at the
+    // same level AND is itself a real pullback; otherwise snap to the level.
     const modelIsNear = Math.abs(entry - anchor.entry) <= atr * 0.33
-      && (bias === "Long" ? entry <= last - buffer * 0.5 : entry >= last + buffer * 0.5);
+      && (bias === "Long" ? entry <= last - buffer : entry >= last + buffer);
     entry = modelIsNear ? entry : anchor.entry;
     anchorLabel = anchor.label;
     // Stop goes just past the far edge of the zone that gave us the entry.
@@ -919,17 +938,17 @@ function sanitizePlan(
   } else {
     // 1b. No usable structure: clamp runaway entries and fall back to a
     // pullback offset from price.
-    if (Math.abs(entry - last) > atr * 2) {
-      entry = bias === "Long" ? last - atr * 0.5 : last + atr * 0.5;
+    if (Math.abs(entry - last) > atr * 2.2 || Math.abs(entry - last) < buffer) {
+      entry = bias === "Long" ? last - Math.max(atr * 0.5, buffer) : last + Math.max(atr * 0.5, buffer);
       structuralStop = null;
     }
-    if (bias === "Long" && entry > last - buffer) entry = last - buffer;
-    else if (bias === "Short" && entry < last + buffer) entry = last + buffer;
   }
 
-  // 2. Longs must still sit below price, shorts above (limit orders only).
+  // 2. Longs must still sit below price, shorts above, by at least the minimum
+  // pullback distance (limit orders only — never a disguised market order).
   if (bias === "Long" && entry > last - buffer) entry = last - buffer;
   if (bias === "Short" && entry < last + buffer) entry = last + buffer;
+
 
   // 3. Stop: it has to sit BEYOND the swing that invalidates the idea, not a
   // tight ATR fraction from entry. We take the widest of (a) the zone stop,
