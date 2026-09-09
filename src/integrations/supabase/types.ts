@@ -275,6 +275,8 @@ export type Database = {
           allowed_symbols: string[]
           created_at: string
           live_acknowledged_at: string | null
+          live_venue: string
+          manage_trades: boolean
           max_daily_loss_pct: number
           max_open_positions: number
           min_grade: string
@@ -290,6 +292,8 @@ export type Database = {
           allowed_symbols?: string[]
           created_at?: string
           live_acknowledged_at?: string | null
+          live_venue?: string
+          manage_trades?: boolean
           max_daily_loss_pct?: number
           max_open_positions?: number
           min_grade?: string
@@ -305,6 +309,8 @@ export type Database = {
           allowed_symbols?: string[]
           created_at?: string
           live_acknowledged_at?: string | null
+          live_venue?: string
+          manage_trades?: boolean
           max_daily_loss_pct?: number
           max_open_positions?: number
           min_grade?: string

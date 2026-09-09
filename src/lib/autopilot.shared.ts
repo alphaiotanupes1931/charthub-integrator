@@ -12,6 +12,10 @@ export type AutopilotSettings = {
   sessionWindows: string[];
   liveAcknowledged: boolean;
   pausedReason: string | null;
+  /** Which connected account real orders go to when accountTarget is "live". */
+  liveVenue: string;
+  /** Move the stop to break-even once a filled trade is up by its own risk. */
+  manageTrades: boolean;
 };
 
 export const DEFAULT_AUTOPILOT_SETTINGS: AutopilotSettings = {
@@ -25,6 +29,8 @@ export const DEFAULT_AUTOPILOT_SETTINGS: AutopilotSettings = {
   sessionWindows: ["london", "newyork"],
   liveAcknowledged: false,
   pausedReason: null,
+  liveVenue: "oanda",
+  manageTrades: true,
 };
 
 const GRADE_RANK: Record<string, number> = { "A+": 3, A: 2, B: 1, C: 0, D: 0, F: 0 };
@@ -78,6 +84,7 @@ export const MODE_COPY: Record<AutopilotMode, { label: string; detail: string }>
   },
   auto: {
     label: "Auto",
-    detail: "Proposals that clear every rail below execute on their own. Everything is still logged here.",
+    detail:
+      "Setups that clear every rail below are placed on their own, on paper or at your connected account, with the stop and target attached. Everything is still logged here.",
   },
 };

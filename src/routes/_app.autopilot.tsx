@@ -50,6 +50,8 @@ export const Route = createFileRoute("/_app/autopilot")({
 type SettingsPatch = {
   mode?: AutopilotMode;
   accountTarget?: "paper" | "live";
+  liveVenue?: string;
+  manageTrades?: boolean;
   minGrade?: AutopilotSettings["minGrade"];
   riskPct?: number;
   maxOpenPositions?: number;
@@ -310,9 +312,43 @@ function AutopilotPage() {
           <span className="text-xs text-muted-foreground">
             {settings.accountTarget === "paper"
               ? "Nothing here touches real money."
-              : "Orders go to your connected OANDA account."}
+              : settings.mode === "auto"
+                ? "Trades are placed at your connected OANDA account on their own, with the stop and target attached."
+                : "Orders go to your connected OANDA account once you approve them."}
           </span>
         </div>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <label className="text-xs">
+            <span className="text-muted-foreground">Account used for real orders</span>
+            <select
+              value={settings.liveVenue}
+              onChange={(e) => save.mutate({ liveVenue: e.target.value })}
+              className="mt-1 w-full rounded-xl border border-border/60 bg-background px-2 py-2 text-sm"
+            >
+              <option value="oanda">OANDA</option>
+            </select>
+            <span className="mt-1 block text-muted-foreground">
+              Connect it on the Broker page first. Only OANDA can place trades on its own today.
+            </span>
+          </label>
+          <label className="flex items-start gap-3 rounded-xl border border-border/60 p-3 text-xs">
+            <input
+              type="checkbox"
+              checked={settings.manageTrades}
+              onChange={(e) => save.mutate({ manageTrades: e.target.checked })}
+              className="mt-0.5"
+            />
+            <span>
+              <span className="block text-sm">Manage the trade after it fills</span>
+              <span className="mt-1 block text-muted-foreground">
+                Once a trade is ahead by the amount it was risking, the stop moves to your entry so it can no longer
+                lose. The target already sits at the broker and closes the trade itself.
+              </span>
+            </span>
+          </label>
+        </div>
+
 
         {liveConfirmOpen && (
           <div className="mt-4 rounded-xl border border-red-600/40 bg-red-950/20 p-4">

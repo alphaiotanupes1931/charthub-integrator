@@ -59,9 +59,9 @@ function prettySymbol(raw: string): string {
 
 // ---------------------------------------------------------------- OANDA
 
-type OandaCreds = { apiKey: string; accountId: string | null; env: "practice" | "live" };
+export type OandaCreds = { apiKey: string; accountId: string | null; env: "practice" | "live" };
 
-async function loadOandaCreds(userId: string): Promise<OandaCreds | null> {
+export async function loadOandaCreds(userId: string): Promise<OandaCreds | null> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data } = await supabaseAdmin
     .from("user_broker_credentials")
@@ -88,10 +88,10 @@ async function loadOandaCreds(userId: string): Promise<OandaCreds | null> {
   };
 }
 
-const oandaHost = (env: "practice" | "live") =>
+export const oandaHost = (env: "practice" | "live") =>
   env === "live" ? "api-fxtrade.oanda.com" : "api-fxpractice.oanda.com";
 
-async function oandaGet(host: string, apiKey: string, path: string) {
+export async function oandaGet(host: string, apiKey: string, path: string) {
   const res = await fetch(`https://${host}/v3${path}`, {
     method: "GET",
     headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json" },
@@ -107,7 +107,7 @@ async function oandaGet(host: string, apiKey: string, path: string) {
 }
 
 /** Resolve the account id on whichever OANDA server the token belongs to. */
-async function resolveOandaTarget(creds: OandaCreds) {
+export async function resolveOandaTarget(creds: OandaCreds) {
   const order: Array<"practice" | "live"> = creds.env === "live" ? ["live", "practice"] : ["practice", "live"];
   for (const env of order) {
     const host = oandaHost(env);
