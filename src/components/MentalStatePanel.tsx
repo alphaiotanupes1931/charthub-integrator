@@ -41,7 +41,7 @@ export function upsertMentalEntry(entry: MentalEntry) {
   saveMental([...others, entry]);
 }
 
-type Trade = { date: string; entry: number; exit: number; stop: number; size: number; side: "Long" | "Short"; fees?: number; pointValue?: number };
+type Trade = { date: string; entry: number; exit: number; stop: number; size: number; side: "Long" | "Short"; fees?: number; pointValue?: number; reportedPnl?: number };
 function loadTrades(): Trade[] {
   try {
     const raw = localStorage.getItem(TRADES_KEY);
@@ -50,6 +50,7 @@ function loadTrades(): Trade[] {
   } catch { return []; }
 }
 function tradePnl(t: Trade) {
+  if (t.reportedPnl != null && isFinite(t.reportedPnl)) return t.reportedPnl;
   const dir = t.side === "Long" ? 1 : -1;
   const pv = t.pointValue && isFinite(t.pointValue) && t.pointValue > 0 ? t.pointValue : 1;
   const fees = t.fees && isFinite(t.fees) ? t.fees : 0;

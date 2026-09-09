@@ -14,6 +14,7 @@ export type JournalTrade = {
   size: number;
   fees?: number;
   pointValue?: number;
+  reportedPnl?: number;
   ruleBroken?: boolean;
   followedPlan?: boolean;
   createdAt: number;
@@ -31,6 +32,7 @@ function readTrades(): JournalTrade[] {
 }
 
 function tradePnl(t: JournalTrade): number {
+  if (t.reportedPnl != null && isFinite(t.reportedPnl)) return t.reportedPnl;
   const dir = t.side === "Long" ? 1 : -1;
   const size = t.size || 0;
   const pv = t.pointValue && isFinite(t.pointValue) && t.pointValue > 0 ? t.pointValue : 1;
