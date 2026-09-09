@@ -1431,6 +1431,32 @@ export async function runPlanner(
   const deltaRead = deltaAgainstPositionRead(bias, snap);
   const setupRead = setupTypeRead(bias, snap);
   const staleRead = staleHigherTimeframeRead(snap);
+
+  // Full "why is this grade what it is" breakdown: every deterministic cap that
+  // fired, plus the engine alignment cap, news risk and session timing, with the
+  // binding one marked so the trader sees which single rule is holding it down.
+  const gradeCaps: GradeCapReason[] = collectGradeCaps(bias, snap);
+  const engineMax = biasRead.result.mtf.maxGrade;
+  if (engineMax === "B" || engineMax === "C" || engineMax === "D" || engineMax === "F") {
+    gradeCaps.push({
+      label: "Timeframe alignment",
+      cap: engineMax === "B" ? "B" : "C",
+      reason: `Only ${biasRead.result.mtf.alignmentScore} of the 4 higher timeframes agree with this ${bias.toLowerCase()}, so the alignment cap allows ${engineMax === "B" ? "B" : "C"} at best.`,
+    });
+  }
+  if (newsWarning) {
+    gradeCaps.push({
+      label: "High-impact news inside the hold window",
+      cap: "B",
+      reason: newsWarning.trim(),
+    });
+  }
+  if (news48Warning) gradeCaps.push({ label: "Event risk within 48 hours", cap: grade, reason: `${news48Warning} This costs one grade letter.` });
+  if (timingGate) gradeCaps.push({ label: "Session timing", cap: grade, reason: `${timingGate} This costs one grade letter until the session opens.` });
+  if (mitigation?.warning) gradeCaps.push({ label: "Entry zone already tested", cap: grade, reason: mitigation.warning });
+  const capOrder: string[] = ["NO ENTRY", "C", "B", "A", "A+"];
+  for (const c of gradeCaps) c.binding = c.cap === grade && capOrder.indexOf(c.cap) <= capOrder.indexOf(grade);
+
   const triggerRead = entryTriggerRead(
     bias,
     snap,
