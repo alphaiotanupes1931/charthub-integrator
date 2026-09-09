@@ -36,6 +36,8 @@ export function settingsFromRow(row: Record<string, unknown> | null): AutopilotS
     sessionWindows: (row.session_windows as string[] | null) ?? [],
     liveAcknowledged: Boolean(row.live_acknowledged_at),
     pausedReason: (row.paused_reason as string | null) ?? null,
+    liveVenue: (row.live_venue as string | null) ?? "oanda",
+    manageTrades: row.manage_trades !== false,
   };
 }
 
