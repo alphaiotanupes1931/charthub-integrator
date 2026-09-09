@@ -36,6 +36,8 @@ export function settingsFromRow(row: Record<string, unknown> | null): AutopilotS
     sessionWindows: (row.session_windows as string[] | null) ?? [],
     liveAcknowledged: Boolean(row.live_acknowledged_at),
     pausedReason: (row.paused_reason as string | null) ?? null,
+    liveVenue: (row.live_venue as string | null) ?? "oanda",
+    manageTrades: row.manage_trades !== false,
   };
 }
 
@@ -145,10 +147,16 @@ export async function runAutopilotForUser(
         dailyLossPct: pct,
       });
 
-      // Auto mode fills paper trades on its own. Live still waits for a tap so
-      // no order reaches a real broker without a human in the loop.
-      const autoFill =
-        verdict.allowed && settings.mode === "auto" && settings.accountTarget === "paper" && draft.units !== null;
+      // Auto mode places the trade itself. On paper that is a paper position; on
+      // a connected account it is a real market order with the stop and target
+      // attached. A setup whose trigger has not fired is never auto-placed.
+      const executable =
+        verdict.allowed && settings.mode === "auto" && draft.units !== null && draft.triggered;
+      if (verdict.allowed && settings.mode === "auto" && !draft.triggered) {
+        result.skipped.push(`${symbol}: setup filed but not triggered yet`);
+      }
+      const autoFill = executable && settings.accountTarget === "paper";
+      const autoLive = executable && settings.accountTarget === "live";
 
       const { data: inserted, error } = await client
         .from("autopilot_proposals")
@@ -167,9 +175,9 @@ export async function runAutopilotForUser(
           order_type: "market",
           account_target: settings.accountTarget,
           reasoning: draft.reasoning,
-          status: verdict.allowed ? (autoFill ? "approved" : "pending") : "blocked",
+          status: verdict.allowed ? (executable ? "approved" : "pending") : "blocked",
           rejection_reason: verdict.allowed ? null : verdict.reason,
-          decided_at: autoFill ? new Date().toISOString() : null,
+          decided_at: executable ? new Date().toISOString() : null,
         } as never)
         .select("id")
         .single();
@@ -237,11 +245,76 @@ export async function runAutopilotForUser(
             `${draft.symbol} ${draft.side} auto-filled on paper, ${size} units at ${draft.entry}`,
             { symbol: draft.symbol, size, entry: draft.entry, proposalId: inserted.id },
           );
+      }
+
+      if (autoLive) {
+        const size = Math.max(1, Math.floor(draft.units ?? 1));
+        const { placeLiveOrder } = await import("@/lib/autopilot-live.server");
+        const sent = await placeLiveOrder(userId, settings.liveVenue, {
+          symbol: draft.symbol,
+          side: draft.side,
+          units: size,
+          entry: draft.entry,
+          stopLoss: draft.stopLoss,
+          takeProfit: draft.takeProfit,
+        });
+        if (!sent.ok) {
+          await client
+            .from("autopilot_proposals")
+            .update({ status: "failed", rejection_reason: sent.detail })
+            .eq("id", inserted.id as string);
+          await logAutopilotEvent(userId, "failed", `${draft.symbol} live order failed: ${sent.detail}`, {
+            symbol: draft.symbol,
+            proposalId: inserted.id,
+          });
+        } else {
+          await client
+            .from("autopilot_proposals")
+            .update({ status: "filled", broker_order_id: sent.orderId ?? null })
+            .eq("id", inserted.id as string);
+          result.executed += 1;
+          openPositions += 1;
+          await logAutopilotEvent(
+            userId,
+            "filled",
+            `${draft.symbol} ${draft.side} placed at your ${settings.liveVenue.toUpperCase()} account, ${size} units. ${sent.detail}`,
+            { symbol: draft.symbol, size, entry: draft.entry, proposalId: inserted.id, live: true },
+          );
+          try {
+            await createNotification({
+              userId,
+              kind: "system",
+              title: `Autopilot placed ${draft.symbol} ${draft.side}`,
+              body: sent.detail,
+              url: "/autopilot",
+            });
+          } catch {
+            // notification failure must not undo a real fill
+          }
         }
+      }
       }
 
     } catch {
       result.skipped.push(`${symbol}: data unavailable`);
+    }
+  }
+
+  // Trade management: protect anything already filled at the live account.
+  if (settings.manageTrades && settings.accountTarget === "live") {
+    try {
+      const { manageLiveTrades } = await import("@/lib/autopilot-live.server");
+      const managed = await manageLiveTrades(userId, settings.liveVenue);
+      if (managed.movedToBreakEven > 0) {
+        await logAutopilotEvent(
+          userId,
+          "run",
+          `Trade management: ${managed.movedToBreakEven} stop(s) moved to break-even. ${managed.notes.join(" ")}`,
+          { managed },
+        );
+      }
+    } catch {
+      // management failure must not fail the run
     }
   }
 

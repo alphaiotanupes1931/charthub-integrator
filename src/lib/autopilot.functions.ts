@@ -30,6 +30,8 @@ export const getAutopilotSettings = createServerFn({ method: "GET" })
       sessionWindows: data.session_windows ?? [],
       liveAcknowledged: Boolean(data.live_acknowledged_at),
       pausedReason: data.paused_reason ?? null,
+      liveVenue: (data as Record<string, unknown>)["live_venue"] as string ?? "oanda",
+      manageTrades: (data as Record<string, unknown>)["manage_trades"] !== false,
     };
   });
 
@@ -40,6 +42,8 @@ export const updateAutopilotSettings = createServerFn({ method: "POST" })
       .object({
         mode: z.enum(["manual", "confirm", "auto"]).optional(),
         accountTarget: z.enum(["paper", "live"]).optional(),
+        liveVenue: z.string().trim().min(2).max(40).optional(),
+        manageTrades: z.boolean().optional(),
         minGrade: z.enum(["A+", "A", "B"]).optional(),
         riskPct: z.number().min(0.1).max(5).optional(),
         maxOpenPositions: z.number().int().min(1).max(20).optional(),
@@ -55,6 +59,8 @@ export const updateAutopilotSettings = createServerFn({ method: "POST" })
     const patch: Record<string, unknown> = { user_id: context.userId };
     if (data.mode !== undefined) patch.mode = data.mode;
     if (data.accountTarget !== undefined) patch.account_target = data.accountTarget;
+    if (data.liveVenue !== undefined) patch.live_venue = data.liveVenue;
+    if (data.manageTrades !== undefined) patch.manage_trades = data.manageTrades;
     if (data.minGrade !== undefined) patch.min_grade = data.minGrade;
     if (data.riskPct !== undefined) patch.risk_pct = data.riskPct;
     if (data.maxOpenPositions !== undefined) patch.max_open_positions = data.maxOpenPositions;
@@ -148,6 +154,8 @@ export const createAutopilotProposal = createServerFn({ method: "POST" })
           sessionWindows: row.session_windows ?? [],
           liveAcknowledged: Boolean(row.live_acknowledged_at),
           pausedReason: row.paused_reason ?? null,
+          liveVenue: ((row as Record<string, unknown>)["live_venue"] as string) ?? "oanda",
+          manageTrades: (row as Record<string, unknown>)["manage_trades"] !== false,
         }
       : { ...DEFAULT_AUTOPILOT_SETTINGS };
 
