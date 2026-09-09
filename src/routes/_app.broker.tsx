@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Wallet, RefreshCw, X, ExternalLink, ArrowUpRight, ArrowDownRight, SlidersHorizontal, Scissors } from "lucide-react";
+import { Wallet, RefreshCw, X, ExternalLink, SlidersHorizontal, Scissors } from "lucide-react";
 import {
   getBrokerStatus,
   listBrokerPositions,
@@ -12,7 +12,6 @@ import {
   modifyBrokerTrade,
   listBrokerPendingOrders,
   cancelBrokerOrder,
-  placeBrokerOrder,
 } from "@/lib/broker-oanda.functions";
 
 type BrokerSearch = {
@@ -50,7 +49,6 @@ type Position = Awaited<ReturnType<typeof listBrokerPositions>>[number];
 type PendingOrder = Awaited<ReturnType<typeof listBrokerPendingOrders>>[number];
 
 function BrokerPage() {
-  const search = Route.useSearch();
   const fetchStatus = useServerFn(getBrokerStatus);
   const fetchPositions = useServerFn(listBrokerPositions);
   const closeTrade = useServerFn(closeBrokerTrade);
@@ -58,26 +56,14 @@ function BrokerPage() {
   const modifyTrade = useServerFn(modifyBrokerTrade);
   const cancelOrder = useServerFn(cancelBrokerOrder);
   const fetchPending = useServerFn(listBrokerPendingOrders);
-  const placeOrder = useServerFn(placeBrokerOrder);
 
   const [status, setStatus] = useState<Status | null>(null);
   const [positions, setPositions] = useState<Position[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [placing, setPlacing] = useState(false);
-
-  // Order form
-  const [symbol, setSymbol] = useState(search.symbol || "EUR/USD");
-  const [side, setSide] = useState<"long" | "short">(search.side ?? "long");
-  const [units, setUnits] = useState(1000);
-  const [orderType, setOrderType] = useState<"market" | "limit" | "stop">("market");
-  const [limitPrice, setLimitPrice] = useState<string>(search.entry != null ? String(search.entry) : "");
   const [pending, setPending] = useState<PendingOrder[]>([]);
-  const [stopLoss, setStopLoss] = useState<string>(search.stop != null ? String(search.stop) : "");
-  const [takeProfit, setTakeProfit] = useState<string>(search.tp != null ? String(search.tp) : "");
 
-  // Risk sizer
-  const [riskDollars, setRiskDollars] = useState<string>("");
+
 
   async function refresh(silent = false) {
     if (!silent) setLoading(true);
@@ -113,48 +99,8 @@ function BrokerPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status?.connected]);
 
-  function sizeFromRisk() {
-    const risk = Number(riskDollars);
-    const sl = Number(stopLoss);
-    const entryHint = Number(search.entry);
-    if (!risk || risk <= 0) { toast.error("Enter a dollar risk amount"); return; }
-    if (!sl || sl <= 0) { toast.error("Enter a stop-loss price first"); return; }
-    if (!entryHint || entryHint <= 0) { toast.error("No entry price yet — run a scan or set entry on the signal card"); return; }
-    const perUnit = Math.abs(entryHint - sl);
-    if (perUnit <= 0) { toast.error("Stop must differ from entry"); return; }
-    const u = Math.max(1, Math.floor(risk / perUnit));
-    setUnits(u);
-    toast.success(`Sized to ${u.toLocaleString()} units for $${risk} risk`);
-  }
 
 
-  async function submitOrder(overrideSide?: "long" | "short") {
-    const useSide = overrideSide ?? side;
-    setPlacing(true);
-    try {
-      const res = await placeOrder({
-        data: {
-          symbol,
-          side: useSide,
-          units,
-          orderType,
-          price: orderType === "market" ? undefined : Number(limitPrice) || undefined,
-          stopLoss: stopLoss ? Number(stopLoss) : undefined,
-          takeProfit: takeProfit ? Number(takeProfit) : undefined,
-        },
-      });
-      toast.success(
-        res.pending
-          ? `Working ${orderType.toUpperCase()} order placed at ${limitPrice}`
-          : `Order filled${res.fillPrice ? ` at ${res.fillPrice}` : ""}`,
-      );
-      refresh();
-    } catch (e) {
-      toast.error((e as Error).message);
-    } finally {
-      setPlacing(false);
-    }
-  }
 
   async function handleClose(id: string, closeUnits?: number) {
     if (!closeUnits && !confirm("Close this trade at market?")) return;
@@ -266,96 +212,8 @@ function BrokerPage() {
         </div>
       )}
 
-      {status?.connected && (
-        <div className="rounded-xl border border-border/60 bg-card p-5 mb-6">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="text-sm font-semibold">Order ticket</div>
-            {status.marginAvailable != null && (
-              <span className="ml-auto text-[11px] text-muted-foreground">
-                Free margin: <span className="font-mono text-foreground">{fmtMoney(status.marginAvailable, status.currency)}</span>
-              </span>
-            )}
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <Field label="Symbol">
-              <input value={symbol} onChange={(e) => setSymbol(e.target.value)} className="w-full px-2 py-1.5 rounded-xl bg-background border border-border/60 text-sm" />
-            </Field>
-            <Field label="Order type">
-              <select value={orderType} onChange={(e) => setOrderType(e.target.value as "market" | "limit" | "stop")} className="w-full px-2 py-1.5 rounded-xl bg-background border border-border/60 text-sm">
-                <option value="market">Market (now)</option>
-                <option value="limit">Limit (better price)</option>
-                <option value="stop">Stop (breakout)</option>
-              </select>
-            </Field>
-            <Field label="Units">
-              <input type="number" value={units} onChange={(e) => setUnits(Number(e.target.value))} className="w-full px-2 py-1.5 rounded-xl bg-background border border-border/60 text-sm" />
-            </Field>
-            <Field label={orderType === "market" ? "Entry price (market)" : "Entry price"}>
-              <input
-                value={orderType === "market" ? "" : limitPrice}
-                onChange={(e) => setLimitPrice(e.target.value)}
-                disabled={orderType === "market"}
-                placeholder={orderType === "market" ? "at market" : "price"}
-                className="w-full px-2 py-1.5 rounded-xl bg-background border border-border/60 text-sm disabled:opacity-50"
-              />
-            </Field>
-            <Field label="Stop loss">
-              <input value={stopLoss} onChange={(e) => setStopLoss(e.target.value)} placeholder="price" className="w-full px-2 py-1.5 rounded-xl bg-background border border-border/60 text-sm" />
-            </Field>
-            <Field label="Take profit">
-              <input value={takeProfit} onChange={(e) => setTakeProfit(e.target.value)} placeholder="price" className="w-full px-2 py-1.5 rounded-xl bg-background border border-border/60 text-sm" />
-            </Field>
-            <Field label="Dollar risk (auto-size units)">
-              <input
-                value={riskDollars}
-                onChange={(e) => setRiskDollars(e.target.value)}
-                placeholder="e.g. 100"
-                className="w-full px-2 py-1.5 rounded-xl bg-background border border-border/60 text-sm"
-              />
-            </Field>
-            <div className="flex items-end">
-              <button
-                onClick={sizeFromRisk}
-                className="w-full px-3 py-1.5 rounded-xl border border-border/60 text-xs hover:bg-muted"
-              >
-                Size from risk
-              </button>
-            </div>
-          </div>
-          {status.marginAvailable != null && status.marginAvailable <= 0 && (
-            <div className="mt-3 text-xs text-red-300">
-              Free margin is 0. This order will be rejected by OANDA. Deposit or close positions first.
-            </div>
-          )}
-          {orderType !== "market" && !Number(limitPrice) && (
-            <div className="mt-3 text-xs text-amber-300">
-              Enter an entry price for a {orderType} order. Buy stop sits above price, buy limit below.
-            </div>
-          )}
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <button
-              onClick={() => { setSide("long"); submitOrder("long"); }}
-              disabled={placing || !symbol || units <= 0 || (orderType !== "market" && !Number(limitPrice)) || (status.marginAvailable != null && status.marginAvailable <= 0)}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-bull/15 border border-bull/40 text-bull text-sm font-semibold hover:bg-bull/25 disabled:opacity-50"
-            >
-              <ArrowUpRight className="h-4 w-4" />
-              {placing ? "Sending..." : `BUY ${orderType === "market" ? "" : orderType.toUpperCase() + " "}${units.toLocaleString()}`}
-            </button>
-            <button
-              onClick={() => { setSide("short"); submitOrder("short"); }}
-              disabled={placing || !symbol || units <= 0 || (orderType !== "market" && !Number(limitPrice)) || (status.marginAvailable != null && status.marginAvailable <= 0)}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-500/15 border border-red-500/40 text-red-300 text-sm font-semibold hover:bg-red-500/25 disabled:opacity-50"
-            >
-              <ArrowDownRight className="h-4 w-4" />
-              {placing ? "Sending..." : `SELL / SHORT ${orderType === "market" ? "" : orderType.toUpperCase() + " "}${units.toLocaleString()}`}
-            </button>
-          </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            Selling on OANDA opens a short position, so SELL is your short button. Orders route to OANDA {status.env}. If OANDA rejects (insufficient margin, halted instrument) you see the exact reason instead of a fake fill.
-          </p>
 
-        </div>
-      )}
+
 
       {status?.connected && pending.length > 0 && (
         <div className="rounded-xl border border-border/60 bg-card p-5 mb-6">
