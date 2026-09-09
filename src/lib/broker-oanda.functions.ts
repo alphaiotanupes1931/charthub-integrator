@@ -321,7 +321,15 @@ export const placeBrokerOrder = createServerFn({ method: "POST" })
     const resp = await oandaFetch(context.userId, "/orders", {
       method: "POST",
       body: JSON.stringify({ order }),
+    }).catch((e: Error) => {
+      if (/not tradeable/i.test(e.message)) {
+        throw new Error(
+          `Your account cannot trade ${data.symbol} (${instrument}). Pick an instrument your account supports, or check that this market is open.`,
+        );
+      }
+      throw e;
     });
+
     const cancel = resp.orderCancelTransaction as Record<string, unknown> | undefined;
     const reject = resp.orderRejectTransaction as Record<string, unknown> | undefined;
     if (cancel || reject) {
