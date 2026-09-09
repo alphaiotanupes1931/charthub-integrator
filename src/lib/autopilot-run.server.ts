@@ -147,10 +147,16 @@ export async function runAutopilotForUser(
         dailyLossPct: pct,
       });
 
-      // Auto mode fills paper trades on its own. Live still waits for a tap so
-      // no order reaches a real broker without a human in the loop.
-      const autoFill =
-        verdict.allowed && settings.mode === "auto" && settings.accountTarget === "paper" && draft.units !== null;
+      // Auto mode places the trade itself. On paper that is a paper position; on
+      // a connected account it is a real market order with the stop and target
+      // attached. A setup whose trigger has not fired is never auto-placed.
+      const executable =
+        verdict.allowed && settings.mode === "auto" && draft.units !== null && draft.triggered;
+      if (verdict.allowed && settings.mode === "auto" && !draft.triggered) {
+        result.skipped.push(`${symbol}: setup filed but not triggered yet`);
+      }
+      const autoFill = executable && settings.accountTarget === "paper";
+      const autoLive = executable && settings.accountTarget === "live";
 
       const { data: inserted, error } = await client
         .from("autopilot_proposals")
