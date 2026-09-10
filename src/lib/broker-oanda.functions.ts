@@ -358,7 +358,10 @@ export const estimateBrokerMargin = createServerFn({ method: "POST" })
       marginRate: rate,
       notional,
       required,
-      currency: config.env === "live" ? "USD" : "USD",
+      currency: "USD",
+      unavailable: rate == null
+        ? (detailsNote ?? "Margin details are not available for this market right now.")
+        : null,
     };
   });
 
