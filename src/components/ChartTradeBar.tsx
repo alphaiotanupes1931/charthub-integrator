@@ -3,7 +3,7 @@ import { ArrowDownRight, ArrowUpRight, CheckCircle2, ExternalLink, Loader2, Refr
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { estimateBrokerMargin, getBrokerStatus, placeBrokerOrder } from "@/lib/broker-oanda.functions";
+import { estimateTradeMargin, getTradeStatus, placeTradeOrder } from "@/lib/broker-trade.functions";
 import {
   Dialog,
   DialogContent,
@@ -35,19 +35,19 @@ export function ChartTradeBar({
   const label = ticker ?? tvSymbol;
   const symbol = ticker ?? tvSymbol.split(":").pop() ?? tvSymbol;
 
-  const fetchStatus = useServerFn(getBrokerStatus);
-  const submitOrder = useServerFn(placeBrokerOrder);
-  const fetchMargin = useServerFn(estimateBrokerMargin);
+  const fetchStatus = useServerFn(getTradeStatus);
+  const submitOrder = useServerFn(placeTradeOrder);
+  const fetchMargin = useServerFn(estimateTradeMargin);
 
   const [side, setSide] = useState<"long" | "short" | null>(null);
-  const [status, setStatus] = useState<Awaited<ReturnType<typeof getBrokerStatus>> | null>(null);
+  const [status, setStatus] = useState<Awaited<ReturnType<typeof getTradeStatus>> | null>(null);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [placing, setPlacing] = useState(false);
   const [units, setUnits] = useState("1000");
   const [stopText, setStopText] = useState("");
   const [tpText, setTpText] = useState("");
-  const [done, setDone] = useState<Awaited<ReturnType<typeof placeBrokerOrder>> | null>(null);
-  const [margin, setMargin] = useState<Awaited<ReturnType<typeof estimateBrokerMargin>> | null>(null);
+  const [done, setDone] = useState<Awaited<ReturnType<typeof placeTradeOrder>> | null>(null);
+  const [margin, setMargin] = useState<Awaited<ReturnType<typeof estimateTradeMargin>> | null>(null);
   const [loadingMargin, setLoadingMargin] = useState(false);
   const [marginError, setMarginError] = useState<string | null>(null);
 
@@ -252,7 +252,7 @@ export function ChartTradeBar({
           ) : (
             <div className="space-y-3 text-sm">
               <div className="rounded-xl border border-border/60 px-3 py-2 text-xs text-muted-foreground">
-                Account {status.accountId ?? "-"} · available to trade{" "}
+                {status.venueName} · account {status.accountId ?? "-"} · available to trade{" "}
                 {status.marginAvailable != null
                   ? `${status.marginAvailable.toFixed(2)} ${status.currency ?? ""}`
                   : "-"}
@@ -318,7 +318,7 @@ export function ChartTradeBar({
                   </p>
                   <div className="flex flex-wrap items-center gap-2">
                     <a
-                      href={status.fundingUrl ?? "https://www.oanda.com/account/funding"}
+                      href={status.fundingUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex h-8 items-center gap-1.5 rounded-xl bg-primary px-3 text-[11px] font-semibold text-primary-foreground"
