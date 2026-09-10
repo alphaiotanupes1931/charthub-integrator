@@ -69,7 +69,10 @@ export function ChartTradeBar({
     setLoadingMargin(true);
     setMarginError(null);
     fetchMargin({ data: { symbol, units: size } })
-      .then((m) => setMargin(m))
+      .then((m) => {
+        setMargin(m);
+        if (m && "unavailable" in m && m.unavailable) setMarginError(m.unavailable);
+      })
       .catch(() => {
         setMargin(null);
         setMarginError("The estimate could not be loaded. Check again before placing this trade.");
