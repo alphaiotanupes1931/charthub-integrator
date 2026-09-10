@@ -200,34 +200,38 @@ async function oandaFetch(userId: string, path: string, init: RequestInit = {}):
   });
 }
 
+/** Plain server helper so other venues can share one status shape. */
+export async function oandaStatus(userId: string) {
+  try {
+    const account = await oandaFetch(userId, "/summary");
+    const a = (account.account ?? {}) as Record<string, string>;
+    return {
+      connected: true as const,
+      env: account.__env ?? "practice",
+      accountId: a.id ?? null,
+      configuredAccountId: account.__configuredAccountId ?? null,
+      usingDiscoveredAccount: account.__discovered ?? false,
+      currency: a.currency ?? null,
+      balance: a.balance ? Number(a.balance) : null,
+      nav: a.NAV ? Number(a.NAV) : null,
+      unrealizedPL: a.unrealizedPL ? Number(a.unrealizedPL) : null,
+      openTradeCount: a.openTradeCount ? Number(a.openTradeCount) : 0,
+      marginAvailable: a.marginAvailable ? Number(a.marginAvailable) : null,
+      // Where the trader adds money to this exact account.
+      fundingUrl:
+        (account.__env ?? "practice") === "live"
+          ? "https://www.oanda.com/account/funding"
+          : "https://trade.practice.oanda.com/",
+    };
+  } catch (e) {
+    return { connected: false as const, reason: (e as Error).message };
+  }
+}
+
 export const getBrokerStatus = createServerFn({ method: "GET" })
   .middleware([requireCapability("broker_live")])
-  .handler(async ({ context }) => {
-    try {
-      const account = await oandaFetch(context.userId, "/summary");
-      const a = (account.account ?? {}) as Record<string, string>;
-      return {
-        connected: true as const,
-        env: account.__env ?? "practice",
-        accountId: a.id ?? null,
-        configuredAccountId: account.__configuredAccountId ?? null,
-        usingDiscoveredAccount: account.__discovered ?? false,
-        currency: a.currency ?? null,
-        balance: a.balance ? Number(a.balance) : null,
-        nav: a.NAV ? Number(a.NAV) : null,
-        unrealizedPL: a.unrealizedPL ? Number(a.unrealizedPL) : null,
-        openTradeCount: a.openTradeCount ? Number(a.openTradeCount) : 0,
-        marginAvailable: a.marginAvailable ? Number(a.marginAvailable) : null,
-        // Where the trader adds money to this exact account.
-        fundingUrl:
-          (account.__env ?? "practice") === "live"
-            ? "https://www.oanda.com/account/funding"
-            : "https://trade.practice.oanda.com/",
-      };
-    } catch (e) {
-      return { connected: false as const, reason: (e as Error).message };
-    }
-  });
+  .handler(async ({ context }) => oandaStatus(context.userId));
+
 
 // Identity check: OANDA has no OAuth login for retail traders, so "being logged
 // in" here means the saved token resolves to a real OANDA account. This lists
@@ -276,14 +280,13 @@ const EstimateMarginInput = z.object({
   units: z.number().positive().max(1_000_000),
 });
 
-export const estimateBrokerMargin = createServerFn({ method: "POST" })
-  .middleware([requireCapability("broker_live")])
-  .inputValidator((raw: unknown) => EstimateMarginInput.parse(raw))
-  .handler(async ({ data, context }) => {
+export async function oandaEstimate(userId: string, data: { symbol: string; units: number }) {
+  {
     const instrument = toOandaInstrument(data.symbol);
     if (!instrument) throw new Error(`Symbol ${data.symbol} is not supported by OANDA`);
 
-    const config = await resolveOandaAccount(context.userId);
+    const config = await resolveOandaAccount(userId);
+
     const pricing = await tryOandaFetch(
       config,
       config.accountId,
@@ -363,7 +366,14 @@ export const estimateBrokerMargin = createServerFn({ method: "POST" })
         ? (detailsNote ?? "Margin details are not available for this market right now.")
         : null,
     };
-  });
+  }
+}
+
+export const estimateBrokerMargin = createServerFn({ method: "POST" })
+  .middleware([requireCapability("broker_live")])
+  .inputValidator((raw: unknown) => EstimateMarginInput.parse(raw))
+  .handler(async ({ data, context }) => oandaEstimate(context.userId, data));
+
 
 export const listBrokerPositions = createServerFn({ method: "GET" })
   .middleware([requireCapability("broker_live")])
@@ -394,11 +404,12 @@ const PlaceOrderInput = z.object({
   takeProfit: z.number().positive().optional(),
 });
 
-export const placeBrokerOrder = createServerFn({ method: "POST" })
-  .middleware([requireCapability("broker_live")])
-  .inputValidator((raw: unknown) => PlaceOrderInput.parse(raw))
-  .handler(async ({ data, context }) => {
+export type PlaceOrderData = z.infer<typeof PlaceOrderInput>;
+
+export async function oandaPlaceOrder(userId: string, data: PlaceOrderData) {
+  {
     const instrument = toOandaInstrument(data.symbol);
+
     if (!instrument) throw new Error(`Symbol ${data.symbol} is not supported by OANDA`);
 
     const signedUnits = (data.side === "long" ? 1 : -1) * Math.floor(data.units);
@@ -419,7 +430,7 @@ export const placeBrokerOrder = createServerFn({ method: "POST" })
     if (data.stopLoss) order.stopLossOnFill = { price: data.stopLoss.toString(), timeInForce: "GTC" };
     if (data.takeProfit) order.takeProfitOnFill = { price: data.takeProfit.toString(), timeInForce: "GTC" };
 
-    const resp = await oandaFetch(context.userId, "/orders", {
+    const resp = await oandaFetch(userId, "/orders", {
       method: "POST",
       body: JSON.stringify({ order }),
     }).catch((e: Error) => {
@@ -470,7 +481,14 @@ export const placeBrokerOrder = createServerFn({ method: "POST" })
           ? "https://trade.oanda.com/"
           : "https://trade.practice.oanda.com/",
     };
-  });
+  }
+}
+
+export const placeBrokerOrder = createServerFn({ method: "POST" })
+  .middleware([requireCapability("broker_live")])
+  .inputValidator((raw: unknown) => PlaceOrderInput.parse(raw))
+  .handler(async ({ data, context }) => oandaPlaceOrder(context.userId, data));
+
 
 export const closeBrokerTrade = createServerFn({ method: "POST" })
   .middleware([requireCapability("broker_live")])

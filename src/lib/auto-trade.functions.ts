@@ -23,7 +23,7 @@ function settingsFromRow(row: Record<string, unknown> | null): AutopilotSettings
     sessionWindows: (row["session_windows"] as string[] | null) ?? [],
     liveAcknowledged: Boolean(row["live_acknowledged_at"]),
     pausedReason: (row["paused_reason"] as string | null) ?? null,
-    liveVenue: (row["live_venue"] as string | null) ?? "oanda",
+    liveVenue: (row["live_venue"] as string | null) ?? "capitalcom",
     manageTrades: row["manage_trades"] !== false,
     managePartials: row["manage_partials"] !== false,
     trailAfterTp1: row["trail_after_tp1"] !== false,
