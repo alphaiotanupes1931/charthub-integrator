@@ -315,7 +315,17 @@ export const estimateBrokerMargin = createServerFn({ method: "POST" })
     const ask = priceObj?.asks?.[0]?.price ? Number(priceObj.asks[0].price) : null;
     const mid = bid != null && ask != null ? (bid + ask) / 2 : bid ?? ask ?? null;
     if (mid == null || !Number.isFinite(mid)) {
-      throw new Error("Could not get a live price for this instrument.");
+      return {
+        instrument,
+        price: null,
+        bid,
+        ask,
+        marginRate: null,
+        notional: null,
+        required: null,
+        currency: "USD",
+        unavailable: "No live price is available for this market right now.",
+      };
     }
 
     const details = await tryOandaFetch(
