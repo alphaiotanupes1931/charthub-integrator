@@ -58,11 +58,25 @@ export function ChartTradeBar({
       .finally(() => setLoadingStatus(false));
   };
 
+  const loadMargin = () => {
+    const size = Number(units);
+    if (!Number.isFinite(size) || size <= 0) {
+      setMargin(null);
+      return;
+    }
+    setLoadingMargin(true);
+    fetchMargin({ data: { symbol, units: size } })
+      .then((m) => setMargin(m))
+      .catch(() => setMargin(null))
+      .finally(() => setLoadingMargin(false));
+  };
+
   useEffect(() => {
     if (!side) return;
     setStopText(stop != null && Number.isFinite(stop) ? String(stop) : "");
     setTpText(takeProfit != null && Number.isFinite(takeProfit) ? String(takeProfit) : "");
     refresh();
+    loadMargin();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [side]);
 
