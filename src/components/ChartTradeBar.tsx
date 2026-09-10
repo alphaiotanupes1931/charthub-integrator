@@ -142,14 +142,52 @@ export function ChartTradeBar({
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {side === "short" ? "Sell" : "Buy"} {label}
+              {done
+                ? done.pending
+                  ? "Order placed"
+                  : `${side === "short" ? "Sold" : "Bought"} ${label}`
+                : `${side === "short" ? "Sell" : "Buy"} ${label}`}
             </DialogTitle>
             <DialogDescription>
-              This sends a real order to your connected live account right now.
+              {done
+                ? "Your order went through on your connected account."
+                : "This sends a real order to your connected live account right now."}
             </DialogDescription>
           </DialogHeader>
 
-          {loadingStatus ? (
+          {done ? (
+            <div className="space-y-3 text-sm">
+              <div className="flex items-start gap-2 rounded-xl border border-bull/40 bg-bull/10 px-3 py-3">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-bull" />
+                <div className="space-y-1">
+                  <p className="font-semibold text-foreground">
+                    {done.pending ? "Your order is waiting for your price." : "Your trade is open."}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {Math.abs(done.units)} units of {label}
+                    {done.fillPrice ? ` at ${done.fillPrice}` : ""}
+                    {done.accountId ? ` · account ${done.accountId}` : ""}
+                  </p>
+                  {(Number(stopText) > 0 || Number(tpText) > 0) && (
+                    <p className="text-xs text-muted-foreground">
+                      {Number(stopText) > 0 ? `Stop loss ${stopText}` : ""}
+                      {Number(stopText) > 0 && Number(tpText) > 0 ? " · " : ""}
+                      {Number(tpText) > 0 ? `Take profit ${tpText}` : ""} attached.
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground">Reference {done.orderId}</p>
+                </div>
+              </div>
+              <a
+                href={done.brokerUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-primary px-4 text-xs font-semibold text-primary-foreground"
+              >
+                View it on your broker <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            </div>
+          ) : loadingStatus ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" /> Checking your account…
             </div>
