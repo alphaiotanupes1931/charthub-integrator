@@ -340,7 +340,7 @@ export const estimateBrokerMargin = createServerFn({ method: "POST" })
     const marginRate = Number(
       (details.body as { instruments?: Array<{ marginRate?: string }> }).instruments?.[0]?.marginRate ?? "",
     );
-    const rate = Number.isFinite(marginRate) && marginRate > 0 ? marginRate : null;
+    const rate = detailsOk && Number.isFinite(marginRate) && marginRate > 0 ? marginRate : null;
 
     const notional = data.units * mid;
     const conversion = Number(
