@@ -49,6 +49,7 @@ export function ChartTradeBar({
   const [done, setDone] = useState<Awaited<ReturnType<typeof placeBrokerOrder>> | null>(null);
   const [margin, setMargin] = useState<Awaited<ReturnType<typeof estimateBrokerMargin>> | null>(null);
   const [loadingMargin, setLoadingMargin] = useState(false);
+  const [marginError, setMarginError] = useState<string | null>(null);
 
   const refresh = () => {
     setLoadingStatus(true);
@@ -62,12 +63,17 @@ export function ChartTradeBar({
     const size = Number(units);
     if (!Number.isFinite(size) || size <= 0) {
       setMargin(null);
+      setMarginError(null);
       return;
     }
     setLoadingMargin(true);
+    setMarginError(null);
     fetchMargin({ data: { symbol, units: size } })
       .then((m) => setMargin(m))
-      .catch(() => setMargin(null))
+      .catch(() => {
+        setMargin(null);
+        setMarginError("The estimate could not be loaded. Check again before placing this trade.");
+      })
       .finally(() => setLoadingMargin(false));
   };
 
@@ -87,7 +93,7 @@ export function ChartTradeBar({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [units, side]);
 
-  const close = () => { setSide(null); setStatus(null); setDone(null); setMargin(null); };
+  const close = () => { setSide(null); setStatus(null); setDone(null); setMargin(null); setMarginError(null); };
 
   const place = async () => {
     if (!side) return;
@@ -248,21 +254,6 @@ export function ChartTradeBar({
                   ? `${status.marginAvailable.toFixed(2)} ${status.currency ?? ""}`
                   : "-"}
               </div>
-              {loadingMargin ? (
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Loader2 className="h-3 w-3 animate-spin" /> Calculating margin…
-                </div>
-              ) : margin?.required != null && Number.isFinite(margin.required) ? (
-                <div className="rounded-xl border border-border/60 px-3 py-2 text-xs">
-                  <span className="text-muted-foreground">About </span>
-                  <span className="font-semibold text-foreground">
-                    {margin.required.toFixed(2)} {status.currency ?? "USD"}
-                  </span>
-                  <span className="text-muted-foreground">
-                    {" "}needed to open {Number(units).toLocaleString()} units at {margin.price}
-                  </span>
-                </div>
-              ) : null}
               <label className="block space-y-1">
                 <span className="text-xs text-muted-foreground">Units</span>
                 <input
@@ -272,6 +263,28 @@ export function ChartTradeBar({
                   className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm"
                 />
               </label>
+              <div className="rounded-xl border border-border/60 bg-muted/30 px-3 py-3 text-xs">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-medium text-muted-foreground">Estimated amount needed</span>
+                  {loadingMargin ? (
+                    <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                      <Loader2 className="h-3 w-3 animate-spin" /> Calculating…
+                    </span>
+                  ) : margin?.required != null && Number.isFinite(margin.required) ? (
+                    <strong className="text-base text-foreground">
+                      {margin.required.toFixed(2)} {status.currency ?? "USD"}
+                    </strong>
+                  ) : (
+                    <span className="text-muted-foreground">Unavailable</span>
+                  )}
+                </div>
+                {margin?.price != null && (
+                  <p className="mt-1 text-muted-foreground">
+                    For {Number(units).toLocaleString()} units at an estimated live price of {margin.price}.
+                  </p>
+                )}
+                {marginError && <p className="mt-1 text-destructive">{marginError}</p>}
+              </div>
               <div className="grid grid-cols-2 gap-2">
                 <label className="block space-y-1">
                   <span className="text-xs text-muted-foreground">Stop loss</span>
