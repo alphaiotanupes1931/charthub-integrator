@@ -404,11 +404,12 @@ const PlaceOrderInput = z.object({
   takeProfit: z.number().positive().optional(),
 });
 
-export const placeBrokerOrder = createServerFn({ method: "POST" })
-  .middleware([requireCapability("broker_live")])
-  .inputValidator((raw: unknown) => PlaceOrderInput.parse(raw))
-  .handler(async ({ data, context }) => {
+export type PlaceOrderData = z.infer<typeof PlaceOrderInput>;
+
+export async function oandaPlaceOrder(userId: string, data: PlaceOrderData) {
+  {
     const instrument = toOandaInstrument(data.symbol);
+
     if (!instrument) throw new Error(`Symbol ${data.symbol} is not supported by OANDA`);
 
     const signedUnits = (data.side === "long" ? 1 : -1) * Math.floor(data.units);
