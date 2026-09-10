@@ -114,6 +114,8 @@ export async function placeLiveOrder(
     timeInForce: "FOK",
     positionFill: "DEFAULT",
   };
+  // Tag so later trade management only ever touches autopilot's own trades.
+  order.clientExtensions = { tag: AUTOPILOT_TAG, comment: "TradeMind autopilot" };
   if (intent.stopLoss) {
     order.stopLossOnFill = { price: priceStr(instrument, intent.stopLoss), timeInForce: "GTC" };
   }
