@@ -481,7 +481,14 @@ export async function oandaPlaceOrder(userId: string, data: PlaceOrderData) {
           ? "https://trade.oanda.com/"
           : "https://trade.practice.oanda.com/",
     };
-  });
+  }
+}
+
+export const placeBrokerOrder = createServerFn({ method: "POST" })
+  .middleware([requireCapability("broker_live")])
+  .inputValidator((raw: unknown) => PlaceOrderInput.parse(raw))
+  .handler(async ({ data, context }) => oandaPlaceOrder(context.userId, data));
+
 
 export const closeBrokerTrade = createServerFn({ method: "POST" })
   .middleware([requireCapability("broker_live")])
