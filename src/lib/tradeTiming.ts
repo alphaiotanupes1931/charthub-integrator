@@ -87,7 +87,20 @@ function killzonesFor(cls: AssetClass): Window[] {
       { name: "New York killzone", start: 8, end: 11.5 },
     ];
   }
-  if (cls === "index" || cls === "equity") {
+  if (cls === "index") {
+    // Index futures (NAS100, US30, SPX500) trade nearly around the clock -
+    // Sunday 6 PM ET through Friday 5 PM ET, with only a short daily break.
+    // They are NOT closed outside the cash session, so every session window
+    // is a valid entry window; the cash open is still the highest-volume one.
+    return [
+      { name: "Asia session", start: 20, end: 24 },
+      { name: "London killzone", start: 3, end: 5 },
+      { name: "New York open drive", start: 9.5, end: 11.5 },
+      { name: "New York afternoon", start: 13.5, end: 15.5 },
+    ];
+  }
+  if (cls === "equity") {
+    // Single stocks only trade the cash session.
     return [
       { name: "New York open drive", start: 9.5, end: 11.5 },
       { name: "New York afternoon", start: 13.5, end: 15.5 },
