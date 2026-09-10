@@ -245,6 +245,12 @@ export function ChartTradeBar({
                   />
                 </label>
               </div>
+              {status.marginAvailable != null && status.marginAvailable <= 0 && (
+                <p className="rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-[11px] text-foreground">
+                  There is no money available to trade in this account, so the order would be turned
+                  down. Add funds or close a position first.
+                </p>
+              )}
               {entry != null && Number.isFinite(entry) && (
                 <p className="text-[11px] text-muted-foreground">
                   Your current plan entry is {entry}. A market order fills at the live price, which
@@ -260,9 +266,9 @@ export function ChartTradeBar({
               onClick={close}
               className="h-9 rounded-xl border border-border/60 px-4 text-xs font-semibold"
             >
-              Cancel
+              {done ? "Done" : "Cancel"}
             </button>
-            {connected && (
+            {connected && !done && (
               <button
                 type="button"
                 disabled={placing}
