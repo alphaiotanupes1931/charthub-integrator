@@ -305,7 +305,7 @@ export function ChartTradeBar({
             {connected && !done && (
               <button
                 type="button"
-                disabled={placing}
+                disabled={placing || entry == null || !Number.isFinite(entry)}
                 onClick={place}
                 className={`inline-flex h-9 items-center gap-2 rounded-xl px-4 text-xs font-bold disabled:opacity-60 ${
                   side === "short"
