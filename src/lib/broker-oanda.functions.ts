@@ -200,34 +200,38 @@ async function oandaFetch(userId: string, path: string, init: RequestInit = {}):
   });
 }
 
+/** Plain server helper so other venues can share one status shape. */
+export async function oandaStatus(userId: string) {
+  try {
+    const account = await oandaFetch(userId, "/summary");
+    const a = (account.account ?? {}) as Record<string, string>;
+    return {
+      connected: true as const,
+      env: account.__env ?? "practice",
+      accountId: a.id ?? null,
+      configuredAccountId: account.__configuredAccountId ?? null,
+      usingDiscoveredAccount: account.__discovered ?? false,
+      currency: a.currency ?? null,
+      balance: a.balance ? Number(a.balance) : null,
+      nav: a.NAV ? Number(a.NAV) : null,
+      unrealizedPL: a.unrealizedPL ? Number(a.unrealizedPL) : null,
+      openTradeCount: a.openTradeCount ? Number(a.openTradeCount) : 0,
+      marginAvailable: a.marginAvailable ? Number(a.marginAvailable) : null,
+      // Where the trader adds money to this exact account.
+      fundingUrl:
+        (account.__env ?? "practice") === "live"
+          ? "https://www.oanda.com/account/funding"
+          : "https://trade.practice.oanda.com/",
+    };
+  } catch (e) {
+    return { connected: false as const, reason: (e as Error).message };
+  }
+}
+
 export const getBrokerStatus = createServerFn({ method: "GET" })
   .middleware([requireCapability("broker_live")])
-  .handler(async ({ context }) => {
-    try {
-      const account = await oandaFetch(context.userId, "/summary");
-      const a = (account.account ?? {}) as Record<string, string>;
-      return {
-        connected: true as const,
-        env: account.__env ?? "practice",
-        accountId: a.id ?? null,
-        configuredAccountId: account.__configuredAccountId ?? null,
-        usingDiscoveredAccount: account.__discovered ?? false,
-        currency: a.currency ?? null,
-        balance: a.balance ? Number(a.balance) : null,
-        nav: a.NAV ? Number(a.NAV) : null,
-        unrealizedPL: a.unrealizedPL ? Number(a.unrealizedPL) : null,
-        openTradeCount: a.openTradeCount ? Number(a.openTradeCount) : 0,
-        marginAvailable: a.marginAvailable ? Number(a.marginAvailable) : null,
-        // Where the trader adds money to this exact account.
-        fundingUrl:
-          (account.__env ?? "practice") === "live"
-            ? "https://www.oanda.com/account/funding"
-            : "https://trade.practice.oanda.com/",
-      };
-    } catch (e) {
-      return { connected: false as const, reason: (e as Error).message };
-    }
-  });
+  .handler(async ({ context }) => oandaStatus(context.userId));
+
 
 // Identity check: OANDA has no OAuth login for retail traders, so "being logged
 // in" here means the saved token resolves to a real OANDA account. This lists
