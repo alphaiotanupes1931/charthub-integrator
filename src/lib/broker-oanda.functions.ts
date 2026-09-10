@@ -218,6 +218,11 @@ export const getBrokerStatus = createServerFn({ method: "GET" })
         unrealizedPL: a.unrealizedPL ? Number(a.unrealizedPL) : null,
         openTradeCount: a.openTradeCount ? Number(a.openTradeCount) : 0,
         marginAvailable: a.marginAvailable ? Number(a.marginAvailable) : null,
+        // Where the trader adds money to this exact account.
+        fundingUrl:
+          (account.__env ?? "practice") === "live"
+            ? "https://www.oanda.com/account/funding"
+            : "https://trade.practice.oanda.com/",
       };
     } catch (e) {
       return { connected: false as const, reason: (e as Error).message };
