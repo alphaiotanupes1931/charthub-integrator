@@ -430,7 +430,7 @@ export async function oandaPlaceOrder(userId: string, data: PlaceOrderData) {
     if (data.stopLoss) order.stopLossOnFill = { price: data.stopLoss.toString(), timeInForce: "GTC" };
     if (data.takeProfit) order.takeProfitOnFill = { price: data.takeProfit.toString(), timeInForce: "GTC" };
 
-    const resp = await oandaFetch(context.userId, "/orders", {
+    const resp = await oandaFetch(userId, "/orders", {
       method: "POST",
       body: JSON.stringify({ order }),
     }).catch((e: Error) => {
