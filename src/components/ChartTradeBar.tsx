@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowDownRight, ArrowUpRight, CheckCircle2, ExternalLink, Loader2 } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, CheckCircle2, ExternalLink, Loader2, RefreshCw } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -47,15 +47,19 @@ export function ChartTradeBar({
   const [tpText, setTpText] = useState("");
   const [done, setDone] = useState<Awaited<ReturnType<typeof placeBrokerOrder>> | null>(null);
 
-  useEffect(() => {
-    if (!side) return;
-    setStopText(stop != null && Number.isFinite(stop) ? String(stop) : "");
-    setTpText(takeProfit != null && Number.isFinite(takeProfit) ? String(takeProfit) : "");
+  const refresh = () => {
     setLoadingStatus(true);
     fetchStatus()
       .then((s) => setStatus(s))
       .catch(() => setStatus({ connected: false, reason: "Could not reach your broker." } as never))
       .finally(() => setLoadingStatus(false));
+  };
+
+  useEffect(() => {
+    if (!side) return;
+    setStopText(stop != null && Number.isFinite(stop) ? String(stop) : "");
+    setTpText(takeProfit != null && Number.isFinite(takeProfit) ? String(takeProfit) : "");
+    refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [side]);
 
