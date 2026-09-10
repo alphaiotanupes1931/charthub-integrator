@@ -194,9 +194,12 @@ export function timingGateFor(
   const cls = assetClassFor(ticker);
   // 24/7 market: an overnight session is just another session.
   if (cls === "crypto") return null;
-  const waitFor = cls === "index" ? "the New York cash open" : "the London open";
+  const waitFor = cls === "index" ? "the New York cash session" : "the London open";
   return {
     waitFor,
-    message: `Timing gate: the setup and its levels stand, but ${read.label} (${read.bars}-bar median) is too little participation to execute. Wait for ${waitFor} before taking the entry.`,
+    message: cls === "index"
+      // Futures trade nearly 24h - this is a thin-tape caution, not a closed market.
+      ? `Timing note: futures are open, but ${read.label} (${read.bars}-bar median) is too thin to execute cleanly. The setup and its levels stand - participation usually arrives at ${waitFor}, so entries fill better then.`
+      : `Timing gate: the setup and its levels stand, but ${read.label} (${read.bars}-bar median) is too little participation to execute. Wait for ${waitFor} before taking the entry.`,
   };
 }
