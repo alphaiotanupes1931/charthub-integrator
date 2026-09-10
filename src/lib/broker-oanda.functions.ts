@@ -269,6 +269,63 @@ export const verifyOandaIdentity = createServerFn({ method: "GET" })
   });
 
 
+// Estimate how much margin this account needs to open a position.
+// Returns the current mid price and the approximate margin required.
+const EstimateMarginInput = z.object({
+  symbol: z.string().min(1),
+  units: z.number().positive().max(1_000_000),
+});
+
+export const estimateBrokerMargin = createServerFn({ method: "POST" })
+  .middleware([requireCapability("broker_live")])
+  .inputValidator((raw: unknown) => EstimateMarginInput.parse(raw))
+  .handler(async ({ data, context }) => {
+    const instrument = toOandaInstrument(data.symbol);
+    if (!instrument) throw new Error(`Symbol ${data.symbol} is not supported by OANDA`);
+
+    const config = await resolveOandaAccount(context.userId);
+    const pricing = await tryOandaFetch(
+      config,
+      config.accountId,
+      config.apiKey,
+      `/pricing?instruments=${encodeURIComponent(instrument)}`,
+      { method: "GET" },
+    );
+    if (!pricing.res.ok) {
+      throw new Error(oandaErrorMessage(pricing.body, pricing.res.status));
+    }
+    const priceObj = (pricing.body as { prices?: Array<{ bids?: Array<{ price: string }>; asks?: Array<{ price: string }> }> }).prices?.[0];
+    const bid = priceObj?.bids?.[0]?.price ? Number(priceObj.bids[0].price) : null;
+    const ask = priceObj?.asks?.[0]?.price ? Number(priceObj.asks[0].price) : null;
+    const mid = bid != null && ask != null ? (bid + ask) / 2 : bid ?? ask ?? null;
+    if (mid == null || !Number.isFinite(mid)) {
+      throw new Error("Could not get a live price for this instrument.");
+    }
+
+    const details = await tryOandaFetch(
+      config,
+      config.accountId,
+      config.apiKey,
+      `/instruments/${encodeURIComponent(instrument)}`,
+      { method: "GET" },
+    );
+    const marginRate = Number((details.body as { instrument?: { marginRate?: string } }).instrument?.marginRate ?? "");
+    const rate = Number.isFinite(marginRate) && marginRate > 0 ? marginRate : null;
+
+    const notional = data.units * mid;
+    const required = rate != null ? notional * rate : null;
+    return {
+      instrument,
+      price: mid,
+      bid,
+      ask,
+      marginRate: rate,
+      notional,
+      required,
+      currency: config.env === "live" ? "USD" : "USD",
+    };
+  });
+
 export const listBrokerPositions = createServerFn({ method: "GET" })
   .middleware([requireCapability("broker_live")])
   .handler(async ({ context }) => {
