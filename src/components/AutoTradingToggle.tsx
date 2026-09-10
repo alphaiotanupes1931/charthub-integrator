@@ -31,7 +31,7 @@ export function AutoTradingToggle({ className = "" }: { className?: string }) {
       qc.invalidateQueries({ queryKey: AUTO_TRADE_CONTEXT_KEY });
       toast.success(
         input.mode === "auto"
-          ? "Auto Trading is on. Qualifying setups will ask before anything is placed."
+          ? "Auto Trading is on. Qualifying setups are placed at your broker automatically, even while the app is closed."
           : "Auto Trading is off. Nothing will be placed for you.",
       );
     },
