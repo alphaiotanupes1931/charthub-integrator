@@ -45,6 +45,7 @@ export function ChartTradeBar({
   const [units, setUnits] = useState("1000");
   const [stopText, setStopText] = useState("");
   const [tpText, setTpText] = useState("");
+  const [done, setDone] = useState<Awaited<ReturnType<typeof placeBrokerOrder>> | null>(null);
 
   useEffect(() => {
     if (!side) return;
@@ -58,13 +59,20 @@ export function ChartTradeBar({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [side]);
 
-  const close = () => { setSide(null); setStatus(null); };
+  const close = () => { setSide(null); setStatus(null); setDone(null); };
 
   const place = async () => {
     if (!side) return;
     const size = Number(units);
     if (!Number.isFinite(size) || size <= 0) {
       toast.error("Enter how many units to trade.");
+      return;
+    }
+    const available = status && "marginAvailable" in status ? status.marginAvailable : null;
+    if (available != null && available <= 0) {
+      toast.error(
+        `There is no money available to trade in your account right now. Add funds or close a position, then try again.`,
+      );
       return;
     }
     const sl = Number(stopText);
@@ -81,12 +89,12 @@ export function ChartTradeBar({
           ...(Number.isFinite(tp) && tp > 0 ? { takeProfit: tp } : {}),
         },
       });
+      setDone(res);
       toast.success(
         `${side === "long" ? "Bought" : "Sold"} ${Math.abs(res.units)} ${label}${
           res.fillPrice ? ` at ${res.fillPrice}` : ""
         }`,
       );
-      close();
     } catch (e) {
       toast.error((e as Error).message || "Your broker did not accept the order.");
     } finally {
