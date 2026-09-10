@@ -31,7 +31,7 @@ export function AutoTradingToggle({ className = "" }: { className?: string }) {
       qc.invalidateQueries({ queryKey: AUTO_TRADE_CONTEXT_KEY });
       toast.success(
         input.mode === "auto"
-          ? "Auto Trading is on. Qualifying setups will ask before anything is placed."
+          ? "Auto Trading is on. Qualifying setups are placed at your broker automatically, even while the app is closed."
           : "Auto Trading is off. Nothing will be placed for you.",
       );
     },
@@ -71,7 +71,7 @@ export function AutoTradingToggle({ className = "" }: { className?: string }) {
           type="button"
           onClick={flip}
           disabled={save.isPending || ctx.isLoading}
-          title="Auto Trading: ask me to place qualifying setups at my connected broker"
+          title="Auto Trading: place qualifying setups at my connected broker automatically"
           className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition ${
             auto
               ? "border-emerald-600/50 bg-emerald-600/10 text-emerald-400"
@@ -136,9 +136,10 @@ export function AutoTradingToggle({ className = "" }: { className?: string }) {
             ) : (
               <>
                 <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-                  You are allowing orders to be sent to your own broker account after you approve each one. TradeMind is
-                  not a broker, advisor, or money manager, and you keep full responsibility for every order. Switch back
-                  to Manual at any time.
+                  You are allowing real orders to be sent to your own broker account automatically, with no further
+                  confirmation, including while the app is closed. Trades placed this way are managed for you (stop to
+                  break-even, partials, trailing). TradeMind is not a broker, advisor, or money manager, and you keep
+                  full responsibility for every order. Switch back to Manual at any time.
                 </p>
                 <div className="mt-4 flex gap-2">
                   <button

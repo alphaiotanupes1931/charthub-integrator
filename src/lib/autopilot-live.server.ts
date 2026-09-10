@@ -20,6 +20,9 @@ export type LiveOrderIntent = {
 
 export type LiveOrderOutcome = { ok: boolean; detail: string; orderId?: string };
 
+/** Marks trades autopilot opened, so management never touches a manual trade. */
+export const AUTOPILOT_TAG = "trademind-autopilot";
+
 /** Platform instrument label -> OANDA instrument code. */
 export function oandaInstrument(symbol: string): string {
   const s = symbol.trim().toUpperCase();
@@ -114,6 +117,8 @@ export async function placeLiveOrder(
     timeInForce: "FOK",
     positionFill: "DEFAULT",
   };
+  // Tag so later trade management only ever touches autopilot's own trades.
+  order.clientExtensions = { tag: AUTOPILOT_TAG, comment: "TradeMind autopilot" };
   if (intent.stopLoss) {
     order.stopLossOnFill = { price: priceStr(instrument, intent.stopLoss), timeInForce: "GTC" };
   }
@@ -211,6 +216,10 @@ export async function manageLiveTrades(
     const entry = Number(t["price"]);
     const units = Number(t["currentUnits"]);
     const initialUnits = Number(t["initialUnits"] ?? units);
+    // Only trades autopilot opened itself. Anything the trader placed by hand
+    // (or before tagging existed) is left completely alone.
+    const tag = (t["clientExtensions"] as { tag?: string } | undefined)?.tag;
+    if (tag !== AUTOPILOT_TAG) continue;
     const stopOrder = t["stopLossOrder"] as { price?: string } | undefined;
     const stop = Number(stopOrder?.price);
     const last = mid.get(instrument);
