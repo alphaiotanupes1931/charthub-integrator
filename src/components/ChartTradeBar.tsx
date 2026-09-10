@@ -3,7 +3,7 @@ import { ArrowDownRight, ArrowUpRight, CheckCircle2, ExternalLink, Loader2, Refr
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { getBrokerStatus, placeBrokerOrder } from "@/lib/broker-oanda.functions";
+import { estimateBrokerMargin, getBrokerStatus, placeBrokerOrder } from "@/lib/broker-oanda.functions";
 import {
   Dialog,
   DialogContent,
