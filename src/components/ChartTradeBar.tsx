@@ -286,11 +286,10 @@ export function ChartTradeBar({
                   may differ.
                 </p>
               ) : (
-                <p className="text-[11px] text-muted-foreground">
-                  You have not scanned {label} yet, so there is no entry, stop or target from a plan.
-                  This would fill at whatever the live price is right now. Run a scan first if you
-                  want the levels filled in for you.
-                </p>
+                <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-[11px] text-foreground">
+                  Run a scan first. Without a scan there is no entry, stop or target from a plan, so
+                  Buy/Sell is disabled until you scan {label}.
+                </div>
               )}
             </div>
           )}
@@ -306,7 +305,7 @@ export function ChartTradeBar({
             {connected && !done && (
               <button
                 type="button"
-                disabled={placing}
+                disabled={placing || entry == null || !Number.isFinite(entry)}
                 onClick={place}
                 className={`inline-flex h-9 items-center gap-2 rounded-xl px-4 text-xs font-bold disabled:opacity-60 ${
                   side === "short"
