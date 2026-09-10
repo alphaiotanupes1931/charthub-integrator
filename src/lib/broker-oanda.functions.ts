@@ -292,7 +292,17 @@ export const estimateBrokerMargin = createServerFn({ method: "POST" })
       { method: "GET" },
     );
     if (!pricing.res.ok) {
-      throw new Error(oandaErrorMessage(pricing.body, pricing.res.status));
+      return {
+        instrument,
+        price: null,
+        bid: null,
+        ask: null,
+        marginRate: null,
+        notional: null,
+        required: null,
+        currency: "USD",
+        unavailable: oandaErrorMessage(pricing.body, pricing.res.status),
+      };
     }
     const priceObj = (pricing.body as {
       prices?: Array<{
