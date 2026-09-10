@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowDownRight, ArrowUpRight, Loader2 } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, CheckCircle2, ExternalLink, Loader2 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -45,6 +45,7 @@ export function ChartTradeBar({
   const [units, setUnits] = useState("1000");
   const [stopText, setStopText] = useState("");
   const [tpText, setTpText] = useState("");
+  const [done, setDone] = useState<Awaited<ReturnType<typeof placeBrokerOrder>> | null>(null);
 
   useEffect(() => {
     if (!side) return;
@@ -58,13 +59,20 @@ export function ChartTradeBar({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [side]);
 
-  const close = () => { setSide(null); setStatus(null); };
+  const close = () => { setSide(null); setStatus(null); setDone(null); };
 
   const place = async () => {
     if (!side) return;
     const size = Number(units);
     if (!Number.isFinite(size) || size <= 0) {
       toast.error("Enter how many units to trade.");
+      return;
+    }
+    const available = status && "marginAvailable" in status ? status.marginAvailable : null;
+    if (available != null && available <= 0) {
+      toast.error(
+        `There is no money available to trade in your account right now. Add funds or close a position, then try again.`,
+      );
       return;
     }
     const sl = Number(stopText);
@@ -81,12 +89,12 @@ export function ChartTradeBar({
           ...(Number.isFinite(tp) && tp > 0 ? { takeProfit: tp } : {}),
         },
       });
+      setDone(res);
       toast.success(
         `${side === "long" ? "Bought" : "Sold"} ${Math.abs(res.units)} ${label}${
           res.fillPrice ? ` at ${res.fillPrice}` : ""
         }`,
       );
-      close();
     } catch (e) {
       toast.error((e as Error).message || "Your broker did not accept the order.");
     } finally {
@@ -134,14 +142,52 @@ export function ChartTradeBar({
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {side === "short" ? "Sell" : "Buy"} {label}
+              {done
+                ? done.pending
+                  ? "Order placed"
+                  : `${side === "short" ? "Sold" : "Bought"} ${label}`
+                : `${side === "short" ? "Sell" : "Buy"} ${label}`}
             </DialogTitle>
             <DialogDescription>
-              This sends a real order to your connected live account right now.
+              {done
+                ? "Your order went through on your connected account."
+                : "This sends a real order to your connected live account right now."}
             </DialogDescription>
           </DialogHeader>
 
-          {loadingStatus ? (
+          {done ? (
+            <div className="space-y-3 text-sm">
+              <div className="flex items-start gap-2 rounded-xl border border-bull/40 bg-bull/10 px-3 py-3">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-bull" />
+                <div className="space-y-1">
+                  <p className="font-semibold text-foreground">
+                    {done.pending ? "Your order is waiting for your price." : "Your trade is open."}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {Math.abs(done.units)} units of {label}
+                    {done.fillPrice ? ` at ${done.fillPrice}` : ""}
+                    {done.accountId ? ` · account ${done.accountId}` : ""}
+                  </p>
+                  {(Number(stopText) > 0 || Number(tpText) > 0) && (
+                    <p className="text-xs text-muted-foreground">
+                      {Number(stopText) > 0 ? `Stop loss ${stopText}` : ""}
+                      {Number(stopText) > 0 && Number(tpText) > 0 ? " · " : ""}
+                      {Number(tpText) > 0 ? `Take profit ${tpText}` : ""} attached.
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground">Reference {done.orderId}</p>
+                </div>
+              </div>
+              <a
+                href={done.brokerUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-primary px-4 text-xs font-semibold text-primary-foreground"
+              >
+                View it on your broker <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            </div>
+          ) : loadingStatus ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" /> Checking your account…
             </div>
@@ -199,6 +245,12 @@ export function ChartTradeBar({
                   />
                 </label>
               </div>
+              {status.marginAvailable != null && status.marginAvailable <= 0 && (
+                <p className="rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-[11px] text-foreground">
+                  There is no money available to trade in this account, so the order would be turned
+                  down. Add funds or close a position first.
+                </p>
+              )}
               {entry != null && Number.isFinite(entry) && (
                 <p className="text-[11px] text-muted-foreground">
                   Your current plan entry is {entry}. A market order fills at the live price, which
@@ -214,9 +266,9 @@ export function ChartTradeBar({
               onClick={close}
               className="h-9 rounded-xl border border-border/60 px-4 text-xs font-semibold"
             >
-              Cancel
+              {done ? "Done" : "Cancel"}
             </button>
-            {connected && (
+            {connected && !done && (
               <button
                 type="button"
                 disabled={placing}

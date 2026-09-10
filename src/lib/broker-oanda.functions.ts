@@ -327,6 +327,11 @@ export const placeBrokerOrder = createServerFn({ method: "POST" })
           `Your account cannot trade ${data.symbol} (${instrument}). Pick an instrument your account supports, or check that this market is open.`,
         );
       }
+      if (/insufficient.?margin|insufficient.?funds|insufficient.?liquidity/i.test(e.message)) {
+        throw new Error(
+          `Not enough money in your account to open ${Math.abs(signedUnits)} units of ${data.symbol}. Lower the units, or add funds to your account, then try again.`,
+        );
+      }
       throw e;
     });
 
@@ -334,17 +339,23 @@ export const placeBrokerOrder = createServerFn({ method: "POST" })
     const reject = resp.orderRejectTransaction as Record<string, unknown> | undefined;
     if (cancel || reject) {
       const reason = String(cancel?.reason ?? reject?.reason ?? "Order was not filled");
-      throw new Error(`OANDA rejected the order: ${reason}. Check account balance, margin, and instrument availability.`);
+      if (/INSUFFICIENT_MARGIN|INSUFFICIENT_FUNDS|INSUFFICIENT_LIQUIDITY/i.test(reason)) {
+        throw new Error(
+          `Not enough money in your account to open ${Math.abs(signedUnits)} units of ${data.symbol}. Lower the units, or add funds to your account, then try again.`,
+        );
+      }
+      throw new Error(`Your broker did not accept the order: ${reason}.`);
     }
     const fill = resp.orderFillTransaction as Record<string, unknown> | undefined;
     const created = resp.orderCreateTransaction as Record<string, unknown> | undefined;
     if (type === "MARKET") {
       if (!fill || !fill.id) {
-        throw new Error("Order was not filled by OANDA. Verify balance and margin, then try again.");
+        throw new Error("Order was not filled by your broker. Check your available balance, then try again.");
       }
     } else if (!created?.id) {
-      throw new Error("OANDA did not create the working order. Check the price and try again.");
+      throw new Error("Your broker did not create the working order. Check the price and try again.");
     }
+    const env = resp.__env === "live" ? "live" : "practice";
     return {
       ok: true,
       orderId: String(fill?.id ?? created?.id ?? ""),
@@ -352,6 +363,11 @@ export const placeBrokerOrder = createServerFn({ method: "POST" })
       instrument,
       units: signedUnits,
       fillPrice: fill?.price ? Number(fill.price) : null,
+      accountId: String(resp.__accountId ?? ""),
+      brokerUrl:
+        env === "live"
+          ? "https://trade.oanda.com/"
+          : "https://trade.practice.oanda.com/",
     };
   });
 
