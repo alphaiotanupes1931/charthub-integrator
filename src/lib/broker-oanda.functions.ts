@@ -294,7 +294,13 @@ export const estimateBrokerMargin = createServerFn({ method: "POST" })
     if (!pricing.res.ok) {
       throw new Error(oandaErrorMessage(pricing.body, pricing.res.status));
     }
-    const priceObj = (pricing.body as { prices?: Array<{ bids?: Array<{ price: string }>; asks?: Array<{ price: string }> }> }).prices?.[0];
+    const priceObj = (pricing.body as {
+      prices?: Array<{
+        bids?: Array<{ price: string }>;
+        asks?: Array<{ price: string }>;
+        quoteHomeConversionFactors?: { positiveUnits?: string; negativeUnits?: string };
+      }>;
+    }).prices?.[0];
     const bid = priceObj?.bids?.[0]?.price ? Number(priceObj.bids[0].price) : null;
     const ask = priceObj?.asks?.[0]?.price ? Number(priceObj.asks[0].price) : null;
     const mid = bid != null && ask != null ? (bid + ask) / 2 : bid ?? ask ?? null;
@@ -306,14 +312,25 @@ export const estimateBrokerMargin = createServerFn({ method: "POST" })
       config,
       config.accountId,
       config.apiKey,
-      `/instruments/${encodeURIComponent(instrument)}`,
+      `/instruments?instruments=${encodeURIComponent(instrument)}`,
       { method: "GET" },
     );
-    const marginRate = Number((details.body as { instrument?: { marginRate?: string } }).instrument?.marginRate ?? "");
+    if (!details.res.ok) {
+      throw new Error(oandaErrorMessage(details.body, details.res.status));
+    }
+    const marginRate = Number(
+      (details.body as { instruments?: Array<{ marginRate?: string }> }).instruments?.[0]?.marginRate ?? "",
+    );
     const rate = Number.isFinite(marginRate) && marginRate > 0 ? marginRate : null;
 
     const notional = data.units * mid;
-    const required = rate != null ? notional * rate : null;
+    const conversion = Number(
+      priceObj?.quoteHomeConversionFactors?.positiveUnits
+      ?? priceObj?.quoteHomeConversionFactors?.negativeUnits
+      ?? "1",
+    );
+    const homeConversion = Number.isFinite(conversion) && conversion > 0 ? conversion : 1;
+    const required = rate != null ? notional * homeConversion * rate : null;
     return {
       instrument,
       price: mid,
