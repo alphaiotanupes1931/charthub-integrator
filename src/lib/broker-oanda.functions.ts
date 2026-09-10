@@ -366,7 +366,14 @@ export async function oandaEstimate(userId: string, data: { symbol: string; unit
         ? (detailsNote ?? "Margin details are not available for this market right now.")
         : null,
     };
-  });
+  }
+}
+
+export const estimateBrokerMargin = createServerFn({ method: "POST" })
+  .middleware([requireCapability("broker_live")])
+  .inputValidator((raw: unknown) => EstimateMarginInput.parse(raw))
+  .handler(async ({ data, context }) => oandaEstimate(context.userId, data));
+
 
 export const listBrokerPositions = createServerFn({ method: "GET" })
   .middleware([requireCapability("broker_live")])
