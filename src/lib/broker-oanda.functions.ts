@@ -292,7 +292,17 @@ export const estimateBrokerMargin = createServerFn({ method: "POST" })
       { method: "GET" },
     );
     if (!pricing.res.ok) {
-      throw new Error(oandaErrorMessage(pricing.body, pricing.res.status));
+      return {
+        instrument,
+        price: null,
+        bid: null,
+        ask: null,
+        marginRate: null,
+        notional: null,
+        required: null,
+        currency: "USD",
+        unavailable: oandaErrorMessage(pricing.body, pricing.res.status),
+      };
     }
     const priceObj = (pricing.body as {
       prices?: Array<{
@@ -305,7 +315,17 @@ export const estimateBrokerMargin = createServerFn({ method: "POST" })
     const ask = priceObj?.asks?.[0]?.price ? Number(priceObj.asks[0].price) : null;
     const mid = bid != null && ask != null ? (bid + ask) / 2 : bid ?? ask ?? null;
     if (mid == null || !Number.isFinite(mid)) {
-      throw new Error("Could not get a live price for this instrument.");
+      return {
+        instrument,
+        price: null,
+        bid,
+        ask,
+        marginRate: null,
+        notional: null,
+        required: null,
+        currency: "USD",
+        unavailable: "No live price is available for this market right now.",
+      };
     }
 
     const details = await tryOandaFetch(
@@ -315,13 +335,12 @@ export const estimateBrokerMargin = createServerFn({ method: "POST" })
       `/instruments?instruments=${encodeURIComponent(instrument)}`,
       { method: "GET" },
     );
-    if (!details.res.ok) {
-      throw new Error(oandaErrorMessage(details.body, details.res.status));
-    }
+    const detailsOk = details.res.ok;
+    const detailsNote = detailsOk ? null : oandaErrorMessage(details.body, details.res.status);
     const marginRate = Number(
       (details.body as { instruments?: Array<{ marginRate?: string }> }).instruments?.[0]?.marginRate ?? "",
     );
-    const rate = Number.isFinite(marginRate) && marginRate > 0 ? marginRate : null;
+    const rate = detailsOk && Number.isFinite(marginRate) && marginRate > 0 ? marginRate : null;
 
     const notional = data.units * mid;
     const conversion = Number(
@@ -339,7 +358,10 @@ export const estimateBrokerMargin = createServerFn({ method: "POST" })
       marginRate: rate,
       notional,
       required,
-      currency: config.env === "live" ? "USD" : "USD",
+      currency: "USD",
+      unavailable: rate == null
+        ? (detailsNote ?? "Margin details are not available for this market right now.")
+        : null,
     };
   });
 
