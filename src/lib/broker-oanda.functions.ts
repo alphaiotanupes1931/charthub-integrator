@@ -335,9 +335,8 @@ export const estimateBrokerMargin = createServerFn({ method: "POST" })
       `/instruments?instruments=${encodeURIComponent(instrument)}`,
       { method: "GET" },
     );
-    if (!details.res.ok) {
-      throw new Error(oandaErrorMessage(details.body, details.res.status));
-    }
+    const detailsOk = details.res.ok;
+    const detailsNote = detailsOk ? null : oandaErrorMessage(details.body, details.res.status);
     const marginRate = Number(
       (details.body as { instruments?: Array<{ marginRate?: string }> }).instruments?.[0]?.marginRate ?? "",
     );
