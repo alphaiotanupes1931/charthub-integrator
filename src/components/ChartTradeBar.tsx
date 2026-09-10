@@ -3,7 +3,7 @@ import { ArrowDownRight, ArrowUpRight, CheckCircle2, ExternalLink, Loader2, Refr
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { getBrokerStatus, placeBrokerOrder } from "@/lib/broker-oanda.functions";
+import { estimateBrokerMargin, getBrokerStatus, placeBrokerOrder } from "@/lib/broker-oanda.functions";
 import {
   Dialog,
   DialogContent,
@@ -37,6 +37,7 @@ export function ChartTradeBar({
 
   const fetchStatus = useServerFn(getBrokerStatus);
   const submitOrder = useServerFn(placeBrokerOrder);
+  const fetchMargin = useServerFn(estimateBrokerMargin);
 
   const [side, setSide] = useState<"long" | "short" | null>(null);
   const [status, setStatus] = useState<Awaited<ReturnType<typeof getBrokerStatus>> | null>(null);
@@ -46,6 +47,8 @@ export function ChartTradeBar({
   const [stopText, setStopText] = useState("");
   const [tpText, setTpText] = useState("");
   const [done, setDone] = useState<Awaited<ReturnType<typeof placeBrokerOrder>> | null>(null);
+  const [margin, setMargin] = useState<Awaited<ReturnType<typeof estimateBrokerMargin>> | null>(null);
+  const [loadingMargin, setLoadingMargin] = useState(false);
 
   const refresh = () => {
     setLoadingStatus(true);
@@ -55,15 +58,36 @@ export function ChartTradeBar({
       .finally(() => setLoadingStatus(false));
   };
 
+  const loadMargin = () => {
+    const size = Number(units);
+    if (!Number.isFinite(size) || size <= 0) {
+      setMargin(null);
+      return;
+    }
+    setLoadingMargin(true);
+    fetchMargin({ data: { symbol, units: size } })
+      .then((m) => setMargin(m))
+      .catch(() => setMargin(null))
+      .finally(() => setLoadingMargin(false));
+  };
+
   useEffect(() => {
     if (!side) return;
     setStopText(stop != null && Number.isFinite(stop) ? String(stop) : "");
     setTpText(takeProfit != null && Number.isFinite(takeProfit) ? String(takeProfit) : "");
     refresh();
+    loadMargin();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [side]);
 
-  const close = () => { setSide(null); setStatus(null); setDone(null); };
+  useEffect(() => {
+    if (!side) return;
+    const t = setTimeout(loadMargin, 400);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [units, side]);
+
+  const close = () => { setSide(null); setStatus(null); setDone(null); setMargin(null); };
 
   const place = async () => {
     if (!side) return;
@@ -76,6 +100,12 @@ export function ChartTradeBar({
     if (available != null && available <= 0) {
       toast.error(
         `There is no money available to trade in your account right now. Add funds or close a position, then try again.`,
+      );
+      return;
+    }
+    if (margin?.required != null && available != null && margin.required > available) {
+      toast.error(
+        `This trade needs about ${margin.required.toFixed(2)} ${status?.currency ?? "USD"} but you only have ${available.toFixed(2)} available. Lower the units or add funds.`,
       );
       return;
     }
@@ -218,6 +248,21 @@ export function ChartTradeBar({
                   ? `${status.marginAvailable.toFixed(2)} ${status.currency ?? ""}`
                   : "-"}
               </div>
+              {loadingMargin ? (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Loader2 className="h-3 w-3 animate-spin" /> Calculating margin…
+                </div>
+              ) : margin?.required != null && Number.isFinite(margin.required) ? (
+                <div className="rounded-xl border border-border/60 px-3 py-2 text-xs">
+                  <span className="text-muted-foreground">About </span>
+                  <span className="font-semibold text-foreground">
+                    {margin.required.toFixed(2)} {status.currency ?? "USD"}
+                  </span>
+                  <span className="text-muted-foreground">
+                    {" "}needed to open {Number(units).toLocaleString()} units at {margin.price}
+                  </span>
+                </div>
+              ) : null}
               <label className="block space-y-1">
                 <span className="text-xs text-muted-foreground">Units</span>
                 <input
