@@ -103,12 +103,12 @@ export async function placeLiveOrder(
   intent: LiveOrderIntent,
 ): Promise<LiveOrderOutcome> {
   if (venue === "capitalcom") {
+    const { resolveTradeVenue } = await import("@/lib/broker-trade.functions");
+    const row = await resolveTradeVenue(userId);
+    if (!row) return { ok: false, detail: "No trading account is connected." };
+    // Traders who only connected OANDA keep routing there.
+    if (row.broker !== "capitalcom") return placeLiveOrder(userId, row.broker, intent);
     try {
-      const { resolveTradeVenue } = await import("@/lib/broker-trade.functions");
-      const row = await resolveTradeVenue(userId);
-      if (!row || row.broker !== "capitalcom") {
-        return { ok: false, detail: "No usable Capital.com account is connected." };
-      }
       const { capitalSession, capitalPlaceOrder } = await import("@/lib/venues/capital.server");
       const session = await capitalSession(row.creds, row.env);
       const res = await capitalPlaceOrder(session, {
