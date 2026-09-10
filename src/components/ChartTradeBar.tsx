@@ -246,15 +246,46 @@ export function ChartTradeBar({
                 </label>
               </div>
               {status.marginAvailable != null && status.marginAvailable <= 0 && (
-                <p className="rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-[11px] text-foreground">
-                  There is no money available to trade in this account, so the order would be turned
-                  down. Add funds or close a position first.
-                </p>
+                <div className="space-y-2 rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-[11px] text-foreground">
+                  <p>
+                    There is no money available to trade in this account, so the order would be
+                    turned down. Add funds or close a position first.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <a
+                      href={status.fundingUrl ?? "https://www.oanda.com/account/funding"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex h-8 items-center gap-1.5 rounded-xl bg-primary px-3 text-[11px] font-semibold text-primary-foreground"
+                    >
+                      Add funds at your broker <ExternalLink className="h-3 w-3" />
+                    </a>
+                    <button
+                      type="button"
+                      onClick={refresh}
+                      disabled={loadingStatus}
+                      className="inline-flex h-8 items-center gap-1.5 rounded-xl border border-border/60 px-3 text-[11px] font-semibold disabled:opacity-60"
+                    >
+                      {loadingStatus ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-3 w-3" />
+                      )}
+                      Check again
+                    </button>
+                  </div>
+                </div>
               )}
-              {entry != null && Number.isFinite(entry) && (
+              {entry != null && Number.isFinite(entry) ? (
                 <p className="text-[11px] text-muted-foreground">
                   Your current plan entry is {entry}. A market order fills at the live price, which
                   may differ.
+                </p>
+              ) : (
+                <p className="text-[11px] text-muted-foreground">
+                  You have not scanned {label} yet, so there is no entry, stop or target from a plan.
+                  This would fill at whatever the live price is right now. Run a scan first if you
+                  want the levels filled in for you.
                 </p>
               )}
             </div>
