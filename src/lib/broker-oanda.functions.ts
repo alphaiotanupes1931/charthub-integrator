@@ -280,14 +280,13 @@ const EstimateMarginInput = z.object({
   units: z.number().positive().max(1_000_000),
 });
 
-export const estimateBrokerMargin = createServerFn({ method: "POST" })
-  .middleware([requireCapability("broker_live")])
-  .inputValidator((raw: unknown) => EstimateMarginInput.parse(raw))
-  .handler(async ({ data, context }) => {
+export async function oandaEstimate(userId: string, data: { symbol: string; units: number }) {
+  {
     const instrument = toOandaInstrument(data.symbol);
     if (!instrument) throw new Error(`Symbol ${data.symbol} is not supported by OANDA`);
 
-    const config = await resolveOandaAccount(context.userId);
+    const config = await resolveOandaAccount(userId);
+
     const pricing = await tryOandaFetch(
       config,
       config.accountId,
