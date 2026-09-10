@@ -103,6 +103,12 @@ export function ChartTradeBar({
       );
       return;
     }
+    if (margin?.required != null && available != null && margin.required > available) {
+      toast.error(
+        `This trade needs about ${margin.required.toFixed(2)} ${status.currency ?? "USD"} but you only have ${available.toFixed(2)} available. Lower the units or add funds.`,
+      );
+      return;
+    }
     const sl = Number(stopText);
     const tp = Number(tpText);
     setPlacing(true);
