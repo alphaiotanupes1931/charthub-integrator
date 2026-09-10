@@ -251,8 +251,9 @@ export async function runAutopilotForUser(
     }
   }
 
-  // Trade management: protect anything already filled at the live account.
-  if (settings.manageTrades) {
+  // Trade management: protect anything autopilot itself filled at the live
+  // account. Never in manual mode, and never a trade the trader placed by hand.
+  if (settings.manageTrades && settings.mode === "auto") {
     try {
       const { manageLiveTrades } = await import("@/lib/autopilot-live.server");
       const managed = await manageLiveTrades(userId, settings.liveVenue, {

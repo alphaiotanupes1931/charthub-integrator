@@ -238,9 +238,26 @@ function binanceInterval(interval: string): string {
 }
 
 async function fetchBinance(symbol: string, interval: string): Promise<OhlcBar[]> {
-  const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${binanceInterval(interval)}&limit=220`;
-  const raw = await fetchJsonWithTimeout<Array<[number, string, string, string, string, string]>>(url);
-  if (!Array.isArray(raw) || raw.length === 0) throw new Error("Binance: no data");
+  // api.binance.com answers HTTP 451 from some hosting regions, which left
+  // crypto charts empty because Binance is the only crypto feed. api.binance.us
+  // serves the same klines shape and is reachable from those regions.
+  const hosts = ["https://api.binance.com", "https://api.binance.us"];
+  let raw: Array<[number, string, string, string, string, string]> | undefined;
+  let lastError: unknown;
+  for (const host of hosts) {
+    try {
+      raw = await fetchJsonWithTimeout<Array<[number, string, string, string, string, string]>>(
+        `${host}/api/v3/klines?symbol=${symbol}&interval=${binanceInterval(interval)}&limit=220`,
+      );
+      if (Array.isArray(raw) && raw.length > 0) break;
+    } catch (error) {
+      lastError = error;
+      raw = undefined;
+    }
+  }
+  if (!raw || !Array.isArray(raw) || raw.length === 0) {
+    throw lastError instanceof Error ? lastError : new Error("Binance: no data");
+  }
   const bars = raw.map(([ms, o, h, l, c]) => ({
     time: Math.floor(ms / 1000),
     open: parseFloat(o), high: parseFloat(h), low: parseFloat(l), close: parseFloat(c),
