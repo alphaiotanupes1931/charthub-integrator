@@ -242,6 +242,21 @@ export function ChartTradeBar({
                   ? `${status.marginAvailable.toFixed(2)} ${status.currency ?? ""}`
                   : "-"}
               </div>
+              {loadingMargin ? (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Loader2 className="h-3 w-3 animate-spin" /> Calculating margin…
+                </div>
+              ) : margin?.required != null && Number.isFinite(margin.required) ? (
+                <div className="rounded-xl border border-border/60 px-3 py-2 text-xs">
+                  <span className="text-muted-foreground">About </span>
+                  <span className="font-semibold text-foreground">
+                    {margin.required.toFixed(2)} {status.currency ?? "USD"}
+                  </span>
+                  <span className="text-muted-foreground">
+                    {" "}needed to open {Number(units).toLocaleString()} units at {margin.price}
+                  </span>
+                </div>
+              ) : null}
               <label className="block space-y-1">
                 <span className="text-xs text-muted-foreground">Units</span>
                 <input
