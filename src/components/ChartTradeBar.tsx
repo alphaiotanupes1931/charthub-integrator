@@ -80,7 +80,14 @@ export function ChartTradeBar({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [side]);
 
-  const close = () => { setSide(null); setStatus(null); setDone(null); };
+  useEffect(() => {
+    if (!side) return;
+    const t = setTimeout(loadMargin, 400);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [units, side]);
+
+  const close = () => { setSide(null); setStatus(null); setDone(null); setMargin(null); };
 
   const place = async () => {
     if (!side) return;
