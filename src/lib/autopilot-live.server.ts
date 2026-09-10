@@ -102,11 +102,37 @@ export async function placeLiveOrder(
   venue: string,
   intent: LiveOrderIntent,
 ): Promise<LiveOrderOutcome> {
+  if (venue === "capitalcom") {
+    try {
+      const { resolveTradeVenue } = await import("@/lib/broker-trade.functions");
+      const row = await resolveTradeVenue(userId);
+      if (!row || row.broker !== "capitalcom") {
+        return { ok: false, detail: "No usable Capital.com account is connected." };
+      }
+      const { capitalSession, capitalPlaceOrder } = await import("@/lib/venues/capital.server");
+      const session = await capitalSession(row.creds, row.env);
+      const res = await capitalPlaceOrder(session, {
+        symbol: intent.symbol,
+        side: intent.side,
+        size: Math.abs(intent.units),
+        stopLoss: intent.stopLoss,
+        takeProfit: intent.takeProfit,
+      });
+      return {
+        ok: true,
+        detail: `Opened ${intent.side} ${res.size} ${res.epic}${res.fillPrice ? ` at ${res.fillPrice}` : ""} on Capital.com.`,
+        orderId: res.orderId,
+      };
+    } catch (e) {
+      return { ok: false, detail: (e as Error).message };
+    }
+  }
   if (venue !== "oanda") {
-    return { ok: false, detail: `Hands-off live execution is only wired for OANDA right now, not ${venue}.` };
+    return { ok: false, detail: `Hands-off live execution is wired for Capital.com and OANDA, not ${venue}.` };
   }
   const target = await oandaTarget(userId);
   if (!target) return { ok: false, detail: "No usable OANDA account is connected." };
+
 
   const instrument = oandaInstrument(intent.symbol);
   const size = Math.max(1, Math.floor(Math.abs(intent.units)));
