@@ -36,9 +36,9 @@ export const Route = createFileRoute("/_app/broker")({
   head: () => ({
     meta: [
       { title: "Brokers — TradeMind" },
-      { name: "description", content: "Sign in to OANDA and place real trades straight from your scans." },
+      { name: "description", content: "Connect Capital.com or OANDA and place real trades straight from your scans." },
       { property: "og:title", content: "Brokers — TradeMind" },
-      { property: "og:description", content: "Sign in to OANDA and place real trades straight from your scans." },
+      { property: "og:description", content: "Connect Capital.com or OANDA and place real trades straight from your scans." },
     ],
   }),
   component: BrokerPage,
@@ -147,7 +147,7 @@ function BrokerPage() {
         <div>
           <h1 className="font-display text-2xl md:text-3xl font-semibold mb-2">Brokers</h1>
           <p className="text-sm text-muted-foreground">
-            Sign in to OANDA once, then place trades straight from your scans. Your token is encrypted on the server and never exposed to the browser.
+            Connect Capital.com or OANDA once, then place trades straight from your scans. Capital.com covers indices, gold, oil and crypto as well as forex. Your token is encrypted on the server and never exposed to the browser.
           </p>
 
         </div>
@@ -181,7 +181,7 @@ function BrokerPage() {
       <div className="rounded-xl border border-border/60 bg-card p-5 mb-6">
         <div className="text-sm font-semibold">Account used for Auto Trading</div>
         <p className="mt-1 text-xs text-muted-foreground">
-          OANDA is your default account, so approved setups are placed and managed there. Switch Auto Trading on from
+          Approved setups are placed and managed at your connected account, Capital.com first if you have one. Switch Auto Trading on from
           the home page; sign out above at any time and nothing can be placed.
         </p>
       </div>
