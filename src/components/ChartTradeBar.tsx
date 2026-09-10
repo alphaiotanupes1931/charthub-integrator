@@ -37,6 +37,7 @@ export function ChartTradeBar({
 
   const fetchStatus = useServerFn(getBrokerStatus);
   const submitOrder = useServerFn(placeBrokerOrder);
+  const fetchMargin = useServerFn(estimateBrokerMargin);
 
   const [side, setSide] = useState<"long" | "short" | null>(null);
   const [status, setStatus] = useState<Awaited<ReturnType<typeof getBrokerStatus>> | null>(null);
@@ -46,6 +47,8 @@ export function ChartTradeBar({
   const [stopText, setStopText] = useState("");
   const [tpText, setTpText] = useState("");
   const [done, setDone] = useState<Awaited<ReturnType<typeof placeBrokerOrder>> | null>(null);
+  const [margin, setMargin] = useState<Awaited<ReturnType<typeof estimateBrokerMargin>> | null>(null);
+  const [loadingMargin, setLoadingMargin] = useState(false);
 
   const refresh = () => {
     setLoadingStatus(true);
