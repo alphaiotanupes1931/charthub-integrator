@@ -151,6 +151,38 @@ function systematicPlan(
   };
 }
 
+/**
+ * True when there is a real structural zone in the trade's direction on the 1H
+ * (order block, FVG) or a 4H demand/supply zone. This is the difference between
+ * "the tape happens to point this way" and "there is a place to enter from".
+ */
+export function hasAlignedZone(bias: typeof BIASES[number], snap: MarketSnapshot): boolean {
+  if (bias === "Neutral") return false;
+  const m = snap.mtf;
+  if (!m) return false;
+  const arr = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
+  const long = bias === "Long";
+  const obs = arr(long ? m.h1?.orderBlocks?.bull : m.h1?.orderBlocks?.bear);
+  const fvgs = arr(long ? m.h1?.fvg?.bull : m.h1?.fvg?.bear);
+  const zones = arr(long ? m.h4?.zones?.demand : m.h4?.zones?.supply);
+  return obs.length > 0 || fvgs.length > 0 || zones.length > 0;
+}
+
+/**
+ * A counter-move on the 1H/15m inside an intact 4H trend is a pullback - which
+ * is the entry the methodology is built around, not a reason to hold the grade
+ * at C. This returns true only when the 4H still agrees with the trade and
+ * there is an aligned zone for price to trade back into.
+ */
+export function isAlignedPullback(bias: typeof BIASES[number], snap: MarketSnapshot): boolean {
+  if (bias === "Neutral") return false;
+  const m = snap.mtf;
+  if (!m) return false;
+  const want = bias === "Long" ? "bullish" : "bearish";
+  const h4Agrees = m.h4?.direction === want || m.h4?.trend === (bias === "Long" ? "up" : "down");
+  return h4Agrees && hasAlignedZone(bias, snap);
+}
+
 // ---------- Evidence-counted conviction ----------
 // Every point below comes from a measurable check on the snapshot. Nothing is
 // asserted by the model and nothing is floored by grade, so a thin setup reads
