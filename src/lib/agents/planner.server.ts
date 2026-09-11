@@ -6,6 +6,7 @@ import { z } from "zod";
 import { createAiGatewayProvider } from "@/lib/ai-gateway.server";
 import type { MarketSnapshot, OrderFlow, ResearchMemo, TradePlan } from "./types";
 import type { TradeStyle } from "@/lib/tradeTiming";
+import { SCANNER_METHODOLOGY_VERSION } from "@/lib/scanner-methodology";
 import { formatOrderFlow } from "./order-flow.server";
 import { computeOrderBlocks } from "@/lib/orderBlocks";
 import { computeBias } from "./bias-adapter.server";
@@ -138,6 +139,7 @@ function systematicPlan(
   const setup = mtf ? `MTF ${mtf.alignment} (4H ${mtf.h4.direction}/${mtf.h4.trend}, 1H ${mtf.h1.structureBreak}, 15m ${mtf.m15.confirmation})`
     : snap.cisd.state === "none" ? "range structure" : `${snap.cisd.state} CISD`;
   return {
+    methodologyVersion: SCANNER_METHODOLOGY_VERSION,
     grade,
     bias,
     confidence: confBase,
