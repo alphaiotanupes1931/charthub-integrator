@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
@@ -121,6 +121,7 @@ function AdminPage() {
 
 
   useEffect(() => {
+    if (profileLoading || !isAdmin) return;
     (async () => {
       try {
         const u = ((await adminUsersOverview()) ?? []) as UserRow[];
@@ -139,10 +140,11 @@ function AdminPage() {
         setErr(e instanceof Error ? e.message : "Failed to load");
       }
     })();
-  }, []);
+  }, [isAdmin, profileLoading]);
 
   // AI spend for the selected money window (defaults to month to date).
   useEffect(() => {
+    if (profileLoading || !isAdmin) return;
     let cancelled = false;
     aiCostSummary({ data: { days: profitRange.days } })
       .then((res) => {
@@ -152,7 +154,7 @@ function AdminPage() {
       })
       .catch(() => { if (!cancelled) setAiSpendMonth(null); });
     return () => { cancelled = true; };
-  }, [profitRange.days]);
+  }, [isAdmin, profileLoading, profitRange.days]);
 
 
   if (profileLoading) {
@@ -163,7 +165,7 @@ function AdminPage() {
     );
   }
 
-  // Admin gate temporarily disabled - panel visible to all users for testing.
+  if (!isAdmin) return <Navigate to="/dashboard" replace />;
 
 
   const totalUsers = users?.length ?? 0;

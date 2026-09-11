@@ -721,7 +721,8 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     return () => { cancelled = true; window.clearTimeout(t1); window.clearTimeout(t2); };
   }, [displayCandles, ready, initAttempt]);
 
-  // ---- VWAP Buy/Sell indicator: VWAP + fast/slow MA + Buy/Sell/TP labels ----
+  // ---- Primary VWAP indicator. Keep the default chart readable: bands and
+  // moving averages are calculated for signals but are not drawn by default. ----
   useEffect(() => {
     if (!ready || !chartRef.current || !seriesRef.current) return;
     const chart = chartRef.current;
@@ -745,10 +746,6 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
         vwapSeriesRef.current.push(line);
       };
       mk(vwapIndicator.vwap, VWAP_COLORS.vwap, 2, false, "VWAP");
-      mk(vwapIndicator.upper1, VWAP_COLORS.band, 1, false, "VWAP +1σ");
-      mk(vwapIndicator.lower1, VWAP_COLORS.band, 1, false, "VWAP -1σ");
-      mk(vwapIndicator.fast, VWAP_COLORS.fast, 2, false, "MA 21");
-      mk(vwapIndicator.slow, VWAP_COLORS.slow, 2, false, "MA 50");
 
       vwapMarkersRef.current = createSeriesMarkers(
         seriesRef.current,
@@ -782,7 +779,6 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       linesRef.current.push(line);
     };
 
-    if (enabled.VWAP) add(levels.vwap, LEVEL_META.VWAP.color, "VWAP");
     if (enabled.POC)  add(levels.poc,  LEVEL_META.POC.color,  "POC", true);
     if (enabled.SR)   levels.sr.forEach((p, i) => add(p, LEVEL_META.SR.color, `S/R ${i + 1}`));
     if (enabled.ZONES) levels.zones.forEach((z, i) => {
