@@ -129,6 +129,22 @@ export default function EngineReplayPanel({ canRefresh = false }: { canRefresh?:
                     </td>
                     <td className="py-2 text-right font-mono">{r.trades ? `${r.netR}R` : "-"}</td>
                     <td className="py-2 text-right font-mono">{r.trades ? `${r.maxDdPct}%` : "-"}</td>
+                    <td className="py-2 text-right">
+                      {(() => {
+                        const status = replayStatus(r);
+                        const tone =
+                          status === "validated"
+                            ? "border-emerald-500/40 text-emerald-400"
+                            : status === "needs-calibration"
+                              ? "border-red-500/40 text-red-400"
+                              : "border-border/60 text-muted-foreground";
+                        return (
+                          <span className={`inline-block rounded-full border px-2 py-0.5 text-[11px] ${tone}`}>
+                            {REPLAY_STATUS_LABEL[status]}
+                          </span>
+                        );
+                      })()}
+                    </td>
                   </tr>
                 ))}
               </tbody>
