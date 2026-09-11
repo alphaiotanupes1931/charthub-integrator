@@ -31,7 +31,7 @@ export const Route = createFileRoute("/_app/admin")({
   component: AdminPage,
 });
 
-type AdminTab = "profit" | "ai" | "image" | "people" | "methodology" | "checks";
+type AdminTab = "profit" | "ai" | "image" | "people" | "methodology" | "paper" | "checks";
 
 const ADMIN_TABS: { value: AdminTab; label: string }[] = [
   { value: "profit", label: "Profit" },
