@@ -680,6 +680,7 @@ export function gradeFromEvidence(
   const m15Agrees = m15 === wanted;
   const h4Agrees = mtf?.h4.direction === wanted;
   const h1Agrees = mtf?.h1.structureBreak === wanted;
+  const alignedZone = hasAlignedZone(bias, snap);
   const fullyAligned = mtf?.alignment === (wantBull ? "aligned-long" : "aligned-short");
 
   let grade: typeof GRADES[number];
@@ -687,7 +688,12 @@ export function gradeFromEvidence(
   // agreement. A majority-selected direction by itself cannot earn an A.
   if (confidence >= 84 && fullyAligned && m15Agrees) grade = "A+";
   else if (confidence >= 74 && h4Agrees && h1Agrees) grade = "A";
-  else if (confidence >= 58) grade = "B";
+  // A valid pullback setup is structurally a B while it waits for the 15m turn.
+  // Monthly/weekly context, a neutral analyst memo, or an unfinished live bar
+  // can lower confidence without erasing an intact 4H direction plus a real
+  // aligned entry zone. Genuine opposition is still applied by the hard caps
+  // below and can reduce this to C or NO ENTRY.
+  else if (confidence >= 58 || (h4Agrees && alignedZone)) grade = "B";
   else grade = "C";
 
   // Missing higher-timeframe data means the counters had little to work with.
@@ -1511,12 +1517,10 @@ export async function runPlanner(
   let timingGate: string | null = null;
   if (gate && grade !== "NO ENTRY") {
     timingGate = gate.message;
-    grade = downgradeOne(grade);
     warnings.push(timingGate);
   } else if (volRead?.thin && !gate && grade !== "NO ENTRY" && assetClassFor(snap.ticker) !== "crypto") {
-    grade = downgradeOne(grade);
     warnings.push(
-      `Thin volume - widen stops or reduce size. ${volRead.label}, so the stop was widened to ${stopFloorAtr.toFixed(1)}x ATR and the grade dropped a letter.`,
+      `Thin volume - widen stops or reduce size. ${volRead.label}, so the stop was widened to ${stopFloorAtr.toFixed(1)}x ATR.`,
     );
   }
 
@@ -1608,7 +1612,7 @@ export async function runPlanner(
     });
   }
   if (news48Warning) gradeCaps.push({ label: "Event risk within 48 hours", cap: grade, reason: `${news48Warning} This costs one grade letter.` });
-  if (timingGate) gradeCaps.push({ label: "Session timing", cap: grade, reason: `${timingGate} This costs one grade letter until the session opens.` });
+  if (timingGate) gradeCaps.push({ label: "Session timing", cap: grade, reason: `${timingGate} This is an execution wait, not a lower-quality structure grade.` });
   if (mitigation?.warning) gradeCaps.push({ label: "Entry zone already tested", cap: grade, reason: mitigation.warning });
   if (selectedEntryZone?.qualityLabel !== "high") {
     gradeCaps.push({

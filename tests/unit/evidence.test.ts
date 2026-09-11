@@ -95,6 +95,24 @@ describe("gradeFromEvidence", () => {
     expect(gradeFromEvidence("Long", 90, mixed)).toBe("B");
   });
 
+  it("keeps an aligned-zone pullback at B when soft evidence is sparse", () => {
+    const pullback = {
+      ...snap(true),
+      cisd: { ...snap(true).cisd, state: "none" },
+      orderFlow: undefined,
+      mtf: {
+        ...snap(true).mtf,
+        alignment: "mixed",
+        h1: {
+          structureBreak: "bearish",
+          orderBlocks: { bull: [[3380, 3390]], bear: [] },
+        },
+        m15: { confirmation: "bearish", reason: "pullback in progress" },
+      },
+    } as unknown as MarketSnapshot;
+    expect(gradeFromEvidence("Long", 40, pullback)).toBe("B");
+  });
+
   it("caps a setup whose order flow opposes it", () => {
     const against = {
       ...snap(true),
