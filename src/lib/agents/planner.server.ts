@@ -439,9 +439,17 @@ export function lowerTimeframeOppositionRead(
   const breakAgainst = h1Break === opposite;
   if (!trendAgainst && !biasAgainst && !breakAgainst) return { cap: null, reason: null };
   if (breakAgainst) {
+    // Same principle: inside an intact 4H trend with an aligned zone, a 1H
+    // counter-break is the retracement leg, not a broken thesis.
+    if (isAlignedPullback(bias, snap)) {
+      return {
+        cap: "B",
+        reason: `The 1H has broken ${opposite} into your ${bias.toLowerCase()} zone while the 4H still reads ${snap.mtf?.h4.direction}/${snap.mtf?.h4.trend}. That is the retracement, so this is a B - take it on the turn back ${wanted}, not before.`,
+      };
+    }
     return {
       cap: "C",
-      reason: `The 1H has broken structure ${opposite}, against this ${bias.toLowerCase()}, so the grade is capped at C until the 1H breaks back ${wanted}.`,
+      reason: `The 1H has broken structure ${opposite}, against this ${bias.toLowerCase()}, and the 4H is not backing the trade, so the grade is capped at C until the 1H breaks back ${wanted}.`,
     };
   }
   return {
