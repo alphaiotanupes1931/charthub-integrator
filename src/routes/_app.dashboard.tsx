@@ -1476,11 +1476,30 @@ function Dashboard() {
 
   const maybeOfferTrade = (plan: ScanResult, scanSymbol: Symbol, scanInterval: string) => {
     const ctx = autoTradeCtx.data;
-    if (!ctx || ctx.settings.mode !== "auto" || !ctx.broker.connected) return;
-    if (!gradeMeets(plan.grade, ctx.settings.minGrade)) return;
+    if (!ctx || ctx.settings.mode !== "auto") return;
+    // Auto is on, so every skip gets an explanation. Silence used to look like
+    // a bug: a B setup with an "A and better" minimum simply never appeared.
+    if (!ctx.broker.connected) {
+      toast.info("Auto Trading is on but no broker is connected", {
+        description: "Connect a broker on the Accounts page to have setups placed for you.",
+      });
+      return;
+    }
+    if (!gradeMeets(plan.grade, ctx.settings.minGrade)) {
+      toast.info(`No trade offered: ${plan.grade} is below your ${ctx.settings.minGrade} minimum`, {
+        description: "Lower the Auto Trading grade filter next to the toggle to include this setup.",
+      });
+      return;
+    }
     const { bias, entry, stop, tp1 } = levelsForPlan(plan);
-    if (bias !== "long" && bias !== "short") return;
-    if (typeof entry !== "number" || typeof stop !== "number") return;
+    if (bias !== "long" && bias !== "short") {
+      toast.info("No trade offered: this scan has no directional bias");
+      return;
+    }
+    if (typeof entry !== "number" || typeof stop !== "number") {
+      toast.info("No trade offered: this scan has no usable entry and stop");
+      return;
+    }
     setTradeOffer({
       symbol: scanSymbol.ticker,
       label: symbolLabel(scanSymbol),
