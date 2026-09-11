@@ -2151,6 +2151,16 @@ export type Database = {
           wins: number
         }[]
       }
+      get_social_roster: {
+        Args: { _user_id: string }
+        Returns: {
+          connected_at: string
+          display_name: string
+          id: string
+          losses: number
+          wins: number
+        }[]
+      }
       has_active_subscription: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
