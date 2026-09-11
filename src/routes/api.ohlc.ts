@@ -4,7 +4,7 @@ import { corsHeadersFor, enforceOrigin, preflight } from "@/lib/api-security";
 
 
 export type OhlcBar = { time: number; open: number; high: number; low: number; close: number };
-export type OhlcSource = "oanda" | "binance" | "twelvedata";
+export type OhlcSource = "oanda" | "binance" | "twelvedata" | "yahoo";
 export type OhlcResponse = {
   source: OhlcSource | null;
   bars: OhlcBar[];
@@ -289,6 +289,14 @@ async function fetchBestAvailable(ticker: string, interval: string, prior?: Cach
   }
   if (tdSymbol) {
     attempts.push(async () => ({ at: Date.now(), bars: await fetchTwelveData(tdSymbol, tdInterval(interval)), source: "twelvedata" }));
+  }
+  // Yahoo backstop. Indices and energy only map to OANDA, so an expired or
+  // wrong-environment OANDA token (HTTP 401) used to leave those charts empty.
+  if (yahooSymbol) {
+    attempts.push(async () => {
+      const { fetchYahooBars } = await import("@/lib/yahoo-ohlc.server");
+      return { at: Date.now(), bars: cleanBars(await fetchYahooBars(ticker, interval)), source: "yahoo" as const };
+    });
   }
 
   // A fallback feed may quote a different venue. If its last price disagrees
