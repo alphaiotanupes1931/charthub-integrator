@@ -106,7 +106,7 @@ export const Route = createFileRoute("/api/public/hooks/journal-verify-tick")({
           let derived: number | null = null;
           if (settled) {
             if (res.status === "tp" && tp != null) derived = tp;
-            else if (res.status === "sl") derived = stop;
+            else if (res.status === "stop") derived = stop;
             else if (res.r != null && Number.isFinite(res.r)) derived = entry + dir * res.r * Math.abs(entry - stop);
           }
           const exit = settled
