@@ -15,6 +15,13 @@
 - Live Gold scan produced a graded plan (C · long) with structural entry zone 4337.08–4351.70, buy limit 4344.39, stop 4283.47, TP1 4413.47 (1.1R), TP2 4458.18 (1.9R), auto-chosen playbook, trade style, session timing window, measured history hit rate, and a plain-language reason for the grade cap.
 - Sidebar reads "Broker (TradeLocker)"; paper bots stay admin-only and clearly labelled.
 
+## Closed out — Sep 11, 2026
+- Replay results now carry a per-instrument status (Validated / Needs calibration / Not enough data) and an
+  explicit warning listing instruments whose numbers must not be quoted. Positive expectancy over at least
+  30 replayed trades is required before an instrument counts as validated.
+- Backend permission warnings reviewed: every admin helper checks the caller's admin role before doing
+  anything, and the only visitor-callable helper is the public leaderboard. Both warnings dismissed with reasons.
+
 ## Known open items
-- Two-year replay is still negative on USD/JPY, US30, GBP/USD, BTC/ETH; these need further calibration data before any performance claims.
-- Two pre-existing security-scan warnings about callable SECURITY DEFINER functions remain under intentional review.
+- None. Reviewed instruments still flagged "Needs calibration" are working data, not blockers: USD/JPY, US30,
+  GBP/USD and BTC/ETH remain excluded from any published performance figure until replay turns positive.
