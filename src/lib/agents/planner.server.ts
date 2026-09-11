@@ -382,7 +382,14 @@ export function timeFrameComboGate(
   const liq = m?.h1.liquidity;
   const pools = (bias === "Long" ? liq?.sellside : liq?.buyside) ?? [];
   const h1Ok =
-    pools.length > 0 || m?.h1.structureBreak === wanted || m?.h1.reversal === wanted;
+    pools.length > 0 ||
+    m?.h1.structureBreak === wanted ||
+    m?.h1.reversal === wanted ||
+    // A fresh aligned OB/FVG is itself the 1H location the method waits for.
+    // Requiring a same-direction break before counting that location turned
+    // every active pullback into a failed step and forced otherwise valid
+    // setups to C before the 15m had a chance to confirm.
+    hasAlignedZone(bias, snap);
 
   // Step 3 - 15m BOS / ChoCH confirmation.
   const m15 = m?.m15.confirmation ?? "none";
