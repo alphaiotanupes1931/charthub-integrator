@@ -297,11 +297,11 @@ function AutopilotPage() {
               onChange={(e) => save.mutate({ liveVenue: e.target.value })}
               className="mt-1 w-full rounded-xl border border-border/60 bg-background px-2 py-2 text-sm"
             >
-              <option value="capitalcom">Capital.com</option>
+              <option value="tradelocker">TradeLocker</option>
               <option value="oanda">OANDA</option>
             </select>
             <span className="mt-1 block text-muted-foreground">
-              Connect it on the Broker page first. Capital.com covers indices, gold, oil, crypto and forex, so
+              Connect it on the Broker page first. TradeLocker covers indices, gold, oil, crypto and forex, so
               it is the recommended account for hands-off trading.
             </span>
           </label>

@@ -102,12 +102,32 @@ export async function placeLiveOrder(
   venue: string,
   intent: LiveOrderIntent,
 ): Promise<LiveOrderOutcome> {
-  if (venue === "capitalcom") {
+  if (venue === "tradelocker" || venue === "capitalcom") {
     const { resolveTradeVenue } = await import("@/lib/broker-trade.functions");
     const row = await resolveTradeVenue(userId);
     if (!row) return { ok: false, detail: "No trading account is connected." };
     // Traders who only connected OANDA keep routing there.
-    if (row.broker !== "capitalcom") return placeLiveOrder(userId, row.broker, intent);
+    if (row.broker !== venue) return placeLiveOrder(userId, row.broker, intent);
+    if (venue === "tradelocker") {
+      try {
+        const { tradeLockerSession, tradeLockerPlaceOrder } = await import("@/lib/venues/tradelocker.server");
+        const session = await tradeLockerSession(userId);
+        const res = await tradeLockerPlaceOrder(session, {
+          symbol: intent.symbol,
+          side: intent.side,
+          size: Math.abs(intent.units),
+          stopLoss: intent.stopLoss,
+          takeProfit: intent.takeProfit,
+        });
+        return {
+          ok: true,
+          detail: `Opened ${intent.side} ${res.size} ${res.instrument}${res.fillPrice ? ` at ${res.fillPrice}` : ""} on TradeLocker.`,
+          orderId: res.orderId,
+        };
+      } catch (e) {
+        return { ok: false, detail: (e as Error).message };
+      }
+    }
     try {
       const { capitalSession, capitalPlaceOrder } = await import("@/lib/venues/capital.server");
       const session = await capitalSession(row.creds, row.env);
@@ -128,7 +148,7 @@ export async function placeLiveOrder(
     }
   }
   if (venue !== "oanda") {
-    return { ok: false, detail: `Hands-off live execution is wired for Capital.com and OANDA, not ${venue}.` };
+    return { ok: false, detail: `Hands-off live execution is wired for TradeLocker and OANDA, not ${venue}.` };
   }
   const target = await oandaTarget(userId);
   if (!target) return { ok: false, detail: "No usable OANDA account is connected." };

@@ -1,6 +1,6 @@
 // Venue-agnostic trading layer for the chart Buy/Sell bar and autopilot.
 //
-// Capital.com is the preferred execution venue because it covers the indices,
+// TradeLocker is the preferred execution venue because it covers the indices,
 // metals, oil and crypto that most OANDA retail accounts refuse. OANDA is still
 // supported for traders who already connected it. Credentials never leave the
 // server: the client only sends order intent.
@@ -9,9 +9,9 @@ import { z } from "zod";
 import { requireCapability } from "@/lib/capability-middleware";
 
 /** Cloud venues we can place orders at, best first. */
-export const TRADE_VENUE_ORDER = ["capitalcom", "oanda"] as const;
+export const TRADE_VENUE_ORDER = ["tradelocker", "oanda"] as const;
 export const VENUE_LABEL: Record<string, string> = {
-  capitalcom: "Capital.com",
+  tradelocker: "TradeLocker",
   oanda: "OANDA",
 };
 
@@ -30,7 +30,7 @@ export async function resolveTradeVenue(userId: string): Promise<Row | null> {
   const rows = data ?? [];
   if (rows.length === 0) return null;
   const picked =
-    rows.find((r) => r.broker === "capitalcom") ?? rows.find((r) => r.broker === "oanda") ?? rows[0];
+    rows.find((r) => r.broker === "tradelocker") ?? rows.find((r) => r.broker === "oanda") ?? rows[0];
   const { decryptSecret } = await import("@/lib/broker-crypto.server");
   const plaintext = decryptSecret(picked.api_key_ciphertext as string);
   let creds: Record<string, string>;
@@ -82,7 +82,7 @@ export const getTradeStatus = createServerFn({ method: "GET" })
         venue: null,
         venueName: null,
         reason:
-          "No trading account is connected yet. Connect Capital.com on the Broker page — it covers indices, gold, oil, crypto and forex.",
+          "No trading account is connected yet. Connect TradeLocker on the Broker page — it covers indices, gold, oil, crypto and forex.",
       };
     }
 
@@ -106,24 +106,24 @@ export const getTradeStatus = createServerFn({ method: "GET" })
     }
 
     try {
-      const { capitalSession, capitalUrls } = await import("@/lib/venues/capital.server");
-      const s = await capitalSession(venue.creds, venue.env);
+      const { tradeLockerSession, tradeLockerUrls } = await import("@/lib/venues/tradelocker.server");
+      const s = await tradeLockerSession(context.userId);
       return {
         connected: true,
-        venue: "capitalcom",
-        venueName: "Capital.com",
-        env: venue.env,
+        venue: "tradelocker",
+        venueName: "TradeLocker",
+        env: s.env,
         accountId: s.accountId,
         currency: s.currency,
         balance: s.balance,
-        marginAvailable: s.available,
-        fundingUrl: capitalUrls(venue.env).fundingUrl,
+        marginAvailable: s.balance,
+        fundingUrl: tradeLockerUrls(s.env).fundingUrl,
       };
     } catch (e) {
       return {
         connected: false,
-        venue: "capitalcom",
-        venueName: "Capital.com",
+        venue: "tradelocker",
+        venueName: "TradeLocker",
         reason: (e as Error).message,
       };
     }
@@ -179,29 +179,32 @@ export const estimateTradeMargin = createServerFn({ method: "POST" })
     }
 
     try {
-      const { capitalSession, capitalEpic, capitalMarket } = await import("@/lib/venues/capital.server");
-      const s = await capitalSession(venue!.creds, venue!.env);
-      const epic = await capitalEpic(s, data.symbol);
-      const m = await capitalMarket(s, epic);
-      const notional = m.mid != null ? m.mid * data.units : null;
-      const required = notional != null && m.marginFactor != null ? notional * m.marginFactor : null;
+      const { tradeLockerSession, tradeLockerInstrument, tradeLockerQuote, tradeLockerMarginRate } = await import(
+        "@/lib/venues/tradelocker.server"
+      );
+      const s = await tradeLockerSession(context.userId);
+      const inst = await tradeLockerInstrument(s, data.symbol);
+      const q = await tradeLockerQuote(s, inst);
+      const rate = await tradeLockerMarginRate(s, inst);
+      const notional = q.mid != null ? q.mid * data.units : null;
+      const required = notional != null && rate != null ? notional * rate : null;
       return {
-        venue: "capitalcom",
-        instrument: epic,
-        price: m.mid,
-        bid: m.bid,
-        ask: m.ask,
-        marginRate: m.marginFactor,
+        venue: "tradelocker",
+        instrument: inst.name,
+        price: q.mid,
+        bid: q.bid,
+        ask: q.ask,
+        marginRate: rate,
         notional,
         required,
-        currency: s.currency,
-        minSize: m.minSize,
+        currency: s.currency ?? "USD",
+        minSize: null,
         unavailable:
-          required == null ? "Capital.com is not returning margin details for this market right now." : null,
+          required == null ? "TradeLocker is not returning margin details for this market right now." : null,
       };
     } catch (err) {
       return {
-        venue: "capitalcom",
+        venue: "tradelocker",
         instrument: null,
         price: null,
         bid: null,
@@ -253,9 +256,11 @@ export const placeTradeOrder = createServerFn({ method: "POST" })
       return { venue: "oanda", venueName: "OANDA", ...r, ok: true as const };
     }
 
-    const { capitalSession, capitalPlaceOrder, capitalUrls } = await import("@/lib/venues/capital.server");
-    const s = await capitalSession(venue!.creds, venue!.env);
-    const r = await capitalPlaceOrder(s, {
+    const { tradeLockerSession, tradeLockerPlaceOrder, tradeLockerUrls } = await import(
+      "@/lib/venues/tradelocker.server"
+    );
+    const s = await tradeLockerSession(context.userId);
+    const r = await tradeLockerPlaceOrder(s, {
       symbol: data.symbol,
       side: data.side,
       size: data.units,
@@ -264,15 +269,15 @@ export const placeTradeOrder = createServerFn({ method: "POST" })
     });
     return {
       ok: true,
-      venue: "capitalcom",
-      venueName: "Capital.com",
+      venue: "tradelocker",
+      venueName: "TradeLocker",
       orderId: r.orderId,
       pending: false,
-      instrument: r.epic,
+      instrument: r.instrument,
       units: data.side === "long" ? r.size : -r.size,
       fillPrice: r.fillPrice,
-      accountId: r.accountId ?? "",
-      brokerUrl: capitalUrls(venue!.env).brokerUrl,
+      accountId: r.accountId,
+      brokerUrl: tradeLockerUrls(r.env).brokerUrl,
     };
   });
 
@@ -281,19 +286,19 @@ export const listTradePositions = createServerFn({ method: "GET" })
   .middleware([requireCapability("broker_live")])
   .handler(async ({ context }) => {
     const venue = await resolveTradeVenue(context.userId);
-    if (venue?.broker === "capitalcom") {
-      const { capitalSession, capitalPositions } = await import("@/lib/venues/capital.server");
-      const s = await capitalSession(venue.creds, venue.env);
-      const rows = await capitalPositions(s);
+    if (venue?.broker === "tradelocker") {
+      const { tradeLockerSession, tradeLockerPositions } = await import("@/lib/venues/tradelocker.server");
+      const s = await tradeLockerSession(context.userId);
+      const rows = await tradeLockerPositions(s);
       return rows.map((p) => ({
-        id: p.dealId,
-        instrument: p.epic,
-        currentUnits: p.direction === "SELL" ? -p.size : p.size,
-        price: p.openLevel ?? 0,
-        unrealizedPL: p.upl ?? 0,
+        id: p.id,
+        instrument: p.instrument,
+        currentUnits: p.units,
+        price: p.price,
+        unrealizedPL: p.unrealizedPL,
         openTime: "",
-        stopLoss: p.stopLevel,
-        takeProfit: p.profitLevel,
+        stopLoss: p.stopLoss,
+        takeProfit: p.takeProfit,
       }));
     }
     const { listBrokerPositions } = await import("@/lib/broker-oanda.functions");
