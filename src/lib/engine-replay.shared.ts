@@ -72,5 +72,7 @@ export function replayTotals(rows: ReplayRow[]): ReplayTotals {
     aTrades,
     aWinRate: aTrades ? round((aWins / aTrades) * 100) : null,
     updatedAt: stamps.length ? new Date(Math.max(...stamps)).toISOString() : null,
+    validatedInstruments: rows.filter((r) => replayStatus(r) === "validated").length,
+    needsCalibration: rows.filter((r) => replayStatus(r) === "needs-calibration").map((r) => r.symbol),
   };
 }
