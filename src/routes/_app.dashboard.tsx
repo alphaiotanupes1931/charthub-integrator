@@ -214,6 +214,7 @@ function findSymbolFromTag(tag?: string | null): Symbol | null {
 }
 
 type ScanResult = {
+  methodologyVersion: string;
   grade: "A+" | "A" | "B" | "C" | "NO ENTRY";
   bias: "Long" | "Short" | "Neutral";
   confidence: number;
