@@ -656,6 +656,14 @@ export async function getSnapshot(rawTicker: string, interval: string): Promise<
     { source: "oanda", load: () => fromOanda(ticker, interval) },
     { source: "binance", load: () => fromBinance(ticker, interval) },
     { source: "twelvedata", load: () => fromTwelveData(ticker, interval) },
+    // Yahoo backstop so indices/energy scans survive an OANDA 401.
+    {
+      source: "yahoo",
+      load: async () => {
+        const { fetchYahooBars } = await import("@/lib/yahoo-ohlc.server");
+        return fetchYahooBars(ticker, interval);
+      },
+    },
   ];
   for (const provider of loaders) {
     try {
