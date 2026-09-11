@@ -1179,6 +1179,148 @@ export type Database = {
         }
         Relationships: []
       }
+      paper_bot_events: {
+        Row: {
+          bot_id: string
+          created_at: string
+          detail: Json
+          id: string
+          kind: string
+        }
+        Insert: {
+          bot_id: string
+          created_at?: string
+          detail?: Json
+          id?: string
+          kind: string
+        }
+        Update: {
+          bot_id?: string
+          created_at?: string
+          detail?: Json
+          id?: string
+          kind?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "paper_bot_events_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "paper_bots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      paper_bot_trades: {
+        Row: {
+          bot_id: string
+          closed_at: string | null
+          created_at: string
+          entry: number
+          exit_price: number | null
+          grade: string
+          id: string
+          opened_at: string
+          realized_r: number | null
+          result: string | null
+          side: string
+          status: string
+          stop: number
+          symbol: string
+          tp1: number | null
+          updated_at: string
+        }
+        Insert: {
+          bot_id: string
+          closed_at?: string | null
+          created_at?: string
+          entry: number
+          exit_price?: number | null
+          grade: string
+          id?: string
+          opened_at?: string
+          realized_r?: number | null
+          result?: string | null
+          side: string
+          status?: string
+          stop: number
+          symbol: string
+          tp1?: number | null
+          updated_at?: string
+        }
+        Update: {
+          bot_id?: string
+          closed_at?: string | null
+          created_at?: string
+          entry?: number
+          exit_price?: number | null
+          grade?: string
+          id?: string
+          opened_at?: string
+          realized_r?: number | null
+          result?: string | null
+          side?: string
+          status?: string
+          stop?: number
+          symbol?: string
+          tp1?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "paper_bot_trades_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "paper_bots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      paper_bots: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          last_tick_at: string | null
+          methodology_version: string
+          min_grade: string
+          name: string
+          status: string
+          symbol: string
+          timeframe: string
+          trade_style: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          last_tick_at?: string | null
+          methodology_version?: string
+          min_grade?: string
+          name: string
+          status?: string
+          symbol: string
+          timeframe?: string
+          trade_style?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          last_tick_at?: string | null
+          methodology_version?: string
+          min_grade?: string
+          name?: string
+          status?: string
+          symbol?: string
+          timeframe?: string
+          trade_style?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       paper_equity_snapshots: {
         Row: {
           equity: number

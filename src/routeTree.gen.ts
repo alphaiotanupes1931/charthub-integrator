@@ -96,6 +96,7 @@ import { Route as ApiPublicHooksResolveSignalsRouteImport } from './routes/api.p
 import { Route as ApiPublicHooksReplayRefreshRouteImport } from './routes/api.public.hooks.replay-refresh'
 import { Route as ApiPublicHooksReconcilePaperRouteImport } from './routes/api.public.hooks.reconcile-paper'
 import { Route as ApiPublicHooksPriceAlertsTickRouteImport } from './routes/api.public.hooks.price-alerts-tick'
+import { Route as ApiPublicHooksPaperBotTickRouteImport } from './routes/api.public.hooks.paper-bot-tick'
 import { Route as ApiPublicHooksJournalVerifyTickRouteImport } from './routes/api.public.hooks.journal-verify-tick'
 import { Route as ApiPublicHooksJournalDailyCheckinRouteImport } from './routes/api.public.hooks.journal-daily-checkin'
 import { Route as ApiPublicHooksDripEmailsRouteImport } from './routes/api.public.hooks.drip-emails'
@@ -552,6 +553,12 @@ const ApiPublicHooksPriceAlertsTickRoute =
     path: '/api/public/hooks/price-alerts-tick',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksPaperBotTickRoute =
+  ApiPublicHooksPaperBotTickRouteImport.update({
+    id: '/api/public/hooks/paper-bot-tick',
+    path: '/api/public/hooks/paper-bot-tick',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksJournalVerifyTickRoute =
   ApiPublicHooksJournalVerifyTickRouteImport.update({
     id: '/api/public/hooks/journal-verify-tick',
@@ -676,6 +683,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/drip-emails': typeof ApiPublicHooksDripEmailsRoute
   '/api/public/hooks/journal-daily-checkin': typeof ApiPublicHooksJournalDailyCheckinRoute
   '/api/public/hooks/journal-verify-tick': typeof ApiPublicHooksJournalVerifyTickRoute
+  '/api/public/hooks/paper-bot-tick': typeof ApiPublicHooksPaperBotTickRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
   '/api/public/hooks/reconcile-paper': typeof ApiPublicHooksReconcilePaperRoute
   '/api/public/hooks/replay-refresh': typeof ApiPublicHooksReplayRefreshRoute
@@ -767,6 +775,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/drip-emails': typeof ApiPublicHooksDripEmailsRoute
   '/api/public/hooks/journal-daily-checkin': typeof ApiPublicHooksJournalDailyCheckinRoute
   '/api/public/hooks/journal-verify-tick': typeof ApiPublicHooksJournalVerifyTickRoute
+  '/api/public/hooks/paper-bot-tick': typeof ApiPublicHooksPaperBotTickRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
   '/api/public/hooks/reconcile-paper': typeof ApiPublicHooksReconcilePaperRoute
   '/api/public/hooks/replay-refresh': typeof ApiPublicHooksReplayRefreshRoute
@@ -864,6 +873,7 @@ export interface FileRoutesById {
   '/api/public/hooks/drip-emails': typeof ApiPublicHooksDripEmailsRoute
   '/api/public/hooks/journal-daily-checkin': typeof ApiPublicHooksJournalDailyCheckinRoute
   '/api/public/hooks/journal-verify-tick': typeof ApiPublicHooksJournalVerifyTickRoute
+  '/api/public/hooks/paper-bot-tick': typeof ApiPublicHooksPaperBotTickRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
   '/api/public/hooks/reconcile-paper': typeof ApiPublicHooksReconcilePaperRoute
   '/api/public/hooks/replay-refresh': typeof ApiPublicHooksReplayRefreshRoute
@@ -961,6 +971,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/drip-emails'
     | '/api/public/hooks/journal-daily-checkin'
     | '/api/public/hooks/journal-verify-tick'
+    | '/api/public/hooks/paper-bot-tick'
     | '/api/public/hooks/price-alerts-tick'
     | '/api/public/hooks/reconcile-paper'
     | '/api/public/hooks/replay-refresh'
@@ -1052,6 +1063,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/drip-emails'
     | '/api/public/hooks/journal-daily-checkin'
     | '/api/public/hooks/journal-verify-tick'
+    | '/api/public/hooks/paper-bot-tick'
     | '/api/public/hooks/price-alerts-tick'
     | '/api/public/hooks/reconcile-paper'
     | '/api/public/hooks/replay-refresh'
@@ -1148,6 +1160,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/drip-emails'
     | '/api/public/hooks/journal-daily-checkin'
     | '/api/public/hooks/journal-verify-tick'
+    | '/api/public/hooks/paper-bot-tick'
     | '/api/public/hooks/price-alerts-tick'
     | '/api/public/hooks/reconcile-paper'
     | '/api/public/hooks/replay-refresh'
@@ -1200,6 +1213,7 @@ export interface RootRouteChildren {
   ApiPublicHooksDripEmailsRoute: typeof ApiPublicHooksDripEmailsRoute
   ApiPublicHooksJournalDailyCheckinRoute: typeof ApiPublicHooksJournalDailyCheckinRoute
   ApiPublicHooksJournalVerifyTickRoute: typeof ApiPublicHooksJournalVerifyTickRoute
+  ApiPublicHooksPaperBotTickRoute: typeof ApiPublicHooksPaperBotTickRoute
   ApiPublicHooksPriceAlertsTickRoute: typeof ApiPublicHooksPriceAlertsTickRoute
   ApiPublicHooksReconcilePaperRoute: typeof ApiPublicHooksReconcilePaperRoute
   ApiPublicHooksReplayRefreshRoute: typeof ApiPublicHooksReplayRefreshRoute
@@ -1824,6 +1838,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksPriceAlertsTickRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/paper-bot-tick': {
+      id: '/api/public/hooks/paper-bot-tick'
+      path: '/api/public/hooks/paper-bot-tick'
+      fullPath: '/api/public/hooks/paper-bot-tick'
+      preLoaderRoute: typeof ApiPublicHooksPaperBotTickRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/journal-verify-tick': {
       id: '/api/public/hooks/journal-verify-tick'
       path: '/api/public/hooks/journal-verify-tick'
@@ -2072,6 +2093,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksJournalDailyCheckinRoute:
     ApiPublicHooksJournalDailyCheckinRoute,
   ApiPublicHooksJournalVerifyTickRoute: ApiPublicHooksJournalVerifyTickRoute,
+  ApiPublicHooksPaperBotTickRoute: ApiPublicHooksPaperBotTickRoute,
   ApiPublicHooksPriceAlertsTickRoute: ApiPublicHooksPriceAlertsTickRoute,
   ApiPublicHooksReconcilePaperRoute: ApiPublicHooksReconcilePaperRoute,
   ApiPublicHooksReplayRefreshRoute: ApiPublicHooksReplayRefreshRoute,
