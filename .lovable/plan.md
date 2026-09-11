@@ -1,73 +1,160 @@
-# Plan — Sep 10 meeting: entry precision, order-block focus, TP calibration, system docs
+# Phased plan — Sep 10 scanner calibration and platform fixes
 
-From the Sep 10 call with Marcus: signals are giving direction right but entries are too early
-(stop hit, then the trade does exactly what was called). The ask: make the entry engine hunt
-the *right* 1H order block like a human doing top-down analysis, keep A-grades sniper-grade,
-fix take-profits that are too far out, handle the "everything is bearish but a big retracement
-is coming first" case, and document what data the system actually uses so rules can be tuned.
+The order is based on the meeting's main decision: pause new live-automation work until the
+scanner is trustworthy. Each phase ends with automated checks and an authenticated test-account
+walkthrough before the next phase starts.
 
-## 1. 1H order-block-first entries (the core ask)
+## What is already present and should be verified, not rebuilt
 
-- Entry selection today uses order blocks but also falls back to bare levels. Make the 1H
-  order block the primary entry zone: a trade only gets an entry when price is inside or
-  approaching a fresh, unmitigated 1H order block in the trade direction.
-- Rank order blocks by quality: unmitigated (untouched since formation), formed on displacement
-  (strong impulse away), aligned with the 4H bias, and near liquidity that was just swept.
-- When no qualifying 1H order block exists near price, the scan returns "no entry yet — wait
-  for pullback into the 1H order block at [zone]" with the zone named, instead of forcing a
-  shallow limit at a weak level.
-- 15-minute confirmation stays as the trigger inside the zone; entry is placed in the order
-  block with the stop beyond the block's far side plus buffer.
+- Deterministic bias, grade caps, confidence, counter-trend/news/stale-data protection, and the
+  visible “why this grade” panel.
+- Structure-based targets, trade-duration guidance, signal TP/SL resolution, the scorecard,
+  chart markup tools, chart-image journal attachments, broker-reported P&L, and admin usage views.
+- Auto strategy selection and early 1H order-block entry preference exist, but they need the
+  stricter calibration and regression coverage below.
 
-## 2. Anti-chase / drawdown reduction
+## Phase 0 — Freeze a measurable baseline
 
-- Reject or flag entries where price has already moved more than ~0.5 ATR away from the order
-  block ("too early / too late" guard) — the failure Marcus described was entering way too early.
-- Add a "wait state": when the plan is valid but the entry zone hasn't been reached, the scan
-  says so and names the zone and the trigger, rather than grading a market-order entry.
+- Record current A/B/C frequency, target rate, stop rate, expectancy, maximum drawdown, and
+  no-entry rate by instrument, timeframe, session, and strategy. Keep live and replay results
+  separate.
+- Create fixed replay fixtures for the failed USD/JPY trade and representative Gold, NAS100,
+  US30, SPX500, BTC, and ETH cases discussed in recent meetings.
+- Save the current test-account scan cards, chart annotations, journal extraction, and admin
+  screens as the before-state.
+- Define promotion rules before tuning: no phase ships if it improves one instrument while
+  materially degrading the rest, or if A trades fail to outperform B trades in the test set.
 
-## 3. Take-profit calibration
+**Test-account gate:** Run the existing full suite, scan the named instruments, confirm current
+grade explanations and outcome tracking, and save screenshots plus scan IDs for comparison.
 
-- TPs are already structure-based (swings, opposing order blocks, liquidity pools). Recalibrate:
-  cap TP1 at the nearest level within a timeframe-scaled ATR reach (e.g. 1.5 ATR of the scan
-  timeframe) so TP1 is realistic; TP2 stays the next structure beyond.
-- If the nearest real structure is further than the reach cap, say "no reachable structure
-  target — expect a runner / manage manually" instead of printing a fantasy TP.
+## Phase 1 — Rebuild entries around the complete top-down method
 
-## 4. Retracement-first scenario
+- Enforce the cascade Marcus described: Daily and 4H establish direction; a closed 4H candle and
+  1H break of structure establish the setup; a fresh 1H order block establishes the entry zone;
+  15m confirms inside that zone; 5m refines the actual entry when data is available.
+- Score candidate 1H blocks by freshness, mitigation count, displacement strength, structural
+  break, higher-timeframe alignment, liquidity sweep, and distance from current price. Prefer
+  order blocks over FVGs and bare levels; weaker structures remain supporting evidence only.
+- Introduce an explicit wait state. If price has not reached the selected block or lower-timeframe
+  confirmation is missing, show the zone and trigger instead of forcing an entry.
+- Add anti-chase and anti-early-entry rules based on measured ATR/pullback profiles. Stops sit
+  beyond the chosen block or confirmed swing with the instrument-specific buffer.
+- Detect retracement-first conditions: preserve the higher-timeframe direction but clearly say
+  that price must pull back to the named zone before entry.
+- Require a quality 1H block, Daily/4H agreement, 15m confirmation, supportive flow, acceptable
+  news risk, and a reachable structural target for an A grade. Missing the block caps the setup
+  at B; unresolved directional conflict remains C or no entry.
 
-- When the higher-timeframe bias is one direction but lower-timeframe structure shows a pending
-  retracement (price stretched from the zone, opposing 1H order block / unmitigated FVG above
-  or below), the plan must say: direction X, but expect pullback toward [zone] first — do not
-  enter at current price. This addresses "everything is bearish on gold but a big retracement
-  is about to happen before it comes down."
+**Test-account gate:** Replay every fixed case, then scan live Gold, NAS100, US30, and one FX pair.
+Verify the selected 1H block visually with “Show Me,” confirm wait states do not present actionable
+orders, and compare grade distribution and drawdown against Phase 0.
 
-## 5. A-grade = sniper
+## Phase 2 — Make targets and trade style match the market
 
-- Tighten the A threshold: A requires 4H alignment + entry at a quality 1H order block +
-  15m confirmation available + no opposing flow + no near-term news + reachable structure TP.
-- Anything missing a quality order-block entry caps at B (shown in the "why this grade" panel
-  with the named reason), keeping the explanation UI Marcus liked.
+- Keep targets structure-first: TP1 is the nearest reachable opposing swing, liquidity pool,
+  order block, or supply/demand boundary; TP2 is the next distinct structure. R:R reports target
+  quality but never invents target placement.
+- Reject fantasy targets beyond the timeframe's measured reach. When no real level is reachable,
+  say so instead of manufacturing a TP.
+- Add `scalp`, `intraday`, and `swing` classification using timeframe, volatility, session,
+  structure distance, and measured instrument behavior.
+- Use **Auto with override**: recommend the best style for current conditions while allowing the
+  trader to choose a different style before scanning.
+- Show expected entry window, likely TP1/TP2 duration range, anticipated chop, cancellation time,
+  and management guidance appropriate to the selected style. Do not present clock estimates as
+  guarantees.
 
-## 6. System documentation page
+**Test-account gate:** Run the same symbol in Auto, Scalp, Intraday, and Swing modes. Confirm each
+mode changes eligible setups, targets, and timing coherently without changing the underlying
+higher-timeframe direction.
 
-- Add an admin "How it works" page documenting, in plain language: what data feeds the engine
-  (candles per timeframe, order flow/delta, volume, sessions, news calendar), what the bias
-  engine computes, how the grade is built from counted evidence, every grade-cap rule, and how
-  entries/stops/TPs are placed. Written so non-engineers can follow, so tuning conversations
-  ("loosen this rule") have a shared reference.
+## Phase 3 — Make screenshot journaling accurate and fast
 
-## Technical notes
+- Redesign the journal around paste/drag/drop first; keep upload and manual entry available but
+  visually secondary.
+- Parse broker position screenshots, marked-up charts, and pasted trade text into a normalized
+  draft that preserves exact broker P&L, fees, entry, exit/current price, stop, targets, size,
+  direction, and instrument without guessing missing values.
+- Use **review then save**: show the screenshot beside extracted values, flag uncertain fields,
+  let the trader correct them, and only then create or update the journal record.
+- Benchmark the current image reader against the strongest available model on a fixed screenshot
+  set. Switch models only if measured field accuracy improves; do not move the whole platform to
+  another model based on assumption.
+- Keep all uploaded and marked-up chart images attached to the trade and available in the existing
+  full-screen viewer after reload and on another device.
 
-- All changes in the deterministic engine: `src/lib/agents/planner.server.ts` (entry anchoring,
-  grade caps, wait-state), `src/lib/orderBlocks.ts` (block quality scoring), and the scan
-  route. AI narration only describes what the engine decided — no behavior from prompts.
-- New tests: order-block entry selection, too-early rejection, retracement-first wording,
-  TP reach cap, A-grade tightening. Run existing suite (640+ tests) to catch regressions.
-- Docs page as a new route under the admin section; no database changes needed.
+**Test-account gate:** Test a broker position card, full TradingView markup, cropped screenshot,
+multi-image trade, pasted fill text, and deliberately ambiguous image. Verify exact $50-style P&L,
+corrections, cloud persistence, and no duplicate journal entries.
 
-## Verification
+## Phase 4 — Simplify charts and close operational gaps
 
-- Unit tests for each rule plus full Vitest run and typecheck.
-- Replay the Sep 8–9 USD/JPY-style failure shape against the new entry logic to confirm it now
-  waits for the order block instead of entering early.
+- Simplify the setup-view VWAP to one primary VWAP line by default. Put bands and moving averages
+  behind optional controls, lower their visual emphasis, and preserve selections across navigation.
+- Verify setup labels and drawings persist when switching Live/Setup and returning.
+- Verify the MNWFX2 admin role appears reliably in the sidebar and direct admin access is actually
+  protected; remove any temporary “visible to all users” behavior.
+- Separate real customers from test/debug accounts in admin reporting without deleting test data,
+  and verify suspicious account-email display using the authoritative account record.
+- Verify existing inactive-user emails and signal-resolution jobs rather than rebuilding them;
+  repair only failures found in delivery/log checks.
+
+**Test-account gate:** Navigate repeatedly between Live and Setup, toggle VWAP options, reload,
+and confirm visual persistence. Test admin and non-admin accounts separately, including direct URL
+access, sidebar visibility, customer filtering, emails, and resolved trade notifications.
+
+## Phase 5 — Create a shared, auditable methodology and trader-review workflow
+
+- Add an admin “How the scanner works” page covering every input, data source, timeframe role,
+  order-block definition, evidence count, grade threshold/cap, wait state, stop rule, target rule,
+  timing estimate, and outcome measurement in plain language.
+- Version the methodology so every saved scan identifies the rules used to produce it.
+- Build the selected **expert review workflow**: Marcus or another approved reviewer can inspect a
+  replayed setup, see the original candles/levels and engine decision, approve/reject it, identify
+  the correct block/entry/stop/target, and leave a note.
+- Store review decisions separately from live performance. Use them to create regression fixtures;
+  never let free-form reviewer notes silently alter production rules.
+- Add a compact command board showing meeting actions as `planned`, `building`, `testing`,
+  `approved`, or `blocked`, with phase and owner, so completed and newly raised work stays visible.
+
+**Test-account gate:** As admin, review and annotate fixtures; as a normal user, confirm the review
+tools are inaccessible. Verify methodology versions and review notes survive reload and that a
+reviewed case can be promoted into a repeatable test.
+
+## Phase 6 — Research and paper-test deterministic trading bots
+
+- Build a paper-only evaluator around the same deterministic scanner. AI explains results but does
+  not choose direction, entries, stops, or targets.
+- Run bots by instrument/style through historical replay and controlled forward paper testing.
+  Record every decision, skip, fill, management action, and outcome for reproducibility.
+- Compare the current single-engine approach with specialist deterministic checks for structure,
+  flow, news, and risk. Do not create an expensive multi-agent system unless the measured result
+  beats the simpler engine.
+- Keep this isolated from funded accounts and existing live automation until the scanner passes
+  agreed sample-size, expectancy, drawdown, and A-versus-B performance thresholds.
+
+**Test-account gate:** Start, pause, resume, and inspect a paper bot; verify no live broker order can
+be created, results are reproducible, and the journal/scoreboard clearly labels all bot data as
+paper testing.
+
+## Phase 7 — Release readiness and ongoing cadence
+
+- Run the full automated suite, fresh-data live scans, all authenticated role checks, and mobile/
+  desktop walkthroughs. Check the signal engine, journal, charts, admin, emails, and paper testing.
+- Publish a phase report after every phase: completed items, before/after metrics, screenshots,
+  regressions, open blockers, and the exact next phase. No phase begins until its test-account gate
+  passes.
+- Keep marketing claims, published hit rates, testimonials, and content tied only to measured live
+  results with clear sample sizes. Do not mix replay, paper-bot, or manually reviewed outcomes into
+  customer-facing performance.
+
+## Technical boundaries
+
+- Trading decisions remain deterministic TypeScript. AI may parse screenshots, summarize evidence,
+  and explain a decision, but prompts cannot override direction, grade, entry, stop, or targets.
+- Likely core changes: order-block scoring and planner logic, trade timing/style classification,
+  journal extraction/review UI, chart VWAP rendering, admin authorization/reporting, methodology
+  versioning, and expert-review/paper-test storage.
+- Any new review or bot tables ship with explicit grants, row-level protection, admin/user policies,
+  and an audit trail. Live and test performance remain separate by design.
