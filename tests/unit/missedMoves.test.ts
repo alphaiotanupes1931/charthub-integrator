@@ -50,7 +50,7 @@ describe("timing gate instead of a killed signal", () => {
   it("gates index setups on the New York cash open, not London", () => {
     const gate = timingGateFor("NAS100", read);
     expect(gate).not.toBeNull();
-    expect(gate!.waitFor).toBe("the New York cash open");
+    expect(gate!.waitFor).toBe("the New York cash session");
     // The setup survives: the message is about execution timing, not validity.
     expect(gate!.message).toMatch(/levels stand/i);
   });
