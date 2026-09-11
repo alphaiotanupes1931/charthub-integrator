@@ -23,7 +23,6 @@ type Invite = {
 type Mentee = {
   id: string;
   display_name: string | null;
-  email: string | null;
   wins: number | null;
   losses: number | null;
   total: number;
@@ -171,8 +170,7 @@ function MentorPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {mentees.map((m) => (
               <div key={m.id} className="rounded-2xl border border-border/60 bg-background/40 p-4">
-                <div className="font-semibold truncate">{m.display_name || m.email || "Trader"}</div>
-                <div className="text-xs text-muted-foreground truncate mb-3">{m.email}</div>
+                <div className="font-semibold truncate mb-3">{m.display_name || "Trader"}</div>
                 <div className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-3">
                     <span className="text-bull font-medium">{m.wins ?? 0}W</span>
