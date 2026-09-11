@@ -1366,6 +1366,7 @@ function Dashboard() {
       dataSource: plan.dataSource ?? null,
       counterTrend: plan.counterTrend ?? false,
       htfBias: plan.htfBias ?? null,
+      methodologyVersion: plan.methodologyVersion,
     });
 
   };
