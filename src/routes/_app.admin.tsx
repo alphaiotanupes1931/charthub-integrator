@@ -22,6 +22,7 @@ import EngineReplayPanel from "@/components/EngineReplayPanel";
 
 import { PlanDebugPanel } from "@/components/admin/PlanDebugPanel";
 import { ScannerGovernancePanel } from "@/components/admin/ScannerGovernancePanel";
+import { PaperBotPanel } from "@/components/admin/PaperBotPanel";
 
 
 
@@ -38,6 +39,7 @@ const ADMIN_TABS: { value: AdminTab; label: string }[] = [
   { value: "image", label: "Image usage" },
   { value: "people", label: "People and settings" },
   { value: "methodology", label: "Scanner methodology" },
+  { value: "paper", label: "Paper testing" },
 ];
 
 // Only admins get the QA checklist tab.
@@ -255,6 +257,8 @@ Live from Stripe, {totalUsers} accounts
       {tab === "image" && <ImageUsagePanel />}
 
       {tab === "methodology" && <ScannerGovernancePanel />}
+
+      {tab === "paper" && <PaperBotPanel />}
 
       {tab === "checks" && isAdmin && (
         <>
