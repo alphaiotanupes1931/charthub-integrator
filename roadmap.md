@@ -6,5 +6,5 @@
 - [ ] Phase 3: Add screenshot-first journal review-before-save workflow
 - [ ] Phase 4: Simplify VWAP and close admin/chart operational gaps
 - [x] Phase 5: Add versioned methodology, expert review, and command board
-- [ ] Phase 6: Add isolated deterministic paper-bot research harness
+- [x] Phase 6: Add isolated deterministic paper-bot research harness
 - [ ] Phase 7: Complete release regression and authenticated acceptance report
