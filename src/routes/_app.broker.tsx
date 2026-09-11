@@ -147,7 +147,7 @@ function BrokerPage() {
         <div>
           <h1 className="font-display text-2xl md:text-3xl font-semibold mb-2">Brokers</h1>
           <p className="text-sm text-muted-foreground">
-            Connect Capital.com or OANDA once, then place trades straight from your scans. Capital.com covers indices, gold, oil and crypto as well as forex. Your token is encrypted on the server and never exposed to the browser.
+            Log in to TradeLocker once, then place trades straight from your scans. TradeLocker covers indices, gold, oil and crypto as well as forex. Your login is encrypted on the server and never exposed to the browser.
           </p>
 
         </div>
@@ -176,7 +176,7 @@ function BrokerPage() {
         </div>
       )}
 
-      <OandaConnectPanel onChange={() => refresh()} />
+      <TradeLockerConnectPanel onChange={() => refresh()} />
 
       <div className="rounded-xl border border-border/60 bg-card p-5 mb-6">
         <div className="text-sm font-semibold">Account used for Auto Trading</div>
