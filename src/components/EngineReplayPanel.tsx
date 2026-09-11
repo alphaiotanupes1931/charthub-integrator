@@ -151,6 +151,14 @@ export default function EngineReplayPanel({ canRefresh = false }: { canRefresh?:
             </table>
           </div>
 
+          {totals.needsCalibration.length > 0 && (
+            <p className="mt-3 rounded-lg border border-red-500/30 bg-red-500/5 p-3 text-xs text-red-300">
+              Do not quote performance for {totals.needsCalibration.join(", ")} — these instruments lost money over
+              the replay and still need calibration. {totals.validatedInstruments} instruments are positive over at
+              least 30 replayed trades.
+            </p>
+          )}
+
           {totals.updatedAt && (
             <p className="mt-3 text-xs text-muted-foreground">
               Last tested {new Date(totals.updatedAt).toLocaleString()}.
