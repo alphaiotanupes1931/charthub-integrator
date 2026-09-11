@@ -801,8 +801,11 @@ export function findEntryAnchor(
     const bottom = Math.min(z[0], z[1]);
     if (!Number.isFinite(top) || !Number.isFinite(bottom) || bottom <= 0) return;
     // Enter at the near edge of the zone, keep the far edge for stop placement.
-    if (bias === "Long") cands.push({ entry: top, zoneFar: bottom, top, bottom, label, quality, qualityLabel, distanceAtr, tier: 0 });
-    else cands.push({ entry: bottom, zoneFar: top, top, bottom, label, quality, qualityLabel, distanceAtr, tier: 0 });
+    const tier = label.includes("1H") && label.includes("order block")
+      ? qualityLabel === "high" ? -2 : -1
+      : 0;
+    if (bias === "Long") cands.push({ entry: top, zoneFar: bottom, top, bottom, label, quality, qualityLabel, distanceAtr, tier });
+    else cands.push({ entry: bottom, zoneFar: top, top, bottom, label, quality, qualityLabel, distanceAtr, tier });
   };
   const pushLevel = (p: number, label: string) => {
     if (!Number.isFinite(p) || p <= 0) return;
@@ -1420,7 +1423,7 @@ export async function runPlanner(
   let mitigation: MitigatedBlockRead | null = null;
   if (grade !== "NO ENTRY" && bias !== "Neutral") {
     try {
-      const blocks = computeOrderBlocks(snap.candles, { max: 10 });
+      const blocks = computeOrderBlocks(snap.candles1h?.length ? snap.candles1h : snap.candles, { max: 10 });
       mitigation = readMitigatedEntry(finalPlan.entry, bias, blocks);
       if (mitigation.warning) {
         warnings.push(mitigation.warning);
@@ -1461,6 +1464,26 @@ export async function runPlanner(
   const deltaRead = deltaAgainstPositionRead(bias, snap);
   const setupRead = setupTypeRead(bias, snap);
   const staleRead = staleHigherTimeframeRead(snap);
+  const selectedEntryZone = bias === "Neutral"
+    ? null
+    : findEntryAnchor(
+        bias,
+        snap.lastPrice,
+        Math.max(snap.stats.atr14 || Math.abs(snap.lastPrice) * 0.002, Math.abs(snap.lastPrice) * 0.0005),
+        snap,
+      );
+
+  // A means a fully formed top-down setup, not simply a high evidence count.
+  // Without a fresh, high-quality 1H block the trade may still be valid, but it
+  // cannot be presented as the sniper-grade setup Marcus expects from A.
+  if ((grade === "A+" || grade === "A") && selectedEntryZone?.qualityLabel !== "high") {
+    grade = "B";
+    warnings.push(
+      selectedEntryZone
+        ? `The selected 1H order block scores ${selectedEntryZone.quality ?? 0}/100 (${selectedEntryZone.qualityLabel ?? "unrated"}), so A is unavailable. Wait for a fresh displacement-backed 1H block with 15m confirmation.`
+        : "No valid 1H order block anchors this entry, so A is unavailable. Wait for a fresh displacement-backed 1H block with 15m confirmation.",
+    );
+  }
 
   // Full "why is this grade what it is" breakdown: every deterministic cap that
   // fired, plus the engine alignment cap, news risk and session timing, with the
@@ -1484,6 +1507,15 @@ export async function runPlanner(
   if (news48Warning) gradeCaps.push({ label: "Event risk within 48 hours", cap: grade, reason: `${news48Warning} This costs one grade letter.` });
   if (timingGate) gradeCaps.push({ label: "Session timing", cap: grade, reason: `${timingGate} This costs one grade letter until the session opens.` });
   if (mitigation?.warning) gradeCaps.push({ label: "Entry zone already tested", cap: grade, reason: mitigation.warning });
+  if (selectedEntryZone?.qualityLabel !== "high") {
+    gradeCaps.push({
+      label: "1H order-block quality",
+      cap: "B",
+      reason: selectedEntryZone
+        ? `The selected 1H zone scores ${selectedEntryZone.quality ?? 0}/100 (${selectedEntryZone.qualityLabel ?? "unrated"}). A requires a fresh, displacement-backed 1H order block aligned with the 4H.`
+        : "No valid 1H order block anchors the entry. A requires a fresh, displacement-backed 1H order block aligned with the 4H.",
+    });
+  }
   const capOrder: string[] = ["NO ENTRY", "C", "B", "A", "A+"];
   for (const c of gradeCaps) c.binding = c.cap === grade && capOrder.indexOf(c.cap) <= capOrder.indexOf(grade);
 
@@ -1589,6 +1621,16 @@ export async function runPlanner(
       : undefined,
     mitigatedEntry: mitigation?.mitigated
       ? { mitigations: mitigation.mitigations, warning: mitigation.warning ?? "" }
+      : undefined,
+    entryZone: selectedEntryZone?.top != null && selectedEntryZone.bottom != null
+      ? {
+          label: selectedEntryZone.label,
+          top: selectedEntryZone.top,
+          bottom: selectedEntryZone.bottom,
+          quality: selectedEntryZone.quality ?? 0,
+          qualityLabel: selectedEntryZone.qualityLabel ?? "low",
+          distanceAtr: selectedEntryZone.distanceAtr ?? 0,
+        }
       : undefined,
   };
 
