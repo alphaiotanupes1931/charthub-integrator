@@ -697,7 +697,16 @@ export function collectGradeCaps(
 // to the nearest real level price is likely to trade back into: 1H order block,
 // 1H FVG, 4H demand/supply zone, 4H key level, or resting liquidity. This is
 // what makes the fill precise rather than "roughly near price".
-type EntryAnchor = { entry: number; zoneFar: number; label: string };
+type EntryAnchor = {
+  entry: number;
+  zoneFar: number;
+  label: string;
+  top?: number;
+  bottom?: number;
+  quality?: number;
+  qualityLabel?: "high" | "medium" | "low";
+  distanceAtr?: number;
+};
 
 /**
  * The last real swing beyond entry on the scanned timeframe, plus a volatility
@@ -787,13 +796,13 @@ export function findEntryAnchor(
 
   // tier 0 = a real zone (order block / FVG / supply-demand): price has to trade
   // into it, so the fill is a discount. tier 1 = a bare level, which is weaker.
-  const pushZone = (z: [number, number], label: string) => {
+  const pushZone = (z: [number, number], label: string, quality?: number, qualityLabel?: "high" | "medium" | "low", distanceAtr?: number) => {
     const top = Math.max(z[0], z[1]);
     const bottom = Math.min(z[0], z[1]);
     if (!Number.isFinite(top) || !Number.isFinite(bottom) || bottom <= 0) return;
     // Enter at the near edge of the zone, keep the far edge for stop placement.
-    if (bias === "Long") cands.push({ entry: top, zoneFar: bottom, label, tier: 0 });
-    else cands.push({ entry: bottom, zoneFar: top, label, tier: 0 });
+    if (bias === "Long") cands.push({ entry: top, zoneFar: bottom, top, bottom, label, quality, qualityLabel, distanceAtr, tier: 0 });
+    else cands.push({ entry: bottom, zoneFar: top, top, bottom, label, quality, qualityLabel, distanceAtr, tier: 0 });
   };
   const pushLevel = (p: number, label: string) => {
     if (!Number.isFinite(p) || p <= 0) return;
@@ -803,14 +812,25 @@ export function findEntryAnchor(
   };
 
   if (m) {
+    const wanted = bias === "Long" ? "bullish" : "bearish";
+    const ranked = (m.h1.orderBlockDetails ?? [])
+      .filter((block) => block.kind === wanted)
+      .sort((a, b) => b.quality - a.quality || a.distanceAtr - b.distanceAtr);
+    ranked.forEach((block) => pushZone(
+      [block.bot, block.top],
+      `1H ${wanted} order block`,
+      block.quality,
+      block.qualityLabel,
+      block.distanceAtr,
+    ));
     if (bias === "Long") {
-      m.h1.orderBlocks.bull.forEach((z) => pushZone(z, "1H bullish order block"));
+      if (!ranked.length) m.h1.orderBlocks.bull.forEach((z) => pushZone(z, "1H bullish order block"));
       m.h1.fvg.bull.forEach((z) => pushZone(z, "1H bullish FVG"));
       m.h4.supplyDemand.demand.forEach((z) => pushZone(z, "4H demand zone"));
       m.h4.keyLevels.support.forEach((p) => pushLevel(p, "4H support"));
       m.h1.liquidity.sellside.forEach((p) => pushLevel(p, "sellside liquidity"));
     } else {
-      m.h1.orderBlocks.bear.forEach((z) => pushZone(z, "1H bearish order block"));
+      if (!ranked.length) m.h1.orderBlocks.bear.forEach((z) => pushZone(z, "1H bearish order block"));
       m.h1.fvg.bear.forEach((z) => pushZone(z, "1H bearish FVG"));
       m.h4.supplyDemand.supply.forEach((z) => pushZone(z, "4H supply zone"));
       m.h4.keyLevels.resistance.forEach((p) => pushLevel(p, "4H resistance"));
@@ -832,11 +852,21 @@ export function findEntryAnchor(
   // nothing deeper exists.
   const rank = (c: EntryAnchor & { tier: number }) => {
     const gap = gapOf(c);
-    return c.tier * 100 + (gap >= goodGap ? 0 : 10) + gap / Math.max(atr, 1e-9);
+    const qualityBonus = c.quality == null ? 0 : (100 - c.quality) / 10;
+    return c.tier * 100 + qualityBonus + (gap >= goodGap ? 0 : 10) + gap / Math.max(atr, 1e-9);
   };
   valid.sort((a, b) => rank(a) - rank(b));
   const best = valid[0]!;
-  return { entry: best.entry, zoneFar: best.zoneFar, label: best.label };
+  return {
+    entry: best.entry,
+    zoneFar: best.zoneFar,
+    label: best.label,
+    top: best.top,
+    bottom: best.bottom,
+    quality: best.quality,
+    qualityLabel: best.qualityLabel,
+    distanceAtr: best.distanceAtr ?? Number((gapOf(best) / Math.max(atr, 1e-9)).toFixed(2)),
+  };
 }
 
 

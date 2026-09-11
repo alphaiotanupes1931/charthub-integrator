@@ -23,6 +23,15 @@ export type OrderBlock = {
   breakLevel: number;
 };
 
+export type RankedOrderBlock = OrderBlock & {
+  /** 0-100 deterministic quality score used by the entry planner. */
+  quality: number;
+  qualityLabel: "high" | "medium" | "low";
+  aligned: boolean;
+  liquiditySweep: boolean;
+  distanceAtr: number;
+};
+
 export const OB_COLORS = {
   bullish: "#2dd4bf",
   bearish: "#f87171",
@@ -106,7 +115,7 @@ export function computeOrderBlocks(candles: ObCandle[], opts?: { max?: number; s
     let inside = false;
     for (let k = i + 1; k < candles.length; k++) {
       const f = candles[k];
-      const touched = block.kind === "bullish" ? f.low <= block.top : f.high >= block.bot;
+      const touched = f.low <= block.top && f.high >= block.bot;
       if (touched) {
         if (!inside) {
           block.mitigations += 1;
@@ -132,6 +141,50 @@ export function computeOrderBlocks(candles: ObCandle[], opts?: { max?: number; s
     return y.time - x.time;
   });
   return sorted.slice(0, max);
+}
+
+/**
+ * Rank blocks for execution rather than drawing. Freshness and displacement
+ * carry most of the score; higher-timeframe alignment and a nearby swept
+ * liquidity level distinguish the institutional-quality blocks from noise.
+ */
+export function rankOrderBlocks(
+  blocks: OrderBlock[],
+  options: {
+    bias: "bullish" | "bearish";
+    price: number;
+    atr: number;
+    h4Direction?: "bullish" | "bearish" | "neutral";
+    sweptLiquidity?: number[];
+  },
+): RankedOrderBlock[] {
+  const atrValue = Math.max(options.atr, Math.abs(options.price) * 1e-6);
+  const liquidity = options.sweptLiquidity ?? [];
+  return blocks
+    .filter((block) => block.kind === options.bias)
+    .map((block) => {
+      const nearEdge = options.bias === "bullish" ? block.top : block.bot;
+      const distanceAtr = Math.abs(options.price - nearEdge) / atrValue;
+      const aligned = options.h4Direction === options.bias;
+      const liquiditySweep = liquidity.some((level) =>
+        Number.isFinite(level) && Math.abs(level - block.breakLevel) <= atrValue * 0.35,
+      );
+      const freshness = block.mitigations === 0 ? 38 : block.mitigations === 1 ? 16 : 0;
+      const displacement = Math.min(28, Math.max(0, block.strength) * 14);
+      const alignment = aligned ? 18 : 0;
+      const sweep = liquiditySweep ? 10 : 0;
+      const proximity = distanceAtr <= 1.5 ? 6 : distanceAtr <= 2.2 ? 2 : 0;
+      const quality = Math.round(Math.min(100, freshness + displacement + alignment + sweep + proximity));
+      return {
+        ...block,
+        quality,
+        qualityLabel: quality >= 75 ? "high" : quality >= 55 ? "medium" : "low",
+        aligned,
+        liquiditySweep,
+        distanceAtr: Number(distanceAtr.toFixed(2)),
+      } satisfies RankedOrderBlock;
+    })
+    .sort((a, b) => b.quality - a.quality || a.distanceAtr - b.distanceAtr || b.time - a.time);
 }
 
 export function obLabel(b: OrderBlock): string {

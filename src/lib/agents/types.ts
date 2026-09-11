@@ -5,6 +5,22 @@
 
 export type Candle = { time: number; open: number; high: number; low: number; close: number; volume?: number };
 
+export type OrderBlockRead = {
+  kind: "bullish" | "bearish";
+  top: number;
+  bot: number;
+  time: number;
+  mitigated: boolean;
+  mitigations: number;
+  strength: number;
+  breakLevel: number;
+  quality: number;
+  qualityLabel: "high" | "medium" | "low";
+  aligned: boolean;
+  liquiditySweep: boolean;
+  distanceAtr: number;
+};
+
 /** Real order-flow metrics derived from OHLCV. See order-flow.server.ts. */
 export type OrderFlow = {
   /** True when the feed supplied no volume and it was estimated from bar range. */
@@ -64,6 +80,10 @@ export type MarketSnapshot = {
   candles4h?: Candle[];
   /** ATR(14) of the 4H series, used for every ATR gate in the bias engine. */
   atr4h?: number;
+  /** Closed 1H/15m/5m series used by the top-down entry cascade. */
+  candles1h?: Candle[];
+  candles15m?: Candle[];
+  candles5m?: Candle[];
 };
 
 // Multi-timeframe context (4H → 1H → 15m cascade).
@@ -80,6 +100,7 @@ export type MtfContext = {
     structureBreak: "bullish" | "bearish" | "none";
     reversal: "bullish" | "bearish" | "none";
     orderBlocks: { bull: [number, number][]; bear: [number, number][] };
+    orderBlockDetails?: OrderBlockRead[];
     fvg: { bull: [number, number][]; bear: [number, number][] };
     liquidity: { buyside: number[]; sellside: number[] };
   };
@@ -193,5 +214,14 @@ export type TradePlan = {
   mitigatedEntry?: { mitigations: number; warning: string };
   /** Set when the platform chose the playbook from live market conditions. */
   autoStrategy?: { name: string; slug: string; regime: string; reason: string };
+  /** The selected institutional entry zone and its deterministic quality. */
+  entryZone?: {
+    label: string;
+    top: number;
+    bottom: number;
+    quality: number;
+    qualityLabel: "high" | "medium" | "low";
+    distanceAtr: number;
+  };
 
 };
