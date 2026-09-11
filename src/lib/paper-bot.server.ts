@@ -12,6 +12,7 @@ import { getSnapshot } from "@/lib/agents/market-data.server";
 import { computeBias } from "@/lib/agents/bias-adapter.server";
 import type { ScanResult } from "@/lib/agents/biasEngine";
 import { SCANNER_METHODOLOGY_VERSION } from "@/lib/scanner-methodology";
+import type { Json } from "@/integrations/supabase/types";
 
 export type PaperBotRow = {
   id: string;
@@ -158,7 +159,7 @@ async function recordEvent(
   kind: "scan" | "skip" | "enter" | "manage" | "exit" | "error",
   detail: Record<string, unknown>,
 ) {
-  await supabase.from("paper_bot_events").insert({ bot_id: botId, kind, detail });
+  await supabase.from("paper_bot_events").insert({ bot_id: botId, kind, detail: detail as Json });
 }
 
 function scanSummary(scan: ScanResult) {
