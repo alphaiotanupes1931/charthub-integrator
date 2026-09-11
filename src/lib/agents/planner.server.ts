@@ -139,7 +139,6 @@ function systematicPlan(
   const setup = mtf ? `MTF ${mtf.alignment} (4H ${mtf.h4.direction}/${mtf.h4.trend}, 1H ${mtf.h1.structureBreak}, 15m ${mtf.m15.confirmation})`
     : snap.cisd.state === "none" ? "range structure" : `${snap.cisd.state} CISD`;
   return {
-    methodologyVersion: SCANNER_METHODOLOGY_VERSION,
     grade,
     bias,
     confidence: confBase,
@@ -1625,6 +1624,7 @@ export async function runPlanner(
     + (timingGate ? ` ${timingGate}` : warnings.length ? ` ${warnings[0]}` : "");
 
   return {
+    methodologyVersion: SCANNER_METHODOLOGY_VERSION,
     grade,
     bias,
     confidence,
