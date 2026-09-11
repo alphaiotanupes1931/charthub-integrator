@@ -26,6 +26,22 @@ export type ReplayRow = {
   updatedAt: string;
 };
 
+/** Whether one instrument's replay result is strong enough to quote anywhere. */
+export type ReplayStatus = "validated" | "needs-calibration" | "insufficient-data";
+
+export const MIN_VALIDATION_TRADES = 30;
+
+export function replayStatus(row: ReplayRow): ReplayStatus {
+  if (row.trades < MIN_VALIDATION_TRADES) return "insufficient-data";
+  return row.expectancyR > 0 ? "validated" : "needs-calibration";
+}
+
+export const REPLAY_STATUS_LABEL: Record<ReplayStatus, string> = {
+  validated: "Validated",
+  "needs-calibration": "Needs calibration",
+  "insufficient-data": "Not enough data",
+};
+
 export type ReplayTotals = {
   instruments: number;
   trades: number;
