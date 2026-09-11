@@ -744,7 +744,7 @@ export function entryTriggerRead(
   bias: "Long" | "Short" | "Neutral",
   snap: MarketSnapshot,
   atr: number,
-  tradeStyle: TradeStyle = "intraday",
+  tradeStyle?: TradeStyle,
 ): EntryTriggerRead {
   if (bias === "Neutral") return { triggered: false, level: null, rule: null };
   const wanted = bias === "Long" ? "bullish" : "bearish";
@@ -765,7 +765,9 @@ export function entryTriggerRead(
     ? lowerTimeframeConfirmed(snap.candles5m ?? snap.candles15m ?? [], wanted)
     : tradeStyle === "swing"
       ? h1Break === wanted
-      : m15 === wanted;
+      : tradeStyle === "intraday"
+        ? m15 === wanted
+        : m15 === wanted || h1Break === wanted;
   if (styleConfirmed) {
     return {
       triggered: true,
@@ -774,7 +776,9 @@ export function entryTriggerRead(
         ? "Trigger met: the 5m has displaced in the direction of the scalp."
         : tradeStyle === "swing"
           ? "Trigger met: the 1H has broken structure in the direction of the swing."
-          : "Trigger met: the 15m has confirmed in the direction of the intraday setup.",
+          : m15 === wanted
+            ? "Trigger met: the 15m has confirmed in the direction of the intraday setup."
+            : "Trigger met: the 1H has broken structure in the direction of the setup.",
     };
   }
   const c = Array.isArray(snap.candles) ? snap.candles : [];
