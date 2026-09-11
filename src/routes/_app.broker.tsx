@@ -22,7 +22,7 @@ type BrokerSearch = {
   tp?: number | string;
 };
 
-import { OandaConnectPanel } from "@/components/OandaConnectPanel";
+import { TradeLockerConnectPanel } from "@/components/TradeLockerConnectPanel";
 
 
 export const Route = createFileRoute("/_app/broker")({
@@ -36,9 +36,9 @@ export const Route = createFileRoute("/_app/broker")({
   head: () => ({
     meta: [
       { title: "Brokers — TradeMind" },
-      { name: "description", content: "Connect Capital.com or OANDA and place real trades straight from your scans." },
+      { name: "description", content: "Connect TradeLocker and place real trades straight from your scans." },
       { property: "og:title", content: "Brokers — TradeMind" },
-      { property: "og:description", content: "Connect Capital.com or OANDA and place real trades straight from your scans." },
+      { property: "og:description", content: "Connect TradeLocker and place real trades straight from your scans." },
     ],
   }),
   component: BrokerPage,
