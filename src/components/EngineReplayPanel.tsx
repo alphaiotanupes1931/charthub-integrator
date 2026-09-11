@@ -112,6 +112,7 @@ export default function EngineReplayPanel({ canRefresh = false }: { canRefresh?:
                   <th className="py-2 text-right font-normal">Avg R</th>
                   <th className="py-2 text-right font-normal">Net R</th>
                   <th className="py-2 text-right font-normal">Max drawdown</th>
+                  <th className="py-2 text-right font-normal">Status</th>
                 </tr>
               </thead>
               <tbody>
