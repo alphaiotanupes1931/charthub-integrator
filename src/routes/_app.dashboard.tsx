@@ -50,6 +50,7 @@ import { AutoTradingToggle, AUTO_TRADE_CONTEXT_KEY } from "@/components/AutoTrad
 import { TradeOfferDialog, type TradeOffer } from "@/components/TradeOfferDialog";
 import { gradeMeets } from "@/lib/autopilot.shared";
 import { getAutoTradeContext } from "@/lib/auto-trade.functions";
+import { SCANNER_METHODOLOGY_VERSION } from "@/lib/scanner-methodology";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn as useServerFnForAutoTrade } from "@tanstack/react-start";
 
@@ -396,6 +397,7 @@ function gradeFor(symbol: Symbol, lastPrice?: number): ScanResult {
     tp2 = px * (1 + stopPct * tp2R);
   }
   return {
+    methodologyVersion: SCANNER_METHODOLOGY_VERSION,
     grade,
     bias,
     confidence,
@@ -1580,6 +1582,7 @@ function Dashboard() {
         // Our failure, so it costs the trader nothing.
         void ent.recordScanOutcome("error");
         setResult({
+          methodologyVersion: SCANNER_METHODOLOGY_VERSION,
           grade: "NO ENTRY", bias: "Neutral", confidence: 0,
           notes: "Research service is temporarily unavailable. Please try again in a moment.",
           entry: "-", stop: "-", tp1: "-", tp2: "-", rr: "-",
