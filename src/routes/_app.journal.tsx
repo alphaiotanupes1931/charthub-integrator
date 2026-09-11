@@ -171,6 +171,21 @@ function formatYmdHuman(s: string): string {
 
 // Accurate P&L: gross move x direction x size x point value, minus fees.
 // point value defaults to 1 (matches raw price units for spot / crypto).
+function effectiveExit(t: Trade): number {
+  // Older auto-verified rows recorded the outcome (target / stop hit) but kept
+  // exit equal to entry because the data feed returned no fill price. Rebuild
+  // the exit from the level that closed the trade so P&L is not stuck at 0.00.
+  const result = (t as unknown as { result?: string }).result;
+  const resultR = (t as unknown as { resultR?: number }).resultR;
+  if (t.exit !== t.entry || !result || result === "open") return t.exit;
+  if (result === "tp" && t.takeProfit != null && Number.isFinite(t.takeProfit)) return t.takeProfit;
+  if (result === "stop" && Number.isFinite(t.stop)) return t.stop;
+  if (resultR != null && Number.isFinite(resultR)) {
+    const dir = t.side === "Long" ? 1 : -1;
+    return t.entry + dir * resultR * Math.abs(t.entry - t.stop);
+  }
+  return t.exit;
+}
 function tradePnl(t: Trade): number {
   // A figure read off the broker (screenshot, pasted fill, manual entry) is the
   // truth. Computed P&L only guesses the contract multiplier, so it can be off
@@ -180,8 +195,9 @@ function tradePnl(t: Trade): number {
   const size = t.size || 0;
   const pv = t.pointValue && isFinite(t.pointValue) && t.pointValue > 0 ? t.pointValue : 1;
   const fees = t.fees && isFinite(t.fees) ? t.fees : 0;
-  return (t.exit - t.entry) * dir * size * pv - fees;
+  return (effectiveExit(t) - t.entry) * dir * size * pv - fees;
 }
+
 function tradeRR(t: Trade): number | null {
   const risk = Math.abs(t.entry - t.stop);
   if (!risk || !isFinite(risk)) return null;
