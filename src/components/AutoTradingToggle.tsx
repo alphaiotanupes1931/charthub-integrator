@@ -137,8 +137,11 @@ export function AutoTradingToggle({ className = "" }: { className?: string }) {
               <>
                 <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
                   You are allowing real orders to be sent to your own broker account automatically, with no further
-                  confirmation, including while the app is closed. Trades placed this way are managed for you (stop to
-                  break-even, partials, trailing). TradeMind is not a broker, advisor, or money manager, and you keep
+                  confirmation, including while the app is closed. Every order is sent with its stop loss and target
+                  already attached. Ongoing management afterwards (stop to break-even, partials, trailing) applies to
+                  OANDA-routed trades opened by Auto Trading from now on — positions you opened yourself, and trades
+                  opened before this setting existed, are never touched. TradeMind is not a broker, advisor, or money
+                  manager, and you keep
                   full responsibility for every order. Switch back to Manual at any time.
                 </p>
                 <div className="mt-4 flex gap-2">
