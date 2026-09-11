@@ -98,9 +98,21 @@ export const Route = createFileRoute("/api/public/hooks/journal-verify-tick")({
           // keeps its exit equal to the entry, so the journal and the calendar
           // still read 0.00 even though the stop or target printed.
           const settled = res.status !== "open";
-          const exit = settled && res.price != null && Number.isFinite(res.price)
-            ? res.price
+          const tp = num(t["takeProfit"]);
+          const dir = side === "Short" ? -1 : 1;
+          // Fall back to the level that resolved the trade (or the measured R)
+          // when the provider gives no fill price, otherwise exit stays equal to
+          // entry and the journal keeps reading 0.00 on a closed trade.
+          let derived: number | null = null;
+          if (settled) {
+            if (res.status === "tp" && tp != null) derived = tp;
+            else if (res.status === "sl") derived = stop;
+            else if (res.r != null && Number.isFinite(res.r)) derived = entry + dir * res.r * Math.abs(entry - stop);
+          }
+          const exit = settled
+            ? (res.price != null && Number.isFinite(res.price) ? res.price : derived ?? num(t["exit"]))
             : num(t["exit"]);
+
           const next = {
             ...t,
             exit,
