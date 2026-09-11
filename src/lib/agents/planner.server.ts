@@ -193,6 +193,20 @@ export function countEvidence(
 
   }
 
+  // Confirmation quality. These are not the votes that chose the direction:
+  // they measure whether the top-down picture actually lines up behind the
+  // trade (4H direction with a 1H break in the same direction, a 15m
+  // confirmation, and a real aligned zone to enter from). Without them an
+  // otherwise textbook aligned pullback scored the same as a coin flip, which
+  // is why almost every scan landed on C.
+  if (mtf) {
+    const want = wantBull ? "bullish" : "bearish";
+    check(mtf.h4.direction === want && mtf.h1.structureBreak === want, 2);
+    check(mtf.m15.confirmation === want, 1);
+    check(hasAlignedZone(bias, snap), 1);
+  }
+
+
   // R:R is constructed by the planner, not observed in the market, so it is a
   // risk-quality gate rather than evidence of directional conviction.
   if (!Number.isFinite(rrMultiple) || rrMultiple < 1.5) return 25;
