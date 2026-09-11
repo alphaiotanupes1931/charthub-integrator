@@ -30,7 +30,9 @@ describe("countEvidence", () => {
 
   it("caps below 100 even when everything aligns", () => {
     const v = countEvidence(snap(true), memo(true), "A+", "Long", 3);
-    expect(v).toBe(90);
+    // 4H+1H agreement and the 15m confirmation now count as confirmation
+    // quality; the missing piece here is an aligned 1H/4H zone.
+    expect(v).toBe(85);
   });
 
   it("scores a counter-trend trade low", () => {
@@ -43,7 +45,7 @@ describe("countEvidence", () => {
     expect(aPlusAgainst).toBeLessThan(40);
   });
 
-  it("does not double-count the direction cascade as confidence", () => {
+  it("credits top-down agreement but still scores a thin tape below an A", () => {
     const cascadeOnly = {
       ...snap(true),
       cisd: { ...snap(true).cisd, state: "none" },
@@ -58,7 +60,9 @@ describe("countEvidence", () => {
       },
     } as MarketSnapshot;
     const neutralMemo = { ...memo(true), consensus: "neutral" } as ResearchMemo;
-    expect(countEvidence(cascadeOnly, neutralMemo, "A", "Long", 3)).toBe(25);
+    const v = countEvidence(cascadeOnly, neutralMemo, "A", "Long", 3);
+    expect(v).toBeGreaterThan(25);
+    expect(v).toBeLessThan(74);
   });
 });
 

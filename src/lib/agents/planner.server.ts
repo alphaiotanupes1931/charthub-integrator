@@ -151,6 +151,38 @@ function systematicPlan(
   };
 }
 
+/**
+ * True when there is a real structural zone in the trade's direction on the 1H
+ * (order block, FVG) or a 4H demand/supply zone. This is the difference between
+ * "the tape happens to point this way" and "there is a place to enter from".
+ */
+export function hasAlignedZone(bias: typeof BIASES[number], snap: MarketSnapshot): boolean {
+  if (bias === "Neutral") return false;
+  const m = snap.mtf;
+  if (!m) return false;
+  const arr = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
+  const long = bias === "Long";
+  const obs = arr(long ? m.h1?.orderBlocks?.bull : m.h1?.orderBlocks?.bear);
+  const fvgs = arr(long ? m.h1?.fvg?.bull : m.h1?.fvg?.bear);
+  const zones = arr(long ? m.h4?.supplyDemand?.demand : m.h4?.supplyDemand?.supply);
+  return obs.length > 0 || fvgs.length > 0 || zones.length > 0;
+}
+
+/**
+ * A counter-move on the 1H/15m inside an intact 4H trend is a pullback - which
+ * is the entry the methodology is built around, not a reason to hold the grade
+ * at C. This returns true only when the 4H still agrees with the trade and
+ * there is an aligned zone for price to trade back into.
+ */
+export function isAlignedPullback(bias: typeof BIASES[number], snap: MarketSnapshot): boolean {
+  if (bias === "Neutral") return false;
+  const m = snap.mtf;
+  if (!m) return false;
+  const want = bias === "Long" ? "bullish" : "bearish";
+  const h4Agrees = m.h4?.direction === want || m.h4?.trend === (bias === "Long" ? "up" : "down");
+  return h4Agrees && hasAlignedZone(bias, snap);
+}
+
 // ---------- Evidence-counted conviction ----------
 // Every point below comes from a measurable check on the snapshot. Nothing is
 // asserted by the model and nothing is floored by grade, so a thin setup reads
@@ -192,6 +224,20 @@ export function countEvidence(
     check(wantBull ? of.priceVsPoc !== "below" : of.priceVsPoc !== "above");
 
   }
+
+  // Confirmation quality. These are not the votes that chose the direction:
+  // they measure whether the top-down picture actually lines up behind the
+  // trade (4H direction with a 1H break in the same direction, a 15m
+  // confirmation, and a real aligned zone to enter from). Without them an
+  // otherwise textbook aligned pullback scored the same as a coin flip, which
+  // is why almost every scan landed on C.
+  if (mtf) {
+    const want = wantBull ? "bullish" : "bearish";
+    check(mtf.h4.direction === want && mtf.h1.structureBreak === want, 2);
+    check(mtf.m15.confirmation === want, 1);
+    check(hasAlignedZone(bias, snap), 1);
+  }
+
 
   // R:R is constructed by the planner, not observed in the market, so it is a
   // risk-quality gate rather than evidence of directional conviction.
@@ -343,9 +389,15 @@ export function timeFrameComboGate(
   const m15Ok = m15 === wanted;
 
   if (m15 === opposite) {
+    // A 15m break against an intact 4H trend, with an aligned zone to trade
+    // back into, is the pullback itself. That is the entry this method is built
+    // on, so it waits for confirmation at B rather than being written off at C.
+    const pullback = h4Ok && h1Ok && isAlignedPullback(bias, snap);
     return {
-      cap: "C",
-      reason: `Time Frame Combo step 3 failed: the 15m break is ${m15}, against this ${bias.toLowerCase()}. Wait for a 15m BOS/ChoCH in your direction before executing on the 5m.`,
+      cap: pullback ? "B" : "C",
+      reason: pullback
+        ? `Time Frame Combo step 3 pending: the 15m is breaking ${m15}, which is the pullback into your ${bias.toLowerCase()} zone while the 4H still reads ${h4Dir}/${h4Trend}. Held at B until the 15m turns ${wanted} - that turn is your execution trigger.`
+        : `Time Frame Combo step 3 failed: the 15m break is ${m15}, against this ${bias.toLowerCase()}. Wait for a 15m BOS/ChoCH in your direction before executing on the 5m.`,
       checks: { h4: h4Ok, h1: h1Ok, m15: false },
     };
   }
@@ -387,9 +439,17 @@ export function lowerTimeframeOppositionRead(
   const breakAgainst = h1Break === opposite;
   if (!trendAgainst && !biasAgainst && !breakAgainst) return { cap: null, reason: null };
   if (breakAgainst) {
+    // Same principle: inside an intact 4H trend with an aligned zone, a 1H
+    // counter-break is the retracement leg, not a broken thesis.
+    if (isAlignedPullback(bias, snap)) {
+      return {
+        cap: "B",
+        reason: `The 1H has broken ${opposite} into your ${bias.toLowerCase()} zone while the 4H still reads ${snap.mtf?.h4.direction}/${snap.mtf?.h4.trend}. That is the retracement, so this is a B - take it on the turn back ${wanted}, not before.`,
+      };
+    }
     return {
       cap: "C",
-      reason: `The 1H has broken structure ${opposite}, against this ${bias.toLowerCase()}, so the grade is capped at C until the 1H breaks back ${wanted}.`,
+      reason: `The 1H has broken structure ${opposite}, against this ${bias.toLowerCase()}, and the 4H is not backing the trade, so the grade is capped at C until the 1H breaks back ${wanted}.`,
     };
   }
   return {
