@@ -25,7 +25,6 @@ type Invite = {
 type Friend = {
   id: string;
   display_name: string | null;
-  email: string | null;
   wins: number | null;
   losses: number | null;
   total: number;
@@ -37,8 +36,8 @@ function inviteUrl(code: string): string {
   return `${window.location.origin}/invite/${code}`;
 }
 
-function initials(name: string | null, email: string | null): string {
-  const src = (name || email || "?").trim();
+function initials(name: string | null): string {
+  const src = (name || "?").trim();
   return src
     .replace(/[._-]+/g, " ")
     .split(/\s+/)
@@ -173,11 +172,11 @@ function FriendsPage() {
             {friends.map((f) => (
               <Card key={f.id} className="flex items-center gap-3 p-4">
                 <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-                  {initials(f.display_name, f.email)}
+                  {initials(f.display_name)}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="truncate font-medium">
-                    {f.display_name || f.email?.split("@")[0] || "Trader"}
+                    {f.display_name || "Trader"}
                   </div>
                   <div className="truncate text-xs text-muted-foreground">
                     {f.wins ?? 0}W · {f.losses ?? 0}L · {f.winRate}% win rate
