@@ -30,7 +30,9 @@ describe("countEvidence", () => {
 
   it("caps below 100 even when everything aligns", () => {
     const v = countEvidence(snap(true), memo(true), "A+", "Long", 3);
-    expect(v).toBe(90);
+    // 4H+1H agreement and the 15m confirmation now count as confirmation
+    // quality; the missing piece here is an aligned 1H/4H zone.
+    expect(v).toBe(85);
   });
 
   it("scores a counter-trend trade low", () => {
