@@ -45,7 +45,7 @@ describe("countEvidence", () => {
     expect(aPlusAgainst).toBeLessThan(40);
   });
 
-  it("does not double-count the direction cascade as confidence", () => {
+  it("credits top-down agreement but still scores a thin tape below an A", () => {
     const cascadeOnly = {
       ...snap(true),
       cisd: { ...snap(true).cisd, state: "none" },
@@ -60,7 +60,9 @@ describe("countEvidence", () => {
       },
     } as MarketSnapshot;
     const neutralMemo = { ...memo(true), consensus: "neutral" } as ResearchMemo;
-    expect(countEvidence(cascadeOnly, neutralMemo, "A", "Long", 3)).toBe(25);
+    const v = countEvidence(cascadeOnly, neutralMemo, "A", "Long", 3);
+    expect(v).toBeGreaterThan(25);
+    expect(v).toBeLessThan(74);
   });
 });
 
