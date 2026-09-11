@@ -214,6 +214,8 @@ export type TradePlan = {
   mitigatedEntry?: { mitigations: number; warning: string };
   /** Set when the platform chose the playbook from live market conditions. */
   autoStrategy?: { name: string; slug: string; regime: string; reason: string };
+  /** Auto-selected or trader-overridden holding style for this setup. */
+  tradeStyle?: "scalp" | "intraday" | "swing";
   /** The selected institutional entry zone and its deterministic quality. */
   entryZone?: {
     label: string;

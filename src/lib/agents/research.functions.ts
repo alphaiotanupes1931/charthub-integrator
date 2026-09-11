@@ -13,6 +13,7 @@ import { formatLessonsForPrompt, type HermesLessonRow } from "./hermes.server";
 import { formatPerfForPrompt } from "@/lib/strategy-perf.shared";
 
 import type { TradePlan } from "./types";
+import { classifyTradeStyle, type TradeStyle } from "@/lib/tradeTiming";
 
 export const runResearchPlan = createServerFn({ method: "POST" })
   .inputValidator((raw: unknown) => z.object({
@@ -23,6 +24,7 @@ export const runResearchPlan = createServerFn({ method: "POST" })
     strategyId: z.string().max(80).optional(),
     /** True when the trader let the platform pick the playbook. */
     autoStrategy: z.boolean().optional(),
+    tradeStyle: z.enum(["scalp", "intraday", "swing"]).optional(),
     coach: z.string().max(60).optional(),
     journalPerf: z.string().max(300).optional(),
   }).parse(raw))
@@ -79,6 +81,13 @@ export const runResearchPlan = createServerFn({ method: "POST" })
       strategyDesc = desc;
       autoPick = { name: pick.name, slug: pick.slug, regime: regimeLabel(pick.regime), reason: pick.reason };
     }
+    const atrPct = snap.lastPrice > 0 ? (snap.stats.atr14 / snap.lastPrice) * 100 : 0;
+    const tradeStyle: TradeStyle = classifyTradeStyle({
+      interval: snap.interval,
+      atrPct,
+      aligned: snap.mtf?.alignment === "aligned-long" || snap.mtf?.alignment === "aligned-short",
+      tradeStyle: data.tradeStyle,
+    });
 
     // Load Hermes memory relevant to this ticker / lens.
     let hermesPrompt = "";
@@ -224,11 +233,12 @@ export const runResearchPlan = createServerFn({ method: "POST" })
         return {
           ...plan,
           autoStrategy: autoPick,
+          tradeStyle,
           grade: capped as TradePlan["grade"],
           details: effectiveReason ? `${plan.details} ${effectiveReason}` : plan.details,
         };
       }
     }
-    return autoPick ? { ...plan, autoStrategy: autoPick } : plan;
+    return { ...plan, ...(autoPick ? { autoStrategy: autoPick } : {}), tradeStyle };
   });
 
