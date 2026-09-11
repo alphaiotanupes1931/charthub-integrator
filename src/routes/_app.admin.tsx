@@ -21,6 +21,7 @@ import { InstrumentProfilePanel } from "@/components/admin/InstrumentProfilePane
 import EngineReplayPanel from "@/components/EngineReplayPanel";
 
 import { PlanDebugPanel } from "@/components/admin/PlanDebugPanel";
+import { ScannerGovernancePanel } from "@/components/admin/ScannerGovernancePanel";
 
 
 
@@ -29,13 +30,14 @@ export const Route = createFileRoute("/_app/admin")({
   component: AdminPage,
 });
 
-type AdminTab = "profit" | "ai" | "image" | "people" | "checks";
+type AdminTab = "profit" | "ai" | "image" | "people" | "methodology" | "checks";
 
 const ADMIN_TABS: { value: AdminTab; label: string }[] = [
   { value: "profit", label: "Profit" },
   { value: "ai", label: "AI usage" },
   { value: "image", label: "Image usage" },
   { value: "people", label: "People and settings" },
+  { value: "methodology", label: "Scanner methodology" },
 ];
 
 // Only admins get the QA checklist tab.
@@ -251,6 +253,8 @@ Live from Stripe, {totalUsers} accounts
       )}
 
       {tab === "image" && <ImageUsagePanel />}
+
+      {tab === "methodology" && <ScannerGovernancePanel />}
 
       {tab === "checks" && isAdmin && (
         <>
