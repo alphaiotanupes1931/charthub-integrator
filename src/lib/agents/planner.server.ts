@@ -164,7 +164,7 @@ export function hasAlignedZone(bias: typeof BIASES[number], snap: MarketSnapshot
   const long = bias === "Long";
   const obs = arr(long ? m.h1?.orderBlocks?.bull : m.h1?.orderBlocks?.bear);
   const fvgs = arr(long ? m.h1?.fvg?.bull : m.h1?.fvg?.bear);
-  const zones = arr(long ? m.h4?.zones?.demand : m.h4?.zones?.supply);
+  const zones = arr(long ? m.h4?.supplyDemand?.demand : m.h4?.supplyDemand?.supply);
   return obs.length > 0 || fvgs.length > 0 || zones.length > 0;
 }
 
