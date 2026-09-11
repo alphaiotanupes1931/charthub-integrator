@@ -19,7 +19,7 @@ import { ScanStamp } from "@/components/ScanStamp";
 import { ScanVersionHistory } from "@/components/ScanVersionHistory";
 import { ChartTradeBar } from "@/components/ChartTradeBar";
 import { useTimezone, TIMEZONE_OPTIONS } from "@/hooks/useTimezone";
-import { computeTiming, clockLabel, tzAbbrev } from "@/lib/tradeTiming";
+import { computeTiming, clockLabel, tzAbbrev, type TradeStyle } from "@/lib/tradeTiming";
 
 import { TodaysRecommendation } from "@/components/TodaysRecommendation";
 import { findStrategyByName, allStrategies } from "@/lib/customStrategies";
@@ -237,6 +237,7 @@ type ScanResult = {
   counterTrend?: boolean;
   htfBias?: "bullish" | "bearish" | "neutral";
   autoStrategy?: { name: string; slug: string; regime: string; reason: string };
+  tradeStyle?: TradeStyle;
   triggered?: boolean;
   triggerLevel?: number;
   triggerRule?: string;
@@ -491,6 +492,7 @@ function ScanTicket({
     stop: parseNum(result.stop),
     tp1: parseNum(result.tp1),
     tp2: parseNum(result.tp2),
+    tradeStyle: result.tradeStyle,
   });
 
   // Daily bias is the direction for the day; current trend is what price is
@@ -659,6 +661,7 @@ function ScanTicket({
           tone={panelTiming.live ? "good" : "neutral"}
         >
           <MetricRow label="Session" value={panelTiming.session} />
+          <MetricRow label="Trade style" value={`${panelTiming.tradeStyle.charAt(0).toUpperCase()}${panelTiming.tradeStyle.slice(1)}`} />
           <MetricRow label="Enter from" value={clockLabel(panelTiming.enterFrom, panelTz)} />
           <MetricRow label="Enter before" value={clockLabel(panelTiming.enterUntil, panelTz)} />
           <MetricRow label="Cancel if unfilled" value={clockLabel(panelTiming.cancelIfUnfilled, panelTz)} />
@@ -1069,6 +1072,7 @@ function Dashboard() {
   const strategyRef = useRef<HTMLDivElement>(null);
   const [strategyOpen, setStrategyOpen] = useState(false);
   const [activeStrategy, setActiveStrategy] = useState<string | null>(null);
+  const [tradeStyle, setTradeStyle] = useState<"auto" | TradeStyle>("auto");
   useEffect(() => {
     // New traders default to Auto: the platform reads conditions and picks the
     // playbook, then tells them which one it used on the scan card.
@@ -1324,6 +1328,7 @@ function Dashboard() {
       stop,
       tp1,
       tp2,
+      tradeStyle: plan.tradeStyle,
       strength: plan.notes,
       weakness: plan.details,
       dataSource: plan.dataSource,
@@ -1430,6 +1435,7 @@ function Dashboard() {
       `${scanSymbol.name} scan: ${plan.grade} ${plan.bias}. Confidence ${plan.confidence}%.`,
       `Market data: ${plan.dataSource ?? "unavailable"}, ${plan.candleCount ?? 0} real candles, fetched ${plan.dataFetchedAt ?? "unknown"}, market price used ${typeof (plan.refPrice ?? last) === "number" ? fmtPrice((plan.refPrice ?? last) as number, dec) : "unknown"}.`,
       ...(autoLine ? [autoLine] : []),
+      ...(plan.tradeStyle ? [`Trade style: ${plan.tradeStyle}.`] : []),
       ...levelLines,
       `Why take this trade: ${plan.notes}`,
       ...(plan.details && plan.details !== plan.notes ? [`Risk and invalidation: ${plan.details}`] : []),
@@ -1541,7 +1547,7 @@ function Dashboard() {
     // Always post the scan prompt to chat so the user sees activity immediately.
     sendToChat(prompt, { focusChat: from === "chat", targetThreadId: scanThreadId });
 
-    runPlan({ data: { ticker: scanSymbol.ticker, interval: scanInterval, lensDesc: `${lens.name}: ${lens.promptEmphasis}`, strategyDesc: activeStrategyDesc(), autoStrategy: autoStrategyOn(), strategyId: activeStrategyId(), coach: readActiveCoach(), journalPerf: formatJournalPerf(scanSymbol.ticker) ?? undefined } })
+    runPlan({ data: { ticker: scanSymbol.ticker, interval: scanInterval, lensDesc: `${lens.name}: ${lens.promptEmphasis}`, strategyDesc: activeStrategyDesc(), autoStrategy: autoStrategyOn(), strategyId: activeStrategyId(), tradeStyle: tradeStyle === "auto" ? undefined : tradeStyle, coach: readActiveCoach(), journalPerf: formatJournalPerf(scanSymbol.ticker) ?? undefined } })
       .then((plan) => {
         const r = plan as ScanResult;
         if (requestId !== activeScanRequestRef.current) return;
@@ -1838,6 +1844,20 @@ function Dashboard() {
               </div>
             )}
           </div>
+          <label className="inline-flex h-9 items-center gap-1.5 rounded-full bg-accent/60 px-3 text-xs font-medium text-foreground">
+            <Clock className="h-3.5 w-3.5 text-primary" />
+            <select
+              aria-label="Trade style"
+              value={tradeStyle}
+              onChange={(event) => setTradeStyle(event.target.value as "auto" | TradeStyle)}
+              className="bg-transparent outline-none dark:[color-scheme:dark]"
+            >
+              <option value="auto">Style: Auto</option>
+              <option value="scalp">Scalp</option>
+              <option value="intraday">Intraday</option>
+              <option value="swing">Swing</option>
+            </select>
+          </label>
         </div>
       </div>
 
