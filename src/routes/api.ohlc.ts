@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { corsHeadersFor, enforceOrigin, preflight } from "@/lib/api-security";
+import { tickerToYahoo } from "@/lib/yahoo-ohlc.server";
 
 
 export type OhlcBar = { time: number; open: number; high: number; low: number; close: number };
@@ -279,6 +280,7 @@ async function fetchBestAvailable(ticker: string, interval: string, prior?: Cach
   const oandaSymbol = tickerToOanda(ticker);
   const binanceSymbol = tickerToBinance(ticker);
   const tdSymbol = tickerToTwelveData(ticker);
+  const yahooSymbol = tickerToYahoo(ticker);
   const attempts: Array<() => Promise<CacheEntry>> = [];
 
   if (oandaSymbol && process.env.OANDA_API_KEY) {
