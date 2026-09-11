@@ -50,6 +50,8 @@ export type ReplayTotals = {
   aTrades: number;
   aWinRate: number | null;
   updatedAt: string | null;
+  validatedInstruments: number;
+  needsCalibration: string[];
 };
 
 const round = (n: number, d = 1) => Math.round(n * 10 ** d) / 10 ** d;
