@@ -9,7 +9,12 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { BACKTEST_SYMBOLS, TIMEFRAME_LABEL, type BacktestTimeframe } from "@/lib/backtest/catalog";
 import { listEngineReplay, refreshEngineReplay } from "@/lib/engine-replay.functions";
-import { replayTotals, type ReplayRow } from "@/lib/engine-replay.shared";
+import {
+  replayTotals,
+  replayStatus,
+  REPLAY_STATUS_LABEL,
+  type ReplayRow,
+} from "@/lib/engine-replay.shared";
 import { InfoTip } from "@/components/InfoTip";
 
 const TF: BacktestTimeframe = "60";
