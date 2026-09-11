@@ -123,7 +123,7 @@ function BrokerPage() {
           ...(trail.trim() === "" ? {} : { trailingStopDistance: Number(trail) }),
         },
       });
-      toast.success("Trade updated on OANDA");
+      toast.success("Trade updated on your broker");
       refresh();
     } catch (e) {
       toast.error((e as Error).message);
@@ -181,7 +181,7 @@ function BrokerPage() {
       <div className="rounded-xl border border-border/60 bg-card p-5 mb-6">
         <div className="text-sm font-semibold">Account used for Auto Trading</div>
         <p className="mt-1 text-xs text-muted-foreground">
-          Approved setups are placed and managed at your connected account, Capital.com first if you have one. Switch Auto Trading on from
+          Approved setups are placed and managed at your connected TradeLocker account. Switch Auto Trading on from
           the home page; sign out above at any time and nothing can be placed.
         </p>
       </div>
@@ -206,7 +206,7 @@ function BrokerPage() {
           </div>
           {status.usingDiscoveredAccount && (
             <p className="mt-3 text-xs text-muted-foreground">
-              Using the account authorized by your saved OANDA key because the saved account ID did not match.
+              Using the account authorized by your saved login because the saved account ID did not match.
             </p>
           )}
         </div>
@@ -245,7 +245,7 @@ function BrokerPage() {
         <div className="rounded-xl border border-border/60 bg-card p-5">
           <div className="text-sm font-semibold mb-3">Open positions</div>
           <p className="text-xs text-muted-foreground mb-3">
-            Adjust stop loss, take profit, or a trailing stop and it is sent straight to OANDA. You can also close part of a position to bank partials.
+            Adjust stop loss, take profit, or a trailing stop and it is sent straight to your broker. You can also close part of a position to bank partials.
           </p>
           <div className="space-y-2">
             {positions.map((p) => (
@@ -357,7 +357,7 @@ function PositionRow({
               disabled={saving}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 disabled:opacity-50"
             >
-              {saving ? "Saving..." : "Save changes to OANDA"}
+              {saving ? "Saving..." : "Save changes to your broker"}
             </button>
             <button
               onClick={() => {
