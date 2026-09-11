@@ -81,19 +81,9 @@ export const acceptInvite = createServerFn({ method: "POST" })
 export const listRoster = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data: conns, error } = await context.supabase
-      .from("trader_connections")
-      .select("user_a,user_b,created_at");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: profs, error } = await supabaseAdmin.rpc("get_social_roster", { _user_id: context.userId });
     if (error) throw new Error(error.message);
-    const ids = (conns ?? [])
-      .map((c) => (c.user_a === context.userId ? c.user_b : c.user_a))
-      .filter((x) => x && x !== context.userId);
-    if (ids.length === 0) return [];
-    const { data: profs, error: pErr } = await context.supabase
-      .from("profiles")
-      .select("id,display_name,email,wins,losses")
-      .in("id", ids);
-    if (pErr) throw new Error(pErr.message);
     return (profs ?? []).map((p) => {
       const total = (p.wins ?? 0) + (p.losses ?? 0);
       const winRate = total > 0 ? Math.round(((p.wins ?? 0) / total) * 100) : 0;

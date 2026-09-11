@@ -1720,6 +1720,10 @@ function TradeFormModal({
   // Multiple screenshots per trade: before/after, higher timeframe, execution.
   const [images, setImages] = useState<{ blob: Blob; url: string }[]>([]);
   const [imagesDirty, setImagesDirty] = useState(false);
+  const [reviewRequired, setReviewRequired] = useState(false);
+  const [reviewConfirmed, setReviewConfirmed] = useState(false);
+  const [extractionConfidence, setExtractionConfidence] = useState<number | null>(null);
+  const [isDraggingImage, setIsDraggingImage] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -1792,6 +1796,9 @@ function TradeFormModal({
       if (out.fees != null && Number.isFinite(out.fees)) setFees(String(Math.abs(out.fees)));
       if (out.notes) setNotes((prev) => (prev.trim() ? prev : out.notes!));
       const filled = out.entry != null || out.stop != null || out.takeProfit != null;
+      setExtractionConfidence(out.confidence ?? null);
+      setReviewRequired(true);
+      setReviewConfirmed(false);
       const conf = out.confidence != null ? ` Confidence ${Math.round(out.confidence * 100)}%.` : "";
       setAutofillNote(
         filled
@@ -1830,6 +1837,9 @@ function TradeFormModal({
       if (out.fees != null && Number.isFinite(out.fees)) setFees(String(Math.abs(out.fees)));
       setNotes((prev) => (prev.trim() ? `${prev.replace(/\s+$/, "")}\n${text}` : text));
       const filled = out.entry != null || out.stop != null || out.takeProfit != null;
+      setExtractionConfidence(out.confidence ?? null);
+      setReviewRequired(true);
+      setReviewConfirmed(false);
       const conf = out.confidence != null ? ` Confidence ${Math.round(out.confidence * 100)}%.` : "";
       setTextNote(
         filled
@@ -1970,7 +1980,13 @@ function TradeFormModal({
   const isLoss = previewPnl < 0;
 
   // Exit is optional: an open trade can be logged in one click.
-  const canSave = !!(symbol.trim() && entry !== "" && stop !== "" && date);
+  const canSave = !!(
+    symbol.trim()
+    && entry !== ""
+    && stop !== ""
+    && date
+    && (!reviewRequired || reviewConfirmed)
+  );
   const [saving, setSaving] = useState(false);
 
   const submit = async () => {
@@ -2018,7 +2034,7 @@ function TradeFormModal({
         </div>
 
         <div className="p-5 space-y-4">
-          <Field label="Upload image to capture numbers">
+          <Field label="Paste, drop, or upload a trade screenshot">
             <input
               ref={fileInputRef}
               type="file"
@@ -2046,11 +2062,19 @@ function TradeFormModal({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="w-full rounded-xl border border-dashed border-border/60 bg-background/40 px-3 py-5 text-sm text-muted-foreground hover:border-primary/40 hover:text-foreground transition flex flex-col items-center gap-1.5"
+              onDragEnter={(event) => { event.preventDefault(); setIsDraggingImage(true); }}
+              onDragOver={(event) => event.preventDefault()}
+              onDragLeave={() => setIsDraggingImage(false)}
+              onDrop={(event) => {
+                event.preventDefault();
+                setIsDraggingImage(false);
+                void handlePickFiles(event.dataTransfer.files);
+              }}
+              className={`w-full rounded-xl border border-dashed px-3 py-5 text-sm transition flex flex-col items-center gap-1.5 ${isDraggingImage ? "border-primary bg-primary/10 text-foreground" : "border-border/60 bg-background/40 text-muted-foreground hover:border-primary/40 hover:text-foreground"}`}
             >
               <Upload className="h-4 w-4" />
-              <span>{images.length ? "Add another screenshot" : "Upload a TradingView screenshot"}</span>
-              <span className="text-[10px]">We read entry, stop, target and size off the image. Stays on this device.</span>
+              <span>{images.length ? "Add another screenshot" : "Paste, drop, or choose screenshots"}</span>
+              <span className="text-[10px]">Broker positions and marked-up charts are supported, up to five images.</span>
             </button>
             {images.length > 0 && (
               <div className="mt-2">
@@ -2101,6 +2125,50 @@ function TradeFormModal({
               {textNote && <div className="mt-1.5 text-[11px] text-muted-foreground">{textNote}</div>}
             </div>
           </Field>
+
+          {reviewRequired && (
+            <section className="rounded-xl border border-primary/35 bg-primary/5 p-4" aria-label="Review extracted trade">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground">Review extracted trade</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Correct anything that is wrong or missing before saving. Blank values were not guessed.
+                  </p>
+                </div>
+                <span className={`rounded-md border px-2 py-1 text-[10px] font-semibold ${extractionConfidence != null && extractionConfidence >= 0.75 ? "border-bull/30 bg-bull/10 text-bull" : "border-amber-500/35 bg-amber-500/10 text-amber-500"}`}>
+                  {extractionConfidence == null
+                    ? "Confidence unavailable"
+                    : `${Math.round(extractionConfidence * 100)}% extraction confidence`}
+                </span>
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
+                {[
+                  ["Instrument", symbol || "Check"],
+                  ["Direction", side || "Check"],
+                  ["Entry", entry || "Missing"],
+                  ["Exit", exit || "Open / missing"],
+                  ["Stop", stop || "Missing"],
+                  ["Target", takeProfit || "Missing"],
+                  ["Size", size || "Missing"],
+                  ["Net P&L", reportedPnl || "Missing"],
+                ].map(([label, value]) => (
+                  <div key={label} className="rounded-lg border border-border/60 bg-background/60 p-2">
+                    <div className="text-[10px] text-muted-foreground">{label}</div>
+                    <div className={value === "Missing" || value === "Check" ? "font-semibold text-amber-500" : "font-semibold text-foreground"}>{value}</div>
+                  </div>
+                ))}
+              </div>
+              <label className="mt-3 flex cursor-pointer items-start gap-2 rounded-lg border border-border/60 bg-background/40 p-3 text-xs text-foreground">
+                <input
+                  type="checkbox"
+                  checked={reviewConfirmed}
+                  onChange={(event) => setReviewConfirmed(event.target.checked)}
+                  className="mt-0.5 h-4 w-4 accent-primary"
+                />
+                <span>I reviewed the extracted values and corrected anything uncertain.</span>
+              </label>
+            </section>
+          )}
 
           <div className="grid grid-cols-2 gap-3">
             <Field label="Date">

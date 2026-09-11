@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +21,7 @@ import { InstrumentProfilePanel } from "@/components/admin/InstrumentProfilePane
 import EngineReplayPanel from "@/components/EngineReplayPanel";
 
 import { PlanDebugPanel } from "@/components/admin/PlanDebugPanel";
+import { ScannerGovernancePanel } from "@/components/admin/ScannerGovernancePanel";
 
 
 
@@ -29,13 +30,14 @@ export const Route = createFileRoute("/_app/admin")({
   component: AdminPage,
 });
 
-type AdminTab = "profit" | "ai" | "image" | "people" | "checks";
+type AdminTab = "profit" | "ai" | "image" | "people" | "methodology" | "checks";
 
 const ADMIN_TABS: { value: AdminTab; label: string }[] = [
   { value: "profit", label: "Profit" },
   { value: "ai", label: "AI usage" },
   { value: "image", label: "Image usage" },
   { value: "people", label: "People and settings" },
+  { value: "methodology", label: "Scanner methodology" },
 ];
 
 // Only admins get the QA checklist tab.
@@ -121,6 +123,7 @@ function AdminPage() {
 
 
   useEffect(() => {
+    if (profileLoading || !isAdmin) return;
     (async () => {
       try {
         const u = ((await adminUsersOverview()) ?? []) as UserRow[];
@@ -139,10 +142,11 @@ function AdminPage() {
         setErr(e instanceof Error ? e.message : "Failed to load");
       }
     })();
-  }, []);
+  }, [isAdmin, profileLoading]);
 
   // AI spend for the selected money window (defaults to month to date).
   useEffect(() => {
+    if (profileLoading || !isAdmin) return;
     let cancelled = false;
     aiCostSummary({ data: { days: profitRange.days } })
       .then((res) => {
@@ -152,7 +156,7 @@ function AdminPage() {
       })
       .catch(() => { if (!cancelled) setAiSpendMonth(null); });
     return () => { cancelled = true; };
-  }, [profitRange.days]);
+  }, [isAdmin, profileLoading, profitRange.days]);
 
 
   if (profileLoading) {
@@ -163,7 +167,7 @@ function AdminPage() {
     );
   }
 
-  // Admin gate temporarily disabled - panel visible to all users for testing.
+  if (!isAdmin) return <Navigate to="/dashboard" replace />;
 
 
   const totalUsers = users?.length ?? 0;
@@ -249,6 +253,8 @@ Live from Stripe, {totalUsers} accounts
       )}
 
       {tab === "image" && <ImageUsagePanel />}
+
+      {tab === "methodology" && <ScannerGovernancePanel />}
 
       {tab === "checks" && isAdmin && (
         <>

@@ -568,6 +568,45 @@ export type Database = {
         }
         Relationships: []
       }
+      command_board_items: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          owner: string
+          phase: string
+          sort_order: number
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          owner: string
+          phase: string
+          sort_order?: number
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          owner?: string
+          phase?: string
+          sort_order?: number
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -1443,6 +1482,90 @@ export type Database = {
         }
         Relationships: []
       }
+      scanner_expert_reviews: {
+        Row: {
+          corrected_levels: Json
+          created_at: string
+          decision: string
+          id: string
+          methodology_version: string
+          note: string | null
+          original_decision: Json
+          promoted_to_fixture: boolean
+          replay_case: Json
+          reviewer_id: string
+          symbol: string
+          timeframe: string
+          updated_at: string
+        }
+        Insert: {
+          corrected_levels?: Json
+          created_at?: string
+          decision: string
+          id?: string
+          methodology_version: string
+          note?: string | null
+          original_decision?: Json
+          promoted_to_fixture?: boolean
+          replay_case?: Json
+          reviewer_id: string
+          symbol: string
+          timeframe: string
+          updated_at?: string
+        }
+        Update: {
+          corrected_levels?: Json
+          created_at?: string
+          decision?: string
+          id?: string
+          methodology_version?: string
+          note?: string | null
+          original_decision?: Json
+          promoted_to_fixture?: boolean
+          replay_case?: Json
+          reviewer_id?: string
+          symbol?: string
+          timeframe?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      scanner_methodology_versions: {
+        Row: {
+          activated_at: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          rules: Json
+          status: string
+          summary: string
+          updated_at: string
+          version: string
+        }
+        Insert: {
+          activated_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          rules?: Json
+          status?: string
+          summary: string
+          updated_at?: string
+          version: string
+        }
+        Update: {
+          activated_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          rules?: Json
+          status?: string
+          summary?: string
+          updated_at?: string
+          version?: string
+        }
+        Relationships: []
+      }
       signal_feed: {
         Row: {
           action: string
@@ -1498,6 +1621,7 @@ export type Database = {
           grade: string
           htf_bias: string | null
           id: string
+          methodology_version: string
           planned_r: number | null
           realized_r: number | null
           resolved_at: string | null
@@ -1520,6 +1644,7 @@ export type Database = {
           grade: string
           htf_bias?: string | null
           id?: string
+          methodology_version?: string
           planned_r?: number | null
           realized_r?: number | null
           resolved_at?: string | null
@@ -1542,6 +1667,7 @@ export type Database = {
           grade?: string
           htf_bias?: string | null
           id?: string
+          methodology_version?: string
           planned_r?: number | null
           realized_r?: number | null
           resolved_at?: string | null
@@ -2022,6 +2148,16 @@ export type Database = {
           trades: number
           updated_at: string
           win_rate: number
+          wins: number
+        }[]
+      }
+      get_social_roster: {
+        Args: { _user_id: string }
+        Returns: {
+          connected_at: string
+          display_name: string
+          id: string
+          losses: number
           wins: number
         }[]
       }
