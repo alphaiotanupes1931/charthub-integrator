@@ -209,6 +209,7 @@ export const runResearchPlan = createServerFn({ method: "POST" })
         data.coach,
         perfDesc || undefined,
         scoreDesc || undefined,
+        tradeStyle,
       );
       return { memo, plan };
     });

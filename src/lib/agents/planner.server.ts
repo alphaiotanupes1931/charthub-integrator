@@ -5,6 +5,7 @@ import { generateText, Output, NoObjectGeneratedError } from "ai";
 import { z } from "zod";
 import { createAiGatewayProvider } from "@/lib/ai-gateway.server";
 import type { MarketSnapshot, OrderFlow, ResearchMemo, TradePlan } from "./types";
+import type { TradeStyle } from "@/lib/tradeTiming";
 import { formatOrderFlow } from "./order-flow.server";
 import { computeOrderBlocks } from "@/lib/orderBlocks";
 import { computeBias } from "./bias-adapter.server";
@@ -743,19 +744,37 @@ export function entryTriggerRead(
   bias: "Long" | "Short" | "Neutral",
   snap: MarketSnapshot,
   atr: number,
+  tradeStyle: TradeStyle = "intraday",
 ): EntryTriggerRead {
   if (bias === "Neutral") return { triggered: false, level: null, rule: null };
   const wanted = bias === "Long" ? "bullish" : "bearish";
   const m = snap.mtf;
   const m15 = m?.m15?.confirmation;
   const h1Break = m?.h1?.structureBreak;
-  if (m15 === wanted || h1Break === wanted) {
+  const lowerTimeframeConfirmed = (candles: MarketSnapshot["candles"], direction: typeof wanted) => {
+    if (candles.length < 4) return false;
+    const closed = candles.slice(-4);
+    const first = closed[0];
+    const last = closed[closed.length - 1];
+    if (!first || !last) return false;
+    return direction === "bullish"
+      ? last.close > first.high && last.close > last.open
+      : last.close < first.low && last.close < last.open;
+  };
+  const styleConfirmed = tradeStyle === "scalp"
+    ? lowerTimeframeConfirmed(snap.candles5m ?? snap.candles15m ?? [], wanted)
+    : tradeStyle === "swing"
+      ? h1Break === wanted
+      : m15 === wanted;
+  if (styleConfirmed) {
     return {
       triggered: true,
       level: null,
-      rule: m15 === wanted
-        ? "Trigger met: the 15m has confirmed in the direction of the setup."
-        : "Trigger met: the 1H has broken structure in the direction of the setup.",
+      rule: tradeStyle === "scalp"
+        ? "Trigger met: the 5m has displaced in the direction of the scalp."
+        : tradeStyle === "swing"
+          ? "Trigger met: the 1H has broken structure in the direction of the swing."
+          : "Trigger met: the 15m has confirmed in the direction of the intraday setup.",
     };
   }
   const c = Array.isArray(snap.candles) ? snap.candles : [];
@@ -770,7 +789,7 @@ export function entryTriggerRead(
   return {
     triggered: false,
     level: Number.isFinite(level as number) && (level as number) > 0 ? (level as number) : null,
-    rule: `Not triggered yet: neither the 15m nor the 1H has turned ${wanted}. The plan only becomes valid once price closes ${dir} ${
+    rule: `Not triggered yet: the ${tradeStyle === "scalp" ? "5m" : tradeStyle === "swing" ? "1H" : "15m"} has not turned ${wanted}. The plan only becomes valid once price closes ${dir} ${
       level && Number.isFinite(level) ? level : "the last swing"
     } on the ${snap.interval} chart. Taking it before that is early.`,
   };
@@ -878,8 +897,7 @@ export function findEntryAnchor(
  * levels price has to fight through next, and without them the only structure
  * the planner can see is 4H shelves, which are always far away.
  */
-export function swingLevels(snap: MarketSnapshot, want: "high" | "low"): number[] {
-  const c = snap.candles;
+function swingLevelsFromCandles(c: MarketSnapshot["candles"], want: "high" | "low"): number[] {
   if (c.length < 10) return [];
   const out: number[] = [];
   const from = Math.max(2, c.length - 120);
@@ -896,18 +914,32 @@ export function swingLevels(snap: MarketSnapshot, want: "high" | "low"): number[
   return out;
 }
 
+export function swingLevels(snap: MarketSnapshot, want: "high" | "low"): number[] {
+  return swingLevelsFromCandles(snap.candles, want);
+}
+
 /**
  * Every level price must trade through beyond entry, nearest first. Targets are
  * decided by market structure; R multiples only describe the result and are a
  * last resort when an instrument has no mapped structure at all.
  */
-export function findTargetLevels(bias: "Long" | "Short", entry: number, snap: MarketSnapshot): number[] {
+export function findTargetLevels(
+  bias: "Long" | "Short",
+  entry: number,
+  snap: MarketSnapshot,
+  tradeStyle: TradeStyle = "intraday",
+): number[] {
   const m = snap.mtf;
   const s = snap.stats;
+  const executionCandles = tradeStyle === "scalp"
+    ? snap.candles5m ?? snap.candles15m ?? snap.candles
+    : tradeStyle === "swing"
+      ? snap.candles1h ?? snap.candles
+      : snap.candles15m ?? snap.candles;
   const pool: number[] = bias === "Long"
     ? [
         // Near-term structure on the timeframe being scanned.
-        ...swingLevels(snap, "high"),
+        ...swingLevelsFromCandles(executionCandles, "high"),
         s.high20, s.high50,
         // Higher-timeframe shelves, liquidity and the near edge of supply.
         ...(m ? m.h4.keyLevels.resistance : []),
@@ -917,7 +949,7 @@ export function findTargetLevels(bias: "Long" | "Short", entry: number, snap: Ma
         ...(m ? m.h1.fvg.bear.map((z) => Math.min(z[0], z[1])) : []),
       ]
     : [
-        ...swingLevels(snap, "low"),
+        ...swingLevelsFromCandles(executionCandles, "low"),
         s.low20, s.low50,
         ...(m ? m.h4.keyLevels.support : []),
         ...(m ? m.h1.liquidity.sellside : []),
@@ -943,7 +975,10 @@ export function findTargetLevels(bias: "Long" | "Short", entry: number, snap: Ma
  * scan timeframe. TP1 beyond this is why targets "never get hit": a 4H
  * resistance shelf can sit 4x ATR away and never print inside the hold window.
  */
-export function reachAtr(interval: string): number {
+export function reachAtr(interval: string, tradeStyle?: TradeStyle): number {
+  if (tradeStyle === "scalp") return 1.15;
+  if (tradeStyle === "intraday") return 1.6;
+  if (tradeStyle === "swing") return 3.5;
   switch (interval) {
     case "1":
     case "5":
@@ -966,6 +1001,7 @@ function sanitizePlan(
   forcedBias?: typeof BIASES[number],
   /** Minimum stop distance in ATR multiples. Widened in thin sessions. */
   stopFloorAtr = 0.6,
+  tradeStyle: TradeStyle = "intraday",
 ): RawPlan {
 
   const last = snap.lastPrice;
@@ -982,7 +1018,7 @@ function sanitizePlan(
     // multiples still get replaced by real structure.
     return sanitizePlan(
       systematicPlan(snap, memo, "Model returned invalid numbers; using systematic plan.", forcedBias),
-      snap, memo, forcedBias, stopFloorAtr,
+      snap, memo, forcedBias, stopFloorAtr, tradeStyle,
     );
 
   }
@@ -1041,11 +1077,11 @@ function sanitizePlan(
   // beyond it. R:R is only reported, never used to place the target. A flat R
   // multiple is the last resort for instruments with no mapped structure.
   const dir = bias === "Long" ? 1 : -1;
-  const levels = findTargetLevels(bias, entry, snap);
-  const reach = atr * reachAtr(snap.interval);
+  const levels = findTargetLevels(bias, entry, snap, tradeStyle);
+  const reach = atr * reachAtr(snap.interval, tradeStyle);
   // Book just in front of the level, not at it, so the reaction does not eat the fill.
   const skim = Math.max(atr * 0.08, last * 0.0002);
-  const minDist = stopDist * 1.0;
+  const minDist = stopDist * (tradeStyle === "scalp" ? 0.8 : tradeStyle === "swing" ? 1.2 : 1.0);
 
   const tp1Level = levels.find((l) => Math.abs(l - entry) - skim >= minDist);
   let targetNote: string;
@@ -1195,6 +1231,7 @@ export async function runPlanner(
   coach?: string,
   perfDesc?: string,
   scoreDesc?: string,
+  tradeStyle: TradeStyle = "intraday",
 ): Promise<TradePlan> {
 
   const provider = createAiGatewayProvider(apiKey);
@@ -1346,7 +1383,7 @@ export async function runPlanner(
     resolved.bias !== "Neutral" && normalizeBias(plan.bias) !== resolved.bias
       ? systematicPlan(snap, memo, `Direction taken from measured structure (${resolved.reason});`, resolved.bias)
       : plan;
-  finalPlan = sanitizePlan(finalPlan, snap, memo, resolved.bias, stopFloorAtr);
+  finalPlan = sanitizePlan(finalPlan, snap, memo, resolved.bias, stopFloorAtr, tradeStyle);
   // Last guard: if anything still points the wrong way, rebuild from structure.
   if (resolved.bias !== "Neutral") {
     const wrongStop = resolved.bias === "Long"
@@ -1362,6 +1399,7 @@ export async function runPlanner(
         memo,
         resolved.bias,
         stopFloorAtr,
+        tradeStyle,
       );
     }
   }
@@ -1523,6 +1561,7 @@ export async function runPlanner(
     bias,
     snap,
     Math.max(snap.stats.atr14 || Math.abs(snap.lastPrice) * 0.002, Math.abs(snap.lastPrice) * 0.0005),
+    tradeStyle,
   );
   const setupFlags = [
     setupRead.type === "fade" ? "COUNTER_TREND_FADE" : null,
@@ -1632,6 +1671,7 @@ export async function runPlanner(
           distanceAtr: selectedEntryZone.distanceAtr ?? 0,
         }
       : undefined,
+    tradeStyle,
   };
 
 }
