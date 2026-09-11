@@ -66,4 +66,24 @@ describe("entry depth", () => {
     } as Partial<MarketSnapshot>);
     expect(findEntryAnchor("Long", 3418, 10, s)).toBeNull();
   });
+
+  it("chooses the higher-quality 1H order block over a slightly nearer weak block", () => {
+    const base = snap();
+    const s = snap({
+      mtf: {
+        ...base.mtf!,
+        h1: {
+          ...base.mtf!.h1,
+          orderBlocks: { bull: [[3408, 3412], [3405, 3410]], bear: [] },
+          orderBlockDetails: [
+            { kind: "bullish", bot: 3408, top: 3412, time: 1, mitigated: true, mitigations: 2, strength: 0.7, breakLevel: 3420, quality: 35, qualityLabel: "low", aligned: true, liquiditySweep: false, distanceAtr: 0.6 },
+            { kind: "bullish", bot: 3405, top: 3410, time: 2, mitigated: false, mitigations: 0, strength: 1.8, breakLevel: 3422, quality: 91, qualityLabel: "high", aligned: true, liquiditySweep: true, distanceAtr: 0.8 },
+          ],
+        },
+      },
+    });
+    const a = findEntryAnchor("Long", 3418, 10, s);
+    expect(a?.entry).toBe(3410);
+    expect(a?.qualityLabel).toBe("high");
+  });
 });

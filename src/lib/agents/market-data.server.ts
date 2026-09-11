@@ -4,6 +4,7 @@
 
 import type { Candle, MarketSnapshot, MtfContext, TimeframeRead } from "./types";
 import { computeOrderFlow } from "./order-flow.server";
+import { computeOrderBlocks, rankOrderBlocks } from "@/lib/orderBlocks";
 
 // Canonical instrument keys the app speaks. Provider-specific symbols live in
 // the OANDA / BINANCE / TWELVE_DATA maps below.
@@ -423,7 +424,7 @@ function h4Analysis(candles: Candle[]): MtfContext["h4"] {
   };
 }
 
-function h1Analysis(candles: Candle[]): MtfContext["h1"] {
+function h1Analysis(candles: Candle[], h4Direction: MtfContext["h4"]["direction"]): MtfContext["h1"] {
   const cisd = detectCisd(candles);
   const structureBreak = cisd.state;
 
@@ -436,20 +437,6 @@ function h1Analysis(candles: Candle[]): MtfContext["h1"] {
     const lastDir = last3[last3.length - 1].close - last3[0].close;
     if (priorDir < 0 && lastDir > 0 && Math.abs(lastDir) > Math.abs(priorDir) * 0.4) reversal = "bullish";
     else if (priorDir > 0 && lastDir < 0 && Math.abs(lastDir) > Math.abs(priorDir) * 0.4) reversal = "bearish";
-  }
-
-  // Order blocks: last opposing candle before an impulse that breaks structure.
-  const bullOB: [number, number][] = [];
-  const bearOB: [number, number][] = [];
-  for (let i = 2; i < candles.length - 1; i++) {
-    const c = candles[i];
-    const next = candles[i + 1];
-    const isDown = c.close < c.open;
-    const isUp = c.close > c.open;
-    const impUp = next.close > next.open && next.close > c.high;
-    const impDn = next.close < next.open && next.close < c.low;
-    if (isDown && impUp) bullOB.push([c.low, c.high]);
-    if (isUp && impDn) bearOB.push([c.low, c.high]);
   }
 
   // FVG: 3-candle imbalance.
@@ -476,10 +463,35 @@ function h1Analysis(candles: Candle[]): MtfContext["h1"] {
     }
   }
 
+  const last = candles.at(-1)?.close ?? 0;
+  const atr1h = atr(candles) || Math.max(last * 0.002, 1e-9);
+  const rankedBlocks = rankOrderBlocks(computeOrderBlocks(candles, { max: 12 }), {
+    bias: h4Direction === "bearish" ? "bearish" : "bullish",
+    price: last,
+    atr: atr1h,
+    h4Direction,
+    sweptLiquidity: h4Direction === "bearish" ? buyside : sellside,
+  });
+  const allBlocks = computeOrderBlocks(candles, { max: 12 });
+  const details = [
+    ...rankedBlocks,
+    ...allBlocks.filter((block) => !rankedBlocks.some((ranked) => ranked.time === block.time && ranked.kind === block.kind)).map((block) => ({
+      ...block,
+      quality: Math.round(Math.min(100, (block.mitigations === 0 ? 38 : 10) + Math.min(28, block.strength * 14))),
+      qualityLabel: "low" as const,
+      aligned: false,
+      liquiditySweep: false,
+      distanceAtr: Number((Math.abs(last - (block.kind === "bullish" ? block.top : block.bot)) / atr1h).toFixed(2)),
+    })),
+  ];
+  const bullOB = details.filter((block) => block.kind === "bullish").map((block) => [block.bot, block.top] as [number, number]);
+  const bearOB = details.filter((block) => block.kind === "bearish").map((block) => [block.bot, block.top] as [number, number]);
+
   return {
     structureBreak,
     reversal,
-    orderBlocks: { bull: bullOB.slice(-2), bear: bearOB.slice(-2) },
+    orderBlocks: { bull: bullOB.slice(0, 4), bear: bearOB.slice(0, 4) },
+    orderBlockDetails: details,
     fvg: { bull: bullFvg.slice(-2), bear: bearFvg.slice(-2) },
     liquidity: { buyside: buyside.slice(-3), sellside: sellside.slice(-3) },
   };
@@ -625,14 +637,16 @@ async function buildMtf(
   ticker: string,
   primaryInterval: string,
   primaryCandles: Candle[],
-): Promise<{ mtf: MtfContext; candles4h: Candle[] } | undefined> {
+): Promise<{ mtf: MtfContext; candles4h: Candle[]; candles1h: Candle[]; candles15m: Candle[]; candles5m: Candle[] } | undefined> {
   const useH4 = primaryInterval === "240" ? primaryCandles : await loadCandlesSafe(ticker, "240");
   const useH1 = primaryInterval === "60"  ? primaryCandles : await loadCandlesSafe(ticker, "60");
   const use15 = primaryInterval === "15"  ? primaryCandles : await loadCandlesSafe(ticker, "15");
+  const use5 = primaryInterval === "5" ? primaryCandles : await loadCandlesSafe(ticker, "5");
   if (useH4.length < 20 || useH1.length < 20 || use15.length < 10) return undefined;
-  const base = { h4: h4Analysis(useH4), h1: h1Analysis(useH1), m15: m15Confirmation(use15) };
+  const h4 = h4Analysis(useH4);
+  const base = { h4, h1: h1Analysis(useH1, h4.direction), m15: m15Confirmation(use15) };
   const ladder = await getTimeframeLadder(ticker).catch(() => [] as TimeframeRead[]);
-  return { mtf: { ...base, alignment: computeAlignment(base), ladder }, candles4h: useH4 };
+  return { mtf: { ...base, alignment: computeAlignment(base), ladder }, candles4h: useH4, candles1h: useH1, candles15m: use15, candles5m: use5 };
 }
 
 
@@ -707,5 +721,8 @@ export async function getSnapshot(rawTicker: string, interval: string): Promise<
     orderFlow: computeOrderFlow(candles),
     candles4h,
     atr4h: candles4h.length > 1 ? atr(candles4h) : undefined,
+    candles1h: mtfRead?.candles1h,
+    candles15m: mtfRead?.candles15m,
+    candles5m: mtfRead?.candles5m,
   };
 }

@@ -9,9 +9,12 @@
  */
 
 export type AssetClass = "crypto" | "fx" | "metal" | "energy" | "index" | "equity";
+export type TradeStyle = "scalp" | "intraday" | "swing";
 
 export type TradeTiming = {
   assetClass: AssetClass;
+  /** Recommended holding style. Traders may override this before scanning. */
+  tradeStyle: TradeStyle;
   /** Session the entry window belongs to. */
   session: string;
   /** Whether the entry window is open right now. */
@@ -47,6 +50,12 @@ type Input = {
   tp1?: number;
   tp2?: number;
   now?: Date;
+  /** Optional trader override; Auto leaves this undefined. */
+  tradeStyle?: TradeStyle;
+  /** Current volatility as ATR percent of price. */
+  atrPct?: number;
+  /** Whether the Daily/4H/1H cascade is aligned. */
+  aligned?: boolean;
 };
 
 export function classifyAsset(symbol?: string): AssetClass {
@@ -120,7 +129,18 @@ function killzonesFor(cls: AssetClass): Window[] {
   ];
 }
 
-function holdFor(interval?: string): { hours: number; label: string } {
+export function classifyTradeStyle(input: Pick<Input, "interval" | "atrPct" | "aligned" | "tradeStyle">): TradeStyle {
+  if (input.tradeStyle) return input.tradeStyle;
+  const n = Number(input.interval);
+  if (!Number.isFinite(n) || n >= 240) return "swing";
+  if (n <= 5 || ((input.atrPct ?? 0) >= 0.8 && n <= 15)) return "scalp";
+  if (n <= 60) return "intraday";
+  return input.aligned ? "swing" : "intraday";
+}
+
+function holdFor(interval: string | undefined, style: TradeStyle): { hours: number; label: string } {
+  if (style === "scalp") return { hours: 2, label: "15 minutes to 2 hours" };
+  if (style === "swing") return { hours: 24 * 5, label: "1 to 5 days" };
   switch (interval) {
     case "1":
     case "3":
@@ -178,7 +198,8 @@ export function computeTiming(input: Input): TradeTiming | null {
     enterUntil = plusHours(enterFrom, upcoming.z.end - upcoming.z.start);
   }
 
-  const hold = holdFor(interval);
+  const tradeStyle = classifyTradeStyle(input);
+  const hold = holdFor(interval, tradeStyle);
   const cancelIfUnfilled = enterUntil;
   const exitBy = plusHours(enterUntil, hold.hours);
 
@@ -215,6 +236,7 @@ export function computeTiming(input: Input): TradeTiming | null {
 
   return {
     assetClass: cls,
+    tradeStyle,
     session,
     live: Boolean(inside),
     enterFrom: enterFrom.toISOString(),

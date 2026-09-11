@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Json } from "@/integrations/supabase/types";
 
 async function assertAdmin(userId: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -11,6 +12,94 @@ async function assertAdmin(userId: string) {
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Forbidden");
 }
+
+const ReviewInput = z.object({
+  id: z.string().uuid().optional(),
+  methodologyVersion: z.string().min(1).max(40),
+  symbol: z.string().min(1).max(24),
+  timeframe: z.string().min(1).max(8),
+  replayCase: z.record(z.string(), z.unknown()).default({}),
+  originalDecision: z.record(z.string(), z.unknown()).default({}),
+  decision: z.enum(["approved", "rejected", "needs_changes"]),
+  correctedLevels: z.record(z.string(), z.unknown()).default({}),
+  note: z.string().max(4000).nullable().optional(),
+  promotedToFixture: z.boolean().default(false),
+});
+
+const BoardInput = z.object({
+  id: z.string().uuid().optional(),
+  phase: z.string().min(1).max(80),
+  owner: z.string().min(1).max(120),
+  title: z.string().min(1).max(240),
+  status: z.enum(["planned", "building", "testing", "approved", "blocked"]),
+  notes: z.string().max(2000).nullable().optional(),
+  sortOrder: z.number().int().min(0).max(10000).default(0),
+});
+
+/** Admin-only methodology, expert decisions, and delivery board. */
+export const adminScannerGovernance = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const [methodology, reviews, board] = await Promise.all([
+      supabaseAdmin.from("scanner_methodology_versions").select("*").order("created_at", { ascending: false }),
+      supabaseAdmin.from("scanner_expert_reviews").select("*").order("created_at", { ascending: false }),
+      supabaseAdmin.from("command_board_items").select("*").order("sort_order").order("created_at", { ascending: false }),
+    ]);
+    const error = methodology.error ?? reviews.error ?? board.error;
+    if (error) throw new Error(error.message);
+    return { methodology: methodology.data ?? [], reviews: reviews.data ?? [], board: board.data ?? [] };
+  });
+
+export const adminSaveScannerReview = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => ReviewInput.parse(raw))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const row = {
+      reviewer_id: context.userId,
+      methodology_version: data.methodologyVersion,
+      symbol: data.symbol.toUpperCase(),
+      timeframe: data.timeframe,
+      replay_case: data.replayCase as Json,
+      original_decision: data.originalDecision as Json,
+      decision: data.decision,
+      corrected_levels: data.correctedLevels as Json,
+      note: data.note?.trim() || null,
+      promoted_to_fixture: data.promotedToFixture,
+    };
+    const query = data.id
+      ? supabaseAdmin.from("scanner_expert_reviews").update(row).eq("id", data.id)
+      : supabaseAdmin.from("scanner_expert_reviews").insert(row);
+    const { data: saved, error } = await query.select("*").single();
+    if (error) throw new Error(error.message);
+    return saved;
+  });
+
+export const adminSaveCommandBoardItem = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => BoardInput.parse(raw))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const row = {
+      phase: data.phase,
+      owner: data.owner,
+      title: data.title,
+      status: data.status,
+      notes: data.notes?.trim() || null,
+      sort_order: data.sortOrder,
+      created_by: context.userId,
+    };
+    const query = data.id
+      ? supabaseAdmin.from("command_board_items").update(row).eq("id", data.id)
+      : supabaseAdmin.from("command_board_items").insert(row);
+    const { data: saved, error } = await query.select("*").single();
+    if (error) throw new Error(error.message);
+    return saved;
+  });
 
 export const adminReferralStats = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
