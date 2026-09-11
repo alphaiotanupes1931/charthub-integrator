@@ -465,25 +465,21 @@ function h1Analysis(candles: Candle[], h4Direction: MtfContext["h4"]["direction"
 
   const last = candles.at(-1)?.close ?? 0;
   const atr1h = atr(candles) || Math.max(last * 0.002, 1e-9);
-  const rankedBlocks = rankOrderBlocks(computeOrderBlocks(candles, { max: 12 }), {
-    bias: h4Direction === "bearish" ? "bearish" : "bullish",
-    price: last,
-    atr: atr1h,
-    h4Direction,
-    sweptLiquidity: h4Direction === "bearish" ? buyside : sellside,
-  });
-  const allBlocks = computeOrderBlocks(candles, { max: 12 });
-  const details = [
-    ...rankedBlocks,
-    ...allBlocks.filter((block) => !rankedBlocks.some((ranked) => ranked.time === block.time && ranked.kind === block.kind)).map((block) => ({
-      ...block,
-      quality: Math.round(Math.min(100, (block.mitigations === 0 ? 38 : 10) + Math.min(28, block.strength * 14))),
-      qualityLabel: "low" as const,
-      aligned: false,
-      liquiditySweep: false,
-      distanceAtr: Number((Math.abs(last - (block.kind === "bullish" ? block.top : block.bot)) / atr1h).toFixed(2)),
-    })),
-  ];
+  // Score both directions properly. Scoring only the 4H-aligned side and
+  // hard-labelling everything else "low" meant a short while the 4H was
+  // neutral or up could never reach A, however fresh the 1H block was.
+  const rawBlocks = computeOrderBlocks(candles, { max: 12 });
+  const rankFor = (bias: "bullish" | "bearish") =>
+    rankOrderBlocks(rawBlocks, {
+      bias,
+      price: last,
+      atr: atr1h,
+      h4Direction,
+      sweptLiquidity: bias === "bearish" ? buyside : sellside,
+    });
+  const details = [...rankFor("bullish"), ...rankFor("bearish")].sort(
+    (a, b) => b.quality - a.quality || a.distanceAtr - b.distanceAtr || b.time - a.time,
+  );
   const bullOB = details.filter((block) => block.kind === "bullish").map((block) => [block.bot, block.top] as [number, number]);
   const bearOB = details.filter((block) => block.kind === "bearish").map((block) => [block.bot, block.top] as [number, number]);
 
@@ -660,6 +656,14 @@ export async function getSnapshot(rawTicker: string, interval: string): Promise<
     { source: "oanda", load: () => fromOanda(ticker, interval) },
     { source: "binance", load: () => fromBinance(ticker, interval) },
     { source: "twelvedata", load: () => fromTwelveData(ticker, interval) },
+    // Yahoo backstop so indices/energy scans survive an OANDA 401.
+    {
+      source: "yahoo",
+      load: async () => {
+        const { fetchYahooBars } = await import("@/lib/yahoo-ohlc.server");
+        return fetchYahooBars(ticker, interval);
+      },
+    },
   ];
   for (const provider of loaders) {
     try {
