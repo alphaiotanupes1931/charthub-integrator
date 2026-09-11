@@ -239,7 +239,7 @@ export async function tradeLockerPositions(s: TLTradeSession): Promise<TLPositio
         const qty = Number(row[4]);
         const price = Number(row[5]);
         const short = String(row[3] ?? "").toLowerCase().startsWith("s");
-        return {
+        const out: TLPositionRow = {
           id: String(row[0] ?? ""),
           instrument: String(row[1] ?? ""),
           units: Number.isFinite(qty) ? (short ? -qty : qty) : 0,
@@ -248,8 +248,9 @@ export async function tradeLockerPositions(s: TLTradeSession): Promise<TLPositio
           stopLoss: null,
           takeProfit: null,
         };
+        return out;
       })
-      .filter((r): r is TLPositionRow => !!r);
+      .filter((r): r is TLPositionRow => r !== null);
   } catch {
     return [];
   }
