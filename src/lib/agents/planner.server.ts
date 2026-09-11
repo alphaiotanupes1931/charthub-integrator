@@ -389,9 +389,15 @@ export function timeFrameComboGate(
   const m15Ok = m15 === wanted;
 
   if (m15 === opposite) {
+    // A 15m break against an intact 4H trend, with an aligned zone to trade
+    // back into, is the pullback itself. That is the entry this method is built
+    // on, so it waits for confirmation at B rather than being written off at C.
+    const pullback = h4Ok && h1Ok && isAlignedPullback(bias, snap);
     return {
-      cap: "C",
-      reason: `Time Frame Combo step 3 failed: the 15m break is ${m15}, against this ${bias.toLowerCase()}. Wait for a 15m BOS/ChoCH in your direction before executing on the 5m.`,
+      cap: pullback ? "B" : "C",
+      reason: pullback
+        ? `Time Frame Combo step 3 pending: the 15m is breaking ${m15}, which is the pullback into your ${bias.toLowerCase()} zone while the 4H still reads ${h4Dir}/${h4Trend}. Held at B until the 15m turns ${wanted} - that turn is your execution trigger.`
+        : `Time Frame Combo step 3 failed: the 15m break is ${m15}, against this ${bias.toLowerCase()}. Wait for a 15m BOS/ChoCH in your direction before executing on the 5m.`,
       checks: { h4: h4Ok, h1: h1Ok, m15: false },
     };
   }
