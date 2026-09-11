@@ -9,6 +9,7 @@ import {
   type SignalScoreRow,
   type SignalScoreStatus,
 } from "@/lib/signal-scores.shared";
+import { SCANNER_METHODOLOGY_VERSION } from "@/lib/scanner-methodology";
 
 const RecordInput = z.object({
   symbol: z.string().min(1).max(24),
@@ -22,6 +23,7 @@ const RecordInput = z.object({
   tp1: z.number().finite(),
   counterTrend: z.boolean().optional(),
   htfBias: z.string().max(12).nullable().optional(),
+  methodologyVersion: z.string().min(1).max(40).optional(),
 });
 
 type Row = {
@@ -105,6 +107,7 @@ export const recordSignalScore = createServerFn({ method: "POST" })
         planned_r: plannedR,
         counter_trend: data.counterTrend ?? false,
         htf_bias: data.htfBias ?? null,
+        methodology_version: data.methodologyVersion ?? SCANNER_METHODOLOGY_VERSION,
       })
       .select("id")
       .single();

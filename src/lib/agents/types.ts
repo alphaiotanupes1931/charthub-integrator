@@ -147,6 +147,8 @@ export type ResearchMemo = {
 };
 
 export type TradePlan = {
+  /** Immutable ruleset identifier used to reproduce and audit this scan. */
+  methodologyVersion: string;
   grade: "A+" | "A" | "B" | "C" | "NO ENTRY";
   bias: "Long" | "Short" | "Neutral";
   confidence: number;

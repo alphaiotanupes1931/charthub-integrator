@@ -14,6 +14,7 @@ import { formatPerfForPrompt } from "@/lib/strategy-perf.shared";
 
 import type { TradePlan } from "./types";
 import { classifyTradeStyle, type TradeStyle } from "@/lib/tradeTiming";
+import { SCANNER_METHODOLOGY_VERSION } from "@/lib/scanner-methodology";
 
 export const runResearchPlan = createServerFn({ method: "POST" })
   .inputValidator((raw: unknown) => z.object({
@@ -32,6 +33,7 @@ export const runResearchPlan = createServerFn({ method: "POST" })
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) {
       return {
+        methodologyVersion: SCANNER_METHODOLOGY_VERSION,
         grade: "NO ENTRY",
         bias: "Neutral",
         confidence: 0,
@@ -53,6 +55,7 @@ export const runResearchPlan = createServerFn({ method: "POST" })
     const snap = await getSnapshot(data.ticker, data.interval);
     if (snap.source === "unavailable" || snap.candles.length < 20) {
       return {
+        methodologyVersion: SCANNER_METHODOLOGY_VERSION,
         grade: "NO ENTRY",
         bias: "Neutral",
         confidence: 0,

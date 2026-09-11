@@ -32,6 +32,8 @@ export type SignalRecord = {
   counterTrend?: boolean | null;
   /** Daily bias at scan time. */
   htfBias?: string | null;
+  /** Deterministic scanner ruleset that produced this record. */
+  methodologyVersion?: string;
 };
 
 /** One scan of a symbol/timeframe, numbered oldest-first, with its deltas. */
@@ -192,6 +194,7 @@ export function recordSignal(input: Omit<SignalRecord, "id" | "at">): SignalReco
             tp1: input.tp1 as number,
             counterTrend: input.counterTrend ?? false,
             htfBias: input.htfBias ?? null,
+            methodologyVersion: input.methodologyVersion,
           },
         }),
       )
