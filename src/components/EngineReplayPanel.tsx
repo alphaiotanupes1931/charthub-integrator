@@ -9,7 +9,12 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { BACKTEST_SYMBOLS, TIMEFRAME_LABEL, type BacktestTimeframe } from "@/lib/backtest/catalog";
 import { listEngineReplay, refreshEngineReplay } from "@/lib/engine-replay.functions";
-import { replayTotals, type ReplayRow } from "@/lib/engine-replay.shared";
+import {
+  replayTotals,
+  replayStatus,
+  REPLAY_STATUS_LABEL,
+  type ReplayRow,
+} from "@/lib/engine-replay.shared";
 import { InfoTip } from "@/components/InfoTip";
 
 const TF: BacktestTimeframe = "60";
@@ -107,6 +112,7 @@ export default function EngineReplayPanel({ canRefresh = false }: { canRefresh?:
                   <th className="py-2 text-right font-normal">Avg R</th>
                   <th className="py-2 text-right font-normal">Net R</th>
                   <th className="py-2 text-right font-normal">Max drawdown</th>
+                  <th className="py-2 text-right font-normal">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -123,11 +129,35 @@ export default function EngineReplayPanel({ canRefresh = false }: { canRefresh?:
                     </td>
                     <td className="py-2 text-right font-mono">{r.trades ? `${r.netR}R` : "-"}</td>
                     <td className="py-2 text-right font-mono">{r.trades ? `${r.maxDdPct}%` : "-"}</td>
+                    <td className="py-2 text-right">
+                      {(() => {
+                        const status = replayStatus(r);
+                        const tone =
+                          status === "validated"
+                            ? "border-emerald-500/40 text-emerald-400"
+                            : status === "needs-calibration"
+                              ? "border-red-500/40 text-red-400"
+                              : "border-border/60 text-muted-foreground";
+                        return (
+                          <span className={`inline-block rounded-full border px-2 py-0.5 text-[11px] ${tone}`}>
+                            {REPLAY_STATUS_LABEL[status]}
+                          </span>
+                        );
+                      })()}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+
+          {totals.needsCalibration.length > 0 && (
+            <p className="mt-3 rounded-lg border border-red-500/30 bg-red-500/5 p-3 text-xs text-red-300">
+              Do not quote performance for {totals.needsCalibration.join(", ")} — these instruments lost money over
+              the replay and still need calibration. {totals.validatedInstruments} instruments are positive over at
+              least 30 replayed trades.
+            </p>
+          )}
 
           {totals.updatedAt && (
             <p className="mt-3 text-xs text-muted-foreground">

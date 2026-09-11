@@ -26,6 +26,22 @@ export type ReplayRow = {
   updatedAt: string;
 };
 
+/** Whether one instrument's replay result is strong enough to quote anywhere. */
+export type ReplayStatus = "validated" | "needs-calibration" | "insufficient-data";
+
+export const MIN_VALIDATION_TRADES = 30;
+
+export function replayStatus(row: ReplayRow): ReplayStatus {
+  if (row.trades < MIN_VALIDATION_TRADES) return "insufficient-data";
+  return row.expectancyR > 0 ? "validated" : "needs-calibration";
+}
+
+export const REPLAY_STATUS_LABEL: Record<ReplayStatus, string> = {
+  validated: "Validated",
+  "needs-calibration": "Needs calibration",
+  "insufficient-data": "Not enough data",
+};
+
 export type ReplayTotals = {
   instruments: number;
   trades: number;
@@ -34,6 +50,8 @@ export type ReplayTotals = {
   aTrades: number;
   aWinRate: number | null;
   updatedAt: string | null;
+  validatedInstruments: number;
+  needsCalibration: string[];
 };
 
 const round = (n: number, d = 1) => Math.round(n * 10 ** d) / 10 ** d;
@@ -54,5 +72,7 @@ export function replayTotals(rows: ReplayRow[]): ReplayTotals {
     aTrades,
     aWinRate: aTrades ? round((aWins / aTrades) * 100) : null,
     updatedAt: stamps.length ? new Date(Math.max(...stamps)).toISOString() : null,
+    validatedInstruments: rows.filter((r) => replayStatus(r) === "validated").length,
+    needsCalibration: rows.filter((r) => replayStatus(r) === "needs-calibration").map((r) => r.symbol),
   };
 }
