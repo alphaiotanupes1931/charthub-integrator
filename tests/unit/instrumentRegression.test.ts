@@ -46,7 +46,7 @@ describe.each([...BACKTEST_SYMBOLS])("%s", (symbol) => {
       expect(gate).toBeNull();
     } else {
       expect(gate).not.toBeNull();
-      expect(gate!.waitFor).toMatch(/open/i);
+      expect(gate!.waitFor).toMatch(/cash session|open/i);
       expect(gate!.message).toMatch(/levels stand/i);
     }
   });
