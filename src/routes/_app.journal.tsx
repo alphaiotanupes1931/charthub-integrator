@@ -1840,6 +1840,7 @@ function TradeFormModal({
       setExtractionConfidence(out.confidence ?? null);
       setReviewRequired(true);
       setReviewConfirmed(false);
+      if (filled) setDetailsOpen(true);
       const conf = out.confidence != null ? ` Confidence ${Math.round(out.confidence * 100)}%.` : "";
       setAutofillNote(
         filled
@@ -1891,6 +1892,7 @@ function TradeFormModal({
       setExtractionConfidence(out.confidence ?? null);
       setReviewRequired(true);
       setReviewConfirmed(false);
+      if (filled) setDetailsOpen(true);
       const conf = out.confidence != null ? ` Confidence ${Math.round(out.confidence * 100)}%.` : "";
       setTextNote(
         filled
