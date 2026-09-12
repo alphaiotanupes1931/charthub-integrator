@@ -1847,6 +1847,16 @@ function TradeFormModal({
     }
   };
 
+  // Reading happens on its own the moment screenshots are added: nobody should
+  // have to press a button to get the numbers off an image.
+  useEffect(() => {
+    if (!images.length || autofilling) return;
+    if (images.length === readImageCount.current) return;
+    readImageCount.current = images.length;
+    void autofillFromScreenshot();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [images.length]);
+
   const [pasteBox, setPasteBox] = useState("");
   const [textFilling, setTextFilling] = useState(false);
   const [textNote, setTextNote] = useState("");
