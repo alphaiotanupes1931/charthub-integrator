@@ -2530,6 +2530,7 @@ function TradeFormModal({
               />
             )}
           </div>
+          </>)}
 
 
           <div className="rounded-2xl border border-border/60 bg-background/50 p-3 grid grid-cols-3 gap-3 text-sm">
