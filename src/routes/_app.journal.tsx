@@ -27,6 +27,8 @@ import {
   MessageSquare,
   NotebookPen,
   RefreshCw,
+  ChevronDown,
+  ChevronUp,
   Ban,
 } from "lucide-react";
 import { LevelWarnings } from "@/components/LevelWarnings";
@@ -1729,6 +1731,10 @@ function TradeFormModal({
   const [reviewConfirmed, setReviewConfirmed] = useState(false);
   const [extractionConfidence, setExtractionConfidence] = useState<number | null>(null);
   const [isDraggingImage, setIsDraggingImage] = useState(false);
+  // The detailed form stays out of the way: uploading a screenshot or pasting
+  // text is the primary path and opens these fields once numbers are read.
+  // Editing a saved trade opens them too. Otherwise they wait behind a toggle.
+  const [detailsOpen, setDetailsOpen] = useState<boolean>(!!editing);
   // Images already read (or loaded from a saved trade) so re-renders never
   // trigger a second read of the same set.
   const readImageCount = useRef(0);
@@ -1834,6 +1840,7 @@ function TradeFormModal({
       setExtractionConfidence(out.confidence ?? null);
       setReviewRequired(true);
       setReviewConfirmed(false);
+      if (filled) setDetailsOpen(true);
       const conf = out.confidence != null ? ` Confidence ${Math.round(out.confidence * 100)}%.` : "";
       setAutofillNote(
         filled
@@ -1885,6 +1892,7 @@ function TradeFormModal({
       setExtractionConfidence(out.confidence ?? null);
       setReviewRequired(true);
       setReviewConfirmed(false);
+      if (filled) setDetailsOpen(true);
       const conf = out.confidence != null ? ` Confidence ${Math.round(out.confidence * 100)}%.` : "";
       setTextNote(
         filled
@@ -2259,6 +2267,17 @@ function TradeFormModal({
             </section>
           )}
 
+          <button
+            type="button"
+            onClick={() => setDetailsOpen((v) => !v)}
+            aria-expanded={detailsOpen}
+            className="flex w-full items-center justify-between rounded-xl border border-border/60 bg-background/40 px-3 py-2.5 text-sm font-medium text-muted-foreground transition hover:text-foreground"
+          >
+            <span>{detailsOpen ? "Hide trade details" : "Show trade details / fill in manually"}</span>
+            {detailsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </button>
+
+          {detailsOpen && (<>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Date">
               <input
@@ -2511,6 +2530,7 @@ function TradeFormModal({
               />
             )}
           </div>
+          </>)}
 
 
           <div className="rounded-2xl border border-border/60 bg-background/50 p-3 grid grid-cols-3 gap-3 text-sm">
