@@ -105,6 +105,8 @@ type Trade = {
   hasImage?: boolean;
   /** How many screenshots are stored for this trade (1 = legacy single image). */
   imageCount?: number;
+  /** Of those, how many were read by the AI. The rest are reference-only extra photos. */
+  analyzedImageCount?: number;
   /** Did the trader actually pull the trigger on this setup? */
   executed?: boolean;
   executedAt?: number;
