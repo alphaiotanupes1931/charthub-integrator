@@ -2123,18 +2123,19 @@ function TradeFormModal({
               <span>{images.length ? "Add another screenshot" : "Paste, drop, or choose screenshots"}</span>
               <span className="text-[10px]">Broker positions and marked-up charts are supported, up to five images.</span>
             </button>
-            {images.length > 0 && (
-              <div className="mt-2">
-                <button
-                  type="button"
-                  disabled={autofilling}
-                  onClick={() => void autofillFromScreenshot()}
-                  className="w-full rounded-xl border border-primary/40 bg-primary/10 px-3 py-2.5 text-sm font-semibold text-primary hover:bg-primary/15 transition disabled:opacity-60"
-                >
-                  {autofilling ? "Reading the chart…" : "Fill fields from screenshot"}
-                </button>
-                {autofillNote && (
-                  <div className="mt-1.5 text-[11px] text-muted-foreground">{autofillNote}</div>
+            {(images.length > 0 || autofilling) && (
+              <div className="mt-2 rounded-xl border border-border/60 bg-background/40 px-3 py-2 text-[11px] text-muted-foreground">
+                {autofilling
+                  ? "Reading the numbers off your screenshot…"
+                  : autofillNote || "Numbers are read automatically when you add a screenshot."}
+                {!autofilling && images.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => void autofillFromScreenshot()}
+                    className="ml-2 font-semibold text-primary hover:underline"
+                  >
+                    Read again
+                  </button>
                 )}
               </div>
             )}
