@@ -1775,6 +1775,29 @@ function TradeFormModal({
     setImagesDirty(true);
   };
 
+  // Extra photos are stored with the trade for later reference only — they are
+  // never sent to the reader, so there is no image limit worth enforcing here.
+  const handlePickExtraFiles = async (files: FileList | File[] | null | undefined) => {
+    const list = Array.from(files ?? []).filter((f) => f.type.startsWith("image/"));
+    if (!list.length) return;
+    const added: { blob: Blob; url: string }[] = [];
+    for (const file of list.slice(0, 8)) {
+      const compressed = await compressImageFile(file);
+      added.push({ blob: compressed, url: URL.createObjectURL(compressed) });
+    }
+    setExtraImages((prev) => [...prev, ...added].slice(0, 8));
+    setImagesDirty(true);
+  };
+
+  const removeExtraImageAt = (i: number) => {
+    setExtraImages((prev) => {
+      const target = prev[i];
+      if (target) URL.revokeObjectURL(target.url);
+      return prev.filter((_, idx) => idx !== i);
+    });
+    setImagesDirty(true);
+  };
+
   // Read the numbers off an uploaded chart screenshot and drop them into the
   // form. Existing values are only overwritten when the reader found something.
   const [autofilling, setAutofilling] = useState(false);
