@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Bot, X } from "lucide-react";
 import { placeAutoTrade, previewAutoTrade, skipAutoTrade } from "@/lib/auto-trade.functions";
