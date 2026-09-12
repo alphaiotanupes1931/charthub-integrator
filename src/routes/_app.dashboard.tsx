@@ -1348,7 +1348,21 @@ function Dashboard() {
       refPrice: typeof plan.refPrice === "number" ? plan.refPrice : last,
     }));
     if (entry && stop && tp1 && tp2 && bias !== "neutral") {
-      setAiAnnotationsRaw(buildLevelAnnotations(bias, entry, stop, tp1, tp2, last));
+      // The order block (or other institutional zone) the entry is anchored to
+      // is drawn first so the trader sees WHERE the entry comes from, not just
+      // the price. Order blocks are the primary anchor in our methodology.
+      const zone = plan.entryZone;
+      const zoneAnn: import("@/lib/chartAnnotations").ChartAnnotation[] =
+        zone && Number.isFinite(zone.top) && Number.isFinite(zone.bottom) && zone.bottom > 0
+          ? [{
+              kind: "zone",
+              top: Math.max(zone.top, zone.bottom),
+              bottom: Math.min(zone.top, zone.bottom),
+              label: `${zone.label.toUpperCase()} · ${zone.qualityLabel.toUpperCase()} QUALITY`,
+              color: bias === "long" ? "#38bdf8" : "#c084fc",
+            }]
+          : [];
+      setAiAnnotationsRaw([...zoneAnn, ...buildLevelAnnotations(bias, entry, stop, tp1, tp2, last)]);
 
 
       // TradingView (Live) can't render our markers, so a scan always drops the
