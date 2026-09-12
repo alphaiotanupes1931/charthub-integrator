@@ -243,6 +243,15 @@ type ScanResult = {
   triggered?: boolean;
   triggerLevel?: number;
   triggerRule?: string;
+  /** Institutional zone (usually a 1H order block) the entry is anchored to. */
+  entryZone?: {
+    label: string;
+    top: number;
+    bottom: number;
+    quality: number;
+    qualityLabel: "high" | "medium" | "low";
+    distanceAtr: number;
+  };
 
 };
 
