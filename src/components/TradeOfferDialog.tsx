@@ -165,7 +165,7 @@ export function TradeOfferDialog({
             onClick={() => placeMutation.mutate()}
             className="rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50"
           >
-            {placeMutation.isPending ? "Placing…" : "Place trade"}
+            {placeMutation.isPending ? "Placing…" : !units ? "Connect broker to trade" : "Place trade"}
           </button>
           <button
             type="button"
