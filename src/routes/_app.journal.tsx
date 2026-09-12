@@ -2267,6 +2267,17 @@ function TradeFormModal({
             </section>
           )}
 
+          <button
+            type="button"
+            onClick={() => setDetailsOpen((v) => !v)}
+            aria-expanded={detailsOpen}
+            className="flex w-full items-center justify-between rounded-xl border border-border/60 bg-background/40 px-3 py-2.5 text-sm font-medium text-muted-foreground transition hover:text-foreground"
+          >
+            <span>{detailsOpen ? "Hide trade details" : "Show trade details / fill in manually"}</span>
+            {detailsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </button>
+
+          {detailsOpen && (<>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Date">
               <input
