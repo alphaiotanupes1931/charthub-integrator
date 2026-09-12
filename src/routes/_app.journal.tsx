@@ -2174,6 +2174,47 @@ function TradeFormModal({
             </div>
           </Field>
 
+          {/* Extra photos: saved with the trade for your own review only. The
+              reader never looks at these, so they cannot skew the numbers. */}
+          <Field label="Additional photos">
+            <input
+              ref={extraFileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => { void handlePickExtraFiles(e.target.files); e.target.value = ""; }}
+            />
+            {extraImages.length > 0 && (
+              <div className="grid grid-cols-3 gap-2 mb-2">
+                {extraImages.map((img, i) => (
+                  <div key={img.url} className="relative rounded-xl border border-border/60 overflow-hidden bg-background">
+                    <img src={img.url} alt={`Additional photo ${i + 1}`} className="w-full max-h-32 object-contain" />
+                    <button
+                      type="button"
+                      onClick={() => removeExtraImageAt(i)}
+                      className="absolute top-1 right-1 rounded bg-background/80 px-1.5 py-0.5 text-[10px] font-medium border border-border/60 text-destructive hover:bg-destructive/10"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => extraFileInputRef.current?.click()}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={(event) => { event.preventDefault(); void handlePickExtraFiles(event.dataTransfer.files); }}
+              className="w-full rounded-xl border border-dashed border-border/60 bg-background/40 px-3 py-4 text-sm text-muted-foreground hover:border-primary/40 hover:text-foreground transition flex flex-col items-center gap-1"
+            >
+              <Upload className="h-4 w-4" />
+              <span>{extraImages.length ? "Add another photo" : "Add photos to keep with this trade"}</span>
+              <span className="text-[10px]">Kept for your own review. These are not read for numbers.</span>
+            </button>
+          </Field>
+
+
           {reviewRequired && (
             <section className="rounded-xl border border-primary/35 bg-primary/5 p-4" aria-label="Review extracted trade">
               <div className="flex flex-wrap items-start justify-between gap-2">
