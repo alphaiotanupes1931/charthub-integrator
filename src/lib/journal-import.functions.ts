@@ -53,14 +53,25 @@ const MAX_CHARS = 6_000_000; // ~4.5MB of base64 per request
  * Ask the model for JSON and parse it ourselves. The gateway's Gemini route
  * does not honour provider structured output, so a schema-constrained call
  * comes back as prose and throws. Requesting raw JSON works on every model.
+ *
+ * Screenshot reading runs on Claude (best at reading numbers off a trading
+ * screenshot); the gateway model stays as the fallback when no Anthropic key
+ * is configured on this deployment.
  */
 async function readJson<T>(
   schema: { parse: (v: unknown) => T },
   args: { apiKey: string; system: string; messages: any[] },
 ): Promise<T> {
   const { generateText } = await import("ai");
-  const { createAiGatewayProvider } = await import("@/lib/ai-gateway.server");
-  const model = createAiGatewayProvider(args.apiKey)("google/gemini-3.7-flash");
+  const anthropicKey = process.env['ANTHROPIC_API_KEY'];
+  let model: any;
+  if (anthropicKey) {
+    const { createAnthropic } = await import("@ai-sdk/anthropic");
+    model = createAnthropic({ apiKey: anthropicKey })("claude-sonnet-4-5");
+  } else {
+    const { createAiGatewayProvider } = await import("@/lib/ai-gateway.server");
+    model = createAiGatewayProvider(args.apiKey)("google/gemini-3.7-flash");
+  }
   let last = "";
   // The model occasionally answers in prose or truncates the object; one retry
   // with a blunter instruction clears almost every case.
