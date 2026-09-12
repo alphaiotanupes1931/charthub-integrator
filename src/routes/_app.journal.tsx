@@ -2041,7 +2041,8 @@ function TradeFormModal({
     const id = editing?.id ?? `t_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
     if (imagesDirty || !editing) {
       await deleteTradeImages(id, Math.max(12, editing?.imageCount ?? 1));
-      if (images.length) await putTradeImages(id, images.map((i) => i.blob));
+      const allShots = [...images, ...extraImages].map((i) => i.blob);
+      if (allShots.length) await putTradeImages(id, allShots);
     }
     if (mentalScore != null) {
       const existing = loadMental().find((e) => e.date === date);
