@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Bot, X } from "lucide-react";
 import { placeAutoTrade, previewAutoTrade, skipAutoTrade } from "@/lib/auto-trade.functions";
@@ -123,7 +124,22 @@ export function TradeOfferDialog({
           {sizing.isError && (
             <span className="text-red-400">Your account could not be read right now, so no size was worked out.</span>
           )}
-          {sizing.data && (
+          {sizing.data && !sizing.data.connected && (
+            <div className="space-y-2">
+              <p className="font-medium text-amber-400">No broker account is connected.</p>
+              <p className="text-muted-foreground">
+                Connect your broker so TradeMind can size, place, and manage this trade.
+              </p>
+              <Link
+                to="/broker"
+                className="inline-flex items-center rounded-xl bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90"
+                onClick={dismiss}
+              >
+                Connect broker
+              </Link>
+            </div>
+          )}
+          {sizing.data && sizing.data.connected && (
             <div className="space-y-1">
               <div>
                 Size: <span className="font-mono">{units ?? "-"}</span> units
@@ -149,7 +165,7 @@ export function TradeOfferDialog({
             onClick={() => placeMutation.mutate()}
             className="rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50"
           >
-            {placeMutation.isPending ? "Placing…" : "Place trade"}
+            {placeMutation.isPending ? "Placing…" : !units ? "Connect broker to trade" : "Place trade"}
           </button>
           <button
             type="button"
