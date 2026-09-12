@@ -105,6 +105,8 @@ type Trade = {
   hasImage?: boolean;
   /** How many screenshots are stored for this trade (1 = legacy single image). */
   imageCount?: number;
+  /** Of those, how many were read by the AI. The rest are reference-only extra photos. */
+  analyzedImageCount?: number;
   /** Did the trader actually pull the trigger on this setup? */
   executed?: boolean;
   executedAt?: number;
@@ -1717,13 +1719,19 @@ function TradeFormModal({
   }, [date]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const extraFileInputRef = useRef<HTMLInputElement>(null);
   // Multiple screenshots per trade: before/after, higher timeframe, execution.
   const [images, setImages] = useState<{ blob: Blob; url: string }[]>([]);
+  // Reference-only photos: kept with the trade, never sent to the reader.
+  const [extraImages, setExtraImages] = useState<{ blob: Blob; url: string }[]>([]);
   const [imagesDirty, setImagesDirty] = useState(false);
   const [reviewRequired, setReviewRequired] = useState(false);
   const [reviewConfirmed, setReviewConfirmed] = useState(false);
   const [extractionConfidence, setExtractionConfidence] = useState<number | null>(null);
   const [isDraggingImage, setIsDraggingImage] = useState(false);
+  // Images already read (or loaded from a saved trade) so re-renders never
+  // trigger a second read of the same set.
+  const readImageCount = useRef(0);
 
   useEffect(() => {
     let active = true;
@@ -1736,11 +1744,15 @@ function TradeFormModal({
           urls.push(url);
           return { blob, url };
         });
-        setImages(next);
+        const analyzed = Math.min(editing.analyzedImageCount ?? next.length, next.length);
+        setImages(next.slice(0, analyzed));
+        setExtraImages(next.slice(analyzed));
+        readImageCount.current = analyzed;
       });
     }
     return () => { active = false; urls.forEach((u) => URL.revokeObjectURL(u)); };
-  }, [editing?.id, editing?.hasImage, editing?.imageCount]);
+  }, [editing?.id, editing?.hasImage, editing?.imageCount, editing?.analyzedImageCount]);
+
 
   // Five frames per trade: 4H, 1H, 15m, 5m, 1m. More than that is noise and the
   // reader cannot use it, so extra files are dropped with a note.
@@ -1759,6 +1771,29 @@ function TradeFormModal({
         setAutofillNote(`Up to ${MAX_TRADE_IMAGES} images per trade (4H, 1H, 15m, 5m, 1m). The extras were skipped.`);
       }
       return next;
+    });
+    setImagesDirty(true);
+  };
+
+  // Extra photos are stored with the trade for later reference only — they are
+  // never sent to the reader, so there is no image limit worth enforcing here.
+  const handlePickExtraFiles = async (files: FileList | File[] | null | undefined) => {
+    const list = Array.from(files ?? []).filter((f) => f.type.startsWith("image/"));
+    if (!list.length) return;
+    const added: { blob: Blob; url: string }[] = [];
+    for (const file of list.slice(0, 8)) {
+      const compressed = await compressImageFile(file);
+      added.push({ blob: compressed, url: URL.createObjectURL(compressed) });
+    }
+    setExtraImages((prev) => [...prev, ...added].slice(0, 8));
+    setImagesDirty(true);
+  };
+
+  const removeExtraImageAt = (i: number) => {
+    setExtraImages((prev) => {
+      const target = prev[i];
+      if (target) URL.revokeObjectURL(target.url);
+      return prev.filter((_, idx) => idx !== i);
     });
     setImagesDirty(true);
   };
@@ -1811,6 +1846,16 @@ function TradeFormModal({
       setAutofilling(false);
     }
   };
+
+  // Reading happens on its own the moment screenshots are added: nobody should
+  // have to press a button to get the numbers off an image.
+  useEffect(() => {
+    if (!images.length || autofilling) return;
+    if (images.length === readImageCount.current) return;
+    readImageCount.current = images.length;
+    void autofillFromScreenshot();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [images.length]);
 
   const [pasteBox, setPasteBox] = useState("");
   const [textFilling, setTextFilling] = useState(false);
@@ -1929,7 +1974,7 @@ function TradeFormModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const hasImage = images.length > 0;
+  const hasImage = images.length + extraImages.length > 0;
 
   // A trade you just took has no exit yet. Treat a blank exit as "still open"
   // and fall back to the entry so P&L reads 0 until the trade is closed.
@@ -1957,7 +2002,8 @@ function TradeFormModal({
     ruleBrokenNote: ruleBroken ? (ruleBrokenNote || undefined) : undefined,
     lossCategory: lossCategory || undefined,
     hasImage,
-    imageCount: images.length || undefined,
+    imageCount: images.length + extraImages.length || undefined,
+    analyzedImageCount: images.length || undefined,
     executed: editing?.executed,
     executedAt: editing?.executedAt,
     followedPlan: followedPlan || undefined,
@@ -1995,7 +2041,8 @@ function TradeFormModal({
     const id = editing?.id ?? `t_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
     if (imagesDirty || !editing) {
       await deleteTradeImages(id, Math.max(12, editing?.imageCount ?? 1));
-      if (images.length) await putTradeImages(id, images.map((i) => i.blob));
+      const allShots = [...images, ...extraImages].map((i) => i.blob);
+      if (allShots.length) await putTradeImages(id, allShots);
     }
     if (mentalScore != null) {
       const existing = loadMental().find((e) => e.date === date);
@@ -2076,18 +2123,19 @@ function TradeFormModal({
               <span>{images.length ? "Add another screenshot" : "Paste, drop, or choose screenshots"}</span>
               <span className="text-[10px]">Broker positions and marked-up charts are supported, up to five images.</span>
             </button>
-            {images.length > 0 && (
-              <div className="mt-2">
-                <button
-                  type="button"
-                  disabled={autofilling}
-                  onClick={() => void autofillFromScreenshot()}
-                  className="w-full rounded-xl border border-primary/40 bg-primary/10 px-3 py-2.5 text-sm font-semibold text-primary hover:bg-primary/15 transition disabled:opacity-60"
-                >
-                  {autofilling ? "Reading the chart…" : "Fill fields from screenshot"}
-                </button>
-                {autofillNote && (
-                  <div className="mt-1.5 text-[11px] text-muted-foreground">{autofillNote}</div>
+            {(images.length > 0 || autofilling) && (
+              <div className="mt-2 rounded-xl border border-border/60 bg-background/40 px-3 py-2 text-[11px] text-muted-foreground">
+                {autofilling
+                  ? "Reading the numbers off your screenshot…"
+                  : autofillNote || "Numbers are read automatically when you add a screenshot."}
+                {!autofilling && images.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => void autofillFromScreenshot()}
+                    className="ml-2 font-semibold text-primary hover:underline"
+                  >
+                    Read again
+                  </button>
                 )}
               </div>
             )}
@@ -2125,6 +2173,47 @@ function TradeFormModal({
               {textNote && <div className="mt-1.5 text-[11px] text-muted-foreground">{textNote}</div>}
             </div>
           </Field>
+
+          {/* Extra photos: saved with the trade for your own review only. The
+              reader never looks at these, so they cannot skew the numbers. */}
+          <Field label="Additional photos">
+            <input
+              ref={extraFileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => { void handlePickExtraFiles(e.target.files); e.target.value = ""; }}
+            />
+            {extraImages.length > 0 && (
+              <div className="grid grid-cols-3 gap-2 mb-2">
+                {extraImages.map((img, i) => (
+                  <div key={img.url} className="relative rounded-xl border border-border/60 overflow-hidden bg-background">
+                    <img src={img.url} alt={`Additional photo ${i + 1}`} className="w-full max-h-32 object-contain" />
+                    <button
+                      type="button"
+                      onClick={() => removeExtraImageAt(i)}
+                      className="absolute top-1 right-1 rounded bg-background/80 px-1.5 py-0.5 text-[10px] font-medium border border-border/60 text-destructive hover:bg-destructive/10"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => extraFileInputRef.current?.click()}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={(event) => { event.preventDefault(); void handlePickExtraFiles(event.dataTransfer.files); }}
+              className="w-full rounded-xl border border-dashed border-border/60 bg-background/40 px-3 py-4 text-sm text-muted-foreground hover:border-primary/40 hover:text-foreground transition flex flex-col items-center gap-1"
+            >
+              <Upload className="h-4 w-4" />
+              <span>{extraImages.length ? "Add another photo" : "Add photos to keep with this trade"}</span>
+              <span className="text-[10px]">Kept for your own review. These are not read for numbers.</span>
+            </button>
+          </Field>
+
 
           {reviewRequired && (
             <section className="rounded-xl border border-primary/35 bg-primary/5 p-4" aria-label="Review extracted trade">
