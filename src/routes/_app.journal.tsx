@@ -1974,7 +1974,7 @@ function TradeFormModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const hasImage = images.length > 0;
+  const hasImage = images.length + extraImages.length > 0;
 
   // A trade you just took has no exit yet. Treat a blank exit as "still open"
   // and fall back to the entry so P&L reads 0 until the trade is closed.
