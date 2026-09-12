@@ -243,6 +243,15 @@ type ScanResult = {
   triggered?: boolean;
   triggerLevel?: number;
   triggerRule?: string;
+  /** Institutional zone (usually a 1H order block) the entry is anchored to. */
+  entryZone?: {
+    label: string;
+    top: number;
+    bottom: number;
+    quality: number;
+    qualityLabel: "high" | "medium" | "low";
+    distanceAtr: number;
+  };
 
 };
 
@@ -564,6 +573,43 @@ function ScanTicket({
             </div>
           </div>
         )}
+
+        {/* Order blocks are the anchor of the methodology, so the zone the entry
+            came from is stated up front - above the numbers - with its measured
+            quality and how far away it sits. */}
+        {!isNoEntry && result.entryZone && (
+          <div className="rounded-xl border border-primary/30 bg-primary/5 px-3 py-2.5">
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-primary">
+                Entry anchored to {result.entryZone.label}
+              </div>
+              <span
+                className={`shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
+                  result.entryZone.qualityLabel === "high"
+                    ? "bg-bull/15 text-bull"
+                    : result.entryZone.qualityLabel === "medium"
+                      ? "bg-gold/15 text-gold"
+                      : "bg-destructive/15 text-destructive"
+                }`}
+              >
+                {result.entryZone.qualityLabel} quality
+              </span>
+            </div>
+            <div className="mt-1 text-[11px] leading-snug text-foreground/85">
+              Zone {fmtPrice(Math.min(result.entryZone.bottom, result.entryZone.top), decimalsFor(result.entryZone.top))}
+              {" – "}
+              {fmtPrice(Math.max(result.entryZone.bottom, result.entryZone.top), decimalsFor(result.entryZone.top))}
+              {" · "}quality score {Math.round(result.entryZone.quality)}/100
+              {" · "}{result.entryZone.distanceAtr.toFixed(2)}x ATR from price.
+            </div>
+            <div className="mt-1 text-[10px] leading-snug text-muted-foreground">
+              {result.entryZone.label.toLowerCase().includes("order block")
+                ? "The order block is the reason this trade exists: price has to trade back into it before the entry is valid. The stop sits just past its far edge."
+                : "No fresh order block qualified, so this entry falls back to the next-best institutional zone. Treat it as a lower-conviction anchor."}
+            </div>
+          </div>
+        )}
+
 
         <div className="space-y-2">
           {!isNoEntry && logged && (
@@ -1339,7 +1385,21 @@ function Dashboard() {
       refPrice: typeof plan.refPrice === "number" ? plan.refPrice : last,
     }));
     if (entry && stop && tp1 && tp2 && bias !== "neutral") {
-      setAiAnnotationsRaw(buildLevelAnnotations(bias, entry, stop, tp1, tp2, last));
+      // The order block (or other institutional zone) the entry is anchored to
+      // is drawn first so the trader sees WHERE the entry comes from, not just
+      // the price. Order blocks are the primary anchor in our methodology.
+      const zone = plan.entryZone;
+      const zoneAnn: import("@/lib/chartAnnotations").ChartAnnotation[] =
+        zone && Number.isFinite(zone.top) && Number.isFinite(zone.bottom) && zone.bottom > 0
+          ? [{
+              kind: "zone",
+              top: Math.max(zone.top, zone.bottom),
+              bottom: Math.min(zone.top, zone.bottom),
+              label: `${zone.label.toUpperCase()} · ${zone.qualityLabel.toUpperCase()} QUALITY`,
+              color: bias === "long" ? "#38bdf8" : "#c084fc",
+            }]
+          : [];
+      setAiAnnotationsRaw([...zoneAnn, ...buildLevelAnnotations(bias, entry, stop, tp1, tp2, last)]);
 
 
       // TradingView (Live) can't render our markers, so a scan always drops the
