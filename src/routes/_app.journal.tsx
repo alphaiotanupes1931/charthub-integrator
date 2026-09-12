@@ -27,6 +27,8 @@ import {
   MessageSquare,
   NotebookPen,
   RefreshCw,
+  ChevronDown,
+  ChevronUp,
   Ban,
 } from "lucide-react";
 import { LevelWarnings } from "@/components/LevelWarnings";
@@ -1729,6 +1731,10 @@ function TradeFormModal({
   const [reviewConfirmed, setReviewConfirmed] = useState(false);
   const [extractionConfidence, setExtractionConfidence] = useState<number | null>(null);
   const [isDraggingImage, setIsDraggingImage] = useState(false);
+  // The detailed form stays out of the way: uploading a screenshot or pasting
+  // text is the primary path and opens these fields once numbers are read.
+  // Editing a saved trade opens them too. Otherwise they wait behind a toggle.
+  const [detailsOpen, setDetailsOpen] = useState<boolean>(!!editing);
   // Images already read (or loaded from a saved trade) so re-renders never
   // trigger a second read of the same set.
   const readImageCount = useRef(0);
