@@ -124,7 +124,22 @@ export function TradeOfferDialog({
           {sizing.isError && (
             <span className="text-red-400">Your account could not be read right now, so no size was worked out.</span>
           )}
-          {sizing.data && (
+          {sizing.data && !sizing.data.connected && (
+            <div className="space-y-2">
+              <p className="font-medium text-amber-400">No broker account is connected.</p>
+              <p className="text-muted-foreground">
+                Connect your broker so TradeMind can size, place, and manage this trade.
+              </p>
+              <Link
+                to="/broker"
+                className="inline-flex items-center rounded-xl bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90"
+                onClick={dismiss}
+              >
+                Connect broker
+              </Link>
+            </div>
+          )}
+          {sizing.data && sizing.data.connected && (
             <div className="space-y-1">
               <div>
                 Size: <span className="font-mono">{units ?? "-"}</span> units
