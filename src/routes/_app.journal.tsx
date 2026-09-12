@@ -1719,13 +1719,19 @@ function TradeFormModal({
   }, [date]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const extraFileInputRef = useRef<HTMLInputElement>(null);
   // Multiple screenshots per trade: before/after, higher timeframe, execution.
   const [images, setImages] = useState<{ blob: Blob; url: string }[]>([]);
+  // Reference-only photos: kept with the trade, never sent to the reader.
+  const [extraImages, setExtraImages] = useState<{ blob: Blob; url: string }[]>([]);
   const [imagesDirty, setImagesDirty] = useState(false);
   const [reviewRequired, setReviewRequired] = useState(false);
   const [reviewConfirmed, setReviewConfirmed] = useState(false);
   const [extractionConfidence, setExtractionConfidence] = useState<number | null>(null);
   const [isDraggingImage, setIsDraggingImage] = useState(false);
+  // Images already read (or loaded from a saved trade) so re-renders never
+  // trigger a second read of the same set.
+  const readImageCount = useRef(0);
 
   useEffect(() => {
     let active = true;
@@ -1738,11 +1744,15 @@ function TradeFormModal({
           urls.push(url);
           return { blob, url };
         });
-        setImages(next);
+        const analyzed = Math.min(editing.analyzedImageCount ?? next.length, next.length);
+        setImages(next.slice(0, analyzed));
+        setExtraImages(next.slice(analyzed));
+        readImageCount.current = analyzed;
       });
     }
     return () => { active = false; urls.forEach((u) => URL.revokeObjectURL(u)); };
-  }, [editing?.id, editing?.hasImage, editing?.imageCount]);
+  }, [editing?.id, editing?.hasImage, editing?.imageCount, editing?.analyzedImageCount]);
+
 
   // Five frames per trade: 4H, 1H, 15m, 5m, 1m. More than that is noise and the
   // reader cannot use it, so extra files are dropped with a note.
