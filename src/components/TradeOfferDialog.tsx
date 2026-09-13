@@ -139,15 +139,31 @@ export function TradeOfferDialog({
               </Link>
             </div>
           )}
-          {sizing.data && sizing.data.connected && (
+          {sizing.data && sizing.data.connected && units !== null && (
             <div className="space-y-1">
               <div>
-                Size: <span className="font-mono">{units ?? "-"}</span> units
+                Size: <span className="font-mono">{units}</span> units
               </div>
               <div className="text-muted-foreground">
                 Risking {sizing.data.riskPct}% of your account, about {currency} {sizing.data.riskAmount} if the stop is
                 hit. The stop and target are attached to the order.
               </div>
+            </div>
+          )}
+          {sizing.data && sizing.data.connected && units === null && (
+            <div className="space-y-2">
+              <p className="font-medium text-amber-400">No funded trading account was found.</p>
+              <p className="text-muted-foreground">
+                TradeMind can only place and manage this trade once a funded broker account is linked. Open the broker
+                page to sign in to your broker and pick it as your default.
+              </p>
+              <Link
+                to="/broker"
+                className="inline-flex items-center rounded-xl bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90"
+                onClick={dismiss}
+              >
+                Go to broker setup
+              </Link>
             </div>
           )}
         </div>
@@ -159,14 +175,24 @@ export function TradeOfferDialog({
         )}
 
         <div className="mt-4 flex gap-2">
-          <button
-            type="button"
-            disabled={placeMutation.isPending || !units}
-            onClick={() => placeMutation.mutate()}
-            className="rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50"
-          >
-            {placeMutation.isPending ? "Placing…" : !units ? "Connect broker to trade" : "Place trade"}
-          </button>
+          {units ? (
+            <button
+              type="button"
+              disabled={placeMutation.isPending}
+              onClick={() => placeMutation.mutate()}
+              className="rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50"
+            >
+              {placeMutation.isPending ? "Placing…" : "Place trade"}
+            </button>
+          ) : (
+            <Link
+              to="/broker"
+              onClick={dismiss}
+              className="rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90"
+            >
+              Connect broker to trade
+            </Link>
+          )}
           <button
             type="button"
             onClick={dismiss}
