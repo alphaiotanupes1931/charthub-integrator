@@ -8,6 +8,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { BACKTEST_SYMBOLS, BACKTEST_TIMEFRAMES } from "@/lib/backtest/catalog";
 import type { ReplayRow } from "@/lib/engine-replay.shared";
+import { parseGradeMix, toGradeMix } from "@/lib/grade-mix.shared";
 
 const RefreshInput = z.object({
   symbol: z.enum(BACKTEST_SYMBOLS),
@@ -34,6 +35,7 @@ type Row = {
   a_expectancy_r: number;
   source: string;
   updated_at: string;
+  grade_mix: unknown;
 };
 
 function toRow(r: Row): ReplayRow {
@@ -56,6 +58,7 @@ function toRow(r: Row): ReplayRow {
     aExpectancyR: Number(r.a_expectancy_r),
     source: r.source,
     updatedAt: r.updated_at,
+    gradeMix: parseGradeMix(r.grade_mix),
   };
 }
 
@@ -110,6 +113,7 @@ export const refreshEngineReplay = createServerFn({ method: "POST" })
         a_win_rate: aTrades ? Math.round((aWins / aTrades) * 1000) / 10 : 0,
         a_expectancy_r: aTrades ? Math.round((aNetR / aTrades) * 100) / 100 : 0,
         source,
+        grade_mix: toGradeMix(result.byGrade),
         notes: result.notes.join(" ") || null,
         updated_at: new Date().toISOString(),
       };

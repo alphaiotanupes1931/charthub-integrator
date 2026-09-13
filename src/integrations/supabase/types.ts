@@ -703,6 +703,7 @@ export type Database = {
           created_at: string
           expectancy_r: number
           from_ts: string | null
+          grade_mix: Json
           id: string
           lookback: string
           max_dd_pct: number
@@ -726,6 +727,7 @@ export type Database = {
           created_at?: string
           expectancy_r?: number
           from_ts?: string | null
+          grade_mix?: Json
           id?: string
           lookback?: string
           max_dd_pct?: number
@@ -749,6 +751,7 @@ export type Database = {
           created_at?: string
           expectancy_r?: number
           from_ts?: string | null
+          grade_mix?: Json
           id?: string
           lookback?: string
           max_dd_pct?: number

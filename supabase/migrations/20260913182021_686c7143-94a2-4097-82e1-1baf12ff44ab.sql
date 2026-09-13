@@ -1,0 +1,1 @@
+ALTER TABLE public.engine_replay_stats ADD COLUMN IF NOT EXISTS grade_mix jsonb NOT NULL DEFAULT '[]'::jsonb;

@@ -5,6 +5,8 @@
 // measured track record of the same deterministic rules, kept clearly separate
 // from live scan outcomes.
 
+import type { GradeMixEntry } from "@/lib/grade-mix.shared";
+
 export type ReplayRow = {
   symbol: string;
   timeframe: string;
@@ -24,6 +26,8 @@ export type ReplayRow = {
   aExpectancyR: number;
   source: string;
   updatedAt: string;
+  /** Per-grade trades and outcome for this instrument's replay. */
+  gradeMix: GradeMixEntry[];
 };
 
 /** Whether one instrument's replay result is strong enough to quote anywhere. */
