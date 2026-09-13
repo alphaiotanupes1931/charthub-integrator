@@ -176,7 +176,6 @@ function BrokerPage() {
         </div>
       )}
 
-      <TradeLockerConnectPanel onChange={() => refresh()} />
       <OandaConnectPanel onChange={() => refresh()} />
 
       <div className="rounded-xl border border-border/60 bg-card p-5 mb-6">
