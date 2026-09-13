@@ -1808,12 +1808,15 @@ function Dashboard() {
                         aria-selected={active}
                         onClick={() => { setSymbol(s); setPickerOpen(false); }}
                         className={`w-full text-left px-3 py-2.5 text-sm flex items-center justify-between gap-3 hover:bg-accent/40 transition ${
-                          active ? "bg-primary/10 text-primary" : "text-foreground"
+                          active ? "bg-primary/10 text-primary" : "text-oanda"
                         }`}
                       >
                         <div className="min-w-0">
-                          <div className="font-medium truncate">{s.ticker}</div>
-                          <div className="text-[11px] text-muted-foreground truncate">{s.name} · OANDA</div>
+                          <div className="font-medium truncate flex items-center gap-1.5">
+                            {s.ticker}
+                            {!active && <span className="h-1.5 w-1.5 rounded-full bg-oanda shrink-0" />}
+                          </div>
+                          <div className={`text-[11px] truncate ${active ? "text-muted-foreground" : "text-oanda/70"}`}>{s.name} · tradable on OANDA</div>
                         </div>
                         {active && <Check className="h-4 w-4 shrink-0" />}
                       </button>
