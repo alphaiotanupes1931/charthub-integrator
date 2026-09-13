@@ -13,7 +13,6 @@ import {
   listBrokerPendingOrders,
   cancelBrokerOrder,
 } from "@/lib/broker-oanda.functions";
-import { TradeLockerConnectPanel } from "@/components/TradeLockerConnectPanel";
 import { OandaConnectPanel } from "@/components/OandaConnectPanel";
 
 type BrokerSearch = {
