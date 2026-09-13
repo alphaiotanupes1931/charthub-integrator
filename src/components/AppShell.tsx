@@ -334,12 +334,12 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <WelcomeBackProvider>
-      <div className={`flex w-full text-foreground ${isDashboard ? "h-screen overflow-hidden" : "min-h-screen"}`}>
+      <div className={`app-shell flex w-full text-foreground ${isDashboard ? "h-screen overflow-hidden" : "min-h-screen"}`}>
       {/* Desktop sidebar */}
       <aside
         className={`${
-          collapsed ? "w-[76px]" : "w-[264px]"
-        } hidden md:flex shrink-0 border-r border-border/50 bg-card flex-col transition-[width] duration-300 ease-out`}
+          collapsed ? "w-[68px]" : "w-[236px]"
+        } hidden md:flex shrink-0 border-r border-border/60 bg-background flex-col transition-[width] duration-300 ease-out`}
       >
         {SidebarContent}
       </aside>
@@ -393,7 +393,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="sticky top-0 z-30 flex items-center gap-2 px-4 md:px-6 py-3 border-b border-border/50 bg-background/85 backdrop-blur-xl">
+        <header className="sticky top-0 z-30 flex items-center gap-2 px-4 md:px-5 py-2.5 border-b border-border/60 bg-background/95 backdrop-blur-xl">
           {/* Mobile menu */}
           <button
             onClick={() => setMobileOpen(true)}
@@ -494,11 +494,11 @@ function NavLinkRow({
   return (
     <Link
       to={item.to}
-      className={`group relative flex items-center gap-3.5 rounded-xl text-[14px] transition-colors ${
+      className={`group relative flex items-center gap-3 rounded-md text-[13px] transition-colors ${
         nested ? "pl-8 pr-3 py-2" : collapsed ? "px-3 py-2.5 justify-center" : "px-3 py-2.5"
       } ${
         active
-          ? "bg-accent text-foreground font-semibold"
+          ? "bg-accent/70 text-foreground font-medium"
           : "text-foreground/70 hover:bg-accent/50 hover:text-foreground font-medium"
       }`}
       title={item.label}
@@ -528,7 +528,7 @@ function NavGroupBlock({
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        className={`w-full flex items-center gap-3.5 rounded-xl px-3 py-2.5 text-[14px] transition-colors ${
+        className={`w-full flex items-center gap-3 rounded-md px-3 py-2.5 text-[13px] transition-colors ${
           hasActive ? "text-foreground font-semibold" : "text-foreground/70 hover:bg-accent/50 hover:text-foreground font-medium"
         }`}
       >
