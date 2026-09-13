@@ -175,14 +175,24 @@ export function TradeOfferDialog({
         )}
 
         <div className="mt-4 flex gap-2">
-          <button
-            type="button"
-            disabled={placeMutation.isPending || !units}
-            onClick={() => placeMutation.mutate()}
-            className="rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50"
-          >
-            {placeMutation.isPending ? "Placing…" : !units ? "Connect broker to trade" : "Place trade"}
-          </button>
+          {units ? (
+            <button
+              type="button"
+              disabled={placeMutation.isPending}
+              onClick={() => placeMutation.mutate()}
+              className="rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50"
+            >
+              {placeMutation.isPending ? "Placing…" : "Place trade"}
+            </button>
+          ) : (
+            <Link
+              to="/broker"
+              onClick={dismiss}
+              className="rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90"
+            >
+              Connect broker to trade
+            </Link>
+          )}
           <button
             type="button"
             onClick={dismiss}
