@@ -1857,8 +1857,13 @@ function TradeFormModal({
   // Reading happens on its own the moment screenshots are added: nobody should
   // have to press a button to get the numbers off an image.
   useEffect(() => {
-    if (!images.length || autofilling) return;
-    if (images.length === readImageCount.current) return;
+    if (autofilling) return;
+    // Removing a screenshot must not trigger a re-read (it would overwrite any
+    // corrections), but it must let the next upload be read again.
+    if (images.length <= readImageCount.current) {
+      readImageCount.current = images.length;
+      return;
+    }
     readImageCount.current = images.length;
     void autofillFromScreenshot();
     // eslint-disable-next-line react-hooks/exhaustive-deps
