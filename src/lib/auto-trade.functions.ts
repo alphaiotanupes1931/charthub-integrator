@@ -121,6 +121,10 @@ export const previewAutoTrade = createServerFn({ method: "POST" })
       riskPct: settings.riskPct,
       riskAmount: Math.round(((facts.equity * settings.riskPct) / 100) * 100) / 100,
       units,
+      // Approximate value of the position at entry (units x entry, in the
+      // instrument's quote currency). Margin needed depends on the account's
+      // leverage, so this is labelled an estimate in the popup.
+      positionValue: units === null ? null : Math.round(units * data.entry * 100) / 100,
     };
   });
 
