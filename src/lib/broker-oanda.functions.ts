@@ -233,6 +233,40 @@ export const getBrokerStatus = createServerFn({ method: "GET" })
   .handler(async ({ context }) => oandaStatus(context.userId));
 
 
+/**
+ * The instruments this exact account may trade, straight from OANDA
+ * (GET /v3/accounts/{accountID}/instruments). What OANDA offers depends on the
+ * user's regulated entity (country), so the tradable list is per-account and can
+ * never be a static table. resolveOandaAccount already tries api-fxpractice and
+ * api-fxtrade, so demo and live tokens both work without the user picking a host.
+ */
+export const listOandaInstruments = createServerFn({ method: "GET" })
+  .middleware([requireCapability("broker_live")])
+  .handler(async ({ context }) => {
+    try {
+      const body = await oandaFetch(context.userId, "/instruments");
+      const raw = Array.isArray(body.instruments) ? (body.instruments as Array<Record<string, unknown>>) : [];
+      const instruments = raw
+        .map((i) => ({
+          name: String(i.name ?? ""),
+          displayName: String(i.displayName ?? i.name ?? ""),
+          type: String(i.type ?? ""),
+        }))
+        .filter((i) => i.name.length > 0)
+        .sort((a, b) => a.displayName.localeCompare(b.displayName));
+      return {
+        connected: true as const,
+        env: (body.__env ?? "practice") as OandaEnv,
+        accountId: body.__accountId ?? null,
+        instruments,
+      };
+    } catch (e) {
+      return { connected: false as const, reason: (e as Error).message, instruments: [] as Array<{ name: string; displayName: string; type: string }> };
+    }
+  });
+
+
+
 // Identity check: OANDA has no OAuth login for retail traders, so "being logged
 // in" here means the saved token resolves to a real OANDA account. This lists
 // every account the token is authorized for, with the alias OANDA shows in its

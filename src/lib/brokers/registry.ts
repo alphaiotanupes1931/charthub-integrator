@@ -157,7 +157,9 @@ export const BROKERS: BrokerDef[] = [
       { key: "apiKey", label: "App ID / device ID", secret: true, optional: true },
     ],
     docsUrl: "https://api.tradovate.com/",
-    notes: "Futures routing venue. Also the API path used by NinjaTrader accounts cleared through Tradovate.",
+    notes:
+      "Futures routing venue, and the way US traders execute Dow, Nasdaq, S&P, gold and oil (MYM, MNQ, MES, MGC, MCL) - OANDA cannot offer those to US accounts. Also the API path used by NinjaTrader accounts cleared through Tradovate.",
+
   },
   {
     id: "ninjatrader",
@@ -181,30 +183,33 @@ export const BROKERS: BrokerDef[] = [
     fields: [ACCOUNT],
     docsUrl: "https://www.interactivebrokers.com/campus/ibkr-api-page/cpapi-v1/",
     notes:
-      "IBKR requires the Client Portal Gateway running on your own machine, so cloud verification is not possible. Store your account ID for signal context.",
+      "The other US route to index and gold futures alongside stocks and forex. IBKR requires the Client Portal Gateway running on your own machine, so cloud verification is not possible. Store your account ID for signal context.",
   },
   {
     id: "coinbase",
-    name: "Coinbase Exchange",
+    name: "Coinbase (Advanced Trade)",
     group: "Crypto",
     assets: ["crypto"],
     testable: true,
     trading: true,
     fields: [KEY, SECRET, PASS],
-    docsUrl: "https://docs.cdp.coinbase.com/exchange/docs/welcome",
-    notes: "Exchange API key, secret and passphrase. Read-only keys are enough to verify balances.",
+    docsUrl: "https://docs.cdp.coinbase.com/advanced-trade/docs/welcome",
+    notes:
+      "Recommended crypto venue for US traders: API key, secret and passphrase. Read-only keys are enough to verify balances.",
   },
   {
     id: "binance",
-    name: "Binance",
+    name: "Binance (non-US only)",
     group: "Crypto",
     assets: ["crypto"],
     testable: true,
     trading: true,
     fields: [KEY, SECRET],
     docsUrl: "https://developers.binance.com/docs/binance-spot-api-docs",
-    notes: "HMAC key pair. Restrict the key to your IP and disable withdrawals.",
+    notes:
+      "Binance.com does not serve US residents, and Binance.US is a separate exchange with a smaller product set and different keys. If you are in the US, connect Coinbase Advanced Trade instead. HMAC key pair; restrict the key to your IP and disable withdrawals.",
   },
+
   {
     id: "bybit",
     name: "Bybit",
