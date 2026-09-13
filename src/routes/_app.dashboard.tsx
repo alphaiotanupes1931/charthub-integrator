@@ -1786,8 +1786,11 @@ function Dashboard() {
                         {s.ticker}
                         {tradable === true && !active && <span className="h-1.5 w-1.5 rounded-full bg-oanda shrink-0" />}
                       </div>
-                      <div className={`text-[11px] truncate ${tradable === true && !active ? "text-oanda/70" : "text-muted-foreground"}`}>
-                        {tradable === false ? `${s.name} · Analysis only — ${untradableReason(s)}` : tradable === true ? `${s.name} · Tradable on OANDA` : `${s.name} · ${s.venue}`}
+                      <div
+                        className={`text-[11px] truncate ${tradable === true && !active ? "text-oanda/70" : "text-muted-foreground"}`}
+                        title={tradable === false ? untradableReason(s) : undefined}
+                      >
+                        {tradable === false ? `${s.name} · Analysis only` : tradable === true ? `${s.name} · OANDA` : `${s.name} · ${s.venue}`}
                       </div>
                     </div>
                     {active && <Check className="h-4 w-4 shrink-0" />}
@@ -1797,7 +1800,7 @@ function Dashboard() {
               {accountInstruments.length > 0 && (
                 <>
                   <div className="px-3 pt-3 pb-1 text-[11px] font-medium text-foreground">
-                    Also Tradable on Your OANDA Account
+                    Also on OANDA
                   </div>
                   {accountInstruments.map((s) => {
                     const active = s.tv === symbol.tv;
