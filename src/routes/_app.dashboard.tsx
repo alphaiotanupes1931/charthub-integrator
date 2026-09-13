@@ -1723,9 +1723,10 @@ function Dashboard() {
             <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${pickerOpen ? "rotate-180" : ""}`} />
           </button>
           {pickerOpen && (
-            <div role="listbox" className="absolute left-0 mt-2 w-[min(18rem,calc(100vw-2rem))] max-h-80 overflow-y-auto rounded-2xl border border-border/60 bg-card shadow-xl z-50">
+            <div role="listbox" className="absolute left-0 mt-2 w-[min(20rem,calc(100vw-2rem))] max-h-80 overflow-y-auto rounded-2xl border border-border/60 bg-card shadow-xl z-50">
               {SYMBOLS.map((s) => {
                 const active = s.tv === symbol.tv;
+                const tradable = isTradableHere(s);
                 return (
                   <button
                     key={s.tv}
@@ -1734,18 +1735,48 @@ function Dashboard() {
                     onClick={() => { setSymbol(s); setPickerOpen(false); }}
                     className={`w-full text-left px-3 py-2.5 text-sm flex items-center justify-between gap-3 hover:bg-accent/40 transition ${
                       active ? "bg-primary/10 text-primary" : "text-foreground"
-                    }`}
+                    } ${tradable === false ? "opacity-60" : ""}`}
                   >
                     <div className="min-w-0">
                       <div className="font-medium truncate">{s.ticker}</div>
-                      <div className="text-[11px] text-muted-foreground truncate">{s.name} · {s.venue}</div>
+                      <div className="text-[11px] text-muted-foreground truncate">
+                        {tradable === false ? `${s.name} · analysis only — ${untradableReason(s)}` : `${s.name} · ${s.venue}`}
+                      </div>
                     </div>
                     {active && <Check className="h-4 w-4 shrink-0" />}
                   </button>
                 );
               })}
+              {accountInstruments.length > 0 && (
+                <>
+                  <div className="px-3 pt-3 pb-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+                    Also tradable on your OANDA account
+                  </div>
+                  {accountInstruments.map((s) => {
+                    const active = s.tv === symbol.tv;
+                    return (
+                      <button
+                        key={s.tv}
+                        role="option"
+                        aria-selected={active}
+                        onClick={() => { setSymbol(s); setPickerOpen(false); }}
+                        className={`w-full text-left px-3 py-2.5 text-sm flex items-center justify-between gap-3 hover:bg-accent/40 transition ${
+                          active ? "bg-primary/10 text-primary" : "text-foreground"
+                        }`}
+                      >
+                        <div className="min-w-0">
+                          <div className="font-medium truncate">{s.ticker}</div>
+                          <div className="text-[11px] text-muted-foreground truncate">{s.name} · OANDA</div>
+                        </div>
+                        {active && <Check className="h-4 w-4 shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </>
+              )}
             </div>
           )}
+
         </div>
 
         {/* Timeframe pills */}
