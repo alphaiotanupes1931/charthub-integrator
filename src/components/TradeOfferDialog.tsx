@@ -144,9 +144,15 @@ export function TradeOfferDialog({
               <div>
                 Size: <span className="font-mono">{units}</span> units
               </div>
+              {sizing.data.positionValue !== null && sizing.data.positionValue !== undefined && (
+                <div>
+                  Position value: about {currency} {sizing.data.positionValue.toLocaleString()}
+                </div>
+              )}
               <div className="text-muted-foreground">
                 Risking {sizing.data.riskPct}% of your account, about {currency} {sizing.data.riskAmount} if the stop is
-                hit. The stop and target are attached to the order.
+                hit. The exact margin depends on your account's leverage. The stop and target are attached to the
+                order.
               </div>
             </div>
           )}
