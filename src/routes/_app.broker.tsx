@@ -13,6 +13,8 @@ import {
   listBrokerPendingOrders,
   cancelBrokerOrder,
 } from "@/lib/broker-oanda.functions";
+import { TradeLockerConnectPanel } from "@/components/TradeLockerConnectPanel";
+import { OandaConnectPanel } from "@/components/OandaConnectPanel";
 
 type BrokerSearch = {
   symbol?: string;
@@ -22,7 +24,6 @@ type BrokerSearch = {
   tp?: number | string;
 };
 
-import { TradeLockerConnectPanel } from "@/components/TradeLockerConnectPanel";
 
 
 export const Route = createFileRoute("/_app/broker")({
@@ -147,7 +148,7 @@ function BrokerPage() {
         <div>
           <h1 className="font-display text-2xl md:text-3xl font-semibold mb-2">Brokers</h1>
           <p className="text-sm text-muted-foreground">
-            Log in to TradeLocker once, then place trades straight from your scans. TradeLocker covers indices, gold, oil and crypto as well as forex. Your login is encrypted on the server and never exposed to the browser.
+            Connect a supported broker account, then place trades straight from your scans. Your credentials are encrypted on the server and never exposed to the browser.
           </p>
 
         </div>
@@ -177,11 +178,12 @@ function BrokerPage() {
       )}
 
       <TradeLockerConnectPanel onChange={() => refresh()} />
+      <OandaConnectPanel onChange={() => refresh()} />
 
       <div className="rounded-xl border border-border/60 bg-card p-5 mb-6">
         <div className="text-sm font-semibold">Account used for Auto Trading</div>
         <p className="mt-1 text-xs text-muted-foreground">
-          Approved setups are placed and managed at your connected TradeLocker account. Switch Auto Trading on from
+          Approved setups are placed and managed at your connected broker account. Switch Auto Trading on from
           the home page; sign out above at any time and nothing can be placed.
         </p>
       </div>
