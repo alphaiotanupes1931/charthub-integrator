@@ -3,6 +3,7 @@
 // published track record does not depend on waiting for live scans to resolve.
 import { createFileRoute } from "@tanstack/react-router";
 import { BACKTEST_SYMBOLS } from "@/lib/backtest/catalog";
+import { toGradeMix } from "@/lib/grade-mix.shared";
 
 export const Route = createFileRoute("/api/public/hooks/replay-refresh")({
   server: {
@@ -81,6 +82,7 @@ export const Route = createFileRoute("/api/public/hooks/replay-refresh")({
                 a_win_rate: aTrades ? Math.round((aWins / aTrades) * 1000) / 10 : 0,
                 a_expectancy_r: aTrades ? Math.round((aNetR / aTrades) * 100) / 100 : 0,
                 source,
+                grade_mix: toGradeMix(result.byGrade),
                 notes: result.notes.join(" ") || null,
                 updated_at: new Date().toISOString(),
               } as never,
