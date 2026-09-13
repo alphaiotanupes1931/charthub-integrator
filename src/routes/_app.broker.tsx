@@ -13,6 +13,8 @@ import {
   listBrokerPendingOrders,
   cancelBrokerOrder,
 } from "@/lib/broker-oanda.functions";
+import { TradeLockerConnectPanel } from "@/components/TradeLockerConnectPanel";
+import { OandaConnectPanel } from "@/components/OandaConnectPanel";
 
 type BrokerSearch = {
   symbol?: string;
@@ -22,7 +24,6 @@ type BrokerSearch = {
   tp?: number | string;
 };
 
-import { TradeLockerConnectPanel } from "@/components/TradeLockerConnectPanel";
 
 
 export const Route = createFileRoute("/_app/broker")({
