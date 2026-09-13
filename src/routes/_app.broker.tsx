@@ -147,7 +147,7 @@ function BrokerPage() {
         <div>
           <h1 className="font-display text-2xl md:text-3xl font-semibold mb-2">Brokers</h1>
           <p className="text-sm text-muted-foreground">
-            Connect a supported broker account, then place trades straight from your scans. Your credentials are encrypted on the server and never exposed to the browser.
+            Connect your OANDA account, then place trades straight from your scans. Your API token is encrypted on the server and never exposed to the browser.
           </p>
 
         </div>
