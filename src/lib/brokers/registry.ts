@@ -185,26 +185,29 @@ export const BROKERS: BrokerDef[] = [
   },
   {
     id: "coinbase",
-    name: "Coinbase Exchange",
+    name: "Coinbase (Advanced Trade)",
     group: "Crypto",
     assets: ["crypto"],
     testable: true,
     trading: true,
     fields: [KEY, SECRET, PASS],
-    docsUrl: "https://docs.cdp.coinbase.com/exchange/docs/welcome",
-    notes: "Exchange API key, secret and passphrase. Read-only keys are enough to verify balances.",
+    docsUrl: "https://docs.cdp.coinbase.com/advanced-trade/docs/welcome",
+    notes:
+      "Recommended crypto venue for US traders: API key, secret and passphrase. Read-only keys are enough to verify balances.",
   },
   {
     id: "binance",
-    name: "Binance",
+    name: "Binance (non-US only)",
     group: "Crypto",
     assets: ["crypto"],
     testable: true,
     trading: true,
     fields: [KEY, SECRET],
     docsUrl: "https://developers.binance.com/docs/binance-spot-api-docs",
-    notes: "HMAC key pair. Restrict the key to your IP and disable withdrawals.",
+    notes:
+      "Binance.com does not serve US residents, and Binance.US is a separate exchange with a smaller product set and different keys. If you are in the US, connect Coinbase Advanced Trade instead. HMAC key pair; restrict the key to your IP and disable withdrawals.",
   },
+
   {
     id: "bybit",
     name: "Bybit",
