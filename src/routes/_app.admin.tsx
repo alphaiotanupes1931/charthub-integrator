@@ -19,6 +19,7 @@ import { UserUsageDrawer } from "@/components/admin/UserUsageDrawer";
 import { TestChecklistPanel } from "@/components/admin/TestChecklistPanel";
 import { InstrumentProfilePanel } from "@/components/admin/InstrumentProfilePanel";
 import EngineReplayPanel from "@/components/EngineReplayPanel";
+import { GradeAccuracyPanel } from "@/components/admin/GradeAccuracyPanel";
 
 import { PlanDebugPanel } from "@/components/admin/PlanDebugPanel";
 import { ScannerGovernancePanel } from "@/components/admin/ScannerGovernancePanel";
@@ -265,6 +266,7 @@ Live from Stripe, {totalUsers} accounts
           <PlanDebugPanel />
           <InstrumentProfilePanel />
           <EngineReplayPanel canRefresh />
+          <GradeAccuracyPanel />
 
           <TestChecklistPanel />
         </>
