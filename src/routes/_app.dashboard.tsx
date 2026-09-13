@@ -185,10 +185,14 @@ const SYMBOLS: Symbol[] = [
   { tv: "OANDA:EURUSD",      ticker: "EUR/USD", name: "Euro / Dollar",    venue: "OANDA"     },
   { tv: "OANDA:GBPUSD",      ticker: "GBP/USD", name: "Pound / Dollar",   venue: "OANDA"     },
   { tv: "OANDA:USDJPY",      ticker: "USD/JPY", name: "Dollar / Yen",     venue: "OANDA"     },
-  { tv: "BINANCE:BTCUSDT",   ticker: "BTC/USD", name: "Bitcoin",          venue: "Binance"   },
-  { tv: "BINANCE:ETHUSDT",   ticker: "ETH/USD", name: "Ethereum",         venue: "Binance"   },
-  { tv: "BINANCE:XRPUSDT",   ticker: "XRP/USD", name: "Ripple",           venue: "Binance"   },
-  { tv: "BINANCE:SOLUSDT",   ticker: "SOL/USD", name: "Solana",           venue: "Binance"   },
+  // Crypto is quoted from Coinbase: Binance.com does not serve US residents and
+  // Binance.US is a separate, more limited exchange, so Coinbase Advanced Trade
+  // is the venue a US trader can actually execute on.
+  { tv: "COINBASE:BTCUSD",   ticker: "BTC/USD", name: "Bitcoin",          venue: "Coinbase"  },
+  { tv: "COINBASE:ETHUSD",   ticker: "ETH/USD", name: "Ethereum",         venue: "Coinbase"  },
+  { tv: "COINBASE:XRPUSD",   ticker: "XRP/USD", name: "Ripple",           venue: "Coinbase"  },
+  { tv: "COINBASE:SOLUSD",   ticker: "SOL/USD", name: "Solana",           venue: "Coinbase"  },
+
 ];
 
 // Resolve a chat-history "symbol" tag (e.g. "XAU Gold", "SPX500", "BTC")
