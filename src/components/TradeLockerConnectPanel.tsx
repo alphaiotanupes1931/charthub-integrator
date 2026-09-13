@@ -172,6 +172,19 @@ export function TradeLockerConnectPanel({ onChange }: { onChange?: () => void })
             Log in with the email, password and server you use on TradeLocker. Your login stays
             encrypted on the server and is never shown in the browser.
           </p>
+          <div className="rounded-xl border border-border/60 bg-muted/40 p-3 text-xs text-muted-foreground space-y-1.5">
+            <p className="font-semibold text-foreground">You signed up for TradeLocker with Google?</p>
+            <p>
+              TradeLocker doesn't offer a "connect with Google" handoff for apps like this — connecting
+              needs an email and password. It takes a minute:
+            </p>
+            <ol className="list-decimal list-inside space-y-1">
+              <li>Open TradeLocker and sign in with Google as usual.</li>
+              <li>Go to your profile/settings and set a password for the account.</li>
+              <li>Come back here and use your Google email plus that new password.</li>
+            </ol>
+            <p>The server name is shown on your TradeLocker account/login screen.</p>
+          </div>
           <input
             value={email}
             onChange={(ev) => setEmail(ev.target.value)}
@@ -205,7 +218,7 @@ export function TradeLockerConnectPanel({ onChange }: { onChange?: () => void })
               <LogIn className="h-4 w-4" /> {busy ? "Signing in..." : "Sign in to TradeLocker"}
             </button>
             <a
-              href="https://tradelocker.com"
+              href="https://app.tradelocker.com/en/login"
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
