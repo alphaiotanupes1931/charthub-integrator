@@ -157,7 +157,9 @@ export const BROKERS: BrokerDef[] = [
       { key: "apiKey", label: "App ID / device ID", secret: true, optional: true },
     ],
     docsUrl: "https://api.tradovate.com/",
-    notes: "Futures routing venue. Also the API path used by NinjaTrader accounts cleared through Tradovate.",
+    notes:
+      "Futures routing venue, and the way US traders execute Dow, Nasdaq, S&P, gold and oil (MYM, MNQ, MES, MGC, MCL) - OANDA cannot offer those to US accounts. Also the API path used by NinjaTrader accounts cleared through Tradovate.",
+
   },
   {
     id: "ninjatrader",
@@ -181,7 +183,7 @@ export const BROKERS: BrokerDef[] = [
     fields: [ACCOUNT],
     docsUrl: "https://www.interactivebrokers.com/campus/ibkr-api-page/cpapi-v1/",
     notes:
-      "IBKR requires the Client Portal Gateway running on your own machine, so cloud verification is not possible. Store your account ID for signal context.",
+      "The other US route to index and gold futures alongside stocks and forex. IBKR requires the Client Portal Gateway running on your own machine, so cloud verification is not possible. Store your account ID for signal context.",
   },
   {
     id: "coinbase",
