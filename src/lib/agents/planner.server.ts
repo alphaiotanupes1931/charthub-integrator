@@ -700,7 +700,9 @@ export function gradeFromEvidence(
   // can lower confidence without erasing an intact 4H direction plus a real
   // aligned entry zone. Genuine opposition is still applied by the hard caps
   // below and can reduce this to C or NO ENTRY.
-  else if (confidence >= 58 || (h4Agrees && alignedZone)) grade = "B";
+  // The shortcut never applies at the floor score of 25, which is what a failing
+  // reward-to-risk (or zero positive evidence) returns: those stay C.
+  else if (confidence >= 58 || (confidence > 25 && h4Agrees && alignedZone)) grade = "B";
   else grade = "C";
 
   // Missing higher-timeframe data means the counters had little to work with.
