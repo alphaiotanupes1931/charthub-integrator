@@ -238,6 +238,14 @@
 @layer base {
   html, body { overflow-x: hidden; }
   h1, h2, h3 { text-wrap: balance; overflow-wrap: anywhere; }
+  h1, h2, h3, h4, h5, h6,
+  nav a,
+  button,
+  [role="tab"],
+  [role="option"] > div:first-child {
+    text-transform: capitalize;
+  }
+  abbr, code, kbd, .font-mono { text-transform: none; }
   p, li { text-wrap: pretty; }
   @media (max-width: 640px) {
     h1 { font-size: clamp(1.875rem, 8vw, 3rem) !important; line-height: 1.08 !important; }
@@ -315,6 +323,11 @@
 .app-shell aside,
 .app-shell header,
 .trade-dashboard {
+  box-shadow: none;
+}
+
+.app-shell [class*="shadow-"],
+.trade-dashboard [class*="shadow-"] {
   box-shadow: none;
 }
 
