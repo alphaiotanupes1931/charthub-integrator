@@ -173,16 +173,13 @@ export function TradeOfferDialog({
                 page to sign in to your broker and pick it as your default.
               </p>
               <div className="rounded-lg bg-muted/40 p-2.5 text-muted-foreground">
-                <p className="font-medium text-foreground">What would this trade need?</p>
+                <p className="font-medium text-foreground">Cost estimate</p>
                 <p className="mt-1">
-                  Every 1 unit risks about {money} {riskPerUnit.toFixed(offer.decimals)} at the stop. With a {money}{" "}
+                  Every 1 unit risks about {money} {riskPerUnit.toFixed(offer.decimals)} at the stop. With a {money}
                   {exampleDeposit.toLocaleString()} deposit risking {riskPct}%, this setup would open roughly{" "}
-                  {exampleUnits.toLocaleString()} units
-                  {exampleValue !== null && (
-                    <> — a position worth about {money} {exampleValue.toLocaleString()}</>
-                  )}{" "}
-                  — so your deposit has to cover the {money} {exampleRisk.toLocaleString()} at risk plus the margin
-                  your broker requires (margin depends on your account's leverage).
+                  {exampleUnits.toLocaleString()} units — a position worth about {money}{" "}
+                  {exampleValue !== null ? exampleValue.toLocaleString() : "—"} — so your deposit has to cover the {money}
+                  {exampleRisk.toLocaleString()} at risk plus the margin your broker requires (margin depends on your account's leverage).
                 </p>
               </div>
               <Link
