@@ -30,6 +30,7 @@
   --color-ring: var(--ring);
   --color-bull: var(--bull);
   --color-bear: var(--bear);
+  --color-oanda: oklch(0.60 0.13 240);
   --color-gold: var(--gold);
   --color-gold-light: var(--gold-light);
   --color-gold-deep: var(--gold-deep);
