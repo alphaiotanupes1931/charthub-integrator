@@ -53,6 +53,9 @@ import { getAutoTradeContext } from "@/lib/auto-trade.functions";
 import { SCANNER_METHODOLOGY_VERSION } from "@/lib/scanner-methodology";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn as useServerFnForAutoTrade } from "@tanstack/react-start";
+import { listOandaInstruments } from "@/lib/broker-oanda.functions";
+import { OANDA_NAME_BY_TICKER, tvSymbolForOanda, oandaLabel, FUTURES_ONLY_TICKERS } from "@/lib/oanda-instruments";
+
 
 // Scan context: the active strategy playbook is fed to the planner so the
 // Analysis grade is scored against the same rules the chat coach uses.
@@ -185,10 +188,14 @@ const SYMBOLS: Symbol[] = [
   { tv: "OANDA:EURUSD",      ticker: "EUR/USD", name: "Euro / Dollar",    venue: "OANDA"     },
   { tv: "OANDA:GBPUSD",      ticker: "GBP/USD", name: "Pound / Dollar",   venue: "OANDA"     },
   { tv: "OANDA:USDJPY",      ticker: "USD/JPY", name: "Dollar / Yen",     venue: "OANDA"     },
-  { tv: "BINANCE:BTCUSDT",   ticker: "BTC/USD", name: "Bitcoin",          venue: "Binance"   },
-  { tv: "BINANCE:ETHUSDT",   ticker: "ETH/USD", name: "Ethereum",         venue: "Binance"   },
-  { tv: "BINANCE:XRPUSDT",   ticker: "XRP/USD", name: "Ripple",           venue: "Binance"   },
-  { tv: "BINANCE:SOLUSDT",   ticker: "SOL/USD", name: "Solana",           venue: "Binance"   },
+  // Crypto is quoted from Coinbase: Binance.com does not serve US residents and
+  // Binance.US is a separate, more limited exchange, so Coinbase Advanced Trade
+  // is the venue a US trader can actually execute on.
+  { tv: "COINBASE:BTCUSD",   ticker: "BTC/USD", name: "Bitcoin",          venue: "Coinbase"  },
+  { tv: "COINBASE:ETHUSD",   ticker: "ETH/USD", name: "Ethereum",         venue: "Coinbase"  },
+  { tv: "COINBASE:XRPUSD",   ticker: "XRP/USD", name: "Ripple",           venue: "Coinbase"  },
+  { tv: "COINBASE:SOLUSD",   ticker: "SOL/USD", name: "Solana",           venue: "Coinbase"  },
+
 ];
 
 // Resolve a chat-history "symbol" tag (e.g. "XAU Gold", "SPX500", "BTC")
@@ -904,6 +911,47 @@ function Dashboard() {
   const [interval, setIntervalState] = useState("60");
   const [symbol, setSymbol] = useState<Symbol>(SYMBOLS[0]);
   const [pickerOpen, setPickerOpen] = useState(false);
+
+  // The tradable list comes from the trader's own OANDA account, not a static
+  // table: what OANDA offers depends on the regulated entity for their country.
+  // Demo and live tokens both resolve server-side, so no host picking here.
+  const loadOandaInstruments = useServerFn(listOandaInstruments);
+  const oandaInstruments = useQuery({
+    queryKey: ["oanda", "instruments"],
+    queryFn: () => loadOandaInstruments(),
+    retry: false,
+    staleTime: 10 * 60_000,
+  });
+  const oandaConnected = oandaInstruments.data?.connected === true;
+  const supportedOanda = useMemo(
+    () => new Set((oandaInstruments.data?.instruments ?? []).map((i) => i.name)),
+    [oandaInstruments.data],
+  );
+  /** null = unknown (no account connected yet), true/false = account fact. */
+  const isTradableHere = useCallback(
+    (s: Symbol): boolean | null => {
+      if (s.venue !== "OANDA") return null;
+      if (!oandaConnected) return null;
+      const name = OANDA_NAME_BY_TICKER[s.ticker];
+      return name ? supportedOanda.has(name) : null;
+    },
+    [oandaConnected, supportedOanda],
+  );
+  const untradableReason = useCallback(
+    (s: Symbol) =>
+      FUTURES_ONLY_TICKERS.has(s.ticker)
+        ? "your OANDA account cannot trade this; use a futures broker (Tradovate, IBKR)"
+        : "not offered on your OANDA account",
+    [],
+  );
+  const accountInstruments = useMemo<Symbol[]>(() => {
+    if (!oandaConnected) return [];
+    const curated = new Set(Object.values(OANDA_NAME_BY_TICKER));
+    return (oandaInstruments.data?.instruments ?? [])
+      .filter((i) => !curated.has(i.name))
+      .map((i) => ({ tv: tvSymbolForOanda(i.name), ticker: oandaLabel(i), name: oandaLabel(i), venue: "OANDA" }));
+  }, [oandaConnected, oandaInstruments.data]);
+
   const [scanning, setScanning] = useState(false);
   const [result, setResult] = useState<ScanResult | null>(() => {
     if (typeof window === "undefined") return null;
@@ -1719,9 +1767,10 @@ function Dashboard() {
             <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${pickerOpen ? "rotate-180" : ""}`} />
           </button>
           {pickerOpen && (
-            <div role="listbox" className="absolute left-0 mt-2 w-[min(18rem,calc(100vw-2rem))] max-h-80 overflow-y-auto rounded-2xl border border-border/60 bg-card shadow-xl z-50">
+            <div role="listbox" className="absolute left-0 mt-2 w-[min(20rem,calc(100vw-2rem))] max-h-80 overflow-y-auto rounded-2xl border border-border/60 bg-card shadow-xl z-50">
               {SYMBOLS.map((s) => {
                 const active = s.tv === symbol.tv;
+                const tradable = isTradableHere(s);
                 return (
                   <button
                     key={s.tv}
@@ -1730,18 +1779,48 @@ function Dashboard() {
                     onClick={() => { setSymbol(s); setPickerOpen(false); }}
                     className={`w-full text-left px-3 py-2.5 text-sm flex items-center justify-between gap-3 hover:bg-accent/40 transition ${
                       active ? "bg-primary/10 text-primary" : "text-foreground"
-                    }`}
+                    } ${tradable === false ? "opacity-60" : ""}`}
                   >
                     <div className="min-w-0">
                       <div className="font-medium truncate">{s.ticker}</div>
-                      <div className="text-[11px] text-muted-foreground truncate">{s.name} · {s.venue}</div>
+                      <div className="text-[11px] text-muted-foreground truncate">
+                        {tradable === false ? `${s.name} · analysis only — ${untradableReason(s)}` : `${s.name} · ${s.venue}`}
+                      </div>
                     </div>
                     {active && <Check className="h-4 w-4 shrink-0" />}
                   </button>
                 );
               })}
+              {accountInstruments.length > 0 && (
+                <>
+                  <div className="px-3 pt-3 pb-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+                    Also tradable on your OANDA account
+                  </div>
+                  {accountInstruments.map((s) => {
+                    const active = s.tv === symbol.tv;
+                    return (
+                      <button
+                        key={s.tv}
+                        role="option"
+                        aria-selected={active}
+                        onClick={() => { setSymbol(s); setPickerOpen(false); }}
+                        className={`w-full text-left px-3 py-2.5 text-sm flex items-center justify-between gap-3 hover:bg-accent/40 transition ${
+                          active ? "bg-primary/10 text-primary" : "text-foreground"
+                        }`}
+                      >
+                        <div className="min-w-0">
+                          <div className="font-medium truncate">{s.ticker}</div>
+                          <div className="text-[11px] text-muted-foreground truncate">{s.name} · OANDA</div>
+                        </div>
+                        {active && <Check className="h-4 w-4 shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </>
+              )}
             </div>
           )}
+
         </div>
 
         {/* Timeframe pills */}

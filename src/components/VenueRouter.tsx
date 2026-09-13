@@ -60,8 +60,10 @@ export function VenueRouter({ prefill, exclude = [] }: { prefill?: Prefill; excl
       <div className="rounded-xl border border-border/60 bg-card p-5">
         <div className="text-sm font-semibold">Route to another venue</div>
         <p className="mt-2 text-xs text-muted-foreground">
-          Alpaca, Tradier, Coinbase and Binance can execute orders from a setup once connected.
+          Alpaca, Tradier, Coinbase, Tradovate and Binance (outside the US) can execute orders from a setup once
+          connected. US traders: Coinbase for crypto, Tradovate or IBKR for index and gold futures.
         </p>
+
         <Link
           to="/connections"
           className="mt-3 inline-flex items-center gap-2 rounded-xl border border-border/60 px-3 py-1.5 text-xs"
