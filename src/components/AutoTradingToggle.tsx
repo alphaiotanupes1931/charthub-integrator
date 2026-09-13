@@ -140,10 +140,16 @@ export function AutoTradingToggle({ className = "" }: { className?: string }) {
                   confirmation, including while the app is closed. Every order is sent with its stop loss and target
                   already attached. Ongoing management afterwards (stop to break-even, partials, trailing) applies to
                   OANDA-routed trades opened by Auto Trading from now on — positions you opened yourself, and trades
-                  opened before this setting existed, are never touched. TradeMind is not a broker, advisor, or money
-                  manager, and you keep
-                  full responsibility for every order. Switch back to Manual at any time.
+                  opened before this setting existed, are never touched.
                 </p>
+                <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+                  This is opt-in automation of your own strategy, executed with your own broker credentials under your
+                  broker&apos;s third-party API terms. It is not investment advice, a managed account, or a
+                  recommendation, and nothing here is personalised to your circumstances. TradeMind is not a broker,
+                  adviser, or money manager, no outcome is guaranteed, and you keep full responsibility for every
+                  order. Switch back to Manual at any time.
+                </p>
+
                 <div className="mt-4 flex gap-2">
                   <button
                     type="button"
