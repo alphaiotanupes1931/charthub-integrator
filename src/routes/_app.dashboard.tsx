@@ -911,6 +911,47 @@ function Dashboard() {
   const [interval, setIntervalState] = useState("60");
   const [symbol, setSymbol] = useState<Symbol>(SYMBOLS[0]);
   const [pickerOpen, setPickerOpen] = useState(false);
+
+  // The tradable list comes from the trader's own OANDA account, not a static
+  // table: what OANDA offers depends on the regulated entity for their country.
+  // Demo and live tokens both resolve server-side, so no host picking here.
+  const loadOandaInstruments = useServerFn(listOandaInstruments);
+  const oandaInstruments = useQuery({
+    queryKey: ["oanda", "instruments"],
+    queryFn: () => loadOandaInstruments(),
+    retry: false,
+    staleTime: 10 * 60_000,
+  });
+  const oandaConnected = oandaInstruments.data?.connected === true;
+  const supportedOanda = useMemo(
+    () => new Set((oandaInstruments.data?.instruments ?? []).map((i) => i.name)),
+    [oandaInstruments.data],
+  );
+  /** null = unknown (no account connected yet), true/false = account fact. */
+  const isTradableHere = useCallback(
+    (s: Symbol): boolean | null => {
+      if (s.venue !== "OANDA") return null;
+      if (!oandaConnected) return null;
+      const name = OANDA_NAME_BY_TICKER[s.ticker];
+      return name ? supportedOanda.has(name) : null;
+    },
+    [oandaConnected, supportedOanda],
+  );
+  const untradableReason = useCallback(
+    (s: Symbol) =>
+      FUTURES_ONLY_TICKERS.has(s.ticker)
+        ? "your OANDA account cannot trade this; use a futures broker (Tradovate, IBKR)"
+        : "not offered on your OANDA account",
+    [],
+  );
+  const accountInstruments = useMemo<Symbol[]>(() => {
+    if (!oandaConnected) return [];
+    const curated = new Set(Object.values(OANDA_NAME_BY_TICKER));
+    return (oandaInstruments.data?.instruments ?? [])
+      .filter((i) => !curated.has(i.name))
+      .map((i) => ({ tv: tvSymbolForOanda(i.name), ticker: oandaLabel(i), name: oandaLabel(i), venue: "OANDA" }));
+  }, [oandaConnected, oandaInstruments.data]);
+
   const [scanning, setScanning] = useState(false);
   const [result, setResult] = useState<ScanResult | null>(() => {
     if (typeof window === "undefined") return null;
