@@ -172,15 +172,12 @@ export function TradeOfferDialog({
                 TradeMind can only place and manage this trade once a funded broker account is linked. Open the broker
                 page to sign in to your broker and pick it as your default.
               </p>
-              <div className="rounded-lg bg-muted/40 p-2.5 text-muted-foreground">
-                <p className="font-medium text-foreground">Cost estimate</p>
-                <p className="mt-1">
-                  Every 1 unit risks about {money} {riskPerUnit.toFixed(offer.decimals)} at the stop. With a {money}
-                  {exampleDeposit.toLocaleString()} deposit risking {riskPct}%, this setup would open roughly{" "}
-                  {exampleUnits.toLocaleString()} units — a position worth about {money}{" "}
-                  {exampleValue !== null ? exampleValue.toLocaleString() : "—"} — so your deposit has to cover the {money}
-                  {exampleRisk.toLocaleString()} at risk plus the margin your broker requires (margin depends on your account's leverage).
-                </p>
+              <div className="rounded-lg bg-muted/40 p-2.5 text-xs text-muted-foreground">
+                <span className="font-medium text-foreground">Cost estimate:</span> a {money}
+                {exampleDeposit.toLocaleString()} deposit risking {riskPct}% opens ~{exampleUnits.toLocaleString()} units
+                (~{money}
+                {exampleValue !== null ? exampleValue.toLocaleString() : "—"}). You need at least {money}
+                {exampleRisk.toLocaleString()} plus your broker's margin.
               </div>
               <Link
                 to="/broker"
