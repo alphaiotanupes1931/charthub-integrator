@@ -13,7 +13,6 @@ import {
   listBrokerPendingOrders,
   cancelBrokerOrder,
 } from "@/lib/broker-oanda.functions";
-import { TradeLockerConnectPanel } from "@/components/TradeLockerConnectPanel";
 import { OandaConnectPanel } from "@/components/OandaConnectPanel";
 
 type BrokerSearch = {
@@ -37,9 +36,9 @@ export const Route = createFileRoute("/_app/broker")({
   head: () => ({
     meta: [
       { title: "Brokers — TradeMind" },
-      { name: "description", content: "Connect TradeLocker and place real trades straight from your scans." },
+      { name: "description", content: "Connect your OANDA account and place real trades straight from your scans." },
       { property: "og:title", content: "Brokers — TradeMind" },
-      { property: "og:description", content: "Connect TradeLocker and place real trades straight from your scans." },
+      { property: "og:description", content: "Connect your OANDA account and place real trades straight from your scans." },
     ],
   }),
   component: BrokerPage,
@@ -148,7 +147,7 @@ function BrokerPage() {
         <div>
           <h1 className="font-display text-2xl md:text-3xl font-semibold mb-2">Brokers</h1>
           <p className="text-sm text-muted-foreground">
-            Connect a supported broker account, then place trades straight from your scans. Your credentials are encrypted on the server and never exposed to the browser.
+            Connect your OANDA account, then place trades straight from your scans. Your API token is encrypted on the server and never exposed to the browser.
           </p>
 
         </div>
@@ -177,7 +176,6 @@ function BrokerPage() {
         </div>
       )}
 
-      <TradeLockerConnectPanel onChange={() => refresh()} />
       <OandaConnectPanel onChange={() => refresh()} />
 
       <div className="rounded-xl border border-border/60 bg-card p-5 mb-6">
