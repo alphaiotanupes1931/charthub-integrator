@@ -82,6 +82,15 @@ export function TradeOfferDialog({
   };
   const currency = sizing.data?.currency ?? "";
   const units = sizing.data?.units ?? null;
+  // Rough cost guide so the trader knows what a deposit needs to cover even
+  // before a funded account is linked.
+  const riskPerUnit = Math.abs(offer.entry - offer.stop);
+  const riskPct = sizing.data?.riskPct ?? 1;
+  const exampleDeposit = 1000;
+  const exampleUnits = Math.floor((exampleDeposit * riskPct) / 100 / riskPerUnit);
+  const exampleRisk = Math.round(((exampleDeposit * riskPct) / 100) * 100) / 100;
+  const exampleValue = exampleUnits > 0 ? Math.round(exampleUnits * offer.entry * 100) / 100 : null;
+  const money = currency || "$";
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4">
@@ -163,6 +172,19 @@ export function TradeOfferDialog({
                 TradeMind can only place and manage this trade once a funded broker account is linked. Open the broker
                 page to sign in to your broker and pick it as your default.
               </p>
+              <div className="rounded-lg bg-muted/40 p-2.5 text-muted-foreground">
+                <p className="font-medium text-foreground">What would this trade need?</p>
+                <p className="mt-1">
+                  Every 1 unit risks about {money} {riskPerUnit.toFixed(offer.decimals)} at the stop. With a {money}{" "}
+                  {exampleDeposit.toLocaleString()} deposit risking {riskPct}%, this setup would open roughly{" "}
+                  {exampleUnits.toLocaleString()} units
+                  {exampleValue !== null && (
+                    <> — a position worth about {money} {exampleValue.toLocaleString()}</>
+                  )}{" "}
+                  — so your deposit has to cover the {money} {exampleRisk.toLocaleString()} at risk plus the margin
+                  your broker requires (margin depends on your account's leverage).
+                </p>
+              </div>
               <Link
                 to="/broker"
                 className="inline-flex items-center rounded-xl bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90"
