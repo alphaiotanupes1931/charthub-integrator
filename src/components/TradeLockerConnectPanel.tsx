@@ -172,16 +172,17 @@ export function TradeLockerConnectPanel({ onChange }: { onChange?: () => void })
             Log in with the email, password and server you use on TradeLocker. Your login stays
             encrypted on the server and is never shown in the browser.
           </p>
-          <div className="rounded-xl border border-border/60 bg-muted/40 p-3 text-xs text-muted-foreground space-y-1.5">
-            <p className="font-semibold text-foreground">You signed up for TradeLocker with Google?</p>
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-muted-foreground space-y-1.5">
+            <p className="font-semibold text-foreground">Signed up for TradeLocker with Google or Apple?</p>
             <p>
-              TradeLocker doesn't offer a "connect with Google" handoff for apps like this — connecting
-              needs an email and password. It takes a minute:
+              TradeLocker does not let third-party apps connect through Google or Apple sign-in, and
+              those accounts do not expose a password you can paste here. That means a social-only
+              TradeLocker account cannot be linked to TradeMind today.
             </p>
+            <p className="text-foreground">Your options:</p>
             <ol className="list-decimal list-inside space-y-1">
-              <li>Open TradeLocker and sign in with Google as usual.</li>
-              <li>Go to your profile/settings and set a password for the account.</li>
-              <li>Come back here and use your Google email plus that new password.</li>
+              <li>Connect OANDA instead (paste an API token below).</li>
+              <li>Ask your TradeLocker broker or prop firm if they can issue email/password credentials for the same account.</li>
             </ol>
             <p>The server name is shown on your TradeLocker account/login screen.</p>
           </div>
