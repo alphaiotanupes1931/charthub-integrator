@@ -172,6 +172,19 @@ export function TradeOfferDialog({
                 TradeMind can only place and manage this trade once a funded broker account is linked. Open the broker
                 page to sign in to your broker and pick it as your default.
               </p>
+              <div className="rounded-lg bg-muted/40 p-2.5 text-muted-foreground">
+                <p className="font-medium text-foreground">What would this trade need?</p>
+                <p className="mt-1">
+                  Every 1 unit risks about {money} {riskPerUnit.toFixed(offer.decimals)} at the stop. With a {money}{" "}
+                  {exampleDeposit.toLocaleString()} deposit risking {riskPct}%, this setup would open roughly{" "}
+                  {exampleUnits.toLocaleString()} units
+                  {exampleValue !== null && (
+                    <> — a position worth about {money} {exampleValue.toLocaleString()}</>
+                  )}{" "}
+                  — so your deposit has to cover the {money} {exampleRisk.toLocaleString()} at risk plus the margin
+                  your broker requires (margin depends on your account's leverage).
+                </p>
+              </div>
               <Link
                 to="/broker"
                 className="inline-flex items-center rounded-xl bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90"
