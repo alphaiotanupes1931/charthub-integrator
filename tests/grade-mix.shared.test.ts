@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { gradeReport, toGradeMix, parseGradeMix } from "./grade-mix.shared";
+import { gradeReport, toGradeMix, parseGradeMix } from "@/lib/grade-mix.shared";
 
 const entry = (grade: string, trades: number, wins: number, netR: number) => ({
   grade,
