@@ -82,6 +82,15 @@ export function TradeOfferDialog({
   };
   const currency = sizing.data?.currency ?? "";
   const units = sizing.data?.units ?? null;
+  // Rough cost guide so the trader knows what a deposit needs to cover even
+  // before a funded account is linked.
+  const riskPerUnit = Math.abs(offer.entry - offer.stop);
+  const riskPct = sizing.data?.riskPct ?? 1;
+  const exampleDeposit = 1000;
+  const exampleUnits = Math.floor((exampleDeposit * riskPct) / 100 / riskPerUnit);
+  const exampleRisk = Math.round(((exampleDeposit * riskPct) / 100) * 100) / 100;
+  const exampleValue = exampleUnits > 0 ? Math.round(exampleUnits * offer.entry * 100) / 100 : null;
+  const money = currency || "$";
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4">
