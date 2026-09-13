@@ -1800,7 +1800,7 @@ function Dashboard() {
               {accountInstruments.length > 0 && (
                 <>
                   <div className="px-3 pt-3 pb-1 text-[11px] font-medium text-foreground">
-                    Also Tradable on Your OANDA Account
+                    Also on OANDA
                   </div>
                   {accountInstruments.map((s) => {
                     const active = s.tv === symbol.tv;
