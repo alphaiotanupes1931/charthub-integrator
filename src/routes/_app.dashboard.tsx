@@ -53,6 +53,9 @@ import { getAutoTradeContext } from "@/lib/auto-trade.functions";
 import { SCANNER_METHODOLOGY_VERSION } from "@/lib/scanner-methodology";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn as useServerFnForAutoTrade } from "@tanstack/react-start";
+import { listOandaInstruments } from "@/lib/broker-oanda.functions";
+import { OANDA_NAME_BY_TICKER, tvSymbolForOanda, oandaLabel, FUTURES_ONLY_TICKERS } from "@/lib/oanda-instruments";
+
 
 // Scan context: the active strategy playbook is fed to the planner so the
 // Analysis grade is scored against the same rules the chat coach uses.
