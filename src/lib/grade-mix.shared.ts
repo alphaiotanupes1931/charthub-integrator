@@ -158,3 +158,19 @@ export const VERDICT_LABEL: Record<GradeReport["verdict"], string> = {
   "needs-attention": "Needs calibration",
   "not-enough-data": "Not enough data yet",
 };
+
+/** Convert the backtest engine's grade buckets into stored mix entries. */
+export function toGradeMix(
+  buckets: Array<{ key: string; trades: number; wins: number; winRate: number; expectancyR: number; netR: number }>,
+): GradeMixEntry[] {
+  return buckets
+    .filter((b) => GRADE_KEYS.includes(b.key as GradeKey))
+    .map((b) => ({
+      grade: b.key,
+      trades: b.trades,
+      wins: b.wins,
+      winRate: r1(b.winRate),
+      expectancyR: r2(b.expectancyR),
+      netR: r2(b.netR),
+    }));
+}
