@@ -1750,24 +1750,24 @@ function Dashboard() {
   const enabledCount = ALL_LEVELS.filter((k) => levels[k]).length;
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
+    <div className="trade-dashboard h-full flex flex-col overflow-hidden">
       {/* Row 1: symbol + timeframes + right-side pickers */}
-      <div className="shrink-0 flex items-center gap-4 px-5 py-3 border-b border-border/50 bg-background">
+      <div className="shrink-0 flex items-center gap-3 px-4 py-2.5 border-b border-border/60 bg-background">
 
 
         <div className="relative shrink-0" ref={pickerRef} data-tour="symbol-picker">
           <button
             onClick={() => setPickerOpen((o) => !o)}
-            className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm hover:bg-accent/60 transition"
+            className="dashboard-control inline-flex items-center gap-2 px-3 py-1.5 text-sm transition"
             aria-haspopup="listbox"
             aria-expanded={pickerOpen}
           >
             <span className="h-2 w-2 rounded-full bg-bull" />
-            <span className="font-display text-base font-semibold tracking-tight uppercase">{symbol.ticker.replace("/", "").replace("XAUUSD", "GOLD")}</span>
+            <span className="font-display text-lg">{symbol.ticker.replace("/", "").replace("XAUUSD", "Gold")}</span>
             <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${pickerOpen ? "rotate-180" : ""}`} />
           </button>
           {pickerOpen && (
-            <div role="listbox" className="absolute left-0 mt-2 w-[min(20rem,calc(100vw-2rem))] max-h-80 overflow-y-auto rounded-2xl border border-border/60 bg-card shadow-xl z-50">
+            <div role="listbox" className="dashboard-popover absolute left-0 mt-2 w-[min(20rem,calc(100vw-2rem))] max-h-80 overflow-y-auto border border-border/60 bg-card z-50">
               {SYMBOLS.map((s) => {
                 const active = s.tv === symbol.tv;
                 const tradable = isTradableHere(s);
@@ -1787,7 +1787,7 @@ function Dashboard() {
                         {tradable === true && !active && <span className="h-1.5 w-1.5 rounded-full bg-oanda shrink-0" />}
                       </div>
                       <div className={`text-[11px] truncate ${tradable === true && !active ? "text-oanda/70" : "text-muted-foreground"}`}>
-                        {tradable === false ? `${s.name} · analysis only — ${untradableReason(s)}` : tradable === true ? `${s.name} · tradable on OANDA` : `${s.name} · ${s.venue}`}
+                        {tradable === false ? `${s.name} · Analysis only — ${untradableReason(s)}` : tradable === true ? `${s.name} · Tradable on OANDA` : `${s.name} · ${s.venue}`}
                       </div>
                     </div>
                     {active && <Check className="h-4 w-4 shrink-0" />}
@@ -1796,8 +1796,8 @@ function Dashboard() {
               })}
               {accountInstruments.length > 0 && (
                 <>
-                  <div className="px-3 pt-3 pb-1 text-[10px] uppercase tracking-wide text-muted-foreground">
-                    Also tradable on your OANDA account
+                  <div className="px-3 pt-3 pb-1 text-[11px] font-medium text-foreground">
+                    Also Tradable on Your OANDA Account
                   </div>
                   {accountInstruments.map((s) => {
                     const active = s.tv === symbol.tv;
@@ -1816,7 +1816,7 @@ function Dashboard() {
                             {s.ticker}
                             {!active && <span className="h-1.5 w-1.5 rounded-full bg-oanda shrink-0" />}
                           </div>
-                          <div className={`text-[11px] truncate ${active ? "text-muted-foreground" : "text-oanda/70"}`}>{s.name} · tradable on OANDA</div>
+                          <div className={`text-[11px] truncate ${active ? "text-muted-foreground" : "text-oanda/70"}`}>{s.name} · Tradable on OANDA</div>
                         </div>
                         {active && <Check className="h-4 w-4 shrink-0" />}
                       </button>
@@ -1830,13 +1830,13 @@ function Dashboard() {
         </div>
 
         {/* Timeframe pills */}
-        <div className="flex items-center gap-0.5 overflow-x-auto min-w-0 rounded-full bg-accent/60 p-1">
+        <div className="flex items-center gap-0.5 overflow-x-auto min-w-0 rounded-md border border-border/60 p-0.5">
           {INTERVALS.map((i) => (
             <button
               key={i.value}
               onClick={() => setIntervalState(i.value)}
-              className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-semibold transition ${
-                interval === i.value ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              className={`shrink-0 rounded-sm px-3 py-1 text-[11px] font-medium transition ${
+                interval === i.value ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
             >
               {i.label}
@@ -1852,7 +1852,7 @@ function Dashboard() {
           <div className="relative" ref={lensRef}>
             <button
               onClick={() => setLensOpen((o) => !o)}
-              className="inline-flex items-center gap-1.5 rounded-full h-9 bg-accent/60 px-3.5 text-xs font-medium text-foreground hover:bg-accent transition"
+               className="dashboard-control inline-flex items-center gap-1.5 h-9 px-3.5 text-xs font-medium text-foreground transition"
               title="Scan lens"
             >
               <Crosshair className="h-3.5 w-3.5 text-primary" />
@@ -1896,7 +1896,7 @@ function Dashboard() {
               <div className="relative" ref={coachRef}>
                 <button
                   onClick={() => setCoachOpen((o) => !o)}
-                  className="inline-flex items-center gap-1.5 rounded-full h-9 bg-accent/60 px-3.5 text-xs font-medium text-foreground hover:bg-accent transition"
+                  className="dashboard-control inline-flex items-center gap-1.5 h-9 px-3.5 text-xs font-medium text-foreground transition"
                   title="Change active AI coach"
                 >
                   <span className={`inline-flex h-5 w-5 items-center justify-center rounded-xl ${meta.iconBg} ${meta.iconText} shrink-0`}>
@@ -1953,7 +1953,7 @@ function Dashboard() {
           <div className="relative" ref={strategyRef}>
             <button
               onClick={() => setStrategyOpen((o) => !o)}
-              className="inline-flex items-center gap-1.5 rounded-full h-9 bg-accent/60 px-3.5 text-xs font-medium text-foreground hover:bg-accent transition"
+              className="dashboard-control inline-flex items-center gap-1.5 h-9 px-3.5 text-xs font-medium text-foreground transition"
               title="Change the strategy playbook your scans are graded against"
             >
               <BookOpen className="h-3.5 w-3.5 text-primary" />
@@ -2012,7 +2012,7 @@ function Dashboard() {
               </div>
             )}
           </div>
-          <label className="inline-flex h-9 items-center gap-1.5 rounded-full bg-accent/60 px-3 text-xs font-medium text-foreground">
+          <label className="dashboard-control inline-flex h-9 items-center gap-1.5 px-3 text-xs font-medium text-foreground">
             <Clock className="h-3.5 w-3.5 text-primary" />
             <select
               aria-label="Trade style"
@@ -2030,20 +2030,20 @@ function Dashboard() {
       </div>
 
       {/* Row 2: Live / Setup segmented control + chart controls */}
-      <div className={`shrink-0 items-center gap-3 px-5 py-3 border-b border-border/50 bg-background text-xs ${chatHalf ? "flex lg:hidden" : "flex"}`}>
-        <div className="inline-flex items-center rounded-full bg-accent/60 p-1">
+      <div className={`shrink-0 items-center gap-3 px-4 py-2.5 border-b border-border/60 bg-background text-xs ${chatHalf ? "flex lg:hidden" : "flex"}`}>
+        <div className="inline-flex items-center rounded-md border border-border/60 p-0.5">
           <button
             onClick={() => setChartTab("live")}
-            className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[11px] font-semibold transition ${
-              chartTab === "live" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            className={`inline-flex items-center gap-1.5 rounded-sm px-3.5 py-1.5 text-[11px] font-medium transition ${
+              chartTab === "live" ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <Activity className="h-3.5 w-3.5" /> Live
           </button>
           <button
             onClick={() => { setChartTab("setup"); setIntervalState("60"); }}
-            className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[11px] font-semibold transition ${
-              chartTab === "setup" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            className={`inline-flex items-center gap-1.5 rounded-sm px-3.5 py-1.5 text-[11px] font-medium transition ${
+              chartTab === "setup" ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <Crosshair className="h-3.5 w-3.5" /> Setup

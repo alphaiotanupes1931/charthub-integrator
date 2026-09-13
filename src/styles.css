@@ -34,8 +34,8 @@
   --color-gold: var(--gold);
   --color-gold-light: var(--gold-light);
   --color-gold-deep: var(--gold-deep);
-  --font-display: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Inter Display", "Inter", "Segoe UI", sans-serif;
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Instrument Serif", Georgia, serif;
+  --font-sans: "Work Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: "SF Mono", ui-monospace, "JetBrains Mono", Menlo, monospace;
 }
 
@@ -142,19 +142,25 @@
     font-family: var(--font-sans);
     font-feature-settings: "tnum" 1, "cv11" 1;
     -webkit-font-smoothing: antialiased;
-    letter-spacing: -0.005em;
+    letter-spacing: 0;
   }
   .font-display {
     font-family: var(--font-display);
-    letter-spacing: -0.022em;
-    font-weight: 600;
+    letter-spacing: 0;
+    font-weight: 400;
   }
   .font-mono { font-family: var(--font-mono); }
 
-  /* Global radius normalization: soft, consistent corners across every route. */
-  .rounded-3xl { border-radius: 0.875rem !important; }
-  .rounded-2xl { border-radius: 0.75rem !important; }
-  .rounded-xl  { border-radius: 0.625rem !important; }
+  /* Restrained geometry keeps dense trading screens from feeling card-heavy. */
+  .rounded-3xl { border-radius: 0.5rem !important; }
+  .rounded-2xl { border-radius: 0.5rem !important; }
+  .rounded-xl  { border-radius: 0.375rem !important; }
+
+  /* Labels use authored casing. Legacy all-caps utilities no longer shout. */
+  .uppercase {
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+  }
 
   /* Kill scale-on-hover globally; framer-motion handles motion now. */
   .hover\:scale-105:hover,
@@ -192,11 +198,11 @@
   .ring-gold { box-shadow: 0 0 0 1px color-mix(in oklab, var(--primary) 45%, transparent); }
   .grid-bg { background-image: none; mask-image: none; }
 
-  /* Flat display headings, tight tracking, Apple-style */
-  .h-display-xl { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.03em; line-height: 1.02; font-size: clamp(2.25rem, 7vw, 5.25rem); }
-  .h-display-lg { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.028em; line-height: 1.05; font-size: clamp(1.875rem, 5.25vw, 3.75rem); }
-  .h-display-md { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.02em;  line-height: 1.1;  font-size: clamp(1.5rem, 4vw, 2.5rem); }
-  .h-display-sm { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.015em; line-height: 1.15; font-size: clamp(1.25rem, 3vw, 1.75rem); }
+  /* Editorial display headings with calm, consistent spacing. */
+  .h-display-xl { font-family: var(--font-display); font-weight: 400; letter-spacing: 0; line-height: 1.02; font-size: clamp(2.25rem, 7vw, 5.25rem); }
+  .h-display-lg { font-family: var(--font-display); font-weight: 400; letter-spacing: 0; line-height: 1.05; font-size: clamp(1.875rem, 5.25vw, 3.75rem); }
+  .h-display-md { font-family: var(--font-display); font-weight: 400; letter-spacing: 0; line-height: 1.1; font-size: clamp(1.5rem, 4vw, 2.5rem); }
+  .h-display-sm { font-family: var(--font-display); font-weight: 400; letter-spacing: 0; line-height: 1.15; font-size: clamp(1.25rem, 3vw, 1.75rem); }
 
   .interactive {
     transition: background-color .18s ease, border-color .18s ease, color .18s ease;
@@ -303,4 +309,34 @@
     transition-duration: .01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Minimal application surfaces: structure comes from spacing and dividers. */
+.app-shell aside,
+.app-shell header,
+.trade-dashboard {
+  box-shadow: none;
+}
+
+.trade-dashboard .dashboard-popover {
+  border-radius: 0.5rem;
+  box-shadow: 0 12px 32px color-mix(in oklab, var(--background) 72%, transparent);
+}
+
+.trade-dashboard .dashboard-control {
+  border-radius: 0.375rem;
+  background: transparent;
+  border: 1px solid var(--border);
+}
+
+.trade-dashboard .dashboard-control:hover,
+.trade-dashboard .dashboard-control[aria-expanded="true"] {
+  background: var(--accent);
+}
+
+.trade-dashboard .dashboard-section {
+  border-radius: 0;
+  border-width: 0 0 1px;
+  background: transparent;
+  padding: 1rem 0;
 }
