@@ -100,6 +100,13 @@ export const Route = createFileRoute("/api/news-chat")({
         } catch (e) {
           console.warn(`[news-chat] req=${reqId} calendar_failed`, (e as Error).message);
         }
+        // No feed means NO news: never let the model answer from training data.
+        if (!calendar) {
+          calendar = [
+            "ECONOMIC CALENDAR: no live calendar data is available for this request.",
+            "Say plainly that the calendar feed is unavailable right now. Never name a release, time, forecast or actual figure from memory.",
+          ].join("\n");
+        }
 
         const model = anthropicKey
           ? (createAnthropic({ apiKey: anthropicKey })(CLAUDE_MODEL) as unknown as Parameters<typeof streamText>[0]["model"])

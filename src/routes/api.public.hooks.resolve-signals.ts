@@ -51,7 +51,14 @@ export const Route = createFileRoute("/api/public/hooks/resolve-signals")({
             if (res.status === "open") continue;
             await supabaseAdmin
               .from("signal_scores")
-              .update({ status: res.status, realized_r: res.realizedR, resolved_at: new Date().toISOString() })
+              .update({
+                status: res.status,
+                realized_r: res.realizedR,
+                resolved_at: new Date().toISOString(),
+                // "How early" as a number: heat taken before the signal resolved.
+                mae_r: res.maeR ?? null,
+                bars_to_resolve: res.barsToResolve ?? null,
+              } as never)
               .eq("id", sig.id);
             resolved += 1;
           } catch {

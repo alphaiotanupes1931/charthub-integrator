@@ -6,6 +6,7 @@ import type { Candle, MarketSnapshot, MtfContext, TimeframeRead } from "./types"
 import { computeOrderFlow } from "./order-flow.server";
 import { computeOrderBlocks, rankOrderBlocks } from "@/lib/orderBlocks";
 import { readProtectedStructure } from "@/lib/protectedStructure";
+import { closedBars, splitForming, secondsToBarClose } from "@/lib/barClock";
 
 // Canonical instrument keys the app speaks. Provider-specific symbols live in
 // the OANDA / BINANCE / TWELVE_DATA maps below.
@@ -535,7 +536,10 @@ async function loadCandlesSafe(ticker: string, interval: string): Promise<Candle
   ];
   for (const load of loaders) {
     try {
-      const candles = await load();
+      // Every provider returns the bar that is still forming as its last row.
+      // Structure read off that bar fires a signal one to two bars early, so it
+      // is dropped here, before any timeframe analysis sees the series.
+      const candles = closedBars(await load());
       if (candles.length >= 6) {
         rememberCandles(ticker, interval, candles);
         return candles;
@@ -670,25 +674,35 @@ export async function getSnapshot(rawTicker: string, interval: string): Promise<
       },
     },
   ];
+  // The bar still forming, kept only as a live price. It never reaches the
+  // structure, grading or order-flow reads.
+  let forming: Candle | null = null;
+  let secondsToClose = 0;
   for (const provider of loaders) {
     try {
-      const next = await provider.load();
-      if (next.length < 20) continue;
-      candles = next;
+      const raw = await provider.load();
+      const split = splitForming(raw);
+      if (split.closed.length < 20) continue;
+      candles = split.closed;
+      forming = split.forming;
+      secondsToClose = secondsToBarClose(raw);
       source = provider.source;
-      rememberCandles(ticker, interval, next);
+      rememberCandles(ticker, interval, candles);
       break;
     } catch { /* try the next real history provider */ }
   }
   if (candles.length < 20) {
     const recalled = recallCandles(ticker, interval);
     if (recalled.length >= 20) {
-      candles = recalled;
+      candles = closedBars(recalled);
       source = "cached";
     }
   }
 
-  const last = candles.at(-1)?.close ?? 0;
+  const lastClosed = candles.at(-1)?.close ?? 0;
+  // Distance-to-entry checks want the live price; everything structural uses
+  // the last closed bar.
+  const last = forming?.close ?? lastClosed;
   const highs = candles.map(c => c.high);
   const lows = candles.map(c => c.low);
   const closes = candles.map(c => c.close);
@@ -733,5 +747,10 @@ export async function getSnapshot(rawTicker: string, interval: string): Promise<
     candles1h: mtfRead?.candles1h,
     candles15m: mtfRead?.candles15m,
     candles5m: mtfRead?.candles5m,
+    bar: {
+      formingDropped: forming !== null,
+      secondsToClose,
+      lastClosedPrice: lastClosed,
+    },
   };
 }

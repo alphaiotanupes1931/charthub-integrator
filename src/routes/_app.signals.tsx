@@ -348,6 +348,18 @@ function SignalColumn({ title, tone, signals, onClick }: { title: string; tone: 
               <span>{s.action}</span>
               <span>R:R {s.rr}</span>
             </div>
+            {s.state === "confirmed" && (
+              <div className="mt-1 text-[10px] text-bull">Confirmed entry</div>
+            )}
+            {s.state === "forming" && (
+              <div className="mt-1 text-[10px] text-amber-500">
+                Setup developing, not an entry yet
+                {typeof s.triggerLevel === "number" && s.triggerLevel > 0 ? ` · trigger ${s.triggerLevel}` : ""}
+              </div>
+            )}
+            {s.stateReason && s.state !== "confirmed" && (
+              <div className="mt-1 text-[10px] text-muted-foreground line-clamp-2">{s.stateReason}</div>
+            )}
             {s.action !== "HOLD" && (
               <div className="mt-2 grid grid-cols-3 gap-1 text-[10px] text-muted-foreground">
                 <div>Entry <div className="text-foreground">{s.entry}</div></div>
