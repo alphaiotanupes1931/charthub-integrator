@@ -10,6 +10,12 @@ export type CalendarEvent = {
   forecast: string;
   previous: string;
   actual?: string;
+  /**
+   * True for "All Day" / "Tentative" rows. Those carry no real release time, so
+   * they must never be treated as "news lands in N minutes" - that was the
+   * source of phantom timing warnings on the scanner.
+   */
+  allDay?: boolean;
 };
 
 const HOSTS = ["https://nfs.faireconomy.media", "https://cdn-nfs.faireconomy.media"];
@@ -18,17 +24,71 @@ const WEEKS = ["ff_calendar_thisweek", "ff_calendar_nextweek"];
 let cache: { at: number; events: CalendarEvent[] } | null = null;
 const TTL_MS = 10 * 60 * 1000;
 
+/** Forex Factory publishes one canonical impact set; anything else is Low. */
+export function normalizeImpact(raw: string): "High" | "Medium" | "Low" | "Holiday" {
+  const s = String(raw ?? "").toLowerCase();
+  if (s.includes("high")) return "High";
+  if (s.includes("medium") || s.includes("moderate")) return "Medium";
+  if (s.includes("holiday")) return "Holiday";
+  return "Low";
+}
+
+/**
+ * The feed timestamps releases in US Eastern time. The JSON mirror says so with
+ * an offset; the XML mirror does not, so the offset has to be worked out for the
+ * exact date (EST vs EDT) instead of assuming UTC, which put every event 4 to 5
+ * hours off during summer.
+ */
+function easternOffsetMinutes(y: number, mo: number, d: number, h: number, mi: number): number {
+  const guess = Date.UTC(y, mo - 1, d, h, mi);
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    hour12: false,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).formatToParts(new Date(guess));
+  const get = (t: string) => Number(parts.find((p) => p.type === t)?.value ?? 0);
+  const asUtc = Date.UTC(get("year"), get("month") - 1, get("day"), get("hour") % 24, get("minute"));
+  return (asUtc - guess) / 60000;
+}
+
+function easternIso(y: number, mo: number, d: number, h: number, mi: number): string {
+  const off = easternOffsetMinutes(y, mo, d, h, mi);
+  return new Date(Date.UTC(y, mo - 1, d, h, mi) - off * 60000).toISOString();
+}
+
 function push(merged: CalendarEvent[], e: Partial<CalendarEvent>) {
   if (!e?.title || !e?.date) return;
+  const raw = String(e.date);
+  const parsed = new Date(raw);
+  if (Number.isNaN(parsed.getTime())) return;
   merged.push({
     title: String(e.title),
     country: String(e.country ?? ""),
-    date: String(e.date),
-    impact: String(e.impact ?? "Low"),
+    date: parsed.toISOString(),
+    impact: normalizeImpact(String(e.impact ?? "Low")),
     forecast: String(e.forecast ?? ""),
     previous: String(e.previous ?? ""),
     actual: e.actual ? String(e.actual) : undefined,
+    // A feed row timed at local midnight is an all-day or tentative entry.
+    allDay: e.allDay ?? /T00:00(:00)?/.test(raw),
   });
+}
+
+/** Same release published by both weeks or both mirrors collapses to one row. */
+function dedupe(events: CalendarEvent[]): CalendarEvent[] {
+  const seen = new Set<string>();
+  const out: CalendarEvent[] = [];
+  for (const e of events) {
+    const key = `${e.date}|${e.country.toUpperCase()}|${e.title.toLowerCase().replace(/\s+/g, " ").trim()}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(e);
+  }
+  return out;
 }
 
 // Faireconomy also publishes the same calendar as XML. Used when the JSON
@@ -53,19 +113,21 @@ function parseFaireconomyXml(xml: string): Partial<CalendarEvent>[] {
       hours = Number(t[1]) % 12 + (/pm/i.test(t[3]) ? 12 : 0);
       mins = Number(t[2]);
     }
-    const iso = new Date(Date.UTC(Number(yyyy), Number(mm) - 1, Number(dd), hours, mins)).toISOString();
     out.push({
       title: tag(b, "title"),
       country: tag(b, "country"),
-      date: iso,
+      date: easternIso(Number(yyyy), Number(mm), Number(dd), hours, mins),
       impact: tag(b, "impact") || "Low",
       forecast: tag(b, "forecast"),
       previous: tag(b, "previous"),
       actual: tag(b, "actual") || undefined,
+      allDay: !t,
     });
   }
   return out;
 }
+
+export const __calendarInternals = { easternIso, dedupe };
 
 export async function fetchCalendar(): Promise<CalendarEvent[]> {
   if (cache && Date.now() - cache.at < TTL_MS) return cache.events;
