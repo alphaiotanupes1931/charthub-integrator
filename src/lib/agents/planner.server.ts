@@ -1242,9 +1242,10 @@ function sanitizePlan(
   // Once deterministic validation changes an AI-proposed level, the old thesis
   // can no longer be trusted to name the entry anchor. Replace it rather than
   // appending to it, otherwise the same explanation can claim two entries.
-  const thesis = anchorLabel
+  const bosNote = bosThesisNote(bias, snap);
+  const thesis = (anchorLabel
     ? `The planned entry is ${fmt(entry, dec)}, anchored to the ${anchorLabel}. The stop is ${fmt(stop, dec)}, giving ${fmt(stopDist, dec)} of risk (${(stopDist / atr).toFixed(2)}x ATR). ${targetNote} Other mapped zones are supporting structure or invalidation unless they contain ${fmt(entry, dec)}.`
-    : `${plan.thesis} ${targetNote}`;
+    : `${plan.thesis} ${targetNote}`) + (bosNote ? ` ${bosNote}` : "");
 
 
   return { ...plan, entry, stop, tp1, tp2, thesis };
