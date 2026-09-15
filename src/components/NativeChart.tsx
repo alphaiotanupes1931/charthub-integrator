@@ -421,6 +421,12 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     () => computeOrderBlocks(candles.map((c) => ({ time: Number(c.time), open: c.open, high: c.high, low: c.low, close: c.close }))),
     [candles],
   );
+  // Break-of-structure quality: did the low/high the expansion came from sweep
+  // liquidity first (protected) or not (the break that stops traders out).
+  const bosRead = useMemo(
+    () => readProtectedStructure(candles.map((c) => ({ time: Number(c.time), open: c.open, high: c.high, low: c.low, close: c.close }))),
+    [candles],
+  );
   const vwapIndicator = useMemo(
     () => computeVwapIndicator(candles.map((c) => ({ time: Number(c.time), open: c.open, high: c.high, low: c.low, close: c.close }))),
     [candles],
@@ -469,6 +475,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       delta: levels.delta,
       sessionsActive: activeSessionsNow,
       cisd,
+      bos: bosRead,
       fetchedAt: new Date().toISOString(),
     };
     onSnapshot(snap);
