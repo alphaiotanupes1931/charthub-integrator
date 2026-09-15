@@ -154,6 +154,9 @@ export function computeBias(
   snap: MarketSnapshot,
   baseGrade: Grade = "A",
   configOverride?: InstrumentConfig,
+  /** Measured profile hint so the best session comes from real bars where we have them. */
+  profileHint?: { bestSession?: "asia" | "london" | "newyork"; barsSampled?: number } | null,
+  nowMs: number = Date.now(),
 ): BiasReadout {
   const symbol = engineSymbolFor(snap.ticker);
   const candles4h = toEngineCandles(snap.candles4h?.length ? snap.candles4h : snap.candles);
