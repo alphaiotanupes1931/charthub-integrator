@@ -20,7 +20,7 @@ import {
   type InstrumentConfig,
   type ScanResult,
   type Zone,
-  shiftGrade,
+
 } from "./biasEngine";
 import {
   behaviourFor,
