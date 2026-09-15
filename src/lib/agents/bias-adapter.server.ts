@@ -25,7 +25,7 @@ import {
 import {
   behaviourFor,
   behaviourBrief,
-  capBehaviourGrade,
+  applyBehaviourGrade,
   expectedHold,
   sessionGate,
   type InstrumentBehaviour,
