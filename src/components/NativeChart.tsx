@@ -86,6 +86,8 @@ export type ChartSnapshot = {
   delta: number;
   sessionsActive: string[];
   cisd: CisdInfo | null;
+  /** Quality of the latest break of structure: protected low/high or not. */
+  bos?: import("@/lib/protectedStructure").BosRead | null;
   fetchedAt: string;
 };
 

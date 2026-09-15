@@ -136,6 +136,10 @@ type ChartSnap = {
   delta?: number;
   sessionsActive?: string[];
   cisd?: { state: string; level: number; trigger: number; proj1: number; proj2: number; legSize: number; htfBias: string } | null;
+  bos?: {
+    kind: string; breakLevel: number; originLevel: number; priorLevel: number | null;
+    swept: boolean; protectedLevel: number | null; quality: string; reason: string;
+  } | null;
   fetchedAt?: string;
 };
 type ChartCtx = { ticker?: string; intervalLabel?: string; enabledLevels?: string; snapshot?: ChartSnap };
