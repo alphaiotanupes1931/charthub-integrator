@@ -18,6 +18,7 @@ export type MethodChunk = {
 };
 
 export const METHODOLOGY_CORE = `# METHODOLOGY BASE (apply silently, cite by name when it helps the trader learn)
+- Break of structure quality: a break only counts if the low (long) or high (short) that produced the broken swing had itself swept liquidity. Swept = protected low/high, stop covers it, target the broken level. Not swept = bad break, the resting liquidity gets collected first and the trade gets stopped out. When the data says the break is unprotected, say so and tell the trader to wait for the sweep, then the break.
 - Wyckoff structure: price moves through accumulation, markup, distribution, markdown. Read effort (volume) against result (spread/close). Effort without result warns of absorption; result without effort warns of a thin move that reverses.
 - Wyckoff events in order: PS, SC, AR, ST, spring/shakeout, test, SOS, LPS (mirror for distribution: PSY, BC, AR, ST, UTAD, SOW, LPSY). Name the event you believe price is at, and what would invalidate it.
 - Weis-style spring/test read: the highest-probability long is a spring that sweeps below support on wide spread, then a LOW-volume test that holds above the sweep low. Failure of the test to hold is the invalidation, not a fixed stop distance.
