@@ -200,11 +200,29 @@ export function computeBias(
     configOverride,
   });
 
+  // Per-instrument behaviour: sessions, expected hold, target style and the
+  // measured-edge ceiling. Applied after grading so direction and levels are
+  // untouched; only the confidence we sell it with changes.
+  const behaviour = behaviourFor(symbol, profileHint);
+  const hold = expectedHold(behaviour);
+  let session = sessionGate(behaviour, nowMs);
+  if (result.bias !== "neutral" && result.status !== "NO SETUP") {
+    const applied = applyBehaviourGrade(result.grade, behaviour, nowMs);
+    result.grade = applied.grade;
+    session = applied.session;
+    result.notes.push(...applied.notes);
+  } else {
+    result.notes.push(behaviourBrief(behaviour, nowMs));
+  }
+
   return {
     symbol,
     result,
-    contextBlock: buildScanContext(result, symbol, snap.lastPrice),
+    contextBlock: `${buildScanContext(result, symbol, snap.lastPrice)}\n\n${behaviourBrief(behaviour, nowMs)}`,
     platformBias: result.bias === "bullish" ? "Long" : result.bias === "bearish" ? "Short" : "Neutral",
+    behaviour,
+    hold,
+    session,
   };
 }
 
