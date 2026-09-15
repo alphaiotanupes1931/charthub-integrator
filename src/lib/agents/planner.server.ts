@@ -427,6 +427,61 @@ export function timeFrameComboGate(
   return { cap: null, reason: null, checks: { h4: true, h1: true, m15: true } };
 }
 
+// ---------- Protected low / high (break of structure quality) ----------
+// A break of structure only counts when the low (long) or high (short) that
+// produced the broken swing had itself swept liquidity. If it did not, the stops
+// beyond it are untouched and price normally goes and collects them first: that
+// is the break that looks perfect and stops the trader out. Those setups cannot
+// be an A.
+export function protectedStructureRead(
+  bias: typeof BIASES[number],
+  snap: MarketSnapshot,
+): { cap: typeof GRADES[number] | null; reason: string | null } {
+  if (bias === "Neutral") return { cap: null, reason: null };
+  const bos = snap.mtf?.h1.bos;
+  if (!bos) return { cap: null, reason: null };
+  const wanted = bias === "Long" ? "bullish" : "bearish";
+  if (bos.kind !== wanted) return { cap: null, reason: null };
+  if (bos.quality === "protected") return { cap: null, reason: null };
+  const side = bias === "Long" ? "low" : "high";
+  const where = bias === "Long" ? "below" : "above";
+  return {
+    cap: "C",
+    reason: `Bad break of structure: the 1H ${side} at ${bos.originLevel} expanded without sweeping the ${side} at ${bos.priorLevel ?? "the prior swing"} first, so that liquidity is still resting ${where} it. There is no protected ${side} to hide the stop behind, so this caps at C - wait for the sweep, then the break.`,
+  };
+}
+
+/** One sentence for the written plan describing the break of structure quality. */
+export function bosThesisNote(
+  bias: typeof BIASES[number],
+  snap: MarketSnapshot,
+): string | null {
+  const bos = snap.mtf?.h1.bos;
+  if (!bos) return null;
+  const wanted = bias === "Long" ? "bullish" : bias === "Short" ? "bearish" : null;
+  if (wanted && bos.kind !== wanted) return null;
+  return bos.reason;
+}
+
+/**
+ * Stop level that covers the protected low/high left by the 1H break, when the
+ * break agrees with the trade and the level sits the right side of entry.
+ */
+export function protectedStopBeyond(
+  bias: typeof BIASES[number],
+  entry: number,
+  atr: number,
+  snap: MarketSnapshot,
+): number | null {
+  const bos = snap.mtf?.h1.bos;
+  if (!bos || bos.quality !== "protected" || bos.protectedLevel === null) return null;
+  const wanted = bias === "Long" ? "bullish" : "bearish";
+  if (bos.kind !== wanted) return null;
+  const pad = Math.max(atr * 0.25, Math.abs(entry) * 0.0003);
+  if (bias === "Long") return bos.protectedLevel < entry ? bos.protectedLevel - pad : null;
+  return bos.protectedLevel > entry ? bos.protectedLevel + pad : null;
+}
+
 // ---------- 1H opposition (mixed alignment) ----------
 // A short taken while the 1H is bullish is a mixed-alignment setup, not an
 // aligned one. The old grade path only read h1.structureBreak, so a bullish 1H
@@ -752,6 +807,7 @@ export function collectGradeCaps(
   push("Counter-trend setup", counterTrendRead(bias, snap));
   push("Time Frame Combo gate", timeFrameComboGate(bias, snap));
   push("1H against the higher timeframes", lowerTimeframeOppositionRead(bias, snap));
+  push("Break of structure quality", protectedStructureRead(bias, snap));
   push("Order flow opposing the setup", orderFlowOppositionRead(bias, snap));
   push("Delta expanding against the position", deltaAgainstPositionRead(bias, snap));
   push("Setup type", setupTypeRead(bias, snap));
@@ -1144,7 +1200,12 @@ function sanitizePlan(
   const zoneStopDist = structuralStop !== null ? Math.abs(entry - structuralStop) : 0;
   const swingStop = swingStopBeyond(bias, entry, atr, snap);
   const swingStopDist = swingStop !== null ? Math.abs(entry - swingStop) : 0;
-  const rawStopDist = Math.max(zoneStopDist, swingStopDist, zoneStopDist ? 0 : modelStopDist);
+  // A protected low/high is the level that actually defends the trade: the swing
+  // that formed AFTER liquidity was swept. When the 1H break left one behind on
+  // our side, the stop must cover it.
+  const protectedStop = protectedStopBeyond(bias, entry, atr, snap);
+  const protectedStopDist = protectedStop !== null ? Math.abs(entry - protectedStop) : 0;
+  const rawStopDist = Math.max(zoneStopDist, swingStopDist, protectedStopDist, zoneStopDist ? 0 : modelStopDist);
   const floor = Math.max(0.3, stopFloorAtr);
   // Cap generously so a genuine swing stop is never pulled in front of the swing.
   const cap = atr * Math.max(3.2, floor + 1.8);
@@ -1193,9 +1254,10 @@ function sanitizePlan(
   // Once deterministic validation changes an AI-proposed level, the old thesis
   // can no longer be trusted to name the entry anchor. Replace it rather than
   // appending to it, otherwise the same explanation can claim two entries.
-  const thesis = anchorLabel
+  const bosNote = bosThesisNote(bias, snap);
+  const thesis = (anchorLabel
     ? `The planned entry is ${fmt(entry, dec)}, anchored to the ${anchorLabel}. The stop is ${fmt(stop, dec)}, giving ${fmt(stopDist, dec)} of risk (${(stopDist / atr).toFixed(2)}x ATR). ${targetNote} Other mapped zones are supporting structure or invalidation unless they contain ${fmt(entry, dec)}.`
-    : `${plan.thesis} ${targetNote}`;
+    : `${plan.thesis} ${targetNote}`) + (bosNote ? ` ${bosNote}` : "");
 
 
   return { ...plan, entry, stop, tp1, tp2, thesis };

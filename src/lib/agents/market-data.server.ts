@@ -5,6 +5,7 @@
 import type { Candle, MarketSnapshot, MtfContext, TimeframeRead } from "./types";
 import { computeOrderFlow } from "./order-flow.server";
 import { computeOrderBlocks, rankOrderBlocks } from "@/lib/orderBlocks";
+import { readProtectedStructure } from "@/lib/protectedStructure";
 
 // Canonical instrument keys the app speaks. Provider-specific symbols live in
 // the OANDA / BINANCE / TWELVE_DATA maps below.
@@ -490,6 +491,7 @@ function h1Analysis(candles: Candle[], h4Direction: MtfContext["h4"]["direction"
     orderBlockDetails: details,
     fvg: { bull: bullFvg.slice(-2), bear: bearFvg.slice(-2) },
     liquidity: { buyside: buyside.slice(-3), sellside: sellside.slice(-3) },
+    bos: readProtectedStructure(candles),
   };
 }
 
