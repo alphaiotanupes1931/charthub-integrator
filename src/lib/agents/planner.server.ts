@@ -877,6 +877,13 @@ export function entryTriggerRead(
   snap: MarketSnapshot,
   atr: number,
   tradeStyle?: TradeStyle,
+  /**
+   * The planned entry price. Six live trades in a row were taken far too early
+   * because a confirmed lower timeframe was reported as "triggered" while price
+   * was still an ATR away from the entry zone. When the entry is known, price
+   * has to actually reach it before the plan is live.
+   */
+  plannedEntry?: number | null,
 ): EntryTriggerRead {
   if (bias === "Neutral") return { triggered: false, level: null, rule: null };
   const wanted = bias === "Long" ? "bullish" : "bearish";
@@ -900,6 +907,28 @@ export function entryTriggerRead(
       : tradeStyle === "intraday"
         ? m15 === wanted
         : m15 === wanted || h1Break === wanted;
+
+  // Distance gate. Runs before the confirmation read, because "the 15m turned"
+  // is not permission to buy a price the plan never asked you to buy.
+  const entry = Number(plannedEntry);
+  if (Number.isFinite(entry) && entry > 0 && Number.isFinite(snap.lastPrice)) {
+    const tol = Math.max(atr * 0.1, Math.abs(snap.lastPrice) * 0.0002);
+    const reached = bias === "Long" ? snap.lastPrice <= entry + tol : snap.lastPrice >= entry - tol;
+    if (!reached) {
+      const away = Math.abs(snap.lastPrice - entry);
+      const awayAtr = atr > 0 ? away / atr : 0;
+      return {
+        triggered: false,
+        level: entry,
+        rule: `Not at the entry yet: price is ${awayAtr.toFixed(2)}x ATR (${away.toPrecision(4)}) ${
+          bias === "Long" ? "above" : "below"
+        } the ${entry} entry. Leave a limit order at the entry or wait for the pullback. Buying${
+          bias === "Short" ? "/selling" : ""
+        } here is early and gives you a worse price with a wider stop.`,
+      };
+    }
+  }
+
   if (styleConfirmed) {
     return {
       triggered: true,
@@ -1702,6 +1731,7 @@ export async function runPlanner(
     snap,
     Math.max(snap.stats.atr14 || Math.abs(snap.lastPrice) * 0.002, Math.abs(snap.lastPrice) * 0.0005),
     tradeStyle,
+    isNoEntry ? null : finalPlan.entry,
   );
   const setupFlags = [
     setupRead.type === "fade" ? "COUNTER_TREND_FADE" : null,
