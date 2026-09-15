@@ -427,6 +427,49 @@ export function timeFrameComboGate(
   return { cap: null, reason: null, checks: { h4: true, h1: true, m15: true } };
 }
 
+// ---------- Protected low / high (break of structure quality) ----------
+// A break of structure only counts when the low (long) or high (short) that
+// produced the broken swing had itself swept liquidity. If it did not, the stops
+// beyond it are untouched and price normally goes and collects them first: that
+// is the break that looks perfect and stops the trader out. Those setups cannot
+// be an A.
+export function protectedStructureRead(
+  bias: typeof BIASES[number],
+  snap: MarketSnapshot,
+): { cap: typeof GRADES[number] | null; reason: string | null } {
+  if (bias === "Neutral") return { cap: null, reason: null };
+  const bos = snap.mtf?.h1.bos;
+  if (!bos) return { cap: null, reason: null };
+  const wanted = bias === "Long" ? "bullish" : "bearish";
+  if (bos.kind !== wanted) return { cap: null, reason: null };
+  if (bos.quality === "protected") return { cap: null, reason: null };
+  const side = bias === "Long" ? "low" : "high";
+  const where = bias === "Long" ? "below" : "above";
+  return {
+    cap: "C",
+    reason: `Bad break of structure: the 1H ${side} at ${bos.originLevel} expanded without sweeping the ${side} at ${bos.priorLevel ?? "the prior swing"} first, so that liquidity is still resting ${where} it. There is no protected ${side} to hide the stop behind, so this caps at C - wait for the sweep, then the break.`,
+  };
+}
+
+/**
+ * Stop level that covers the protected low/high left by the 1H break, when the
+ * break agrees with the trade and the level sits the right side of entry.
+ */
+export function protectedStopBeyond(
+  bias: typeof BIASES[number],
+  entry: number,
+  atr: number,
+  snap: MarketSnapshot,
+): number | null {
+  const bos = snap.mtf?.h1.bos;
+  if (!bos || bos.quality !== "protected" || bos.protectedLevel === null) return null;
+  const wanted = bias === "Long" ? "bullish" : "bearish";
+  if (bos.kind !== wanted) return null;
+  const pad = Math.max(atr * 0.25, Math.abs(entry) * 0.0003);
+  if (bias === "Long") return bos.protectedLevel < entry ? bos.protectedLevel - pad : null;
+  return bos.protectedLevel > entry ? bos.protectedLevel + pad : null;
+}
+
 // ---------- 1H opposition (mixed alignment) ----------
 // A short taken while the 1H is bullish is a mixed-alignment setup, not an
 // aligned one. The old grade path only read h1.structureBreak, so a bullish 1H
