@@ -1832,6 +1832,17 @@ function Dashboard() {
                   })}
                 </>
               )}
+              <Link
+                to="/broker"
+                onClick={() => setPickerOpen(false)}
+                className="flex items-center justify-between gap-2 px-3 py-2.5 text-xs font-medium text-foreground hover:bg-accent/40 border-t border-border/60 transition"
+              >
+                <span className="flex items-center gap-1.5">
+                  <Plug className="h-3.5 w-3.5 text-primary" />
+                  {oandaConnected ? "Manage OANDA account" : "Load OANDA account"}
+                </span>
+                <span className="text-muted-foreground">→</span>
+              </Link>
             </div>
           )}
 
