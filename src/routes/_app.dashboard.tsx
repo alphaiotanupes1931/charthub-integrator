@@ -1172,6 +1172,8 @@ function Dashboard() {
   const [strategyOpen, setStrategyOpen] = useState(false);
   const [activeStrategy, setActiveStrategy] = useState<string | null>(null);
   const [tradeStyle, setTradeStyle] = useState<"auto" | TradeStyle>("auto");
+  const styleRef = useRef<HTMLDivElement>(null);
+  const [styleOpen, setStyleOpen] = useState(false);
   useEffect(() => {
     // New traders default to Auto: the platform reads conditions and picks the
     // playbook, then tells them which one it used on the scan card.
