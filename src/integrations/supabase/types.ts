@@ -1758,6 +1758,7 @@ export type Database = {
       }
       signal_scores: {
         Row: {
+          bars_to_resolve: number | null
           bias: string
           confidence: number | null
           counter_trend: boolean
@@ -1766,6 +1767,7 @@ export type Database = {
           grade: string
           htf_bias: string | null
           id: string
+          mae_r: number | null
           methodology_version: string
           planned_r: number | null
           realized_r: number | null
@@ -1781,6 +1783,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          bars_to_resolve?: number | null
           bias: string
           confidence?: number | null
           counter_trend?: boolean
@@ -1789,6 +1792,7 @@ export type Database = {
           grade: string
           htf_bias?: string | null
           id?: string
+          mae_r?: number | null
           methodology_version?: string
           planned_r?: number | null
           realized_r?: number | null
@@ -1804,6 +1808,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          bars_to_resolve?: number | null
           bias?: string
           confidence?: number | null
           counter_trend?: boolean
@@ -1812,6 +1817,7 @@ export type Database = {
           grade?: string
           htf_bias?: string | null
           id?: string
+          mae_r?: number | null
           methodology_version?: string
           planned_r?: number | null
           realized_r?: number | null
