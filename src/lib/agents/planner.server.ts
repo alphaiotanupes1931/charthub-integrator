@@ -795,6 +795,7 @@ export function collectGradeCaps(
   push("Counter-trend setup", counterTrendRead(bias, snap));
   push("Time Frame Combo gate", timeFrameComboGate(bias, snap));
   push("1H against the higher timeframes", lowerTimeframeOppositionRead(bias, snap));
+  push("Break of structure quality", protectedStructureRead(bias, snap));
   push("Order flow opposing the setup", orderFlowOppositionRead(bias, snap));
   push("Delta expanding against the position", deltaAgainstPositionRead(bias, snap));
   push("Setup type", setupTypeRead(bias, snap));
