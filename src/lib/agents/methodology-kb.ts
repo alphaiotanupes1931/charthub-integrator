@@ -12,7 +12,7 @@
 export type MethodChunk = {
   id: string;
   title: string;
-  framework: "wyckoff" | "auction" | "psychology";
+  framework: "wyckoff" | "auction" | "psychology" | "structure";
   keywords: string[];
   body: string;
 };
@@ -26,6 +26,20 @@ export const METHODOLOGY_CORE = `# METHODOLOGY BASE (apply silently, cite by nam
 - Psychology: risk is accepted BEFORE entry, never renegotiated mid-trade. Judge execution by process adherence, not by the P&L of one trade.`;
 
 export const METHOD_CHUNKS: MethodChunk[] = [
+  {
+    id: "structure-protected-bos",
+    title: "Good vs bad break of structure (protected low / protected high)",
+    framework: "structure",
+    keywords: [
+      "break of structure", "bos", "protected low", "protected high", "structure break",
+      "choch", "swing low", "swing high", "liquidity", "sweep", "stop hunt", "stopped out",
+      "good break", "bad break", "market structure",
+    ],
+    body: `A break of structure on its own is not a signal. What decides it is the low (for an upside break) or high (for a downside break) that produced the swing which got broken.
+Procedure for an upside break: from the break point, find the first swing low to the left - the low that led to the broken high. Then ask one question: did price sweep liquidity before expanding up from that low, i.e. did it trade through the swing low before it? If yes, the stops beneath are already taken and that low is a PROTECTED LOW: the long can cover the protected low with the stop and target the broken high, and it usually gets there. If no, resting liquidity is still sitting below. That is a BAD break of structure: price normally goes down to collect those stops first, which is exactly how a textbook-looking break stops the trader out.
+Mirror it for a downside break: first swing high to the left, sweep of the high above it, protected high, stop above it, target the broken low.
+Coaching use: name the two levels explicitly (the low that got swept and the protected low), and say what would invalidate the read. Never grade an unprotected break as a high-quality setup - the correct instruction is wait for the sweep, then the break.`,
+  },
   {
     id: "wyckoff-phases",
     title: "Wyckoff schematic and phase identification",
