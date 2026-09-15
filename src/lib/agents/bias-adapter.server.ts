@@ -20,7 +20,16 @@ import {
   type InstrumentConfig,
   type ScanResult,
   type Zone,
+  shiftGrade,
 } from "./biasEngine";
+import {
+  behaviourFor,
+  behaviourBrief,
+  capBehaviourGrade,
+  expectedHold,
+  sessionGate,
+  type InstrumentBehaviour,
+} from "../instrumentBehaviour";
 
 export type BiasReadout = {
   symbol: string;
