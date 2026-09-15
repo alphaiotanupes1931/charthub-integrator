@@ -2019,20 +2019,45 @@ function Dashboard() {
               </div>
             )}
           </div>
-          <label className="dashboard-control inline-flex h-9 items-center gap-1.5 px-3 text-xs font-medium text-foreground">
-            <Clock className="h-3.5 w-3.5 text-primary" />
-            <select
+          <div className="relative" ref={styleRef}>
+            <button
+              onClick={() => setStyleOpen((o) => !o)}
+              className="dashboard-control inline-flex h-9 items-center gap-1.5 px-3 text-xs font-medium text-foreground transition"
+              aria-haspopup="listbox"
+              aria-expanded={styleOpen}
               aria-label="Trade style"
-              value={tradeStyle}
-              onChange={(event) => setTradeStyle(event.target.value as "auto" | TradeStyle)}
-              className="bg-transparent outline-none dark:[color-scheme:dark]"
             >
-              <option value="auto">Style: Auto</option>
-              <option value="scalp">Scalp</option>
-              <option value="intraday">Intraday</option>
-              <option value="swing">Swing</option>
-            </select>
-          </label>
+              <Clock className="h-3.5 w-3.5 text-primary" />
+              <span className="capitalize">{tradeStyle === "auto" ? "Style: Auto" : tradeStyle}</span>
+              <ChevronDown className={`h-3 w-3 transition-transform ${styleOpen ? "rotate-180" : ""}`} />
+            </button>
+            {styleOpen && (
+              <div role="listbox" className="absolute right-0 mt-2 w-40 overflow-hidden rounded-md border border-border/60 bg-card z-50">
+                {[
+                  { value: "auto", label: "Auto" },
+                  { value: "scalp", label: "Scalp" },
+                  { value: "intraday", label: "Intraday" },
+                  { value: "swing", label: "Swing" },
+                ].map((opt) => {
+                  const active = tradeStyle === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      role="option"
+                      aria-selected={active}
+                      onClick={() => { setTradeStyle(opt.value as "auto" | TradeStyle); setStyleOpen(false); }}
+                      className={`w-full text-left px-3 py-2 text-sm hover:bg-accent/40 transition ${active ? "bg-primary/10 text-primary" : "text-foreground"}`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-medium capitalize">{opt.label}</span>
+                        {active && <Check className="h-3.5 w-3.5 shrink-0" />}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
