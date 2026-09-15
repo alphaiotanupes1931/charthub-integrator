@@ -451,6 +451,18 @@ export function protectedStructureRead(
   };
 }
 
+/** One sentence for the written plan describing the break of structure quality. */
+export function bosThesisNote(
+  bias: typeof BIASES[number],
+  snap: MarketSnapshot,
+): string | null {
+  const bos = snap.mtf?.h1.bos;
+  if (!bos) return null;
+  const wanted = bias === "Long" ? "bullish" : bias === "Short" ? "bearish" : null;
+  if (wanted && bos.kind !== wanted) return null;
+  return bos.reason;
+}
+
 /**
  * Stop level that covers the protected low/high left by the 1H break, when the
  * break agrees with the trade and the level sits the right side of entry.
