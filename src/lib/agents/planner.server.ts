@@ -1144,7 +1144,12 @@ function sanitizePlan(
   const zoneStopDist = structuralStop !== null ? Math.abs(entry - structuralStop) : 0;
   const swingStop = swingStopBeyond(bias, entry, atr, snap);
   const swingStopDist = swingStop !== null ? Math.abs(entry - swingStop) : 0;
-  const rawStopDist = Math.max(zoneStopDist, swingStopDist, zoneStopDist ? 0 : modelStopDist);
+  // A protected low/high is the level that actually defends the trade: the swing
+  // that formed AFTER liquidity was swept. When the 1H break left one behind on
+  // our side, the stop must cover it.
+  const protectedStop = protectedStopBeyond(bias, entry, atr, snap);
+  const protectedStopDist = protectedStop !== null ? Math.abs(entry - protectedStop) : 0;
+  const rawStopDist = Math.max(zoneStopDist, swingStopDist, protectedStopDist, zoneStopDist ? 0 : modelStopDist);
   const floor = Math.max(0.3, stopFloorAtr);
   // Cap generously so a genuine swing stop is never pulled in front of the swing.
   const cap = atr * Math.max(3.2, floor + 1.8);
