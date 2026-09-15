@@ -167,9 +167,9 @@ export async function fetchCalendar(): Promise<CalendarEvent[]> {
   }
   // Keep serving the last good copy rather than going blank when every mirror fails.
   if (!merged.length) return cache?.events ?? [];
-  merged.sort((a, b) => a.date.localeCompare(b.date));
-  cache = { at: Date.now(), events: merged };
-  return merged;
+  const clean = dedupe(merged).sort((a, b) => a.date.localeCompare(b.date));
+  cache = { at: Date.now(), events: clean };
+  return clean;
 }
 
 
@@ -190,8 +190,11 @@ export function highImpactAhead(
   const until = ref.getTime() + hours * 3600_000;
   return events
     .filter((e) => {
+      // All-day and tentative rows have no release time, so they cannot be
+      // placed inside an hours-from-now window.
+      if (e.allDay) return false;
       const t = new Date(e.date).getTime();
-      return t >= ref.getTime() && t <= until && /high|medium/i.test(e.impact);
+      return t >= ref.getTime() && t <= until && /^(high|medium)$/i.test(e.impact);
     })
     .sort((a, b) => a.date.localeCompare(b.date));
 }
