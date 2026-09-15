@@ -23,6 +23,8 @@ const WEEKS = ["ff_calendar_thisweek", "ff_calendar_nextweek"];
 
 let cache: { at: number; events: CalendarEvent[] } | null = null;
 const TTL_MS = 10 * 60 * 1000;
+/** How long a cached calendar may still be served when every mirror is down. */
+const STALE_MAX_MS = 3 * 60 * 60 * 1000;
 
 /** Forex Factory publishes one canonical impact set; anything else is Low. */
 export function normalizeImpact(raw: string): "High" | "Medium" | "Low" | "Holiday" {
