@@ -2,7 +2,7 @@
 // feature itself (drip stages, support forwards, platform status notices).
 // Mirrors the request shape of the template helper in
 // src/lib/email-templates/send-email.ts — delivery, retries, suppression and
-// the unsubscribe footer are handled by Lovable's managed email API.
+// the unsubscribe footer are handled by the managed email API.
 import { EmailAPIError, sendLovableEmail } from "@lovable.dev/email-js";
 
 export const SITE_NAME = "TradeMind";
