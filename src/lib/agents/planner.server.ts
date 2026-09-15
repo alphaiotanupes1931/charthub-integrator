@@ -10,7 +10,7 @@ import { SCANNER_METHODOLOGY_VERSION } from "@/lib/scanner-methodology";
 import { formatOrderFlow } from "./order-flow.server";
 import { computeOrderBlocks } from "@/lib/orderBlocks";
 import { computeBias } from "./bias-adapter.server";
-import { tunedConfigFor } from "../instrument-profile.server";
+import { tunedConfigFor, profileHintFor } from "../instrument-profile.server";
 
 import {
   readSessionVolume,
@@ -1451,7 +1451,13 @@ export async function runPlanner(
   } catch {
     tunedCfg = null;
   }
-  const biasRead = computeBias(snap, "A", tunedCfg ?? undefined);
+  let profileHint: Awaited<ReturnType<typeof profileHintFor>> = null;
+  try {
+    profileHint = await profileHintFor(snap.ticker);
+  } catch {
+    profileHint = null;
+  }
+  const biasRead = computeBias(snap, "A", tunedCfg ?? undefined, profileHint);
   const ctx = biasRead.contextBlock
     + "\n\n"
     + memoBlock(memo, snap, lensDesc, strategyDesc, perfDesc, scoreDesc)
