@@ -1731,6 +1731,7 @@ export async function runPlanner(
     snap,
     Math.max(snap.stats.atr14 || Math.abs(snap.lastPrice) * 0.002, Math.abs(snap.lastPrice) * 0.0005),
     tradeStyle,
+    isNoEntry ? null : finalPlan.entry,
   );
   const setupFlags = [
     setupRead.type === "fade" ? "COUNTER_TREND_FADE" : null,
