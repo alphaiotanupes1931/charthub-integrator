@@ -307,3 +307,39 @@ export function behaviourBrief(behaviour: InstrumentBehaviour, nowMs?: number): 
   if (nowMs !== undefined) lines.push(`Now: ${sessionGate(behaviour, nowMs).note}`);
   return lines.join("\n");
 }
+
+/** Grade arithmetic local to this module (keeps it free of an engine cycle). */
+export function shiftBehaviourGrade(grade: Grade, delta: number): Grade {
+  const i = GRADE_ORDER.indexOf(grade);
+  const next = Math.min(GRADE_ORDER.length - 1, Math.max(0, i - delta));
+  return GRADE_ORDER[next];
+}
+
+/**
+ * Apply this instrument's own behaviour to a graded setup:
+ *  1. session quality (wrong session for this market drops the grade),
+ *  2. measured-edge ceiling (no A grades on a market that has not earned them).
+ * Direction, entry, stop and targets are never touched here.
+ */
+export function applyBehaviourGrade(
+  grade: Grade,
+  behaviour: InstrumentBehaviour,
+  nowMs: number,
+): { grade: Grade; notes: string[]; session: SessionGate } {
+  const session = sessionGate(behaviour, nowMs);
+  const notes: string[] = [session.note];
+  let out = grade;
+  if (session.gradeDelta !== 0) out = shiftBehaviourGrade(out, session.gradeDelta);
+  const capped = capBehaviourGrade(out, behaviour.gradeCeiling);
+  if (capped !== out) {
+    notes.push(
+      behaviour.expectancyR === null
+        ? `${behaviour.symbol} has no measured edge yet, so it cannot grade above ${behaviour.gradeCeiling}.`
+        : `${behaviour.symbol} replay expectancy is ${behaviour.expectancyR}R per trade, so it cannot grade above ${behaviour.gradeCeiling}.`,
+    );
+    out = capped;
+  }
+  const hold = expectedHold(behaviour);
+  notes.push(`Expected duration on ${behaviour.symbol}: ${hold.label}. Targets from ${behaviour.targetStrategy.replace("_", " ")}.`);
+  return { grade: out, notes, session };
+}
