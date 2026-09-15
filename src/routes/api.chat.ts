@@ -37,7 +37,7 @@ const DEEP_INTENT = /\b(why|explain|teach|walk me|help me understand|how do|how 
 
 // Anthropic health gate. Claude is only used after the stored key passes an
 // automated health check (see lib/anthropic-health.server.ts); otherwise replies
-// would die mid-stream on a rejected key. On failure we fall back to the Lovable
+// would die mid-stream on a rejected key. On failure we fall back to the managed
 // gateway model so the coach keeps answering.
 import { resolveChatModel, normalizeModelPref } from "@/lib/ai-routing";
 
