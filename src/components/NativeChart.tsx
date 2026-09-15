@@ -824,7 +824,16 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       add(cisd.proj1,   LEVEL_META.CISD.color, `CISD 1x → ${cisd.proj1.toFixed(2)}`, true);
       add(cisd.proj2,   LEVEL_META.CISD.color, `CISD 2x → ${cisd.proj2.toFixed(2)}`, true);
     }
-  }, [enabled, levels, fibStudy, cisd, ready]);
+    // Structure quality: the low/high the last break expanded from, plus the
+    // level it had to sweep for that break to be trustworthy.
+    if (enabled.SR && bosRead) {
+      const good = bosRead.quality === "protected";
+      add(bosRead.originLevel, good ? "#34d399" : "#f87171", bosLabel(bosRead), !good);
+      if (bosRead.priorLevel !== null) {
+        add(bosRead.priorLevel, good ? "#34d399" : "#f87171", good ? "Swept liquidity" : "Untouched liquidity", true);
+      }
+    }
+  }, [enabled, levels, fibStudy, cisd, bosRead, ready]);
 
   // ---- Sessions overlay ----
   useEffect(() => {
