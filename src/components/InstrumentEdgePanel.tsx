@@ -13,6 +13,7 @@ import { getInstrumentProfiles } from "@/lib/instrument-profile.functions";
 import { InfoTip } from "@/components/InfoTip";
 import { SESSION_LABEL, type SessionKey } from "@/lib/instrument-profile.shared";
 import { engineSymbolFor } from "@/lib/agents/biasEngine";
+import { behaviourFor, expectedHold } from "@/lib/instrumentBehaviour";
 
 const MIN_RESOLVED = 5;
 
@@ -86,6 +87,9 @@ export function InstrumentEdgePanel() {
                 <th className="px-3 py-2 font-medium">Volatility (ATR)</th>
                 <th className="px-3 py-2 font-medium">Typical pullback</th>
                 <th className="px-3 py-2 font-medium">Busiest session</th>
+                <th className="px-3 py-2 font-medium">Trades in</th>
+                <th className="px-3 py-2 font-medium">Typical hold</th>
+                <th className="px-3 py-2 font-medium">Max grade</th>
                 <th className="px-3 py-2 font-medium">Tuning</th>
               </tr>
             </thead>
@@ -93,6 +97,8 @@ export function InstrumentEdgePanel() {
               {rows.map(({ key, label, bucket, profile }) => {
                 const enough = (bucket?.resolved ?? 0) >= MIN_RESOLVED;
                 const exp = bucket?.expectancyR ?? 0;
+                const behaviour = behaviourFor(key, profile ? { bestSession: profile.bestSession as SessionKey, barsSampled: profile.barsSampled } : null);
+                const hold = expectedHold(behaviour);
                 return (
                   <tr key={key}>
                     <td className="px-4 py-2 font-semibold">{label.replace(/_/g, "/")}</td>
@@ -112,6 +118,13 @@ export function InstrumentEdgePanel() {
                     <td className="px-3 py-2">
                       {profile ? SESSION_LABEL[profile.bestSession as SessionKey] ?? profile.bestSession : <span className="text-muted-foreground">-</span>}
                     </td>
+                    <td className="px-3 py-2">
+                      {behaviour.continuous
+                        ? "24/7"
+                        : behaviour.activeSessions.map((sess) => SESSION_LABEL[sess]).join(", ")}
+                    </td>
+                    <td className="px-3 py-2">{hold.label}</td>
+                    <td className="px-3 py-2 font-mono">{behaviour.gradeCeiling}</td>
                     <td className="px-3 py-2">
                       {profile?.tuned ? (
                         <span className="inline-flex items-center gap-1 rounded border border-bull/50 px-1.5 py-0.5 font-semibold text-bull" title={profile.tuneReason}>
@@ -136,7 +149,8 @@ export function InstrumentEdgePanel() {
         <span>
           Hit rate and expectancy come from scans resolved against real price bars. Volatility and pullback depth are measured
           from years of 4H history and set the entry and stop distances used for that symbol. Symbols marked Default have not
-          been measured yet and run on conservative settings.
+          been measured yet and run on conservative settings. Trades in, typical hold and max grade are that market's own behaviour:
+          a setup found outside its session is graded down, and a market only earns top grades once its measured results justify them.
         </span>
       </div>
     </div>

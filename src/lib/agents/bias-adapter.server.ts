@@ -20,7 +20,16 @@ import {
   type InstrumentConfig,
   type ScanResult,
   type Zone,
+
 } from "./biasEngine";
+import {
+  behaviourFor,
+  behaviourBrief,
+  applyBehaviourGrade,
+  expectedHold,
+  sessionGate,
+  type InstrumentBehaviour,
+} from "../instrumentBehaviour";
 
 export type BiasReadout = {
   symbol: string;
@@ -29,6 +38,12 @@ export type BiasReadout = {
   contextBlock: string;
   /** Long / Short / Neutral in the platform's own vocabulary. */
   platformBias: "Long" | "Short" | "Neutral";
+  /** How this specific instrument moves: sessions, hold, target style, grade ceiling. */
+  behaviour: InstrumentBehaviour;
+  /** Expected hold for a valid setup here. */
+  hold: ReturnType<typeof expectedHold>;
+  /** Session quality at scan time. */
+  session: ReturnType<typeof sessionGate>;
 };
 
 /** OANDA marks live candles incomplete; our loaders drop the forming bar already. */
@@ -139,6 +154,9 @@ export function computeBias(
   snap: MarketSnapshot,
   baseGrade: Grade = "A",
   configOverride?: InstrumentConfig,
+  /** Measured profile hint so the best session comes from real bars where we have them. */
+  profileHint?: { bestSession?: "asia" | "london" | "newyork"; barsSampled?: number } | null,
+  nowMs: number = Date.now(),
 ): BiasReadout {
   const symbol = engineSymbolFor(snap.ticker);
   const candles4h = toEngineCandles(snap.candles4h?.length ? snap.candles4h : snap.candles);
@@ -182,11 +200,29 @@ export function computeBias(
     configOverride,
   });
 
+  // Per-instrument behaviour: sessions, expected hold, target style and the
+  // measured-edge ceiling. Applied after grading so direction and levels are
+  // untouched; only the confidence we sell it with changes.
+  const behaviour = behaviourFor(symbol, profileHint);
+  const hold = expectedHold(behaviour);
+  let session = sessionGate(behaviour, nowMs);
+  if (result.bias !== "neutral" && result.status !== "NO SETUP") {
+    const applied = applyBehaviourGrade(result.grade, behaviour, nowMs);
+    result.grade = applied.grade;
+    session = applied.session;
+    result.notes.push(...applied.notes);
+  } else {
+    result.notes.push(behaviourBrief(behaviour, nowMs));
+  }
+
   return {
     symbol,
     result,
-    contextBlock: buildScanContext(result, symbol, snap.lastPrice),
+    contextBlock: `${buildScanContext(result, symbol, snap.lastPrice)}\n\n${behaviourBrief(behaviour, nowMs)}`,
     platformBias: result.bias === "bullish" ? "Long" : result.bias === "bearish" ? "Short" : "Neutral",
+    behaviour,
+    hold,
+    session,
   };
 }
 

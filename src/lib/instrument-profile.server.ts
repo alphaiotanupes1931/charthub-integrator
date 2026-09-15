@@ -158,3 +158,12 @@ export async function tunedConfigFor(ticker: string): Promise<InstrumentConfig |
 export function invalidateProfileCache(): void {
   cache = null;
 }
+
+/** Best-session hint for the per-instrument behaviour layer. */
+export async function profileHintFor(
+  ticker: string,
+): Promise<{ bestSession?: SessionKey; barsSampled?: number } | null> {
+  const map = await profileMap();
+  const p = map.get(engineSymbolFor(ticker));
+  return p ? { bestSession: p.bestSession, barsSampled: p.barsSampled } : null;
+}
