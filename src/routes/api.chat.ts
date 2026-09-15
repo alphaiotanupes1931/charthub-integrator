@@ -1028,6 +1028,15 @@ export const Route = createFileRoute("/api/chat")({
         } catch (e) {
           console.warn(`[chat] req=${reqId} calendar_failed`, (e as Error).message);
         }
+        // No feed means NO news. Without this the model answers from training
+        // data and states stale or invented releases with full confidence.
+        if (!newsCtx) {
+          newsCtx = [
+            "ECONOMIC CALENDAR: no live calendar data is available for this request.",
+            "You therefore have NO news. Say plainly that the calendar feed is unavailable right now and that you cannot see scheduled releases.",
+            "Never name a release, a time, a forecast or an actual figure from memory or training data. Never guess which events are due.",
+          ].join("\n");
+        }
 
         // Read-only live broker positions, so trade-management answers know the
         // trader's real side, size, stop and open P&L instead of asking.
