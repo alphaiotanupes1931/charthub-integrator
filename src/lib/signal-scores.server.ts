@@ -22,6 +22,15 @@ export type OpenSignal = {
 export type Resolution = {
   status: "target" | "stop" | "expired" | "open";
   realizedR: number | null;
+  /**
+   * Maximum adverse excursion, in R: how far price went AGAINST the entry
+   * before the signal resolved. This is the measurement of "how early" an entry
+   * was. A book of winners with a consistent 0.7R of heat means the entry rule
+   * fires before price is done, and the confirmation threshold should tighten.
+   */
+  maeR?: number | null;
+  /** Bars from filing to resolution, so timing can be judged per timeframe. */
+  barsToResolve?: number | null;
 };
 
 const HISTORY_TF: Record<string, BacktestTimeframe> = {
@@ -67,17 +76,29 @@ export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
   const reward = Math.abs(sig.tp1 - sig.entry);
   const rMultiple = Math.round((reward / risk) * 100) / 100;
 
-  for (const bar of forward) {
+  // Heat taken before resolution, measured bar by bar in R.
+  let mae = 0;
+  const round = (n: number) => Math.round(n * 100) / 100;
+
+  for (let i = 0; i < forward.length; i++) {
+    const bar = forward[i]!;
+    const adverse = long ? sig.entry - bar.low : bar.high - sig.entry;
+    if (adverse > 0) mae = Math.max(mae, adverse / risk);
     const hitStop = long ? bar.low <= sig.stop : bar.high >= sig.stop;
     const hitTarget = long ? bar.high >= sig.tp1 : bar.low <= sig.tp1;
-    if (hitStop) return { status: "stop", realizedR: -1 };
-    if (hitTarget) return { status: "target", realizedR: rMultiple };
+    if (hitStop) return { status: "stop", realizedR: -1, maeR: round(mae), barsToResolve: i + 1 };
+    if (hitTarget) return { status: "target", realizedR: rMultiple, maeR: round(mae), barsToResolve: i + 1 };
   }
 
   if (ageHours > expiryHours) {
     const last = forward[forward.length - 1]!.close;
     const move = long ? last - sig.entry : sig.entry - last;
-    return { status: "expired", realizedR: Math.round((move / risk) * 100) / 100 };
+    return {
+      status: "expired",
+      realizedR: round(move / risk),
+      maeR: round(mae),
+      barsToResolve: forward.length,
+    };
   }
-  return { status: "open", realizedR: null };
+  return { status: "open", realizedR: null, maeR: round(mae), barsToResolve: forward.length };
 }

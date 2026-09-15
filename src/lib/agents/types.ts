@@ -87,6 +87,19 @@ export type MarketSnapshot = {
   candles1h?: Candle[];
   candles15m?: Candle[];
   candles5m?: Candle[];
+  /**
+   * Bar completion. `candles` holds CLOSED bars only, so structure and grading
+   * never read a half-formed candle. The live price of the bar still forming is
+   * kept separately for distance/entry checks.
+   */
+  bar?: {
+    /** True when the feed's newest row was still forming and was set aside. */
+    formingDropped: boolean;
+    /** Seconds until the forming bar closes; 0 when the series is fully closed. */
+    secondsToClose: number;
+    /** Close of the last CLOSED bar - what confirmation is judged on. */
+    lastClosedPrice: number;
+  };
 };
 
 // Multi-timeframe context (4H → 1H → 15m cascade).
