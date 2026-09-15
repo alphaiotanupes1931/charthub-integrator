@@ -165,8 +165,13 @@ export async function fetchCalendar(): Promise<CalendarEvent[]> {
       }
     }
   }
-  // Keep serving the last good copy rather than going blank when every mirror fails.
-  if (!merged.length) return cache?.events ?? [];
+  // Keep serving the last good copy rather than going blank when every mirror
+  // fails, but only while it is still recent. A day-old calendar presented as
+  // today's session is worse than saying the feed is down.
+  if (!merged.length) {
+    if (cache && Date.now() - cache.at < STALE_MAX_MS) return cache.events;
+    return [];
+  }
   const clean = dedupe(merged).sort((a, b) => a.date.localeCompare(b.date));
   cache = { at: Date.now(), events: clean };
   return clean;
