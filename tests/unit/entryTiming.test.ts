@@ -45,6 +45,24 @@ describe("entry timing", () => {
     expect(entryTriggerRead("Short", snap("none", "bearish"), 2).triggered).toBe(true);
   });
 
+  it("is not triggered when price has not reached the planned entry yet", () => {
+    // Confirmed 15m, but the entry sits an ATR below spot: taking it now is early.
+    const r = entryTriggerRead("Long", snap("bullish", "none"), 2, "intraday", 102);
+    expect(r.triggered).toBe(false);
+    expect(r.level).toBe(102);
+    expect(r.rule).toMatch(/Not at the entry yet/);
+  });
+
+  it("is triggered once price trades into the planned entry", () => {
+    expect(entryTriggerRead("Long", snap("bullish", "none"), 2, "intraday", 105).triggered).toBe(true);
+  });
+
+  it("holds a short until price rallies back up to the entry", () => {
+    const r = entryTriggerRead("Short", snap("none", "bearish"), 2, "swing", 108);
+    expect(r.triggered).toBe(false);
+    expect(r.rule).toMatch(/Not at the entry yet/);
+  });
+
   it("places a long stop below the recent swing low with a buffer", () => {
     const stop = swingStopBeyond("Long", 103, 2, snap("none", "none"));
     expect(stop).not.toBeNull();
