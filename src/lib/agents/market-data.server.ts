@@ -92,6 +92,9 @@ function oandaInstrument(ticker: string): string | null {
   if (isCryptoTicker(ticker)) return null;
   // Any plain FX pair OANDA quotes, e.g. "EUR/USD" -> "EUR_USD".
   if (/^[A-Z]{3}\/[A-Z]{3}$/.test(ticker.toUpperCase())) return ticker.toUpperCase().replace("/", "_");
+  // Raw OANDA instrument names from the account's instrument list (DE30_EUR,
+  // USB10Y_USD, CORN_USD) are valid as-is - the account can trade them.
+  if (/^[A-Z0-9]{2,12}_[A-Z0-9]{2,12}$/.test(ticker.toUpperCase())) return ticker.toUpperCase();
   return null;
 }
 
