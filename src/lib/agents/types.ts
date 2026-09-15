@@ -103,6 +103,12 @@ export type MtfContext = {
     orderBlockDetails?: OrderBlockRead[];
     fvg: { bull: [number, number][]; bear: [number, number][] };
     liquidity: { buyside: number[]; sellside: number[] };
+    /**
+     * Quality of the most recent 1H break of structure: did the low/high that
+     * produced the broken swing sweep liquidity first (protected) or not
+     * (unprotected, the break that stops traders out).
+     */
+    bos?: BosRead | null;
   };
   m15: {
     confirmation: "bullish" | "bearish" | "none";
