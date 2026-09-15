@@ -123,7 +123,10 @@ function readOneSide(
 
     // The low (bull) / high (bear) that produced the broken pivot: first opposing
     // swing to the left of it.
-    const originIdx = [...originPivots].reverse().find((i) => i < pivotIdx);
+    // Walking left from the break, the first opposing swing is the low (bull) /
+    // high (bear) the expansion leg started from. That is the level that must be
+    // protected, not the one before the broken pivot.
+    const originIdx = [...originPivots].reverse().find((i) => i < breakIdx);
     if (originIdx === undefined) continue;
     const originLevel = bull ? series[originIdx].low : series[originIdx].high;
 
