@@ -38,6 +38,12 @@ export type BiasReadout = {
   contextBlock: string;
   /** Long / Short / Neutral in the platform's own vocabulary. */
   platformBias: "Long" | "Short" | "Neutral";
+  /** How this specific instrument moves: sessions, hold, target style, grade ceiling. */
+  behaviour: InstrumentBehaviour;
+  /** Expected hold for a valid setup here. */
+  hold: ReturnType<typeof expectedHold>;
+  /** Session quality at scan time. */
+  session: ReturnType<typeof sessionGate>;
 };
 
 /** OANDA marks live candles incomplete; our loaders drop the forming bar already. */
