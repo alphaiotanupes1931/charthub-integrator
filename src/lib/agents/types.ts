@@ -3,6 +3,9 @@
 //   L2 Research → AnalystNote[] + ResearchMemo
 //   L3 Planner → TradePlan
 
+import type { BosRead } from "@/lib/protectedStructure";
+export type { BosRead };
+
 export type Candle = { time: number; open: number; high: number; low: number; close: number; volume?: number };
 
 export type OrderBlockRead = {

@@ -106,6 +106,12 @@ function buildContext(snap: MarketSnapshot): string {
     lines.push(
       `MTF cascade — 4H direction=${m.h4.direction} trend=${m.h4.trend}; 1H structureBreak=${m.h1.structureBreak} reversal=${m.h1.reversal}; 15m confirmation=${m.m15.confirmation} (${m.m15.reason}); alignment=${m.alignment}`,
     );
+    if (m.h1.bos) {
+      const b = m.h1.bos;
+      lines.push(
+        `1H break of structure quality — ${b.kind} break of ${b.breakLevel}, origin ${b.kind === "bullish" ? "low" : "high"} ${b.originLevel}, prior ${b.priorLevel ?? "n/a"}, swept=${b.swept}, ${b.quality} (${b.quality === "protected" ? `protected level ${b.protectedLevel}` : "liquidity still resting beyond the origin"}). An unprotected break is a bad break of structure: price usually collects that liquidity before the move holds.`,
+      );
+    }
     if (m.ladder?.length) {
       lines.push(
         `Timeframe ladder: ${m.ladder.map((r) => `${r.label}=${r.bias}/${r.trend}`).join(" | ")}`,
