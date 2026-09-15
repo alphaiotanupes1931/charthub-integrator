@@ -215,18 +215,21 @@ export function currenciesFor(symbol: string): string[] {
 export function formatCalendarLines(events: CalendarEvent[], tz = "UTC", limit = 12): string[] {
   const fmt = (iso: string) => {
     try {
+      // The timezone is part of the fact: "8:30" with no zone is what made
+      // traders read UTC releases as their own local time.
       return new Intl.DateTimeFormat("en-US", {
         timeZone: tz,
         hour: "numeric",
         minute: "2-digit",
+        timeZoneName: "short",
       }).format(new Date(iso));
     } catch {
-      return new Date(iso).toISOString().slice(11, 16);
+      return `${new Date(iso).toISOString().slice(11, 16)} UTC`;
     }
   };
   return events.slice(0, limit).map((e) => {
     const bits = [
-      `${fmt(e.date)} ${e.country} ${e.impact.toUpperCase()}: ${e.title}`,
+      `${e.allDay ? "All day" : fmt(e.date)} ${e.country} ${e.impact.toUpperCase()}: ${e.title}`,
       e.actual ? `actual ${e.actual}` : "",
       e.forecast ? `forecast ${e.forecast}` : "",
       e.previous ? `previous ${e.previous}` : "",
