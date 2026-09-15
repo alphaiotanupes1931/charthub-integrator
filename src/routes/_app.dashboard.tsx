@@ -949,7 +949,9 @@ function Dashboard() {
     const curated = new Set(Object.values(OANDA_NAME_BY_TICKER));
     return (oandaInstruments.data?.instruments ?? [])
       .filter((i) => !curated.has(i.name))
-      .map((i) => ({ tv: tvSymbolForOanda(i.name), ticker: oandaLabel(i), name: oandaLabel(i), venue: "OANDA" }));
+      // ticker must be the raw OANDA instrument name (DE30_EUR), not the display
+      // name ("Bund") - the price feeds resolve raw names, display names scan to nothing.
+      .map((i) => ({ tv: tvSymbolForOanda(i.name), ticker: i.name, name: oandaLabel(i), venue: "OANDA" }));
   }, [oandaConnected, oandaInstruments.data]);
 
   const [scanning, setScanning] = useState(false);
