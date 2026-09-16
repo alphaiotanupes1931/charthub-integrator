@@ -210,6 +210,7 @@ export function computeBias(
   // measured-edge ceiling. Applied after grading so direction and levels are
   // untouched; only the confidence we sell it with changes.
   const behaviour = behaviourFor(symbol, profileHint);
+  const engineGrade = result.grade;
   const hold = expectedHold(behaviour);
   let session = sessionGate(behaviour, nowMs);
   if (result.bias !== "neutral" && result.status !== "NO SETUP") {
