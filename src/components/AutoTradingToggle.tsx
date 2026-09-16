@@ -38,9 +38,9 @@ export function AutoTradingToggle({ className = "" }: { className?: string }) {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const mode = ctx.data?.settings.mode ?? "manual";
-  const minGrade = ctx.data?.settings.minGrade ?? "A";
-  const connected = ctx.data?.broker.connected ?? false;
+  const mode = ctx.data?.settings?.mode ?? "manual";
+  const minGrade = ctx.data?.settings?.minGrade ?? "A";
+  const connected = ctx.data?.broker?.connected ?? false;
   const auto = mode === "auto";
   const unavailable = ctx.isError;
 
@@ -57,7 +57,7 @@ export function AutoTradingToggle({ className = "" }: { className?: string }) {
       setNotice("no-broker");
       return;
     }
-    if (!ctx.data?.settings.liveAcknowledged) {
+    if (!ctx.data?.settings?.liveAcknowledged) {
       setNotice("live-consent");
       return;
     }
