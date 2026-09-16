@@ -239,7 +239,7 @@ export async function tickPaperBot(botId: string): Promise<boolean> {
       .select("id")
       .single();
     await recordEvent(supabaseAdmin, bot.id, "enter", {
-      ...scanSummary(scan),
+      ...scanSummary(scan, readout.engineGrade),
       tradeId: trade?.id ?? null,
       side: decision.side,
       note: "Paper fill at the scanner's limit entry. No live order exists.",
@@ -256,7 +256,7 @@ export async function tickPaperBot(botId: string): Promise<boolean> {
       })
       .eq("id", decision.tradeId);
     await recordEvent(supabaseAdmin, bot.id, "exit", {
-      ...scanSummary(scan),
+      ...scanSummary(scan, readout.engineGrade),
       tradeId: decision.tradeId,
       result: decision.result,
       realizedR: decision.realizedR,
@@ -265,7 +265,7 @@ export async function tickPaperBot(botId: string): Promise<boolean> {
   } else if (decision.kind === "manage") {
     await recordEvent(supabaseAdmin, bot.id, "manage", { tradeId: decision.tradeId, note: decision.note });
   } else {
-    await recordEvent(supabaseAdmin, bot.id, "skip", { ...scanSummary(scan), reason: decision.reason });
+    await recordEvent(supabaseAdmin, bot.id, "skip", { ...scanSummary(scan, readout.engineGrade), reason: decision.reason });
   }
 
   await supabaseAdmin.from("paper_bots").update({ last_tick_at: new Date().toISOString() }).eq("id", bot.id);
