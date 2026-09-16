@@ -155,7 +155,7 @@ export function decideBotAction(args: {
     entry: entry as number,
     stop: stop as number,
     tp1,
-    grade: scan.grade,
+    grade: gateGrade,
   };
 }
 
