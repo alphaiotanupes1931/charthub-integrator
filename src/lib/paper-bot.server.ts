@@ -170,10 +170,11 @@ async function recordEvent(
   await supabase.from("paper_bot_events").insert({ bot_id: botId, kind, detail: detail as Json });
 }
 
-function scanSummary(scan: ScanResult) {
+function scanSummary(scan: ScanResult, engineGrade?: string) {
   return {
     bias: scan.bias,
     grade: scan.grade,
+    engineGrade: engineGrade ?? scan.grade,
     status: scan.status,
     entry: scan.entry ?? null,
     stop: scan.stop ?? null,
