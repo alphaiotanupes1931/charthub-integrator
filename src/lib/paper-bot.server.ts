@@ -140,8 +140,8 @@ export function decideBotAction(args: {
   if (scan.status === "PENDING CONFIRMATION") {
     return { kind: "skip", reason: "Setup exists but lower-timeframe confirmation is missing — waiting, not entering." };
   }
-  if (!gradeMeets(scan.grade, minGrade)) {
-    return { kind: "skip", reason: `Grade ${scan.grade} is below this bot's ${minGrade} minimum.` };
+  if (!gradeMeets(gateGrade, minGrade)) {
+    return { kind: "skip", reason: `Grade ${gateGrade} is below this bot's ${minGrade} minimum.` };
   }
   const entry = scan.entry;
   const stop = scan.stop;
