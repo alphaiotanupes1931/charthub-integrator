@@ -34,6 +34,12 @@ import {
 export type BiasReadout = {
   symbol: string;
   result: ScanResult;
+  /**
+   * Grade the engine produced before the per-instrument session/edge ceiling was
+   * applied. Research paths (paper bots, replay) measure the raw edge and must
+   * not be gated by a ceiling that exists to temper what we show a trader.
+   */
+  engineGrade: Grade;
   /** The authoritative block injected into the model prompt. */
   contextBlock: string;
   /** Long / Short / Neutral in the platform's own vocabulary. */
