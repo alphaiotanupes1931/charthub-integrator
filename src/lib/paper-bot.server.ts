@@ -220,6 +220,7 @@ export async function tickPaperBot(botId: string): Promise<boolean> {
     candlesAfterOpen,
     minGrade: bot.min_grade,
     lastPrice: snap.lastPrice,
+    gateGrade: readout.engineGrade,
   });
 
   if (decision.kind === "enter") {
