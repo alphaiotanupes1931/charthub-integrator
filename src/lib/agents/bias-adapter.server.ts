@@ -225,6 +225,7 @@ export function computeBias(
   return {
     symbol,
     result,
+    engineGrade,
     contextBlock: `${buildScanContext(result, symbol, snap.lastPrice)}\n\n${behaviourBrief(behaviour, nowMs)}`,
     platformBias: result.bias === "bullish" ? "Long" : result.bias === "bearish" ? "Short" : "Neutral",
     behaviour,
