@@ -46,6 +46,10 @@ function GatePending() {
 function GateError({ error }: { error: Error }) {
   const msg = error?.message ?? "";
   const isChunkError = /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|ChunkLoadError/i.test(msg);
+  // Only session problems are fixed by signing in again. A rendering fault
+  // ("undefined is not an object", a failed panel) used to show the same
+  // "sign in again" screen, which sent traders round in circles.
+  const isSessionError = /session|sign in|unauthori[sz]ed|401|403|token|expired|access|capability|forbidden/i.test(msg);
 
   // Stale-deploy self-heal: the browser is holding an old index.html pointing at
   // a JS chunk hash that no longer exists on the server. One hard reload pulls
