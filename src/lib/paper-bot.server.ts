@@ -92,8 +92,16 @@ export function decideBotAction(args: {
   candlesAfterOpen: { time: number; high: number; low: number }[];
   minGrade: string;
   lastPrice: number;
+  /**
+   * Grade used for the minimum-grade gate. Research bots exist to measure the
+   * raw engine edge, so they gate on the engine's own grade rather than the
+   * per-instrument display ceiling — otherwise an A-minimum bot on a
+   * B-capped market (US30, GBP/USD, USD/JPY, BTC…) could never open a trade.
+   */
+  gateGrade?: string;
 }): BotDecision {
   const { scan, openTrade, candlesAfterOpen, minGrade, lastPrice } = args;
+  const gateGrade = args.gateGrade ?? scan.grade;
 
   if (openTrade) {
     const tp = openTrade.tp1;
