@@ -1589,10 +1589,10 @@ function Dashboard() {
 
   const maybeOfferTrade = (plan: ScanResult, scanSymbol: Symbol, scanInterval: string) => {
     const ctx = autoTradeCtx.data;
-    if (!ctx || ctx.settings.mode !== "auto") return;
+    if (!ctx?.settings || ctx.settings.mode !== "auto") return;
     // Auto is on, so every skip gets an explanation. Silence used to look like
     // a bug: a B setup with an "A and better" minimum simply never appeared.
-    if (!ctx.broker.connected) {
+    if (!ctx.broker?.connected) {
       toast.info("Auto Trading is on but no broker is connected", {
         description: "Connect a broker on the Accounts page to have setups placed for you.",
       });
