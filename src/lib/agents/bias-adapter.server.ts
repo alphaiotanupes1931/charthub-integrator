@@ -34,6 +34,12 @@ import {
 export type BiasReadout = {
   symbol: string;
   result: ScanResult;
+  /**
+   * Grade the engine produced before the per-instrument session/edge ceiling was
+   * applied. Research paths (paper bots, replay) measure the raw edge and must
+   * not be gated by a ceiling that exists to temper what we show a trader.
+   */
+  engineGrade: Grade;
   /** The authoritative block injected into the model prompt. */
   contextBlock: string;
   /** Long / Short / Neutral in the platform's own vocabulary. */
@@ -204,6 +210,7 @@ export function computeBias(
   // measured-edge ceiling. Applied after grading so direction and levels are
   // untouched; only the confidence we sell it with changes.
   const behaviour = behaviourFor(symbol, profileHint);
+  const engineGrade = result.grade;
   const hold = expectedHold(behaviour);
   let session = sessionGate(behaviour, nowMs);
   if (result.bias !== "neutral" && result.status !== "NO SETUP") {
@@ -218,6 +225,7 @@ export function computeBias(
   return {
     symbol,
     result,
+    engineGrade,
     contextBlock: `${buildScanContext(result, symbol, snap.lastPrice)}\n\n${behaviourBrief(behaviour, nowMs)}`,
     platformBias: result.bias === "bullish" ? "Long" : result.bias === "bearish" ? "Short" : "Neutral",
     behaviour,
