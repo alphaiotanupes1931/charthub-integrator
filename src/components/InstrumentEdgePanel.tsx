@@ -32,7 +32,7 @@ export function InstrumentEdgePanel() {
     staleTime: 10 * 60_000,
   });
 
-  const buckets = scores.data?.scoreboard.bySymbol ?? [];
+  const buckets = scores.data?.scoreboard?.bySymbol ?? [];
   const profileMap = new Map((profiles.data?.profiles ?? []).map((p) => [p.symbol, p]));
 
   // Buckets are keyed by display ticker ("XAU/USD"), profiles by engine symbol

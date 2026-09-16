@@ -46,6 +46,10 @@ function GatePending() {
 function GateError({ error }: { error: Error }) {
   const msg = error?.message ?? "";
   const isChunkError = /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|ChunkLoadError/i.test(msg);
+  // Only session problems are fixed by signing in again. A rendering fault
+  // ("undefined is not an object", a failed panel) used to show the same
+  // "sign in again" screen, which sent traders round in circles.
+  const isSessionError = /session|sign in|unauthori[sz]ed|401|403|token|expired|access|capability|forbidden/i.test(msg);
 
   // Stale-deploy self-heal: the browser is holding an old index.html pointing at
   // a JS chunk hash that no longer exists on the server. One hard reload pulls
@@ -65,15 +69,21 @@ function GateError({ error }: { error: Error }) {
     <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-4">
       <div className="w-full max-w-sm rounded-2xl border border-border/60 bg-card p-6 text-center shadow-sm">
         <h1 className="text-lg font-semibold">
-          {isChunkError ? "Updating to the latest version…" : "Dashboard access did not load"}
+          {isChunkError
+            ? "Updating to the latest version…"
+            : isSessionError
+              ? "Dashboard access did not load"
+              : "Your dashboard could not finish loading"}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {isChunkError
             ? "A new version just shipped. Reloading now to pick it up."
-            : (msg || "Your session could not be checked. Please sign in again.")}
+            : isSessionError
+              ? (msg || "Your session could not be checked. Please sign in again.")
+              : "Something on the page failed to load. Refresh to try again — you are still signed in."}
         </p>
         <div className="mt-5 flex flex-col gap-2">
-          {!isChunkError && (
+          {!isChunkError && isSessionError && (
             <a className="inline-flex h-10 items-center justify-center rounded-2xl bg-primary px-4 text-sm font-semibold text-primary-foreground" href="/auth?mode=signin&redirect=%2Fdashboard">
               Sign in again
             </a>
