@@ -92,8 +92,16 @@ export function decideBotAction(args: {
   candlesAfterOpen: { time: number; high: number; low: number }[];
   minGrade: string;
   lastPrice: number;
+  /**
+   * Grade used for the minimum-grade gate. Research bots exist to measure the
+   * raw engine edge, so they gate on the engine's own grade rather than the
+   * per-instrument display ceiling — otherwise an A-minimum bot on a
+   * B-capped market (US30, GBP/USD, USD/JPY, BTC…) could never open a trade.
+   */
+  gateGrade?: string;
 }): BotDecision {
   const { scan, openTrade, candlesAfterOpen, minGrade, lastPrice } = args;
+  const gateGrade = args.gateGrade ?? scan.grade;
 
   if (openTrade) {
     const tp = openTrade.tp1;
@@ -132,8 +140,8 @@ export function decideBotAction(args: {
   if (scan.status === "PENDING CONFIRMATION") {
     return { kind: "skip", reason: "Setup exists but lower-timeframe confirmation is missing — waiting, not entering." };
   }
-  if (!gradeMeets(scan.grade, minGrade)) {
-    return { kind: "skip", reason: `Grade ${scan.grade} is below this bot's ${minGrade} minimum.` };
+  if (!gradeMeets(gateGrade, minGrade)) {
+    return { kind: "skip", reason: `Grade ${gateGrade} is below this bot's ${minGrade} minimum.` };
   }
   const entry = scan.entry;
   const stop = scan.stop;
@@ -147,7 +155,7 @@ export function decideBotAction(args: {
     entry: entry as number,
     stop: stop as number,
     tp1,
-    grade: scan.grade,
+    grade: gateGrade,
   };
 }
 
@@ -162,10 +170,11 @@ async function recordEvent(
   await supabase.from("paper_bot_events").insert({ bot_id: botId, kind, detail: detail as Json });
 }
 
-function scanSummary(scan: ScanResult) {
+function scanSummary(scan: ScanResult, engineGrade?: string) {
   return {
     bias: scan.bias,
     grade: scan.grade,
+    engineGrade: engineGrade ?? scan.grade,
     status: scan.status,
     entry: scan.entry ?? null,
     stop: scan.stop ?? null,
@@ -211,6 +220,7 @@ export async function tickPaperBot(botId: string): Promise<boolean> {
     candlesAfterOpen,
     minGrade: bot.min_grade,
     lastPrice: snap.lastPrice,
+    gateGrade: readout.engineGrade,
   });
 
   if (decision.kind === "enter") {
@@ -229,7 +239,7 @@ export async function tickPaperBot(botId: string): Promise<boolean> {
       .select("id")
       .single();
     await recordEvent(supabaseAdmin, bot.id, "enter", {
-      ...scanSummary(scan),
+      ...scanSummary(scan, readout.engineGrade),
       tradeId: trade?.id ?? null,
       side: decision.side,
       note: "Paper fill at the scanner's limit entry. No live order exists.",
@@ -246,7 +256,7 @@ export async function tickPaperBot(botId: string): Promise<boolean> {
       })
       .eq("id", decision.tradeId);
     await recordEvent(supabaseAdmin, bot.id, "exit", {
-      ...scanSummary(scan),
+      ...scanSummary(scan, readout.engineGrade),
       tradeId: decision.tradeId,
       result: decision.result,
       realizedR: decision.realizedR,
@@ -255,7 +265,7 @@ export async function tickPaperBot(botId: string): Promise<boolean> {
   } else if (decision.kind === "manage") {
     await recordEvent(supabaseAdmin, bot.id, "manage", { tradeId: decision.tradeId, note: decision.note });
   } else {
-    await recordEvent(supabaseAdmin, bot.id, "skip", { ...scanSummary(scan), reason: decision.reason });
+    await recordEvent(supabaseAdmin, bot.id, "skip", { ...scanSummary(scan, readout.engineGrade), reason: decision.reason });
   }
 
   await supabaseAdmin.from("paper_bots").update({ last_tick_at: new Date().toISOString() }).eq("id", bot.id);
