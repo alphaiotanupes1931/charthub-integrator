@@ -69,15 +69,21 @@ function GateError({ error }: { error: Error }) {
     <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-4">
       <div className="w-full max-w-sm rounded-2xl border border-border/60 bg-card p-6 text-center shadow-sm">
         <h1 className="text-lg font-semibold">
-          {isChunkError ? "Updating to the latest version…" : "Dashboard access did not load"}
+          {isChunkError
+            ? "Updating to the latest version…"
+            : isSessionError
+              ? "Dashboard access did not load"
+              : "Your dashboard could not finish loading"}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {isChunkError
             ? "A new version just shipped. Reloading now to pick it up."
-            : (msg || "Your session could not be checked. Please sign in again.")}
+            : isSessionError
+              ? (msg || "Your session could not be checked. Please sign in again.")
+              : "Something on the page failed to load. Refresh to try again — you are still signed in."}
         </p>
         <div className="mt-5 flex flex-col gap-2">
-          {!isChunkError && (
+          {!isChunkError && isSessionError && (
             <a className="inline-flex h-10 items-center justify-center rounded-2xl bg-primary px-4 text-sm font-semibold text-primary-foreground" href="/auth?mode=signin&redirect=%2Fdashboard">
               Sign in again
             </a>
