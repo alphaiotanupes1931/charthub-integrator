@@ -64,6 +64,16 @@ describe("decideBotAction — entries", () => {
     expect(d.kind).toBe("skip");
   });
 
+  it("gates on the raw engine grade so a display ceiling cannot freeze a bot", () => {
+    // US30 / GBP/USD etc. are capped at B for display; the engine still graded A.
+    const d = decideBotAction({
+      scan: scan({ grade: "B" }), gateGrade: "A",
+      openTrade: null, candlesAfterOpen: [], minGrade: "A", lastPrice: 101,
+    });
+    expect(d.kind).toBe("enter");
+    if (d.kind === "enter") expect(d.grade).toBe("A");
+  });
+
   it("skips NO SETUP and PENDING CONFIRMATION passes instead of forcing entries", () => {
     const noSetup = decideBotAction({
       scan: scan({ status: "NO SETUP", notes: ["Neutral: 4H range."] }),
