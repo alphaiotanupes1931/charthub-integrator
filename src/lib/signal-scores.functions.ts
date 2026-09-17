@@ -213,7 +213,7 @@ export const resolveMySignalScores = createServerFn({ method: "POST" })
           mae_r: res.maeR ?? null,
           mfe_r: res.mfeR ?? null,
           bars_to_resolve: res.barsToResolve ?? null,
-        })
+        } as never)
         .eq("id", sig.id);
       resolved += 1;
     }
