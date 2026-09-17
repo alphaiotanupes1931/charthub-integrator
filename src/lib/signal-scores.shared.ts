@@ -76,12 +76,19 @@ export type Scoreboard = {
   open: number;
   /** No-direction rows held out of every number here. */
   voided: number;
-  resolved: number;
+  /** Target + stop. The single denominator behind every headline figure. */
+  decided: number;
   targets: number;
   stops: number;
   expired: number;
+  expiredAvgR: number | null;
   hitRate: number;
   expectancyR: number;
+  netExpectancyR: number | null;
+  netCount: number;
+  avgCostR: number | null;
+  /** A and A+ combined, so the callout and the table share one denominator. */
+  aGrade: ScoreBucket;
   byGrade: ScoreBucket[];
   bySymbol: ScoreBucket[];
   byTimeframe: ScoreBucket[];
