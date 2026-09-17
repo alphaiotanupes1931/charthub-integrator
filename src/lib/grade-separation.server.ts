@@ -182,7 +182,7 @@ export function analyzeGradeSeparation(
   program: ProgramRow[],
 ): SeparationReport {
   const scored = filed.filter(
-    (r) => (r.status === "hit" || r.status === "stopped" || r.status === "expired" || r.status === "resolved") && r.r !== null,
+    (r) => (r.status === "target" || r.status === "stop" || r.status === "expired") && r.r !== null,
   );
 
   // 1. Published grade
