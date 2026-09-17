@@ -99,47 +99,41 @@ export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
     return { status: "open", realizedR: null };
   }
 
-  const forward = bars.filter((b) => b.time * 1000 > createdMs);
-  const long = direction === "long";
   const risk = Math.abs(sig.entry - sig.stop);
-  if (!risk || !forward.length) {
+  // One bar walk for the whole app: see signal-replay.ts. The backfill pass uses
+  // the same function, so a historical MFE and a live MFE are the same measurement.
+  const verdict = replayForward(sig, bars);
+  if (!verdict || !risk) {
     return ageHours > expiryHours ? { status: "expired", realizedR: 0 } : { status: "open", realizedR: null };
   }
   const cost = costInR(sig.symbol, sig.entry, risk);
   const net = (gross: number) => Math.round((gross - cost) * 1000) / 1000;
-  const reward = Math.abs(sig.tp1 - sig.entry);
-  const rMultiple = Math.round((reward / risk) * 100) / 100;
-
-  // Heat taken and ground made before resolution, measured bar by bar in R.
-  let mae = 0;
-  let mfe = 0;
   const round = (n: number) => Math.round(n * 100) / 100;
 
-  for (let i = 0; i < forward.length; i++) {
-    const bar = forward[i]!;
-    const adverse = long ? sig.entry - bar.low : bar.high - sig.entry;
-    if (adverse > 0) mae = Math.max(mae, adverse / risk);
-    const favourable = long ? bar.high - sig.entry : sig.entry - bar.low;
-    if (favourable > 0) mfe = Math.max(mfe, favourable / risk);
-    const hitStop = long ? bar.low <= sig.stop : bar.high >= sig.stop;
-    const hitTarget = long ? bar.high >= sig.tp1 : bar.low <= sig.tp1;
-    if (hitStop)
-      return { status: "stop", realizedR: -1, netR: net(-1), costR: cost, maeR: round(mae), mfeR: round(mfe), barsToResolve: i + 1 };
-    if (hitTarget)
-      return { status: "target", realizedR: rMultiple, netR: net(rMultiple), costR: cost, maeR: round(mae), mfeR: round(mfe), barsToResolve: i + 1 };
+  if (verdict.status !== "unresolved") {
+    return {
+      status: verdict.status,
+      realizedR: verdict.realizedR,
+      netR: net(verdict.realizedR ?? 0),
+      costR: cost,
+      maeR: verdict.maeR,
+      mfeR: verdict.mfeR,
+      barsToResolve: verdict.bars,
+    };
   }
 
   if (ageHours > expiryHours) {
-    const last = forward[forward.length - 1]!.close;
+    const long = direction === "long";
+    const last = verdict.lastClose ?? sig.entry;
     const move = long ? last - sig.entry : sig.entry - last;
     return {
       status: "expired",
       realizedR: round(move / risk),
       netR: net(round(move / risk)),
       costR: cost,
-      maeR: round(mae),
-      mfeR: round(mfe),
-      barsToResolve: forward.length,
+      maeR: verdict.maeR,
+      mfeR: verdict.mfeR,
+      barsToResolve: verdict.bars,
     };
   }
   return {
@@ -147,8 +141,8 @@ export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
     realizedR: null,
     netR: null,
     costR: cost,
-    maeR: round(mae),
-    mfeR: round(mfe),
-    barsToResolve: forward.length,
+    maeR: verdict.maeR,
+    mfeR: verdict.mfeR,
+    barsToResolve: verdict.bars,
   };
 }
