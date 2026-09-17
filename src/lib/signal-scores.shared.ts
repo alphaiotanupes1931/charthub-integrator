@@ -125,7 +125,8 @@ function group(rows: SignalScoreRow[], keyOf: (r: SignalScoreRow) => string | nu
     .sort((a, b) => b.total - a.total);
 }
 
-function hitRateOf(rows: SignalScoreRow[]): number | null {
+function hitRateOf(all: SignalScoreRow[]): number | null {
+  const rows = scorableRows(all);
   const targets = rows.filter((r) => r.status === "target").length;
   const stops = rows.filter((r) => r.status === "stop").length;
   if (targets + stops === 0) return null;
