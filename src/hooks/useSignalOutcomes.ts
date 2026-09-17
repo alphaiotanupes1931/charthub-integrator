@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listSignalScores, resolveMySignalScores } from "@/lib/signal-scores.functions";
-import type { SignalScoreRow } from "@/lib/signal-scores.shared";
+import { buildScoreboard, bucket, scorableRows, type SignalScoreRow } from "@/lib/signal-scores.shared";
 import { isAfterEngineFix } from "@/lib/signal-engine-version";
 
 import type { SignalRecord } from "@/lib/signalHistory";
@@ -58,52 +58,44 @@ export function useSignalOutcomes() {
   }, [rows]);
 
   const totals = useMemo(() => {
-    const targets = rows.filter((r) => r.status === "target").length;
-    const stops = rows.filter((r) => r.status === "stop").length;
-    const open = rows.filter((r) => r.status === "open").length;
-    const expired = rows.filter((r) => r.status === "expired").length;
-    const decided = targets + stops;
-    const resolvedRows = rows.filter((r) => r.status !== "open");
-    const rSum = resolvedRows.reduce((acc, r) => acc + (r.realizedR ?? 0), 0);
-    // A-grade only, because that is the number traders actually act on: the
-    // all-grades figure includes C setups the coach told them to skip.
-    const aRows = rows.filter((r) => String(r.grade ?? "").toUpperCase().startsWith("A"));
-    const aTargets = aRows.filter((r) => r.status === "target").length;
-    const aDecided = aTargets + aRows.filter((r) => r.status === "stop").length;
+    // Built from the same aggregator as the scoreboard page, so a figure here can
+    // never end up on a different denominator to the same figure over there.
+    const board = buildScoreboard(rows);
+    const scorable = scorableRows(rows);
+    const fresh = scorable.filter((r) => isAfterEngineFix(r.createdAt));
+    const freshBoard = buildScoreboard(fresh);
+    const freshA = bucket("A/A+", fresh.filter((r) => String(r.grade ?? "").toUpperCase().startsWith("A")));
     // Newest resolution timestamp, so the header can show when stats last moved.
     const stamps = rows
       .map((r) => Date.parse(String(r.resolvedAt ?? r.createdAt ?? "")))
       .filter((t) => Number.isFinite(t));
-    // Same numbers again, counting only scans produced by the current engine.
-    const fresh = rows.filter((r) => isAfterEngineFix(r.createdAt));
-    const fTargets = fresh.filter((r) => r.status === "target").length;
-    const fDecided = fTargets + fresh.filter((r) => r.status === "stop").length;
-    const fResolved = fresh.filter((r) => r.status !== "open");
-    const fA = fresh.filter((r) => String(r.grade ?? "").toUpperCase().startsWith("A"));
-    const fATargets = fA.filter((r) => r.status === "target").length;
-    const fADecided = fATargets + fA.filter((r) => r.status === "stop").length;
     return {
-      filed: rows.length,
-      targets,
-      stops,
-      open,
-      expired,
-      hitRate: decided ? Math.round((targets / decided) * 1000) / 10 : null,
-      aGradeHitRate: aDecided ? Math.round((aTargets / aDecided) * 1000) / 10 : null,
-      aGradeDecided: aDecided,
-      avgR: resolvedRows.length ? Math.round((rSum / resolvedRows.length) * 100) / 100 : null,
+      filed: board.total,
+      targets: board.targets,
+      stops: board.stops,
+      open: board.open,
+      expired: board.expired,
+      expiredAvgR: board.expiredAvgR,
+      voided: board.voided,
+      /** Target or stop printed. The denominator for every rate and average below. */
+      decided: board.decided,
+      hitRate: board.decided ? board.hitRate : null,
+      aGradeHitRate: board.aGrade.decided ? board.aGrade.hitRate : null,
+      aGradeDecided: board.aGrade.decided,
+      avgR: board.decided ? board.expectancyR : null,
+      netAvgR: board.netExpectancyR,
+      netCount: board.netCount,
       updatedAt: stamps.length ? new Date(Math.max(...stamps)) : null,
       sinceFix: {
-        filed: fresh.length,
-        decided: fDecided,
-        hitRate: fDecided ? Math.round((fTargets / fDecided) * 1000) / 10 : null,
-        aGradeHitRate: fADecided ? Math.round((fATargets / fADecided) * 1000) / 10 : null,
-        avgR: fResolved.length
-          ? Math.round((fResolved.reduce((acc, r) => acc + (r.realizedR ?? 0), 0) / fResolved.length) * 100) / 100
-          : null,
+        filed: freshBoard.total,
+        decided: freshBoard.decided,
+        hitRate: freshBoard.decided ? freshBoard.hitRate : null,
+        aGradeHitRate: freshA.decided ? freshA.hitRate : null,
+        aGradeDecided: freshA.decided,
+        avgR: freshBoard.decided ? freshBoard.expectancyR : null,
+        netAvgR: freshBoard.netExpectancyR,
       },
     };
-
   }, [rows]);
 
   return { rows, outcomeFor, totals, loading: query.isLoading, recheck };
