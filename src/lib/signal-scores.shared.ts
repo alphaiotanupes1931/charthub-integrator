@@ -86,7 +86,13 @@ export function tfLabel(tf: string): string {
   return TF_LABEL[tf] ?? tf;
 }
 
-function bucket(key: string, rows: SignalScoreRow[]): ScoreBucket {
+/** Rows that can be scored at all: void (no-direction) rows never count. */
+export function scorableRows(rows: SignalScoreRow[]): SignalScoreRow[] {
+  return rows.filter((r) => r.status !== "void");
+}
+
+function bucket(key: string, all: SignalScoreRow[]): ScoreBucket {
+  const rows = scorableRows(all);
   const targets = rows.filter((r) => r.status === "target").length;
   const stops = rows.filter((r) => r.status === "stop").length;
   const expired = rows.filter((r) => r.status === "expired").length;
