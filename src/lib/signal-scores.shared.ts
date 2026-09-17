@@ -203,7 +203,14 @@ export function buildScoreboard(allRows: SignalScoreRow[]): Scoreboard {
     notes.push("Fewer than 10 resolved signals so far. Numbers here get meaningful after a few weeks of scanning.");
   }
 
+  if (voided > 0) {
+    notes.push(
+      `${voided} no-direction scan${voided === 1 ? "" : "s"} excluded from these numbers. Neutral reads are not scored either way.`,
+    );
+  }
+
   return {
+    voided,
     total: overall.total,
     open: rows.filter((r) => r.status === "open").length,
     resolved: overall.resolved,
