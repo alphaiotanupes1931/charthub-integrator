@@ -215,24 +215,28 @@ function SignalHistory({ records, onOpen }: { records: SignalRecord[]; onOpen: (
         </span>
         <span className="inline-flex flex-wrap items-center gap-1 font-mono">
           <span className="text-bull">{totals.targets} hit TP</span> · <span className="text-red-500">{totals.stops} stopped</span> · {totals.open} open
+          {totals.expired ? ` · ${totals.expired} expired (not counted below)` : ""}
           {totals.hitRate != null ? (
             <>
               {" · "}
-              <span>{totals.hitRate}% hit rate</span>
+              <span>{totals.hitRate}% hit rate (n={totals.decided})</span>
               <InfoTip id="hitRate" />
             </>
           ) : null}
           {totals.aGradeHitRate != null ? (
             <>
               {" · "}
-              <span>{totals.aGradeHitRate}% on A grades</span>
+              <span>{totals.aGradeHitRate}% on A grades (n={totals.aGradeDecided})</span>
               <InfoTip id="gradeA" />
             </>
           ) : null}
           {totals.avgR != null ? (
             <>
               {" · "}
-              <span>{totals.avgR}R avg</span>
+              <span>
+                {totals.avgR}R avg gross (n={totals.decided})
+                {totals.netAvgR == null ? "" : ` · ${totals.netAvgR}R net (n=${totals.netCount})`}
+              </span>
               <InfoTip id="avgR" />
             </>
           ) : null}
@@ -240,9 +244,10 @@ function SignalHistory({ records, onOpen }: { records: SignalRecord[]; onOpen: (
         {totals.sinceFix.hitRate != null ? (
           <span className="inline-flex flex-wrap items-center gap-1 font-mono">
             {ENGINE_FIX_LABEL}: {totals.sinceFix.hitRate}% hit rate
-            {totals.sinceFix.aGradeHitRate != null ? ` · ${totals.sinceFix.aGradeHitRate}% on A grades` : ""}
-            {totals.sinceFix.avgR != null ? ` · ${totals.sinceFix.avgR}R avg` : ""}
-            {` (${totals.sinceFix.decided} resolved)`}
+            {totals.sinceFix.aGradeHitRate != null ? ` · ${totals.sinceFix.aGradeHitRate}% on A grades (n=${totals.sinceFix.aGradeDecided})` : ""}
+            {totals.sinceFix.avgR != null ? ` · ${totals.sinceFix.avgR}R avg gross` : ""}
+            {totals.sinceFix.netAvgR != null ? ` · ${totals.sinceFix.netAvgR}R net` : ""}
+            {` (n=${totals.sinceFix.decided} decided)`}
           </span>
         ) : null}
 
