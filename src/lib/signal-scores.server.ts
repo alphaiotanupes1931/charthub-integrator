@@ -72,6 +72,11 @@ const EXPIRY_HOURS: Record<string, number> = {
 };
 
 export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
+  const direction = signalDirection(sig.bias);
+  if (!direction) {
+    // No opinion, nothing to score. Voided rather than defaulted to short.
+    return { status: "void", realizedR: null, maeR: null, mfeR: null, barsToResolve: null };
+  }
   const tf = HISTORY_TF[sig.timeframe] ?? "60";
   const expiryHours = EXPIRY_HOURS[tf] ?? 72;
   const createdMs = new Date(sig.created_at).getTime();
