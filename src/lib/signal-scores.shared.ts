@@ -251,6 +251,14 @@ export function buildScoreboard(allRows: SignalScoreRow[]): Scoreboard {
     );
   }
 
+  if (overall.expired > 0) {
+    notes.push(
+      `${overall.expired} signal${overall.expired === 1 ? "" : "s"} timed out without hitting the stop or the target` +
+        (overall.expiredAvgR == null ? "" : ` (${overall.expiredAvgR}R average at the last close)`) +
+        ". Expiries are shown on their own line and are not counted in hit rate or average R.",
+    );
+  }
+
   return {
     voided,
     total: overall.total,

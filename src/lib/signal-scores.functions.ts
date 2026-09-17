@@ -51,6 +51,8 @@ type Row = {
   created_at: string;
   counter_trend: boolean | null;
   htf_bias: string | null;
+  net_r: number | string | null;
+  cost_r: number | string | null;
 };
 
 function toRow(r: Row): SignalScoreRow {
@@ -74,6 +76,8 @@ function toRow(r: Row): SignalScoreRow {
     createdAt: r.created_at,
     counterTrend: Boolean(r.counter_trend),
     htfBias: r.htf_bias,
+    netR: num(r.net_r ?? null),
+    costR: num(r.cost_r ?? null),
   };
 }
 
