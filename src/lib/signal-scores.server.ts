@@ -20,7 +20,12 @@ export type OpenSignal = {
 };
 
 export type Resolution = {
-  status: "target" | "stop" | "expired" | "open";
+  /**
+   * "void" means the signal had no direction to score (Neutral bias). Those rows
+   * are excluded from hit rate and expectancy: scoring them silently bets short
+   * on every no-opinion scan and folds coin flips into the record.
+   */
+  status: "target" | "stop" | "expired" | "open" | "void";
   realizedR: number | null;
   /**
    * Maximum adverse excursion, in R: how far price went AGAINST the entry
