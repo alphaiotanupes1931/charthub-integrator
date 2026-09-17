@@ -400,7 +400,7 @@ export function assignBand(args: {
     band,
     rawBand: raw.band,
     tier: tierOf(band),
-    tradeable: def.tradeable && !provisional ? def.tradeable : def.tradeable && !provisional,
+    tradeable: def.tradeable && !provisional,
     coarsened,
     provisional,
     reasons,
