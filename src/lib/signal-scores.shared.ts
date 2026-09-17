@@ -35,17 +35,40 @@ export type SignalScoreRow = {
   counterTrend?: boolean;
   /** Daily bias recorded at scan time. */
   htfBias?: string | null;
+  /** Realised R after spread and slippage. Null on rows resolved before costs were recorded. */
+  netR?: number | null;
+  /** Spread and slippage for this row, in R. */
+  costR?: number | null;
 };
 
+/**
+ * One definition of "resolved" for the whole scoreboard: DECIDED, meaning the
+ * stop or the first target actually printed. Expiries are counted and reported
+ * on their own line but never folded into hit rate or average R, because an
+ * expiry is marked to the last close of a trade that never concluded, and a
+ * partial R from a timed-out signal dilutes every figure it lands in.
+ */
 export type ScoreBucket = {
   key: string;
+  /** Scorable rows filed (open + decided + expired). */
   total: number;
-  resolved: number;
+  open: number;
+  /** Target + stop. The denominator for hit rate, average R and net R. */
+  decided: number;
   targets: number;
   stops: number;
+  /** Timed out. Reported separately, never inside hitRate/expectancyR. */
   expired: number;
-  hitRate: number; // 0-100 of resolved win/loss rows
-  expectancyR: number; // average R across resolved rows
+  hitRate: number; // 0-100 over `decided`
+  expectancyR: number; // gross average R over `decided`
+  /** Average R after costs, over the decided rows that carry a cost figure. */
+  netExpectancyR: number | null;
+  /** How many decided rows had a net figure to average. */
+  netCount: number;
+  /** Average cost paid, in R, over the same rows as netExpectancyR. */
+  avgCostR: number | null;
+  /** Average R on expiries, so timing-out trades are visible but separate. */
+  expiredAvgR: number | null;
 };
 
 export type Scoreboard = {
