@@ -58,7 +58,7 @@ describe("scoreboard excludes void rows", () => {
     const board = buildScoreboard(rows);
     expect(board.voided).toBe(2);
     expect(board.total).toBe(2);
-    expect(board.resolved).toBe(2);
+    expect(board.decided).toBe(2);
     expect(board.hitRate).toBe(50);
     expect(board.expectancyR).toBe(0.5);
     expect(board.notes.some((n) => n.includes("no-direction"))).toBe(true);
