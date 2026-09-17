@@ -29,11 +29,17 @@ export const Route = createFileRoute("/_app/scoreboard")({
   component: ScoreboardPage,
 });
 
-function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
+/**
+ * Every figure on this page carries the count it was computed from. That is not
+ * decoration: hit rate and average R were once averaged over different sets, and
+ * the only way to catch that class of bug is to print the n next to the number.
+ */
+function Stat({ label, value, n, sub }: { label: string; value: string; n?: number; sub?: string }) {
   return (
     <div className="rounded-xl border border-border/60 p-4">
       <div className="text-xs tracking-wide text-muted-foreground">{label}</div>
       <div className="mt-1 text-2xl font-semibold">{value}</div>
+      {n != null && <div className="mt-0.5 font-mono text-xs text-muted-foreground">n = {n}</div>}
       {sub && <div className="mt-0.5 text-xs text-muted-foreground">{sub}</div>}
     </div>
   );
