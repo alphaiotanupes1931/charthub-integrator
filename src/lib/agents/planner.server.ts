@@ -1800,8 +1800,11 @@ export async function runPlanner(
   // grade yet: it records what it would have said next to what was published, so
   // the drop in signal volume is measured before any trader sees it. Failures
   // here can never affect the scan.
+  // Awaited, not fired and forgotten: the server runtime cancels pending work once
+  // the response is sent, which is why the shadow table was still empty after this
+  // shipped. The whole calibration plan depends on these rows existing.
   if (bias !== "Neutral" && !isNoEntry) {
-    void (async () => {
+    await (async () => {
       try {
         const bos = snap.mtf?.h1.bos;
         const { toProgramInput } = await import("@/lib/scanner/adapter");
