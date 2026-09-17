@@ -65,7 +65,8 @@ function BucketTable({ title, buckets, empty }: { title: string; buckets: ScoreB
                 <th className="py-2 pr-3 font-normal">Expired</th>
                 <th className="py-2 pr-3 font-normal">Hit rate</th>
                 <th className="py-2 pr-3 font-normal">Avg R gross</th>
-                <th className="py-2 font-normal">Avg R net</th>
+                <th className="py-2 pr-3 font-normal">Avg R net</th>
+                <th className="py-2 font-normal">Heat / best (n)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -85,11 +86,17 @@ function BucketTable({ title, buckets, empty }: { title: string; buckets: ScoreB
                     {b.decided ? `${b.expectancyR}R` : "-"}
                   </td>
                   <td
-                    className={`py-2 font-mono ${
+                    className={`py-2 pr-3 font-mono ${
                       (b.netExpectancyR ?? 0) > 0 ? "text-emerald-400" : (b.netExpectancyR ?? 0) < 0 ? "text-red-400" : ""
                     }`}
                   >
                     {b.netExpectancyR == null ? "-" : `${b.netExpectancyR}R (n=${b.netCount})`}
+                  </td>
+                  {/* Heat taken and best price reached, recovered from the same bars
+                      that decided the trade. Big best-price on a losing group means
+                      the direction was right and the stop was too tight. */}
+                  <td className="py-2 font-mono text-muted-foreground">
+                    {b.avgMfeR == null ? "-" : `${b.avgMaeR}R / ${b.avgMfeR}R (n=${b.excursionCount})`}
                   </td>
                 </tr>
               ))}
