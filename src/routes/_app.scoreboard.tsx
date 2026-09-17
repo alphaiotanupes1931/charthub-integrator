@@ -57,12 +57,15 @@ function BucketTable({ title, buckets, empty }: { title: string; buckets: ScoreB
             <thead>
               <tr className="text-left text-muted-foreground">
                 <th className="py-2 pr-3 font-normal">Group</th>
-                <th className="py-2 pr-3 font-normal">Signals</th>
-                <th className="py-2 pr-3 font-normal">Resolved</th>
+                <th className="py-2 pr-3 font-normal">Filed</th>
+                <th className="py-2 pr-3 font-normal">Open</th>
+                <th className="py-2 pr-3 font-normal">Decided (n)</th>
                 <th className="py-2 pr-3 font-normal">Hit</th>
                 <th className="py-2 pr-3 font-normal">Stopped</th>
+                <th className="py-2 pr-3 font-normal">Expired</th>
                 <th className="py-2 pr-3 font-normal">Hit rate</th>
-                <th className="py-2 font-normal">Avg R</th>
+                <th className="py-2 pr-3 font-normal">Avg R gross</th>
+                <th className="py-2 font-normal">Avg R net</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -70,12 +73,23 @@ function BucketTable({ title, buckets, empty }: { title: string; buckets: ScoreB
                 <tr key={b.key}>
                   <td className="py-2 pr-3 font-medium">{b.key}</td>
                   <td className="py-2 pr-3 font-mono">{b.total}</td>
-                  <td className="py-2 pr-3 font-mono">{b.resolved}</td>
+                  <td className="py-2 pr-3 font-mono text-muted-foreground">{b.open}</td>
+                  <td className="py-2 pr-3 font-mono">{b.decided}</td>
                   <td className="py-2 pr-3 font-mono text-emerald-400">{b.targets}</td>
                   <td className="py-2 pr-3 font-mono text-red-400">{b.stops}</td>
-                  <td className="py-2 pr-3 font-mono">{b.resolved ? `${b.hitRate}%` : "-"}</td>
-                  <td className={`py-2 font-mono ${b.expectancyR > 0 ? "text-emerald-400" : b.expectancyR < 0 ? "text-red-400" : ""}`}>
-                    {b.resolved ? `${b.expectancyR}R` : "-"}
+                  <td className="py-2 pr-3 font-mono text-muted-foreground">
+                    {b.expired ? `${b.expired}${b.expiredAvgR == null ? "" : ` (${b.expiredAvgR}R)`}` : "-"}
+                  </td>
+                  <td className="py-2 pr-3 font-mono">{b.decided ? `${b.hitRate}%` : "-"}</td>
+                  <td className={`py-2 pr-3 font-mono ${b.expectancyR > 0 ? "text-emerald-400" : b.expectancyR < 0 ? "text-red-400" : ""}`}>
+                    {b.decided ? `${b.expectancyR}R` : "-"}
+                  </td>
+                  <td
+                    className={`py-2 font-mono ${
+                      (b.netExpectancyR ?? 0) > 0 ? "text-emerald-400" : (b.netExpectancyR ?? 0) < 0 ? "text-red-400" : ""
+                    }`}
+                  >
+                    {b.netExpectancyR == null ? "-" : `${b.netExpectancyR}R (n=${b.netCount})`}
                   </td>
                 </tr>
               ))}
