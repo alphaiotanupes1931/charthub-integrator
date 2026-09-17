@@ -8,6 +8,7 @@
 import type { BtBar } from "@/lib/backtest/engine";
 import type { BacktestTimeframe } from "@/lib/backtest/catalog";
 import { costInR } from "@/lib/trading-costs";
+import { replayForward } from "@/lib/signal-replay";
 
 export type OpenSignal = {
   id: string;
@@ -53,12 +54,7 @@ export type Resolution = {
 };
 
 /** Long or short, or null when the scan had no directional opinion. */
-export function signalDirection(bias: string): "long" | "short" | null {
-  const b = bias.trim().toLowerCase();
-  if (b.startsWith("l") || b === "buy" || b === "bull" || b === "bullish") return "long";
-  if (b.startsWith("s") || b === "sell" || b === "bear" || b === "bearish") return "short";
-  return null;
-}
+export { replayDirection as signalDirection } from "@/lib/signal-replay";
 
 const HISTORY_TF: Record<string, BacktestTimeframe> = {
   "1": "15",
