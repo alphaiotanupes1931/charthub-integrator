@@ -100,18 +100,23 @@ export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
   const reward = Math.abs(sig.tp1 - sig.entry);
   const rMultiple = Math.round((reward / risk) * 100) / 100;
 
-  // Heat taken before resolution, measured bar by bar in R.
+  // Heat taken and ground made before resolution, measured bar by bar in R.
   let mae = 0;
+  let mfe = 0;
   const round = (n: number) => Math.round(n * 100) / 100;
 
   for (let i = 0; i < forward.length; i++) {
     const bar = forward[i]!;
     const adverse = long ? sig.entry - bar.low : bar.high - sig.entry;
     if (adverse > 0) mae = Math.max(mae, adverse / risk);
+    const favourable = long ? bar.high - sig.entry : sig.entry - bar.low;
+    if (favourable > 0) mfe = Math.max(mfe, favourable / risk);
     const hitStop = long ? bar.low <= sig.stop : bar.high >= sig.stop;
     const hitTarget = long ? bar.high >= sig.tp1 : bar.low <= sig.tp1;
-    if (hitStop) return { status: "stop", realizedR: -1, maeR: round(mae), barsToResolve: i + 1 };
-    if (hitTarget) return { status: "target", realizedR: rMultiple, maeR: round(mae), barsToResolve: i + 1 };
+    if (hitStop)
+      return { status: "stop", realizedR: -1, maeR: round(mae), mfeR: round(mfe), barsToResolve: i + 1 };
+    if (hitTarget)
+      return { status: "target", realizedR: rMultiple, maeR: round(mae), mfeR: round(mfe), barsToResolve: i + 1 };
   }
 
   if (ageHours > expiryHours) {
@@ -121,8 +126,15 @@ export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
       status: "expired",
       realizedR: round(move / risk),
       maeR: round(mae),
+      mfeR: round(mfe),
       barsToResolve: forward.length,
     };
   }
-  return { status: "open", realizedR: null, maeR: round(mae), barsToResolve: forward.length };
+  return {
+    status: "open",
+    realizedR: null,
+    maeR: round(mae),
+    mfeR: round(mfe),
+    barsToResolve: forward.length,
+  };
 }
