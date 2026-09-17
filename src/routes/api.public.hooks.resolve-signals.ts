@@ -57,6 +57,8 @@ export const Route = createFileRoute("/api/public/hooks/resolve-signals")({
                 resolved_at: new Date().toISOString(),
                 // "How early" as a number: heat taken before the signal resolved.
                 mae_r: res.maeR ?? null,
+                // Ground made in our favour: separates a tight stop from a wrong call.
+                mfe_r: res.mfeR ?? null,
                 bars_to_resolve: res.barsToResolve ?? null,
               } as never)
               .eq("id", sig.id);
