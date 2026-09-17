@@ -100,6 +100,7 @@ import { Route as ApiPublicHooksPriceAlertsTickRouteImport } from './routes/api.
 import { Route as ApiPublicHooksPaperBotTickRouteImport } from './routes/api.public.hooks.paper-bot-tick'
 import { Route as ApiPublicHooksJournalVerifyTickRouteImport } from './routes/api.public.hooks.journal-verify-tick'
 import { Route as ApiPublicHooksJournalDailyCheckinRouteImport } from './routes/api.public.hooks.journal-daily-checkin'
+import { Route as ApiPublicHooksGradeInversionRouteImport } from './routes/api.public.hooks.grade-inversion'
 import { Route as ApiPublicHooksDripEmailsRouteImport } from './routes/api.public.hooks.drip-emails'
 import { Route as ApiPublicHooksAutopilotTickRouteImport } from './routes/api.public.hooks.autopilot-tick'
 import { Route as ApiPublicHooksAiCreditsRouteImport } from './routes/api.public.hooks.ai-credits'
@@ -578,6 +579,12 @@ const ApiPublicHooksJournalDailyCheckinRoute =
     path: '/api/public/hooks/journal-daily-checkin',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksGradeInversionRoute =
+  ApiPublicHooksGradeInversionRouteImport.update({
+    id: '/api/public/hooks/grade-inversion',
+    path: '/api/public/hooks/grade-inversion',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksDripEmailsRoute =
   ApiPublicHooksDripEmailsRouteImport.update({
     id: '/api/public/hooks/drip-emails',
@@ -688,6 +695,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/ai-credits': typeof ApiPublicHooksAiCreditsRoute
   '/api/public/hooks/autopilot-tick': typeof ApiPublicHooksAutopilotTickRoute
   '/api/public/hooks/drip-emails': typeof ApiPublicHooksDripEmailsRoute
+  '/api/public/hooks/grade-inversion': typeof ApiPublicHooksGradeInversionRoute
   '/api/public/hooks/journal-daily-checkin': typeof ApiPublicHooksJournalDailyCheckinRoute
   '/api/public/hooks/journal-verify-tick': typeof ApiPublicHooksJournalVerifyTickRoute
   '/api/public/hooks/paper-bot-tick': typeof ApiPublicHooksPaperBotTickRoute
@@ -781,6 +789,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/ai-credits': typeof ApiPublicHooksAiCreditsRoute
   '/api/public/hooks/autopilot-tick': typeof ApiPublicHooksAutopilotTickRoute
   '/api/public/hooks/drip-emails': typeof ApiPublicHooksDripEmailsRoute
+  '/api/public/hooks/grade-inversion': typeof ApiPublicHooksGradeInversionRoute
   '/api/public/hooks/journal-daily-checkin': typeof ApiPublicHooksJournalDailyCheckinRoute
   '/api/public/hooks/journal-verify-tick': typeof ApiPublicHooksJournalVerifyTickRoute
   '/api/public/hooks/paper-bot-tick': typeof ApiPublicHooksPaperBotTickRoute
@@ -880,6 +889,7 @@ export interface FileRoutesById {
   '/api/public/hooks/ai-credits': typeof ApiPublicHooksAiCreditsRoute
   '/api/public/hooks/autopilot-tick': typeof ApiPublicHooksAutopilotTickRoute
   '/api/public/hooks/drip-emails': typeof ApiPublicHooksDripEmailsRoute
+  '/api/public/hooks/grade-inversion': typeof ApiPublicHooksGradeInversionRoute
   '/api/public/hooks/journal-daily-checkin': typeof ApiPublicHooksJournalDailyCheckinRoute
   '/api/public/hooks/journal-verify-tick': typeof ApiPublicHooksJournalVerifyTickRoute
   '/api/public/hooks/paper-bot-tick': typeof ApiPublicHooksPaperBotTickRoute
@@ -979,6 +989,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/ai-credits'
     | '/api/public/hooks/autopilot-tick'
     | '/api/public/hooks/drip-emails'
+    | '/api/public/hooks/grade-inversion'
     | '/api/public/hooks/journal-daily-checkin'
     | '/api/public/hooks/journal-verify-tick'
     | '/api/public/hooks/paper-bot-tick'
@@ -1072,6 +1083,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/ai-credits'
     | '/api/public/hooks/autopilot-tick'
     | '/api/public/hooks/drip-emails'
+    | '/api/public/hooks/grade-inversion'
     | '/api/public/hooks/journal-daily-checkin'
     | '/api/public/hooks/journal-verify-tick'
     | '/api/public/hooks/paper-bot-tick'
@@ -1170,6 +1182,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/ai-credits'
     | '/api/public/hooks/autopilot-tick'
     | '/api/public/hooks/drip-emails'
+    | '/api/public/hooks/grade-inversion'
     | '/api/public/hooks/journal-daily-checkin'
     | '/api/public/hooks/journal-verify-tick'
     | '/api/public/hooks/paper-bot-tick'
@@ -1224,6 +1237,7 @@ export interface RootRouteChildren {
   ApiPublicHooksAiCreditsRoute: typeof ApiPublicHooksAiCreditsRoute
   ApiPublicHooksAutopilotTickRoute: typeof ApiPublicHooksAutopilotTickRoute
   ApiPublicHooksDripEmailsRoute: typeof ApiPublicHooksDripEmailsRoute
+  ApiPublicHooksGradeInversionRoute: typeof ApiPublicHooksGradeInversionRoute
   ApiPublicHooksJournalDailyCheckinRoute: typeof ApiPublicHooksJournalDailyCheckinRoute
   ApiPublicHooksJournalVerifyTickRoute: typeof ApiPublicHooksJournalVerifyTickRoute
   ApiPublicHooksPaperBotTickRoute: typeof ApiPublicHooksPaperBotTickRoute
@@ -1880,6 +1894,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksJournalDailyCheckinRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/grade-inversion': {
+      id: '/api/public/hooks/grade-inversion'
+      path: '/api/public/hooks/grade-inversion'
+      fullPath: '/api/public/hooks/grade-inversion'
+      preLoaderRoute: typeof ApiPublicHooksGradeInversionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/drip-emails': {
       id: '/api/public/hooks/drip-emails'
       path: '/api/public/hooks/drip-emails'
@@ -2111,6 +2132,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksAiCreditsRoute: ApiPublicHooksAiCreditsRoute,
   ApiPublicHooksAutopilotTickRoute: ApiPublicHooksAutopilotTickRoute,
   ApiPublicHooksDripEmailsRoute: ApiPublicHooksDripEmailsRoute,
+  ApiPublicHooksGradeInversionRoute: ApiPublicHooksGradeInversionRoute,
   ApiPublicHooksJournalDailyCheckinRoute:
     ApiPublicHooksJournalDailyCheckinRoute,
   ApiPublicHooksJournalVerifyTickRoute: ApiPublicHooksJournalVerifyTickRoute,
