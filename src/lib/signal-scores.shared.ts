@@ -123,23 +123,33 @@ export function scorableRows(rows: SignalScoreRow[]): SignalScoreRow[] {
   return rows.filter((r) => r.status !== "void");
 }
 
-function bucket(key: string, all: SignalScoreRow[]): ScoreBucket {
+const r2 = (n: number) => Math.round(n * 100) / 100;
+const avg = (xs: number[]): number | null => (xs.length ? r2(xs.reduce((a, b) => a + b, 0) / xs.length) : null);
+
+export function bucket(key: string, all: SignalScoreRow[]): ScoreBucket {
   const rows = scorableRows(all);
+  const decidedRows = rows.filter((r) => r.status === "target" || r.status === "stop");
+  const expiredRows = rows.filter((r) => r.status === "expired");
   const targets = rows.filter((r) => r.status === "target").length;
   const stops = rows.filter((r) => r.status === "stop").length;
-  const expired = rows.filter((r) => r.status === "expired").length;
-  const decided = targets + stops;
-  const resolvedRows = rows.filter((r) => r.status !== "open");
-  const rSum = resolvedRows.reduce((acc, r) => acc + (r.realizedR ?? 0), 0);
+  const decided = decidedRows.length;
+  // Net R only over the decided rows that actually carry a cost figure, so a
+  // backfill gap cannot silently drag the net number toward gross.
+  const netRows = decidedRows.filter((r) => typeof r.netR === "number");
   return {
     key,
     total: rows.length,
-    resolved: resolvedRows.length,
+    open: rows.filter((r) => r.status === "open").length,
+    decided,
     targets,
     stops,
-    expired,
+    expired: expiredRows.length,
     hitRate: decided ? Math.round((targets / decided) * 1000) / 10 : 0,
-    expectancyR: resolvedRows.length ? Math.round((rSum / resolvedRows.length) * 100) / 100 : 0,
+    expectancyR: avg(decidedRows.map((r) => r.realizedR ?? 0)) ?? 0,
+    netExpectancyR: avg(netRows.map((r) => r.netR as number)),
+    netCount: netRows.length,
+    avgCostR: avg(netRows.map((r) => r.costR ?? 0)),
+    expiredAvgR: avg(expiredRows.map((r) => r.realizedR ?? 0)),
   };
 }
 
