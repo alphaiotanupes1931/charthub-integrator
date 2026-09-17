@@ -92,7 +92,7 @@ export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
   }
 
   const forward = bars.filter((b) => b.time * 1000 > createdMs);
-  const long = sig.bias.toLowerCase().startsWith("l");
+  const long = direction === "long";
   const risk = Math.abs(sig.entry - sig.stop);
   if (!risk || !forward.length) {
     return ageHours > expiryHours ? { status: "expired", realizedR: 0 } : { status: "open", realizedR: null };
