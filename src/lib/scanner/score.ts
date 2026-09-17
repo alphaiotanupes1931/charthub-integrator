@@ -376,7 +376,7 @@ export function assignBand(args: {
   if (args.lowerBoundR < 0.35) aPlusFailed.push(`the pessimistic estimate of net R is ${args.lowerBoundR.toFixed(2)}R, under the +0.35R floor`);
   if (args.sample < MIN_SAMPLE_FOR_BAND) aPlusFailed.push(`${args.sample} resolved trades in this instrument class, under the ${MIN_SAMPLE_FOR_BAND} needed to hold the opinion`);
 
-  let band = raw;
+  let band: Grade9 = raw.band;
   if (band === "A+" && aPlusFailed.length > 0) {
     band = "A";
     reasons.push(`Capped at A: ${aPlusFailed[0]}.`);
