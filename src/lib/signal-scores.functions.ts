@@ -15,7 +15,13 @@ const RecordInput = z.object({
   symbol: z.string().min(1).max(24),
   timeframe: z.string().min(1).max(4),
   grade: z.string().min(1).max(8),
-  bias: z.string().min(1).max(12),
+  // Only directional scans can be scored, so Neutral cannot be filed with an
+  // entry, stop and target at all.
+  bias: z
+    .string()
+    .transform((v) => v.trim().toLowerCase())
+    .pipe(z.enum(["long", "short"]))
+    .transform((v) => (v === "long" ? "Long" : "Short")),
   confidence: z.number().min(0).max(100).nullable().optional(),
   strategyId: z.string().max(64).nullable().optional(),
   entry: z.number().finite(),
@@ -200,7 +206,14 @@ export const resolveMySignalScores = createServerFn({ method: "POST" })
       if (res.status === "open") continue;
       await context.supabase
         .from("signal_scores")
-        .update({ status: res.status, realized_r: res.realizedR, resolved_at: new Date().toISOString() })
+        .update({
+          status: res.status,
+          realized_r: res.realizedR,
+          resolved_at: new Date().toISOString(),
+          mae_r: res.maeR ?? null,
+          mfe_r: res.mfeR ?? null,
+          bars_to_resolve: res.barsToResolve ?? null,
+        } as never)
         .eq("id", sig.id);
       resolved += 1;
     }

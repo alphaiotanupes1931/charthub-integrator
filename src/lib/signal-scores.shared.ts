@@ -7,7 +7,12 @@
 
 import { ENGINE_FIX_LABEL, isAfterEngineFix } from "@/lib/signal-engine-version";
 
-export type SignalScoreStatus = "open" | "target" | "stop" | "expired";
+/**
+ * "void" is a row with no direction to score (Neutral bias). It is kept for the
+ * audit trail but excluded from every aggregate, so no-opinion scans never count
+ * as short bets that happened to win or lose.
+ */
+export type SignalScoreStatus = "open" | "target" | "stop" | "expired" | "void";
 
 export type SignalScoreRow = {
   id: string;
@@ -46,6 +51,8 @@ export type ScoreBucket = {
 export type Scoreboard = {
   total: number;
   open: number;
+  /** No-direction rows held out of every number here. */
+  voided: number;
   resolved: number;
   targets: number;
   stops: number;
@@ -81,7 +88,13 @@ export function tfLabel(tf: string): string {
   return TF_LABEL[tf] ?? tf;
 }
 
-function bucket(key: string, rows: SignalScoreRow[]): ScoreBucket {
+/** Rows that can be scored at all: void (no-direction) rows never count. */
+export function scorableRows(rows: SignalScoreRow[]): SignalScoreRow[] {
+  return rows.filter((r) => r.status !== "void");
+}
+
+function bucket(key: string, all: SignalScoreRow[]): ScoreBucket {
+  const rows = scorableRows(all);
   const targets = rows.filter((r) => r.status === "target").length;
   const stops = rows.filter((r) => r.status === "stop").length;
   const expired = rows.filter((r) => r.status === "expired").length;
@@ -114,7 +127,8 @@ function group(rows: SignalScoreRow[], keyOf: (r: SignalScoreRow) => string | nu
     .sort((a, b) => b.total - a.total);
 }
 
-function hitRateOf(rows: SignalScoreRow[]): number | null {
+function hitRateOf(all: SignalScoreRow[]): number | null {
+  const rows = scorableRows(all);
   const targets = rows.filter((r) => r.status === "target").length;
   const stops = rows.filter((r) => r.status === "stop").length;
   if (targets + stops === 0) return null;
@@ -129,7 +143,11 @@ function confidenceBand(c: number | null): string | null {
   return "Under 60%";
 }
 
-export function buildScoreboard(rows: SignalScoreRow[]): Scoreboard {
+export function buildScoreboard(allRows: SignalScoreRow[]): Scoreboard {
+  // No-direction scans are voided, not scored: including them defaults every
+  // Neutral read to a short and drags the measured hit rate toward chance.
+  const voided = allRows.filter((r) => r.status === "void").length;
+  const rows = scorableRows(allRows);
   const overall = bucket("all", rows);
   const notes: string[] = [];
 
@@ -187,7 +205,14 @@ export function buildScoreboard(rows: SignalScoreRow[]): Scoreboard {
     notes.push("Fewer than 10 resolved signals so far. Numbers here get meaningful after a few weeks of scanning.");
   }
 
+  if (voided > 0) {
+    notes.push(
+      `${voided} no-direction scan${voided === 1 ? "" : "s"} excluded from these numbers. Neutral reads are not scored either way.`,
+    );
+  }
+
   return {
+    voided,
     total: overall.total,
     open: rows.filter((r) => r.status === "open").length,
     resolved: overall.resolved,
