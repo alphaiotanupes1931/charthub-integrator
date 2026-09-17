@@ -64,10 +64,10 @@ function lineFor(label: string, rows: Row[]): string | null {
   const s = stat(rows);
   if (s.decided < MIN_SAMPLE) {
     return s.total
-      ? `${label}: only ${s.decided} resolved signal${s.decided === 1 ? "" : "s"}, not enough to quote a hit rate.`
+      ? `${label}: only ${s.decided} decided signal${s.decided === 1 ? "" : "s"} (target or stop printed), not enough to quote a hit rate.`
       : null;
   }
-  return `${label}: ${s.hitRate}% hit rate over ${s.decided} resolved signals (${s.targets} hit target, ${s.stops} stopped), ${s.avgR}R average.`;
+  return `${label}: ${s.hitRate}% hit rate over ${s.decided} decided signals (${s.targets} hit target, ${s.stops} stopped), ${s.avgR}R average gross${s.netAvgR == null ? "" : `, ${s.netAvgR}R net of costs over ${s.netCount}`}.`;
 }
 
 /**
