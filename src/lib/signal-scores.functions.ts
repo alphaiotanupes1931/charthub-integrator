@@ -206,7 +206,14 @@ export const resolveMySignalScores = createServerFn({ method: "POST" })
       if (res.status === "open") continue;
       await context.supabase
         .from("signal_scores")
-        .update({ status: res.status, realized_r: res.realizedR, resolved_at: new Date().toISOString() })
+        .update({
+          status: res.status,
+          realized_r: res.realizedR,
+          resolved_at: new Date().toISOString(),
+          mae_r: res.maeR ?? null,
+          mfe_r: res.mfeR ?? null,
+          bars_to_resolve: res.barsToResolve ?? null,
+        })
         .eq("id", sig.id);
       resolved += 1;
     }
