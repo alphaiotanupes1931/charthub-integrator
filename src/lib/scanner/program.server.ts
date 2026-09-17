@@ -108,7 +108,7 @@ export async function runScannerProgram(input: ProgramInput): Promise<ProgramRes
     families,
     costShare: input.costShare ?? null,
     targetReachable: input.targetRoomOk !== false,
-    playbookEligible: spec.measuredPlaybooks.length > 0,
+    playbookEligible: spec.eligiblePlaybooks.length > 0,
   });
 
   const mandatory = vetoes.filter((v) => v.mandatory);
@@ -166,7 +166,7 @@ export async function recordProgramScore(args: {
       families: Object.fromEntries(
         Object.entries(result.families).map(([k, v]) => [k, { score: v.score, basis: v.basis, above: v.aboveThreshold, detail: v.detail }]),
       ),
-      vetoes: result.vetoes,
+      vetoes: result.vetoes.map((v) => ({ code: v.code, mandatory: v.mandatory, reason: v.reason })),
       reasons: result.band.reasons,
       shadow: args.shadow,
     });
