@@ -21,7 +21,6 @@ export const Route = createFileRoute("/api/public/hooks/signal-excursions")({
         const { computeExcursions } = await import("@/lib/signal-excursions.server");
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { getHistory } = await import("@/lib/backtest/history.server");
-        const type Unused = never;
 
         const { data, error } = await supabaseAdmin
           .from("signal_scores")
