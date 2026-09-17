@@ -51,6 +51,8 @@ export type ScoreBucket = {
 export type Scoreboard = {
   total: number;
   open: number;
+  /** No-direction rows held out of every number here. */
+  voided: number;
   resolved: number;
   targets: number;
   stops: number;
