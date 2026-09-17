@@ -226,6 +226,9 @@ function ScoreboardPage() {
                       </>
                     )}
                     {r.status === "open" && <span className="text-muted-foreground">Open</span>}
+                    {r.status === "void" && (
+                      <span className="text-muted-foreground">Not scored (no direction)</span>
+                    )}
                   </span>
                   <span className="ml-auto text-muted-foreground">{new Date(r.createdAt).toLocaleString()}</span>
                 </li>
