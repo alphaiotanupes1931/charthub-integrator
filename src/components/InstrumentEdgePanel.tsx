@@ -83,7 +83,7 @@ export function InstrumentEdgePanel() {
                 <th className="px-4 py-2 font-medium">Instrument</th>
                 <th className="px-3 py-2 font-medium">Hit rate</th>
                 <th className="px-3 py-2 font-medium">Expectancy</th>
-                <th className="px-3 py-2 font-medium">Resolved</th>
+                <th className="px-3 py-2 font-medium">Decided (n)</th>
                 <th className="px-3 py-2 font-medium">Volatility (ATR)</th>
                 <th className="px-3 py-2 font-medium">Typical pullback</th>
                 <th className="px-3 py-2 font-medium">Busiest session</th>
