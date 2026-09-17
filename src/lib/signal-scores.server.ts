@@ -20,7 +20,12 @@ export type OpenSignal = {
 };
 
 export type Resolution = {
-  status: "target" | "stop" | "expired" | "open";
+  /**
+   * "void" means the signal had no direction to score (Neutral bias). Those rows
+   * are excluded from hit rate and expectancy: scoring them silently bets short
+   * on every no-opinion scan and folds coin flips into the record.
+   */
+  status: "target" | "stop" | "expired" | "open" | "void";
   realizedR: number | null;
   /**
    * Maximum adverse excursion, in R: how far price went AGAINST the entry
@@ -29,9 +34,23 @@ export type Resolution = {
    * fires before price is done, and the confirmation threshold should tighten.
    */
   maeR?: number | null;
+  /**
+   * Maximum favourable excursion, in R: how far price went IN FAVOUR of the
+   * entry before the signal resolved. Read against maeR it separates a stop that
+   * was too tight (large mfeR on a loser) from a direction that was simply wrong.
+   */
+  mfeR?: number | null;
   /** Bars from filing to resolution, so timing can be judged per timeframe. */
   barsToResolve?: number | null;
 };
+
+/** Long or short, or null when the scan had no directional opinion. */
+export function signalDirection(bias: string): "long" | "short" | null {
+  const b = bias.trim().toLowerCase();
+  if (b.startsWith("l") || b === "buy" || b === "bull" || b === "bullish") return "long";
+  if (b.startsWith("s") || b === "sell" || b === "bear" || b === "bearish") return "short";
+  return null;
+}
 
 const HISTORY_TF: Record<string, BacktestTimeframe> = {
   "1": "15",
@@ -53,6 +72,11 @@ const EXPIRY_HOURS: Record<string, number> = {
 };
 
 export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
+  const direction = signalDirection(sig.bias);
+  if (!direction) {
+    // No opinion, nothing to score. Voided rather than defaulted to short.
+    return { status: "void", realizedR: null, maeR: null, mfeR: null, barsToResolve: null };
+  }
   const tf = HISTORY_TF[sig.timeframe] ?? "60";
   const expiryHours = EXPIRY_HOURS[tf] ?? 72;
   const createdMs = new Date(sig.created_at).getTime();
@@ -68,7 +92,7 @@ export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
   }
 
   const forward = bars.filter((b) => b.time * 1000 > createdMs);
-  const long = sig.bias.toLowerCase().startsWith("l");
+  const long = direction === "long";
   const risk = Math.abs(sig.entry - sig.stop);
   if (!risk || !forward.length) {
     return ageHours > expiryHours ? { status: "expired", realizedR: 0 } : { status: "open", realizedR: null };
@@ -76,18 +100,23 @@ export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
   const reward = Math.abs(sig.tp1 - sig.entry);
   const rMultiple = Math.round((reward / risk) * 100) / 100;
 
-  // Heat taken before resolution, measured bar by bar in R.
+  // Heat taken and ground made before resolution, measured bar by bar in R.
   let mae = 0;
+  let mfe = 0;
   const round = (n: number) => Math.round(n * 100) / 100;
 
   for (let i = 0; i < forward.length; i++) {
     const bar = forward[i]!;
     const adverse = long ? sig.entry - bar.low : bar.high - sig.entry;
     if (adverse > 0) mae = Math.max(mae, adverse / risk);
+    const favourable = long ? bar.high - sig.entry : sig.entry - bar.low;
+    if (favourable > 0) mfe = Math.max(mfe, favourable / risk);
     const hitStop = long ? bar.low <= sig.stop : bar.high >= sig.stop;
     const hitTarget = long ? bar.high >= sig.tp1 : bar.low <= sig.tp1;
-    if (hitStop) return { status: "stop", realizedR: -1, maeR: round(mae), barsToResolve: i + 1 };
-    if (hitTarget) return { status: "target", realizedR: rMultiple, maeR: round(mae), barsToResolve: i + 1 };
+    if (hitStop)
+      return { status: "stop", realizedR: -1, maeR: round(mae), mfeR: round(mfe), barsToResolve: i + 1 };
+    if (hitTarget)
+      return { status: "target", realizedR: rMultiple, maeR: round(mae), mfeR: round(mfe), barsToResolve: i + 1 };
   }
 
   if (ageHours > expiryHours) {
@@ -97,8 +126,15 @@ export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
       status: "expired",
       realizedR: round(move / risk),
       maeR: round(mae),
+      mfeR: round(mfe),
       barsToResolve: forward.length,
     };
   }
-  return { status: "open", realizedR: null, maeR: round(mae), barsToResolve: forward.length };
+  return {
+    status: "open",
+    realizedR: null,
+    maeR: round(mae),
+    mfeR: round(mfe),
+    barsToResolve: forward.length,
+  };
 }
