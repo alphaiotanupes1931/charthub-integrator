@@ -210,6 +210,8 @@ export const resolveMySignalScores = createServerFn({ method: "POST" })
           status: res.status,
           realized_r: res.realizedR,
           resolved_at: new Date().toISOString(),
+          net_r: res.netR ?? null,
+          cost_r: res.costR ?? null,
           mae_r: res.maeR ?? null,
           mfe_r: res.mfeR ?? null,
           bars_to_resolve: res.barsToResolve ?? null,

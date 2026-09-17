@@ -6,6 +6,8 @@
 // i is only ever filled at the open of bar i+1, and the exit walks bars
 // forward one at a time.
 
+import { costInR } from "@/lib/trading-costs";
+
 export type BtBar = {
   time: number; // seconds
   open: number;
@@ -73,7 +75,12 @@ export type BtTrade = {
   stop: number;
   target: number;
   exit: number;
+  /** R after spread and slippage; every stat below is built from this. */
   r: number;
+  /** R before trading costs, kept so the size of the haircut stays visible. */
+  grossR: number;
+  /** Cost of this trade in R. Larger on tighter stops for the same spread. */
+  costR: number;
   outcome: "win" | "loss" | "timeout";
   holdBars: number;
   balanceAfter: number;
@@ -96,6 +103,11 @@ export type BtStats = {
   winRate: number;
   expectancyR: number;
   netR: number;
+  /** Same two figures before trading costs. */
+  grossExpectancyR: number;
+  grossNetR: number;
+  /** Average cost per trade in R. */
+  avgCostR: number;
   avgWinR: number;
   avgLossR: number;
   profitFactor: number | null;
@@ -448,7 +460,9 @@ export function runBacktest(
       exit = b.close;
     }
 
-    const r = round(((sig.side === "Long" ? exit - entry : entry - exit) / stopDist), 3);
+    const grossR = round(((sig.side === "Long" ? exit - entry : entry - exit) / stopDist), 3);
+    const costR = costInR(meta.symbol, entry, stopDist);
+    const r = round(grossR - costR, 3);
     netR += r;
     balance = balance * (1 + (p.riskPct / 100) * r);
     peak = Math.max(peak, balance);
@@ -471,6 +485,8 @@ export function runBacktest(
       entryTime: fillBar.time,
       exitTime,
       entry: round(entry, 5),
+      grossR,
+      costR,
       stop: round(stop, 5),
       target: round(target, 5),
       exit: round(exit, 5),
@@ -490,6 +506,7 @@ export function runBacktest(
   const losses = trades.filter((t) => t.r <= 0);
   const grossWin = wins.reduce((s, t) => s + t.r, 0);
   const grossLoss = Math.abs(losses.reduce((s, t) => s + t.r, 0));
+  const grossSum = trades.reduce((s, t) => s + t.grossR, 0);
   const first = bars[startIndex]?.close ?? 0;
   const last = bars[bars.length - 1]?.close ?? 0;
 
@@ -511,6 +528,9 @@ export function runBacktest(
     winRate: trades.length ? round((wins.length / trades.length) * 100, 1) : 0,
     expectancyR: trades.length ? round(netR / trades.length, 2) : 0,
     netR: round(netR, 2),
+    grossExpectancyR: trades.length ? round(grossSum / trades.length, 2) : 0,
+    grossNetR: round(grossSum, 2),
+    avgCostR: trades.length ? round(trades.reduce((s, t) => s + t.costR, 0) / trades.length, 3) : 0,
     avgWinR: wins.length ? round(grossWin / wins.length, 2) : 0,
     avgLossR: losses.length ? round(-grossLoss / losses.length, 2) : 0,
     profitFactor: grossLoss > 0 ? round(grossWin / grossLoss, 2) : null,
