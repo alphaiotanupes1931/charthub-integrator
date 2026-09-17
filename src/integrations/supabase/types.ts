@@ -1761,6 +1761,7 @@ export type Database = {
           bars_to_resolve: number | null
           bias: string
           confidence: number | null
+          cost_r: number | null
           counter_trend: boolean
           created_at: string
           entry: number
@@ -1770,6 +1771,7 @@ export type Database = {
           mae_r: number | null
           methodology_version: string
           mfe_r: number | null
+          net_r: number | null
           planned_r: number | null
           realized_r: number | null
           resolved_at: string | null
@@ -1787,6 +1789,7 @@ export type Database = {
           bars_to_resolve?: number | null
           bias: string
           confidence?: number | null
+          cost_r?: number | null
           counter_trend?: boolean
           created_at?: string
           entry: number
@@ -1796,6 +1799,7 @@ export type Database = {
           mae_r?: number | null
           methodology_version?: string
           mfe_r?: number | null
+          net_r?: number | null
           planned_r?: number | null
           realized_r?: number | null
           resolved_at?: string | null
@@ -1813,6 +1817,7 @@ export type Database = {
           bars_to_resolve?: number | null
           bias?: string
           confidence?: number | null
+          cost_r?: number | null
           counter_trend?: boolean
           created_at?: string
           entry?: number
@@ -1822,6 +1827,7 @@ export type Database = {
           mae_r?: number | null
           methodology_version?: string
           mfe_r?: number | null
+          net_r?: number | null
           planned_r?: number | null
           realized_r?: number | null
           resolved_at?: string | null
