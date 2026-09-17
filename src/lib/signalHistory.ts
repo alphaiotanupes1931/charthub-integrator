@@ -178,7 +178,10 @@ export function recordSignal(input: Omit<SignalRecord, "id" | "at">): SignalReco
   write([rec, ...list]);
   // File the same scan server-side so the scoreboard can resolve it against
   // real bars later. Fire and forget: a signed-out or test session just skips.
-  if (input.entry && input.stop && input.tp1 && input.grade !== "NO ENTRY") {
+  // Only directional scans go on the scoreboard: a Neutral read has no side to
+  // score, so filing it would put a coin flip inside the hit rate.
+  const directional = /^(long|short)$/i.test((input.bias ?? "").trim());
+  if (input.entry && input.stop && input.tp1 && input.grade !== "NO ENTRY" && directional) {
     void import("@/lib/signal-scores.functions")
       .then(({ recordSignalScore }) =>
         recordSignalScore({
