@@ -7,7 +7,12 @@
 
 import { ENGINE_FIX_LABEL, isAfterEngineFix } from "@/lib/signal-engine-version";
 
-export type SignalScoreStatus = "open" | "target" | "stop" | "expired";
+/**
+ * "void" is a row with no direction to score (Neutral bias). It is kept for the
+ * audit trail but excluded from every aggregate, so no-opinion scans never count
+ * as short bets that happened to win or lose.
+ */
+export type SignalScoreStatus = "open" | "target" | "stop" | "expired" | "void";
 
 export type SignalScoreRow = {
   id: string;
