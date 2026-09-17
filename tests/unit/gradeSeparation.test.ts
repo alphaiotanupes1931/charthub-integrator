@@ -120,6 +120,8 @@ describe("analyzeGradeSeparation", () => {
       percentile: null,
       families: { regime: { score: 50 } },
     }));
-    expect(analyzeGradeSeparation(rows, program).programCoverage).toBe(25);
+    // The 25 Long signals match, plus the three Short-side signals sitting inside
+    // the three-minute window either side of the first Long shadow score.
+    expect(analyzeGradeSeparation(rows, program).programCoverage).toBe(28);
   });
 });
