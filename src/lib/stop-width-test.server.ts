@@ -39,6 +39,8 @@ export type StopWidthBand = {
 
 export type StopWidthReport = {
   targetMult: number;
+  /** True when TP1 was moved with the stop so planned R:R stayed constant. */
+  scaledTargets: boolean;
   bands: StopWidthBand[];
   skipped: number;
   notes: string[];
@@ -66,10 +68,26 @@ const rate = (wins: number, losses: number): number | null =>
 
 /**
  * Re-resolve each filed signal with the stop moved to `targetMult` x ATR.
- * TP1 is untouched, so widening the stop lowers the planned R as well as the
- * chance of being stopped: that is the point, both effects are real.
+ *
+ * Two modes, and the difference is the whole point:
+ *
+ *   scaleTargets: false — TP1 stays where it was filed. Widening the stop then
+ *     lowers planned R as well as the chance of being stopped, so hit rate rises
+ *     while each win pays less. That is two changes at once and it is why the
+ *     first run of this test came back "not clearly better": it was comparing
+ *     two different bets, not two stop widths.
+ *
+ *   scaleTargets: true — TP1 moves out by the same factor as the stop, so planned
+ *     R:R is held constant. This is the version that isolates stop width, and it
+ *     is the one to read when asking whether A grades were being stopped out by
+ *     noise.
  */
-export async function runStopWidthTest(rows: Filed[], targetMult = 1.5): Promise<StopWidthReport> {
+export async function runStopWidthTest(
+  rows: Filed[],
+  targetMult = 1.5,
+  opts: { scaleTargets?: boolean } = {},
+): Promise<StopWidthReport> {
+  const scaleTargets = opts.scaleTargets ?? false;
   const notes: string[] = [];
   let skipped = 0;
 
@@ -86,6 +104,12 @@ export async function runStopWidthTest(rows: Filed[], targetMult = 1.5): Promise
     const atr = risk / filedMult;
     const widened = atr * targetMult;
     const stop = direction === "long" ? row.entry - widened : row.entry + widened;
+    // Hold planned R:R constant by moving TP1 out in the same proportion as the
+    // stop, so the only variable is how much room the trade is given.
+    const scale = widened / risk;
+    const tp1 = scaleTargets
+      ? row.entry + (row.tp1 - row.entry) * scale
+      : row.tp1;
 
     const sig: OpenSignal = {
       id: row.id,
@@ -94,7 +118,7 @@ export async function runStopWidthTest(rows: Filed[], targetMult = 1.5): Promise
       bias: row.bias,
       entry: row.entry,
       stop,
-      tp1: row.tp1,
+      tp1,
       created_at: row.created_at,
     };
     const res = await resolveSignal(sig);
@@ -142,8 +166,10 @@ export async function runStopWidthTest(rows: Filed[], targetMult = 1.5): Promise
     notes.push(`${skipped} rows skipped: no direction, unknown grade or zero risk distance.`);
   }
   notes.push(
-    "Only stop width changes. TP1 stays where it was filed, so a widened stop also lowers planned R, which is why expectancy can fall while hit rate rises.",
+    scaleTargets
+      ? "TP1 was moved out in the same proportion as the stop, so planned R:R is unchanged and the only variable is how much room the trade was given. Read this run when asking whether A grades were being stopped out by noise."
+      : "Only the stop moved. TP1 stayed where it was filed, so widening the stop also lowered planned R: hit rate rises while each win pays less. This run cannot separate the two effects - use scaleTargets for that.",
   );
 
-  return { targetMult, bands, skipped, notes };
+  return { targetMult, scaledTargets: scaleTargets, bands, skipped, notes };
 }
