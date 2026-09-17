@@ -46,7 +46,10 @@ export const Route = createFileRoute("/api/public/hooks/stop-width-test")({
           created_at: r.created_at,
         }));
 
-        const report = await runStopWidthTest(rows, targetMult);
+        // scale=1 moves TP1 with the stop so planned R:R stays constant, which is
+        // the only version of this test that isolates stop width.
+        const scaleTargets = ["1", "true", "yes"].includes((url.searchParams.get("scale") ?? "").toLowerCase());
+        const report = await runStopWidthTest(rows, targetMult, { scaleTargets });
         return Response.json({ sampled: rows.length, ...report });
       },
     },
