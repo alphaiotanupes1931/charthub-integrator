@@ -100,6 +100,7 @@ import { Route as ApiPublicHooksPriceAlertsTickRouteImport } from './routes/api.
 import { Route as ApiPublicHooksPaperBotTickRouteImport } from './routes/api.public.hooks.paper-bot-tick'
 import { Route as ApiPublicHooksJournalVerifyTickRouteImport } from './routes/api.public.hooks.journal-verify-tick'
 import { Route as ApiPublicHooksJournalDailyCheckinRouteImport } from './routes/api.public.hooks.journal-daily-checkin'
+import { Route as ApiPublicHooksGradeSeparationRouteImport } from './routes/api.public.hooks.grade-separation'
 import { Route as ApiPublicHooksGradeInversionRouteImport } from './routes/api.public.hooks.grade-inversion'
 import { Route as ApiPublicHooksDripEmailsRouteImport } from './routes/api.public.hooks.drip-emails'
 import { Route as ApiPublicHooksAutopilotTickRouteImport } from './routes/api.public.hooks.autopilot-tick'
@@ -579,6 +580,12 @@ const ApiPublicHooksJournalDailyCheckinRoute =
     path: '/api/public/hooks/journal-daily-checkin',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksGradeSeparationRoute =
+  ApiPublicHooksGradeSeparationRouteImport.update({
+    id: '/api/public/hooks/grade-separation',
+    path: '/api/public/hooks/grade-separation',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksGradeInversionRoute =
   ApiPublicHooksGradeInversionRouteImport.update({
     id: '/api/public/hooks/grade-inversion',
@@ -696,6 +703,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/autopilot-tick': typeof ApiPublicHooksAutopilotTickRoute
   '/api/public/hooks/drip-emails': typeof ApiPublicHooksDripEmailsRoute
   '/api/public/hooks/grade-inversion': typeof ApiPublicHooksGradeInversionRoute
+  '/api/public/hooks/grade-separation': typeof ApiPublicHooksGradeSeparationRoute
   '/api/public/hooks/journal-daily-checkin': typeof ApiPublicHooksJournalDailyCheckinRoute
   '/api/public/hooks/journal-verify-tick': typeof ApiPublicHooksJournalVerifyTickRoute
   '/api/public/hooks/paper-bot-tick': typeof ApiPublicHooksPaperBotTickRoute
@@ -790,6 +798,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/autopilot-tick': typeof ApiPublicHooksAutopilotTickRoute
   '/api/public/hooks/drip-emails': typeof ApiPublicHooksDripEmailsRoute
   '/api/public/hooks/grade-inversion': typeof ApiPublicHooksGradeInversionRoute
+  '/api/public/hooks/grade-separation': typeof ApiPublicHooksGradeSeparationRoute
   '/api/public/hooks/journal-daily-checkin': typeof ApiPublicHooksJournalDailyCheckinRoute
   '/api/public/hooks/journal-verify-tick': typeof ApiPublicHooksJournalVerifyTickRoute
   '/api/public/hooks/paper-bot-tick': typeof ApiPublicHooksPaperBotTickRoute
@@ -890,6 +899,7 @@ export interface FileRoutesById {
   '/api/public/hooks/autopilot-tick': typeof ApiPublicHooksAutopilotTickRoute
   '/api/public/hooks/drip-emails': typeof ApiPublicHooksDripEmailsRoute
   '/api/public/hooks/grade-inversion': typeof ApiPublicHooksGradeInversionRoute
+  '/api/public/hooks/grade-separation': typeof ApiPublicHooksGradeSeparationRoute
   '/api/public/hooks/journal-daily-checkin': typeof ApiPublicHooksJournalDailyCheckinRoute
   '/api/public/hooks/journal-verify-tick': typeof ApiPublicHooksJournalVerifyTickRoute
   '/api/public/hooks/paper-bot-tick': typeof ApiPublicHooksPaperBotTickRoute
@@ -990,6 +1000,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/autopilot-tick'
     | '/api/public/hooks/drip-emails'
     | '/api/public/hooks/grade-inversion'
+    | '/api/public/hooks/grade-separation'
     | '/api/public/hooks/journal-daily-checkin'
     | '/api/public/hooks/journal-verify-tick'
     | '/api/public/hooks/paper-bot-tick'
@@ -1084,6 +1095,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/autopilot-tick'
     | '/api/public/hooks/drip-emails'
     | '/api/public/hooks/grade-inversion'
+    | '/api/public/hooks/grade-separation'
     | '/api/public/hooks/journal-daily-checkin'
     | '/api/public/hooks/journal-verify-tick'
     | '/api/public/hooks/paper-bot-tick'
@@ -1183,6 +1195,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/autopilot-tick'
     | '/api/public/hooks/drip-emails'
     | '/api/public/hooks/grade-inversion'
+    | '/api/public/hooks/grade-separation'
     | '/api/public/hooks/journal-daily-checkin'
     | '/api/public/hooks/journal-verify-tick'
     | '/api/public/hooks/paper-bot-tick'
@@ -1238,6 +1251,7 @@ export interface RootRouteChildren {
   ApiPublicHooksAutopilotTickRoute: typeof ApiPublicHooksAutopilotTickRoute
   ApiPublicHooksDripEmailsRoute: typeof ApiPublicHooksDripEmailsRoute
   ApiPublicHooksGradeInversionRoute: typeof ApiPublicHooksGradeInversionRoute
+  ApiPublicHooksGradeSeparationRoute: typeof ApiPublicHooksGradeSeparationRoute
   ApiPublicHooksJournalDailyCheckinRoute: typeof ApiPublicHooksJournalDailyCheckinRoute
   ApiPublicHooksJournalVerifyTickRoute: typeof ApiPublicHooksJournalVerifyTickRoute
   ApiPublicHooksPaperBotTickRoute: typeof ApiPublicHooksPaperBotTickRoute
@@ -1894,6 +1908,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksJournalDailyCheckinRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/grade-separation': {
+      id: '/api/public/hooks/grade-separation'
+      path: '/api/public/hooks/grade-separation'
+      fullPath: '/api/public/hooks/grade-separation'
+      preLoaderRoute: typeof ApiPublicHooksGradeSeparationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/grade-inversion': {
       id: '/api/public/hooks/grade-inversion'
       path: '/api/public/hooks/grade-inversion'
@@ -2133,6 +2154,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksAutopilotTickRoute: ApiPublicHooksAutopilotTickRoute,
   ApiPublicHooksDripEmailsRoute: ApiPublicHooksDripEmailsRoute,
   ApiPublicHooksGradeInversionRoute: ApiPublicHooksGradeInversionRoute,
+  ApiPublicHooksGradeSeparationRoute: ApiPublicHooksGradeSeparationRoute,
   ApiPublicHooksJournalDailyCheckinRoute:
     ApiPublicHooksJournalDailyCheckinRoute,
   ApiPublicHooksJournalVerifyTickRoute: ApiPublicHooksJournalVerifyTickRoute,
