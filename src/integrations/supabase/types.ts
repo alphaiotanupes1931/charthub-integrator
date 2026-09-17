@@ -1769,6 +1769,7 @@ export type Database = {
           id: string
           mae_r: number | null
           methodology_version: string
+          mfe_r: number | null
           planned_r: number | null
           realized_r: number | null
           resolved_at: string | null
@@ -1794,6 +1795,7 @@ export type Database = {
           id?: string
           mae_r?: number | null
           methodology_version?: string
+          mfe_r?: number | null
           planned_r?: number | null
           realized_r?: number | null
           resolved_at?: string | null
@@ -1819,6 +1821,7 @@ export type Database = {
           id?: string
           mae_r?: number | null
           methodology_version?: string
+          mfe_r?: number | null
           planned_r?: number | null
           realized_r?: number | null
           resolved_at?: string | null

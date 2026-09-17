@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1789682335140,
+      "tag": "0000_add_signal_scores_mfe_r",
+      "breakpoints": true
+    }
+  ]
+}
