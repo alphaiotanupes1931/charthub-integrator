@@ -8,6 +8,13 @@
       "when": 1789682335140,
       "tag": "0000_add_signal_scores_mfe_r",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789682696392,
+      "tag": "0001_add_signal_scores_net_r",
+      "breakpoints": true
     }
   ]
 }

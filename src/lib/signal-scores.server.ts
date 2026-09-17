@@ -7,6 +7,7 @@
 
 import type { BtBar } from "@/lib/backtest/engine";
 import type { BacktestTimeframe } from "@/lib/backtest/catalog";
+import { costInR } from "@/lib/trading-costs";
 
 export type OpenSignal = {
   id: string;
@@ -40,6 +41,13 @@ export type Resolution = {
    * was too tight (large mfeR on a loser) from a direction that was simply wrong.
    */
   mfeR?: number | null;
+  /**
+   * Realised R after spread and slippage. Gross R (realizedR) leaves trading
+   * costs out, which flatters tight-stopped setups most, so both are reported.
+   */
+  netR?: number | null;
+  /** Cost of this trade expressed in R, so the size of the haircut is visible. */
+  costR?: number | null;
   /** Bars from filing to resolution, so timing can be judged per timeframe. */
   barsToResolve?: number | null;
 };
@@ -75,7 +83,7 @@ export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
   const direction = signalDirection(sig.bias);
   if (!direction) {
     // No opinion, nothing to score. Voided rather than defaulted to short.
-    return { status: "void", realizedR: null, maeR: null, mfeR: null, barsToResolve: null };
+    return { status: "void", realizedR: null, maeR: null, mfeR: null, netR: null, costR: null, barsToResolve: null };
   }
   const tf = HISTORY_TF[sig.timeframe] ?? "60";
   const expiryHours = EXPIRY_HOURS[tf] ?? 72;
@@ -97,6 +105,8 @@ export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
   if (!risk || !forward.length) {
     return ageHours > expiryHours ? { status: "expired", realizedR: 0 } : { status: "open", realizedR: null };
   }
+  const cost = costInR(sig.symbol, sig.entry, risk);
+  const net = (gross: number) => Math.round((gross - cost) * 1000) / 1000;
   const reward = Math.abs(sig.tp1 - sig.entry);
   const rMultiple = Math.round((reward / risk) * 100) / 100;
 
@@ -114,9 +124,9 @@ export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
     const hitStop = long ? bar.low <= sig.stop : bar.high >= sig.stop;
     const hitTarget = long ? bar.high >= sig.tp1 : bar.low <= sig.tp1;
     if (hitStop)
-      return { status: "stop", realizedR: -1, maeR: round(mae), mfeR: round(mfe), barsToResolve: i + 1 };
+      return { status: "stop", realizedR: -1, netR: net(-1), costR: cost, maeR: round(mae), mfeR: round(mfe), barsToResolve: i + 1 };
     if (hitTarget)
-      return { status: "target", realizedR: rMultiple, maeR: round(mae), mfeR: round(mfe), barsToResolve: i + 1 };
+      return { status: "target", realizedR: rMultiple, netR: net(rMultiple), costR: cost, maeR: round(mae), mfeR: round(mfe), barsToResolve: i + 1 };
   }
 
   if (ageHours > expiryHours) {
@@ -125,6 +135,8 @@ export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
     return {
       status: "expired",
       realizedR: round(move / risk),
+      netR: net(round(move / risk)),
+      costR: cost,
       maeR: round(mae),
       mfeR: round(mfe),
       barsToResolve: forward.length,
@@ -133,6 +145,8 @@ export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
   return {
     status: "open",
     realizedR: null,
+    netR: null,
+    costR: cost,
     maeR: round(mae),
     mfeR: round(mfe),
     barsToResolve: forward.length,

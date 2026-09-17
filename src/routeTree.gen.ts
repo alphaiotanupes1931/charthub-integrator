@@ -90,6 +90,7 @@ import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/em
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api.public.telegram.webhook'
 import { Route as ApiPublicHooksWeeklyReviewRouteImport } from './routes/api.public.hooks.weekly-review'
+import { Route as ApiPublicHooksStopWidthTestRouteImport } from './routes/api.public.hooks.stop-width-test'
 import { Route as ApiPublicHooksSendBriefingsRouteImport } from './routes/api.public.hooks.send-briefings'
 import { Route as ApiPublicHooksScanSignalsRouteImport } from './routes/api.public.hooks.scan-signals'
 import { Route as ApiPublicHooksResolveSignalsRouteImport } from './routes/api.public.hooks.resolve-signals'
@@ -517,6 +518,12 @@ const ApiPublicHooksWeeklyReviewRoute =
     path: '/api/public/hooks/weekly-review',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksStopWidthTestRoute =
+  ApiPublicHooksStopWidthTestRouteImport.update({
+    id: '/api/public/hooks/stop-width-test',
+    path: '/api/public/hooks/stop-width-test',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksSendBriefingsRoute =
   ApiPublicHooksSendBriefingsRouteImport.update({
     id: '/api/public/hooks/send-briefings',
@@ -690,6 +697,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/resolve-signals': typeof ApiPublicHooksResolveSignalsRoute
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
+  '/api/public/hooks/stop-width-test': typeof ApiPublicHooksStopWidthTestRoute
   '/api/public/hooks/weekly-review': typeof ApiPublicHooksWeeklyReviewRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -782,6 +790,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/resolve-signals': typeof ApiPublicHooksResolveSignalsRoute
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
+  '/api/public/hooks/stop-width-test': typeof ApiPublicHooksStopWidthTestRoute
   '/api/public/hooks/weekly-review': typeof ApiPublicHooksWeeklyReviewRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -880,6 +889,7 @@ export interface FileRoutesById {
   '/api/public/hooks/resolve-signals': typeof ApiPublicHooksResolveSignalsRoute
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
+  '/api/public/hooks/stop-width-test': typeof ApiPublicHooksStopWidthTestRoute
   '/api/public/hooks/weekly-review': typeof ApiPublicHooksWeeklyReviewRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -978,6 +988,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/resolve-signals'
     | '/api/public/hooks/scan-signals'
     | '/api/public/hooks/send-briefings'
+    | '/api/public/hooks/stop-width-test'
     | '/api/public/hooks/weekly-review'
     | '/api/public/telegram/webhook'
     | '/lovable/email/auth/preview'
@@ -1070,6 +1081,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/resolve-signals'
     | '/api/public/hooks/scan-signals'
     | '/api/public/hooks/send-briefings'
+    | '/api/public/hooks/stop-width-test'
     | '/api/public/hooks/weekly-review'
     | '/api/public/telegram/webhook'
     | '/lovable/email/auth/preview'
@@ -1167,6 +1179,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/resolve-signals'
     | '/api/public/hooks/scan-signals'
     | '/api/public/hooks/send-briefings'
+    | '/api/public/hooks/stop-width-test'
     | '/api/public/hooks/weekly-review'
     | '/api/public/telegram/webhook'
     | '/lovable/email/auth/preview'
@@ -1220,6 +1233,7 @@ export interface RootRouteChildren {
   ApiPublicHooksResolveSignalsRoute: typeof ApiPublicHooksResolveSignalsRoute
   ApiPublicHooksScanSignalsRoute: typeof ApiPublicHooksScanSignalsRoute
   ApiPublicHooksSendBriefingsRoute: typeof ApiPublicHooksSendBriefingsRoute
+  ApiPublicHooksStopWidthTestRoute: typeof ApiPublicHooksStopWidthTestRoute
   ApiPublicHooksWeeklyReviewRoute: typeof ApiPublicHooksWeeklyReviewRoute
   ApiPublicTelegramWebhookRoute: typeof ApiPublicTelegramWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -1796,6 +1810,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksWeeklyReviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/stop-width-test': {
+      id: '/api/public/hooks/stop-width-test'
+      path: '/api/public/hooks/stop-width-test'
+      fullPath: '/api/public/hooks/stop-width-test'
+      preLoaderRoute: typeof ApiPublicHooksStopWidthTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/send-briefings': {
       id: '/api/public/hooks/send-briefings'
       path: '/api/public/hooks/send-briefings'
@@ -2100,6 +2121,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksResolveSignalsRoute: ApiPublicHooksResolveSignalsRoute,
   ApiPublicHooksScanSignalsRoute: ApiPublicHooksScanSignalsRoute,
   ApiPublicHooksSendBriefingsRoute: ApiPublicHooksSendBriefingsRoute,
+  ApiPublicHooksStopWidthTestRoute: ApiPublicHooksStopWidthTestRoute,
   ApiPublicHooksWeeklyReviewRoute: ApiPublicHooksWeeklyReviewRoute,
   ApiPublicTelegramWebhookRoute: ApiPublicTelegramWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,

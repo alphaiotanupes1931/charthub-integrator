@@ -56,6 +56,9 @@ export const Route = createFileRoute("/api/public/hooks/resolve-signals")({
                 realized_r: res.realizedR,
                 resolved_at: new Date().toISOString(),
                 // "How early" as a number: heat taken before the signal resolved.
+                // Net of spread and slippage, plus the size of that haircut in R.
+                net_r: res.netR ?? null,
+                cost_r: res.costR ?? null,
                 mae_r: res.maeR ?? null,
                 // Ground made in our favour: separates a tight stop from a wrong call.
                 mfe_r: res.mfeR ?? null,
