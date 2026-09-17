@@ -35,17 +35,40 @@ export type SignalScoreRow = {
   counterTrend?: boolean;
   /** Daily bias recorded at scan time. */
   htfBias?: string | null;
+  /** Realised R after spread and slippage. Null on rows resolved before costs were recorded. */
+  netR?: number | null;
+  /** Spread and slippage for this row, in R. */
+  costR?: number | null;
 };
 
+/**
+ * One definition of "resolved" for the whole scoreboard: DECIDED, meaning the
+ * stop or the first target actually printed. Expiries are counted and reported
+ * on their own line but never folded into hit rate or average R, because an
+ * expiry is marked to the last close of a trade that never concluded, and a
+ * partial R from a timed-out signal dilutes every figure it lands in.
+ */
 export type ScoreBucket = {
   key: string;
+  /** Scorable rows filed (open + decided + expired). */
   total: number;
-  resolved: number;
+  open: number;
+  /** Target + stop. The denominator for hit rate, average R and net R. */
+  decided: number;
   targets: number;
   stops: number;
+  /** Timed out. Reported separately, never inside hitRate/expectancyR. */
   expired: number;
-  hitRate: number; // 0-100 of resolved win/loss rows
-  expectancyR: number; // average R across resolved rows
+  hitRate: number; // 0-100 over `decided`
+  expectancyR: number; // gross average R over `decided`
+  /** Average R after costs, over the decided rows that carry a cost figure. */
+  netExpectancyR: number | null;
+  /** How many decided rows had a net figure to average. */
+  netCount: number;
+  /** Average cost paid, in R, over the same rows as netExpectancyR. */
+  avgCostR: number | null;
+  /** Average R on expiries, so timing-out trades are visible but separate. */
+  expiredAvgR: number | null;
 };
 
 export type Scoreboard = {
@@ -53,12 +76,19 @@ export type Scoreboard = {
   open: number;
   /** No-direction rows held out of every number here. */
   voided: number;
-  resolved: number;
+  /** Target + stop. The single denominator behind every headline figure. */
+  decided: number;
   targets: number;
   stops: number;
   expired: number;
+  expiredAvgR: number | null;
   hitRate: number;
   expectancyR: number;
+  netExpectancyR: number | null;
+  netCount: number;
+  avgCostR: number | null;
+  /** A and A+ combined, so the callout and the table share one denominator. */
+  aGrade: ScoreBucket;
   byGrade: ScoreBucket[];
   bySymbol: ScoreBucket[];
   byTimeframe: ScoreBucket[];
@@ -93,23 +123,33 @@ export function scorableRows(rows: SignalScoreRow[]): SignalScoreRow[] {
   return rows.filter((r) => r.status !== "void");
 }
 
-function bucket(key: string, all: SignalScoreRow[]): ScoreBucket {
+const r2 = (n: number) => Math.round(n * 100) / 100;
+const avg = (xs: number[]): number | null => (xs.length ? r2(xs.reduce((a, b) => a + b, 0) / xs.length) : null);
+
+export function bucket(key: string, all: SignalScoreRow[]): ScoreBucket {
   const rows = scorableRows(all);
+  const decidedRows = rows.filter((r) => r.status === "target" || r.status === "stop");
+  const expiredRows = rows.filter((r) => r.status === "expired");
   const targets = rows.filter((r) => r.status === "target").length;
   const stops = rows.filter((r) => r.status === "stop").length;
-  const expired = rows.filter((r) => r.status === "expired").length;
-  const decided = targets + stops;
-  const resolvedRows = rows.filter((r) => r.status !== "open");
-  const rSum = resolvedRows.reduce((acc, r) => acc + (r.realizedR ?? 0), 0);
+  const decided = decidedRows.length;
+  // Net R only over the decided rows that actually carry a cost figure, so a
+  // backfill gap cannot silently drag the net number toward gross.
+  const netRows = decidedRows.filter((r) => typeof r.netR === "number");
   return {
     key,
     total: rows.length,
-    resolved: resolvedRows.length,
+    open: rows.filter((r) => r.status === "open").length,
+    decided,
     targets,
     stops,
-    expired,
+    expired: expiredRows.length,
     hitRate: decided ? Math.round((targets / decided) * 1000) / 10 : 0,
-    expectancyR: resolvedRows.length ? Math.round((rSum / resolvedRows.length) * 100) / 100 : 0,
+    expectancyR: avg(decidedRows.map((r) => r.realizedR ?? 0)) ?? 0,
+    netExpectancyR: avg(netRows.map((r) => r.netR as number)),
+    netCount: netRows.length,
+    avgCostR: avg(netRows.map((r) => r.costR ?? 0)),
+    expiredAvgR: avg(expiredRows.map((r) => r.realizedR ?? 0)),
   };
 }
 
@@ -161,13 +201,13 @@ export function buildScoreboard(allRows: SignalScoreRow[]): Scoreboard {
   const byTrendContext = group(rows, (r) =>
     `${r.counterTrend ? "Counter-trend" : "With-trend"} ${r.grade}`);
 
-  const worstSymbol = bySymbol.filter((b) => b.resolved >= 4).sort((a, b) => a.expectancyR - b.expectancyR)[0];
-  const bestSymbol = bySymbol.filter((b) => b.resolved >= 4).sort((a, b) => b.expectancyR - a.expectancyR)[0];
+  const worstSymbol = bySymbol.filter((b) => b.decided >= 4).sort((a, b) => a.expectancyR - b.expectancyR)[0];
+  const bestSymbol = bySymbol.filter((b) => b.decided >= 4).sort((a, b) => b.expectancyR - a.expectancyR)[0];
   if (bestSymbol && bestSymbol.expectancyR > 0) {
-    notes.push(`${bestSymbol.key} is your strongest instrument: ${bestSymbol.hitRate}% hit rate over ${bestSymbol.resolved} resolved signals, ${bestSymbol.expectancyR}R average.`);
+    notes.push(`${bestSymbol.key} is your strongest instrument: ${bestSymbol.hitRate}% hit rate over ${bestSymbol.decided} decided signals, ${bestSymbol.expectancyR}R average.`);
   }
   if (worstSymbol && worstSymbol.expectancyR < 0 && worstSymbol.key !== bestSymbol?.key) {
-    notes.push(`${worstSymbol.key} is losing: ${worstSymbol.hitRate}% hit rate over ${worstSymbol.resolved} resolved signals, ${worstSymbol.expectancyR}R average. Consider dropping it or trading it smaller.`);
+    notes.push(`${worstSymbol.key} is losing: ${worstSymbol.hitRate}% hit rate over ${worstSymbol.decided} decided signals, ${worstSymbol.expectancyR}R average. Consider dropping it or trading it smaller.`);
   }
 
   const aGrades = rows.filter((r) => r.grade === "A" || r.grade === "A+");
@@ -186,10 +226,10 @@ export function buildScoreboard(allRows: SignalScoreRow[]): Scoreboard {
 
   const counter = bucket("counter", rows.filter((r) => r.counterTrend));
   const withTrend = bucket("with", rows.filter((r) => !r.counterTrend));
-  if (counter.resolved >= 4) {
+  if (counter.decided >= 4) {
     notes.push(
-      `Counter-trend scans (fighting the Daily and 4H): ${counter.hitRate}% hit rate, ${counter.expectancyR}R average over ${counter.resolved} resolved signals` +
-        (withTrend.resolved >= 4 ? `, against ${withTrend.hitRate}% and ${withTrend.expectancyR}R with the trend.` : "."),
+      `Counter-trend scans (fighting the Daily and 4H): ${counter.hitRate}% hit rate, ${counter.expectancyR}R average over ${counter.decided} decided signals` +
+        (withTrend.decided >= 4 ? `, against ${withTrend.hitRate}% and ${withTrend.expectancyR}R with the trend.` : "."),
     );
   }
 
@@ -197,12 +237,12 @@ export function buildScoreboard(allRows: SignalScoreRow[]): Scoreboard {
   const freshBucket = bucket("since-fix", fresh);
   if (freshBucket.targets + freshBucket.stops >= 3) {
     notes.push(
-      `Measured ${ENGINE_FIX_LABEL}: ${freshBucket.hitRate}% hit rate and ${freshBucket.expectancyR}R average over ${freshBucket.resolved} resolved signals, against ${overall.hitRate}% and ${overall.expectancyR}R all time.`,
+      `Measured ${ENGINE_FIX_LABEL}: ${freshBucket.hitRate}% hit rate and ${freshBucket.expectancyR}R average over ${freshBucket.decided} decided signals, against ${overall.hitRate}% and ${overall.expectancyR}R all time.`,
     );
   }
 
-  if (overall.resolved < 10) {
-    notes.push("Fewer than 10 resolved signals so far. Numbers here get meaningful after a few weeks of scanning.");
+  if (overall.decided < 10) {
+    notes.push("Fewer than 10 decided signals so far (target or stop printed). Numbers here get meaningful after a few weeks of scanning.");
   }
 
   if (voided > 0) {
@@ -211,16 +251,29 @@ export function buildScoreboard(allRows: SignalScoreRow[]): Scoreboard {
     );
   }
 
+  if (overall.expired > 0) {
+    notes.push(
+      `${overall.expired} signal${overall.expired === 1 ? "" : "s"} timed out without hitting the stop or the target` +
+        (overall.expiredAvgR == null ? "" : ` (${overall.expiredAvgR}R average at the last close)`) +
+        ". Expiries are shown on their own line and are not counted in hit rate or average R.",
+    );
+  }
+
   return {
     voided,
     total: overall.total,
     open: rows.filter((r) => r.status === "open").length,
-    resolved: overall.resolved,
+    decided: overall.decided,
     targets: overall.targets,
     stops: overall.stops,
     expired: overall.expired,
+    expiredAvgR: overall.expiredAvgR,
     hitRate: overall.hitRate,
     expectancyR: overall.expectancyR,
+    netExpectancyR: overall.netExpectancyR,
+    netCount: overall.netCount,
+    avgCostR: overall.avgCostR,
+    aGrade: bucket("A/A+", aGrades),
     byGrade,
     bySymbol,
     byTimeframe,

@@ -56,7 +56,7 @@ export function InstrumentEdgePanel() {
   for (const sym of profileMap.keys()) put(sym, sym);
 
   const rows = [...byEngine.values()].sort(
-    (a, b) => (b.bucket?.resolved ?? 0) - (a.bucket?.resolved ?? 0) || a.label.localeCompare(b.label),
+    (a, b) => (b.bucket?.decided ?? 0) - (a.bucket?.decided ?? 0) || a.label.localeCompare(b.label),
   );
 
   return (
@@ -83,7 +83,7 @@ export function InstrumentEdgePanel() {
                 <th className="px-4 py-2 font-medium">Instrument</th>
                 <th className="px-3 py-2 font-medium">Hit rate</th>
                 <th className="px-3 py-2 font-medium">Expectancy</th>
-                <th className="px-3 py-2 font-medium">Resolved</th>
+                <th className="px-3 py-2 font-medium">Decided (n)</th>
                 <th className="px-3 py-2 font-medium">Volatility (ATR)</th>
                 <th className="px-3 py-2 font-medium">Typical pullback</th>
                 <th className="px-3 py-2 font-medium">Busiest session</th>
@@ -95,7 +95,7 @@ export function InstrumentEdgePanel() {
             </thead>
             <tbody className="divide-y divide-border">
               {rows.map(({ key, label, bucket, profile }) => {
-                const enough = (bucket?.resolved ?? 0) >= MIN_RESOLVED;
+                const enough = (bucket?.decided ?? 0) >= MIN_RESOLVED;
                 const exp = bucket?.expectancyR ?? 0;
                 const behaviour = behaviourFor(key, profile ? { bestSession: profile.bestSession as SessionKey, barsSampled: profile.barsSampled } : null);
                 const hold = expectedHold(behaviour);
@@ -108,7 +108,7 @@ export function InstrumentEdgePanel() {
                     <td className={`px-3 py-2 font-mono ${enough ? (exp >= 0 ? "text-bull" : "text-red-500") : ""}`}>
                       {enough ? `${exp >= 0 ? "+" : ""}${exp.toFixed(2)}R` : <span className="text-muted-foreground">-</span>}
                     </td>
-                    <td className="px-3 py-2 font-mono text-muted-foreground">{bucket?.resolved ?? 0}</td>
+                    <td className="px-3 py-2 font-mono text-muted-foreground">{bucket?.decided ?? 0}</td>
                     <td className="px-3 py-2 font-mono">
                       {profile ? `${profile.atrPct.toFixed(2)}%` : <span className="text-muted-foreground">-</span>}
                     </td>

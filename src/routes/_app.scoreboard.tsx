@@ -29,11 +29,17 @@ export const Route = createFileRoute("/_app/scoreboard")({
   component: ScoreboardPage,
 });
 
-function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
+/**
+ * Every figure on this page carries the count it was computed from. That is not
+ * decoration: hit rate and average R were once averaged over different sets, and
+ * the only way to catch that class of bug is to print the n next to the number.
+ */
+function Stat({ label, value, n, sub }: { label: string; value: string; n?: number; sub?: string }) {
   return (
     <div className="rounded-xl border border-border/60 p-4">
       <div className="text-xs tracking-wide text-muted-foreground">{label}</div>
       <div className="mt-1 text-2xl font-semibold">{value}</div>
+      {n != null && <div className="mt-0.5 font-mono text-xs text-muted-foreground">n = {n}</div>}
       {sub && <div className="mt-0.5 text-xs text-muted-foreground">{sub}</div>}
     </div>
   );
@@ -51,12 +57,15 @@ function BucketTable({ title, buckets, empty }: { title: string; buckets: ScoreB
             <thead>
               <tr className="text-left text-muted-foreground">
                 <th className="py-2 pr-3 font-normal">Group</th>
-                <th className="py-2 pr-3 font-normal">Signals</th>
-                <th className="py-2 pr-3 font-normal">Resolved</th>
+                <th className="py-2 pr-3 font-normal">Filed</th>
+                <th className="py-2 pr-3 font-normal">Open</th>
+                <th className="py-2 pr-3 font-normal">Decided (n)</th>
                 <th className="py-2 pr-3 font-normal">Hit</th>
                 <th className="py-2 pr-3 font-normal">Stopped</th>
+                <th className="py-2 pr-3 font-normal">Expired</th>
                 <th className="py-2 pr-3 font-normal">Hit rate</th>
-                <th className="py-2 font-normal">Avg R</th>
+                <th className="py-2 pr-3 font-normal">Avg R gross</th>
+                <th className="py-2 font-normal">Avg R net</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -64,12 +73,23 @@ function BucketTable({ title, buckets, empty }: { title: string; buckets: ScoreB
                 <tr key={b.key}>
                   <td className="py-2 pr-3 font-medium">{b.key}</td>
                   <td className="py-2 pr-3 font-mono">{b.total}</td>
-                  <td className="py-2 pr-3 font-mono">{b.resolved}</td>
+                  <td className="py-2 pr-3 font-mono text-muted-foreground">{b.open}</td>
+                  <td className="py-2 pr-3 font-mono">{b.decided}</td>
                   <td className="py-2 pr-3 font-mono text-emerald-400">{b.targets}</td>
                   <td className="py-2 pr-3 font-mono text-red-400">{b.stops}</td>
-                  <td className="py-2 pr-3 font-mono">{b.resolved ? `${b.hitRate}%` : "-"}</td>
-                  <td className={`py-2 font-mono ${b.expectancyR > 0 ? "text-emerald-400" : b.expectancyR < 0 ? "text-red-400" : ""}`}>
-                    {b.resolved ? `${b.expectancyR}R` : "-"}
+                  <td className="py-2 pr-3 font-mono text-muted-foreground">
+                    {b.expired ? `${b.expired}${b.expiredAvgR == null ? "" : ` (${b.expiredAvgR}R)`}` : "-"}
+                  </td>
+                  <td className="py-2 pr-3 font-mono">{b.decided ? `${b.hitRate}%` : "-"}</td>
+                  <td className={`py-2 pr-3 font-mono ${b.expectancyR > 0 ? "text-emerald-400" : b.expectancyR < 0 ? "text-red-400" : ""}`}>
+                    {b.decided ? `${b.expectancyR}R` : "-"}
+                  </td>
+                  <td
+                    className={`py-2 font-mono ${
+                      (b.netExpectancyR ?? 0) > 0 ? "text-emerald-400" : (b.netExpectancyR ?? 0) < 0 ? "text-red-400" : ""
+                    }`}
+                  >
+                    {b.netExpectancyR == null ? "-" : `${b.netExpectancyR}R (n=${b.netCount})`}
                   </td>
                 </tr>
               ))}
@@ -133,17 +153,51 @@ function ScoreboardPage() {
         </p>
       ) : (
         <>
+          <p className="mt-4 rounded-xl border border-border/60 bg-card px-4 py-3 text-xs text-muted-foreground">
+            One definition of resolved is used for every number here: <strong className="text-foreground">decided</strong>,
+            meaning the stop or the first target actually printed. Expiries and open signals are counted on their own lines
+            and never inside a hit rate or an average. Net R subtracts spread and slippage. Each figure shows the count it
+            was computed from.
+          </p>
+
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Stat label="Signals filed" value={String(board.total)} sub={`${board.open} still open`} />
             <Stat
-              label="Hit rate"
-              value={board.resolved ? `${board.hitRate}%` : "-"}
+              label="Signals filed"
+              value={String(board.total)}
+              n={board.total}
+              sub={`${board.open} open, ${board.decided} decided, ${board.expired} expired${board.voided ? `, ${board.voided} no-direction (excluded)` : ""}`}
+            />
+            <Stat
+              label="Hit rate, decided only"
+              value={board.decided ? `${board.hitRate}%` : "-"}
+              n={board.decided}
               sub={`${board.targets} hit target, ${board.stops} stopped`}
             />
             <Stat
-              label="Average R"
-              value={board.resolved ? `${board.expectancyR}R` : "-"}
-              sub={`${board.resolved} resolved signals`}
+              label="Average R, decided only"
+              value={board.decided ? `${board.expectancyR}R gross` : "-"}
+              n={board.decided}
+              sub={
+                board.netExpectancyR == null
+                  ? "No cost figures recorded on these rows yet"
+                  : `${board.netExpectancyR}R net after costs (n = ${board.netCount}, ${board.avgCostR ?? 0}R average cost)`
+              }
+            />
+            <Stat
+              label="A and A+ hit rate"
+              value={board.aGrade.decided ? `${board.aGrade.hitRate}%` : "-"}
+              n={board.aGrade.decided}
+              sub={`${board.aGrade.expectancyR}R gross${board.aGrade.netExpectancyR == null ? "" : `, ${board.aGrade.netExpectancyR}R net`}. Same denominator as the A row in the grade table.`}
+            />
+            <Stat
+              label="Expiries"
+              value={String(board.expired)}
+              n={board.expired}
+              sub={
+                board.expiredAvgR == null
+                  ? "No signals have timed out yet"
+                  : `${board.expiredAvgR}R average at the last close. Held out of hit rate and average R.`
+              }
             />
             <Stat
               label="Taken vs skipped"
@@ -152,9 +206,10 @@ function ScoreboardPage() {
                   ? "-"
                   : `${board.takenHitRate ?? "-"}% / ${board.skippedHitRate ?? "-"}%`
               }
-              sub="Hit rate on signals you took, then the ones you passed on"
+              sub="Hit rate on signals you took, then the ones you passed on. Decided only."
             />
           </div>
+
 
           {board.notes.length > 0 && (
             <section className="mt-4 rounded-xl border border-border/60 bg-card p-5">
