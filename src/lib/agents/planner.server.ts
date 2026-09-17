@@ -1794,6 +1794,60 @@ export async function runPlanner(
     + newsWarning
     + (timingGate ? ` ${timingGate}` : warnings.length ? ` ${warnings[0]}` : "");
 
+  // ---- Scanner Program v1, in shadow -----------------------------------
+  // The program scores six evidence families instead of counting sixteen ticks,
+  // and assigns a band by percentile with a sample gate. It does NOT publish the
+  // grade yet: it records what it would have said next to what was published, so
+  // the drop in signal volume is measured before any trader sees it. Failures
+  // here can never affect the scan.
+  if (bias !== "Neutral" && !isNoEntry) {
+    void (async () => {
+      try {
+        const bos = snap.mtf?.h1.bos;
+        const { toProgramInput } = await import("@/lib/scanner/adapter");
+        const { runScannerProgram, recordProgramScore } = await import("@/lib/scanner/program.server");
+        const result = await runScannerProgram(toProgramInput({
+          symbol: snap.ticker,
+          timeframe: snap.interval,
+          bias,
+          lastPrice: snap.lastPrice,
+          entry: finalPlan.entry,
+          stop: finalPlan.stop,
+          tp1: finalPlan.tp1,
+          ladder,
+          h4Direction: snap.mtf?.h4.direction,
+          h4Trend: snap.mtf?.h4.trend,
+          h1StructureBreak: snap.mtf?.h1.structureBreak,
+          m15Confirmation: snap.mtf?.m15.confirmation,
+          cisdState: snap.cisd.state,
+          closed4hCandles: snap.mtf?.ladder.length ? snap.candles.length : snap.candles.length,
+          entryZoneQuality: selectedEntryZone?.quality ?? null,
+          hasOrderBlock: !!selectedEntryZone,
+          hasHtfZone: hasAlignedZone(bias, snap),
+          protectedBreak: bos ? bos.quality === "protected" : null,
+          sweptLiquidity: bos ? bos.quality === "protected" : undefined,
+          cvd: snap.orderFlow?.cvd ?? null,
+          delta: snap.orderFlow?.delta ?? null,
+          priceVsPoc: snap.orderFlow?.priceVsPoc ?? null,
+          volumeRatio: volRead?.ratio ?? null,
+          thinVolume: volRead?.thin,
+          newsInHoldWindow: !!newsWarning,
+          news48h: !!news48Warning,
+          staleHtf: !!staleRead.cap,
+          triggered: triggerRead.triggered,
+          targetRoomOk: true,
+        }));
+        await recordProgramScore({
+          result,
+          timeframe: snap.interval,
+          bias,
+          publishedGrade: grade,
+          shadow: true,
+        });
+      } catch { /* shadow scoring must never affect a scan */ }
+    })();
+  }
+
   return {
     methodologyVersion: SCANNER_METHODOLOGY_VERSION,
     grade,
