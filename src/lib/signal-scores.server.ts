@@ -34,9 +34,23 @@ export type Resolution = {
    * fires before price is done, and the confirmation threshold should tighten.
    */
   maeR?: number | null;
+  /**
+   * Maximum favourable excursion, in R: how far price went IN FAVOUR of the
+   * entry before the signal resolved. Read against maeR it separates a stop that
+   * was too tight (large mfeR on a loser) from a direction that was simply wrong.
+   */
+  mfeR?: number | null;
   /** Bars from filing to resolution, so timing can be judged per timeframe. */
   barsToResolve?: number | null;
 };
+
+/** Long or short, or null when the scan had no directional opinion. */
+export function signalDirection(bias: string): "long" | "short" | null {
+  const b = bias.trim().toLowerCase();
+  if (b.startsWith("l") || b === "buy" || b === "bull" || b === "bullish") return "long";
+  if (b.startsWith("s") || b === "sell" || b === "bear" || b === "bearish") return "short";
+  return null;
+}
 
 const HISTORY_TF: Record<string, BacktestTimeframe> = {
   "1": "15",
