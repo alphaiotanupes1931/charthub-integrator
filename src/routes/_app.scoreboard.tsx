@@ -153,17 +153,51 @@ function ScoreboardPage() {
         </p>
       ) : (
         <>
+          <p className="mt-4 rounded-xl border border-border/60 bg-card px-4 py-3 text-xs text-muted-foreground">
+            One definition of resolved is used for every number here: <strong className="text-foreground">decided</strong>,
+            meaning the stop or the first target actually printed. Expiries and open signals are counted on their own lines
+            and never inside a hit rate or an average. Net R subtracts spread and slippage. Each figure shows the count it
+            was computed from.
+          </p>
+
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Stat label="Signals filed" value={String(board.total)} sub={`${board.open} still open`} />
             <Stat
-              label="Hit rate"
-              value={board.resolved ? `${board.hitRate}%` : "-"}
+              label="Signals filed"
+              value={String(board.total)}
+              n={board.total}
+              sub={`${board.open} open, ${board.decided} decided, ${board.expired} expired${board.voided ? `, ${board.voided} no-direction (excluded)` : ""}`}
+            />
+            <Stat
+              label="Hit rate, decided only"
+              value={board.decided ? `${board.hitRate}%` : "-"}
+              n={board.decided}
               sub={`${board.targets} hit target, ${board.stops} stopped`}
             />
             <Stat
-              label="Average R"
-              value={board.resolved ? `${board.expectancyR}R` : "-"}
-              sub={`${board.resolved} resolved signals`}
+              label="Average R, decided only"
+              value={board.decided ? `${board.expectancyR}R gross` : "-"}
+              n={board.decided}
+              sub={
+                board.netExpectancyR == null
+                  ? "No cost figures recorded on these rows yet"
+                  : `${board.netExpectancyR}R net after costs (n = ${board.netCount}, ${board.avgCostR ?? 0}R average cost)`
+              }
+            />
+            <Stat
+              label="A and A+ hit rate"
+              value={board.aGrade.decided ? `${board.aGrade.hitRate}%` : "-"}
+              n={board.aGrade.decided}
+              sub={`${board.aGrade.expectancyR}R gross${board.aGrade.netExpectancyR == null ? "" : `, ${board.aGrade.netExpectancyR}R net`}. Same denominator as the A row in the grade table.`}
+            />
+            <Stat
+              label="Expiries"
+              value={String(board.expired)}
+              n={board.expired}
+              sub={
+                board.expiredAvgR == null
+                  ? "No signals have timed out yet"
+                  : `${board.expiredAvgR}R average at the last close. Held out of hit rate and average R.`
+              }
             />
             <Stat
               label="Taken vs skipped"
@@ -172,9 +206,10 @@ function ScoreboardPage() {
                   ? "-"
                   : `${board.takenHitRate ?? "-"}% / ${board.skippedHitRate ?? "-"}%`
               }
-              sub="Hit rate on signals you took, then the ones you passed on"
+              sub="Hit rate on signals you took, then the ones you passed on. Decided only."
             />
           </div>
+
 
           {board.notes.length > 0 && (
             <section className="mt-4 rounded-xl border border-border/60 bg-card p-5">
