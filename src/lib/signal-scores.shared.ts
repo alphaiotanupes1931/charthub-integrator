@@ -141,7 +141,11 @@ function confidenceBand(c: number | null): string | null {
   return "Under 60%";
 }
 
-export function buildScoreboard(rows: SignalScoreRow[]): Scoreboard {
+export function buildScoreboard(allRows: SignalScoreRow[]): Scoreboard {
+  // No-direction scans are voided, not scored: including them defaults every
+  // Neutral read to a short and drags the measured hit rate toward chance.
+  const voided = allRows.filter((r) => r.status === "void").length;
+  const rows = scorableRows(allRows);
   const overall = bucket("all", rows);
   const notes: string[] = [];
 
