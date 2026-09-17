@@ -39,6 +39,10 @@ export type SignalScoreRow = {
   netR?: number | null;
   /** Spread and slippage for this row, in R. */
   costR?: number | null;
+  /** Maximum adverse excursion in R: heat taken before it resolved. */
+  maeR?: number | null;
+  /** Maximum favourable excursion in R: best price reached before it resolved. */
+  mfeR?: number | null;
 };
 
 /**
@@ -69,6 +73,13 @@ export type ScoreBucket = {
   avgCostR: number | null;
   /** Average R on expiries, so timing-out trades are visible but separate. */
   expiredAvgR: number | null;
+  /** Average heat taken before resolving, over decided rows that carry it. */
+  avgMaeR: number | null;
+  /** Average best price reached before resolving. Large on losers means the
+   * direction was right and the stop was too tight. */
+  avgMfeR: number | null;
+  /** How many decided rows carried excursion figures. */
+  excursionCount: number;
 };
 
 export type Scoreboard = {
@@ -136,6 +147,9 @@ export function bucket(key: string, all: SignalScoreRow[]): ScoreBucket {
   // Net R only over the decided rows that actually carry a cost figure, so a
   // backfill gap cannot silently drag the net number toward gross.
   const netRows = decidedRows.filter((r) => typeof r.netR === "number");
+  // Excursions were backfilled from the same bar walk, but only where price
+  // history still reaches; average them over the rows that actually have them.
+  const excursionRows = decidedRows.filter((r) => typeof r.mfeR === "number" && typeof r.maeR === "number");
   return {
     key,
     total: rows.length,
@@ -150,6 +164,9 @@ export function bucket(key: string, all: SignalScoreRow[]): ScoreBucket {
     netCount: netRows.length,
     avgCostR: avg(netRows.map((r) => r.costR ?? 0)),
     expiredAvgR: avg(expiredRows.map((r) => r.realizedR ?? 0)),
+    avgMaeR: avg(excursionRows.map((r) => r.maeR as number)),
+    avgMfeR: avg(excursionRows.map((r) => r.mfeR as number)),
+    excursionCount: excursionRows.length,
   };
 }
 

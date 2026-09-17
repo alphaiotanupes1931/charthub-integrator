@@ -53,6 +53,8 @@ type Row = {
   htf_bias: string | null;
   net_r: number | string | null;
   cost_r: number | string | null;
+  mae_r?: number | string | null;
+  mfe_r?: number | string | null;
 };
 
 function toRow(r: Row): SignalScoreRow {
@@ -78,6 +80,8 @@ function toRow(r: Row): SignalScoreRow {
     htfBias: r.htf_bias,
     netR: num(r.net_r ?? null),
     costR: num(r.cost_r ?? null),
+    maeR: num(r.mae_r ?? null),
+    mfeR: num(r.mfe_r ?? null),
   };
 }
 
