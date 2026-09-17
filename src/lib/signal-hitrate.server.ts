@@ -90,7 +90,7 @@ export async function measuredHitRatePrompt(symbol?: string, userId?: string): P
       };
     })
       .from("signal_scores")
-      .select("symbol, grade, status, realized_r, taken, user_id")
+      .select("symbol, grade, status, realized_r, net_r, taken, user_id")
       .neq("status", "open")
       .order("created_at", { ascending: false })
       .limit(4000);
