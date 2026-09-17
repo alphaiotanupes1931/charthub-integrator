@@ -1820,7 +1820,7 @@ export async function runPlanner(
           h1StructureBreak: snap.mtf?.h1.structureBreak,
           m15Confirmation: snap.mtf?.m15.confirmation,
           cisdState: snap.cisd.state,
-          closed4hCandles: snap.mtf?.ladder.length ? snap.candles.length : snap.candles.length,
+          closed4hCandles: snap.candles.length,
           entryZoneQuality: selectedEntryZone?.quality ?? null,
           hasOrderBlock: !!selectedEntryZone,
           hasHtfZone: hasAlignedZone(bias, snap),
