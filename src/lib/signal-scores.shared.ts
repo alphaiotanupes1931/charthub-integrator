@@ -201,13 +201,13 @@ export function buildScoreboard(allRows: SignalScoreRow[]): Scoreboard {
   const byTrendContext = group(rows, (r) =>
     `${r.counterTrend ? "Counter-trend" : "With-trend"} ${r.grade}`);
 
-  const worstSymbol = bySymbol.filter((b) => b.resolved >= 4).sort((a, b) => a.expectancyR - b.expectancyR)[0];
-  const bestSymbol = bySymbol.filter((b) => b.resolved >= 4).sort((a, b) => b.expectancyR - a.expectancyR)[0];
+  const worstSymbol = bySymbol.filter((b) => b.decided >= 4).sort((a, b) => a.expectancyR - b.expectancyR)[0];
+  const bestSymbol = bySymbol.filter((b) => b.decided >= 4).sort((a, b) => b.expectancyR - a.expectancyR)[0];
   if (bestSymbol && bestSymbol.expectancyR > 0) {
-    notes.push(`${bestSymbol.key} is your strongest instrument: ${bestSymbol.hitRate}% hit rate over ${bestSymbol.resolved} resolved signals, ${bestSymbol.expectancyR}R average.`);
+    notes.push(`${bestSymbol.key} is your strongest instrument: ${bestSymbol.hitRate}% hit rate over ${bestSymbol.decided} decided signals, ${bestSymbol.expectancyR}R average.`);
   }
   if (worstSymbol && worstSymbol.expectancyR < 0 && worstSymbol.key !== bestSymbol?.key) {
-    notes.push(`${worstSymbol.key} is losing: ${worstSymbol.hitRate}% hit rate over ${worstSymbol.resolved} resolved signals, ${worstSymbol.expectancyR}R average. Consider dropping it or trading it smaller.`);
+    notes.push(`${worstSymbol.key} is losing: ${worstSymbol.hitRate}% hit rate over ${worstSymbol.decided} decided signals, ${worstSymbol.expectancyR}R average. Consider dropping it or trading it smaller.`);
   }
 
   const aGrades = rows.filter((r) => r.grade === "A" || r.grade === "A+");
@@ -226,10 +226,10 @@ export function buildScoreboard(allRows: SignalScoreRow[]): Scoreboard {
 
   const counter = bucket("counter", rows.filter((r) => r.counterTrend));
   const withTrend = bucket("with", rows.filter((r) => !r.counterTrend));
-  if (counter.resolved >= 4) {
+  if (counter.decided >= 4) {
     notes.push(
-      `Counter-trend scans (fighting the Daily and 4H): ${counter.hitRate}% hit rate, ${counter.expectancyR}R average over ${counter.resolved} resolved signals` +
-        (withTrend.resolved >= 4 ? `, against ${withTrend.hitRate}% and ${withTrend.expectancyR}R with the trend.` : "."),
+      `Counter-trend scans (fighting the Daily and 4H): ${counter.hitRate}% hit rate, ${counter.expectancyR}R average over ${counter.decided} decided signals` +
+        (withTrend.decided >= 4 ? `, against ${withTrend.hitRate}% and ${withTrend.expectancyR}R with the trend.` : "."),
     );
   }
 
@@ -237,12 +237,12 @@ export function buildScoreboard(allRows: SignalScoreRow[]): Scoreboard {
   const freshBucket = bucket("since-fix", fresh);
   if (freshBucket.targets + freshBucket.stops >= 3) {
     notes.push(
-      `Measured ${ENGINE_FIX_LABEL}: ${freshBucket.hitRate}% hit rate and ${freshBucket.expectancyR}R average over ${freshBucket.resolved} resolved signals, against ${overall.hitRate}% and ${overall.expectancyR}R all time.`,
+      `Measured ${ENGINE_FIX_LABEL}: ${freshBucket.hitRate}% hit rate and ${freshBucket.expectancyR}R average over ${freshBucket.decided} decided signals, against ${overall.hitRate}% and ${overall.expectancyR}R all time.`,
     );
   }
 
-  if (overall.resolved < 10) {
-    notes.push("Fewer than 10 resolved signals so far. Numbers here get meaningful after a few weeks of scanning.");
+  if (overall.decided < 10) {
+    notes.push("Fewer than 10 decided signals so far (target or stop printed). Numbers here get meaningful after a few weeks of scanning.");
   }
 
   if (voided > 0) {
@@ -255,12 +255,17 @@ export function buildScoreboard(allRows: SignalScoreRow[]): Scoreboard {
     voided,
     total: overall.total,
     open: rows.filter((r) => r.status === "open").length,
-    resolved: overall.resolved,
+    decided: overall.decided,
     targets: overall.targets,
     stops: overall.stops,
     expired: overall.expired,
+    expiredAvgR: overall.expiredAvgR,
     hitRate: overall.hitRate,
     expectancyR: overall.expectancyR,
+    netExpectancyR: overall.netExpectancyR,
+    netCount: overall.netCount,
+    avgCostR: overall.avgCostR,
+    aGrade: bucket("A/A+", aGrades),
     byGrade,
     bySymbol,
     byTimeframe,
