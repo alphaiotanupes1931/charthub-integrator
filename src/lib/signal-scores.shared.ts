@@ -131,7 +131,11 @@ export function tfLabel(tf: string): string {
 
 /** Rows that can be scored at all: void (no-direction) rows never count. */
 export function scorableRows(rows: SignalScoreRow[]): SignalScoreRow[] {
-  return rows.filter((r) => r.status !== "void");
+  // Two independent defences against a coin-flip landing in an average: the
+  // resolver voids no-direction signals, and this filter refuses anything whose
+  // bias is not Long or Short even if it carries a stored verdict from before
+  // the resolver was fixed.
+  return rows.filter((r) => r.status !== "void" && (r.bias === "Long" || r.bias === "Short"));
 }
 
 const r2 = (n: number) => Math.round(n * 100) / 100;
