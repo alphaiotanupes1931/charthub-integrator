@@ -8,7 +8,7 @@
 import type { BtBar } from "@/lib/backtest/engine";
 import type { BacktestTimeframe } from "@/lib/backtest/catalog";
 import { costInR } from "@/lib/trading-costs";
-import { replayForward } from "@/lib/signal-replay";
+import { replayForward, replayDirection } from "@/lib/signal-replay";
 
 export type OpenSignal = {
   id: string;
@@ -54,7 +54,7 @@ export type Resolution = {
 };
 
 /** Long or short, or null when the scan had no directional opinion. */
-export { replayDirection as signalDirection } from "@/lib/signal-replay";
+export { replayDirection as signalDirection };
 
 const HISTORY_TF: Record<string, BacktestTimeframe> = {
   "1": "15",
@@ -76,7 +76,7 @@ const EXPIRY_HOURS: Record<string, number> = {
 };
 
 export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
-  const direction = signalDirection(sig.bias);
+  const direction = replayDirection(sig.bias);
   if (!direction) {
     // No opinion, nothing to score. Voided rather than defaulted to short.
     return { status: "void", realizedR: null, maeR: null, mfeR: null, netR: null, costR: null, barsToResolve: null };
