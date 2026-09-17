@@ -1711,6 +1711,78 @@ export type Database = {
         }
         Relationships: []
       }
+      scanner_program_scores: {
+        Row: {
+          band: string
+          bias: string
+          composite: number
+          cost_r: number | null
+          created_at: string
+          families: Json
+          id: string
+          instrument_class: string
+          legacy_grade: string
+          lower_bound_r: number | null
+          net_r: number | null
+          percentile: number | null
+          published_grade: string | null
+          raw_band: string
+          reasons: Json
+          sample_size: number
+          shadow: boolean
+          symbol: string
+          tier: string
+          timeframe: string
+          vetoes: Json
+        }
+        Insert: {
+          band: string
+          bias: string
+          composite: number
+          cost_r?: number | null
+          created_at?: string
+          families?: Json
+          id?: string
+          instrument_class: string
+          legacy_grade: string
+          lower_bound_r?: number | null
+          net_r?: number | null
+          percentile?: number | null
+          published_grade?: string | null
+          raw_band: string
+          reasons?: Json
+          sample_size?: number
+          shadow?: boolean
+          symbol: string
+          tier: string
+          timeframe: string
+          vetoes?: Json
+        }
+        Update: {
+          band?: string
+          bias?: string
+          composite?: number
+          cost_r?: number | null
+          created_at?: string
+          families?: Json
+          id?: string
+          instrument_class?: string
+          legacy_grade?: string
+          lower_bound_r?: number | null
+          net_r?: number | null
+          percentile?: number | null
+          published_grade?: string | null
+          raw_band?: string
+          reasons?: Json
+          sample_size?: number
+          shadow?: boolean
+          symbol?: string
+          tier?: string
+          timeframe?: string
+          vetoes?: Json
+        }
+        Relationships: []
+      }
       signal_feed: {
         Row: {
           action: string

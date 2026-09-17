@@ -15,6 +15,13 @@
       "when": 1789682696392,
       "tag": "0001_add_signal_scores_net_r",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789683461682,
+      "tag": "0002_scanner_program_scores",
+      "breakpoints": true
     }
   ]
 }
