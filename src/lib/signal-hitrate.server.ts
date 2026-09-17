@@ -6,18 +6,38 @@
 // Sample sizes are always included so a 2-trade bucket cannot be sold as an
 // edge, and buckets with too little data are named as such.
 
-type Row = { grade: string; status: string; realized_r: number | string | null; taken?: boolean };
+type Row = {
+  grade: string;
+  status: string;
+  realized_r: number | string | null;
+  net_r?: number | string | null;
+  taken?: boolean;
+};
 
 const MIN_SAMPLE = 8;
 
+/**
+ * Hit rate and average R are both computed over DECIDED rows only (target or
+ * stop printed). Expiries are marked to the last close of a trade that never
+ * concluded, so folding them into the average dilutes it with partial results.
+ */
 function stat(rows: Row[]) {
   let targets = 0;
   let stops = 0;
   let rSum = 0;
+  let netSum = 0;
+  let netCount = 0;
   for (const r of rows) {
-    if (r.status === "target") targets += 1;
-    else if (r.status === "stop") stops += 1;
+    const isTarget = r.status === "target";
+    const isStop = r.status === "stop";
+    if (isTarget) targets += 1;
+    else if (isStop) stops += 1;
+    if (!isTarget && !isStop) continue;
     rSum += r.realized_r === null ? 0 : Number(r.realized_r);
+    if (r.net_r !== null && r.net_r !== undefined) {
+      netSum += Number(r.net_r);
+      netCount += 1;
+    }
   }
   const decided = targets + stops;
   return {
@@ -26,7 +46,9 @@ function stat(rows: Row[]) {
     stops,
     decided,
     hitRate: decided ? Math.round((targets / decided) * 1000) / 10 : null,
-    avgR: rows.length ? Math.round((rSum / rows.length) * 100) / 100 : 0,
+    avgR: decided ? Math.round((rSum / decided) * 100) / 100 : 0,
+    netAvgR: netCount ? Math.round((netSum / netCount) * 100) / 100 : null,
+    netCount,
   };
 }
 
