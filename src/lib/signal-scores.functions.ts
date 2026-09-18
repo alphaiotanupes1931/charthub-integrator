@@ -30,6 +30,8 @@ const RecordInput = z.object({
   counterTrend: z.boolean().optional(),
   htfBias: z.string().max(12).nullable().optional(),
   methodologyVersion: z.string().min(1).max(40).optional(),
+  /** Market price the plan was measured against. Required for the staleness guard. */
+  lastPrice: z.number().finite().nullable().optional(),
 });
 
 type Row = {
