@@ -385,8 +385,14 @@ export function runEntryFillTest(
   const slippagePaid: number[] = [];
   // One cohort per candidate staleness tolerance, so the guard threshold is picked
   // from the trade-off between volume kept and honesty gained.
-  const cohorts = new Map<number, { acc: Acc; survivors: number; refused: number; firstBar: number }>(
-    TOLERANCES.map((t) => [t, { acc: emptyOutcome("limit"), survivors: 0, refused: 0, firstBar: 0 }]),
+  const cohorts = new Map<
+    number,
+    { acc: Acc; survivors: number; refused: number; firstBar: number; grades: Map<string, { acc: Acc; n: number }> }
+  >(
+    TOLERANCES.map((t) => [
+      t,
+      { acc: emptyOutcome("limit"), survivors: 0, refused: 0, firstBar: 0, grades: new Map() },
+    ]),
   );
 
   for (const row of rows) {
