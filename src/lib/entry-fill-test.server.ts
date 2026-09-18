@@ -98,6 +98,28 @@ export type FirstBarRead = {
   refusedAtTolerance: Array<{ toleranceR: number; refused: number; share: number }>;
 };
 
+/**
+ * What the record would look like if we refused to publish a signal whose entry
+ * price had already gone by more than `toleranceR` at the moment of filing.
+ *
+ * Staleness is measured against the last close before filing, because that is the
+ * price the scanner itself can see when it decides. Survivors are then scored on
+ * the limit entry, which is what production actually files.
+ */
+export type ToleranceCohort = {
+  toleranceR: number;
+  survivors: number;
+  refused: number;
+  /** Share of today's published volume that would be refused. */
+  refusedShare: number;
+  decided: number;
+  hitRate: number | null;
+  grossExpectancyR: number | null;
+  netExpectancyR: number | null;
+  /** First-bar resolutions left inside the surviving population. */
+  resolvedOnFirstBar: number;
+};
+
 export type EntryFillReport = {
   scanned: number;
   scorable: number;
