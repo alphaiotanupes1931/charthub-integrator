@@ -468,6 +468,17 @@ export function runEntryFillTest(
       `Stop entries went unfilled more often (${os.unfilled} vs ${ol.unfilled}). Fewer trades taken is part of the trade-off and has to be counted alongside the R figure.`,
     );
   }
+  if (osl.netExpectancyR != null && os.netExpectancyR != null && ol.netExpectancyR != null) {
+    const paid = median(slippagePaid);
+    verdicts.push(
+      `Priced honestly — the stop entry filled where the market actually was rather than at a level price had already left — the stop entry returns ${osl.netExpectancyR}R over ${osl.decided} decided, against ${os.netExpectancyR}R at the level and ${ol.netExpectancyR}R on the limit. ${osl.unfilled} signals had no trade left to take because the target was already reached.${paid == null ? "" : ` Median fill sat ${r3(paid)}R past the planned entry.`}`,
+    );
+    verdicts.push(
+      osl.netExpectancyR > ol.netExpectancyR + 0.05
+        ? "The order-type change survives honest fill pricing, so it is worth testing forward on one instrument."
+        : "The order-type advantage does not survive honest fill pricing: most of it was buying at a price that had already gone. The real problem is the entry level being stale at filing, not the order type.",
+    );
+  }
   if (resolvedOnFirstBar) {
     verdicts.push(
       `${resolvedOnFirstBar} signals resolved on their first bar, ${freeWins} of them as wins with no adverse move at all. Those are the ones where the entry price was most likely already gone at filing.`,
