@@ -198,6 +198,9 @@ export function recordSignal(input: Omit<SignalRecord, "id" | "at">): SignalReco
             counterTrend: input.counterTrend ?? false,
             htfBias: input.htfBias ?? null,
             methodologyVersion: input.methodologyVersion,
+            // The price the plan was measured against. The server refuses to file
+            // the signal if the entry has already been left behind by this price.
+            lastPrice: input.refPrice ?? null,
           },
         }),
       )
