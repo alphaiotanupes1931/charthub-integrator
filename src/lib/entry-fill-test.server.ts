@@ -372,6 +372,11 @@ export function runEntryFillTest(
   let entryAlreadyGone = 0;
   const goneBy: number[] = [];
   const slippagePaid: number[] = [];
+  // One cohort per candidate staleness tolerance, so the guard threshold is picked
+  // from the trade-off between volume kept and honesty gained.
+  const cohorts = new Map<number, { acc: Acc; survivors: number; refused: number; firstBar: number }>(
+    TOLERANCES.map((t) => [t, { acc: emptyOutcome("limit"), survivors: 0, refused: 0, firstBar: 0 }]),
+  );
 
   for (const row of rows) {
     const bars = barsFor(row.symbol, row.timeframe);
