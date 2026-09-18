@@ -471,6 +471,11 @@ export function runEntryFillTest(
       cohort.survivors += 1;
       addTrial(cohort.acc, limit);
       if (limit.filled && limit.barsToResolve === 1 && limit.barsToFill === 1) cohort.firstBar += 1;
+      const gradeKey = (row.grade || "?").trim().toUpperCase();
+      const gb = cohort.grades.get(gradeKey) ?? { acc: emptyOutcome("limit"), n: 0 };
+      gb.n += 1;
+      addTrial(gb.acc, limit);
+      cohort.grades.set(gradeKey, gb);
     }
   }
 
