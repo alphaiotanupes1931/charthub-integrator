@@ -105,6 +105,20 @@ export const recordSignalScore = createServerFn({ method: "POST" })
     if (dupe && dupe.length) return { ok: true, id: (dupe[0] as { id: string }).id };
 
     const plannedR = Math.round((Math.abs(data.tp1 - data.entry) / risk) * 100) / 100;
+    // The filing timestamp is set here, not by the database, because it is part of
+    // the fingerprint that seals these terms as append-only.
+    const createdAt = new Date().toISOString();
+    const { signalFingerprint } = await import("@/lib/signal-integrity.server");
+    const filedHash = signalFingerprint({
+      symbol: data.symbol,
+      timeframe: data.timeframe,
+      bias: data.bias,
+      grade: data.grade,
+      entry: data.entry,
+      stop: data.stop,
+      tp1: data.tp1,
+      createdAt,
+    });
     const { data: inserted, error } = await context.supabase
       .from("signal_scores")
       .insert({
@@ -122,7 +136,9 @@ export const recordSignalScore = createServerFn({ method: "POST" })
         counter_trend: data.counterTrend ?? false,
         htf_bias: data.htfBias ?? null,
         methodology_version: data.methodologyVersion ?? SCANNER_METHODOLOGY_VERSION,
-      })
+        created_at: createdAt,
+        filed_hash: filedHash,
+      } as never)
       .select("id")
       .single();
     if (error) return { ok: false };
