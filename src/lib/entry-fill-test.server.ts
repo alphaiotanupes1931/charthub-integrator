@@ -40,7 +40,7 @@ export type FillTestSignal = {
   created_at: string;
 };
 
-export type EntryMode = "limit" | "stop";
+export type EntryMode = "limit" | "stop" | "stop-slipped";
 
 /** One outcome bucket: the population that filled under a given order type. */
 export type FillOutcome = {
