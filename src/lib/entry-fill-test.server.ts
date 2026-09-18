@@ -593,6 +593,18 @@ export function runEntryFillTest(
         grossExpectancyR: o.grossExpectancyR,
         netExpectancyR: o.netExpectancyR,
         resolvedOnFirstBar: c.firstBar,
+        byGrade: [...c.grades.entries()]
+          .map(([grade, g]) => {
+            const go = seal(g.acc);
+            return {
+              grade,
+              survivors: g.n,
+              decided: go.decided,
+              hitRate: go.hitRate,
+              netExpectancyR: go.netExpectancyR,
+            };
+          })
+          .sort((a, b) => b.survivors - a.survivors),
       };
     })
     .sort((a, b) => a.toleranceR - b.toleranceR);
