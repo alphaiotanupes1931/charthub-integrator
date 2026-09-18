@@ -153,6 +153,7 @@ export const recordSignalScore = createServerFn({ method: "POST" })
         methodology_version: data.methodologyVersion ?? SCANNER_METHODOLOGY_VERSION,
         created_at: createdAt,
         filed_hash: filedHash,
+        entry_distance_r: staleness.distanceR,
       } as never)
       .select("id")
       .single();
