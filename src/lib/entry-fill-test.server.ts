@@ -66,8 +66,12 @@ export type PerInstrument = {
   n: number;
   limit: FillOutcome;
   stop: FillOutcome;
+  /** Stop entry priced at where the market actually was, not at the level. */
+  stopSlipped: FillOutcome;
   /** Positive means the stop entry produced more net R per decided trade. */
   netEdgeToStopEntry: number | null;
+  /** The same comparison once the stale fill price is paid for. */
+  netEdgeToStopEntrySlipped: number | null;
 };
 
 export type ExpiryClock = {
