@@ -77,6 +77,7 @@ const NAV_GROUPS: NavGroup[] = [
     icon: Radar,
     items: [
       { to: "/signals",    label: "AI Signals",      icon: Radar },
+      { to: "/wyckoff",    label: "Wyckoff Mode",    icon: Layers },
       { to: "/journal",    label: "Trade Journal",   icon: NotebookPen },
       { to: "/alerts",     label: "Price Alerts",    icon: Bell },
       { to: "/calculator", label: "Risk Calculator", icon: Calculator },
