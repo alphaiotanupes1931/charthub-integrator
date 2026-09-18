@@ -513,7 +513,10 @@ export function runEntryFillTest(
     overall: {
       limit: ol,
       stop: os,
-      netEdgeToStopEntry: ol.netExpectancyR == null || os.netExpectancyR == null ? null : r3(os.netExpectancyR - ol.netExpectancyR),
+      stopSlipped: osl,
+      netEdgeToStopEntry: edgeOf(ol, os),
+      netEdgeToStopEntrySlipped: edgeOf(ol, osl),
+      medianSlippagePaidR: slippagePaid.length ? r3(median(slippagePaid)!) : null,
     },
     byInstrument,
     expiryClock,
