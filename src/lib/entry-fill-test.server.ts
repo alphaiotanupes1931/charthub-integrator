@@ -130,28 +130,60 @@ type Trial = {
   grossR: number | null;
   netR: number | null;
   barsToResolve: number | null;
+  /** Price the order is assumed to be filled at, which is not always the level. */
+  fillPrice: number | null;
+  /** How far past the planned level the assumed fill sat, in planned R. */
+  slippageR: number | null;
 };
+
+const unfilled = (): Trial => ({
+  filled: false,
+  barsToFill: null,
+  status: "open",
+  grossR: null,
+  netR: null,
+  barsToResolve: null,
+  fillPrice: null,
+  slippageR: null,
+});
+
+/** Last closed bar at or before the moment the signal was filed. */
+function priorClose(bars: ReplayBar[], createdAt: string): number | null {
+  const t = new Date(createdAt).getTime();
+  let close: number | null = null;
+  for (const bar of bars) {
+    if (bar.time * 1000 <= t) close = bar.close;
+    else break;
+  }
+  return close;
+}
 
 /**
  * Replay one signal under one order type.
  *
- * Limit: fills when price trades BACK to the level (a long fills on a low at or
- * below entry). Stop: fills when price trades THROUGH the level in the direction
- * of the trade (a long fills on a high at or above entry). Both then walk on from
- * the filling bar to the stop or the target, and a bar containing both counts as a
- * stop because intrabar sequence is not visible.
+ * limit: fills when price trades BACK to the level (a long fills on a low at or
+ *   below entry).
+ * stop: fills when price trades THROUGH the level in the direction of the trade
+ *   (a long fills on a high at or above entry), assumed filled at the level.
+ * stop-slipped: the same trigger, but when the level was ALREADY behind price
+ *   before that bar opened, the fill is moved to that earlier close instead of the
+ *   level. This is the honest version for a signal filed after price had already
+ *   left the zone: the account cannot buy at a price that has gone. Risk is
+ *   recomputed from the worse fill, so R shrinks, and if the target was already
+ *   reached the trade counts as never available.
+ *
+ * All modes walk on from the filling bar inclusive, and a bar holding both the
+ * stop and the target counts as a stop because intrabar sequence is not visible.
  */
 export function trialEntry(sig: FillTestSignal, bars: ReplayBar[], mode: EntryMode): Trial | null {
   const direction = replayDirection(sig.bias);
-  const risk = Math.abs(sig.entry - sig.stop);
-  if (!direction || !(risk > 0)) return null;
+  const plannedRisk = Math.abs(sig.entry - sig.stop);
+  if (!direction || !(plannedRisk > 0)) return null;
 
   const forward = forwardBars(bars, sig.created_at);
   if (!forward.length) return null;
 
   const long = direction === "long";
-  const rMultiple = r2(Math.abs(sig.tp1 - sig.entry) / risk);
-  const cost = costInR(sig.symbol, sig.entry, risk);
 
   let fillIndex = -1;
   for (let i = 0; i < forward.length; i++) {
@@ -170,13 +202,26 @@ export function trialEntry(sig: FillTestSignal, bars: ReplayBar[], mode: EntryMo
     }
   }
 
-  if (fillIndex === -1) {
-    return { filled: false, barsToFill: null, status: "open", grossR: null, netR: null, barsToResolve: null };
+  if (fillIndex === -1) return unfilled();
+
+  let fillPrice = sig.entry;
+  if (mode === "stop-slipped") {
+    const reference = fillIndex > 0 ? forward[fillIndex - 1]!.close : priorClose(bars, sig.created_at);
+    if (reference != null && (long ? reference > sig.entry : reference < sig.entry)) {
+      fillPrice = reference;
+    }
   }
 
-  // From the filling bar onward, including the filling bar itself: a stop entry is
-  // frequently filled and stopped inside the same candle, and pretending otherwise
-  // is exactly the flattery this test exists to remove.
+  const risk = Math.abs(fillPrice - sig.stop);
+  const reward = long ? sig.tp1 - fillPrice : fillPrice - sig.tp1;
+  // Price already past the target, or the fill already at or beyond the stop:
+  // there was no trade left to take.
+  if (!(risk > 0) || !(reward > 0)) return unfilled();
+
+  const rMultiple = r2(reward / risk);
+  const cost = costInR(sig.symbol, fillPrice, risk);
+  const slippageR = r3(Math.abs(fillPrice - sig.entry) / plannedRisk);
+
   for (let i = fillIndex; i < forward.length; i++) {
     const bar = forward[i]!;
     const hitStop = long ? bar.low <= sig.stop : bar.high >= sig.stop;
@@ -190,11 +235,22 @@ export function trialEntry(sig: FillTestSignal, bars: ReplayBar[], mode: EntryMo
         grossR,
         netR: r3(grossR - cost),
         barsToResolve: i - fillIndex + 1,
+        fillPrice,
+        slippageR,
       };
     }
   }
 
-  return { filled: true, barsToFill: fillIndex + 1, status: "open", grossR: null, netR: null, barsToResolve: null };
+  return {
+    filled: true,
+    barsToFill: fillIndex + 1,
+    status: "open",
+    grossR: null,
+    netR: null,
+    barsToResolve: null,
+    fillPrice,
+    slippageR,
+  };
 }
 
 function emptyOutcome(mode: EntryMode): FillOutcome & { _gross: number[]; _net: number[]; _fill: number[]; _res: number[] } {
