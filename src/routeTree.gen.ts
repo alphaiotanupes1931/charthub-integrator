@@ -32,6 +32,7 @@ import { Route as ApiOhlcRouteImport } from './routes/api.ohlc'
 import { Route as ApiNewsChatRouteImport } from './routes/api.news-chat'
 import { Route as ApiHealthRouteImport } from './routes/api.health'
 import { Route as ApiChatRouteImport } from './routes/api.chat'
+import { Route as AppWyckoffRouteImport } from './routes/_app.wyckoff'
 import { Route as AppVoiceCoachRouteImport } from './routes/_app.voice-coach'
 import { Route as AppTestingRouteImport } from './routes/_app.testing'
 import { Route as AppStrategiesRouteImport } from './routes/_app.strategies'
@@ -222,6 +223,11 @@ const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
   path: '/api/chat',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppWyckoffRoute = AppWyckoffRouteImport.update({
+  id: '/wyckoff',
+  path: '/wyckoff',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppVoiceCoachRoute = AppVoiceCoachRouteImport.update({
   id: '/voice-coach',
@@ -678,6 +684,7 @@ export interface FileRoutesByFullPath {
   '/strategies': typeof AppStrategiesRouteWithChildren
   '/testing': typeof AppTestingRoute
   '/voice-coach': typeof AppVoiceCoachRoute
+  '/wyckoff': typeof AppWyckoffRoute
   '/api/chat': typeof ApiChatRoute
   '/api/health': typeof ApiHealthRoute
   '/api/news-chat': typeof ApiNewsChatRoute
@@ -775,6 +782,7 @@ export interface FileRoutesByTo {
   '/signals': typeof AppSignalsRoute
   '/testing': typeof AppTestingRoute
   '/voice-coach': typeof AppVoiceCoachRoute
+  '/wyckoff': typeof AppWyckoffRoute
   '/api/chat': typeof ApiChatRoute
   '/api/health': typeof ApiHealthRoute
   '/api/news-chat': typeof ApiNewsChatRoute
@@ -876,6 +884,7 @@ export interface FileRoutesById {
   '/_app/strategies': typeof AppStrategiesRouteWithChildren
   '/_app/testing': typeof AppTestingRoute
   '/_app/voice-coach': typeof AppVoiceCoachRoute
+  '/_app/wyckoff': typeof AppWyckoffRoute
   '/api/chat': typeof ApiChatRoute
   '/api/health': typeof ApiHealthRoute
   '/api/news-chat': typeof ApiNewsChatRoute
@@ -978,6 +987,7 @@ export interface FileRouteTypes {
     | '/strategies'
     | '/testing'
     | '/voice-coach'
+    | '/wyckoff'
     | '/api/chat'
     | '/api/health'
     | '/api/news-chat'
@@ -1075,6 +1085,7 @@ export interface FileRouteTypes {
     | '/signals'
     | '/testing'
     | '/voice-coach'
+    | '/wyckoff'
     | '/api/chat'
     | '/api/health'
     | '/api/news-chat'
@@ -1175,6 +1186,7 @@ export interface FileRouteTypes {
     | '/_app/strategies'
     | '/_app/testing'
     | '/_app/voice-coach'
+    | '/_app/wyckoff'
     | '/api/chat'
     | '/api/health'
     | '/api/news-chat'
@@ -1445,6 +1457,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/chat'
       preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_app/wyckoff': {
+      id: '/_app/wyckoff'
+      path: '/wyckoff'
+      fullPath: '/wyckoff'
+      preLoaderRoute: typeof AppWyckoffRouteImport
+      parentRoute: typeof AppRoute
     }
     '/_app/voice-coach': {
       id: '/_app/voice-coach'
@@ -2088,6 +2107,7 @@ interface AppRouteChildren {
   AppStrategiesRoute: typeof AppStrategiesRouteWithChildren
   AppTestingRoute: typeof AppTestingRoute
   AppVoiceCoachRoute: typeof AppVoiceCoachRoute
+  AppWyckoffRoute: typeof AppWyckoffRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -2123,6 +2143,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppStrategiesRoute: AppStrategiesRouteWithChildren,
   AppTestingRoute: AppTestingRoute,
   AppVoiceCoachRoute: AppVoiceCoachRoute,
+  AppWyckoffRoute: AppWyckoffRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
