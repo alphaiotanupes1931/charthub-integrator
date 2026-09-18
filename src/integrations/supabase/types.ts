@@ -1837,6 +1837,7 @@ export type Database = {
           counter_trend: boolean
           created_at: string
           entry: number
+          filed_hash: string | null
           grade: string
           htf_bias: string | null
           id: string
@@ -1865,6 +1866,7 @@ export type Database = {
           counter_trend?: boolean
           created_at?: string
           entry: number
+          filed_hash?: string | null
           grade: string
           htf_bias?: string | null
           id?: string
@@ -1893,6 +1895,7 @@ export type Database = {
           counter_trend?: boolean
           created_at?: string
           entry?: number
+          filed_hash?: string | null
           grade?: string
           htf_bias?: string | null
           id?: string
