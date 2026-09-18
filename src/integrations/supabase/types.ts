@@ -1828,6 +1828,39 @@ export type Database = {
         }
         Relationships: []
       }
+      signal_inbound_keys: {
+        Row: {
+          created_at: string
+          id: string
+          label: string
+          last_used_at: string | null
+          revoked_at: string | null
+          source: string
+          token: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label?: string
+          last_used_at?: string | null
+          revoked_at?: string | null
+          source?: string
+          token: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string
+          last_used_at?: string | null
+          revoked_at?: string | null
+          source?: string
+          token?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       signal_scores: {
         Row: {
           bars_to_resolve: number | null
@@ -1848,6 +1881,7 @@ export type Database = {
           planned_r: number | null
           realized_r: number | null
           resolved_at: string | null
+          source: string
           status: string
           stop: number
           strategy_id: string | null
@@ -1877,6 +1911,7 @@ export type Database = {
           planned_r?: number | null
           realized_r?: number | null
           resolved_at?: string | null
+          source?: string
           status?: string
           stop: number
           strategy_id?: string | null
@@ -1906,6 +1941,7 @@ export type Database = {
           planned_r?: number | null
           realized_r?: number | null
           resolved_at?: string | null
+          source?: string
           status?: string
           stop?: number
           strategy_id?: string | null
