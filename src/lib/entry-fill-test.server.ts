@@ -402,17 +402,22 @@ export function runEntryFillTest(
     }
   }
 
+  const edgeOf = (a: FillOutcome, b: FillOutcome) =>
+    a.netExpectancyR == null || b.netExpectancyR == null ? null : r3(b.netExpectancyR - a.netExpectancyR);
+
   const byInstrument: PerInstrument[] = [...perSymbol.entries()]
     .map(([symbol, b]) => {
       const l = seal(b.limit);
       const s = seal(b.stop);
+      const sl = seal(b.slipped);
       return {
         symbol,
         n: b.n,
         limit: l,
         stop: s,
-        netEdgeToStopEntry:
-          l.netExpectancyR == null || s.netExpectancyR == null ? null : r3(s.netExpectancyR - l.netExpectancyR),
+        stopSlipped: sl,
+        netEdgeToStopEntry: edgeOf(l, s),
+        netEdgeToStopEntrySlipped: edgeOf(l, sl),
       };
     })
     .sort((a, b) => b.n - a.n);
