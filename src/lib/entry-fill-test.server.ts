@@ -102,7 +102,14 @@ export type EntryFillReport = {
   scanned: number;
   scorable: number;
   unrecoverable: number;
-  overall: { limit: FillOutcome; stop: FillOutcome; netEdgeToStopEntry: number | null };
+  overall: {
+    limit: FillOutcome;
+    stop: FillOutcome;
+    stopSlipped: FillOutcome;
+    netEdgeToStopEntry: number | null;
+    netEdgeToStopEntrySlipped: number | null;
+    medianSlippagePaidR: number | null;
+  };
   byInstrument: PerInstrument[];
   expiryClock: ExpiryClock[];
   firstBar: FirstBarRead;
