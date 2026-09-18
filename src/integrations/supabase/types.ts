@@ -1783,6 +1783,44 @@ export type Database = {
         }
         Relationships: []
       }
+      signal_corrections: {
+        Row: {
+          corrected_at: string
+          field: string
+          id: string
+          new_value: string | null
+          old_value: string | null
+          reason: string
+          signal_id: string
+        }
+        Insert: {
+          corrected_at?: string
+          field: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          reason: string
+          signal_id: string
+        }
+        Update: {
+          corrected_at?: string
+          field?: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          reason?: string
+          signal_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signal_corrections_signal_id_fkey"
+            columns: ["signal_id"]
+            isOneToOne: false
+            referencedRelation: "signal_scores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       signal_feed: {
         Row: {
           action: string
@@ -1870,6 +1908,7 @@ export type Database = {
           counter_trend: boolean
           created_at: string
           entry: number
+          entry_distance_r: number | null
           filed_hash: string | null
           grade: string
           htf_bias: string | null
@@ -1900,6 +1939,7 @@ export type Database = {
           counter_trend?: boolean
           created_at?: string
           entry: number
+          entry_distance_r?: number | null
           filed_hash?: string | null
           grade: string
           htf_bias?: string | null
@@ -1930,6 +1970,7 @@ export type Database = {
           counter_trend?: boolean
           created_at?: string
           entry?: number
+          entry_distance_r?: number | null
           filed_hash?: string | null
           grade?: string
           htf_bias?: string | null
