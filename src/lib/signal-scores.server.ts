@@ -67,14 +67,6 @@ const HISTORY_TF: Record<string, BacktestTimeframe> = {
   W: "D",
 };
 
-/** How long a signal gets to work before we call it stale, per timeframe. */
-const EXPIRY_HOURS: Record<string, number> = {
-  "15": 24,
-  "60": 72,
-  "240": 240,
-  D: 720,
-};
-
 export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
   const direction = replayDirection(sig.bias);
   if (!direction) {
@@ -82,7 +74,10 @@ export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
     return { status: "void", realizedR: null, maeR: null, mfeR: null, netR: null, costR: null, barsToResolve: null };
   }
   const tf = HISTORY_TF[sig.timeframe] ?? "60";
-  const expiryHours = EXPIRY_HOURS[tf] ?? 72;
+  // Per-market clock from measured time-to-resolution: see signal-expiry.ts. The
+  // old single 72-hour 1H clock was closing live trades and holding dead ones.
+  const { expiryHoursFor } = await import("@/lib/signal-expiry");
+  const expiryHours = expiryHoursFor(sig.symbol, tf);
   const createdMs = new Date(sig.created_at).getTime();
   const ageHours = (Date.now() - createdMs) / 3_600_000;
 

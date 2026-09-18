@@ -98,6 +98,39 @@ export type FirstBarRead = {
   refusedAtTolerance: Array<{ toleranceR: number; refused: number; share: number }>;
 };
 
+/**
+ * What the record would look like if we refused to publish a signal whose entry
+ * price had already gone by more than `toleranceR` at the moment of filing.
+ *
+ * Staleness is measured against the last close before filing, because that is the
+ * price the scanner itself can see when it decides. Survivors are then scored on
+ * the limit entry, which is what production actually files.
+ */
+export type ToleranceCohort = {
+  toleranceR: number;
+  survivors: number;
+  refused: number;
+  /** Share of today's published volume that would be refused. */
+  refusedShare: number;
+  decided: number;
+  hitRate: number | null;
+  grossExpectancyR: number | null;
+  netExpectancyR: number | null;
+  /** First-bar resolutions left inside the surviving population. */
+  resolvedOnFirstBar: number;
+  /**
+   * The same figures split by published grade. This is how we tell whether grade
+   * separation was real and hidden by the stale rows, or simply absent.
+   */
+  byGrade: Array<{
+    grade: string;
+    survivors: number;
+    decided: number;
+    hitRate: number | null;
+    netExpectancyR: number | null;
+  }>;
+};
+
 export type EntryFillReport = {
   scanned: number;
   scorable: number;
@@ -113,6 +146,7 @@ export type EntryFillReport = {
   byInstrument: PerInstrument[];
   expiryClock: ExpiryClock[];
   firstBar: FirstBarRead;
+  toleranceCohorts: ToleranceCohort[];
   verdicts: string[];
   caveats: string[];
 };
@@ -349,6 +383,17 @@ export function runEntryFillTest(
   let entryAlreadyGone = 0;
   const goneBy: number[] = [];
   const slippagePaid: number[] = [];
+  // One cohort per candidate staleness tolerance, so the guard threshold is picked
+  // from the trade-off between volume kept and honesty gained.
+  const cohorts = new Map<
+    number,
+    { acc: Acc; survivors: number; refused: number; firstBar: number; grades: Map<string, { acc: Acc; n: number }> }
+  >(
+    TOLERANCES.map((t) => [
+      t,
+      { acc: emptyOutcome("limit"), survivors: 0, refused: 0, firstBar: 0, grades: new Map() },
+    ]),
+  );
 
   for (const row of rows) {
     const bars = barsFor(row.symbol, row.timeframe);
@@ -407,7 +452,33 @@ export function runEntryFillTest(
         goneBy.push(past / risk);
       }
     }
+
+    // Guard simulation. Staleness is judged on the last close BEFORE filing,
+    // because that is the price the scanner can see at the moment it decides.
+    const atFiling = priorClose(bars, row.created_at);
+    const riskAtFiling = Math.abs(row.entry - row.stop);
+    const long = replayDirection(row.bias) === "long";
+    const staleR =
+      atFiling == null || !(riskAtFiling > 0)
+        ? null
+        : Math.max(0, (long ? atFiling - row.entry : row.entry - atFiling) / riskAtFiling);
+    for (const [tolerance, cohort] of cohorts) {
+      // A row we cannot price at filing time is refused rather than assumed clean.
+      if (staleR == null || staleR > tolerance) {
+        cohort.refused += 1;
+        continue;
+      }
+      cohort.survivors += 1;
+      addTrial(cohort.acc, limit);
+      if (limit.filled && limit.barsToResolve === 1 && limit.barsToFill === 1) cohort.firstBar += 1;
+      const gradeKey = (row.grade || "?").trim().toUpperCase();
+      const gb = cohort.grades.get(gradeKey) ?? { acc: emptyOutcome("limit"), n: 0 };
+      gb.n += 1;
+      addTrial(gb.acc, limit);
+      cohort.grades.set(gradeKey, gb);
+    }
   }
+
 
   const edgeOf = (a: FillOutcome, b: FillOutcome) =>
     a.netExpectancyR == null || b.netExpectancyR == null ? null : r3(b.netExpectancyR - a.netExpectancyR);
@@ -508,6 +579,45 @@ export function runEntryFillTest(
     );
   }
 
+  const toleranceCohorts: ToleranceCohort[] = [...cohorts.entries()]
+    .map(([toleranceR, c]) => {
+      const o = seal(c.acc);
+      const seen = c.survivors + c.refused;
+      return {
+        toleranceR,
+        survivors: c.survivors,
+        refused: c.refused,
+        refusedShare: seen ? r3(c.refused / seen) : 0,
+        decided: o.decided,
+        hitRate: o.hitRate,
+        grossExpectancyR: o.grossExpectancyR,
+        netExpectancyR: o.netExpectancyR,
+        resolvedOnFirstBar: c.firstBar,
+        byGrade: [...c.grades.entries()]
+          .map(([grade, g]) => {
+            const go = seal(g.acc);
+            return {
+              grade,
+              survivors: g.n,
+              decided: go.decided,
+              hitRate: go.hitRate,
+              netExpectancyR: go.netExpectancyR,
+            };
+          })
+          .sort((a, b) => b.survivors - a.survivors),
+      };
+    })
+    .sort((a, b) => a.toleranceR - b.toleranceR);
+
+  for (const c of toleranceCohorts) {
+    verdicts.push(
+      `At a ${c.toleranceR}R staleness tolerance, ${Math.round(c.refusedShare * 100)}% of published signals are refused; ` +
+        `${c.decided} of the ${c.survivors} survivors decided, ${
+          c.hitRate == null ? "no hit rate" : `${Math.round(c.hitRate * 100)}% hit`
+        }, net ${c.netExpectancyR == null ? "n/a" : `${c.netExpectancyR}R`}.`,
+    );
+  }
+
   return {
     scanned: rows.length,
     scorable,
@@ -523,6 +633,7 @@ export function runEntryFillTest(
     byInstrument,
     expiryClock,
     firstBar,
+    toleranceCohorts,
     verdicts,
     caveats: [
       "A bar containing both the stop and the target counts as a stop in every mode. Intrabar sequence is not visible, so the pessimistic read is taken.",

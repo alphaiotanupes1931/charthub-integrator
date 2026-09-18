@@ -30,6 +30,8 @@ const RecordInput = z.object({
   counterTrend: z.boolean().optional(),
   htfBias: z.string().max(12).nullable().optional(),
   methodologyVersion: z.string().min(1).max(40).optional(),
+  /** Market price the plan was measured against. Required for the staleness guard. */
+  lastPrice: z.number().finite().nullable().optional(),
 });
 
 type Row = {
@@ -89,9 +91,22 @@ function toRow(r: Row): SignalScoreRow {
 export const recordSignalScore = createServerFn({ method: "POST" })
   .middleware([requireCapability("signal_engine")])
   .inputValidator((raw: unknown) => RecordInput.parse(raw))
-  .handler(async ({ data, context }): Promise<{ ok: boolean; id?: string }> => {
+  .handler(async ({ data, context }): Promise<{ ok: boolean; id?: string; refused?: string }> => {
     const risk = Math.abs(data.entry - data.stop);
     if (!risk) return { ok: false };
+
+    // Staleness guard. A signal whose entry price has already run away is not a
+    // call, it is a report, so it never enters the record. The refusal is returned
+    // rather than swallowed, so the drop in volume is visible.
+    const { evaluateEntryStaleness } = await import("@/lib/signal-staleness");
+    const staleness = evaluateEntryStaleness({
+      bias: data.bias,
+      entry: data.entry,
+      stop: data.stop,
+      lastPrice: data.lastPrice ?? null,
+    });
+    if (staleness.stale) return { ok: false, refused: staleness.reason ?? "Entry already gone." };
+
     const since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
     const { data: dupe } = await context.supabase
       .from("signal_scores")
@@ -138,6 +153,7 @@ export const recordSignalScore = createServerFn({ method: "POST" })
         methodology_version: data.methodologyVersion ?? SCANNER_METHODOLOGY_VERSION,
         created_at: createdAt,
         filed_hash: filedHash,
+        entry_distance_r: staleness.distanceR,
       } as never)
       .select("id")
       .single();
