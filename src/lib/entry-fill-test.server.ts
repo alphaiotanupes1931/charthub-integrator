@@ -331,7 +331,8 @@ export function runEntryFillTest(
 ): EntryFillReport {
   const overallLimit = emptyOutcome("limit");
   const overallStop = emptyOutcome("stop");
-  const perSymbol = new Map<string, { limit: Acc; stop: Acc; n: number }>();
+  const overallSlipped = emptyOutcome("stop-slipped");
+  const perSymbol = new Map<string, { limit: Acc; stop: Acc; slipped: Acc; n: number }>();
   const clock = new Map<string, { symbol: string; timeframe: string; bars: number[] }>();
 
   let scorable = 0;
@@ -340,6 +341,7 @@ export function runEntryFillTest(
   let freeWins = 0;
   let entryAlreadyGone = 0;
   const goneBy: number[] = [];
+  const slippagePaid: number[] = [];
 
   for (const row of rows) {
     const bars = barsFor(row.symbol, row.timeframe);
@@ -349,19 +351,24 @@ export function runEntryFillTest(
     }
     const limit = trialEntry(row, bars, "limit");
     const stopEntry = trialEntry(row, bars, "stop");
-    if (!limit || !stopEntry) {
+    const slipped = trialEntry(row, bars, "stop-slipped");
+    if (!limit || !stopEntry || !slipped) {
       unrecoverable += 1;
       continue;
     }
     scorable += 1;
+    if (slipped.slippageR) slippagePaid.push(slipped.slippageR);
 
     addTrial(overallLimit, limit);
     addTrial(overallStop, stopEntry);
+    addTrial(overallSlipped, slipped);
     const bucket =
-      perSymbol.get(row.symbol) ?? { limit: emptyOutcome("limit"), stop: emptyOutcome("stop"), n: 0 };
+      perSymbol.get(row.symbol) ??
+      { limit: emptyOutcome("limit"), stop: emptyOutcome("stop"), slipped: emptyOutcome("stop-slipped"), n: 0 };
     bucket.n += 1;
     addTrial(bucket.limit, limit);
     addTrial(bucket.stop, stopEntry);
+    addTrial(bucket.slipped, slipped);
     perSymbol.set(row.symbol, bucket);
 
     // Hold window: how long a setup takes once it is actually filled, measured on
