@@ -66,6 +66,9 @@ export const getPublicRecord = createServerFn({ method: "GET" })
         "id,symbol,timeframe,grade,bias,confidence,entry,stop,tp1,planned_r,status,realized_r,net_r,cost_r,mae_r,mfe_r,resolved_at,created_at,counter_trend,htf_bias,filed_hash",
       )
       .in("status", ["target", "stop", "expired", "open", "void"])
+      // Only our own engine's scans are published. Signals filed by outside tools
+      // through the inbound endpoint are resolved on identical terms but excluded.
+      .eq("source", "engine")
       .order("created_at", { ascending: false })
       .limit(limit);
     if (error) throw new Error(error.message);
