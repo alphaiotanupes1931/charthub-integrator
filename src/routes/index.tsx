@@ -542,6 +542,7 @@ function Nav({ isAuthed }: { isAuthed: boolean }) {
           <a href="#product" className="hover:text-foreground transition-colors">Product</a>
           <a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a>
           <Link to="/coaches" className="hover:text-foreground transition-colors">Coaches</Link>
+          <Link to="/record" className="hover:text-foreground transition-colors">Track record</Link>
           <Link to="/faq" className="hover:text-foreground transition-colors">FAQ</Link>
         </nav>
         <div className="flex items-center gap-2 shrink-0">
@@ -564,6 +565,9 @@ function Nav({ isAuthed }: { isAuthed: boolean }) {
                 </SheetClose>
                 <SheetClose asChild>
                   <Link to="/coaches" className="text-lg font-medium">Coaches</Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link to="/record" className="text-lg font-medium">Track record</Link>
                 </SheetClose>
                 <SheetClose asChild>
                   <Link to="/faq" className="text-lg font-medium">FAQ</Link>
