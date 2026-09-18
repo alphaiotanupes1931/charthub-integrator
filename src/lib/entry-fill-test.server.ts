@@ -435,7 +435,28 @@ export function runEntryFillTest(
         goneBy.push(past / risk);
       }
     }
+
+    // Guard simulation. Staleness is judged on the last close BEFORE filing,
+    // because that is the price the scanner can see at the moment it decides.
+    const atFiling = priorClose(bars, row.created_at);
+    const riskAtFiling = Math.abs(row.entry - row.stop);
+    const long = replayDirection(row.bias) === "long";
+    const staleR =
+      atFiling == null || !(riskAtFiling > 0)
+        ? null
+        : Math.max(0, (long ? atFiling - row.entry : row.entry - atFiling) / riskAtFiling);
+    for (const [tolerance, cohort] of cohorts) {
+      // A row we cannot price at filing time is refused rather than assumed clean.
+      if (staleR == null || staleR > tolerance) {
+        cohort.refused += 1;
+        continue;
+      }
+      cohort.survivors += 1;
+      addTrial(cohort.acc, limit);
+      if (limit.filled && limit.barsToResolve === 1 && limit.barsToFill === 1) cohort.firstBar += 1;
+    }
   }
+
 
   const edgeOf = (a: FillOutcome, b: FillOutcome) =>
     a.netExpectancyR == null || b.netExpectancyR == null ? null : r3(b.netExpectancyR - a.netExpectancyR);
