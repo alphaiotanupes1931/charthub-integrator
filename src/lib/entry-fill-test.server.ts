@@ -475,11 +475,13 @@ export function runEntryFillTest(
       `Stop entries went unfilled more often (${os.unfilled} vs ${ol.unfilled}). Fewer trades taken is part of the trade-off and has to be counted alongside the R figure.`,
     );
   }
-  if (osl.netExpectancyR != null && os.netExpectancyR != null && ol.netExpectancyR != null) {
+  if (osl.netExpectancyR != null && os.netExpectancyR != null) {
     const paid = median(slippagePaid);
     verdicts.push(
-      `Priced honestly — the stop entry filled where the market actually was rather than at a level price had already left — the stop entry returns ${osl.netExpectancyR}R over ${osl.decided} decided, against ${os.netExpectancyR}R at the level and ${ol.netExpectancyR}R on the limit. ${osl.unfilled} signals had no trade left to take because the target was already reached.${paid == null ? "" : ` Median fill sat ${r3(paid)}R past the planned entry.`}`,
+      `Priced honestly — the stop entry filled where the market actually was rather than at a level price had already left — the stop entry returns ${osl.netExpectancyR}R over ${osl.decided} decided, against ${os.netExpectancyR}R at the level and ${ol.netExpectancyR ?? "no"}R on the limit. ${osl.unfilled} signals had no trade left to take because the target was already reached.${paid == null ? "" : ` Median fill sat ${r3(paid)}R past the planned entry.`}`,
     );
+  }
+  if (osl.netExpectancyR != null && ol.netExpectancyR != null) {
     verdicts.push(
       osl.netExpectancyR > ol.netExpectancyR + 0.05
         ? "The order-type change survives honest fill pricing, so it is worth testing forward on one instrument."
