@@ -13,6 +13,7 @@ import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as StatusRouteImport } from './routes/status'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RecordRouteImport } from './routes/record'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
@@ -90,8 +91,10 @@ import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/l
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api.public.telegram.webhook'
+import { Route as ApiPublicSignalsFileRouteImport } from './routes/api.public.signals.file'
 import { Route as ApiPublicHooksWeeklyReviewRouteImport } from './routes/api.public.hooks.weekly-review'
 import { Route as ApiPublicHooksStopWidthTestRouteImport } from './routes/api.public.hooks.stop-width-test'
+import { Route as ApiPublicHooksSignalIntegrityRouteImport } from './routes/api.public.hooks.signal-integrity'
 import { Route as ApiPublicHooksSignalExcursionsRouteImport } from './routes/api.public.hooks.signal-excursions'
 import { Route as ApiPublicHooksSendBriefingsRouteImport } from './routes/api.public.hooks.send-briefings'
 import { Route as ApiPublicHooksScanSignalsRouteImport } from './routes/api.public.hooks.scan-signals'
@@ -128,6 +131,11 @@ const StatusRoute = StatusRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecordRoute = RecordRouteImport.update({
+  id: '/record',
+  path: '/record',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -521,6 +529,11 @@ const ApiPublicTelegramWebhookRoute =
     path: '/api/public/telegram/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicSignalsFileRoute = ApiPublicSignalsFileRouteImport.update({
+  id: '/api/public/signals/file',
+  path: '/api/public/signals/file',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksWeeklyReviewRoute =
   ApiPublicHooksWeeklyReviewRouteImport.update({
     id: '/api/public/hooks/weekly-review',
@@ -531,6 +544,12 @@ const ApiPublicHooksStopWidthTestRoute =
   ApiPublicHooksStopWidthTestRouteImport.update({
     id: '/api/public/hooks/stop-width-test',
     path: '/api/public/hooks/stop-width-test',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksSignalIntegrityRoute =
+  ApiPublicHooksSignalIntegrityRouteImport.update({
+    id: '/api/public/hooks/signal-integrity',
+    path: '/api/public/hooks/signal-integrity',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicHooksSignalExcursionsRoute =
@@ -646,6 +665,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
+  '/record': typeof RecordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
@@ -728,8 +748,10 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
   '/api/public/hooks/signal-excursions': typeof ApiPublicHooksSignalExcursionsRoute
+  '/api/public/hooks/signal-integrity': typeof ApiPublicHooksSignalIntegrityRoute
   '/api/public/hooks/stop-width-test': typeof ApiPublicHooksStopWidthTestRoute
   '/api/public/hooks/weekly-review': typeof ApiPublicHooksWeeklyReviewRoute
+  '/api/public/signals/file': typeof ApiPublicSignalsFileRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -747,6 +769,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
+  '/record': typeof RecordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
@@ -825,8 +848,10 @@ export interface FileRoutesByTo {
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
   '/api/public/hooks/signal-excursions': typeof ApiPublicHooksSignalExcursionsRoute
+  '/api/public/hooks/signal-integrity': typeof ApiPublicHooksSignalIntegrityRoute
   '/api/public/hooks/stop-width-test': typeof ApiPublicHooksStopWidthTestRoute
   '/api/public/hooks/weekly-review': typeof ApiPublicHooksWeeklyReviewRoute
+  '/api/public/signals/file': typeof ApiPublicSignalsFileRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -846,6 +871,7 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
+  '/record': typeof RecordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/status': typeof StatusRoute
   '/terms': typeof TermsRoute
@@ -928,8 +954,10 @@ export interface FileRoutesById {
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
   '/api/public/hooks/signal-excursions': typeof ApiPublicHooksSignalExcursionsRoute
+  '/api/public/hooks/signal-integrity': typeof ApiPublicHooksSignalIntegrityRoute
   '/api/public/hooks/stop-width-test': typeof ApiPublicHooksStopWidthTestRoute
   '/api/public/hooks/weekly-review': typeof ApiPublicHooksWeeklyReviewRoute
+  '/api/public/signals/file': typeof ApiPublicSignalsFileRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -949,6 +977,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/pricing'
     | '/privacy'
+    | '/record'
     | '/reset-password'
     | '/status'
     | '/terms'
@@ -1031,8 +1060,10 @@ export interface FileRouteTypes {
     | '/api/public/hooks/scan-signals'
     | '/api/public/hooks/send-briefings'
     | '/api/public/hooks/signal-excursions'
+    | '/api/public/hooks/signal-integrity'
     | '/api/public/hooks/stop-width-test'
     | '/api/public/hooks/weekly-review'
+    | '/api/public/signals/file'
     | '/api/public/telegram/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -1050,6 +1081,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/pricing'
     | '/privacy'
+    | '/record'
     | '/reset-password'
     | '/status'
     | '/terms'
@@ -1128,8 +1160,10 @@ export interface FileRouteTypes {
     | '/api/public/hooks/scan-signals'
     | '/api/public/hooks/send-briefings'
     | '/api/public/hooks/signal-excursions'
+    | '/api/public/hooks/signal-integrity'
     | '/api/public/hooks/stop-width-test'
     | '/api/public/hooks/weekly-review'
+    | '/api/public/signals/file'
     | '/api/public/telegram/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -1148,6 +1182,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/pricing'
     | '/privacy'
+    | '/record'
     | '/reset-password'
     | '/status'
     | '/terms'
@@ -1230,8 +1265,10 @@ export interface FileRouteTypes {
     | '/api/public/hooks/scan-signals'
     | '/api/public/hooks/send-briefings'
     | '/api/public/hooks/signal-excursions'
+    | '/api/public/hooks/signal-integrity'
     | '/api/public/hooks/stop-width-test'
     | '/api/public/hooks/weekly-review'
+    | '/api/public/signals/file'
     | '/api/public/telegram/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -1251,6 +1288,7 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
+  RecordRoute: typeof RecordRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   StatusRoute: typeof StatusRoute
   TermsRoute: typeof TermsRoute
@@ -1287,8 +1325,10 @@ export interface RootRouteChildren {
   ApiPublicHooksScanSignalsRoute: typeof ApiPublicHooksScanSignalsRoute
   ApiPublicHooksSendBriefingsRoute: typeof ApiPublicHooksSendBriefingsRoute
   ApiPublicHooksSignalExcursionsRoute: typeof ApiPublicHooksSignalExcursionsRoute
+  ApiPublicHooksSignalIntegrityRoute: typeof ApiPublicHooksSignalIntegrityRoute
   ApiPublicHooksStopWidthTestRoute: typeof ApiPublicHooksStopWidthTestRoute
   ApiPublicHooksWeeklyReviewRoute: typeof ApiPublicHooksWeeklyReviewRoute
+  ApiPublicSignalsFileRoute: typeof ApiPublicSignalsFileRoute
   ApiPublicTelegramWebhookRoute: typeof ApiPublicTelegramWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -1323,6 +1363,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/record': {
+      id: '/record'
+      path: '/record'
+      fullPath: '/record'
+      preLoaderRoute: typeof RecordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -1864,6 +1911,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicTelegramWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/signals/file': {
+      id: '/api/public/signals/file'
+      path: '/api/public/signals/file'
+      fullPath: '/api/public/signals/file'
+      preLoaderRoute: typeof ApiPublicSignalsFileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/weekly-review': {
       id: '/api/public/hooks/weekly-review'
       path: '/api/public/hooks/weekly-review'
@@ -1876,6 +1930,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/hooks/stop-width-test'
       fullPath: '/api/public/hooks/stop-width-test'
       preLoaderRoute: typeof ApiPublicHooksStopWidthTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/signal-integrity': {
+      id: '/api/public/hooks/signal-integrity'
+      path: '/api/public/hooks/signal-integrity'
+      fullPath: '/api/public/hooks/signal-integrity'
+      preLoaderRoute: typeof ApiPublicHooksSignalIntegrityRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/signal-excursions': {
@@ -2170,6 +2231,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
+  RecordRoute: RecordRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   StatusRoute: StatusRoute,
   TermsRoute: TermsRoute,
@@ -2208,8 +2270,10 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksScanSignalsRoute: ApiPublicHooksScanSignalsRoute,
   ApiPublicHooksSendBriefingsRoute: ApiPublicHooksSendBriefingsRoute,
   ApiPublicHooksSignalExcursionsRoute: ApiPublicHooksSignalExcursionsRoute,
+  ApiPublicHooksSignalIntegrityRoute: ApiPublicHooksSignalIntegrityRoute,
   ApiPublicHooksStopWidthTestRoute: ApiPublicHooksStopWidthTestRoute,
   ApiPublicHooksWeeklyReviewRoute: ApiPublicHooksWeeklyReviewRoute,
+  ApiPublicSignalsFileRoute: ApiPublicSignalsFileRoute,
   ApiPublicTelegramWebhookRoute: ApiPublicTelegramWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
