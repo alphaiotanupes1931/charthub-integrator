@@ -183,10 +183,11 @@ function RecordPage() {
       </section>
 
       <p className="mt-3 text-xs text-muted-foreground">
-        {b.expired} signal{b.expired === 1 ? "" : "s"} expired without reaching either level
-        {b.expiredAvgR == null ? "" : ` (average ${b.expiredAvgR}R)`}. {b.open} still open. {b.voided} filed with no
-        directional read and excluded from every figure. Filed, resolved, expired, open and excluded add up to{" "}
-        {b.decided + b.expired + b.open + b.voided}.
+        {`${b.expired} ${b.expired === 1 ? "signal" : "signals"} expired without reaching either level`}
+        {b.expiredAvgR == null ? "" : ` (average ${b.expiredAvgR}R)`}
+        {`. ${b.open} still open. ${b.voided} filed with no directional read and excluded from every figure. Resolved, expired, open and excluded add up to ${
+          b.decided + b.expired + b.open + b.voided
+        }, the most recent signals filed. Older signals stay in the record and are audited separately.`}
       </p>
 
       <section className="mt-10">
