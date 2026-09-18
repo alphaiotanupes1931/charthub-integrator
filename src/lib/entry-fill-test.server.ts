@@ -557,6 +557,33 @@ export function runEntryFillTest(
     );
   }
 
+  const toleranceCohorts: ToleranceCohort[] = [...cohorts.entries()]
+    .map(([toleranceR, c]) => {
+      const o = seal(c.acc);
+      const seen = c.survivors + c.refused;
+      return {
+        toleranceR,
+        survivors: c.survivors,
+        refused: c.refused,
+        refusedShare: seen ? r3(c.refused / seen) : 0,
+        decided: o.decided,
+        hitRate: o.hitRate,
+        grossExpectancyR: o.grossExpectancyR,
+        netExpectancyR: o.netExpectancyR,
+        resolvedOnFirstBar: c.firstBar,
+      };
+    })
+    .sort((a, b) => a.toleranceR - b.toleranceR);
+
+  for (const c of toleranceCohorts) {
+    verdicts.push(
+      `At a ${c.toleranceR}R staleness tolerance, ${Math.round(c.refusedShare * 100)}% of published signals are refused; ` +
+        `${c.decided} of the ${c.survivors} survivors decided, ${
+          c.hitRate == null ? "no hit rate" : `${Math.round(c.hitRate * 100)}% hit`
+        }, net ${c.netExpectancyR == null ? "n/a" : `${c.netExpectancyR}R`}.`,
+    );
+  }
+
   return {
     scanned: rows.length,
     scorable,
@@ -572,6 +599,7 @@ export function runEntryFillTest(
     byInstrument,
     expiryClock,
     firstBar,
+    toleranceCohorts,
     verdicts,
     caveats: [
       "A bar containing both the stop and the target counts as a stop in every mode. Intrabar sequence is not visible, so the pessimistic read is taken.",
