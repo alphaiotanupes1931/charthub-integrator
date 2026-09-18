@@ -135,6 +135,7 @@ export type EntryFillReport = {
   byInstrument: PerInstrument[];
   expiryClock: ExpiryClock[];
   firstBar: FirstBarRead;
+  toleranceCohorts: ToleranceCohort[];
   verdicts: string[];
   caveats: string[];
 };
