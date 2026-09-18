@@ -1,4 +1,5 @@
 import { BrokerAccountPanel } from "@/components/BrokerAccountPanel";
+import { InboundSignalKeys } from "@/components/InboundSignalKeys";
 import { PageInstructions } from "@/components/PageInstructions";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
@@ -347,6 +348,8 @@ function ConnectionsPage() {
           </section>
         ))
       )}
+
+      <InboundSignalKeys />
     </div>
   );
 }
