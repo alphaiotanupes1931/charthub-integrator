@@ -1,0 +1,440 @@
+/**
+ * Read-only measurement of the entry-fill complaint.
+ *
+ * Marcus's report is "price goes straight through my entry to the stop, never in
+ * profit for 5 minutes". That sentence hides three different failures, and each
+ * needs its own number before any rule changes:
+ *
+ *  1. ORDER TYPE. Today a planned entry is a resting limit at the level. The claim
+ *     is that every one of them should have been a stop order taken as price
+ *     leaves the level. Both are replayed here from the same bars so the answer is
+ *     a measurement, not a preference.
+ *
+ *  2. THE EXPIRY CLOCK. Signals are closed as expired while still live. The
+ *     measured bars-to-resolution distribution per instrument says how long a
+ *     setup actually needs, so the hold window can be set from data.
+ *
+ *  3. FIRST-BAR FILLS. A win that lands on its first bar with no adverse move
+ *     usually means the entry price was already gone when the signal was filed.
+ *     Measured here as the gap between the planned entry and where price actually
+ *     was on the first bar after filing.
+ *
+ * Nothing in this module writes to the database and nothing changes production
+ * behaviour. It reports.
+ */
+
+import type { ReplayBar } from "@/lib/signal-replay";
+import { replayDirection, forwardBars } from "@/lib/signal-replay";
+import { costInR } from "@/lib/trading-costs";
+
+export type FillTestSignal = {
+  id: string;
+  symbol: string;
+  timeframe: string;
+  bias: string;
+  grade: string;
+  entry: number;
+  stop: number;
+  tp1: number;
+  status: string;
+  created_at: string;
+};
+
+export type EntryMode = "limit" | "stop";
+
+/** One outcome bucket: the population that filled under a given order type. */
+export type FillOutcome = {
+  mode: EntryMode;
+  /** Signals where the order would have been triggered at all. */
+  filled: number;
+  /** Signals whose order never triggered inside the walk window. */
+  unfilled: number;
+  target: number;
+  stopped: number;
+  /** Filled but neither level printed before the bars ran out. */
+  openAtEnd: number;
+  decided: number;
+  hitRate: number | null;
+  grossExpectancyR: number | null;
+  netExpectancyR: number | null;
+  avgBarsToFill: number | null;
+  avgBarsToResolve: number | null;
+};
+
+export type PerInstrument = {
+  symbol: string;
+  n: number;
+  limit: FillOutcome;
+  stop: FillOutcome;
+  /** Positive means the stop entry produced more net R per decided trade. */
+  netEdgeToStopEntry: number | null;
+};
+
+export type ExpiryClock = {
+  symbol: string;
+  timeframe: string;
+  resolved: number;
+  medianBarsToResolve: number | null;
+  p90BarsToResolve: number | null;
+  maxBarsToResolve: number | null;
+  /** Bars to cover 90% of resolutions — the hold window this data supports. */
+  recommendedHoldBars: number | null;
+};
+
+export type FirstBarRead = {
+  /** Signals resolved on the very first bar after filing. */
+  resolvedOnFirstBar: number;
+  /** Of those, how many were wins with no adverse move at all. */
+  freeWins: number;
+  /** Signals whose first bar had already left the planned entry behind. */
+  entryAlreadyGone: number;
+  /** Median distance, in R, price sat past the entry on the first bar. */
+  medianGoneByR: number | null;
+  /** How many would be refused at each candidate tolerance. */
+  refusedAtTolerance: Array<{ toleranceR: number; refused: number; share: number }>;
+};
+
+export type EntryFillReport = {
+  scanned: number;
+  scorable: number;
+  unrecoverable: number;
+  overall: { limit: FillOutcome; stop: FillOutcome; netEdgeToStopEntry: number | null };
+  byInstrument: PerInstrument[];
+  expiryClock: ExpiryClock[];
+  firstBar: FirstBarRead;
+  verdicts: string[];
+  caveats: string[];
+};
+
+const r2 = (n: number) => Math.round(n * 100) / 100;
+const r3 = (n: number) => Math.round(n * 1000) / 1000;
+
+function median(values: number[]): number | null {
+  if (!values.length) return null;
+  const s = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(s.length / 2);
+  return s.length % 2 ? s[mid]! : (s[mid - 1]! + s[mid]!) / 2;
+}
+
+function quantile(values: number[], q: number): number | null {
+  if (!values.length) return null;
+  const s = [...values].sort((a, b) => a - b);
+  const idx = Math.min(s.length - 1, Math.max(0, Math.ceil(q * s.length) - 1));
+  return s[idx]!;
+}
+
+type Trial = {
+  filled: boolean;
+  barsToFill: number | null;
+  status: "target" | "stop" | "open";
+  grossR: number | null;
+  netR: number | null;
+  barsToResolve: number | null;
+};
+
+/**
+ * Replay one signal under one order type.
+ *
+ * Limit: fills when price trades BACK to the level (a long fills on a low at or
+ * below entry). Stop: fills when price trades THROUGH the level in the direction
+ * of the trade (a long fills on a high at or above entry). Both then walk on from
+ * the filling bar to the stop or the target, and a bar containing both counts as a
+ * stop because intrabar sequence is not visible.
+ */
+export function trialEntry(sig: FillTestSignal, bars: ReplayBar[], mode: EntryMode): Trial | null {
+  const direction = replayDirection(sig.bias);
+  const risk = Math.abs(sig.entry - sig.stop);
+  if (!direction || !(risk > 0)) return null;
+
+  const forward = forwardBars(bars, sig.created_at);
+  if (!forward.length) return null;
+
+  const long = direction === "long";
+  const rMultiple = r2(Math.abs(sig.tp1 - sig.entry) / risk);
+  const cost = costInR(sig.symbol, sig.entry, risk);
+
+  let fillIndex = -1;
+  for (let i = 0; i < forward.length; i++) {
+    const bar = forward[i]!;
+    const touched =
+      mode === "limit"
+        ? long
+          ? bar.low <= sig.entry
+          : bar.high >= sig.entry
+        : long
+          ? bar.high >= sig.entry
+          : bar.low <= sig.entry;
+    if (touched) {
+      fillIndex = i;
+      break;
+    }
+  }
+
+  if (fillIndex === -1) {
+    return { filled: false, barsToFill: null, status: "open", grossR: null, netR: null, barsToResolve: null };
+  }
+
+  // From the filling bar onward, including the filling bar itself: a stop entry is
+  // frequently filled and stopped inside the same candle, and pretending otherwise
+  // is exactly the flattery this test exists to remove.
+  for (let i = fillIndex; i < forward.length; i++) {
+    const bar = forward[i]!;
+    const hitStop = long ? bar.low <= sig.stop : bar.high >= sig.stop;
+    const hitTarget = long ? bar.high >= sig.tp1 : bar.low <= sig.tp1;
+    if (hitStop || hitTarget) {
+      const grossR = hitStop ? -1 : rMultiple;
+      return {
+        filled: true,
+        barsToFill: fillIndex + 1,
+        status: hitStop ? "stop" : "target",
+        grossR,
+        netR: r3(grossR - cost),
+        barsToResolve: i - fillIndex + 1,
+      };
+    }
+  }
+
+  return { filled: true, barsToFill: fillIndex + 1, status: "open", grossR: null, netR: null, barsToResolve: null };
+}
+
+function emptyOutcome(mode: EntryMode): FillOutcome & { _gross: number[]; _net: number[]; _fill: number[]; _res: number[] } {
+  return {
+    mode,
+    filled: 0,
+    unfilled: 0,
+    target: 0,
+    stopped: 0,
+    openAtEnd: 0,
+    decided: 0,
+    hitRate: null,
+    grossExpectancyR: null,
+    netExpectancyR: null,
+    avgBarsToFill: null,
+    avgBarsToResolve: null,
+    _gross: [],
+    _net: [],
+    _fill: [],
+    _res: [],
+  };
+}
+
+type Acc = ReturnType<typeof emptyOutcome>;
+
+function addTrial(acc: Acc, t: Trial) {
+  if (!t.filled) {
+    acc.unfilled += 1;
+    return;
+  }
+  acc.filled += 1;
+  if (t.barsToFill != null) acc._fill.push(t.barsToFill);
+  if (t.status === "open") {
+    acc.openAtEnd += 1;
+    return;
+  }
+  if (t.status === "target") acc.target += 1;
+  else acc.stopped += 1;
+  acc.decided += 1;
+  if (t.grossR != null) acc._gross.push(t.grossR);
+  if (t.netR != null) acc._net.push(t.netR);
+  if (t.barsToResolve != null) acc._res.push(t.barsToResolve);
+}
+
+const avg = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
+
+function seal(acc: Acc): FillOutcome {
+  const { _gross, _net, _fill, _res, ...rest } = acc;
+  const gross = avg(_gross);
+  const net = avg(_net);
+  const fill = avg(_fill);
+  const res = avg(_res);
+  return {
+    ...rest,
+    hitRate: rest.decided ? r3(rest.target / rest.decided) : null,
+    grossExpectancyR: gross == null ? null : r3(gross),
+    netExpectancyR: net == null ? null : r3(net),
+    avgBarsToFill: fill == null ? null : r2(fill),
+    avgBarsToResolve: res == null ? null : r2(res),
+  };
+}
+
+const TOLERANCES = [0.1, 0.25, 0.5];
+
+/**
+ * Pure core. Given stored signals and a bar source, report on order type, hold
+ * window and first-bar fills. No database access so it can be tested on
+ * fabricated bars.
+ */
+export function runEntryFillTest(
+  rows: FillTestSignal[],
+  barsFor: (symbol: string, timeframe: string) => ReplayBar[] | null,
+  minSample = 20,
+): EntryFillReport {
+  const overallLimit = emptyOutcome("limit");
+  const overallStop = emptyOutcome("stop");
+  const perSymbol = new Map<string, { limit: Acc; stop: Acc; n: number }>();
+  const clock = new Map<string, { symbol: string; timeframe: string; bars: number[] }>();
+
+  let scorable = 0;
+  let unrecoverable = 0;
+  let resolvedOnFirstBar = 0;
+  let freeWins = 0;
+  let entryAlreadyGone = 0;
+  const goneBy: number[] = [];
+
+  for (const row of rows) {
+    const bars = barsFor(row.symbol, row.timeframe);
+    if (!bars || !bars.length) {
+      unrecoverable += 1;
+      continue;
+    }
+    const limit = trialEntry(row, bars, "limit");
+    const stopEntry = trialEntry(row, bars, "stop");
+    if (!limit || !stopEntry) {
+      unrecoverable += 1;
+      continue;
+    }
+    scorable += 1;
+
+    addTrial(overallLimit, limit);
+    addTrial(overallStop, stopEntry);
+    const bucket =
+      perSymbol.get(row.symbol) ?? { limit: emptyOutcome("limit"), stop: emptyOutcome("stop"), n: 0 };
+    bucket.n += 1;
+    addTrial(bucket.limit, limit);
+    addTrial(bucket.stop, stopEntry);
+    perSymbol.set(row.symbol, bucket);
+
+    // Hold window: how long a setup takes once it is actually filled, measured on
+    // the limit entry because that is what production files today.
+    if (limit.filled && limit.barsToResolve != null) {
+      const key = `${row.symbol}|${row.timeframe}`;
+      const entry = clock.get(key) ?? { symbol: row.symbol, timeframe: row.timeframe, bars: [] };
+      entry.bars.push((limit.barsToFill ?? 1) - 1 + limit.barsToResolve);
+      clock.set(key, entry);
+    }
+
+    // First-bar read, from the raw bar walk rather than a fill assumption.
+    const forward = forwardBars(bars, row.created_at);
+    const first = forward[0];
+    if (first) {
+      const long = replayDirection(row.bias) === "long";
+      const risk = Math.abs(row.entry - row.stop);
+      const hitStop = long ? first.low <= row.stop : first.high >= row.stop;
+      const hitTarget = long ? first.high >= row.tp1 : first.low <= row.tp1;
+      if (hitStop || hitTarget) {
+        resolvedOnFirstBar += 1;
+        const adverse = long ? row.entry - first.low : first.high - row.entry;
+        if (hitTarget && !hitStop && adverse <= 0) freeWins += 1;
+      }
+      // How far past the planned entry price already sat when the bar opened.
+      const past = long ? first.close - row.entry : row.entry - first.close;
+      if (past > 0 && risk > 0) {
+        entryAlreadyGone += 1;
+        goneBy.push(past / risk);
+      }
+    }
+  }
+
+  const byInstrument: PerInstrument[] = [...perSymbol.entries()]
+    .map(([symbol, b]) => {
+      const l = seal(b.limit);
+      const s = seal(b.stop);
+      return {
+        symbol,
+        n: b.n,
+        limit: l,
+        stop: s,
+        netEdgeToStopEntry:
+          l.netExpectancyR == null || s.netExpectancyR == null ? null : r3(s.netExpectancyR - l.netExpectancyR),
+      };
+    })
+    .sort((a, b) => b.n - a.n);
+
+  const expiryClock: ExpiryClock[] = [...clock.values()]
+    .map((c) => {
+      const p90 = quantile(c.bars, 0.9);
+      return {
+        symbol: c.symbol,
+        timeframe: c.timeframe,
+        resolved: c.bars.length,
+        medianBarsToResolve: median(c.bars),
+        p90BarsToResolve: p90,
+        maxBarsToResolve: c.bars.length ? Math.max(...c.bars) : null,
+        recommendedHoldBars: c.bars.length >= minSample && p90 != null ? Math.ceil(p90) : null,
+      };
+    })
+    .sort((a, b) => b.resolved - a.resolved);
+
+  const ol = seal(overallLimit);
+  const os = seal(overallStop);
+
+  const firstBar: FirstBarRead = {
+    resolvedOnFirstBar,
+    freeWins,
+    entryAlreadyGone,
+    medianGoneByR: goneBy.length ? r3(median(goneBy)!) : null,
+    refusedAtTolerance: TOLERANCES.map((toleranceR) => {
+      const refused = goneBy.filter((g) => g > toleranceR).length;
+      return { toleranceR, refused, share: scorable ? r3(refused / scorable) : 0 };
+    }),
+  };
+
+  const verdicts: string[] = [];
+  if (ol.netExpectancyR != null && os.netExpectancyR != null) {
+    const edge = r3(os.netExpectancyR - ol.netExpectancyR);
+    verdicts.push(
+      edge > 0.05
+        ? `Stop entries produced ${edge}R more per decided trade than limit entries (${os.decided} vs ${ol.decided} decided). The claim that every pending limit should have been a pending stop is supported at the overall level.`
+        : edge < -0.05
+          ? `Limit entries produced ${Math.abs(edge)}R more per decided trade than stop entries (${ol.decided} vs ${os.decided} decided). The claim that every pending limit should have been a pending stop is not supported.`
+          : `Stop and limit entries land within 0.05R of each other (${os.netExpectancyR}R vs ${ol.netExpectancyR}R). At this sample the order type is not the cause of the complaint.`,
+    );
+  }
+  if (os.unfilled > ol.unfilled) {
+    verdicts.push(
+      `Stop entries went unfilled more often (${os.unfilled} vs ${ol.unfilled}). Fewer trades taken is part of the trade-off and has to be counted alongside the R figure.`,
+    );
+  }
+  if (resolvedOnFirstBar) {
+    verdicts.push(
+      `${resolvedOnFirstBar} signals resolved on their first bar, ${freeWins} of them as wins with no adverse move at all. Those are the ones where the entry price was most likely already gone at filing.`,
+    );
+  }
+  if (firstBar.medianGoneByR != null) {
+    verdicts.push(
+      `On ${entryAlreadyGone} signals price had already closed past the planned entry on the first bar, by a median of ${firstBar.medianGoneByR}R. Refusing to file above a tolerance would drop the signal count by the shares listed.`,
+    );
+  }
+  const tooShort = expiryClock.filter((c) => c.recommendedHoldBars != null);
+  if (tooShort.length) {
+    verdicts.push(
+      `Hold windows the data supports, covering 90% of resolutions: ${tooShort
+        .slice(0, 6)
+        .map((c) => `${c.symbol} ${c.timeframe} needs ${c.recommendedHoldBars} bars`)
+        .join(", ")}.`,
+    );
+  }
+
+  return {
+    scanned: rows.length,
+    scorable,
+    unrecoverable,
+    overall: {
+      limit: ol,
+      stop: os,
+      netEdgeToStopEntry: ol.netExpectancyR == null || os.netExpectancyR == null ? null : r3(os.netExpectancyR - ol.netExpectancyR),
+    },
+    byInstrument,
+    expiryClock,
+    firstBar,
+    verdicts,
+    caveats: [
+      "A bar containing both the stop and the target counts as a stop in both modes. Intrabar sequence is not visible, so the pessimistic read is taken.",
+      "A stop entry is allowed to be stopped on the same bar it fills, because that is what happens in a real account.",
+      "Net R subtracts the static per-instrument spread and slippage estimate, not the spread quoted at the moment each signal was filed.",
+      "Both modes are replayed over the same stored signals, so this measures order type on setups the current engine chose. It cannot say what a different engine would have found.",
+      `Instruments with fewer than ${minSample} resolutions get no recommended hold window; the sample does not support one.`,
+      "Price history reaches back roughly a year per instrument. Older signals are reported as unrecoverable rather than skipped quietly.",
+    ],
+  };
+}
