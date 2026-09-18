@@ -99,6 +99,7 @@ import { Route as ApiPublicHooksSignalExcursionsRouteImport } from './routes/api
 import { Route as ApiPublicHooksSendBriefingsRouteImport } from './routes/api.public.hooks.send-briefings'
 import { Route as ApiPublicHooksScanSignalsRouteImport } from './routes/api.public.hooks.scan-signals'
 import { Route as ApiPublicHooksResolveSignalsRouteImport } from './routes/api.public.hooks.resolve-signals'
+import { Route as ApiPublicHooksReresolveExpiriesRouteImport } from './routes/api.public.hooks.reresolve-expiries'
 import { Route as ApiPublicHooksReplayRefreshRouteImport } from './routes/api.public.hooks.replay-refresh'
 import { Route as ApiPublicHooksReconcilePaperRouteImport } from './routes/api.public.hooks.reconcile-paper'
 import { Route as ApiPublicHooksPriceAlertsTickRouteImport } from './routes/api.public.hooks.price-alerts-tick'
@@ -577,6 +578,12 @@ const ApiPublicHooksResolveSignalsRoute =
     path: '/api/public/hooks/resolve-signals',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksReresolveExpiriesRoute =
+  ApiPublicHooksReresolveExpiriesRouteImport.update({
+    id: '/api/public/hooks/reresolve-expiries',
+    path: '/api/public/hooks/reresolve-expiries',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksReplayRefreshRoute =
   ApiPublicHooksReplayRefreshRouteImport.update({
     id: '/api/public/hooks/replay-refresh',
@@ -752,6 +759,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
   '/api/public/hooks/reconcile-paper': typeof ApiPublicHooksReconcilePaperRoute
   '/api/public/hooks/replay-refresh': typeof ApiPublicHooksReplayRefreshRoute
+  '/api/public/hooks/reresolve-expiries': typeof ApiPublicHooksReresolveExpiriesRoute
   '/api/public/hooks/resolve-signals': typeof ApiPublicHooksResolveSignalsRoute
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
@@ -853,6 +861,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
   '/api/public/hooks/reconcile-paper': typeof ApiPublicHooksReconcilePaperRoute
   '/api/public/hooks/replay-refresh': typeof ApiPublicHooksReplayRefreshRoute
+  '/api/public/hooks/reresolve-expiries': typeof ApiPublicHooksReresolveExpiriesRoute
   '/api/public/hooks/resolve-signals': typeof ApiPublicHooksResolveSignalsRoute
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
@@ -960,6 +969,7 @@ export interface FileRoutesById {
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
   '/api/public/hooks/reconcile-paper': typeof ApiPublicHooksReconcilePaperRoute
   '/api/public/hooks/replay-refresh': typeof ApiPublicHooksReplayRefreshRoute
+  '/api/public/hooks/reresolve-expiries': typeof ApiPublicHooksReresolveExpiriesRoute
   '/api/public/hooks/resolve-signals': typeof ApiPublicHooksResolveSignalsRoute
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
@@ -1067,6 +1077,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/price-alerts-tick'
     | '/api/public/hooks/reconcile-paper'
     | '/api/public/hooks/replay-refresh'
+    | '/api/public/hooks/reresolve-expiries'
     | '/api/public/hooks/resolve-signals'
     | '/api/public/hooks/scan-signals'
     | '/api/public/hooks/send-briefings'
@@ -1168,6 +1179,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/price-alerts-tick'
     | '/api/public/hooks/reconcile-paper'
     | '/api/public/hooks/replay-refresh'
+    | '/api/public/hooks/reresolve-expiries'
     | '/api/public/hooks/resolve-signals'
     | '/api/public/hooks/scan-signals'
     | '/api/public/hooks/send-briefings'
@@ -1274,6 +1286,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/price-alerts-tick'
     | '/api/public/hooks/reconcile-paper'
     | '/api/public/hooks/replay-refresh'
+    | '/api/public/hooks/reresolve-expiries'
     | '/api/public/hooks/resolve-signals'
     | '/api/public/hooks/scan-signals'
     | '/api/public/hooks/send-briefings'
@@ -1335,6 +1348,7 @@ export interface RootRouteChildren {
   ApiPublicHooksPriceAlertsTickRoute: typeof ApiPublicHooksPriceAlertsTickRoute
   ApiPublicHooksReconcilePaperRoute: typeof ApiPublicHooksReconcilePaperRoute
   ApiPublicHooksReplayRefreshRoute: typeof ApiPublicHooksReplayRefreshRoute
+  ApiPublicHooksReresolveExpiriesRoute: typeof ApiPublicHooksReresolveExpiriesRoute
   ApiPublicHooksResolveSignalsRoute: typeof ApiPublicHooksResolveSignalsRoute
   ApiPublicHooksScanSignalsRoute: typeof ApiPublicHooksScanSignalsRoute
   ApiPublicHooksSendBriefingsRoute: typeof ApiPublicHooksSendBriefingsRoute
@@ -1981,6 +1995,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksResolveSignalsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/reresolve-expiries': {
+      id: '/api/public/hooks/reresolve-expiries'
+      path: '/api/public/hooks/reresolve-expiries'
+      fullPath: '/api/public/hooks/reresolve-expiries'
+      preLoaderRoute: typeof ApiPublicHooksReresolveExpiriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/replay-refresh': {
       id: '/api/public/hooks/replay-refresh'
       path: '/api/public/hooks/replay-refresh'
@@ -2288,6 +2309,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksPriceAlertsTickRoute: ApiPublicHooksPriceAlertsTickRoute,
   ApiPublicHooksReconcilePaperRoute: ApiPublicHooksReconcilePaperRoute,
   ApiPublicHooksReplayRefreshRoute: ApiPublicHooksReplayRefreshRoute,
+  ApiPublicHooksReresolveExpiriesRoute: ApiPublicHooksReresolveExpiriesRoute,
   ApiPublicHooksResolveSignalsRoute: ApiPublicHooksResolveSignalsRoute,
   ApiPublicHooksScanSignalsRoute: ApiPublicHooksScanSignalsRoute,
   ApiPublicHooksSendBriefingsRoute: ApiPublicHooksSendBriefingsRoute,
