@@ -137,6 +137,7 @@ export const getPublicRecord = createServerFn({ method: "GET" })
         "Scans with no directional read are kept in the record for the audit trail and excluded from every figure above.",
         "Whether a signal was actually traded was not linked to scans before this record existed, so taken-versus-skipped only accumulates from now on.",
         "Two data-quality items are still open: how long a signal is allowed to run before it expires, and how same-bar fills are treated. Both are resolved pessimistically today.",
+        "Only signals produced by our own engine appear here. Signals filed through the inbound endpoint by outside tools are sealed and resolved on identical terms but are never counted in these figures.",
       ],
       generatedAt: new Date().toISOString(),
     };
