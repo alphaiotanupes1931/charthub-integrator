@@ -43,6 +43,13 @@
       "when": 1789709139048,
       "tag": "0005_signal_entry_distance",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789709464420,
+      "tag": "0006_signal_corrections",
+      "breakpoints": true
     }
   ]
 }
