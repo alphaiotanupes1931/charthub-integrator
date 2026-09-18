@@ -118,6 +118,17 @@ export type ToleranceCohort = {
   netExpectancyR: number | null;
   /** First-bar resolutions left inside the surviving population. */
   resolvedOnFirstBar: number;
+  /**
+   * The same figures split by published grade. This is how we tell whether grade
+   * separation was real and hidden by the stale rows, or simply absent.
+   */
+  byGrade: Array<{
+    grade: string;
+    survivors: number;
+    decided: number;
+    hitRate: number | null;
+    netExpectancyR: number | null;
+  }>;
 };
 
 export type EntryFillReport = {
