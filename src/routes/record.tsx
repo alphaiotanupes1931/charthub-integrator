@@ -42,7 +42,7 @@ export const Route = createFileRoute("/record")({
       <h1 className="text-2xl">Not found</h1>
     </main>
   ),
-  component: RecordPage;
+  component: RecordPage,
 });
 
 function Figure({ label, value, n, sub }: { label: string; value: string; n?: number; sub?: string }) {
