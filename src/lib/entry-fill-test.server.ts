@@ -439,6 +439,7 @@ export function runEntryFillTest(
 
   const ol = seal(overallLimit);
   const os = seal(overallStop);
+  const osl = seal(overallSlipped);
 
   const firstBar: FirstBarRead = {
     resolvedOnFirstBar,
