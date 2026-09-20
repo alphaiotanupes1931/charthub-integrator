@@ -279,6 +279,8 @@ function ChatThreadInner({
           )}
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
+          <AnalysisModelPicker />
+
           <span className="text-[9px] font-semibold tracking-tight text-primary px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20">
             {activeModel?.label ?? "AI"}
           </span>
