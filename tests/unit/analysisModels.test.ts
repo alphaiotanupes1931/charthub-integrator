@@ -55,10 +55,15 @@ describe("analysis model registry", () => {
     }
   });
 
-  it("Classic is ready and The Trading Channel is not until strategies are written in", () => {
+  it("both models are ready once their rulebooks are written in", () => {
     expect(analysisModelReady("classic")).toBe(true);
-    expect(analysisModelReady("focus")).toBe(false);
+    expect(analysisModelReady("focus")).toBe(true);
+    // The safety copy stays in place in case the rulebook is ever emptied.
     expect(getAnalysisModel("focus").notReadyReason).toBeTruthy();
+  });
+
+  it("The Trading Channel version tracks its rulebook version", () => {
+    expect(analysisModelVersion("focus")).toContain("trading-channel-1.0");
   });
 
   it("The Trading Channel is fed only its own rulebook and inherits nothing from Classic", () => {
