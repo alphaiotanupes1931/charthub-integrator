@@ -43,6 +43,9 @@ export type SignalScoreRow = {
   maeR?: number | null;
   /** Maximum favourable excursion in R: best price reached before it resolved. */
   mfeR?: number | null;
+  /** Which named analysis model produced this signal. Legacy rows are "classic". */
+  modelId?: string | null;
+  modelVersion?: string | null;
 };
 
 /**
@@ -107,6 +110,10 @@ export type Scoreboard = {
   byConfidence: ScoreBucket[];
   /** Counter-trend vs with-trend, measured from real bars. */
   byTrendContext: ScoreBucket[];
+  /** One line per named analysis model. Models are never pooled into one figure. */
+  byModel: ScoreBucket[];
+  /** Grade record inside each model, so a model's grades are judged on its own rows. */
+  byModelGrade: ScoreBucket[];
   takenHitRate: number | null;
   skippedHitRate: number | null;
   /** Grade record limited to signals the trader actually traded. */
@@ -219,6 +226,8 @@ export function buildScoreboard(allRows: SignalScoreRow[]): Scoreboard {
   const byConfidence = group(rows, (r) => confidenceBand(r.confidence));
   // Counter-trend vs with-trend, split by grade so "counter-trend B" shows up
   // as its own measured line instead of hiding inside the B bucket.
+  const byModel = group(rows, (r) => r.modelId ?? "classic");
+  const byModelGrade = group(rows, (r) => `${r.modelId ?? "classic"} ${r.grade}`);
   const byTrendContext = group(rows, (r) =>
     `${r.counterTrend ? "Counter-trend" : "With-trend"} ${r.grade}`);
 
@@ -301,6 +310,8 @@ export function buildScoreboard(allRows: SignalScoreRow[]): Scoreboard {
     byStrategy,
     byConfidence,
     byTrendContext,
+    byModel,
+    byModelGrade,
     takenHitRate: takenRate,
     skippedHitRate: skippedRate,
     takenByGrade: group(rows.filter((r) => r.taken), (r) => r.grade),

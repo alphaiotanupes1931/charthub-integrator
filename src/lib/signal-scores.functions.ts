@@ -57,6 +57,8 @@ type Row = {
   cost_r: number | string | null;
   mae_r?: number | string | null;
   mfe_r?: number | string | null;
+  model_id?: string | null;
+  model_version?: string | null;
 };
 
 function toRow(r: Row): SignalScoreRow {
@@ -84,6 +86,8 @@ function toRow(r: Row): SignalScoreRow {
     costR: num(r.cost_r ?? null),
     maeR: num(r.mae_r ?? null),
     mfeR: num(r.mfe_r ?? null),
+    modelId: r.model_id ?? "classic",
+    modelVersion: r.model_version ?? null,
   };
 }
 
