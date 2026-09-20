@@ -8,7 +8,6 @@ import {
   normalizeAnalysisModel,
 } from "@/lib/analysis-models";
 import { buildScoreboard, type SignalScoreRow } from "@/lib/signal-scores.shared";
-import { douglasAnalysis, douglasContextBlock } from "@/lib/analysis-models/douglas-engine";
 
 const row = (over: Partial<SignalScoreRow>): SignalScoreRow =>
   ({
@@ -60,7 +59,6 @@ describe("analysis model registry", () => {
     expect(analysisModelReady("classic")).toBe(true);
     expect(analysisModelReady("focus")).toBe(true);
     expect(analysisModelReady("photon")).toBe(true);
-    expect(analysisModelReady("douglas")).toBe(true);
     // The safety copy stays in place in case the rulebook is ever emptied.
     expect(getAnalysisModel("focus").notReadyReason).toBeTruthy();
     expect(getAnalysisModel("photon").notReadyReason).toBeTruthy();
@@ -98,39 +96,6 @@ describe("analysis model registry", () => {
     expect(block).toContain("photon-1.0");
     expect(block.toLowerCase()).not.toContain("order block");
     expect(block).not.toContain("38.2 candle");
-  });
-
-  it("names model 4 Mark Douglas and tracks its rulebook version", () => {
-    const douglas = getAnalysisModel("douglas");
-    expect(douglas.name).toBe("Mark Douglas");
-    expect(analysisModelVersion("douglas")).toContain("douglas-1.0");
-    expect(analysisModelVersion("douglas")).not.toBe(analysisModelVersion("photon"));
-    expect(normalizeAnalysisModel("douglas")).toBe("douglas");
-    expect(douglas.sourceLabel).toBeTruthy();
-  });
-
-  it("Mark Douglas is fed only psychology and files no signals of its own", () => {
-    const block = analysisModelPromptBlock("douglas");
-    expect(block).toContain("Mark Douglas");
-    expect(block).toContain("douglas-1.0");
-    expect(block.toLowerCase()).toContain("no trade signals");
-    expect(block.toLowerCase()).not.toContain("order block");
-    expect(block).not.toContain("38.2 candle");
-    // The description must be honest about the no-signal scope.
-    expect(getAnalysisModel("douglas").description.toLowerCase()).toContain("files no trade signals");
-  });
-
-  it("the Douglas engine always grades NO ENTRY and never invents levels", () => {
-    const read = douglasAnalysis();
-    expect(read.grade).toBe("NO ENTRY");
-    expect(read.bias).toBe("Neutral");
-    expect(read.rulebookVersion).toBe("douglas-1.0");
-    expect(read.checklist.length).toBeGreaterThanOrEqual(5);
-    const block = douglasContextBlock(read, "XAUUSD", "1H");
-    expect(block).toContain("MARK DOUGLAS MODEL");
-    expect(block).toContain("files no signals");
-    // Deterministic: same call, same read.
-    expect(douglasAnalysis()).toEqual(read);
   });
 
   it("every registered model has a name and version", () => {
