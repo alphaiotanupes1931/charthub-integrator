@@ -24,7 +24,6 @@ import {
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { readJournal, readActiveCoach, readActiveStrategy, readLastChart, writeLastThreadId, type LastChart } from "@/lib/chat-client";
 import { readAnalysisModel } from "@/hooks/useAnalysisModel";
-import { AnalysisModelPicker } from "@/components/AnalysisModelPicker";
 
 import { findStrategyByName } from "@/lib/customStrategies";
 import { isAutoStrategy } from "@/lib/strategyAuto";

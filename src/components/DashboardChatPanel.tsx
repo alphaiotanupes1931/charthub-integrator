@@ -29,7 +29,6 @@ import { getOrCreateDashboardThread, getChatMessages, getActiveModel, appendAssi
 import { ActionLoader } from "@/components/ActionLoader";
 import { clearLastThreadId, readJournal, readActiveCoach, writeActiveCoach, readActiveStrategy, readLastThreadId, writeLastThreadId } from "@/lib/chat-client";
 import { readAnalysisModel } from "@/hooks/useAnalysisModel";
-import { AnalysisModelPicker } from "@/components/AnalysisModelPicker";
 
 import { findStrategyByName } from "@/lib/customStrategies";
 import { isAutoStrategy } from "@/lib/strategyAuto";
@@ -850,8 +849,6 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
           </div>
 
           <div className="flex items-center gap-0.5 shrink-0">
-            <AnalysisModelPicker />
-
             {activeModel && (
               <span
                 className="hidden sm:inline text-[10px] font-medium text-muted-foreground truncate max-w-[120px]"
