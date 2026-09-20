@@ -99,7 +99,9 @@ const MIN_BARS = 120;
 function wantedBars(tf: BacktestTimeframe, lookback: string): number {
   const days = lookback === "60d" ? 60 : lookback === "1y" ? 365 : lookback === "5y" ? 1825 : 730;
   const perDay = tf === "15" ? 96 : tf === "60" ? 24 : tf === "240" ? 6 : 1;
-  return Math.min(5000, Math.max(MIN_BARS, Math.round(days * perDay * 0.72)));
+  // Intraday FX/metal history needs more than one provider page for a genuine
+  // two-year test. 0.72 approximates weekday trading plus short closures.
+  return Math.min(20_000, Math.max(MIN_BARS, Math.round(days * perDay * 0.72)));
 }
 
 async function getJson<T>(url: string, init?: RequestInit, timeoutMs = 20_000): Promise<T> {
@@ -155,31 +157,38 @@ async function fromOanda(symbol: string, tf: BacktestTimeframe, lookback: string
   const instrument = normalizeOandaInstrument(symbol);
   const apiKey = process.env.OANDA_API_KEY;
   if (!instrument || !apiKey) throw new Error("oanda not configured");
-  const count = wantedBars(tf, lookback);
+  const wanted = wantedBars(tf, lookback);
   // Host is resolved by which one accepts the token, not by OANDA_ENV.
   const { oandaGetJson } = await import("@/lib/oanda-host.server");
-  const { json } = await oandaGetJson(
-    `/instruments/${instrument}/candles?granularity=${oandaGranularity(tf)}&count=${count}&price=M`,
-    15_000,
-  );
-  const bars = ((json as {
-    candles?: Array<{
-      time: string;
-      complete?: boolean;
-      volume?: number;
-      mid?: { o: string; h: string; l: string; c: string };
-    }>;
-  }).candles ?? [])
-    .filter((c) => c.complete !== false && c.mid)
-    .map((c) => ({
-      time: Math.floor(new Date(c.time).getTime() / 1000),
-      open: Number(c.mid!.o),
-      high: Number(c.mid!.h),
-      low: Number(c.mid!.l),
-      close: Number(c.mid!.c),
-      volume: c.volume,
-    }));
-  return sortDedupe(bars);
+  const bars: BtBar[] = [];
+  let to: string | undefined;
+  for (let page = 0; page < Math.ceil(wanted / 5000) && bars.length < wanted; page++) {
+    const count = Math.min(5000, wanted - bars.length);
+    const path = `/instruments/${instrument}/candles?granularity=${oandaGranularity(tf)}&count=${count}&price=M${to ? `&to=${encodeURIComponent(to)}` : ""}`;
+    const { json } = await oandaGetJson(path, 20_000);
+    const candles = ((json as {
+      candles?: Array<{
+        time: string;
+        complete?: boolean;
+        volume?: number;
+        mid?: { o: string; h: string; l: string; c: string };
+      }>;
+    }).candles ?? []);
+    const pageBars = candles
+      .filter((c) => c.complete !== false && c.mid)
+      .map((c) => ({
+        time: Math.floor(new Date(c.time).getTime() / 1000),
+        open: Number(c.mid?.o),
+        high: Number(c.mid?.h),
+        low: Number(c.mid?.l),
+        close: Number(c.mid?.c),
+        volume: c.volume,
+      }));
+    if (!pageBars.length) break;
+    bars.push(...pageBars);
+    to = new Date((pageBars[0].time - 1) * 1000).toISOString();
+  }
+  return sortDedupe(bars).slice(-wanted);
 }
 
 // ----------------------------------------------------------- Twelve Data
