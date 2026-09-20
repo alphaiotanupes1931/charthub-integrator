@@ -45,13 +45,23 @@ describe("analysis model registry", () => {
     expect(analysisModelVersion("focus")).not.toBe(analysisModelVersion("classic"));
   });
 
-  it("Classic is ready and Focus is not until strategies are written in", () => {
+  it("names model 2 The Trading Channel", () => {
+    expect(getAnalysisModel("focus").name).toBe("The Trading Channel");
+  });
+
+  it("every model carries a full explanation behind the info button", () => {
+    for (const m of ANALYSIS_MODELS) {
+      expect(m.description.length).toBeGreaterThan(40);
+    }
+  });
+
+  it("Classic is ready and The Trading Channel is not until strategies are written in", () => {
     expect(analysisModelReady("classic")).toBe(true);
     expect(analysisModelReady("focus")).toBe(false);
     expect(getAnalysisModel("focus").notReadyReason).toBeTruthy();
   });
 
-  it("Focus is fed only its own rulebook and inherits nothing from Classic", () => {
+  it("The Trading Channel is fed only its own rulebook and inherits nothing from Classic", () => {
     const block = analysisModelPromptBlock("focus");
     expect(block).toContain("ONLY the strategies");
     expect(block.toLowerCase()).not.toContain("order block");
