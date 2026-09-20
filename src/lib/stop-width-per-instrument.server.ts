@@ -124,9 +124,10 @@ const rate = (wins: number, losses: number): number | null =>
 export async function runPerInstrumentStopWidthSweep(
   rows: FiledSignal[],
   multiples: number[] = DEFAULT_STOP_MULTIPLES,
-  opts: { sampleFloor?: number } = {},
+  opts: { sampleFloor?: number; loadBars?: BarLoader } = {},
 ): Promise<PerInstrumentStopWidthReport> {
   const sampleFloor = opts.sampleFloor ?? PER_INSTRUMENT_SAMPLE_FLOOR;
+  const loadBars = opts.loadBars ?? cachedBarLoader();
   const mults = [...new Set(multiples.filter((m) => Number.isFinite(m) && m > 0))].sort((a, b) => a - b);
   let skipped = 0;
 
@@ -137,10 +138,15 @@ export async function runPerInstrumentStopWidthSweep(
   const bySymbol = new Map<string, Bucket>();
 
   for (const row of rows) {
-    const direction = signalDirection(row.bias);
+    const direction = replayDirection(row.bias);
     const filedMult = PLANNER_STOP_MULT[row.grade];
     const risk = Math.abs(row.entry - row.stop);
     if (!direction || !filedMult || !(risk > 0)) {
+      skipped += 1;
+      continue;
+    }
+    const bars = await loadBars(row.symbol, row.timeframe);
+    if (bars.length === 0) {
       skipped += 1;
       continue;
     }
@@ -154,27 +160,23 @@ export async function runPerInstrumentStopWidthSweep(
       const stop = direction === "long" ? row.entry - widened : row.entry + widened;
       const scale = widened / risk;
       const tp1 = row.entry + (row.tp1 - row.entry) * scale;
-      const sig: OpenSignal = {
-        id: row.id,
-        symbol: row.symbol,
-        timeframe: row.timeframe,
-        bias: row.bias,
-        entry: row.entry,
-        stop,
-        tp1,
-        created_at: row.created_at,
-      };
-      const res = await resolveSignal(sig);
+      const verdict = replayForward(
+        { bias: row.bias, entry: row.entry, stop, tp1, created_at: row.created_at },
+        bars,
+        { requireFill: true },
+      );
+      const decided = verdict?.status === "target" || verdict?.status === "stop";
       const list = bucket.perMult.get(mult) ?? [];
       list.push({
-        r: res.realizedR,
-        hit: res.status === "target" ? true : res.status === "stop" ? false : null,
+        r: decided ? (verdict?.realizedR ?? null) : null,
+        hit: verdict?.status === "target" ? true : verdict?.status === "stop" ? false : null,
         costR: costInR(row.symbol, row.entry, widened),
       });
       bucket.perMult.set(mult, list);
     }
     bySymbol.set(row.symbol, bucket);
   }
+
 
   const out: InstrumentStopWidthRow[] = [...bySymbol.entries()].map(([symbol, b]) => {
     const filedWins = b.filed.filter((r) => r.status === "target").length;
