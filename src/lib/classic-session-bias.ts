@@ -25,8 +25,11 @@ type LocalStamp = { date: string; hour: number; weekday: string };
 
 const ZONE = "America/New_York";
 const SUPPORTED = new Set(["XAU/USD", "XAG/USD", "EUR/USD", "GBP/USD", "USD/JPY"]);
+const stampCache = new Map<number, LocalStamp>();
 
 function localStamp(time: number): LocalStamp {
+  const cached = stampCache.get(time);
+  if (cached) return cached;
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: ZONE,
     year: "numeric",
@@ -37,11 +40,13 @@ function localStamp(time: number): LocalStamp {
     weekday: "short",
   }).formatToParts(new Date(time * 1000));
   const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value ?? "";
-  return {
+  const stamp = {
     date: `${part("year")}-${part("month")}-${part("day")}`,
     hour: Number(part("hour")),
     weekday: part("weekday"),
   };
+  stampCache.set(time, stamp);
+  return stamp;
 }
 
 function nextDate(date: string): string {
