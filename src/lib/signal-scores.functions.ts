@@ -57,6 +57,9 @@ type Row = {
   cost_r: number | string | null;
   mae_r?: number | string | null;
   mfe_r?: number | string | null;
+  rescued?: boolean | null;
+  correlated?: boolean | null;
+  correlation_cluster?: string | null;
   model_id?: string | null;
   model_version?: string | null;
 };
@@ -86,6 +89,9 @@ function toRow(r: Row): SignalScoreRow {
     costR: num(r.cost_r ?? null),
     maeR: num(r.mae_r ?? null),
     mfeR: num(r.mfe_r ?? null),
+    rescued: Boolean(r.rescued),
+    correlated: Boolean(r.correlated),
+    correlationCluster: r.correlation_cluster ?? null,
     modelId: r.model_id ?? "classic",
     modelVersion: r.model_version ?? null,
   };
@@ -140,6 +146,30 @@ export const recordSignalScore = createServerFn({ method: "POST" })
       .limit(1);
     if (dupe && dupe.length) return { ok: true, id: (dupe[0] as { id: string }).id };
 
+    // Correlated instruments scanned in the same pass are one bet. The signal is
+    // still filed, but flagged so the scoreboard counts the family once instead
+    // of reporting the index complex as three independent calls.
+    const { clusterOf, isCorrelatedDuplicate, CLUSTER_WINDOW_MINUTES } = await import(
+      "@/lib/correlation-clusters"
+    );
+    const cluster = clusterOf(data.symbol);
+    let correlated = false;
+    if (cluster) {
+      const { data: peerRows } = await context.supabase
+        .from("signal_scores")
+        .select("symbol, grade, bias, created_at")
+        .eq("user_id", context.userId)
+        .eq("correlation_cluster", cluster)
+        .gte("created_at", new Date(Date.now() - CLUSTER_WINDOW_MINUTES * 60_000).toISOString())
+        .limit(20);
+      const peers = ((peerRows ?? []) as Array<{ symbol: string; grade: string; bias: string; created_at: string }>)
+        .map((p) => ({ symbol: p.symbol, grade: p.grade, bias: p.bias, createdAt: p.created_at }));
+      correlated = isCorrelatedDuplicate(
+        { symbol: data.symbol, grade: data.grade, bias: data.bias, createdAt: new Date().toISOString() },
+        peers,
+      );
+    }
+
     const plannedR = Math.round((Math.abs(data.tp1 - data.entry) / risk) * 100) / 100;
     // The filing timestamp is set here, not by the database, because it is part of
     // the fingerprint that seals these terms as append-only.
@@ -177,7 +207,8 @@ export const recordSignalScore = createServerFn({ method: "POST" })
         entry_distance_r: staleness.distanceR,
         model_id: model.id,
         model_version: model.version,
-
+        correlation_cluster: cluster,
+        correlated,
       } as never)
       .select("id")
       .single();
@@ -279,6 +310,7 @@ export const resolveMySignalScores = createServerFn({ method: "POST" })
           mae_r: res.maeR ?? null,
           mfe_r: res.mfeR ?? null,
           bars_to_resolve: res.barsToResolve ?? null,
+          rescued: res.rescued ?? false,
         } as never)
         .eq("id", sig.id);
       resolved += 1;

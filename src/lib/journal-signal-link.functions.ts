@@ -37,6 +37,12 @@ type SignalRow = {
 };
 
 const dirOf = (v: string) => (v.trim().toLowerCase().startsWith("s") ? "short" : "long");
+/**
+ * Journal entries and scans do not always spell an instrument the same way
+ * ("XAU/USD" against "XAUUSD"), and a strict string compare is why no journaled
+ * trade had ever linked to a filed scan.
+ */
+const symKey = (v: string) => v.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
 
 export const linkJournalTradesToSignals = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -45,7 +51,6 @@ export const linkJournalTradesToSignals = createServerFn({ method: "POST" })
     const linked: Record<string, string> = {};
     if (!data.trades.length) return { linked };
 
-    const symbols = [...new Set(data.trades.map((t) => t.symbol))].slice(0, 40);
     const oldest = data.trades
       .map((t) => (t.takenAt ? Date.parse(t.takenAt) : NaN))
       .filter((n) => Number.isFinite(n))
@@ -58,7 +63,9 @@ export const linkJournalTradesToSignals = createServerFn({ method: "POST" })
       .from("signal_scores")
       .select("id, symbol, bias, grade, entry, created_at, taken")
       .eq("user_id", context.userId)
-      .in("symbol", symbols)
+      // Symbols are matched in memory, not in the query: the journal and the scan
+      // record spell the same instrument differently often enough that filtering
+      // on the exact string here returned nothing at all.
       .gte("created_at", since)
       .order("created_at", { ascending: false })
       .limit(1000);
@@ -77,7 +84,7 @@ export const linkJournalTradesToSignals = createServerFn({ method: "POST" })
 
       for (const s of signals) {
         if (claimed.has(s.id)) continue;
-        if (s.symbol !== trade.symbol) continue;
+        if (symKey(s.symbol) !== symKey(trade.symbol)) continue;
         if (dirOf(s.bias) !== dir) continue;
         const gap = Number.isFinite(at) ? Math.abs(Date.parse(s.created_at) - (at as number)) : 0;
         if (Number.isFinite(at) && gap > WINDOW_HOURS * 36e5) continue;

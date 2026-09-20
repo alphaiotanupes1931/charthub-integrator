@@ -10,8 +10,10 @@ import {
   decideAlert,
   formatAlert,
   inQuietHours,
+  isTradeableBias,
   normalizeMinGrade,
 } from "@/lib/signal-alerts.shared";
+import { clusterOf, gradeRank } from "@/lib/correlation-clusters";
 import { getAnalysisModel, normalizeAnalysisModel, type AnalysisModelId } from "@/lib/analysis-models";
 import { evaluateEntryStaleness } from "@/lib/signal-staleness";
 
@@ -131,8 +133,25 @@ export const Route = createFileRoute("/api/public/hooks/signal-alerts-tick")({
           const wantedModels = new Set((p.models ?? ["classic"]).map((m) => normalizeAnalysisModel(m)));
           const wantedSymbols = new Set(p.symbols ?? []);
 
+          // Within this trader's own selection, an instrument family gets one alert:
+          // the best-graded setup in that direction. The rest are the same bet.
+          const bestInCluster = new Map<string, string>();
           for (const scan of scans) {
             if (!wantedSymbols.has(scan.symbol) || !wantedModels.has(scan.modelId)) continue;
+            const cluster = clusterOf(scan.symbol);
+            if (!cluster || !isTradeableBias(scan.bias)) continue;
+            const familyKey = `${cluster}:${scan.bias.toLowerCase()}`;
+            const held = bestInCluster.get(familyKey);
+            if (!held || gradeRank(scan.grade) > gradeRank(held)) {
+              bestInCluster.set(familyKey, scan.grade);
+            }
+          }
+
+          for (const scan of scans) {
+            if (!wantedSymbols.has(scan.symbol) || !wantedModels.has(scan.modelId)) continue;
+            const cluster = clusterOf(scan.symbol);
+            const familyBest = cluster ? bestInCluster.get(`${cluster}:${scan.bias.toLowerCase()}`) : undefined;
+            const correlated = familyBest != null && gradeRank(familyBest) > gradeRank(scan.grade);
             const decision = decideAlert({
               plan: {
                 grade: scan.grade, bias: scan.bias, entry: scan.entry,
@@ -142,6 +161,7 @@ export const Route = createFileRoute("/api/public/hooks/signal-alerts-tick")({
               stale: scan.stale,
               staleReason: scan.staleReason,
               quiet,
+              correlated,
             });
             if (!decision.alert) continue;
 

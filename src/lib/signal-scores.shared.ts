@@ -6,6 +6,9 @@
 // the trader remembering to tag an outcome.
 
 import { ENGINE_FIX_LABEL, isAfterEngineFix } from "@/lib/signal-engine-version";
+// Every claim on this page passes a significance gate: a rate below the sample
+// floor is reported with its interval and explicitly not claimed.
+import { SAMPLE_FLOOR, classifyClaim, samplesNeeded, wilson95 } from "@/lib/statistics";
 
 /**
  * "void" is a row with no direction to score (Neutral bias). It is kept for the
@@ -46,6 +49,15 @@ export type SignalScoreRow = {
   /** Which named analysis model produced this signal. Legacy rows are "classic". */
   modelId?: string | null;
   modelVersion?: string | null;
+  /** Stopped out, then price reached the target anyway: a stop-placement loss. */
+  rescued?: boolean | null;
+  /**
+   * Filed alongside a better-graded signal on a correlated instrument inside the
+   * same few minutes. Kept for the audit trail, held out of every aggregate: three
+   * index shorts at the same second are one bet, not three.
+   */
+  correlated?: boolean | null;
+  correlationCluster?: string | null;
 };
 
 /**
@@ -83,6 +95,14 @@ export type ScoreBucket = {
   avgMfeR: number | null;
   /** How many decided rows carried excursion figures. */
   excursionCount: number;
+  /** Stops where price went on to reach the target: the stop was too tight. */
+  rescuedStops: number;
+  /** Rescued stops as a share of stops, 0-100. Null with no stops. */
+  rescueRate: number | null;
+  /** 95% Wilson interval on the hit rate, so the number carries its own uncertainty. */
+  interval: { low: number; high: number } | null;
+  /** True once this bucket has enough decided trades to be claimed rather than reported. */
+  reliable: boolean;
 };
 
 export type Scoreboard = {
@@ -92,6 +112,15 @@ export type Scoreboard = {
   voided: number;
   /** Signals whose planned entry was never traded back to. Held out of every number. */
   unfilled: number;
+  /** Correlated duplicates held out so one bet is counted once. */
+  correlated: number;
+  /** Stops that later reached the target, and that share of all stops. */
+  rescuedStops: number;
+  rescueRate: number | null;
+  /** Decided trades needed before a figure here is claimed rather than reported. */
+  sampleFloor: number;
+  /** 95% interval on the headline hit rate. */
+  interval: { low: number; high: number } | null;
   /** Target + stop. The single denominator behind every headline figure. */
   decided: number;
   targets: number;
@@ -147,8 +176,15 @@ export function scorableRows(rows: SignalScoreRow[]): SignalScoreRow[] {
   // "unfilled" is held out for the same reason as "void": price never traded back
   // to the planned entry, so there was no position to win or lose with. Counting
   // one would credit the record with a trade the account never had.
+  // Correlated duplicates are held out too: filing US30, SPX500 and NAS100 short
+  // in the same second is one bet reported three times, which inflates both the
+  // sample size and the apparent size of the win or loss.
   return rows.filter(
-    (r) => r.status !== "void" && r.status !== "unfilled" && (r.bias === "Long" || r.bias === "Short"),
+    (r) =>
+      r.status !== "void" &&
+      r.status !== "unfilled" &&
+      !r.correlated &&
+      (r.bias === "Long" || r.bias === "Short"),
   );
 }
 
@@ -168,8 +204,13 @@ export function bucket(key: string, all: SignalScoreRow[]): ScoreBucket {
   // Excursions were backfilled from the same bar walk, but only where price
   // history still reaches; average them over the rows that actually have them.
   const excursionRows = decidedRows.filter((r) => typeof r.mfeR === "number" && typeof r.maeR === "number");
+  const rescuedStops = decidedRows.filter((r) => r.status === "stop" && r.rescued).length;
   return {
     key,
+    rescuedStops,
+    rescueRate: stops ? Math.round((rescuedStops / stops) * 1000) / 10 : null,
+    interval: wilson95(targets, decided),
+    reliable: decided >= SAMPLE_FLOOR,
     total: rows.length,
     open: rows.filter((r) => r.status === "open").length,
     decided,
@@ -239,8 +280,12 @@ export function buildScoreboard(allRows: SignalScoreRow[]): Scoreboard {
   const byTrendContext = group(rows, (r) =>
     `${r.counterTrend ? "Counter-trend" : "With-trend"} ${r.grade}`);
 
-  const worstSymbol = bySymbol.filter((b) => b.decided >= 4).sort((a, b) => a.expectancyR - b.expectancyR)[0];
-  const bestSymbol = bySymbol.filter((b) => b.decided >= 4).sort((a, b) => b.expectancyR - a.expectancyR)[0];
+  // Instrument callouts only where there is enough decided history to mean
+  // something. Below the floor the table still shows the number; the page just
+  // does not put a conclusion next to it.
+  const ranked = bySymbol.filter((b) => b.reliable);
+  const worstSymbol = [...ranked].sort((a, b) => a.expectancyR - b.expectancyR)[0];
+  const bestSymbol = [...ranked].sort((a, b) => b.expectancyR - a.expectancyR)[0];
   if (bestSymbol && bestSymbol.expectancyR > 0) {
     notes.push(`${bestSymbol.key} is your strongest instrument: ${bestSymbol.hitRate}% hit rate over ${bestSymbol.decided} decided signals, ${bestSymbol.expectancyR}R average.`);
   }
@@ -250,10 +295,47 @@ export function buildScoreboard(allRows: SignalScoreRow[]): Scoreboard {
 
   const aGrades = rows.filter((r) => r.grade === "A" || r.grade === "A+");
   const bGrades = rows.filter((r) => r.grade === "B");
+  const aBucket = bucket("A/A+", aGrades);
+  const bBucket = bucket("B", bGrades);
   const aRate = hitRateOf(aGrades);
   const bRate = hitRateOf(bGrades);
+  // The grade inversion is the most consequential claim on the page, so it is the
+  // one held hardest to the significance gate. Below the floor it is stated as an
+  // open question with the sample needed to settle it, not as a finding.
   if (aRate != null && bRate != null && aRate <= bRate) {
-    notes.push(`A grades are not outperforming B grades right now (${aRate}% vs ${bRate}%). Treat grade as one input, not a guarantee.`);
+    const verdict = classifyClaim({
+      hits: aBucket.targets,
+      n: aBucket.decided,
+      baselineHits: bBucket.targets,
+      baselineN: bBucket.decided,
+    });
+    if (verdict.strength === "established") {
+      notes.push(
+        `A grades are measurably not outperforming B grades (${aRate}% over ${aBucket.decided} decided against ${bRate}% over ${bBucket.decided}, p=${verdict.p?.toFixed(4)}). Treat grade as one input, not a guarantee.`,
+      );
+    } else if (verdict.strength === "early signal") {
+      notes.push(
+        `A grades are running behind B grades (${aRate}% vs ${bRate}%), but the gap is not confirmed yet at this sample (p=${verdict.p?.toFixed(2)}).`,
+      );
+    } else {
+      const need = samplesNeeded(aRate, bRate);
+      notes.push(
+        `A grades sit at ${aRate}% over ${aBucket.decided} decided signals and B grades at ${bRate}% over ${bBucket.decided}` +
+          (aBucket.interval ? ` (A's 95% interval is ${aBucket.interval.low}% to ${aBucket.interval.high}%)` : "") +
+          `. Not enough decided A grades to call this either way` +
+          (need ? `: a gap this size needs about ${need} decided trades per grade.` : "."),
+      );
+    }
+  }
+
+  // Direction wrong, or stop too tight? The rescued-stop share is the measurement
+  // that answers it, so it is stated rather than left for the reader to infer.
+  if (overall.stops >= 10 && overall.rescueRate != null) {
+    notes.push(
+      overall.rescueRate >= 40
+        ? `${overall.rescueRate}% of stopped trades went on to reach the target anyway (${overall.rescuedStops} of ${overall.stops}). That is a stop-placement problem, not a direction problem: widen stops before changing the read.`
+        : `${overall.rescueRate}% of stopped trades later reached the target (${overall.rescuedStops} of ${overall.stops}). Most losses were the direction being wrong rather than the stop being tight.`,
+    );
   }
 
   const takenRate = hitRateOf(rows.filter((r) => r.taken));
@@ -295,6 +377,13 @@ export function buildScoreboard(allRows: SignalScoreRow[]): Scoreboard {
     );
   }
 
+  const correlatedCount = allRows.filter((r) => r.correlated).length;
+  if (correlatedCount > 0) {
+    notes.push(
+      `${correlatedCount} signal${correlatedCount === 1 ? "" : "s"} filed on instruments that move together with a better-graded signal at the same time. ${correlatedCount === 1 ? "It is" : "They are"} kept on record but held out of these numbers, so three index shorts in one second count as one bet.`,
+    );
+  }
+
   if (overall.expired > 0) {
     notes.push(
       `${overall.expired} signal${overall.expired === 1 ? "" : "s"} timed out without hitting the stop or the target` +
@@ -306,6 +395,11 @@ export function buildScoreboard(allRows: SignalScoreRow[]): Scoreboard {
   return {
     voided,
     unfilled,
+    correlated: allRows.filter((r) => r.correlated).length,
+    rescuedStops: overall.rescuedStops,
+    rescueRate: overall.rescueRate,
+    sampleFloor: SAMPLE_FLOOR,
+    interval: overall.interval,
     total: overall.total,
     open: rows.filter((r) => r.status === "open").length,
     decided: overall.decided,

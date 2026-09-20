@@ -51,6 +51,12 @@ export type Resolution = {
   costR?: number | null;
   /** Bars from filing to resolution, so timing can be judged per timeframe. */
   barsToResolve?: number | null;
+  /**
+   * Stopped out, and then price reached the target anyway. A book of rescued
+   * stops is a stop-placement problem, not a direction problem, and the two
+   * need opposite fixes.
+   */
+  rescued?: boolean;
 };
 
 /** Long or short, or null when the scan had no directional opinion. */
@@ -129,6 +135,7 @@ export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
       maeR: verdict.maeR,
       mfeR: verdict.mfeR,
       barsToResolve: verdict.bars,
+      rescued: verdict.rescued,
     };
   }
 

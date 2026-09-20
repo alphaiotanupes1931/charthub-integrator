@@ -41,6 +41,12 @@ export type ReplayVerdict = {
   lastClose: number | null;
   /** Time of the resolving bar, for spot checks against a chart. */
   resolvedAt: number | null;
+  /**
+   * Stopped out, then price went on to print the target in the bars supplied.
+   * This is the one measurement that separates "the direction was wrong" from
+   * "the stop was too tight", so it is recorded on every stop.
+   */
+  rescued: boolean;
 };
 
 export type ReplayOptions = {
@@ -111,6 +117,7 @@ export function replayForward(
         bars: forward.length,
         lastClose,
         resolvedAt: null,
+        rescued: false,
       };
     }
   }
@@ -127,6 +134,19 @@ export function replayForward(
     const hitStop = long ? bar.low <= sig.stop : bar.high >= sig.stop;
     const hitTarget = long ? bar.high >= sig.tp1 : bar.low <= sig.tp1;
     if (hitStop || hitTarget) {
+      // On a stop, keep looking: if the target printed later, the call was right
+      // and the stop was in the wrong place. That is a different problem with a
+      // different fix, so it gets its own field instead of a lost trade.
+      let rescued = false;
+      if (hitStop) {
+        for (let j = i + 1; j < forward.length; j++) {
+          const later = forward[j]!;
+          if (long ? later.high >= sig.tp1 : later.low <= sig.tp1) {
+            rescued = true;
+            break;
+          }
+        }
+      }
       return {
         status: hitStop ? "stop" : "target",
         realizedR: hitStop ? -1 : rMultiple,
@@ -135,6 +155,7 @@ export function replayForward(
         bars: i - start + 1,
         lastClose: bar.close,
         resolvedAt: bar.time,
+        rescued,
       };
     }
   }
@@ -147,5 +168,6 @@ export function replayForward(
     bars: forward.length,
     lastClose: forward.length ? forward[forward.length - 1]!.close : null,
     resolvedAt: null,
+    rescued: false,
   };
 }
