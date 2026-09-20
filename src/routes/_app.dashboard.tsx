@@ -1,5 +1,7 @@
 import { PageInstructions } from "@/components/PageInstructions";
 import { InfoTip } from "@/components/InfoTip";
+import { DouglasChecklist, douglasConfidence } from "@/components/DouglasChecklist";
+import { DOUGLAS_CHECKLIST } from "@/lib/analysis-models/douglas-engine";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
