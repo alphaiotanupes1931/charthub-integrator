@@ -7,7 +7,7 @@
 //
 // Model 1 ("TradeMind Classic") is exactly the content the platform has been
 // fed to date, given a name and a version so results can be attributed to it.
-// Model 2 ("TradeMind Focus") is fed only the strategies the owner supplies; it
+// Model 2 ("The Trading Channel") is fed only the strategies the owner supplies; it
 // deliberately inherits nothing from Classic, so its record can be judged on
 // its own.
 
