@@ -12,6 +12,7 @@ import { computeOrderBlocks } from "@/lib/orderBlocks";
 import { computeBias } from "./bias-adapter.server";
 import type { AnalysisModelId } from "@/lib/analysis-models";
 import { focusAnalysis, focusContextBlock } from "@/lib/analysis-models/focus-engine";
+import { photonAnalysis, photonContextBlock } from "@/lib/analysis-models/photon-engine";
 import { tunedConfigFor, profileHintFor } from "../instrument-profile.server";
 
 import {
@@ -1483,6 +1484,52 @@ export async function runPlanner(
       refPrice: snap.lastPrice,
       counterTrend: false,
       warnings: fWarnings.length ? fWarnings : undefined,
+      tradeStyle,
+    };
+  }
+
+  // ---- Model routing: Photon Trading ---------------------------------------
+  // Model 3 is fed ONLY the Photon market-structure rulebook. Its read comes
+  // from its own deterministic engine over closed bars (photon-engine.ts); the
+  // Classic bias engine, order-block cascade and AI-written levels below do not
+  // apply.
+  if (modelId === "photon") {
+    const photonBars = (snap.candles1h?.length ? snap.candles1h : snap.candles)
+      .map((c) => ({ time: c.time, open: c.open, high: c.high, low: c.low, close: c.close }));
+    const read = photonAnalysis(photonBars);
+    const pDec = decimalsFor(snap.lastPrice || read.lastPrice || 1);
+    let pGrade: TradePlan["grade"] = read.grade;
+    const pWarnings: string[] = [];
+    if (newsWarning && (pGrade === "A" || pGrade === "B")) {
+      pGrade = "B";
+      pWarnings.push(`High-impact news inside the hold window caps this at B.${newsWarning}`);
+    }
+    if (news48Warning) pWarnings.push(news48Warning);
+    const isNoEntryP = pGrade === "NO ENTRY" || read.entry == null;
+    const trendWord = read.swingTrend === "up" ? "bullish" : read.swingTrend === "down" ? "bearish" : "neutral";
+    return {
+      methodologyVersion: read.rulebookVersion,
+      grade: pGrade,
+      bias: read.bias,
+      confidence: pGrade === "A" ? 80 : pGrade === "B" ? 60 : pGrade === "C" ? 40 : 0,
+      notes: `${read.note}${pWarnings.length ? ` ${pWarnings.join(" ")}` : ""}`,
+      entry: isNoEntryP ? "-" : fmt(read.entry!, pDec),
+      stop: isNoEntryP ? "-" : fmt(read.stop!, pDec),
+      tp1: isNoEntryP ? "-" : fmt(read.tp1!, pDec),
+      tp2: "-",
+      rr: isNoEntryP || read.rr == null ? "-" : `1 : ${read.rr.toFixed(1)}`,
+      details: photonContextBlock(read, snap.ticker, snap.interval),
+      memo,
+      orderFlow: snap.orderFlow,
+      dailyBias: trendWord,
+      currentTrend: read.swingTrend === "none" ? "range" : read.swingTrend,
+      synopsis: read.note,
+      dataSource: snap.source,
+      dataFetchedAt: snap.fetchedAt,
+      candleCount: snap.candles.length,
+      refPrice: snap.lastPrice,
+      counterTrend: false,
+      warnings: pWarnings.length ? pWarnings : undefined,
       tradeStyle,
     };
   }
