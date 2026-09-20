@@ -8,6 +8,13 @@ import { createAiGatewayProvider } from "@/lib/ai-gateway.server";
 import { METHODOLOGY_CORE } from "@/lib/agents/methodology-kb";
 import { rulebookForPrompt } from "@/lib/wyckoff/rulebook";
 import {
+  analysisModelPromptBlock,
+  getAnalysisModel,
+  normalizeAnalysisModel,
+  type AnalysisModelId,
+} from "@/lib/analysis-models";
+
+import {
   corsHeadersFor,
   enforceMaxBody,
   enforceOrigin,
@@ -167,6 +174,9 @@ type ChatRequestBody = {
   strategy?: StrategyCtx | null;
   lens?: LensCtx | null;
   signalLearning?: string | null;
+  /** Which named analysis model to answer with. Falls back to the account's saved choice. */
+  analysisModel?: string | null;
+
 };
 
 
@@ -461,7 +471,18 @@ function historyTitleFromChart(chart?: ChartCtx): string | null {
 // and every request. Anthropic prompt caching keys off an exact prefix match,
 // so this block is sent first and marked cacheable; the per-request context
 // (coach voice, chart, journal, news) follows in a second system message.
-function staticSystemPrompt() {
+function staticSystemPrompt(modelId: AnalysisModelId = "classic") {
+  const model = getAnalysisModel(modelId);
+  // Classic is fed the full library exactly as before. Focus is fed only its own
+  // rulebook, so the Classic methodology and Wyckoff blocks are withheld.
+  const knowledge =
+    model.knowledge === "full"
+      ? `${METHODOLOGY_CORE}
+
+# WYCKOFF RULEBOOK (versioned, persistent)
+These rules do not change between sessions and they outrank anything you improvise. Judge every setup discussion against them by number.
+${rulebookForPrompt()}`
+      : analysisModelPromptBlock(model.id);
   return `# ROLE
 You are the TradeMind AI Coach - a senior trading educator, chart analyst, and mentor built into the TradeMind platform. Your job is to help retail traders (many are older beginners) learn to trade safely, read charts, size risk, and improve their journal. You are NOT a licensed advisor. You are opinionated, direct, calm, and warm - like a mentor sitting next to them at the desk. You always finish your thoughts in full sentences; never stop after a couple of words.
 
@@ -472,11 +493,8 @@ When a block titled AUTHORITATIVE BIAS BLOCK or a PRIMARY_BIAS line is present, 
 Before you answer anything, re-read the LIVE CHART CONTEXT block below and confirm which instrument and timeframe the trader is on right now. It can change between messages. Open your answer by anchoring to that instrument by name whenever the question touches the market, and never carry over levels, bias, or numbers from an earlier instrument in this thread. If the question is about a different instrument than the chart shows, say which one you are answering about.
 
 
-${METHODOLOGY_CORE}
+${knowledge}
 
-# WYCKOFF RULEBOOK (versioned, persistent)
-These rules do not change between sessions and they outrank anything you improvise. Judge every setup discussion against them by number.
-${rulebookForPrompt()}
 
 # CORE BEHAVIOR
 You are TradeMind, the trader's personal AI trading educator and coach. TradeMind is an EDUCATIONAL platform - your primary job is to teach. Answer ANY question the user types: trading concepts, market structure, indicators, psychology, risk management, strategy theory, historical examples, jargon definitions, "explain like I'm 5" walkthroughs, worked examples, or broader finance/economics questions that help them learn. Never refuse a question just because it isn't a setup request. Never tell the user to rephrase or that you only do X - if the question is unclear, make your best interpretation and answer it, then offer to go deeper.
@@ -740,6 +758,11 @@ export const Route = createFileRoute("/api/chat")({
           return new Response("Invalid JSON", { status: 400, headers: cors });
         }
         const { messages, threadId, coach, previousCoach, journal, chart, strategy, lens, signalLearning } = body;
+        // The picker sends the model with the request; the account's saved choice
+        // is read below and used when the request does not name one.
+        let analysisModelId: AnalysisModelId = normalizeAnalysisModel(body.analysisModel);
+        const analysisModelFromBody = body.analysisModel != null;
+
         if (!Array.isArray(messages) || !threadId) {
           return new Response("messages, threadId required", { status: 400, headers: cors });
         }
@@ -845,12 +868,18 @@ export const Route = createFileRoute("/api/chat")({
         if (sb && userId) {
           const { data: prefRow } = await sb
             .from("profiles")
-            .select("ai_model_pref")
+            .select("ai_model_pref, analysis_model")
             .eq("id", userId)
             .maybeSingle();
           const raw = (prefRow as { ai_model_pref?: string } | null)?.ai_model_pref;
           modelPref = normalizeModelPref(raw);
+          if (!analysisModelFromBody) {
+            analysisModelId = normalizeAnalysisModel((prefRow as { analysis_model?: string } | null)?.analysis_model);
+          }
         }
+        const analysisModel = getAnalysisModel(analysisModelId);
+        console.log(`[chat] req=${reqId} analysis_model=${analysisModel.id} version=${analysisModel.version}`);
+
 
 
         if (sb && userId && !isAdmin) {
@@ -1055,7 +1084,7 @@ export const Route = createFileRoute("/api/chat")({
           }
         }
 
-        const staticSystem = staticSystemPrompt();
+        const staticSystem = staticSystemPrompt(analysisModelId);
         const forceDraw = shouldForceChartDraw(messages);
         let liveSystem = dynamicSystemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens), learningCtx, newsCtx, scoreCtx, forceDraw, previousCoach, hermesCtx, hitRateCtx);
         // Retrieved methodology / psychology reference for this exact question.

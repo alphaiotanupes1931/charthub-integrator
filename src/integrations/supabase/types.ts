@@ -1537,6 +1537,7 @@ export type Database = {
       profiles: {
         Row: {
           ai_model_pref: string
+          analysis_model: string
           banned: boolean
           broker_account_type: string | null
           broker_connected: boolean
@@ -1560,6 +1561,7 @@ export type Database = {
         }
         Insert: {
           ai_model_pref?: string
+          analysis_model?: string
           banned?: boolean
           broker_account_type?: string | null
           broker_connected?: boolean
@@ -1583,6 +1585,7 @@ export type Database = {
         }
         Update: {
           ai_model_pref?: string
+          analysis_model?: string
           banned?: boolean
           broker_account_type?: string | null
           broker_connected?: boolean
@@ -1916,6 +1919,8 @@ export type Database = {
           mae_r: number | null
           methodology_version: string
           mfe_r: number | null
+          model_id: string
+          model_version: string
           net_r: number | null
           planned_r: number | null
           realized_r: number | null
@@ -1947,6 +1952,8 @@ export type Database = {
           mae_r?: number | null
           methodology_version?: string
           mfe_r?: number | null
+          model_id?: string
+          model_version?: string
           net_r?: number | null
           planned_r?: number | null
           realized_r?: number | null
@@ -1978,6 +1985,8 @@ export type Database = {
           mae_r?: number | null
           methodology_version?: string
           mfe_r?: number | null
+          model_id?: string
+          model_version?: string
           net_r?: number | null
           planned_r?: number | null
           realized_r?: number | null

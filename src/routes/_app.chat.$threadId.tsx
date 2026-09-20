@@ -23,6 +23,9 @@ import {
 } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { readJournal, readActiveCoach, readActiveStrategy, readLastChart, writeLastThreadId, type LastChart } from "@/lib/chat-client";
+import { readAnalysisModel } from "@/hooks/useAnalysisModel";
+import { AnalysisModelPicker } from "@/components/AnalysisModelPicker";
+
 import { findStrategyByName } from "@/lib/customStrategies";
 import { isAutoStrategy } from "@/lib/strategyAuto";
 import { findLens, readActiveLensId } from "@/lib/scanLens";
@@ -220,6 +223,8 @@ function ChatThreadInner({
             strategy,
             lens: { id: lens.id, name: lens.name, promptEmphasis: lens.promptEmphasis },
             signalLearning: buildLearningPromptBlock(),
+            analysisModel: readAnalysisModel(),
+
           },
         };
       },
@@ -274,6 +279,8 @@ function ChatThreadInner({
           )}
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
+          <AnalysisModelPicker />
+
           <span className="text-[9px] font-semibold tracking-tight text-primary px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20">
             {activeModel?.label ?? "AI"}
           </span>
