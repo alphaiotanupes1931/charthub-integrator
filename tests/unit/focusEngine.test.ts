@@ -31,7 +31,7 @@ const bullishBreakRetest = (): FocusCandle[] => {
   const out: FocusCandle[] = [];
   const push = (o: number, h: number, l: number, c: number) => out.push(bar(o, h, l, c));
   // Base with a clear swing high at 101 and pullback origin low at 98.
-  for (let i = 0; i < 20; i++) push(99, 99.6, 98.6, 99.2);
+  for (let i = 0; i < 26; i++) push(99, 99.6, 98.6, 99.2);
   push(99.2, 101.2, 98.9, 100.8); // swing high 101.2 (pivot, 2 bars each side)
   push(100.8, 100.9, 98.2, 98.4); // pullback
   push(98.4, 98.6, 97.9, 98.1); // origin low 97.9
