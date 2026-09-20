@@ -172,7 +172,7 @@ function ScoreboardPage() {
               label="Signals filed"
               value={String(board.total)}
               n={board.total}
-              sub={`${board.open} open, ${board.decided} decided, ${board.expired} expired${board.voided ? `, ${board.voided} no-direction (excluded)` : ""}`}
+              sub={`${board.open} open, ${board.decided} decided, ${board.expired} expired${board.unfilled ? `, ${board.unfilled} never filled (excluded)` : ""}${board.voided ? `, ${board.voided} no-direction (excluded)` : ""}`}
             />
             <Stat
               label="Hit rate, decided only"
