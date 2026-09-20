@@ -148,7 +148,7 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
   return (
     <div className="shrink-0 border-b border-border/60 bg-card/40">
       {/* Header strip - one clean line: what the setup is, then a single action. */}
-      <div className="flex flex-wrap items-center gap-2 px-4 py-2.5">
+      <div className="grid grid-cols-[auto_auto_minmax(0,1fr)_auto] items-center gap-1.5 px-3 py-2 sm:flex sm:flex-wrap sm:gap-2 sm:px-4 sm:py-2.5">
         <span className={`inline-flex h-8 items-center gap-1.5 rounded-2xl border px-2.5 ${biasBg}`}>
           <BiasIcon className={`h-3 w-3 ${biasText}`} />
           <span className={`text-[10px] font-bold tracking-wider ${biasText}`}>{actionLabel}</span>
@@ -166,8 +166,8 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
         )}
 
         {timing && (
-          <span
-            className="inline-flex h-8 items-center gap-1.5 rounded-2xl border border-border/60 bg-background/60 px-2.5 text-[10px] font-semibold tracking-tight text-muted-foreground"
+           <span
+             className="hidden h-8 items-center gap-1.5 rounded-2xl border border-border/60 bg-background/60 px-2.5 text-[10px] font-semibold tracking-tight text-muted-foreground sm:inline-flex"
             title={`Best window to enter: ${clockLabel(timing.enterFrom, tz)} to ${clockLabel(timing.enterUntil, tz)} (${timing.session}). Times shown in ${tz}.`}
           >
             <Clock className="h-3 w-3" />
@@ -176,7 +176,7 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
           </span>
         )}
 
-        <div className="flex-1" />
+        <div className="hidden flex-1 sm:block" />
 
         {(isLong || isShort)
           && typeof grade.entry === "number" && typeof grade.stop === "number"
@@ -193,7 +193,7 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
                 tp2: grade.tp2 as number,
               })
             }
-            className="inline-flex h-8 items-center gap-1.5 rounded-2xl border border-primary/50 bg-primary/10 px-3 text-[10px] font-bold tracking-tight text-primary hover:bg-primary/20 disabled:opacity-60"
+             className="hidden h-8 items-center gap-1.5 rounded-2xl border border-primary/50 bg-primary/10 px-3 text-[10px] font-bold tracking-tight text-primary hover:bg-primary/20 disabled:opacity-60 sm:inline-flex"
             title="Double down: rescan on a lower timeframe for a deeper sniper limit with tighter risk"
           >
             {sniperMut.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Crosshair className="h-3 w-3" />}
@@ -204,14 +204,14 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
 
 
         {(isLong || isShort) && (
-          <div className="flex flex-col gap-1">
+           <div className="flex min-w-0 flex-col gap-1">
             {logged ? (
               <Link
                 to="/journal"
-                className="inline-flex h-8 items-center gap-1.5 rounded-2xl border border-bull/40 bg-bull/10 px-3 text-[10px] font-bold tracking-tight text-bull hover:bg-bull/20"
+                 className="inline-flex h-8 min-w-0 items-center gap-1.5 rounded-2xl border border-bull/40 bg-bull/10 px-2.5 text-[10px] font-bold tracking-tight text-bull hover:bg-bull/20 sm:px-3"
                 title={`Saved to your journal on ${new Date(logged.at).toLocaleDateString()}. Open the journal to edit it.`}
               >
-                <Check className="h-3 w-3" /> Already logged
+                 <Check className="h-3 w-3 shrink-0" /> <span className="truncate">Already logged</span>
               </Link>
             ) : (
               <button
@@ -230,10 +230,10 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
                     risk: grade.weakness,
                   })
                 }
-                className="inline-flex h-8 items-center gap-1.5 rounded-2xl px-3 text-[10px] font-bold tracking-tight bg-primary text-primary-foreground hover:opacity-90"
+                 className="inline-flex h-8 min-w-0 items-center gap-1.5 rounded-2xl px-2.5 text-[10px] font-bold tracking-tight bg-primary text-primary-foreground hover:opacity-90 sm:px-3"
                 title="Log this setup in your trade journal"
               >
-                <BookOpen className="h-3 w-3" /> Log this trade
+                 <BookOpen className="h-3 w-3 shrink-0" /> <span className="truncate">Log trade</span>
               </button>
             )}
 
@@ -248,7 +248,7 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
           title={expanded ? "Hide details" : "Show details"}
         >
           {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-          {expanded ? "Hide" : "Details"}
+           <span className="hidden sm:inline">{expanded ? "Hide" : "Details"}</span>
         </button>
         {onClear && (
           <button
