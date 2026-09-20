@@ -2,7 +2,7 @@ import { closedBars, type BarCandle } from "@/lib/barClock";
 import { CLASSIC_SESSION_RULEBOOK_VERSION } from "@/lib/analysis-models/classic-session-rulebook";
 
 export type SessionBiasDirection = "bullish" | "bearish" | "pending" | "conflicted" | "not-applicable";
-export type SessionBiasPattern = "london-reversal" | "london-continuation" | "new-york-reversal" | "none";
+export type SessionBiasPattern = "london-reversal" | "london-continuation" | "new-york-reversal" | "joint-range-new-york-reversal" | "none";
 
 export type SessionBiasRead = {
   version: string;
@@ -15,6 +15,7 @@ export type SessionBiasRead = {
   asiaRange: number | null;
   priorMedianRange: number | null;
   accumulation: boolean;
+  londonAccumulation: boolean;
   londonSweep: "high" | "low" | "both" | "none";
   newYorkSweep: "high" | "low" | "both" | "none";
   displacement: boolean;
@@ -124,6 +125,7 @@ function empty(direction: SessionBiasDirection, reason: string, tradeDay: string
     asiaRange: null,
     priorMedianRange: null,
     accumulation: false,
+    londonAccumulation: false,
     londonSweep: "none",
     newYorkSweep: "none",
     displacement: false,
@@ -172,6 +174,7 @@ export function readClassicSessionBias(
     asiaRange: asiaRange.range,
     priorMedianRange,
     accumulation,
+    londonAccumulation: false,
   };
   if (!accumulation) {
     return { ...empty("not-applicable", "Asia expanded beyond its trailing median range, so it did not qualify as accumulation.", tradeDay), ...base };
@@ -240,11 +243,21 @@ export function readClassicSessionBias(
     const event = newYork.find((bar) => newYorkSweep === "high"
       ? bar.high > asiaRange.high && bar.close < asiaRange.high
       : bar.low < asiaRange.low && bar.close > asiaRange.low);
+    const londonRange = rangeOf(london);
+    const londonAccumulation = Boolean(
+      londonRange &&
+      londonRange.high <= asiaRange.high &&
+      londonRange.low >= asiaRange.low &&
+      Math.max(asiaRange.high, londonRange.high) - Math.min(asiaRange.low, londonRange.low) <= asiaRange.range * 1.25
+    );
     return {
       ...base,
       direction: directionFromSweep(newYorkSweep),
-      pattern: "new-york-reversal",
-      reason: `London held the Asia range; New York swept the ${newYorkSweep} and closed back inside.`,
+      pattern: londonAccumulation ? "joint-range-new-york-reversal" : "new-york-reversal",
+      reason: londonAccumulation
+        ? `Asia and London accumulated together; New York swept the ${newYorkSweep} and closed back inside the combined range.`
+        : `London held the Asia range; New York swept the ${newYorkSweep} and closed back inside.`,
+      londonAccumulation,
       londonSweep: "none",
       newYorkSweep,
       displacement: false,

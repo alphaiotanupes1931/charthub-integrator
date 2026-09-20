@@ -92,7 +92,8 @@ describe("Classic session-liquidity shadow read", () => {
       bar("2026-06-11T11:00:00Z", 100, 100.4, 98.5, 99.5),
     ]), at("2026-06-11T13:00:00Z") * 1000);
     expect(read.direction).toBe("bullish");
-    expect(read.pattern).toBe("new-york-reversal");
+    expect(read.pattern).toBe("joint-range-new-york-reversal");
+    expect(read.londonAccumulation).toBe(true);
   });
 
   it("recognizes same-session London displacement", () => {
