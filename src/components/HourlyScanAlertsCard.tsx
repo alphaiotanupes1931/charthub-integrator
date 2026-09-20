@@ -8,6 +8,7 @@ import { Radar } from "lucide-react";
 
 import { ANALYSIS_MODELS, type AnalysisModelId } from "@/lib/analysis-models";
 import { ALERT_GRADES, type AlertMinGrade } from "@/lib/signal-alerts.shared";
+import { instrumentReview } from "@/lib/instrument-review";
 import { getMySignalAlertPrefs, saveMySignalAlertPrefs } from "@/lib/signal-alerts.functions";
 
 const SYMBOLS = [
