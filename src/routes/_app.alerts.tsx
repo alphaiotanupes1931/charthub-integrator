@@ -1,4 +1,5 @@
 import { PageInstructions } from "@/components/PageInstructions";
+import { HourlyScanAlertsCard } from "@/components/HourlyScanAlertsCard";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -97,6 +98,8 @@ function AlertsPage() {
         </div>
       </header>
       <PageInstructions className="mb-6" />
+
+      <HourlyScanAlertsCard enabled={hasSession} />
 
       <form onSubmit={submit} className="rounded-2xl border border-border/60 bg-card p-4 md:p-5 mb-8 space-y-3">
         <div className="grid grid-cols-1 md:grid-cols-[1fr_120px_1fr] gap-3">

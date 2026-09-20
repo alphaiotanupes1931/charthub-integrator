@@ -97,6 +97,7 @@ import { Route as ApiPublicHooksWeeklyReviewRouteImport } from './routes/api.pub
 import { Route as ApiPublicHooksStopWidthTestRouteImport } from './routes/api.public.hooks.stop-width-test'
 import { Route as ApiPublicHooksSignalIntegrityRouteImport } from './routes/api.public.hooks.signal-integrity'
 import { Route as ApiPublicHooksSignalExcursionsRouteImport } from './routes/api.public.hooks.signal-excursions'
+import { Route as ApiPublicHooksSignalAlertsTickRouteImport } from './routes/api.public.hooks.signal-alerts-tick'
 import { Route as ApiPublicHooksSendBriefingsRouteImport } from './routes/api.public.hooks.send-briefings'
 import { Route as ApiPublicHooksScanSignalsRouteImport } from './routes/api.public.hooks.scan-signals'
 import { Route as ApiPublicHooksResolveSignalsRouteImport } from './routes/api.public.hooks.resolve-signals'
@@ -566,6 +567,12 @@ const ApiPublicHooksSignalExcursionsRoute =
     path: '/api/public/hooks/signal-excursions',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksSignalAlertsTickRoute =
+  ApiPublicHooksSignalAlertsTickRouteImport.update({
+    id: '/api/public/hooks/signal-alerts-tick',
+    path: '/api/public/hooks/signal-alerts-tick',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksSendBriefingsRoute =
   ApiPublicHooksSendBriefingsRouteImport.update({
     id: '/api/public/hooks/send-briefings',
@@ -770,6 +777,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/resolve-signals': typeof ApiPublicHooksResolveSignalsRoute
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
+  '/api/public/hooks/signal-alerts-tick': typeof ApiPublicHooksSignalAlertsTickRoute
   '/api/public/hooks/signal-excursions': typeof ApiPublicHooksSignalExcursionsRoute
   '/api/public/hooks/signal-integrity': typeof ApiPublicHooksSignalIntegrityRoute
   '/api/public/hooks/stop-width-test': typeof ApiPublicHooksStopWidthTestRoute
@@ -873,6 +881,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/resolve-signals': typeof ApiPublicHooksResolveSignalsRoute
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
+  '/api/public/hooks/signal-alerts-tick': typeof ApiPublicHooksSignalAlertsTickRoute
   '/api/public/hooks/signal-excursions': typeof ApiPublicHooksSignalExcursionsRoute
   '/api/public/hooks/signal-integrity': typeof ApiPublicHooksSignalIntegrityRoute
   '/api/public/hooks/stop-width-test': typeof ApiPublicHooksStopWidthTestRoute
@@ -982,6 +991,7 @@ export interface FileRoutesById {
   '/api/public/hooks/resolve-signals': typeof ApiPublicHooksResolveSignalsRoute
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
+  '/api/public/hooks/signal-alerts-tick': typeof ApiPublicHooksSignalAlertsTickRoute
   '/api/public/hooks/signal-excursions': typeof ApiPublicHooksSignalExcursionsRoute
   '/api/public/hooks/signal-integrity': typeof ApiPublicHooksSignalIntegrityRoute
   '/api/public/hooks/stop-width-test': typeof ApiPublicHooksStopWidthTestRoute
@@ -1091,6 +1101,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/resolve-signals'
     | '/api/public/hooks/scan-signals'
     | '/api/public/hooks/send-briefings'
+    | '/api/public/hooks/signal-alerts-tick'
     | '/api/public/hooks/signal-excursions'
     | '/api/public/hooks/signal-integrity'
     | '/api/public/hooks/stop-width-test'
@@ -1194,6 +1205,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/resolve-signals'
     | '/api/public/hooks/scan-signals'
     | '/api/public/hooks/send-briefings'
+    | '/api/public/hooks/signal-alerts-tick'
     | '/api/public/hooks/signal-excursions'
     | '/api/public/hooks/signal-integrity'
     | '/api/public/hooks/stop-width-test'
@@ -1302,6 +1314,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/resolve-signals'
     | '/api/public/hooks/scan-signals'
     | '/api/public/hooks/send-briefings'
+    | '/api/public/hooks/signal-alerts-tick'
     | '/api/public/hooks/signal-excursions'
     | '/api/public/hooks/signal-integrity'
     | '/api/public/hooks/stop-width-test'
@@ -1364,6 +1377,7 @@ export interface RootRouteChildren {
   ApiPublicHooksResolveSignalsRoute: typeof ApiPublicHooksResolveSignalsRoute
   ApiPublicHooksScanSignalsRoute: typeof ApiPublicHooksScanSignalsRoute
   ApiPublicHooksSendBriefingsRoute: typeof ApiPublicHooksSendBriefingsRoute
+  ApiPublicHooksSignalAlertsTickRoute: typeof ApiPublicHooksSignalAlertsTickRoute
   ApiPublicHooksSignalExcursionsRoute: typeof ApiPublicHooksSignalExcursionsRoute
   ApiPublicHooksSignalIntegrityRoute: typeof ApiPublicHooksSignalIntegrityRoute
   ApiPublicHooksStopWidthTestRoute: typeof ApiPublicHooksStopWidthTestRoute
@@ -1993,6 +2007,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksSignalExcursionsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/signal-alerts-tick': {
+      id: '/api/public/hooks/signal-alerts-tick'
+      path: '/api/public/hooks/signal-alerts-tick'
+      fullPath: '/api/public/hooks/signal-alerts-tick'
+      preLoaderRoute: typeof ApiPublicHooksSignalAlertsTickRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/send-briefings': {
       id: '/api/public/hooks/send-briefings'
       path: '/api/public/hooks/send-briefings'
@@ -2334,6 +2355,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksResolveSignalsRoute: ApiPublicHooksResolveSignalsRoute,
   ApiPublicHooksScanSignalsRoute: ApiPublicHooksScanSignalsRoute,
   ApiPublicHooksSendBriefingsRoute: ApiPublicHooksSendBriefingsRoute,
+  ApiPublicHooksSignalAlertsTickRoute: ApiPublicHooksSignalAlertsTickRoute,
   ApiPublicHooksSignalExcursionsRoute: ApiPublicHooksSignalExcursionsRoute,
   ApiPublicHooksSignalIntegrityRoute: ApiPublicHooksSignalIntegrityRoute,
   ApiPublicHooksStopWidthTestRoute: ApiPublicHooksStopWidthTestRoute,
