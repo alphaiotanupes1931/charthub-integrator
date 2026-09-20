@@ -16,6 +16,14 @@ function history(current: BarCandle[]): BarCandle[] {
   return [...rows, ...current].sort((a, b) => a.time - b.time);
 }
 
+function winterHistory(current: BarCandle[]): BarCandle[] {
+  const rows: BarCandle[] = [];
+  for (let day = 1; day <= 6; day++) {
+    for (let hour = 0; hour < 5; hour++) rows.push(bar(`2026-12-0${day}T0${hour}:00:00Z`, 100, 101, 99, 100));
+  }
+  return [...rows, ...current].sort((a, b) => a.time - b.time);
+}
+
 const asia = [
   bar("2026-06-10T23:00:00Z", 100, 101, 99, 100),
   bar("2026-06-11T00:00:00Z", 100, 101, 99, 100),
@@ -33,13 +41,19 @@ describe("Classic session-liquidity shadow read", () => {
     ]);
     expect(readClassicSessionBias("EUR/USD", summer, at("2026-06-11T10:00:00Z") * 1000).direction).toBe("bullish");
 
-    const winterAsia = asia.map((b) => ({ ...b, time: b.time + 184 * 86_400 + 3600 }));
-    const winter = history([...winterAsia,
-      bar("2026-12-12T07:00:00Z", 100, 100.5, 98.5, 99.5),
-      bar("2026-12-12T08:00:00Z", 99.5, 100.8, 99.4, 100.5),
-      bar("2026-12-12T09:00:00Z", 100.5, 101, 100, 100.8),
+    const winterAsia = [
+      bar("2026-12-09T00:00:00Z", 100, 101, 99, 100),
+      bar("2026-12-09T01:00:00Z", 100, 101, 99, 100),
+      bar("2026-12-09T02:00:00Z", 100, 101, 99, 100),
+      bar("2026-12-09T03:00:00Z", 100, 101, 99, 100),
+      bar("2026-12-09T04:00:00Z", 100, 101, 99, 100),
+    ];
+    const winter = winterHistory([...winterAsia,
+      bar("2026-12-09T07:00:00Z", 100, 100.5, 98.5, 99.5),
+      bar("2026-12-09T08:00:00Z", 99.5, 100.8, 99.4, 100.5),
+      bar("2026-12-09T09:00:00Z", 100.5, 101, 100, 100.8),
     ]);
-    expect(readClassicSessionBias("EUR/USD", winter, at("2026-12-12T11:00:00Z") * 1000).direction).toBe("bullish");
+    expect(readClassicSessionBias("EUR/USD", winter, at("2026-12-09T11:00:00Z") * 1000).direction).toBe("bullish");
   });
 
   it("returns bearish after a one-sided London high sweep", () => {
@@ -68,6 +82,28 @@ describe("Classic session-liquidity shadow read", () => {
       bar("2026-06-11T08:00:00Z", 100, 100.8, 99.2, 100),
     ]), at("2026-06-11T10:00:00Z") * 1000);
     expect(read.direction).toBe("pending");
+  });
+
+  it("uses a New York low sweep after London holds the range", () => {
+    const read = readClassicSessionBias("XAG/USD", history([...asia,
+      bar("2026-06-11T06:00:00Z", 100, 100.8, 99.2, 100),
+      bar("2026-06-11T07:00:00Z", 100, 100.8, 99.2, 100),
+      bar("2026-06-11T08:00:00Z", 100, 100.8, 99.2, 100),
+      bar("2026-06-11T11:00:00Z", 100, 100.4, 98.5, 99.5),
+    ]), at("2026-06-11T13:00:00Z") * 1000);
+    expect(read.direction).toBe("bullish");
+    expect(read.pattern).toBe("new-york-reversal");
+  });
+
+  it("recognizes same-session London displacement", () => {
+    const read = readClassicSessionBias("EUR/USD", history([...asia,
+      bar("2026-06-11T06:00:00Z", 100, 100.5, 98.5, 99.5),
+      bar("2026-06-11T07:00:00Z", 99.5, 101.8, 99.4, 101.7),
+      bar("2026-06-11T08:00:00Z", 101.7, 102, 101.2, 101.8),
+    ]), at("2026-06-11T10:00:00Z") * 1000);
+    expect(read.direction).toBe("bullish");
+    expect(read.displacement).toBe(true);
+    expect(read.pattern).toBe("london-continuation");
   });
 
   it("ignores an unclosed sweep candle", () => {
