@@ -3,10 +3,8 @@
 
 import { generateText, Output, NoObjectGeneratedError } from "ai";
 import { z } from "zod";
-import { createAiGatewayProvider } from "@/lib/ai-gateway.server";
+import { runScanModel } from "./scan-model.server";
 import type { AnalystNote, MarketSnapshot } from "./types";
-
-const MODEL = "google/gemini-3-flash-preview";
 
 // No .min/.max bounds - schema-level constraints cause NoObjectGeneratedError
 // when the model exceeds them, collapsing every analyst to neutral/0 and
