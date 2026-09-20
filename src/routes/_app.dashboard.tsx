@@ -526,6 +526,18 @@ function ScanTicket({
   const biasTrendConflict =
     (dailyBias === "bullish" && currentTrend === "down") || (dailyBias === "bearish" && currentTrend === "up");
 
+  // Mark Douglas is a mindset model, so it shows up under each trade as a
+  // discipline checklist. The count of yeses is the confidence on this scan.
+  const [douglasChecks, setDouglasChecks] = useState<ReadonlySet<number>>(() => new Set<number>());
+  const toggleDouglas = (i: number) =>
+    setDouglasChecks((prev) => {
+      const next = new Set(prev);
+      if (next.has(i)) next.delete(i);
+      else next.add(i);
+      return next;
+    });
+  const checklistConfidence = douglasConfidence(douglasChecks);
+
   // Volatility from the risk analyst read.
   const volatilityConf = riskNote?.confidence ?? 50;
   const volatilityTag = volatilityConf >= 65 ? "Elevated" : volatilityConf >= 40 ? "Normal" : "Quiet";
