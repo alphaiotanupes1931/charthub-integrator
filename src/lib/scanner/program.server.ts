@@ -27,8 +27,8 @@ import {
   type ProgramInput,
 } from "@/lib/scanner/score";
 import type { Veto } from "@/lib/scanner/program";
-import { inLiquidWindow } from "@/lib/scanner/program";
-import { sixDimensionShadow, type SixDimensionShadow } from "@/lib/six-dimension-shadow";
+import { sixDimensionFromScan } from "@/lib/scanner/six-dimension-bridge";
+import type { SixDimensionResult } from "@/lib/six-dimension-score";
 
 export type ProgramResult = {
   symbol: string;
@@ -45,14 +45,14 @@ export type ProgramResult = {
    * Recorded, never published: it only becomes visible if it separates resolved
    * outcomes better than the current grade on data it was not built from.
    */
-  sixDimension: SixDimensionShadow;
+  sixDimension: SixDimensionResult;
 };
 
 type CellStats = {
   sample: number;
   distribution: number[];
-  /** Resolved trades per symbol, and how many of those reached target. */
-  bySymbol: Record<string, { decided: number; targets: number }>;
+  /** Resolved trades per symbol: count, targets reached, and average net R. */
+  bySymbol: Record<string, { decided: number; targets: number; netRSum: number }>;
 };
 
 const CACHE_MS = 10 * 60 * 1000;
@@ -73,7 +73,7 @@ export async function getCellStats(klass: InstrumentClass): Promise<CellStats> {
       // Void rows carry no direction, so they are not evidence either way.
       supabaseAdmin
         .from("signal_scores")
-        .select("symbol,status")
+        .select("symbol,status,net_r")
         .not("status", "in", '("open","void","unfilled")')
         .limit(20000),
       supabaseAdmin
@@ -84,13 +84,15 @@ export async function getCellStats(klass: InstrumentClass): Promise<CellStats> {
         .limit(20000),
     ]);
 
-    const rows = (resolved.data ?? []) as Array<{ symbol: string; status: string }>;
+    const rows = (resolved.data ?? []) as Array<{ symbol: string; status: string; net_r: number | string | null }>;
     const sample = rows.filter((r) => classifyInstrument(r.symbol).klass === klass).length;
     const bySymbol: CellStats["bySymbol"] = {};
     for (const r of rows) {
-      const cell = (bySymbol[r.symbol] ??= { decided: 0, targets: 0 });
+      const cell = (bySymbol[r.symbol] ??= { decided: 0, targets: 0, netRSum: 0 });
       cell.decided += 1;
       if (r.status === "target") cell.targets += 1;
+      const netR = Number(r.net_r);
+      if (Number.isFinite(netR)) cell.netRSum += netR;
     }
     const distribution = ((scored.data ?? []) as Array<{ composite: number | string }>)
       .map((r) => Number(r.composite))
@@ -138,17 +140,10 @@ export async function runScannerProgram(input: ProgramInput): Promise<ProgramRes
     band.reasons.unshift(...mandatory.map((v) => v.reason));
   }
 
-  const record = bySymbol[input.symbol] ?? { decided: 0, targets: 0 };
-  const window = inLiquidWindow(spec, input.at);
-  const sixDimension = sixDimensionShadow({
-    families,
-    sessionInside: window.inside,
-    sessionLabel: window.label,
-    marketClosed: window.marketClosed,
-    resolvedSample: record.decided,
-    measuredHitRate: record.decided > 0 ? record.targets / record.decided : null,
-    plannedRR: input.plannedRR ?? null,
-    costShare: input.costShare ?? null,
+  // The taught six dimensions, measured on the same scan, recorded in shadow.
+  const record = bySymbol[input.symbol] ?? { decided: 0, targets: 0, netRSum: 0 };
+  const sixDimension = sixDimensionFromScan(input, {
+    trackRecord: record.decided > 0 ? { sample: record.decided, expectancyR: record.netRSum / record.decided } : null,
   });
 
   return {
@@ -202,10 +197,12 @@ export async function recordProgramScore(args: {
       vetoes: result.vetoes.map((v) => ({ code: v.code, mandatory: v.mandatory, reason: v.reason })),
       reasons: result.band.reasons,
       six_dimension: {
-        composite: result.sixDimension.composite,
-        pass: result.sixDimension.pass,
-        reason: result.sixDimension.reason,
-        dimensions: result.sixDimension.dimensions.map((d) => ({ ...d })) as unknown as Record<string, unknown>[],
+        total: result.sixDimension.total,
+        gate_passed: result.sixDimension.gatePassed,
+        gate_reason: result.sixDimension.gateReason,
+        shadow_grade: result.sixDimension.shadowGrade,
+        notes: result.sixDimension.notes,
+        dimensions: JSON.parse(JSON.stringify(result.sixDimension.dimensions)),
       },
       shadow: args.shadow,
     });
