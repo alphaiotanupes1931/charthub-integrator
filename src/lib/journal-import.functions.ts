@@ -63,26 +63,20 @@ async function readJson<T>(
   args: { apiKey: string; system: string; messages: any[] },
 ): Promise<T> {
   const { generateText } = await import("ai");
-  const anthropicKey = process.env['ANTHROPIC_API_KEY'];
-  let model: any;
-  if (anthropicKey) {
-    const { createAnthropic } = await import("@ai-sdk/anthropic");
-    model = createAnthropic({ apiKey: anthropicKey })("claude-sonnet-4-5");
-  } else {
-    const { createAiGatewayProvider } = await import("@/lib/ai-gateway.server");
-    model = createAiGatewayProvider(args.apiKey)("google/gemini-3.7-flash");
-  }
+  const { runScanModel } = await import("@/lib/agents/scan-model.server");
   let last = "";
   // The model occasionally answers in prose or truncates the object; one retry
   // with a blunter instruction clears almost every case.
   for (let attempt = 0; attempt < 2; attempt++) {
-    const res = await generateText({
+    // Claude reads the screenshot; the gateway model only covers a Claude
+    // outage or a deployment without an Anthropic key.
+    const res = await runScanModel(args.apiKey, async (model) => generateText({
       model,
       system:
         `${args.system} Reply with a single minified JSON object only. No prose, no explanation, no markdown fences.` +
         (attempt === 0 ? "" : " Your previous reply was not valid JSON. Output only the JSON object now."),
       messages: args.messages,
-    });
+    }));
     const text = res.text || "";
     last = text.slice(0, 200);
     const start = text.indexOf("{");
