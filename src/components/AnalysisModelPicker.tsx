@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, ChevronDown, Layers } from "lucide-react";
+import { Check, ChevronDown, Info, Layers } from "lucide-react";
 import { toast } from "sonner";
 import { ANALYSIS_MODELS, getAnalysisModel } from "@/lib/analysis-models";
 import { useAnalysisModel } from "@/hooks/useAnalysisModel";
@@ -11,6 +11,7 @@ import { useAnalysisModel } from "@/hooks/useAnalysisModel";
 export function AnalysisModelPicker({ className = "" }: { className?: string }) {
   const { modelId, select, saving } = useAnalysisModel();
   const [open, setOpen] = useState(false);
+  const [infoFor, setInfoFor] = useState<string | null>(null);
   const active = getAnalysisModel(modelId);
 
   return (
