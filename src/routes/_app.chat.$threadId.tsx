@@ -220,6 +220,8 @@ function ChatThreadInner({
             strategy,
             lens: { id: lens.id, name: lens.name, promptEmphasis: lens.promptEmphasis },
             signalLearning: buildLearningPromptBlock(),
+            analysisModel: readAnalysisModel(),
+
           },
         };
       },
