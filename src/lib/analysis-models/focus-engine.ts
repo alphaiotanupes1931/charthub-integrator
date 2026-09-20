@@ -149,11 +149,11 @@ function readSide(c: FocusCandle[], atr: number, side: Side): SideRead {
     trendOk: false, level: null, breakoutIndex: null, pullbackExtreme: null,
     atZone: false, voided: false, pattern: null, stopRef: null, target: null,
   };
-  if (pivots.length < 2 || atr <= 0) return empty;
+  if (pivots.length < 1 || atr <= 0) return empty;
 
   // Most recent impulsive break: a close through a pivot that formed earlier.
   let breakout: { index: number; level: number } | null = null;
-  for (let p = pivots.length - 2; p >= 0 && !breakout; p--) {
+  for (let p = pivots.length - 1; p >= 0 && !breakout; p--) {
     const piv = pivots[p]!;
     for (let i = Math.max(piv.index + PIVOT + 1, n - 60); i < n; i++) {
       const broke = side === "long" ? c[i]!.close > piv.price : c[i]!.close < piv.price;
