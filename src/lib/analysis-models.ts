@@ -13,8 +13,9 @@
 
 import { FOCUS_RULEBOOK, FOCUS_RULEBOOK_VERSION, focusRulebookForPrompt, focusRuleCount } from "./analysis-models/focus-rulebook";
 import { PHOTON_RULEBOOK, PHOTON_RULEBOOK_VERSION, photonRulebookForPrompt, photonRuleCount } from "./analysis-models/photon-rulebook";
+import { DOUGLAS_RULEBOOK, DOUGLAS_RULEBOOK_VERSION, douglasRulebookForPrompt, douglasRuleCount } from "./analysis-models/douglas-rulebook";
 
-export type AnalysisModelId = "classic" | "focus" | "photon";
+export type AnalysisModelId = "classic" | "focus" | "photon" | "douglas";
 
 export type AnalysisModel = {
   id: AnalysisModelId;
@@ -81,10 +82,23 @@ export const ANALYSIS_MODELS: readonly AnalysisModel[] = [
     notReadyReason:
       "This model has no strategies written into it yet, so it cannot grade setups or file signals. Send the strategies and they get written into its rulebook.",
   },
+  {
+    id: "douglas",
+    name: "Mark Douglas",
+    version: `douglas-1.0 (${DOUGLAS_RULEBOOK_VERSION})`,
+    tagline: "Fed only Mark Douglas's trading psychology: the profit gap, random outcomes, predefined risk, mechanical execution.",
+    description:
+      "A clean-slate model fed only Mark Douglas's trading-psychology material — nothing from TradeMind Classic, The Trading Channel, or Photon Trading leaks in. This one is deliberately different: the material contains no chart mechanics, so the model files no trade signals of its own and never invents a direction, entry, stop, target, or grade. Douglas's own teaching is that the method supplies the edge and the mind supplies the consistency — so this model is the mindset layer. It coaches the profit gap (why traders take home less than their method produced), random and unique outcomes on every single trade, thinking in probabilities the way a casino runs its edge, predefining risk before entry, taking every signal the edge produces, and executing mechanically before ever going subjective. Use it alongside a chart model: run Classic, The Trading Channel, or Photon Trading for the setup, then let this model coach the execution — hesitation, moved stops, skipped signals, oversizing after a win, and spiralling after a loss are exactly what it is built to catch.",
+    knowledge: "strategies-only",
+    sourceLabel: "Fed from the Mark Douglas 'Mind Over the Market' interview transcript",
+    ready: douglasRuleCount() > 0,
+    notReadyReason:
+      "This model has no material written into it yet. Send the Mark Douglas material and it gets written into its rulebook.",
+  },
 ];
 
 export function normalizeAnalysisModel(raw: unknown): AnalysisModelId {
-  return raw === "focus" || raw === "photon" ? raw : DEFAULT_ANALYSIS_MODEL;
+  return raw === "focus" || raw === "photon" || raw === "douglas" ? raw : DEFAULT_ANALYSIS_MODEL;
 }
 
 export function getAnalysisModel(id: unknown): AnalysisModel {
@@ -114,6 +128,9 @@ function rulebookFor(id: AnalysisModelId): { count: number; text: string } {
   if (id === "photon") {
     return { count: photonRuleCount(), text: photonRuleCount() > 0 ? photonRulebookForPrompt() : "" };
   }
+  if (id === "douglas") {
+    return { count: douglasRuleCount(), text: douglasRuleCount() > 0 ? douglasRulebookForPrompt() : "" };
+  }
   return { count: focusRuleCount(), text: focusRuleCount() > 0 ? focusRulebookForPrompt() : "" };
 }
 
@@ -136,4 +153,4 @@ export function analysisModelPromptBlock(id: unknown): string {
     .join("\n");
 }
 
-export { FOCUS_RULEBOOK, FOCUS_RULEBOOK_VERSION, PHOTON_RULEBOOK, PHOTON_RULEBOOK_VERSION };
+export { FOCUS_RULEBOOK, FOCUS_RULEBOOK_VERSION, PHOTON_RULEBOOK, PHOTON_RULEBOOK_VERSION, DOUGLAS_RULEBOOK, DOUGLAS_RULEBOOK_VERSION };
