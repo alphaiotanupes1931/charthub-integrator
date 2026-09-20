@@ -1949,6 +1949,8 @@ export type Database = {
           bars_to_resolve: number | null
           bias: string
           confidence: number | null
+          correlated: boolean
+          correlation_cluster: string | null
           cost_r: number | null
           counter_trend: boolean
           created_at: string
@@ -1966,6 +1968,7 @@ export type Database = {
           net_r: number | null
           planned_r: number | null
           realized_r: number | null
+          rescued: boolean
           resolved_at: string | null
           source: string
           status: string
@@ -1982,6 +1985,8 @@ export type Database = {
           bars_to_resolve?: number | null
           bias: string
           confidence?: number | null
+          correlated?: boolean
+          correlation_cluster?: string | null
           cost_r?: number | null
           counter_trend?: boolean
           created_at?: string
@@ -1999,6 +2004,7 @@ export type Database = {
           net_r?: number | null
           planned_r?: number | null
           realized_r?: number | null
+          rescued?: boolean
           resolved_at?: string | null
           source?: string
           status?: string
@@ -2015,6 +2021,8 @@ export type Database = {
           bars_to_resolve?: number | null
           bias?: string
           confidence?: number | null
+          correlated?: boolean
+          correlation_cluster?: string | null
           cost_r?: number | null
           counter_trend?: boolean
           created_at?: string
@@ -2032,6 +2040,7 @@ export type Database = {
           net_r?: number | null
           planned_r?: number | null
           realized_r?: number | null
+          rescued?: boolean
           resolved_at?: string | null
           source?: string
           status?: string

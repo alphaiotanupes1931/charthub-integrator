@@ -66,7 +66,8 @@ function BucketTable({ title, buckets, empty }: { title: string; buckets: ScoreB
                 <th className="py-2 pr-3 font-normal">Hit rate</th>
                 <th className="py-2 pr-3 font-normal">Avg R gross</th>
                 <th className="py-2 pr-3 font-normal">Avg R net</th>
-                <th className="py-2 font-normal">Heat / best (n)</th>
+                <th className="py-2 pr-3 font-normal">Heat / best (n)</th>
+                <th className="py-2 font-normal">Stops that later hit</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -95,8 +96,13 @@ function BucketTable({ title, buckets, empty }: { title: string; buckets: ScoreB
                   {/* Heat taken and best price reached, recovered from the same bars
                       that decided the trade. Big best-price on a losing group means
                       the direction was right and the stop was too tight. */}
-                  <td className="py-2 font-mono text-muted-foreground">
+                  <td className="py-2 pr-3 font-mono text-muted-foreground">
                     {b.avgMfeR == null ? "-" : `${b.avgMaeR}R / ${b.avgMfeR}R (n=${b.excursionCount})`}
+                  </td>
+                  {/* Stop-width diagnosis: a losing group with most of its stops
+                      rescued needs wider stops, not a different read. */}
+                  <td className="py-2 font-mono text-muted-foreground">
+                    {b.rescueRate == null ? "-" : `${b.rescueRate}% (${b.rescuedStops}/${b.stops})`}
                   </td>
                 </tr>
               ))}
@@ -178,7 +184,13 @@ function ScoreboardPage() {
               label="Hit rate, decided only"
               value={board.decided ? `${board.hitRate}%` : "-"}
               n={board.decided}
-              sub={`${board.targets} hit target, ${board.stops} stopped`}
+              sub={
+                `${board.targets} hit target, ${board.stops} stopped` +
+                (board.interval ? `. 95% interval ${board.interval.low}% to ${board.interval.high}%` : "") +
+                (board.decided < board.sampleFloor
+                  ? `. Under ${board.sampleFloor} decided trades, so this is reported, not claimed.`
+                  : "")
+              }
             />
             <Stat
               label="Average R, decided only"
@@ -212,6 +224,21 @@ function ScoreboardPage() {
                   : `${board.expiredAvgR}R average at the last close. Held out of hit rate and average R.`
               }
             />
+
+            <Stat
+              label="Stops that later hit target"
+              value={board.rescueRate == null ? "-" : `${board.rescueRate}%`}
+              n={board.stops}
+              sub={`${board.rescuedStops} of ${board.stops} stopped trades went on to reach the target. A high share means the stop was too tight, not the direction wrong.`}
+            />
+            {board.correlated > 0 && (
+              <Stat
+                label="Correlated duplicates"
+                value={String(board.correlated)}
+                n={board.correlated}
+                sub="Signals on instruments that move together, filed at the same time as a better-graded one. Kept on record, held out of every number here."
+              />
+            )}
 
             <Stat
               label="Taken vs skipped"
@@ -297,6 +324,9 @@ function ScoreboardPage() {
                       <>
                         <XCircle className="h-3 w-3 text-red-400" />
                         <span className="text-red-400">Stopped -1R</span>
+                        {r.rescued && (
+                          <span className="text-amber-400">, target hit later</span>
+                        )}
                       </>
                     )}
                     {r.status === "expired" && (
@@ -306,8 +336,14 @@ function ScoreboardPage() {
                       </>
                     )}
                     {r.status === "open" && <span className="text-muted-foreground">Open</span>}
+                    {r.status === "unfilled" && (
+                      <span className="text-muted-foreground">Never filled (entry not traded back to)</span>
+                    )}
                     {r.status === "void" && (
                       <span className="text-muted-foreground">Not scored (no direction)</span>
+                    )}
+                    {r.correlated && (
+                      <span className="text-muted-foreground">· counted with a correlated signal</span>
                     )}
                   </span>
                   <span className="ml-auto text-muted-foreground">{new Date(r.createdAt).toLocaleString()}</span>
