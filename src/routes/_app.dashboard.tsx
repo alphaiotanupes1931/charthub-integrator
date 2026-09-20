@@ -1188,7 +1188,7 @@ function Dashboard() {
   }, []);
   const strategyOptions = useMemo(
     () => allStrategies().map((s) => ({ name: s.name, blurb: s.description ?? "" })),
-    [strategyOpen],
+    [setupOpen],
   );
   const [broker, setBroker] = useState<{ email: string; server: string; accountType: "demo" | "live" } | null>(null);
   const [activeCoach, setActiveCoach] = useState<string>(() =>
@@ -1238,10 +1238,7 @@ function Dashboard() {
     const onDown = (e: MouseEvent) => {
       if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) setPickerOpen(false);
       if (levelsRef.current && !levelsRef.current.contains(e.target as Node)) setLevelsOpen(false);
-      if (lensRef.current && !lensRef.current.contains(e.target as Node)) setLensOpen(false);
-      if (coachRef.current && !coachRef.current.contains(e.target as Node)) setCoachOpen(false);
-      if (strategyRef.current && !strategyRef.current.contains(e.target as Node)) setStrategyOpen(false);
-      if (styleRef.current && !styleRef.current.contains(e.target as Node)) setStyleOpen(false);
+      if (setupRef.current && !setupRef.current.contains(e.target as Node)) setSetupOpen(false);
       if (viewMenuRef.current && !viewMenuRef.current.contains(e.target as Node)) setViewMenuOpen(false);
     };
     document.addEventListener("mousedown", onDown);
@@ -1251,7 +1248,6 @@ function Dashboard() {
   function pickLens(id: ScanLensId) {
     setLensId(id);
     writeActiveLensId(id);
-    setLensOpen(false);
     const lens = SCAN_LENSES.find((l) => l.id === id);
     toast.success(`Scan Lens: ${lens?.name ?? id}`);
   }
