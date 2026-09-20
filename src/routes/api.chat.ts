@@ -8,6 +8,7 @@ import { createAiGatewayProvider } from "@/lib/ai-gateway.server";
 import { METHODOLOGY_CORE } from "@/lib/agents/methodology-kb";
 import { rulebookForPrompt } from "@/lib/wyckoff/rulebook";
 import { classicResearchRulebookForPrompt } from "@/lib/analysis-models/classic-research-rulebook";
+import { foundationFrameworkForPrompt } from "@/lib/analysis-models/foundation-framework";
 import {
   analysisModelPromptBlock,
   getAnalysisModel,
