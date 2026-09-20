@@ -86,6 +86,12 @@ export function decideAlert(input: {
   stale: boolean;
   staleReason?: string | null;
   quiet: boolean;
+  /**
+   * Already alerting on a better-graded setup in the same direction on an
+   * instrument that moves with this one. Three US index shorts in one hour is one
+   * trade taken three times, so only the best of the family is sent.
+   */
+  correlated?: boolean;
 }): AlertDecision {
   if (!isTradeableBias(input.plan.bias)) return { alert: false, reason: "no direction yet" };
   if (!gradeMeetsMin(input.plan.grade, input.minGrade)) {
@@ -94,6 +100,7 @@ export function decideAlert(input: {
   const { entry, stop, tp1 } = input.plan;
   if (entry == null || stop == null || tp1 == null) return { alert: false, reason: "incomplete levels" };
   if (input.stale) return { alert: false, reason: input.staleReason ?? "entry already gone" };
+  if (input.correlated) return { alert: false, reason: "same bet as a better-graded correlated setup" };
   if (input.quiet) return { alert: false, reason: "quiet hours" };
   return { alert: true };
 }
