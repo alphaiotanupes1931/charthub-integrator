@@ -21,7 +21,7 @@ export type DouglasRead = {
 };
 
 /** The fixed execution-discipline checklist, in Douglas's terms. */
-const CHECKLIST: readonly string[] = [
+export const DOUGLAS_CHECKLIST: readonly string[] = [
   "Is this setup produced by your method — not by how the last trade felt?",
   "Is the risk predefined before entry, as the price of finding out whether the edge works this time?",
   "Are you willing to take the small loss without moving the stop or arguing with it?",
