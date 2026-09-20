@@ -40,6 +40,7 @@ import { Route as AppStrategiesRouteImport } from './routes/_app.strategies'
 import { Route as AppSignalsRouteImport } from './routes/_app.signals'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppScoreboardRouteImport } from './routes/_app.scoreboard'
+import { Route as AppScanModelsRouteImport } from './routes/_app.scan-models'
 import { Route as AppScanLensRouteImport } from './routes/_app.scan-lens'
 import { Route as AppNewsRouteImport } from './routes/_app.news'
 import { Route as AppMentorRouteImport } from './routes/_app.mentor'
@@ -267,6 +268,11 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
 const AppScoreboardRoute = AppScoreboardRouteImport.update({
   id: '/scoreboard',
   path: '/scoreboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppScanModelsRoute = AppScanModelsRouteImport.update({
+  id: '/scan-models',
+  path: '/scan-models',
   getParentRoute: () => AppRoute,
 } as any)
 const AppScanLensRoute = AppScanLensRouteImport.update({
@@ -712,6 +718,7 @@ export interface FileRoutesByFullPath {
   '/mentor': typeof AppMentorRoute
   '/news': typeof AppNewsRoute
   '/scan-lens': typeof AppScanLensRoute
+  '/scan-models': typeof AppScanModelsRoute
   '/scoreboard': typeof AppScoreboardRoute
   '/settings': typeof AppSettingsRoute
   '/signals': typeof AppSignalsRoute
@@ -816,6 +823,7 @@ export interface FileRoutesByTo {
   '/mentor': typeof AppMentorRoute
   '/news': typeof AppNewsRoute
   '/scan-lens': typeof AppScanLensRoute
+  '/scan-models': typeof AppScanModelsRoute
   '/scoreboard': typeof AppScoreboardRoute
   '/settings': typeof AppSettingsRoute
   '/signals': typeof AppSignalsRoute
@@ -922,6 +930,7 @@ export interface FileRoutesById {
   '/_app/mentor': typeof AppMentorRoute
   '/_app/news': typeof AppNewsRoute
   '/_app/scan-lens': typeof AppScanLensRoute
+  '/_app/scan-models': typeof AppScanModelsRoute
   '/_app/scoreboard': typeof AppScoreboardRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/signals': typeof AppSignalsRoute
@@ -1030,6 +1039,7 @@ export interface FileRouteTypes {
     | '/mentor'
     | '/news'
     | '/scan-lens'
+    | '/scan-models'
     | '/scoreboard'
     | '/settings'
     | '/signals'
@@ -1134,6 +1144,7 @@ export interface FileRouteTypes {
     | '/mentor'
     | '/news'
     | '/scan-lens'
+    | '/scan-models'
     | '/scoreboard'
     | '/settings'
     | '/signals'
@@ -1239,6 +1250,7 @@ export interface FileRouteTypes {
     | '/_app/mentor'
     | '/_app/news'
     | '/_app/scan-lens'
+    | '/_app/scan-models'
     | '/_app/scoreboard'
     | '/_app/settings'
     | '/_app/signals'
@@ -1580,6 +1592,13 @@ declare module '@tanstack/react-router' {
       path: '/scoreboard'
       fullPath: '/scoreboard'
       preLoaderRoute: typeof AppScoreboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/scan-models': {
+      id: '/_app/scan-models'
+      path: '/scan-models'
+      fullPath: '/scan-models'
+      preLoaderRoute: typeof AppScanModelsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/scan-lens': {
@@ -2204,6 +2223,7 @@ interface AppRouteChildren {
   AppMentorRoute: typeof AppMentorRoute
   AppNewsRoute: typeof AppNewsRoute
   AppScanLensRoute: typeof AppScanLensRoute
+  AppScanModelsRoute: typeof AppScanModelsRoute
   AppScoreboardRoute: typeof AppScoreboardRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppSignalsRoute: typeof AppSignalsRoute
@@ -2240,6 +2260,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppMentorRoute: AppMentorRoute,
   AppNewsRoute: AppNewsRoute,
   AppScanLensRoute: AppScanLensRoute,
+  AppScanModelsRoute: AppScanModelsRoute,
   AppScoreboardRoute: AppScoreboardRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppSignalsRoute: AppSignalsRoute,

@@ -37,6 +37,7 @@ import {
   ChevronDown,
   Target,
   Layers,
+  ScanSearch,
 
 
 } from "lucide-react";
@@ -101,6 +102,7 @@ const NAV_GROUPS: NavGroup[] = [
     icon: Users,
     items: [
       { to: "/coaches",    label: "AI Coaches", icon: Users },
+      { to: "/scan-models", label: "Scan Models", icon: ScanSearch },
       { to: "/strategies", label: "Strategies", icon: Library },
     ],
   },
