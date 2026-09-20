@@ -91,6 +91,9 @@ export function jablonskiPointSize(symbol: string): number | null {
   if (/^(WTI|USOIL|UKOIL|BRENT|NATGAS|XTIUSD|XBRUSD)/.test(s)) return 0.01;
   if (s.startsWith("XAU")) return 1; // gold: one dollar
   if (s.startsWith("XAG")) return 0.01; // silver: one cent
+  // Crypto has no conventional point, so it is out of scope even though tickers
+  // like BTCUSD look like an FX pair.
+  if (/^(BTC|ETH|XRP|SOL|LTC|BCH|ADA|DOGE|AVAX|LINK|DOT|MATIC)/.test(s)) return null;
   // FX: a point is the last quoted decimal of the conventional pip.
   if (/^[A-Z]{6}$/.test(s)) return s.includes("JPY") ? 0.01 : 0.0001;
   return null;
