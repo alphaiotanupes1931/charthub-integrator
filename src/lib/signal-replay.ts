@@ -23,8 +23,12 @@ export type ReplaySignal = {
 };
 
 export type ReplayVerdict = {
-  /** "unresolved" means neither level printed in the bars supplied. */
-  status: "target" | "stop" | "unresolved";
+  /**
+   * "unresolved" means neither level printed in the bars supplied.
+   * "unfilled" means the planned entry was never traded back to, so there was
+   * no position to win or lose with. Only produced when `requireFill` is set.
+   */
+  status: "target" | "stop" | "unresolved" | "unfilled";
   /** Gross R at the resolving level; null while unresolved. */
   realizedR: number | null;
   /** Maximum adverse excursion in R (heat taken). */
@@ -37,6 +41,15 @@ export type ReplayVerdict = {
   lastClose: number | null;
   /** Time of the resolving bar, for spot checks against a chart. */
   resolvedAt: number | null;
+};
+
+export type ReplayOptions = {
+  /**
+   * Score the signal as a resting limit order: nothing counts until price trades
+   * back to the planned entry. Without this a scan is credited with a trade the
+   * account never had, which is what let first-bar "free wins" into the record.
+   */
+  requireFill?: boolean;
 };
 
 /** Long or short, or null when the scan had no directional opinion. */
