@@ -8,7 +8,7 @@ import { CANDLE_STYLES, CANDLE_STYLE_MAP, type CandleStyleId } from "@/lib/candl
 import { enforceGradeDirection } from "@/lib/chartAnnotations";
 
 import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
-import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Clock, MessageSquare, X, Plug, Square, Paperclip, ChevronUp, PanelRightClose, PanelRightOpen, BarChart3, ThumbsUp, ThumbsDown, Brain, LineChart, Settings2, Maximize, Minimize, Maximize2, Minimize2, BookOpen, FlaskConical, Zap } from "lucide-react";
+import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Clock, MessageSquare, X, Plug, Square, Paperclip, ChevronUp, PanelRightClose, PanelRightOpen, BarChart3, ThumbsUp, ThumbsDown, Brain, LineChart, Settings2, Maximize, Minimize, Maximize2, Minimize2, BookOpen, FlaskConical, Zap, Info } from "lucide-react";
 
 
 import { useCoachVoice } from "@/hooks/useCoachVoice";
@@ -31,7 +31,8 @@ import { ActionLoader } from "@/components/ActionLoader";
 import { clearLastThreadId, readActiveCoach, writeActiveCoach, COACH_KEY, writeLastChart, readLastThreadId, writeLastThreadId } from "@/lib/chat-client";
 import { voiceForCoach } from "@/lib/coachVoices";
 import { COACH_ICON_META, DEFAULT_COACH_ICON } from "@/lib/coachMeta";
-import { AnalysisModelPicker } from "@/components/AnalysisModelPicker";
+import { ANALYSIS_MODELS } from "@/lib/analysis-models";
+import { useAnalysisModel } from "@/hooks/useAnalysisModel";
 import { reportSystemNotice } from "@/lib/notifications.functions";
 import { runResearchPlan } from "@/lib/agents/research.functions";
 import { recordHermesFeedback } from "@/lib/agents/hermes.functions";
@@ -1166,15 +1167,14 @@ function Dashboard() {
   const activeScanRequestRef = useRef(0);
   const [isDesktop, setIsDesktop] = useState(false);
   const [lensId, setLensId] = useState<ScanLensId>("wyckoff");
-  const [lensOpen, setLensOpen] = useState(false);
-  const coachRef = useRef<HTMLDivElement>(null);
-  const [coachOpen, setCoachOpen] = useState(false);
-  const strategyRef = useRef<HTMLDivElement>(null);
-  const [strategyOpen, setStrategyOpen] = useState(false);
+  // One consolidated Setup menu holds model, lens, coach, strategy and style so
+  // the toolbar never fills up with dropdown buttons.
+  const setupRef = useRef<HTMLDivElement>(null);
+  const [setupOpen, setSetupOpen] = useState(false);
+  const [modelInfoFor, setModelInfoFor] = useState<string | null>(null);
+  const { modelId, select: selectModel, saving: modelSaving } = useAnalysisModel();
   const [activeStrategy, setActiveStrategy] = useState<string | null>(null);
   const [tradeStyle, setTradeStyle] = useState<"auto" | TradeStyle>("auto");
-  const styleRef = useRef<HTMLDivElement>(null);
-  const [styleOpen, setStyleOpen] = useState(false);
   useEffect(() => {
     // New traders default to Auto: the platform reads conditions and picks the
     // playbook, then tells them which one it used on the scan card.
@@ -1188,7 +1188,7 @@ function Dashboard() {
   }, []);
   const strategyOptions = useMemo(
     () => allStrategies().map((s) => ({ name: s.name, blurb: s.description ?? "" })),
-    [strategyOpen],
+    [setupOpen],
   );
   const [broker, setBroker] = useState<{ email: string; server: string; accountType: "demo" | "live" } | null>(null);
   const [activeCoach, setActiveCoach] = useState<string>(() =>
@@ -1238,10 +1238,7 @@ function Dashboard() {
     const onDown = (e: MouseEvent) => {
       if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) setPickerOpen(false);
       if (levelsRef.current && !levelsRef.current.contains(e.target as Node)) setLevelsOpen(false);
-      if (lensRef.current && !lensRef.current.contains(e.target as Node)) setLensOpen(false);
-      if (coachRef.current && !coachRef.current.contains(e.target as Node)) setCoachOpen(false);
-      if (strategyRef.current && !strategyRef.current.contains(e.target as Node)) setStrategyOpen(false);
-      if (styleRef.current && !styleRef.current.contains(e.target as Node)) setStyleOpen(false);
+      if (setupRef.current && !setupRef.current.contains(e.target as Node)) setSetupOpen(false);
       if (viewMenuRef.current && !viewMenuRef.current.contains(e.target as Node)) setViewMenuOpen(false);
     };
     document.addEventListener("mousedown", onDown);
@@ -1251,7 +1248,6 @@ function Dashboard() {
   function pickLens(id: ScanLensId) {
     setLensId(id);
     writeActiveLensId(id);
-    setLensOpen(false);
     const lens = SCAN_LENSES.find((l) => l.id === id);
     toast.success(`Scan Lens: ${lens?.name ?? id}`);
   }
@@ -1866,210 +1862,165 @@ function Dashboard() {
 
         <div className="flex-1" />
 
-        {/* Right-side pickers: analysis model, Wyckoff (lens), The Analyst (coach) */}
-        <div className="hidden md:flex items-center gap-2 shrink-0">
-
-          <AnalysisModelPicker />
-
-          <div className="relative" ref={lensRef}>
+        {/* Right side: one Setup menu holds model, lens, coach, strategy and
+            style so the toolbar stays clean no matter how many pickers exist. */}
+        <div className="hidden md:flex items-center shrink-0">
+          <div className="relative" ref={setupRef}>
             <button
-              onClick={() => setLensOpen((o) => !o)}
-               className="dashboard-control inline-flex items-center gap-1.5 h-9 px-3.5 text-xs font-medium text-foreground transition"
-              title="Scan lens"
+              onClick={() => setSetupOpen((o) => !o)}
+              className="dashboard-control inline-flex items-center gap-1.5 h-9 px-3.5 text-xs font-medium text-foreground transition"
+              aria-haspopup="menu"
+              aria-expanded={setupOpen}
+              title="Analysis setup: model, lens, coach, strategy, style"
             >
-              <Crosshair className="h-3.5 w-3.5 text-primary" />
-              <span>{activeLens.name}</span>
-              <ChevronDown className={`h-3 w-3 transition-transform ${lensOpen ? "rotate-180" : ""}`} />
+              <Settings2 className="h-3.5 w-3.5 text-primary" />
+              <span>Setup</span>
+              <ChevronDown className={`h-3 w-3 transition-transform ${setupOpen ? "rotate-180" : ""}`} />
             </button>
-            {lensOpen && (
-              <div role="listbox" className="absolute right-0 mt-2 w-72 max-h-96 overflow-y-auto rounded-2xl border border-border/60 bg-card shadow-xl z-50">
-                {SCAN_LENSES.map((l) => {
-                  const isActive = l.id === lensId;
+            {setupOpen && (
+              <div className="absolute right-0 mt-2 w-80 max-h-[70vh] overflow-y-auto rounded-2xl border border-border/60 bg-card shadow-xl z-50 p-2">
+
+                <div className="px-2 pb-1 pt-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Analysis model</div>
+                {ANALYSIS_MODELS.map((m) => (
+                  <div key={m.id}>
+                    <button
+                      type="button"
+                      disabled={modelSaving}
+                      onClick={() => {
+                        if (m.id === modelId) return;
+                        void selectModel(m.id).then((r) => {
+                          if (r?.error) toast.error(r.error.message);
+                          else toast.success(`Now using ${m.name}`);
+                        });
+                      }}
+                      className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left text-sm hover:bg-accent/40 transition disabled:opacity-50"
+                    >
+                      <Check className={`h-3.5 w-3.5 shrink-0 ${m.id === modelId ? "text-foreground" : "text-transparent"}`} />
+                      <span className="min-w-0 flex-1 truncate font-medium">{m.name}</span>
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`About ${m.name}`}
+                        onClick={(e) => { e.stopPropagation(); setModelInfoFor((v) => (v === m.id ? null : m.id)); }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setModelInfoFor((v) => (v === m.id ? null : m.id));
+                          }
+                        }}
+                        className="shrink-0 text-muted-foreground hover:text-foreground"
+                      >
+                        <Info className="h-3.5 w-3.5" />
+                      </span>
+                    </button>
+                    {modelInfoFor === m.id && (
+                      <div className="mx-2 mb-1 border-t border-border/60 pt-1.5 text-[11px] leading-relaxed text-muted-foreground">
+                        <p>{m.tagline}</p>
+                        <p className="mt-1">{m.description}</p>
+                        <p className="mt-1 text-muted-foreground/80">{m.version}</p>
+                        {m.sourceUrl && (
+                          <a
+                            href={m.sourceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-1 block font-medium text-foreground underline underline-offset-2 hover:text-foreground/80"
+                          >
+                            {m.sourceLabel ?? m.sourceUrl}
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                <div className="mt-1 border-t border-border/40 px-2 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Scan lens</div>
+                {SCAN_LENSES.map((l) => (
+                  <button
+                    key={l.id}
+                    onClick={() => pickLens(l.id)}
+                    className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left text-sm hover:bg-accent/40 transition"
+                  >
+                    <Check className={`h-3.5 w-3.5 shrink-0 ${l.id === lensId ? "text-foreground" : "text-transparent"}`} />
+                    <span className="min-w-0 flex-1 truncate font-medium">{l.name}</span>
+                  </button>
+                ))}
+                <Link to="/scan-lens" className="block px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground">
+                  Manage all lenses →
+                </Link>
+
+                <div className="mt-1 border-t border-border/40 px-2 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Coach</div>
+                {Object.keys(COACH_ICON_META).map((name) => {
+                  const meta = COACH_ICON_META[name] ?? DEFAULT_COACH_ICON;
+                  const CIcon = meta.icon;
                   return (
                     <button
-                      key={l.id}
-                      role="option"
-                      aria-selected={isActive}
-                      onClick={() => pickLens(l.id)}
-                      className={`w-full text-left px-3 py-2.5 text-sm border-b border-border/40 last:border-0 hover:bg-accent/40 transition ${
-                        isActive ? "bg-primary/10 text-primary" : ""
-                      }`}
+                      key={name}
+                      onClick={() => {
+                        writeActiveCoach(name);
+                        setActiveCoach(name);
+                        if (name !== activeCoach) toast.success(`${name} is now your coach`);
+                      }}
+                      className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left text-sm hover:bg-accent/40 transition"
                     >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-medium">{l.name}</span>
-                        {isActive && <Check className="h-3.5 w-3.5 shrink-0" />}
-                      </div>
-                      <div className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{l.desc}</div>
+                      <Check className={`h-3.5 w-3.5 shrink-0 ${name === activeCoach ? "text-foreground" : "text-transparent"}`} />
+                      <span className={`inline-flex h-5 w-5 items-center justify-center rounded-xl ${meta.iconBg} ${meta.iconText} shrink-0`}>
+                        <CIcon className="h-3 w-3" />
+                      </span>
+                      <span className="min-w-0 flex-1 truncate font-medium">{name}</span>
                     </button>
                   );
                 })}
-                <Link to="/scan-lens" className="block px-3 py-2 text-[11px] text-muted-foreground hover:text-foreground border-t border-border/60">
-                  Manage all lenses →
+                <Link to="/coaches" className="block px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground">
+                  Manage all coaches →
                 </Link>
-              </div>
-            )}
-          </div>
 
-          {(() => {
-            const meta = COACH_ICON_META[activeCoach] ?? DEFAULT_COACH_ICON;
-            const Icon = meta.icon;
-            const coachNames = Object.keys(COACH_ICON_META);
-            return (
-              <div className="relative" ref={coachRef}>
+                <div className="mt-1 border-t border-border/40 px-2 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Strategy</div>
                 <button
-                  onClick={() => setCoachOpen((o) => !o)}
-                  className="dashboard-control inline-flex items-center gap-1.5 h-9 px-3.5 text-xs font-medium text-foreground transition"
-                  title="Change active AI coach"
-                >
-                  <span className={`inline-flex h-5 w-5 items-center justify-center rounded-xl ${meta.iconBg} ${meta.iconText} shrink-0`}>
-                    <Icon className="h-3 w-3" />
-                  </span>
-                  <span>{activeCoach}</span>
-                  <ChevronDown className={`h-3 w-3 transition-transform ${coachOpen ? "rotate-180" : ""}`} />
-                </button>
-                {coachOpen && (
-                  <div role="listbox" className="absolute right-0 mt-2 w-72 max-h-96 overflow-y-auto rounded-2xl border border-border/60 bg-card shadow-xl z-50">
-                    {coachNames.map((name) => {
-                      const m = COACH_ICON_META[name] ?? DEFAULT_COACH_ICON;
-                      const CIcon = m.icon;
-                      const isActive = name === activeCoach;
-                      return (
-                        <button
-                          key={name}
-                          role="option"
-                          aria-selected={isActive}
-                          onClick={() => {
-                            writeActiveCoach(name);
-                            setActiveCoach(name);
-                            setCoachOpen(false);
-                            if (name !== activeCoach) toast.success(`${name} is now your coach`);
-                          }}
-                          className={`w-full text-left px-3 py-2.5 text-sm border-b border-border/40 last:border-0 hover:bg-accent/40 transition ${
-                            isActive ? "bg-primary/10 text-primary" : ""
-                          }`}
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span className={`inline-flex h-5 w-5 items-center justify-center rounded-xl ${m.iconBg} ${m.iconText} shrink-0`}>
-                                <CIcon className="h-3 w-3" />
-                              </span>
-                              <span className="font-medium truncate">{name}</span>
-                            </div>
-                            {isActive && <Check className="h-3.5 w-3.5 shrink-0" />}
-                          </div>
-                          <div className="text-[11px] text-muted-foreground mt-0.5 leading-snug pl-7">{m.tagline}</div>
-                        </button>
-                      );
-                    })}
-                    <Link to="/coaches" className="block px-3 py-2 text-[11px] text-muted-foreground hover:text-foreground border-t border-border/60">
-                      Manage all coaches →
-                    </Link>
-                  </div>
-                )}
-              </div>
-            );
-          })()}
-
-          {/* Active strategy playbook - sits beside the coach so both pieces of
-              scan context are changeable from the same bar. */}
-          <div className="relative" ref={strategyRef}>
-            <button
-              onClick={() => setStrategyOpen((o) => !o)}
-              className="dashboard-control inline-flex items-center gap-1.5 h-9 px-3.5 text-xs font-medium text-foreground transition"
-              title="Change the strategy playbook your scans are graded against"
-            >
-              <BookOpen className="h-3.5 w-3.5 text-primary" />
-              <span className="max-w-[9rem] truncate">{activeStrategy ?? AUTO_STRATEGY}</span>
-              <ChevronDown className={`h-3 w-3 transition-transform ${strategyOpen ? "rotate-180" : ""}`} />
-            </button>
-            {strategyOpen && (
-              <div role="listbox" className="absolute right-0 mt-2 w-72 max-h-96 overflow-y-auto rounded-2xl border border-border/60 bg-card shadow-xl z-50">
-                <button
-                  role="option"
-                  aria-selected={isAutoStrategy(activeStrategy)}
                   onClick={() => {
                     writeActiveStrategy(AUTO_STRATEGY);
                     setActiveStrategy(AUTO_STRATEGY);
-                    setStrategyOpen(false);
                     toast.success("The platform will pick the strategy from current market conditions");
                   }}
-                  className={`w-full text-left px-3 py-2.5 text-sm border-b border-border/40 hover:bg-accent/40 transition ${isAutoStrategy(activeStrategy) ? "bg-primary/10 text-primary" : ""}`}
+                  className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left text-sm hover:bg-accent/40 transition"
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-medium truncate">{AUTO_STRATEGY}</span>
-                    {isAutoStrategy(activeStrategy) && <Check className="h-3.5 w-3.5 shrink-0" />}
-                  </div>
-                  <div className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
-                    Reads trend, volatility and volume right now, then grades with the playbook that fits. Named on every scan.
-                  </div>
+                  <Check className={`h-3.5 w-3.5 shrink-0 ${isAutoStrategy(activeStrategy) ? "text-foreground" : "text-transparent"}`} />
+                  <span className="min-w-0 flex-1 truncate font-medium">{AUTO_STRATEGY}</span>
                 </button>
-                {strategyOptions.map((s) => {
-                  const isActive = s.name === activeStrategy;
-                  return (
-                    <button
-                      key={s.name}
-                      role="option"
-                      aria-selected={isActive}
-                      onClick={() => {
-                        writeActiveStrategy(s.name);
-                        setActiveStrategy(s.name);
-                        setStrategyOpen(false);
-                        if (!isActive) toast.success(`Scans now graded against ${s.name}`);
-                      }}
-                      className={`w-full text-left px-3 py-2.5 text-sm border-b border-border/40 last:border-0 hover:bg-accent/40 transition ${isActive ? "bg-primary/10 text-primary" : ""}`}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-medium truncate">{s.name}</span>
-                        {isActive && <Check className="h-3.5 w-3.5 shrink-0" />}
-                      </div>
-                      {s.blurb && (
-                        <div className="text-[11px] text-muted-foreground mt-0.5 leading-snug line-clamp-2">{s.blurb}</div>
-                      )}
-                    </button>
-                  );
-                })}
-                <Link to="/strategies" search={{ edit: undefined }} className="block px-3 py-2 text-[11px] text-muted-foreground hover:text-foreground border-t border-border/60">
+                {strategyOptions.map((s) => (
+                  <button
+                    key={s.name}
+                    onClick={() => {
+                      writeActiveStrategy(s.name);
+                      setActiveStrategy(s.name);
+                      if (s.name !== activeStrategy) toast.success(`Scans now graded against ${s.name}`);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left text-sm hover:bg-accent/40 transition"
+                  >
+                    <Check className={`h-3.5 w-3.5 shrink-0 ${s.name === activeStrategy ? "text-foreground" : "text-transparent"}`} />
+                    <span className="min-w-0 flex-1 truncate font-medium">{s.name}</span>
+                  </button>
+                ))}
+                <Link to="/strategies" search={{ edit: undefined }} className="block px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground">
                   Manage all strategies →
                 </Link>
-              </div>
-            )}
-          </div>
-          <div className="relative" ref={styleRef}>
-            <button
-              onClick={() => setStyleOpen((o) => !o)}
-              className="dashboard-control inline-flex h-9 items-center gap-1.5 px-3 text-xs font-medium text-foreground transition"
-              aria-haspopup="listbox"
-              aria-expanded={styleOpen}
-              aria-label="Trade style"
-            >
-              <Clock className="h-3.5 w-3.5 text-primary" />
-              <span className="capitalize">{tradeStyle === "auto" ? "Style: Auto" : tradeStyle}</span>
-              <ChevronDown className={`h-3 w-3 transition-transform ${styleOpen ? "rotate-180" : ""}`} />
-            </button>
-            {styleOpen && (
-              <div role="listbox" className="absolute right-0 mt-2 w-40 overflow-hidden rounded-md border border-border/60 bg-card z-50">
+
+                <div className="mt-1 border-t border-border/40 px-2 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Trade style</div>
                 {[
                   { value: "auto", label: "Auto" },
                   { value: "scalp", label: "Scalp" },
                   { value: "intraday", label: "Intraday" },
                   { value: "swing", label: "Swing" },
-                ].map((opt) => {
-                  const active = tradeStyle === opt.value;
-                  return (
-                    <button
-                      key={opt.value}
-                      role="option"
-                      aria-selected={active}
-                      onClick={() => { setTradeStyle(opt.value as "auto" | TradeStyle); setStyleOpen(false); }}
-                      className={`w-full text-left px-3 py-2 text-sm hover:bg-accent/40 transition ${active ? "bg-primary/10 text-primary" : "text-foreground"}`}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-medium capitalize">{opt.label}</span>
-                        {active && <Check className="h-3.5 w-3.5 shrink-0" />}
-                      </div>
-                    </button>
-                  );
-                })}
+                ].map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setTradeStyle(opt.value as "auto" | TradeStyle)}
+                    className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left text-sm capitalize hover:bg-accent/40 transition"
+                  >
+                    <Check className={`h-3.5 w-3.5 shrink-0 ${tradeStyle === opt.value ? "text-foreground" : "text-transparent"}`} />
+                    <span className="min-w-0 flex-1 truncate font-medium">{opt.label}</span>
+                  </button>
+                ))}
               </div>
             )}
           </div>
