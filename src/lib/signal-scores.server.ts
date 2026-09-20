@@ -27,7 +27,7 @@ export type Resolution = {
    * are excluded from hit rate and expectancy: scoring them silently bets short
    * on every no-opinion scan and folds coin flips into the record.
    */
-  status: "target" | "stop" | "expired" | "open" | "void";
+  status: "target" | "stop" | "expired" | "open" | "void" | "unfilled";
   realizedR: number | null;
   /**
    * Maximum adverse excursion, in R: how far price went AGAINST the entry
@@ -93,13 +93,32 @@ export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
   const risk = Math.abs(sig.entry - sig.stop);
   // One bar walk for the whole app: see signal-replay.ts. The backfill pass uses
   // the same function, so a historical MFE and a live MFE are the same measurement.
-  const verdict = replayForward(sig, bars);
+  // requireFill: a planned entry is a resting limit, so nothing is scored until
+  // price actually traded back to it. Signals price ran away from are recorded as
+  // never filled instead of being credited with a trade the account never had.
+  const verdict = replayForward(sig, bars, { requireFill: true });
   if (!verdict || !risk) {
     return ageHours > expiryHours ? { status: "expired", realizedR: 0 } : { status: "open", realizedR: null };
   }
   const cost = costInR(sig.symbol, sig.entry, risk);
   const net = (gross: number) => Math.round((gross - cost) * 1000) / 1000;
   const round = (n: number) => Math.round(n * 100) / 100;
+
+  if (verdict.status === "unfilled") {
+    // Still inside its clock: the entry may yet be traded back to.
+    if (ageHours <= expiryHours) {
+      return { status: "open", realizedR: null, netR: null, costR: null, maeR: null, mfeR: null, barsToResolve: null };
+    }
+    return {
+      status: "unfilled",
+      realizedR: null,
+      netR: null,
+      costR: null,
+      maeR: null,
+      mfeR: null,
+      barsToResolve: null,
+    };
+  }
 
   if (verdict.status !== "unresolved") {
     return {

@@ -23,8 +23,12 @@ export type ReplaySignal = {
 };
 
 export type ReplayVerdict = {
-  /** "unresolved" means neither level printed in the bars supplied. */
-  status: "target" | "stop" | "unresolved";
+  /**
+   * "unresolved" means neither level printed in the bars supplied.
+   * "unfilled" means the planned entry was never traded back to, so there was
+   * no position to win or lose with. Only produced when `requireFill` is set.
+   */
+  status: "target" | "stop" | "unresolved" | "unfilled";
   /** Gross R at the resolving level; null while unresolved. */
   realizedR: number | null;
   /** Maximum adverse excursion in R (heat taken). */
@@ -37,6 +41,15 @@ export type ReplayVerdict = {
   lastClose: number | null;
   /** Time of the resolving bar, for spot checks against a chart. */
   resolvedAt: number | null;
+};
+
+export type ReplayOptions = {
+  /**
+   * Score the signal as a resting limit order: nothing counts until price trades
+   * back to the planned entry. Without this a scan is credited with a trade the
+   * account never had, which is what let first-bar "free wins" into the record.
+   */
+  requireFill?: boolean;
 };
 
 /** Long or short, or null when the scan had no directional opinion. */
@@ -59,7 +72,11 @@ export function forwardBars(bars: ReplayBar[], createdAtIso: string): ReplayBar[
  * Walk the bars and report what price did. Returns null when the signal has no
  * direction or no risk distance, i.e. nothing scorable.
  */
-export function replayForward(sig: ReplaySignal, bars: ReplayBar[]): ReplayVerdict | null {
+export function replayForward(
+  sig: ReplaySignal,
+  bars: ReplayBar[],
+  opts: ReplayOptions = {},
+): ReplayVerdict | null {
   const direction = replayDirection(sig.bias);
   const risk = Math.abs(sig.entry - sig.stop);
   if (!direction || !(risk > 0)) return null;
@@ -67,10 +84,40 @@ export function replayForward(sig: ReplaySignal, bars: ReplayBar[]): ReplayVerdi
   const forward = forwardBars(bars, sig.created_at);
   const long = direction === "long";
   const rMultiple = r2(Math.abs(sig.tp1 - sig.entry) / risk);
+  const lastClose = forward.length ? forward[forward.length - 1]!.close : null;
+
+  // Limit-order semantics: find the bar that actually traded back to the planned
+  // entry. If price reaches the target first, the move happened without us and
+  // there is nothing to score.
+  let start = 0;
+  if (opts.requireFill) {
+    start = -1;
+    for (let i = 0; i < forward.length; i++) {
+      const bar = forward[i]!;
+      const touched = long ? bar.low <= sig.entry : bar.high >= sig.entry;
+      if (touched) {
+        start = i;
+        break;
+      }
+      const goneWithoutUs = long ? bar.high >= sig.tp1 : bar.low <= sig.tp1;
+      if (goneWithoutUs) break;
+    }
+    if (start === -1) {
+      return {
+        status: "unfilled",
+        realizedR: null,
+        maeR: 0,
+        mfeR: 0,
+        bars: forward.length,
+        lastClose,
+        resolvedAt: null,
+      };
+    }
+  }
 
   let mae = 0;
   let mfe = 0;
-  for (let i = 0; i < forward.length; i++) {
+  for (let i = start; i < forward.length; i++) {
     const bar = forward[i]!;
     const adverse = long ? sig.entry - bar.low : bar.high - sig.entry;
     if (adverse > 0) mae = Math.max(mae, adverse / risk);
@@ -85,7 +132,7 @@ export function replayForward(sig: ReplaySignal, bars: ReplayBar[]): ReplayVerdi
         realizedR: hitStop ? -1 : rMultiple,
         maeR: r2(mae),
         mfeR: r2(mfe),
-        bars: i + 1,
+        bars: i - start + 1,
         lastClose: bar.close,
         resolvedAt: bar.time,
       };

@@ -107,5 +107,7 @@ export function outcomeLabel(row: SignalScoreRow | null): { text: string; tone: 
   if (row.status === "target") return { text: `Hit TP ${row.realizedR ?? ""}R`.trim(), tone: "win" };
   if (row.status === "stop") return { text: "Stopped -1R", tone: "loss" };
   if (row.status === "expired") return { text: `Expired ${row.realizedR ?? 0}R`, tone: "flat" };
+  if (row.status === "unfilled") return { text: "Never filled", tone: "flat" };
+  if (row.status === "void") return { text: "No direction", tone: "flat" };
   return { text: "Still open", tone: "open" };
 }
