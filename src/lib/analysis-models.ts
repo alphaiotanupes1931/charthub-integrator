@@ -12,8 +12,9 @@
 // its own.
 
 import { FOCUS_RULEBOOK, FOCUS_RULEBOOK_VERSION, focusRulebookForPrompt, focusRuleCount } from "./analysis-models/focus-rulebook";
+import { PHOTON_RULEBOOK, PHOTON_RULEBOOK_VERSION, photonRulebookForPrompt, photonRuleCount } from "./analysis-models/photon-rulebook";
 
-export type AnalysisModelId = "classic" | "focus";
+export type AnalysisModelId = "classic" | "focus" | "photon";
 
 export type AnalysisModel = {
   id: AnalysisModelId;
@@ -66,10 +67,24 @@ export const ANALYSIS_MODELS: readonly AnalysisModel[] = [
     notReadyReason:
       "This model has no strategies written into it yet, so it cannot grade setups or file signals. Send the strategies and they get written into its rulebook.",
   },
+  {
+    id: "photon",
+    name: "Photon Trading",
+    version: `photon-1.0 (${PHOTON_RULEBOOK_VERSION})`,
+    tagline: "Fed only Photon Trading's mechanical market-structure mapping: swing breaks on closes, internal shifts on wicks, target weak structure.",
+    description:
+      "A clean-slate model fed only Photon Trading's mechanical market-structure material — nothing from TradeMind Classic or The Trading Channel leaks in. It maps the swing range from candle wicks (the swing low is the lowest point that caused the swing high, and everything in between is internal structure, not trend), takes direction only from a candle CLOSE through a swing level so liquidity grabs don't count as breaks, and after every break of structure it expects the pullback instead of chasing it. Internal changes of character on simple wick breaks time the pullback: the counter-trend shift says the pullback has started, the shift back in line with the swing trend says it has finished, and that realignment is the entry. Stops hide beyond the protecting swing — the level a lot of money had to defend — and targets aim at weak structure: the high that failed to make a lower low, or the low that failed to make a higher high, paying at least 1.5R. Reversal anticipation and supply/demand refinement are taught as coach knowledge but never auto-traded, and the model never issues A+ in v1. Every signal it files is stamped with its own name and version and tracked on its own scoreboard, so you can judge this methodology on its own numbers before trusting it.",
+    knowledge: "strategies-only",
+    sourceUrl: "https://www.youtube.com/watch?v=Pd9ASRCHWmQ",
+    sourceLabel: "Watch the Photon Trading material this model was fed",
+    ready: photonRuleCount() > 0,
+    notReadyReason:
+      "This model has no strategies written into it yet, so it cannot grade setups or file signals. Send the strategies and they get written into its rulebook.",
+  },
 ];
 
 export function normalizeAnalysisModel(raw: unknown): AnalysisModelId {
-  return raw === "focus" ? "focus" : DEFAULT_ANALYSIS_MODEL;
+  return raw === "focus" || raw === "photon" ? raw : DEFAULT_ANALYSIS_MODEL;
 }
 
 export function getAnalysisModel(id: unknown): AnalysisModel {
@@ -94,17 +109,26 @@ export function analysisModelReady(id: unknown): boolean {
  * Model 1 a rename rather than a behaviour change. Focus returns its own
  * rulebook plus an explicit instruction that nothing else applies.
  */
+/** The rulebook each strategies-only model is fed. */
+function rulebookFor(id: AnalysisModelId): { count: number; text: string } {
+  if (id === "photon") {
+    return { count: photonRuleCount(), text: photonRuleCount() > 0 ? photonRulebookForPrompt() : "" };
+  }
+  return { count: focusRuleCount(), text: focusRuleCount() > 0 ? focusRulebookForPrompt() : "" };
+}
+
 export function analysisModelPromptBlock(id: unknown): string {
   const model = getAnalysisModel(id);
   if (model.knowledge === "full") return "";
-  const body = focusRuleCount() > 0 ? focusRulebookForPrompt() : "(No strategies have been written into this model yet.)";
+  const rulebook = rulebookFor(model.id);
+  const body = rulebook.count > 0 ? rulebook.text : "(No strategies have been written into this model yet.)";
   return [
     `# ACTIVE ANALYSIS MODEL: ${model.name} (${model.version})`,
     "This model is fed ONLY the strategies listed below. Every other pattern library, preset, or habit from the standard TradeMind model is OUT OF SCOPE for this conversation. Do not grade, plan, or justify a setup using a rule that is not written below.",
     "If the trader asks for something these strategies do not cover, say plainly that this model does not cover it and name what it does cover. Do not improvise a rule.",
     "",
     body,
-    focusRuleCount() > 0
+    rulebook.count > 0
       ? ""
       : "Until strategies are added, do not produce entries, stops, targets, or grades in this model. Explain that the model is empty and offer to answer in TradeMind Classic instead.",
   ]
@@ -112,4 +136,4 @@ export function analysisModelPromptBlock(id: unknown): string {
     .join("\n");
 }
 
-export { FOCUS_RULEBOOK, FOCUS_RULEBOOK_VERSION };
+export { FOCUS_RULEBOOK, FOCUS_RULEBOOK_VERSION, PHOTON_RULEBOOK, PHOTON_RULEBOOK_VERSION };
