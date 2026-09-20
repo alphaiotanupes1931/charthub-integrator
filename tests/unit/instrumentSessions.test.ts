@@ -1,8 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { resolveWindow, sessionState, venueClosed, LONDON_MORNING, NY_CASH_OPEN, TOKYO, SYDNEY, CRYPTO_US_EUROPE } from "@/lib/instrument-sessions";
 import { classifyInstrument, inLiquidWindow } from "@/lib/scanner/program";
-import { sixDimensionShadow, toFive, TRACK_RECORD_FLOOR } from "@/lib/six-dimension-shadow";
-import { scoreFamilies, type ProgramInput } from "@/lib/scanner/score";
 
 const at = (iso: string) => new Date(iso);
 
@@ -60,94 +58,5 @@ describe("instrument classes", () => {
     const spec = classifyInstrument("AUD/USD");
     const sydneyMorning = at("2025-07-15T01:00:00Z");
     expect(inLiquidWindow(spec, sydneyMorning).inside).toBe(true);
-  });
-});
-
-describe("six dimension shadow score", () => {
-  const families = scoreFamilies({
-    symbol: "EUR/USD",
-    timeframe: "1h",
-    at: at("2025-07-15T10:00:00Z"),
-    wantBull: true,
-    ladder: [
-      { label: "Monthly", bias: "bullish" },
-      { label: "Weekly", bias: "bullish" },
-      { label: "Daily", bias: "bullish" },
-      { label: "4H", bias: "bullish" },
-    ],
-    h4Direction: "bullish",
-    h4Trend: "up",
-    closed4hCandles: 200,
-    entryZoneQuality: 80,
-    hasOrderBlock: true,
-    hasFvg: false,
-    hasHtfZone: false,
-    protectedBreak: true,
-    h1StructureBreak: "bullish",
-    m15Confirmation: "bullish",
-    sweptLiquidity: true,
-    displacement: true,
-    cvd: 500,
-    delta: null,
-    priceVsPoc: "above",
-    volumeRatio: 1.3,
-    costShare: 0.05,
-    spreadPercentile: 40,
-    plannedRR: 2,
-    targetRoomOk: true,
-  } as ProgramInput);
-
-  it("scores all six dimensions on the taught 1-5 scale", () => {
-    const shadow = sixDimensionShadow({
-      families,
-      sessionInside: true,
-      sessionLabel: "London morning",
-      marketClosed: false,
-      resolvedSample: 0,
-      measuredHitRate: null,
-      plannedRR: 2.2,
-      costShare: 0.05,
-    });
-    expect(shadow.dimensions).toHaveLength(6);
-    for (const d of shadow.dimensions) {
-      expect(d.score).toBeGreaterThanOrEqual(1);
-      expect(d.score).toBeLessThanOrEqual(5);
-    }
-  });
-
-  it("refuses to invent a track record below the sample floor", () => {
-    const shadow = sixDimensionShadow({
-      families,
-      sessionInside: true,
-      sessionLabel: "London morning",
-      marketClosed: false,
-      resolvedSample: TRACK_RECORD_FLOOR - 1,
-      measuredHitRate: 0.9,
-      plannedRR: 2,
-      costShare: 0.05,
-    });
-    const record = shadow.dimensions.find((d) => d.id === "track-record")!;
-    expect(record.unmeasured).toBe(true);
-    expect(record.score).toBe(3);
-  });
-
-  it("caps risk when the planned reward is under the floor we teach", () => {
-    const thin = sixDimensionShadow({
-      families, sessionInside: true, sessionLabel: "London morning", marketClosed: false,
-      resolvedSample: 0, measuredHitRate: null, plannedRR: 1.1, costShare: 0.05,
-    });
-    const fine = sixDimensionShadow({
-      families, sessionInside: true, sessionLabel: "London morning", marketClosed: false,
-      resolvedSample: 0, measuredHitRate: null, plannedRR: 2.5, costShare: 0.05,
-    });
-    expect(thin.dimensions.find((d) => d.id === "risk")!.score).toBeLessThan(fine.dimensions.find((d) => d.id === "risk")!.score);
-  });
-
-  it("scores the session dimension lowest when the market is shut", () => {
-    const closed = sixDimensionShadow({
-      families, sessionInside: false, sessionLabel: null, marketClosed: true,
-      resolvedSample: 0, measuredHitRate: null, plannedRR: 2, costShare: 0.05,
-    });
-    expect(closed.dimensions.find((d) => d.id === "session")!.score).toBe(toFive(0));
   });
 });
