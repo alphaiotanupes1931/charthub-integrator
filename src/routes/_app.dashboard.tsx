@@ -608,8 +608,14 @@ function ScanTicket({
         {!isNoEntry && result.entryZone && (
           <div className="rounded-xl border border-primary/30 bg-primary/5 px-3 py-2.5">
             <div className="flex items-center justify-between gap-2">
-              <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-primary">
+              <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-primary">
                 Entry anchored to {result.entryZone.label}
+                <InfoTip
+                  term="Why this zone"
+                  text={result.entryZone.label.toLowerCase().includes("order block")
+                    ? "The order block is the reason this trade exists: price has to trade back into it before the entry is valid. The stop sits just past its far edge."
+                    : "No fresh order block qualified, so this entry falls back to the next-best institutional zone. Treat it as a lower-conviction anchor."}
+                />
               </div>
               <span
                 className={`shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
