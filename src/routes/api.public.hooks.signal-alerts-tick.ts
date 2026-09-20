@@ -153,6 +153,7 @@ export const Route = createFileRoute("/api/public/hooks/signal-alerts-tick")({
             const familyBest = cluster ? bestInCluster.get(`${cluster}:${scan.bias.toLowerCase()}`) : undefined;
             const correlated = familyBest != null && gradeRank(familyBest) > gradeRank(scan.grade);
             const decision = decideAlert({
+              symbol: scan.symbol,
               plan: {
                 grade: scan.grade, bias: scan.bias, entry: scan.entry,
                 stop: scan.stop, tp1: scan.tp1, confidence: scan.confidence,
