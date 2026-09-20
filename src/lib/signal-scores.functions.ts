@@ -171,6 +171,9 @@ export const recordSignalScore = createServerFn({ method: "POST" })
         created_at: createdAt,
         filed_hash: filedHash,
         entry_distance_r: staleness.distanceR,
+        model_id: model.id,
+        model_version: model.version,
+
       } as never)
       .select("id")
       .single();
