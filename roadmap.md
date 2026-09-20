@@ -35,4 +35,5 @@
 - [x] Move Scan Models under Insights.
 - [x] Keep Auto Trading desktop-only and combine its mode and grade controls.
 - [x] Reduce phone toolbar and signal-card crowding.
-- [ ] Verify desktop and phone layouts, Auto Trading behavior, and automated tests.
+- [x] Verify responsive visibility rules and the full automated suite (58 files, 865 tests).
+- [ ] Complete the signed-in visual pass when a preview account is available.
