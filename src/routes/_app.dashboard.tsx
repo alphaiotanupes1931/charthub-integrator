@@ -1754,18 +1754,18 @@ function Dashboard() {
   return (
     <div className="trade-dashboard h-full flex flex-col overflow-hidden">
       {/* Row 1: symbol + timeframes + right-side pickers */}
-      <div className="shrink-0 flex items-center gap-3 px-4 py-2.5 border-b border-border/60 bg-background">
+      <div className="shrink-0 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-2 px-3 py-2 border-b border-border/60 bg-background sm:flex sm:gap-3 sm:px-4 sm:py-2.5">
 
 
         <div className="relative shrink-0" ref={pickerRef} data-tour="symbol-picker">
           <button
             onClick={() => setPickerOpen((o) => !o)}
-            className="dashboard-control inline-flex items-center gap-2 px-3 py-1.5 text-sm transition"
+            className="dashboard-control inline-flex min-w-0 items-center gap-2 px-2.5 py-1.5 text-sm transition sm:px-3"
             aria-haspopup="listbox"
             aria-expanded={pickerOpen}
           >
             <span className="h-2 w-2 rounded-full bg-bull" />
-            <span className="font-display text-lg">{symbol.ticker.replace("/", "").replace("XAUUSD", "Gold")}</span>
+             <span className="max-w-24 truncate font-display text-base sm:max-w-none sm:text-lg">{symbol.ticker.replace("/", "").replace("XAUUSD", "Gold")}</span>
             <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${pickerOpen ? "rotate-180" : ""}`} />
           </button>
           {pickerOpen && (
@@ -1846,12 +1846,12 @@ function Dashboard() {
         </div>
 
         {/* Timeframe pills */}
-        <div className="flex items-center gap-0.5 overflow-x-auto min-w-0 rounded-md border border-border/60 p-0.5">
+        <div className="flex min-w-0 items-center gap-0.5 overflow-x-auto rounded-md border border-border/60 p-0.5 no-scrollbar">
           {INTERVALS.map((i) => (
             <button
               key={i.value}
               onClick={() => setIntervalState(i.value)}
-              className={`shrink-0 rounded-sm px-3 py-1 text-[11px] font-medium transition ${
+               className={`shrink-0 rounded-sm px-2.5 py-1 text-[11px] font-medium transition sm:px-3 ${
                 interval === i.value ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -2035,7 +2035,7 @@ function Dashboard() {
       </div>
 
       {/* Row 2: Live / Setup segmented control + chart controls */}
-      <div className={`shrink-0 items-center gap-3 px-4 py-2.5 border-b border-border/60 bg-background text-xs ${chatHalf ? "flex lg:hidden" : "flex"}`}>
+      <div className={`shrink-0 items-center gap-1.5 px-3 py-2 border-b border-border/60 bg-background text-xs sm:gap-3 sm:px-4 sm:py-2.5 ${chatHalf ? "flex lg:hidden" : "flex"}`}>
         <div className="inline-flex items-center rounded-md border border-border/60 p-0.5">
           <button
             onClick={() => setChartTab("live")}
@@ -2058,14 +2058,14 @@ function Dashboard() {
         <button
           type="button"
           onClick={toggleChartFullscreen}
-          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-accent/60 hover:text-foreground transition"
+            className="hidden sm:inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-accent/60 hover:text-foreground transition"
           title={isChartFullscreen ? "Exit full screen" : "Full screen chart"}
           aria-label={isChartFullscreen ? "Exit full screen" : "Full screen chart"}
         >
           {isChartFullscreen ? <Minimize className="h-3.5 w-3.5" /> : <Maximize className="h-3.5 w-3.5" />}
         </button>
 
-        <StrategyPresetCard name={activeStrategy} className="min-w-0 flex-1" />
+        <StrategyPresetCard name={activeStrategy} className="hidden min-w-0 flex-1 md:flex" />
 
         {/* Single "View" popover holding candle style, sessions, and indicators */}
         <div className="relative" ref={viewMenuRef}>
@@ -2075,7 +2075,7 @@ function Dashboard() {
             title="Chart levels"
           >
             <Settings2 className="h-3 w-3" />
-            <span>Levels</span>
+             <span className="hidden sm:inline">Levels</span>
             {enabledCount > 0 && (
               <span className="text-primary">· {enabledCount}</span>
             )}
@@ -2210,7 +2210,7 @@ function Dashboard() {
           limit={ent.quota.limit}
         />
 
-        <AutoTradingToggle className="hidden lg:inline-flex" />
+         <AutoTradingToggle className="hidden lg:inline-flex" />
 
         <TradeOfferDialog offer={tradeOffer} onClose={() => setTradeOffer(null)} />
 
@@ -2389,7 +2389,7 @@ function Dashboard() {
 
           {/* Broker strip - thin, single line so it doesn't eat chart height */}
           {!isChartFullscreen && (
-            <div className="shrink-0 border-t border-border/60 px-3 py-0.5 flex items-center justify-between gap-2 text-[11px]">
+            <div className="hidden shrink-0 border-t border-border/60 px-3 py-0.5 sm:flex items-center justify-between gap-2 text-[11px]">
 
 
               {broker ? (

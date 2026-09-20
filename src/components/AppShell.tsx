@@ -92,6 +92,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { to: "/analytics",   label: "Analytics",      icon: BarChart3 },
       { to: "/scoreboard",  label: "Signal Scoreboard", icon: Target },
+      { to: "/scan-models", label: "Scan Models", icon: ScanSearch },
       { to: "/memory",      label: "Trading Memory", icon: Brain },
       { to: "/news",        label: "News",           icon: Newspaper },
     ],
@@ -102,7 +103,6 @@ const NAV_GROUPS: NavGroup[] = [
     icon: Users,
     items: [
       { to: "/coaches",    label: "AI Coaches", icon: Users },
-      { to: "/scan-models", label: "Scan Models", icon: ScanSearch },
       { to: "/strategies", label: "Strategies", icon: Library },
     ],
   },

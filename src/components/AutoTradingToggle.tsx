@@ -1,11 +1,11 @@
 // Home-page Manual / Auto switch for auto trading. Auto means: when a scan comes
 // back at or above the chosen grade, the trader is asked whether to place it.
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Bot, ShieldAlert, X } from "lucide-react";
+import { Bot, Check, ChevronDown, ShieldAlert, X } from "lucide-react";
 import { getAutoTradeContext, setAutoTradingMode } from "@/lib/auto-trade.functions";
 import type { AutopilotSettings } from "@/lib/autopilot.shared";
 
@@ -16,6 +16,17 @@ export function AutoTradingToggle({ className = "" }: { className?: string }) {
   const loadContext = useServerFn(getAutoTradeContext);
   const setMode = useServerFn(setAutoTradingMode);
   const [notice, setNotice] = useState<null | "no-broker" | "live-consent">(null);
+  const [open, setOpen] = useState(false);
+  const [pendingGrade, setPendingGrade] = useState<AutopilotSettings["minGrade"] | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const close = (event: MouseEvent) => {
+      if (!menuRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, []);
 
   const ctx = useQuery({
     queryKey: AUTO_TRADE_CONTEXT_KEY,
@@ -44,15 +55,13 @@ export function AutoTradingToggle({ className = "" }: { className?: string }) {
   const auto = mode === "auto";
   const unavailable = ctx.isError;
 
-  const flip = () => {
+  const enableAtGrade = (grade: AutopilotSettings["minGrade"]) => {
+    setOpen(false);
     if (unavailable) {
       toast.error("Auto Trading is part of the Elite plan.");
       return;
     }
-    if (auto) {
-      save.mutate({ mode: "manual" });
-      return;
-    }
+    setPendingGrade(grade);
     if (!connected) {
       setNotice("no-broker");
       return;
@@ -61,17 +70,25 @@ export function AutoTradingToggle({ className = "" }: { className?: string }) {
       setNotice("live-consent");
       return;
     }
-    save.mutate({ mode: "auto" });
+    save.mutate({ mode: "auto", minGrade: grade });
+  };
+
+  const turnOff = () => {
+    setOpen(false);
+    setPendingGrade(null);
+    save.mutate({ mode: "manual" });
   };
 
   return (
     <>
-      <div className={`inline-flex items-center gap-1 ${className}`}>
+       <div ref={menuRef} className={`relative inline-flex items-center ${className}`}>
         <button
           type="button"
-          onClick={flip}
+           onClick={() => setOpen((value) => !value)}
           disabled={save.isPending || ctx.isLoading}
-          title="Auto Trading: place qualifying setups at my connected broker automatically"
+           title="Choose the minimum grade for Auto Trading"
+           aria-haspopup="menu"
+           aria-expanded={open}
           className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition ${
             auto
               ? "border-emerald-600/50 bg-emerald-600/10 text-emerald-400"
@@ -81,20 +98,42 @@ export function AutoTradingToggle({ className = "" }: { className?: string }) {
           <Bot className="h-3 w-3" />
           <span>Auto Trading</span>
           <span className={`rounded-full px-2 py-0.5 text-[10px] ${auto ? "bg-emerald-600/20" : "bg-accent/60"}`}>
-            {auto ? "Auto" : "Manual"}
+             {auto ? `${minGrade}+` : "Off"}
           </span>
+           <ChevronDown className={`h-3 w-3 transition-transform ${open ? "rotate-180" : ""}`} />
         </button>
-        {auto && (
-          <select
-            value={minGrade}
-            onChange={(e) => save.mutate({ mode: "auto", minGrade: e.target.value as AutopilotSettings["minGrade"] })}
-            title="Only setups at or above this grade will be offered"
-            className="h-9 rounded-full border border-border/60 bg-background/50 px-2 text-xs text-foreground outline-none dark:[color-scheme:dark]"
-          >
-            <option value="A+">A+ only</option>
-            <option value="A">A and better</option>
-            <option value="B">B and better</option>
-          </select>
+         {open && (
+           <div role="menu" className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-md border border-border/60 bg-card p-1.5">
+             <div className="px-2 py-1.5 text-[10px] font-semibold uppercase text-muted-foreground">Minimum signal grade</div>
+             {([
+               { grade: "A+" as const, label: "A+ only" },
+               { grade: "A" as const, label: "A and better" },
+               { grade: "B" as const, label: "B and better" },
+             ]).map((option) => (
+               <button
+                 key={option.grade}
+                 type="button"
+                 role="menuitemradio"
+                 aria-checked={auto && minGrade === option.grade}
+                 onClick={() => enableAtGrade(option.grade)}
+                 className="flex w-full items-center gap-2 rounded-sm px-2 py-2 text-left text-xs font-medium text-foreground hover:bg-accent/60"
+               >
+                 <Check className={`h-3.5 w-3.5 ${auto && minGrade === option.grade ? "text-primary" : "text-transparent"}`} />
+                 {option.label}
+               </button>
+             ))}
+             <div className="my-1 border-t border-border/60" />
+             <button
+               type="button"
+               role="menuitemradio"
+               aria-checked={!auto}
+               onClick={turnOff}
+               className="flex w-full items-center gap-2 rounded-sm px-2 py-2 text-left text-xs font-medium text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+             >
+               <Check className={`h-3.5 w-3.5 ${!auto ? "text-primary" : "text-transparent"}`} />
+               Off
+             </button>
+           </div>
         )}
       </div>
 
@@ -154,7 +193,8 @@ export function AutoTradingToggle({ className = "" }: { className?: string }) {
                   <button
                     type="button"
                     onClick={() => {
-                      save.mutate({ mode: "auto", acknowledgeLive: true });
+                       save.mutate({ mode: "auto", minGrade: pendingGrade ?? minGrade, acknowledgeLive: true });
+                       setPendingGrade(null);
                       setNotice(null);
                     }}
                     className="rounded-xl bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground"
