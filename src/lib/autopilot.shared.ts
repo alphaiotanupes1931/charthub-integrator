@@ -1,5 +1,6 @@
 // Shared auto-trading types + rail evaluation. Safe to import from client and server.
 // Live only: every order goes to the trader's connected broker account.
+import { instrumentReview } from "@/lib/instrument-review";
 export type AutopilotMode = "manual" | "auto";
 
 export type AutopilotSettings = {
