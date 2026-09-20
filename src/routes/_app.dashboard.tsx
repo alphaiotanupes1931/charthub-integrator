@@ -8,7 +8,7 @@ import { CANDLE_STYLES, CANDLE_STYLE_MAP, type CandleStyleId } from "@/lib/candl
 import { enforceGradeDirection } from "@/lib/chartAnnotations";
 
 import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
-import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Clock, MessageSquare, X, Plug, Square, Paperclip, ChevronUp, PanelRightClose, PanelRightOpen, BarChart3, ThumbsUp, ThumbsDown, Brain, LineChart, Settings2, Maximize, Minimize, Maximize2, Minimize2, BookOpen, FlaskConical, Zap } from "lucide-react";
+import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Clock, MessageSquare, X, Plug, Square, Paperclip, ChevronUp, PanelRightClose, PanelRightOpen, BarChart3, ThumbsUp, ThumbsDown, Brain, LineChart, Settings2, Maximize, Minimize, Maximize2, Minimize2, BookOpen, FlaskConical, Zap, Info } from "lucide-react";
 
 
 import { useCoachVoice } from "@/hooks/useCoachVoice";
@@ -31,7 +31,8 @@ import { ActionLoader } from "@/components/ActionLoader";
 import { clearLastThreadId, readActiveCoach, writeActiveCoach, COACH_KEY, writeLastChart, readLastThreadId, writeLastThreadId } from "@/lib/chat-client";
 import { voiceForCoach } from "@/lib/coachVoices";
 import { COACH_ICON_META, DEFAULT_COACH_ICON } from "@/lib/coachMeta";
-import { AnalysisModelPicker } from "@/components/AnalysisModelPicker";
+import { ANALYSIS_MODELS } from "@/lib/analysis-models";
+import { useAnalysisModel } from "@/hooks/useAnalysisModel";
 import { reportSystemNotice } from "@/lib/notifications.functions";
 import { runResearchPlan } from "@/lib/agents/research.functions";
 import { recordHermesFeedback } from "@/lib/agents/hermes.functions";
@@ -1166,15 +1167,14 @@ function Dashboard() {
   const activeScanRequestRef = useRef(0);
   const [isDesktop, setIsDesktop] = useState(false);
   const [lensId, setLensId] = useState<ScanLensId>("wyckoff");
-  const [lensOpen, setLensOpen] = useState(false);
-  const coachRef = useRef<HTMLDivElement>(null);
-  const [coachOpen, setCoachOpen] = useState(false);
-  const strategyRef = useRef<HTMLDivElement>(null);
-  const [strategyOpen, setStrategyOpen] = useState(false);
+  // One consolidated Setup menu holds model, lens, coach, strategy and style so
+  // the toolbar never fills up with dropdown buttons.
+  const setupRef = useRef<HTMLDivElement>(null);
+  const [setupOpen, setSetupOpen] = useState(false);
+  const [modelInfoFor, setModelInfoFor] = useState<string | null>(null);
+  const { modelId, select: selectModel, saving: modelSaving } = useAnalysisModel();
   const [activeStrategy, setActiveStrategy] = useState<string | null>(null);
   const [tradeStyle, setTradeStyle] = useState<"auto" | TradeStyle>("auto");
-  const styleRef = useRef<HTMLDivElement>(null);
-  const [styleOpen, setStyleOpen] = useState(false);
   useEffect(() => {
     // New traders default to Auto: the platform reads conditions and picks the
     // playbook, then tells them which one it used on the scan card.
