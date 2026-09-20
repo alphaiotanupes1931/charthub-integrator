@@ -35,7 +35,7 @@ export function douglasAnalysis(): DouglasRead {
     rulebookVersion: DOUGLAS_RULEBOOK_VERSION,
     grade: "NO ENTRY",
     bias: "Neutral",
-    checklist: [...CHECKLIST],
+    checklist: [...DOUGLAS_CHECKLIST],
     note:
       "This is the Mark Douglas mindset model. It is fed trading psychology only and files no trade signals of its own — Douglas's own teaching is that the METHOD supplies the edge and the MIND supplies the consistency. Run your chart model (Classic, The Trading Channel, or Photon Trading) for the setup; use this model to coach its execution. Before taking any trade your chart model produces, work the checklist: every answer must be yes.",
   };
