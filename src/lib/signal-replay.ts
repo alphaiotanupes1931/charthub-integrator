@@ -72,7 +72,11 @@ export function forwardBars(bars: ReplayBar[], createdAtIso: string): ReplayBar[
  * Walk the bars and report what price did. Returns null when the signal has no
  * direction or no risk distance, i.e. nothing scorable.
  */
-export function replayForward(sig: ReplaySignal, bars: ReplayBar[]): ReplayVerdict | null {
+export function replayForward(
+  sig: ReplaySignal,
+  bars: ReplayBar[],
+  opts: ReplayOptions = {},
+): ReplayVerdict | null {
   const direction = replayDirection(sig.bias);
   const risk = Math.abs(sig.entry - sig.stop);
   if (!direction || !(risk > 0)) return null;
@@ -80,10 +84,40 @@ export function replayForward(sig: ReplaySignal, bars: ReplayBar[]): ReplayVerdi
   const forward = forwardBars(bars, sig.created_at);
   const long = direction === "long";
   const rMultiple = r2(Math.abs(sig.tp1 - sig.entry) / risk);
+  const lastClose = forward.length ? forward[forward.length - 1]!.close : null;
+
+  // Limit-order semantics: find the bar that actually traded back to the planned
+  // entry. If price reaches the target first, the move happened without us and
+  // there is nothing to score.
+  let start = 0;
+  if (opts.requireFill) {
+    start = -1;
+    for (let i = 0; i < forward.length; i++) {
+      const bar = forward[i]!;
+      const touched = long ? bar.low <= sig.entry : bar.high >= sig.entry;
+      if (touched) {
+        start = i;
+        break;
+      }
+      const goneWithoutUs = long ? bar.high >= sig.tp1 : bar.low <= sig.tp1;
+      if (goneWithoutUs) break;
+    }
+    if (start === -1) {
+      return {
+        status: "unfilled",
+        realizedR: null,
+        maeR: 0,
+        mfeR: 0,
+        bars: forward.length,
+        lastClose,
+        resolvedAt: null,
+      };
+    }
+  }
 
   let mae = 0;
   let mfe = 0;
-  for (let i = 0; i < forward.length; i++) {
+  for (let i = start; i < forward.length; i++) {
     const bar = forward[i]!;
     const adverse = long ? sig.entry - bar.low : bar.high - sig.entry;
     if (adverse > 0) mae = Math.max(mae, adverse / risk);
