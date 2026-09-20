@@ -882,9 +882,11 @@ export const Route = createFileRoute("/api/chat")({
             .maybeSingle();
           const raw = (prefRow as { ai_model_pref?: string } | null)?.ai_model_pref;
           modelPref = normalizeModelPref(raw);
-          if (!analysisModelFromBody) {
-            analysisModelId = normalizeAnalysisModel((prefRow as { analysis_model?: string } | null)?.analysis_model);
+          const savedAnalysisModel = (prefRow as { analysis_model?: string } | null)?.analysis_model;
+          if (savedAnalysisModel) {
+            analysisModelId = normalizeAnalysisModel(savedAnalysisModel);
           }
+
         }
         const analysisModel = getAnalysisModel(analysisModelId);
         console.log(`[chat] req=${reqId} analysis_model=${analysisModel.id} version=${analysisModel.version}`);
