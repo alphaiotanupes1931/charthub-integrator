@@ -100,6 +100,10 @@ export const runResearchPlan = createServerFn({ method: "POST" })
     let scoreDesc = "";
     let gradeCap: "A+" | "A" | "B" | "C" | null = null;
     let capReason: string | null = null;
+    // The account's chosen analysis model ("classic" | "focus") routes the
+    // planner: The Trading Channel gets its own deterministic engine and
+    // rulebook, untouched by the Classic library.
+    let modelId: import("@/lib/analysis-models").AnalysisModelId = "classic";
     // Applies only if the plan that comes back is itself counter-trend.
     let counterCap: "A+" | "A" | "B" | "C" | null = null;
     let counterCapReason: string | null = null;
@@ -120,6 +124,14 @@ export const runResearchPlan = createServerFn({ method: "POST" })
         costUserId = userId ?? null;
 
         if (userId) {
+          const { normalizeAnalysisModel } = await import("@/lib/analysis-models");
+          const { data: modelRow } = await supabase
+            .from("profiles")
+            .select("analysis_model")
+            .eq("id", userId)
+            .maybeSingle();
+          modelId = normalizeAnalysisModel((modelRow as { analysis_model?: string } | null)?.analysis_model);
+
           const topics = [data.ticker, "general", data.lensDesc?.split(":")[0] ?? ""].filter(Boolean);
           const { data: lessons } = await supabase
             .from("hermes_lessons")
@@ -213,6 +225,7 @@ export const runResearchPlan = createServerFn({ method: "POST" })
         perfDesc || undefined,
         scoreDesc || undefined,
         tradeStyle,
+        modelId,
       );
       return { memo, plan };
     });
