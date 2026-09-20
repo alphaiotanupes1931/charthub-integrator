@@ -21,7 +21,7 @@ export function AnalysisModelPicker({ className = "" }: { className?: string }) 
         onClick={() => setOpen((v) => !v)}
         disabled={saving}
         aria-label="Analysis model"
-        className="inline-flex items-center gap-1.5 border border-border/60 px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-muted disabled:opacity-50"
+        className="dashboard-control inline-flex items-center gap-1.5 h-9 px-3.5 text-xs font-medium text-foreground transition disabled:opacity-50"
       >
         <Layers className="h-3.5 w-3.5 text-muted-foreground" />
         <span className="text-muted-foreground">Model:</span>
@@ -32,7 +32,7 @@ export function AnalysisModelPicker({ className = "" }: { className?: string }) 
       {open ? (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 z-50 mt-1 w-[19rem] border border-border/60 bg-card p-1 shadow-none">
+          <div className="absolute right-0 z-50 mt-2 w-[19rem] rounded-2xl border border-border/60 bg-card p-1 shadow-xl">
             {ANALYSIS_MODELS.map((m) => (
               <button
                 key={m.id}
