@@ -1475,7 +1475,7 @@ export async function runPlanner(
       memo,
       orderFlow: snap.orderFlow,
       dailyBias: trendWord,
-      currentTrend: read.trend,
+      currentTrend: read.trend === "none" ? "range" : read.trend,
       synopsis: read.note,
       dataSource: snap.source,
       dataFetchedAt: snap.fetchedAt,
