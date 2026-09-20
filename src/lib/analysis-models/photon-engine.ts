@@ -107,19 +107,18 @@ type SideRead = {
  * swing break on a close (type 1), pullback tracked by internal wick breaks
  * (type 2), entry when internal realigns, target the weak swing point.
  */
-function readSide(c: PhotonCandle[], side: Side): SideRead {
+function readSide(c: PhotonCandle[], atr: number, side: Side): SideRead {
   const n = c.length;
   const empty: SideRead = {
     breakoutIndex: null, level: null, pullbackExtreme: null,
     pullbackStartIndex: null, realignIndex: null, weakTarget: null, voided: false,
   };
 
-  const swingHighs = pivots(c, SWING_PIVOT, "high");
-  const swingLows = pivots(c, SWING_PIVOT, "low");
-  const breakPivots = side === "long" ? swingHighs : swingLows;
+  const breakPivots = pivots(c, SWING_PIVOT, side === "long" ? "high" : "low");
   if (!breakPivots.length) return empty;
 
-  // Most recent swing break: a CLOSE through a swing pivot that formed earlier.
+  // Most recent swing break: a CLOSE through a swing pivot that formed earlier
+  // (type 1 mapping - a wick through the level is a liquidity grab, not a break).
   let breakout: { index: number; level: number } | null = null;
   for (let p = breakPivots.length - 1; p >= 0 && !breakout; p--) {
     const piv = breakPivots[p]!;
@@ -137,68 +136,61 @@ function readSide(c: PhotonCandle[], side: Side): SideRead {
     if (side === "long" ? cl < breakout.level : cl > breakout.level) { voided = true; break; }
   }
 
-  // The swing leg's extreme after the break: highest high for shorts (the lower
-  // high in the making), lowest low for longs. This is the protecting swing the
-  // stop hides behind once the pullback forms it.
-  let extreme = side === "long" ? Infinity : -Infinity;
-  for (let i = breakout.index; i < n; i++) {
-    extreme = side === "long" ? Math.min(extreme, c[i]!.low) : Math.max(extreme, c[i]!.high);
-  }
-  const pullbackExtreme = isFinite(extreme) ? extreme : null;
+  // The break leg's extreme: lowest low (shorts) / highest high (longs) printed
+  // between the break and the start of the pullback.
+  let legExtreme = side === "long" ? -Infinity : Infinity;
 
-  // Weak target: for shorts, the low that FAILED to take out the swing high -
-  // the lowest low printed between the broken swing high and the break. Mirror
-  // for longs: the highest high between the broken swing low and the break.
-  let weak: number | null = null;
-  {
-    const brokenPivot = (side === "long" ? swingHighs : swingLows)
-      .filter((p) => p.price === breakout!.level)[0];
-    if (brokenPivot) {
-      let w = side === "long" ? -Infinity : Infinity;
-      for (let i = brokenPivot.index + 1; i < breakout.index; i++) {
-        w = side === "long" ? Math.max(w, c[i]!.high) : Math.min(w, c[i]!.low);
-      }
-      if (isFinite(w) && (side === "long" ? w > breakout.level : w < breakout.level)) weak = w;
-    }
-  }
-
-  // Internal structure after the break, walked with wick breaks (type 2).
-  // Start aligned with the swing break; a counter-trend wick break of a minor
-  // pivot starts the pullback; a wick break back with the swing trend realigns.
-  const minorHighs = pivots(c, INTERNAL_PIVOT, "high").filter((p) => p.index >= breakout!.index);
-  const minorLows = pivots(c, INTERNAL_PIVOT, "low").filter((p) => p.index >= breakout!.index);
-  let internal: "with" | "against" = "with";
+  // Internal change of character, tracked exactly the way the material reads it
+  // on candles (type 2, wicks are enough): after the break, the first bar that
+  // BREAKS THE PREVIOUS BAR'S EXTREME AGAINST the swing trend starts the
+  // pullback ("the candle that fails to break the prior candle's low"); the
+  // first bar that then breaks the previous bar's extreme WITH the swing trend
+  // - after the pullback has moved at least 0.3x ATR - realigns internal
+  // structure with the swing trend.
   let pullbackStartIndex: number | null = null;
   let realignIndex: number | null = null;
-  let lastMinorHigh: number | null = null;
-  let lastMinorLow: number | null = null;
-  for (let i = breakout.index; i < n; i++) {
-    for (const p of minorHighs) if (p.index === i) lastMinorHigh = p.price;
-    for (const p of minorLows) if (p.index === i) lastMinorLow = p.price;
+  let pullbackExtreme: number | null = null;
+  for (let i = breakout.index + 1; i < n; i++) {
     const bar = c[i]!;
-    if (internal === "with") {
-      // Counter-trend change of character: pullback has started.
-      const counter = side === "long"
-        ? lastMinorLow != null && bar.low < lastMinorLow
-        : lastMinorHigh != null && bar.high > lastMinorHigh;
-      if (counter && i > breakout.index) {
-        internal = "against";
+    const prev = c[i - 1]!;
+    if (pullbackStartIndex == null) {
+      legExtreme = side === "long" ? Math.max(legExtreme, prev.high) : Math.min(legExtreme, prev.low);
+      const counter = side === "long" ? bar.low < prev.low : bar.high > prev.high;
+      if (counter && isFinite(legExtreme)) {
         pullbackStartIndex = i;
+        pullbackExtreme = side === "long" ? bar.low : bar.high;
+      }
+    } else if (realignIndex == null) {
+      pullbackExtreme = side === "long"
+        ? Math.min(pullbackExtreme!, bar.low)
+        : Math.max(pullbackExtreme!, bar.high);
+      const retraced = Math.abs(pullbackExtreme! - legExtreme) >= 0.3 * atr;
+      const aligned = side === "long" ? bar.high > prev.high : bar.low < prev.low;
+      if (aligned && retraced && i > pullbackStartIndex + 1) {
+        realignIndex = i;
       }
     } else {
-      // Change of character back in line with the swing trend.
-      const aligned = side === "long"
-        ? lastMinorHigh != null && bar.high > lastMinorHigh
-        : lastMinorLow != null && bar.low < lastMinorLow;
-      if (aligned) {
-        internal = "with";
-        realignIndex = i;
-        // Reset so a later pullback can re-arm the sequence.
-        lastMinorHigh = null;
-        lastMinorLow = null;
+      // After a realignment the sequence can re-arm: a fresh counter break is a
+      // new pullback, and the protecting swing only ever moves in the trade's
+      // favour (deeper pullback low for longs, higher pullback high for shorts).
+      pullbackExtreme = side === "long"
+        ? Math.min(pullbackExtreme!, bar.low)
+        : Math.max(pullbackExtreme!, bar.high);
+      const counter = side === "long" ? bar.low < prev.low : bar.high > prev.high;
+      if (counter) {
+        pullbackStartIndex = i;
+        realignIndex = null;
+        legExtreme = side === "long"
+          ? Math.max(...c.slice(breakout.index, i).map((b) => b.high))
+          : Math.min(...c.slice(breakout.index, i).map((b) => b.low));
       }
     }
   }
+
+  // Weak target (rule 9): the extreme the pullback left behind - the low that
+  // failed to take out the swing high (shorts) or the high that failed to take
+  // out the swing low (longs). That is the break leg's extreme.
+  const weakTarget = isFinite(legExtreme) && pullbackStartIndex != null ? legExtreme : null;
 
   return {
     breakoutIndex: breakout.index,
@@ -206,7 +198,7 @@ function readSide(c: PhotonCandle[], side: Side): SideRead {
     pullbackExtreme,
     pullbackStartIndex,
     realignIndex,
-    weakTarget: weak,
+    weakTarget,
     voided,
   };
 }
