@@ -53,9 +53,9 @@ export const ANALYSIS_MODELS: readonly AnalysisModel[] = [
     id: "focus",
     name: "The Trading Channel",
     version: `focus-1.0 (${FOCUS_RULEBOOK_VERSION})`,
-    tagline: "Fed only The Trading Channel strategies. Inherits nothing from Classic.",
+    tagline: "Fed only The Trading Channel strategies: objective trend, break and retest, pressure candles, ATR stops.",
     description:
-      "A clean-slate model fed only the strategies from The Trading Channel material you supply — nothing from Classic leaks in. It knows nothing about order blocks, protected structure, or any other TradeMind library unless that idea is written into its own rulebook. That isolation is the point: its signals are stamped with its own name and version and tracked on a separate scoreboard, so you can judge whether these strategies actually work on their own numbers before trusting them.",
+      "A clean-slate model fed only The Trading Channel's technical-analysis material — nothing from Classic leaks in. It reads trend objectively (an impulsive close through a swing point, alive until the pullback's origin gives way), enters on the break-and-retest of the level that was just broken, and demands a pressure candle at the zone: a 38.2 candle, an engulfing candle, or a close beyond the previous candle's extreme. Stops sit one ATR(14) beyond the protecting swing, targets come from structure and must pay at least 1.5R, and continuation trades must ride the 20-period moving average. Double tops and bottoms, flags and wedges, and RSI divergence are taught as coach knowledge but are never traded on an indicator alone. It knows nothing about order blocks, fair value gaps, or any other TradeMind Classic library. Every signal it files is stamped with its own name and version and tracked on its own scoreboard, so you can judge these strategies on their own numbers before trusting them.",
     knowledge: "strategies-only",
     ready: focusRuleCount() > 0,
     notReadyReason:
