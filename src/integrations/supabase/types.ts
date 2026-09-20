@@ -1733,6 +1733,7 @@ export type Database = {
           reasons: Json
           sample_size: number
           shadow: boolean
+          six_dimension: Json | null
           symbol: string
           tier: string
           timeframe: string
@@ -1756,6 +1757,7 @@ export type Database = {
           reasons?: Json
           sample_size?: number
           shadow?: boolean
+          six_dimension?: Json | null
           symbol: string
           tier: string
           timeframe: string
@@ -1779,6 +1781,7 @@ export type Database = {
           reasons?: Json
           sample_size?: number
           shadow?: boolean
+          six_dimension?: Json | null
           symbol?: string
           tier?: string
           timeframe?: string
