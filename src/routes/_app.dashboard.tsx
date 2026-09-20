@@ -541,11 +541,11 @@ function ScanTicket({
               {result.grade}
             </div>
             {result.autoStrategy && (
-              <div className="mt-2 rounded-xl border border-primary/25 bg-primary/5 px-2.5 py-1.5">
+              <div className="mt-3 rounded-xl border border-primary/25 bg-primary/5 px-3.5 py-3">
                 <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-primary">
                   Strategy chosen for you · {result.autoStrategy.name}
                 </div>
-                <div className="text-[11px] leading-snug text-muted-foreground mt-0.5">
+                <div className="text-[11px] leading-relaxed text-muted-foreground mt-1.5">
                   {result.autoStrategy.regime} — {result.autoStrategy.reason}
                 </div>
               </div>
@@ -563,7 +563,7 @@ function ScanTicket({
             )}
             <button
               onClick={onRescan}
-              className="inline-flex items-center gap-1.5 rounded-sm bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90 transition whitespace-nowrap"
+              className="inline-flex items-center gap-2 rounded-sm bg-primary px-5 py-2.5 text-xs font-semibold text-primary-foreground hover:opacity-90 transition whitespace-nowrap"
               title="Run a new scan on the current chart"
             >
               <Crosshair className="h-3 w-3" /> New scan
