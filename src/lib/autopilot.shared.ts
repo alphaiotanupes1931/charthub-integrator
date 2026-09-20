@@ -1,5 +1,6 @@
 // Shared auto-trading types + rail evaluation. Safe to import from client and server.
 // Live only: every order goes to the trader's connected broker account.
+import { instrumentReview } from "@/lib/instrument-review";
 export type AutopilotMode = "manual" | "auto";
 
 export type AutopilotSettings = {
@@ -65,6 +66,10 @@ export function evaluateRails(
   }
   if (settings.allowedSymbols.length > 0 && !settings.allowedSymbols.includes(candidate.symbol)) {
     return { allowed: false, reason: `${candidate.symbol} is not on your allowed symbol list` };
+  }
+  const review = instrumentReview(candidate.symbol);
+  if (review) {
+    return { allowed: false, reason: `${review.symbol} is under review and cannot be traded automatically` };
   }
   if (!gradeMeets(candidate.grade, settings.minGrade)) {
     return {

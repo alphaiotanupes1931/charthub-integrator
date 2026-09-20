@@ -114,6 +114,7 @@ import { Route as ApiPublicHooksGradeSeparationRouteImport } from './routes/api.
 import { Route as ApiPublicHooksGradeInversionRouteImport } from './routes/api.public.hooks.grade-inversion'
 import { Route as ApiPublicHooksEntryFillTestRouteImport } from './routes/api.public.hooks.entry-fill-test'
 import { Route as ApiPublicHooksDripEmailsRouteImport } from './routes/api.public.hooks.drip-emails'
+import { Route as ApiPublicHooksClassicResearchBacktestRouteImport } from './routes/api.public.hooks.classic-research-backtest'
 import { Route as ApiPublicHooksAutopilotTickRouteImport } from './routes/api.public.hooks.autopilot-tick'
 import { Route as ApiPublicHooksAiCreditsRouteImport } from './routes/api.public.hooks.ai-credits'
 import { Route as AppAcademyCertificateModuleIdRouteImport } from './routes/_app.academy.certificate.$moduleId'
@@ -671,6 +672,12 @@ const ApiPublicHooksDripEmailsRoute =
     path: '/api/public/hooks/drip-emails',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksClassicResearchBacktestRoute =
+  ApiPublicHooksClassicResearchBacktestRouteImport.update({
+    id: '/api/public/hooks/classic-research-backtest',
+    path: '/api/public/hooks/classic-research-backtest',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksAutopilotTickRoute =
   ApiPublicHooksAutopilotTickRouteImport.update({
     id: '/api/public/hooks/autopilot-tick',
@@ -777,6 +784,7 @@ export interface FileRoutesByFullPath {
   '/academy/certificate/$moduleId': typeof AppAcademyCertificateModuleIdRoute
   '/api/public/hooks/ai-credits': typeof ApiPublicHooksAiCreditsRoute
   '/api/public/hooks/autopilot-tick': typeof ApiPublicHooksAutopilotTickRoute
+  '/api/public/hooks/classic-research-backtest': typeof ApiPublicHooksClassicResearchBacktestRoute
   '/api/public/hooks/drip-emails': typeof ApiPublicHooksDripEmailsRoute
   '/api/public/hooks/entry-fill-test': typeof ApiPublicHooksEntryFillTestRoute
   '/api/public/hooks/grade-inversion': typeof ApiPublicHooksGradeInversionRoute
@@ -883,6 +891,7 @@ export interface FileRoutesByTo {
   '/academy/certificate/$moduleId': typeof AppAcademyCertificateModuleIdRoute
   '/api/public/hooks/ai-credits': typeof ApiPublicHooksAiCreditsRoute
   '/api/public/hooks/autopilot-tick': typeof ApiPublicHooksAutopilotTickRoute
+  '/api/public/hooks/classic-research-backtest': typeof ApiPublicHooksClassicResearchBacktestRoute
   '/api/public/hooks/drip-emails': typeof ApiPublicHooksDripEmailsRoute
   '/api/public/hooks/entry-fill-test': typeof ApiPublicHooksEntryFillTestRoute
   '/api/public/hooks/grade-inversion': typeof ApiPublicHooksGradeInversionRoute
@@ -995,6 +1004,7 @@ export interface FileRoutesById {
   '/_app/academy/certificate/$moduleId': typeof AppAcademyCertificateModuleIdRoute
   '/api/public/hooks/ai-credits': typeof ApiPublicHooksAiCreditsRoute
   '/api/public/hooks/autopilot-tick': typeof ApiPublicHooksAutopilotTickRoute
+  '/api/public/hooks/classic-research-backtest': typeof ApiPublicHooksClassicResearchBacktestRoute
   '/api/public/hooks/drip-emails': typeof ApiPublicHooksDripEmailsRoute
   '/api/public/hooks/entry-fill-test': typeof ApiPublicHooksEntryFillTestRoute
   '/api/public/hooks/grade-inversion': typeof ApiPublicHooksGradeInversionRoute
@@ -1107,6 +1117,7 @@ export interface FileRouteTypes {
     | '/academy/certificate/$moduleId'
     | '/api/public/hooks/ai-credits'
     | '/api/public/hooks/autopilot-tick'
+    | '/api/public/hooks/classic-research-backtest'
     | '/api/public/hooks/drip-emails'
     | '/api/public/hooks/entry-fill-test'
     | '/api/public/hooks/grade-inversion'
@@ -1213,6 +1224,7 @@ export interface FileRouteTypes {
     | '/academy/certificate/$moduleId'
     | '/api/public/hooks/ai-credits'
     | '/api/public/hooks/autopilot-tick'
+    | '/api/public/hooks/classic-research-backtest'
     | '/api/public/hooks/drip-emails'
     | '/api/public/hooks/entry-fill-test'
     | '/api/public/hooks/grade-inversion'
@@ -1324,6 +1336,7 @@ export interface FileRouteTypes {
     | '/_app/academy/certificate/$moduleId'
     | '/api/public/hooks/ai-credits'
     | '/api/public/hooks/autopilot-tick'
+    | '/api/public/hooks/classic-research-backtest'
     | '/api/public/hooks/drip-emails'
     | '/api/public/hooks/entry-fill-test'
     | '/api/public/hooks/grade-inversion'
@@ -1389,6 +1402,7 @@ export interface RootRouteChildren {
   LovableEmailEventsRoute: typeof LovableEmailEventsRoute
   ApiPublicHooksAiCreditsRoute: typeof ApiPublicHooksAiCreditsRoute
   ApiPublicHooksAutopilotTickRoute: typeof ApiPublicHooksAutopilotTickRoute
+  ApiPublicHooksClassicResearchBacktestRoute: typeof ApiPublicHooksClassicResearchBacktestRoute
   ApiPublicHooksDripEmailsRoute: typeof ApiPublicHooksDripEmailsRoute
   ApiPublicHooksEntryFillTestRoute: typeof ApiPublicHooksEntryFillTestRoute
   ApiPublicHooksGradeInversionRoute: typeof ApiPublicHooksGradeInversionRoute
@@ -2154,6 +2168,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksDripEmailsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/classic-research-backtest': {
+      id: '/api/public/hooks/classic-research-backtest'
+      path: '/api/public/hooks/classic-research-backtest'
+      fullPath: '/api/public/hooks/classic-research-backtest'
+      preLoaderRoute: typeof ApiPublicHooksClassicResearchBacktestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/autopilot-tick': {
       id: '/api/public/hooks/autopilot-tick'
       path: '/api/public/hooks/autopilot-tick'
@@ -2382,6 +2403,8 @@ const rootRouteChildren: RootRouteChildren = {
   LovableEmailEventsRoute: LovableEmailEventsRoute,
   ApiPublicHooksAiCreditsRoute: ApiPublicHooksAiCreditsRoute,
   ApiPublicHooksAutopilotTickRoute: ApiPublicHooksAutopilotTickRoute,
+  ApiPublicHooksClassicResearchBacktestRoute:
+    ApiPublicHooksClassicResearchBacktestRoute,
   ApiPublicHooksDripEmailsRoute: ApiPublicHooksDripEmailsRoute,
   ApiPublicHooksEntryFillTestRoute: ApiPublicHooksEntryFillTestRoute,
   ApiPublicHooksGradeInversionRoute: ApiPublicHooksGradeInversionRoute,
