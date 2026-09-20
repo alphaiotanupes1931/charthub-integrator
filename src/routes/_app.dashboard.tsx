@@ -560,12 +560,13 @@ function ScanTicket({
               )}
             </div>
             {result.autoStrategy && (
-              <div className="mt-3 rounded-xl border border-primary/25 bg-primary/5 px-3.5 py-3">
-                <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-primary">
+              <div className="mt-3 rounded-xl border border-primary/25 bg-primary/5 px-3.5 py-2.5">
+                <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-primary">
                   Strategy chosen for you · {result.autoStrategy.name}
-                </div>
-                <div className="text-[11px] leading-relaxed text-muted-foreground mt-1.5">
-                  {result.autoStrategy.regime} — {result.autoStrategy.reason}
+                  <InfoTip
+                    term="Why this strategy"
+                    text={`${result.autoStrategy.regime} — ${result.autoStrategy.reason}`}
+                  />
                 </div>
               </div>
             )}
