@@ -1,5 +1,7 @@
 import { PageInstructions } from "@/components/PageInstructions";
 import { InfoTip } from "@/components/InfoTip";
+import { DouglasChecklist, douglasConfidence } from "@/components/DouglasChecklist";
+import { DOUGLAS_CHECKLIST } from "@/lib/analysis-models/douglas-engine";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -526,6 +528,18 @@ function ScanTicket({
   const biasTrendConflict =
     (dailyBias === "bullish" && currentTrend === "down") || (dailyBias === "bearish" && currentTrend === "up");
 
+  // Mark Douglas is a mindset model, so it shows up under each trade as a
+  // discipline checklist. The count of yeses is the confidence on this scan.
+  const [douglasChecks, setDouglasChecks] = useState<ReadonlySet<number>>(() => new Set<number>());
+  const toggleDouglas = (i: number) =>
+    setDouglasChecks((prev) => {
+      const next = new Set(prev);
+      if (next.has(i)) next.delete(i);
+      else next.add(i);
+      return next;
+    });
+  const checklistConfidence = douglasConfidence(douglasChecks);
+
   // Volatility from the risk analyst read.
   const volatilityConf = riskNote?.confidence ?? 50;
   const volatilityTag = volatilityConf >= 65 ? "Elevated" : volatilityConf >= 40 ? "Normal" : "Quiet";
@@ -542,18 +556,18 @@ function ScanTicket({
               <div className={`font-display text-5xl leading-none tracking-tight ${gradeColor[result.grade]}`}>
                 {result.grade}
               </div>
-              {/* Confidence is counted from the snapshot by the engine, never
-                  asserted by the model, so it is shown on every scan. */}
-              {typeof result.confidence === "number" && (
+              {/* Confidence now comes from the Mark Douglas checklist under the
+                  trade: the more yeses, the more confident you are in taking it. */}
+              {!isNoEntry && (
                 <div className="leading-none">
                   <div className="font-display text-2xl tracking-tight text-foreground">
-                    {Math.round(result.confidence)}%
+                    {checklistConfidence}%
                   </div>
                   <div className="mt-1 flex items-center gap-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                     Confidence
                     <InfoTip
                       term="Why this confidence"
-                      text={`Counted from the snapshot by the engine, never asserted by the model. Higher means more checks agreed: timeframe alignment, entry-zone quality, volatility conditions and structure. ${result.bias !== "Neutral" ? `This scan read ${result.bias} at grade ${result.grade}, and ${Math.round(result.confidence)}% reflects how many of those confirmations lined up.` : "This scan came out neutral, so confidence reflects how few confirmations lined up."}`}
+                      text={`Counted from the Mark Douglas checklist below this trade: ${douglasChecks.size} of ${DOUGLAS_CHECKLIST.length} answers are yes. Every yes raises it — the setup itself comes from your chart model, and this number is how ready you are to execute it.`}
                     />
                   </div>
                 </div>
@@ -640,6 +654,10 @@ function ScanTicket({
           </div>
         )}
 
+
+        {!isNoEntry && (
+          <DouglasChecklist checked={douglasChecks} onToggle={toggleDouglas} />
+        )}
 
         <div className="space-y-2">
           {!isNoEntry && logged && (
