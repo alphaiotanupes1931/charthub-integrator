@@ -86,6 +86,17 @@ export function AnalysisModelPicker({ className = "" }: { className?: string }) 
                   {infoFor === m.id ? (
                     <span className="mt-1.5 block border-t border-border/60 pt-1.5 text-[11px] leading-relaxed text-muted-foreground">
                       {m.description}
+                      {m.sourceUrl ? (
+                        <a
+                          href={m.sourceUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="mt-1.5 block font-medium text-foreground underline underline-offset-2 hover:text-foreground/80"
+                        >
+                          {m.sourceLabel ?? m.sourceUrl}
+                        </a>
+                      ) : null}
                     </span>
                   ) : null}
                 </span>

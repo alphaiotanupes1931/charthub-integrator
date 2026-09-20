@@ -25,6 +25,9 @@ export type AnalysisModel = {
   tagline: string;
   /** Full explanation behind the picker's info button: what the model is fed and what makes it different. */
   description: string;
+  /** Where the material this model was fed comes from, shown behind the info button. */
+  sourceUrl?: string;
+  sourceLabel?: string;
   /**
    * "full" = everything the platform knows (Classic).
    * "strategies-only" = nothing but the supplied rulebook (Focus).
@@ -57,6 +60,8 @@ export const ANALYSIS_MODELS: readonly AnalysisModel[] = [
     description:
       "A clean-slate model fed only The Trading Channel's technical-analysis material — nothing from Classic leaks in. It reads trend objectively (an impulsive close through a swing point, alive until the pullback's origin gives way), enters on the break-and-retest of the level that was just broken, and demands a pressure candle at the zone: a 38.2 candle, an engulfing candle, or a close beyond the previous candle's extreme. Stops sit one ATR(14) beyond the protecting swing, targets come from structure and must pay at least 1.5R, and continuation trades must ride the 20-period moving average. Double tops and bottoms, flags and wedges, and RSI divergence are taught as coach knowledge but are never traded on an indicator alone. It knows nothing about order blocks, fair value gaps, or any other TradeMind Classic library. Every signal it files is stamped with its own name and version and tracked on its own scoreboard, so you can judge these strategies on their own numbers before trusting them.",
     knowledge: "strategies-only",
+    sourceUrl: "https://www.youtube.com/watch?v=eynxyoKgpng",
+    sourceLabel: "Watch the Trading Channel material this model was fed",
     ready: focusRuleCount() > 0,
     notReadyReason:
       "This model has no strategies written into it yet, so it cannot grade setups or file signals. Send the strategies and they get written into its rulebook.",
