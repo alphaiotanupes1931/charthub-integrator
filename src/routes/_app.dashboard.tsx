@@ -592,12 +592,12 @@ function ScanTicket({
 
         {!isNoEntry && result.triggered === false && (
           <div className="rounded-xl border border-gold/40 bg-gold/10 px-3 py-2">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-gold">
+            <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-gold">
               Not triggered yet — do not take it here
-            </div>
-            <div className="text-[11px] leading-snug text-foreground/85 mt-0.5">
-              {result.triggerRule}
-              {result.triggerLevel ? ` Watch level: ${result.triggerLevel}.` : ""}
+              <InfoTip
+                term="Not at the entry yet"
+                text={`${result.triggerRule}${result.triggerLevel ? ` Watch level: ${result.triggerLevel}.` : ""} Taking it here is early and gives you a worse price with a wider stop — leave a limit order at the entry or wait for the pullback.`}
+              />
             </div>
           </div>
         )}
