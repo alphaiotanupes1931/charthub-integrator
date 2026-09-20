@@ -174,6 +174,9 @@ type ChatRequestBody = {
   strategy?: StrategyCtx | null;
   lens?: LensCtx | null;
   signalLearning?: string | null;
+  /** Which named analysis model to answer with. Falls back to the account's saved choice. */
+  analysisModel?: string | null;
+
 };
 
 
@@ -755,6 +758,11 @@ export const Route = createFileRoute("/api/chat")({
           return new Response("Invalid JSON", { status: 400, headers: cors });
         }
         const { messages, threadId, coach, previousCoach, journal, chart, strategy, lens, signalLearning } = body;
+        // The picker sends the model with the request; the account's saved choice
+        // is read below and used when the request does not name one.
+        let analysisModelId: AnalysisModelId = normalizeAnalysisModel(body.analysisModel);
+        const analysisModelFromBody = body.analysisModel != null;
+
         if (!Array.isArray(messages) || !threadId) {
           return new Response("messages, threadId required", { status: 400, headers: cors });
         }
