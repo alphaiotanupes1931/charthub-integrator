@@ -28,6 +28,9 @@ import { useTimezone, formatInTimezone } from "@/hooks/useTimezone";
 import { getOrCreateDashboardThread, getChatMessages, getActiveModel, appendAssistantChatMessage, type ActiveModelInfo } from "@/lib/chat.functions";
 import { ActionLoader } from "@/components/ActionLoader";
 import { clearLastThreadId, readJournal, readActiveCoach, writeActiveCoach, readActiveStrategy, readLastThreadId, writeLastThreadId } from "@/lib/chat-client";
+import { readAnalysisModel } from "@/hooks/useAnalysisModel";
+import { AnalysisModelPicker } from "@/components/AnalysisModelPicker";
+
 import { findStrategyByName } from "@/lib/customStrategies";
 import { isAutoStrategy } from "@/lib/strategyAuto";
 import { readActiveLensId, findLens } from "@/lib/scanLens";
