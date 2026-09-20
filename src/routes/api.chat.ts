@@ -8,6 +8,13 @@ import { createAiGatewayProvider } from "@/lib/ai-gateway.server";
 import { METHODOLOGY_CORE } from "@/lib/agents/methodology-kb";
 import { rulebookForPrompt } from "@/lib/wyckoff/rulebook";
 import {
+  analysisModelPromptBlock,
+  getAnalysisModel,
+  normalizeAnalysisModel,
+  type AnalysisModelId,
+} from "@/lib/analysis-models";
+
+import {
   corsHeadersFor,
   enforceMaxBody,
   enforceOrigin,
