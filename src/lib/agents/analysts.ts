@@ -3,10 +3,8 @@
 
 import { generateText, Output, NoObjectGeneratedError } from "ai";
 import { z } from "zod";
-import { createAiGatewayProvider } from "@/lib/ai-gateway.server";
+import { runScanModel } from "./scan-model.server";
 import type { AnalystNote, MarketSnapshot } from "./types";
-
-const MODEL = "google/gemini-3-flash-preview";
 
 // No .min/.max bounds - schema-level constraints cause NoObjectGeneratedError
 // when the model exceeds them, collapsing every analyst to neutral/0 and
@@ -122,18 +120,20 @@ function buildContext(snap: MarketSnapshot): string {
 }
 
 async function askAnalyst(apiKey: string, system: string, snap: MarketSnapshot): Promise<Omit<AnalystNote, "role">> {
-  const provider = createAiGatewayProvider(apiKey);
   let output: RawNote;
   try {
-    const result = await generateText({
-      model: provider(MODEL),
-      output: Output.object({ schema: NoteSchema }),
-      system: `${system} Return exactly one flat JSON object with keys: bias (bullish, bearish, or neutral), confidence (0-100), summary (one sentence), keyLevels (numbers). Do not nest the answer.`,
-      prompt: buildContext(snap),
+    // Claude writes the analyst read; the gateway model is the fallback.
+    output = await runScanModel(apiKey, async (model, modelLabel) => {
+      const result = await generateText({
+        model,
+        output: Output.object({ schema: NoteSchema }),
+        system: `${system} Return exactly one flat JSON object with keys: bias (bullish, bearish, or neutral), confidence (0-100), summary (one sentence), keyLevels (numbers). Do not nest the answer.`,
+        prompt: buildContext(snap),
+      });
+      const { logAiCost } = await import("@/lib/ai-cost.server");
+      await logAiCost({ kind: "analyst", model: modelLabel, usage: result.usage, providerMetadata: result.providerMetadata });
+      return result.output;
     });
-    const { logAiCost } = await import("@/lib/ai-cost.server");
-    await logAiCost({ kind: "analyst", model: MODEL, usage: result.usage, providerMetadata: result.providerMetadata });
-    output = result.output;
 
   } catch (e) {
     if (!NoObjectGeneratedError.isInstance(e)) throw e;

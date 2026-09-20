@@ -3,7 +3,7 @@
 
 import { generateText, Output, NoObjectGeneratedError } from "ai";
 import { z } from "zod";
-import { createAiGatewayProvider } from "@/lib/ai-gateway.server";
+import { runScanModel } from "./scan-model.server";
 import type { MarketSnapshot, OrderFlow, ResearchMemo, TradePlan } from "./types";
 import type { TradeStyle } from "@/lib/tradeTiming";
 import { SCANNER_METHODOLOGY_VERSION } from "@/lib/scanner-methodology";
@@ -27,13 +27,11 @@ import {
 } from "@/lib/sessionVolume";
 
 
-const MODEL = "google/gemini-3-flash-preview";
-
 /** Best-effort cost accounting for each planner step. Never blocks a scan. */
-async function logPlannerCost(kind: string, usage: unknown, providerMetadata: unknown) {
+async function logPlannerCost(kind: string, model: string, usage: unknown, providerMetadata: unknown) {
   try {
     const { logAiCost } = await import("@/lib/ai-cost.server");
-    await logAiCost({ kind, model: MODEL, usage: usage as never, providerMetadata: providerMetadata as never });
+    await logAiCost({ kind, model, usage: usage as never, providerMetadata: providerMetadata as never });
   } catch { /* cost logging is never fatal */ }
 }
 
@@ -1409,7 +1407,6 @@ export async function runPlanner(
   modelId: AnalysisModelId = "classic",
 ): Promise<TradePlan> {
 
-  const provider = createAiGatewayProvider(apiKey);
 
   // Forex Factory calendar feeds the scan decision, not just the chat and the
   // briefings: timing risk is part of whether a setup is worth taking.
@@ -1565,14 +1562,17 @@ export async function runPlanner(
   let plan: RawPlan;
   try {
     // Step 1 - draft plan
-    const draft = await generateText({
-      model: provider(MODEL),
+    const draft = await runScanModel(apiKey, async (model, modelLabel) => {
+      const out = await generateText({
+      model,
       output: Output.object({ schema: PlanSchema }),
       system: "You are the head trader. Follow the 'How to Analysis' cascade in the memo: 4H sets DIRECTION + TREND + key levels + supply/demand; 1H reads STRUCTURE (breaks, reversal, OB, FVG, liquidity); 15m gives CONFIRMATION. Grade A+ only when MTF alignment is aligned-long/aligned-short AND 15m confirmation matches. Grade A when alignment is aligned-* with weaker 15m. Grade B when 1H structure and 4H direction agree but 15m is neutral. Grade C when there is a 1H trigger but 4H is against or neutral. NO ENTRY when direction, structure, and confirmation all conflict. Return exactly one flat JSON object, not an array. Grade MUST be one of: A+, A, B, C, NO ENTRY. Bias MUST be Long, Short, or Neutral. ENTRY PRECISION IS THE PRIORITY: the entry must be a specific level, not a round guess near price. Anchor it to an actual level in the memo - a 1H bullish/bearish order block edge, a 1H FVG edge, a 4H demand/supply boundary, a 4H key level, or a resting liquidity pool - on the pullback side of Last and within 2x ATR. Place the stop just beyond the FAR edge of that same zone (0.6-2.5x ATR of risk), never a round ATR multiple pulled out of the air. TP1 should be the first opposing level or liquidity pool that pays at least 1.5R; TP2 the next one or 3R. In the thesis, state the exact level name and price you anchored the entry to. No generic wording. If an ECONOMIC CALENDAR block is present, treat a high-impact release inside the next few hours as timing risk: cap the grade at B and say so in the invalidation. ENTRY RULES: default to entering on the pullback side of price. For a Long setup, entry must be at or below Last unless the prompt explicitly asks for a breakout stop order. For a Short setup, entry must be at or above Last. Prefer entries at 1H order blocks, FVGs, or 4H demand/supply that align with bias. Do not default to BUY STOP or SELL STOP. Never place entry more than 2x ATR from current price. Keep thesis under 400 chars and invalidation under 200 chars. Do NOT state a confidence percentage; conviction is counted from the data by the platform, not asserted by you." + memoryLine,
       prompt: ctx,
     });
-    plan = draft.output;
-    await logPlannerCost("plan-draft", draft.usage, draft.providerMetadata);
+      await logPlannerCost("plan-draft", modelLabel, out.usage, out.providerMetadata);
+      return out.output;
+    });
+    plan = draft;
 
   } catch (e) {
     // The model writes the explanation, but it must never be a hard dependency
@@ -1588,25 +1588,31 @@ export async function runPlanner(
   const draftGrade = String(plan.grade ?? "").toUpperCase();
   const worthCritiquing = draftGrade === "A+" || draftGrade === "A" || draftGrade === "B";
   if (worthCritiquing) try {
-    const critique = await generateText({
-      model: provider(MODEL),
+    const critique = await runScanModel(apiKey, async (model, modelLabel) => {
+      const out = await generateText({
+      model,
       output: Output.object({ schema: CritiqueSchema }),
       system: "You are the risk manager. Approve the plan if entry/stop/TP are in sensible relation to price (stop within 3x ATR, TPs on the correct side of entry, R:R >= 1.5). Otherwise say revise. Keep reason under 300 chars.",
       prompt: `${ctx}\n\nProposed plan: ${JSON.stringify(plan)}`,
     });
-    await logPlannerCost("plan-critique", critique.usage, critique.providerMetadata);
+      await logPlannerCost("plan-critique", modelLabel, out.usage, out.providerMetadata);
+      return out.output;
+    });
 
     // Step 3 - refine once if needed
-    if (critique.output.verdict === "revise") {
+    if (critique.verdict === "revise") {
       try {
-        const revised = await generateText({
-          model: provider(MODEL),
+        const revised = await runScanModel(apiKey, async (model, modelLabel) => {
+          const out = await generateText({
+          model,
           output: Output.object({ schema: PlanSchema }),
           system: "You are the head trader. Return exactly one flat JSON object, not an array. Revise the previous plan per the risk manager's note. Grade MUST be one of: A+, A, B, C, NO ENTRY. Bias MUST be Long, Short, or Neutral. Keep bias unless the critique explicitly demands a flip. Keep thesis under 400 chars and invalidation under 200 chars. For Long, entry must be at or below current price by default. For Short, entry must be at or above current price by default. Do not revise into a stop-entry unless the prompt explicitly asks for a breakout order.",
-          prompt: `${ctx}\n\nPrevious plan: ${JSON.stringify(plan)}\nRisk manager: ${critique.output.reason}`,
+          prompt: `${ctx}\n\nPrevious plan: ${JSON.stringify(plan)}\nRisk manager: ${critique.reason}`,
         });
-        plan = revised.output;
-        await logPlannerCost("plan-revise", revised.usage, revised.providerMetadata);
+          await logPlannerCost("plan-revise", modelLabel, out.usage, out.providerMetadata);
+          return out.output;
+        });
+        plan = revised;
       } catch (e) {
         const salvaged = NoObjectGeneratedError.isInstance(e) ? salvagePlanFromText(e.text) : null;
         if (salvaged) plan = salvaged;
