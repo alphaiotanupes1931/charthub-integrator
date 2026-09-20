@@ -13,7 +13,6 @@
 
 import { FOCUS_RULEBOOK, FOCUS_RULEBOOK_VERSION, focusRulebookForPrompt, focusRuleCount } from "./analysis-models/focus-rulebook";
 import { PHOTON_RULEBOOK, PHOTON_RULEBOOK_VERSION, photonRulebookForPrompt, photonRuleCount } from "./analysis-models/photon-rulebook";
-import { classicResearchRulebookForPrompt } from "./analysis-models/classic-research-rulebook";
 
 export type AnalysisModelId = "classic" | "focus" | "photon";
 
@@ -120,7 +119,7 @@ function rulebookFor(id: AnalysisModelId): { count: number; text: string } {
 
 export function analysisModelPromptBlock(id: unknown): string {
   const model = getAnalysisModel(id);
-  if (model.knowledge === "full") return classicResearchRulebookForPrompt();
+  if (model.knowledge === "full") return "";
   const rulebook = rulebookFor(model.id);
   const body = rulebook.count > 0 ? rulebook.text : "(No strategies have been written into this model yet.)";
   return [

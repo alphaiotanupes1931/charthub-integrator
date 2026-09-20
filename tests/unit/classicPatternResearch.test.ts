@@ -11,7 +11,7 @@ describe("Classic pattern shadow research", () => {
     const accumulation = Array.from({ length: 10 }, (_, index) => bar(index * 3600, 100, 101, 99, 100, index === 4 ? 1000 : 100));
     const following = [
       bar(10 * 3600, 100, 103, 100, 102.5),
-      bar(11 * 3600, 102.5, 102.6, 99.8, 100.2),
+      bar(11 * 3600, 102.5, 102.6, 98.9, 100.2),
       bar(12 * 3600, 100.2, 103.2, 100.1, 102.8),
     ];
     const read = readPocContinuation({ accumulationBars: accumulation, followingBars: following, higherTimeframeBias: "bullish", asOfMs: 99_999_999 });
@@ -25,7 +25,7 @@ describe("Classic pattern shadow research", () => {
     const accumulation = Array.from({ length: 8 }, (_, index) => bar(index * 3600, 100, 101, 99, 100));
     const read = readPocContinuation({
       accumulationBars: accumulation,
-      followingBars: [bar(8 * 3600, 100, 103, 100, 102.5), bar(9 * 3600, 102, 102.2, 99.8, 100.1)],
+      followingBars: [bar(8 * 3600, 100, 103, 100, 102.5), bar(9 * 3600, 102, 102.2, 98.9, 100.1)],
       higherTimeframeBias: "bullish",
       asOfMs: 99_999_999,
     });

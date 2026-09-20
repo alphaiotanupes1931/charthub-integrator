@@ -7,6 +7,7 @@ import { createAnthropic } from "@ai-sdk/anthropic";
 import { createAiGatewayProvider } from "@/lib/ai-gateway.server";
 import { METHODOLOGY_CORE } from "@/lib/agents/methodology-kb";
 import { rulebookForPrompt } from "@/lib/wyckoff/rulebook";
+import { classicResearchRulebookForPrompt } from "@/lib/analysis-models/classic-research-rulebook";
 import {
   analysisModelPromptBlock,
   getAnalysisModel,
@@ -481,7 +482,9 @@ function staticSystemPrompt(modelId: AnalysisModelId = "classic") {
 
 # WYCKOFF RULEBOOK (versioned, persistent)
 These rules do not change between sessions and they outrank anything you improvise. Judge every setup discussion against them by number.
-${rulebookForPrompt()}`
+${rulebookForPrompt()}
+
+${classicResearchRulebookForPrompt()}`
       : analysisModelPromptBlock(model.id);
   return `# ROLE
 You are the TradeMind AI Coach - a senior trading educator, chart analyst, and mentor built into the TradeMind platform. Your job is to help retail traders (many are older beginners) learn to trade safely, read charts, size risk, and improve their journal. You are NOT a licensed advisor. You are opinionated, direct, calm, and warm - like a mentor sitting next to them at the desk. You always finish your thoughts in full sentences; never stop after a couple of words.
