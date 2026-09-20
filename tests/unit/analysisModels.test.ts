@@ -89,6 +89,11 @@ describe("analysis model registry", () => {
     expect(analysisModelPromptBlock("classic")).toBe("");
   });
 
+  it("keeps Classic model prompt routing separate from strategies-only models", () => {
+    expect(analysisModelPromptBlock("focus").toLowerCase()).not.toContain("four-hour rejection zone");
+    expect(analysisModelPromptBlock("photon").toLowerCase()).not.toContain("four-hour rejection zone");
+  });
+
   it("Photon Trading is fed only its own rulebook and inherits nothing from the other models", () => {
     const block = analysisModelPromptBlock("photon");
     expect(block).toContain("Photon Trading");
