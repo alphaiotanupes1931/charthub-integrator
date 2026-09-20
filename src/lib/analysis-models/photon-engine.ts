@@ -50,7 +50,6 @@ export type PhotonRead = {
 
 const MIN_BARS = 40;
 const SWING_PIVOT = 2; // bars each side for a swing point
-const INTERNAL_PIVOT = 1; // bars each side for internal (minor) structure
 const MAX_BARS_SINCE_REALIGN = 10; // a realignment older than this is stale
 
 type Pivot = { index: number; price: number };
@@ -229,8 +228,8 @@ export function photonAnalysis(candles: PhotonCandle[]): PhotonRead {
     return base;
   }
 
-  const long = readSide(candles, "long");
-  const short = readSide(candles, "short");
+  const long = readSide(candles, atr, "long");
+  const short = readSide(candles, atr, "short");
 
   // Rule 2: the trend belongs to the side with the most recent swing break.
   const trend: "up" | "down" | "none" =
