@@ -24,7 +24,9 @@ function run(symbol: string, bars: BtBar[], filtered: boolean): BtResult {
     filtered
       ? {
           signalFilter: ({ bars: visible, signal }) => {
-            const read = readClassicSessionBias(symbol, visible, (visible[visible.length - 1].time + 3600) * 1000);
+            // Twenty prior sessions need roughly four weeks. Forty-five days
+            // leaves holiday/weekend room without repeatedly scanning two years.
+            const read = readClassicSessionBias(symbol, visible.slice(-24 * 45), (visible[visible.length - 1].time + 3600) * 1000);
             const agrees = (signal.side === "Long" && read.direction === "bullish")
               || (signal.side === "Short" && read.direction === "bearish");
             return { accept: agrees, tag: agrees ? read.pattern : undefined };
