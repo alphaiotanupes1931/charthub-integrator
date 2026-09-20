@@ -81,7 +81,7 @@ export function AutoTradingToggle({ className = "" }: { className?: string }) {
 
   return (
     <>
-       <div ref={menuRef} className={`relative inline-flex items-center ${className}`}>
+       <div ref={menuRef} className={`relative hidden items-center lg:inline-flex ${className}`}>
         <button
           type="button"
            onClick={() => setOpen((value) => !value)}
