@@ -764,10 +764,13 @@ export const Route = createFileRoute("/api/chat")({
           return new Response("Invalid JSON", { status: 400, headers: cors });
         }
         const { messages, threadId, coach, previousCoach, journal, chart, strategy, lens, signalLearning } = body;
-        // The picker sends the model with the request; the account's saved choice
-        // is read below and used when the request does not name one.
+        // The picker sends the model with the request, but the account's saved
+        // choice below wins whenever there is one. The browser copy is only a
+        // fallback for a signed-out scratch chat or a profile that has no choice
+        // stored yet - otherwise signing in on a second device answered as
+        // Classic while the account was set to something else.
         let analysisModelId: AnalysisModelId = normalizeAnalysisModel(body.analysisModel);
-        const analysisModelFromBody = body.analysisModel != null;
+
 
         if (!Array.isArray(messages) || !threadId) {
           return new Response("messages, threadId required", { status: 400, headers: cors });
@@ -879,9 +882,11 @@ export const Route = createFileRoute("/api/chat")({
             .maybeSingle();
           const raw = (prefRow as { ai_model_pref?: string } | null)?.ai_model_pref;
           modelPref = normalizeModelPref(raw);
-          if (!analysisModelFromBody) {
-            analysisModelId = normalizeAnalysisModel((prefRow as { analysis_model?: string } | null)?.analysis_model);
+          const savedAnalysisModel = (prefRow as { analysis_model?: string } | null)?.analysis_model;
+          if (savedAnalysisModel) {
+            analysisModelId = normalizeAnalysisModel(savedAnalysisModel);
           }
+
         }
         const analysisModel = getAnalysisModel(analysisModelId);
         console.log(`[chat] req=${reqId} analysis_model=${analysisModel.id} version=${analysisModel.version}`);
