@@ -172,7 +172,7 @@ function ScoreboardPage() {
               label="Signals filed"
               value={String(board.total)}
               n={board.total}
-              sub={`${board.open} open, ${board.decided} decided, ${board.expired} expired${board.voided ? `, ${board.voided} no-direction (excluded)` : ""}`}
+              sub={`${board.open} open, ${board.decided} decided, ${board.expired} expired${board.unfilled ? `, ${board.unfilled} never filled (excluded)` : ""}${board.voided ? `, ${board.voided} no-direction (excluded)` : ""}`}
             />
             <Stat
               label="Hit rate, decided only"
@@ -197,6 +197,12 @@ function ScoreboardPage() {
               sub={`${board.aGrade.expectancyR}R gross${board.aGrade.netExpectancyR == null ? "" : `, ${board.aGrade.netExpectancyR}R net`}. Same denominator as the A row in the grade table.`}
             />
             <Stat
+              label="Never filled"
+              value={String(board.unfilled)}
+              n={board.unfilled}
+              sub="Price never traded back to the planned entry, so there was no trade. Held out of hit rate and average R."
+            />
+            <Stat
               label="Expiries"
               value={String(board.expired)}
               n={board.expired}
@@ -206,6 +212,7 @@ function ScoreboardPage() {
                   : `${board.expiredAvgR}R average at the last close. Held out of hit rate and average R.`
               }
             />
+
             <Stat
               label="Taken vs skipped"
               value={

@@ -12,7 +12,7 @@ import { ENGINE_FIX_LABEL, isAfterEngineFix } from "@/lib/signal-engine-version"
  * audit trail but excluded from every aggregate, so no-opinion scans never count
  * as short bets that happened to win or lose.
  */
-export type SignalScoreStatus = "open" | "target" | "stop" | "expired" | "void";
+export type SignalScoreStatus = "open" | "target" | "stop" | "expired" | "void" | "unfilled";
 
 export type SignalScoreRow = {
   id: string;
@@ -90,6 +90,8 @@ export type Scoreboard = {
   open: number;
   /** No-direction rows held out of every number here. */
   voided: number;
+  /** Signals whose planned entry was never traded back to. Held out of every number. */
+  unfilled: number;
   /** Target + stop. The single denominator behind every headline figure. */
   decided: number;
   targets: number;
@@ -142,7 +144,12 @@ export function scorableRows(rows: SignalScoreRow[]): SignalScoreRow[] {
   // resolver voids no-direction signals, and this filter refuses anything whose
   // bias is not Long or Short even if it carries a stored verdict from before
   // the resolver was fixed.
-  return rows.filter((r) => r.status !== "void" && (r.bias === "Long" || r.bias === "Short"));
+  // "unfilled" is held out for the same reason as "void": price never traded back
+  // to the planned entry, so there was no position to win or lose with. Counting
+  // one would credit the record with a trade the account never had.
+  return rows.filter(
+    (r) => r.status !== "void" && r.status !== "unfilled" && (r.bias === "Long" || r.bias === "Short"),
+  );
 }
 
 const r2 = (n: number) => Math.round(n * 100) / 100;
@@ -215,6 +222,7 @@ export function buildScoreboard(allRows: SignalScoreRow[]): Scoreboard {
   // No-direction scans are voided, not scored: including them defaults every
   // Neutral read to a short and drags the measured hit rate toward chance.
   const voided = allRows.filter((r) => r.status === "void").length;
+  const unfilled = allRows.filter((r) => r.status === "unfilled").length;
   const rows = scorableRows(allRows);
   const overall = bucket("all", rows);
   const notes: string[] = [];
@@ -281,6 +289,12 @@ export function buildScoreboard(allRows: SignalScoreRow[]): Scoreboard {
     );
   }
 
+  if (unfilled > 0) {
+    notes.push(
+      `${unfilled} signal${unfilled === 1 ? "" : "s"} never filled: price never traded back to the planned entry, so ${unfilled === 1 ? "it is" : "they are"} excluded from hit rate and average R.`,
+    );
+  }
+
   if (overall.expired > 0) {
     notes.push(
       `${overall.expired} signal${overall.expired === 1 ? "" : "s"} timed out without hitting the stop or the target` +
@@ -291,6 +305,7 @@ export function buildScoreboard(allRows: SignalScoreRow[]): Scoreboard {
 
   return {
     voided,
+    unfilled,
     total: overall.total,
     open: rows.filter((r) => r.status === "open").length,
     decided: overall.decided,
