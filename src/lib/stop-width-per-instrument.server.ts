@@ -110,7 +110,7 @@ export async function runPerInstrumentStopWidthSweep(
     }
     // Stop distance was atr * filedMult, so ATR at scan time is recoverable.
     const atr = risk / filedMult;
-    const bucket = bySymbol.get(row.symbol) ?? { filed: [], perMult: new Map() };
+    const bucket: Bucket = bySymbol.get(row.symbol) ?? { filed: [], perMult: new Map() };
     bucket.filed.push(row);
 
     for (const mult of mults) {
