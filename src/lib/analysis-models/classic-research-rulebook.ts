@@ -30,6 +30,26 @@ export const CLASSIC_RESEARCH_RULEBOOK = [
     title: "Four-hour rejection zone with 15-minute confirmation",
     rule: "Start on the four-hour chart and mark only the clearest repeated rejection area as a zone, using candle bodies and wicks rather than a single exact price. Do not enter merely because price reaches it. On the 15-minute chart, require a closed-candle break of the relevant swing structure in the direction supported by the four-hour read. The zone establishes location; the 15-minute break confirms timing. If either part is absent, wait.",
   },
+  {
+    id: "six-dimension-score",
+    title: "Six-dimension setup score",
+    rule: "Score every candidate 1-5 on structure, momentum, risk, confluence, session and track record, and require 4 or better on structure and risk plus at least two of the other four. Measure this alongside the current grade on filed signals before it is allowed to influence a published grade: if the six-dimension gate separates outcomes better than the current grade on held-out data, it earns its place, and not before.",
+  },
+  {
+    id: "level-weighting",
+    title: "Reaction, volume, time - in that order",
+    rule: "A level qualifies on repeated reaction first (two or more turns, not one), then on volume actually traded there, then on the timeframe it formed on, with higher timeframes outranking lower ones absolutely. Test whether scoring zones this way, rather than treating every marked level alike, changes hit rate and average R. A 15-minute signal must never outrank weekly structure in any candidate rule.",
+  },
+  {
+    id: "invalidation-first-sizing",
+    title: "Invalidation before size",
+    rule: "The stop is the price where the reason for the trade stops being true, taken from structure, and position size is derived from that distance at a fixed account risk percentage. Size is never held constant with the stop moved to fit. This is a planning and coaching rule; it changes suggested size, never direction or grade.",
+  },
+  {
+    id: "no-undated-win-rates",
+    title: "No performance claim without its working",
+    rule: "A win rate, expectancy or R figure may only be shown with its sample size, date range and instruments, and only from the scoreboard. Anything else is decoration and must not be stated to a trader, including in marketing copy.",
+  },
 ] as const;
 
 export function classicResearchRulebookForPrompt(): string {
