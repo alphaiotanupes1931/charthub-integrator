@@ -537,8 +537,22 @@ function ScanTicket({
             <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-2 truncate">
               {symbol.ticker} · {result.bias}
             </div>
-            <div className={`font-display text-5xl leading-none tracking-tight ${gradeColor[result.grade]}`}>
-              {result.grade}
+            <div className="flex items-baseline gap-3">
+              <div className={`font-display text-5xl leading-none tracking-tight ${gradeColor[result.grade]}`}>
+                {result.grade}
+              </div>
+              {/* Confidence is counted from the snapshot by the engine, never
+                  asserted by the model, so it is shown on every scan. */}
+              {typeof result.confidence === "number" && (
+                <div className="leading-none">
+                  <div className="font-display text-2xl tracking-tight text-foreground">
+                    {Math.round(result.confidence)}%
+                  </div>
+                  <div className="mt-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Confidence
+                  </div>
+                </div>
+              )}
             </div>
             {result.autoStrategy && (
               <div className="mt-3 rounded-xl border border-primary/25 bg-primary/5 px-3.5 py-3">
