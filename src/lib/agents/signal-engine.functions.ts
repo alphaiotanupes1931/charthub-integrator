@@ -21,6 +21,8 @@ export type SignalState = "forming" | "confirmed" | "invalidated";
 
 export type Signal = {
   ticker: string;
+  /** Market price used to build the plan, required when filing it for scoring. */
+  refPrice: number | null;
   action: "BUY" | "SELL" | "HOLD";
   grade: TradePlan["grade"];
   confidence: number;
@@ -101,6 +103,7 @@ export const runSignalScan = createServerFn({ method: "POST" })
           // like the scanner skipped them.
           return {
             ticker,
+            refPrice: null,
             action: "HOLD",
             grade: "NO ENTRY",
             confidence: 0,
@@ -121,6 +124,7 @@ export const runSignalScan = createServerFn({ method: "POST" })
         const lifecycle = signalState(plan, action);
         return {
           ticker,
+          refPrice: snap.lastPrice,
           action,
           grade: plan.grade,
           confidence: plan.confidence,
