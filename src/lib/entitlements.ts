@@ -29,6 +29,7 @@ export type Capability =
   | "broker_live"
   | "autopilot"
   | "academy_all"
+  | "wyckoff_mode"
   | "journal"
   | "risk_calculator"
   | "price_alerts"
@@ -48,12 +49,13 @@ const ALWAYS_FREE: Capability[] = [
 
 const TIER_CAPABILITIES: Record<Tier, Capability[]> = {
   free: [...ALWAYS_FREE],
-  basic: [...ALWAYS_FREE, "unlimited_grades", "analytics", "academy_all"],
+  basic: [...ALWAYS_FREE, "unlimited_grades", "analytics", "academy_all", "wyckoff_mode"],
   pro: [
     ...ALWAYS_FREE,
     "unlimited_grades",
     "analytics",
     "academy_all",
+    "wyckoff_mode",
     "signal_engine",
     "strategy_library",
     "trading_memory",
@@ -65,6 +67,7 @@ const TIER_CAPABILITIES: Record<Tier, Capability[]> = {
     "unlimited_grades",
     "analytics",
     "academy_all",
+    "wyckoff_mode",
     "signal_engine",
     "strategy_library",
     "trading_memory",

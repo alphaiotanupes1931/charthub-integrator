@@ -118,8 +118,15 @@ describe("§3 free tier capabilities", () => {
       "broker_live",
       "autopilot",
       "academy_all",
+      "wyckoff_mode",
     ] as const) {
       expect(can(free, cap)).toBe(false);
+    }
+  });
+
+  it("opens Wyckoff mode to every paying tier", () => {
+    for (const tier of ["basic", "pro", "elite"] as const) {
+      expect(can(resolveEntitlements({ flagEnabled: true, subscription: paid(tier), now: NOW }), "wyckoff_mode")).toBe(true);
     }
   });
 
