@@ -22,6 +22,10 @@ export const Route = createFileRoute("/api/public/hooks/replay-refresh")({
         // Tuning sweeps run with ?dry=1 so numbers can be compared without
         // overwriting the published track record.
         const dry = url.searchParams.get("dry") === "1";
+        const sessionBiasComparison = url.searchParams.get("variant") === "classic-session-bias";
+        if (sessionBiasComparison && !dry) {
+          return Response.json({ ok: false, error: "The session-bias variant is shadow-only; add dry=1." }, { status: 400 });
+        }
         const num = (k: string) => {
           const v = url.searchParams.get(k);
           const n = v == null ? NaN : Number(v);
@@ -47,6 +51,19 @@ export const Route = createFileRoute("/api/public/hooks/replay-refresh")({
         for (const symbol of symbols) {
           try {
             const { bars, source } = await getHistory(symbol, timeframe, lookback);
+            if (sessionBiasComparison) {
+              const { compareClassicSessionBias, SESSION_BIAS_SYMBOLS } = await import("@/lib/backtest/session-bias-comparison");
+              if (!(SESSION_BIAS_SYMBOLS as readonly string[]).includes(symbol)) continue;
+              const comparison = compareClassicSessionBias(symbol, bars);
+              done.push({
+                symbol,
+                trades: comparison.filtered.stats.trades,
+                winRate: comparison.filtered.stats.winRate,
+                expectancyR: comparison.filtered.stats.expectancyR,
+                comparison,
+              } as (typeof done)[number]);
+              continue;
+            }
             const result = runBacktest(bars, { ...DEFAULT_PARAMS, ...overrides }, { symbol, timeframe, source });
             const aBuckets = result.byGrade.filter((b) => b.key === "A" || b.key === "A+");
             const aTrades = aBuckets.reduce((s, b) => s + b.trades, 0);
