@@ -95,6 +95,22 @@ export const recordSignalScore = createServerFn({ method: "POST" })
     const risk = Math.abs(data.entry - data.stop);
     if (!risk) return { ok: false };
 
+    // Which named analysis model produced this signal. Read from the account so
+    // the stamp cannot be spoofed by the caller, and refuse outright while the
+    // chosen model has no strategies written into it.
+    const { getAnalysisModel, normalizeAnalysisModel } = await import("@/lib/analysis-models");
+    const { data: profileRow } = await context.supabase
+      .from("profiles")
+      .select("analysis_model")
+      .eq("id", context.userId)
+      .maybeSingle();
+    const model = getAnalysisModel(
+      normalizeAnalysisModel((profileRow as { analysis_model?: string } | null)?.analysis_model),
+    );
+    if (!model.ready) {
+      return { ok: false, refused: model.notReadyReason ?? `${model.name} has no strategies yet.` };
+    }
+
     // Staleness guard. A signal whose entry price has already run away is not a
     // call, it is a report, so it never enters the record. The refusal is returned
     // rather than swallowed, so the drop in volume is visible.
@@ -106,6 +122,7 @@ export const recordSignalScore = createServerFn({ method: "POST" })
       lastPrice: data.lastPrice ?? null,
     });
     if (staleness.stale) return { ok: false, refused: staleness.reason ?? "Entry already gone." };
+
 
     const since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
     const { data: dupe } = await context.supabase
