@@ -161,6 +161,7 @@ export const Route = createFileRoute("/api/public/hooks/signal-alerts-tick")({
               stale: scan.stale,
               staleReason: scan.staleReason,
               quiet,
+              correlated,
             });
             if (!decision.alert) continue;
 
