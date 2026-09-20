@@ -17,6 +17,7 @@ import {
   PROVISIONAL_WEIGHTS,
   classifyInstrument,
   inLiquidWindow,
+  liquidWindowLabels,
   tierOf,
   type ClassSpec,
   type EvidenceFamily,
@@ -119,8 +120,14 @@ export function evaluateVetoes(input: ProgramInput, spec: ClassSpec = classifyIn
     push("SPREAD_TOO_WIDE", true, "The spread is wider than it normally is at this time of the week.");
   }
   const window = inLiquidWindow(spec, input.at);
-  if (!window.inside) {
-    push("OUTSIDE_LIQUID_WINDOW", false, `Outside every window where ${input.symbol} actually moves (${spec.liquidWindowsUtc.map((w) => w.label).join(", ")}).`);
+  if (window.marketClosed) {
+    push("OUTSIDE_LIQUID_WINDOW", false, `${input.symbol} is closed for the weekend, so this structure formed with almost nobody trading it.`);
+  } else if (!window.inside) {
+    push(
+      "OUTSIDE_LIQUID_WINDOW",
+      false,
+      `Outside every window where ${input.symbol} actually moves (${liquidWindowLabels(spec, input.at).join(", ")}). Next window opens in about ${Math.round(window.minutesToOpen / 60)}h.`,
+    );
   }
 
   // Event state.
@@ -221,8 +228,9 @@ export function scoreFamilies(input: ProgramInput, spec: ClassSpec = classifyIns
   const window = inLiquidWindow(spec, input.at);
   let execution = 1;
   const executionDetail: string[] = [];
-  if (!window.inside) { execution -= 0.45; executionDetail.push("outside the instrument's liquid windows"); }
-  else executionDetail.push(`inside the ${window.label} window`);
+  if (window.marketClosed) { execution -= 0.6; executionDetail.push("the market is closed for the weekend"); }
+  else if (!window.inside) { execution -= 0.45; executionDetail.push(`outside the instrument's liquid windows, next opens in about ${Math.round(window.minutesToOpen / 60)}h`); }
+  else executionDetail.push(`inside the ${window.label} window, timed in the venue's own clock`);
   if (input.costShare != null) {
     execution -= Math.min(0.5, input.costShare * 2);
     executionDetail.push(`costs take ${Math.round(input.costShare * 100)}% of expected gross`);
