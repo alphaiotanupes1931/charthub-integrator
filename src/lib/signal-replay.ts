@@ -132,7 +132,7 @@ export function replayForward(
         realizedR: hitStop ? -1 : rMultiple,
         maeR: r2(mae),
         mfeR: r2(mfe),
-        bars: i + 1,
+        bars: i - start + 1,
         lastClose: bar.close,
         resolvedAt: bar.time,
       };
