@@ -32,7 +32,7 @@ export const Route = createFileRoute("/api/public/hooks/reresolve-fills")({
 
         const { data, error } = await supabaseAdmin
           .from("signal_scores")
-          .select("id,symbol,timeframe,bias,entry,stop,tp1,grade,status,realized_r,created_at")
+          .select("id,symbol,timeframe,bias,entry,stop,tp1,grade,status,realized_r,rescued,created_at")
           .in("status", ["target", "stop", "expired"])
           .eq("source", "engine")
           .order("created_at", { ascending: false })
@@ -43,6 +43,7 @@ export const Route = createFileRoute("/api/public/hooks/reresolve-fills")({
         let unchanged = 0;
         let failed = 0;
         let becameUnfilled = 0;
+        let rescueBackfilled = 0;
 
         for (const row of data ?? []) {
           let verdict: Awaited<ReturnType<typeof resolveSignal>>;
@@ -75,6 +76,17 @@ export const Route = createFileRoute("/api/public/hooks/reresolve-fills")({
               : Math.abs((verdict.realizedR ?? 0) - (oldR ?? 0)) < 0.005;
           if (sameStatus && sameR) {
             unchanged += 1;
+            // The verdict stands, but "stopped, then the target printed anyway" is a
+            // new measurement rather than a correction, so it is backfilled quietly
+            // on rows whose status and R are unchanged.
+            const wantRescued = Boolean(verdict.rescued);
+            if (!dry && wantRescued !== Boolean(row.rescued)) {
+              rescueBackfilled += 1;
+              await supabaseAdmin
+                .from("signal_scores")
+                .update({ rescued: wantRescued } as never)
+                .eq("id", String(row.id));
+            }
             continue;
           }
           if (verdict.status === "unfilled") becameUnfilled += 1;
@@ -116,6 +128,7 @@ export const Route = createFileRoute("/api/public/hooks/reresolve-fills")({
               cost_r: verdict.costR ?? null,
               mae_r: verdict.maeR ?? null,
               mfe_r: verdict.mfeR ?? null,
+              rescued: verdict.rescued ?? false,
               bars_to_resolve: verdict.barsToResolve ?? null,
               resolved_at: new Date().toISOString(),
             } as never)
@@ -128,6 +141,7 @@ export const Route = createFileRoute("/api/public/hooks/reresolve-fills")({
           scanned: (data ?? []).length,
           changed: changes.length,
           becameUnfilled,
+          rescueBackfilled,
           unchanged,
           failed,
           changes: changes.slice(0, 40),

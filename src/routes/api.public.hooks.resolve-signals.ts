@@ -63,6 +63,8 @@ export const Route = createFileRoute("/api/public/hooks/resolve-signals")({
                 // Ground made in our favour: separates a tight stop from a wrong call.
                 mfe_r: res.mfeR ?? null,
                 bars_to_resolve: res.barsToResolve ?? null,
+                // Stopped, then the target printed anyway: a stop-width problem.
+                rescued: res.rescued ?? false,
               } as never)
               .eq("id", sig.id);
             resolved += 1;
