@@ -599,6 +599,8 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               strategy,
               lens: { id: lens.id, name: lens.name, promptEmphasis: lens.promptEmphasis },
               signalLearning: buildLearningPromptBlock(),
+              analysisModel: readAnalysisModel(),
+
             },
           };
         },
