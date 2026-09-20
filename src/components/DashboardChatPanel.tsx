@@ -850,7 +850,7 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
           </div>
 
           <div className="flex items-center gap-0.5 shrink-0">
-            <AnalysisModelPicker className="hidden sm:block" />
+            <AnalysisModelPicker />
 
             {activeModel && (
               <span
