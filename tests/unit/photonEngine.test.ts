@@ -53,7 +53,7 @@ const bearishContinuation = (): PhotonCandle[] => {
 };
 
 /** The same break, cut before the pullback begins. */
-const freshBreakOnly = (): PhotonCandle[] => bearishContinuation().slice(0, 31);
+const freshBreakOnly = (): PhotonCandle[] => bearishContinuation().slice(0, 55);
 
 /** Bullish mirror: close above the swing high, pullback, realign up. */
 const bullishContinuation = (): PhotonCandle[] => {
