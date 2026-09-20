@@ -868,12 +868,18 @@ export const Route = createFileRoute("/api/chat")({
         if (sb && userId) {
           const { data: prefRow } = await sb
             .from("profiles")
-            .select("ai_model_pref")
+            .select("ai_model_pref, analysis_model")
             .eq("id", userId)
             .maybeSingle();
           const raw = (prefRow as { ai_model_pref?: string } | null)?.ai_model_pref;
           modelPref = normalizeModelPref(raw);
+          if (!analysisModelFromBody) {
+            analysisModelId = normalizeAnalysisModel((prefRow as { analysis_model?: string } | null)?.analysis_model);
+          }
         }
+        const analysisModel = getAnalysisModel(analysisModelId);
+        console.log(`[chat] req=${reqId} analysis_model=${analysisModel.id} version=${analysisModel.version}`);
+
 
 
         if (sb && userId && !isAdmin) {
