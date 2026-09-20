@@ -1865,8 +1865,10 @@ function Dashboard() {
 
         <div className="flex-1" />
 
-        {/* Right-side pickers: Wyckoff (lens), The Analyst (coach) */}
+        {/* Right-side pickers: analysis model, Wyckoff (lens), The Analyst (coach) */}
         <div className="hidden md:flex items-center gap-2 shrink-0">
+
+          <AnalysisModelPicker />
 
           <div className="relative" ref={lensRef}>
             <button
