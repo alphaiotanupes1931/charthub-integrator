@@ -159,6 +159,12 @@ const ROUTES: RouteSpec[] = [
     allowed: PAID_AND_ABOVE,
   },
   { route: "/academy (modules 4+)", file: null, capability: "academy_all", allowed: PAID_AND_ABOVE },
+  {
+    route: "/wyckoff",
+    file: "src/routes/_app.wyckoff.tsx",
+    capability: "wyckoff_mode",
+    allowed: PAID_AND_ABOVE,
+  },
   { route: "/briefings", file: null, capability: "briefings", allowed: PRO_AND_ABOVE },
   { route: "/memory", file: null, capability: "trading_memory", allowed: PRO_AND_ABOVE },
   { route: "/paper trading", file: null, capability: "broker_paper", allowed: PRO_AND_ABOVE },
