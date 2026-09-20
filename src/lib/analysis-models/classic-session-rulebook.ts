@@ -1,7 +1,7 @@
 // Shadow rulebook supplied for TradeMind Classic. These rules are measured in
 // historical and forward data before they may affect a live scan.
 
-export const CLASSIC_SESSION_RULEBOOK_VERSION = "classic-session-liquidity-0.1-shadow";
+export const CLASSIC_SESSION_RULEBOOK_VERSION = "classic-session-liquidity-0.2-shadow";
 
 export const CLASSIC_SESSION_RULEBOOK = [
   {
@@ -26,6 +26,11 @@ export const CLASSIC_SESSION_RULEBOOK = [
   },
   {
     id: 5,
+    title: "Asia and London joint accumulation",
+    rule: "When London stays inside a qualifying Asia range and the combined Asia-London range remains compressed, wait for New York to sweep exactly one combined-range boundary and close back inside. Treat that as manipulation with expected distribution toward the opposite boundary.",
+  },
+  {
+    id: 6,
     title: "No forced read",
     rule: "Double sweeps are conflicted. Missing bars, incomplete sessions, non-accumulating Asia ranges, and unsupported markets are not applicable or pending. Forming candles never count.",
   },
