@@ -8,6 +8,7 @@ import { Radar } from "lucide-react";
 
 import { ANALYSIS_MODELS, type AnalysisModelId } from "@/lib/analysis-models";
 import { ALERT_GRADES, type AlertMinGrade } from "@/lib/signal-alerts.shared";
+import { instrumentReview } from "@/lib/instrument-review";
 import { getMySignalAlertPrefs, saveMySignalAlertPrefs } from "@/lib/signal-alerts.functions";
 
 const SYMBOLS = [
@@ -146,21 +147,31 @@ export function HourlyScanAlertsCard({ enabled: hasSession }: { enabled: boolean
       <div>
         <div className="text-xs tracking-wide text-muted-foreground mb-2">Instruments</div>
         <div className="flex flex-wrap gap-2">
-          {SYMBOLS.map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => toggleSymbol(s)}
-              className={`h-8 rounded-sm border px-3 text-xs ${
-                symbols.includes(s)
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border/60 text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {s}
-            </button>
-          ))}
+          {SYMBOLS.map((s) => {
+            const review = instrumentReview(s);
+            return (
+              <button
+                key={s}
+                type="button"
+                onClick={() => toggleSymbol(s)}
+                title={review ? review.reason : undefined}
+                className={`h-8 rounded-sm border px-3 text-xs ${
+                  symbols.includes(s)
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border/60 text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {s}
+                {review ? <span className="ml-1.5 text-muted-foreground">under review</span> : null}
+              </button>
+            );
+          })}
         </div>
+        {SYMBOLS.some((s) => instrumentReview(s)) ? (
+          <p className="mt-2 text-xs text-muted-foreground">
+            Instruments marked under review will not send alerts until their results improve. You can still analyse them.
+          </p>
+        ) : null}
       </div>
 
       <div>

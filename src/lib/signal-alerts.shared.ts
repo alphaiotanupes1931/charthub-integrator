@@ -3,6 +3,8 @@
 // Kept separate from the cron route and the UI so the decision "does this setup
 // deserve to ping this trader" is testable without network, database or clock.
 
+import { instrumentReview } from "@/lib/instrument-review";
+
 export const ALERT_GRADES = ["A+", "A", "B"] as const;
 export type AlertMinGrade = (typeof ALERT_GRADES)[number];
 
@@ -82,6 +84,7 @@ export type AlertDecision =
  */
 export function decideAlert(input: {
   plan: AlertPlanLike;
+  symbol?: string;
   minGrade: AlertMinGrade;
   stale: boolean;
   staleReason?: string | null;
@@ -94,6 +97,9 @@ export function decideAlert(input: {
   correlated?: boolean;
 }): AlertDecision {
   if (!isTradeableBias(input.plan.bias)) return { alert: false, reason: "no direction yet" };
+  // An instrument whose measured results are negative does not get to ping people.
+  const review = input.symbol ? instrumentReview(input.symbol) : null;
+  if (review) return { alert: false, reason: `${review.symbol} is under review` };
   if (!gradeMeetsMin(input.plan.grade, input.minGrade)) {
     return { alert: false, reason: `grade ${input.plan.grade} below ${input.minGrade}` };
   }
