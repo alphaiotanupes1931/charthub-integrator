@@ -13,6 +13,7 @@ import { computeBias } from "./bias-adapter.server";
 import type { AnalysisModelId } from "@/lib/analysis-models";
 import { focusAnalysis, focusContextBlock } from "@/lib/analysis-models/focus-engine";
 import { photonAnalysis, photonContextBlock } from "@/lib/analysis-models/photon-engine";
+import { douglasAnalysis, douglasContextBlock } from "@/lib/analysis-models/douglas-engine";
 import { tunedConfigFor, profileHintFor } from "../instrument-profile.server";
 
 import {
@@ -1527,6 +1528,40 @@ export async function runPlanner(
       refPrice: snap.lastPrice,
       counterTrend: false,
       warnings: pWarnings.length ? pWarnings : undefined,
+      tradeStyle,
+    };
+  }
+
+  // ---- Model routing: Mark Douglas -----------------------------------------
+  // Model 4 is fed ONLY the Mark Douglas trading-psychology rulebook, which
+  // contains no chart mechanics by design. Its deterministic read is a fixed
+  // execution-discipline checklist, always graded NO ENTRY, so the model
+  // files no signals and keeps no scoreboard — it coaches the execution of
+  // whatever setup the trader's chart model produces.
+  if (modelId === "douglas") {
+    const read = douglasAnalysis();
+    return {
+      methodologyVersion: read.rulebookVersion,
+      grade: read.grade,
+      bias: read.bias,
+      confidence: 0,
+      notes: read.note,
+      entry: "-",
+      stop: "-",
+      tp1: "-",
+      tp2: "-",
+      rr: "-",
+      details: douglasContextBlock(read, snap.ticker, snap.interval),
+      memo,
+      orderFlow: snap.orderFlow,
+      dailyBias: "neutral",
+      currentTrend: "range",
+      synopsis: read.note,
+      dataSource: snap.source,
+      dataFetchedAt: snap.fetchedAt,
+      candleCount: snap.candles.length,
+      refPrice: snap.lastPrice,
+      counterTrend: false,
       tradeStyle,
     };
   }
