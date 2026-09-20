@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Layers, Check, X, RefreshCw } from "lucide-react";
 import { PageInstructions } from "@/components/PageInstructions";
+import { CapabilityGate } from "@/components/CapabilityGate";
 import { BACKTEST_SYMBOLS, BACKTEST_TIMEFRAMES, TIMEFRAME_LABEL, type BacktestTimeframe } from "@/lib/backtest/catalog";
 import { WYCKOFF_RULEBOOK, WYCKOFF_RULEBOOK_VERSION } from "@/lib/wyckoff/rulebook";
 import { runWyckoffScan, type WyckoffScan } from "@/lib/wyckoff/wyckoff.functions";
@@ -26,7 +27,7 @@ export const Route = createFileRoute("/_app/wyckoff")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: WyckoffPage,
+  component: WyckoffRoute,
 });
 
 function num(n: number | null | undefined) {
@@ -43,6 +44,19 @@ const PHASE_COPY: Record<string, string> = {
   consolidation: "A range with no character yet. Nothing has been taken, so there is nothing to do.",
   unreadable: "No readable phase on this series.",
 };
+
+function WyckoffRoute() {
+  return (
+    <CapabilityGate
+      capability="wyckoff_mode"
+      reason="signals"
+      title="Wyckoff mode is part of the paid plan"
+      body="Wyckoff mode reads phase, liquidity, location, stop and target one rule at a time. It's included on every paid plan."
+    >
+      <WyckoffPage />
+    </CapabilityGate>
+  );
+}
 
 function WyckoffPage() {
   const [ticker, setTicker] = useState<string>(BACKTEST_SYMBOLS[0]);
