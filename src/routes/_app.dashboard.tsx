@@ -1,4 +1,5 @@
 import { PageInstructions } from "@/components/PageInstructions";
+import { InfoTip } from "@/components/InfoTip";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -548,8 +549,12 @@ function ScanTicket({
                   <div className="font-display text-2xl tracking-tight text-foreground">
                     {Math.round(result.confidence)}%
                   </div>
-                  <div className="mt-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  <div className="mt-1 flex items-center gap-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                     Confidence
+                    <InfoTip
+                      term="Why this confidence"
+                      text={`Counted from the snapshot by the engine, never asserted by the model. Higher means more checks agreed: timeframe alignment, entry-zone quality, volatility conditions and structure. ${result.bias !== "Neutral" ? `This scan read ${result.bias} at grade ${result.grade}, and ${Math.round(result.confidence)}% reflects how many of those confirmations lined up.` : "This scan came out neutral, so confidence reflects how few confirmations lined up."}`}
+                    />
                   </div>
                 </div>
               )}
@@ -587,12 +592,12 @@ function ScanTicket({
 
         {!isNoEntry && result.triggered === false && (
           <div className="rounded-xl border border-gold/40 bg-gold/10 px-3 py-2">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-gold">
+            <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-gold">
               Not triggered yet — do not take it here
-            </div>
-            <div className="text-[11px] leading-snug text-foreground/85 mt-0.5">
-              {result.triggerRule}
-              {result.triggerLevel ? ` Watch level: ${result.triggerLevel}.` : ""}
+              <InfoTip
+                term="Not at the entry yet"
+                text={`${result.triggerRule}${result.triggerLevel ? ` Watch level: ${result.triggerLevel}.` : ""} Taking it here is early and gives you a worse price with a wider stop — leave a limit order at the entry or wait for the pullback.`}
+              />
             </div>
           </div>
         )}
@@ -603,8 +608,14 @@ function ScanTicket({
         {!isNoEntry && result.entryZone && (
           <div className="rounded-xl border border-primary/30 bg-primary/5 px-3 py-2.5">
             <div className="flex items-center justify-between gap-2">
-              <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-primary">
+              <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-primary">
                 Entry anchored to {result.entryZone.label}
+                <InfoTip
+                  term="Why this zone"
+                  text={result.entryZone.label.toLowerCase().includes("order block")
+                    ? "The order block is the reason this trade exists: price has to trade back into it before the entry is valid. The stop sits just past its far edge."
+                    : "No fresh order block qualified, so this entry falls back to the next-best institutional zone. Treat it as a lower-conviction anchor."}
+                />
               </div>
               <span
                 className={`shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
@@ -624,11 +635,6 @@ function ScanTicket({
               {fmtPrice(Math.max(result.entryZone.bottom, result.entryZone.top), decimalsFor(result.entryZone.top))}
               {" · "}quality score {Math.round(result.entryZone.quality)}/100
               {" · "}{result.entryZone.distanceAtr.toFixed(2)}x ATR from price.
-            </div>
-            <div className="mt-1 text-[10px] leading-snug text-muted-foreground">
-              {result.entryZone.label.toLowerCase().includes("order block")
-                ? "The order block is the reason this trade exists: price has to trade back into it before the entry is valid. The stop sits just past its far edge."
-                : "No fresh order block qualified, so this entry falls back to the next-best institutional zone. Treat it as a lower-conviction anchor."}
             </div>
           </div>
         )}
