@@ -26,6 +26,12 @@ export interface ZoneWindow {
   /** Local end, "HH:MM". May be earlier than start for a window crossing midnight. */
   end: string;
   label: string;
+  /**
+   * 1 is the instrument's best hours; 0.5 is tradeable but thinner. A session
+   * dimension that is only ever on or off says the New York close is as good as
+   * the open, which is not true of any of these markets.
+   */
+  quality?: number;
 }
 
 export interface ResolvedWindow extends ZoneWindow {
@@ -44,6 +50,8 @@ export interface SessionState {
   windows: ResolvedWindow[];
   /** True when the venue is shut: FX and CFDs over the weekend. */
   marketClosed: boolean;
+  /** 0 to 1: how good these hours are for this instrument right now. */
+  quality: number;
 }
 
 const HM = (s: string) => Number(s.slice(0, 2)) * 60 + Number(s.slice(3, 5));
@@ -112,9 +120,11 @@ export function sessionState(windows: ZoneWindow[], at: Date, opts?: { alwaysOpe
   const marketClosed = venueClosed(Boolean(opts?.alwaysOpen), at);
 
   let label: string | null = null;
+  let quality = 0;
   for (const w of resolved) {
     if (insideWindow(w, minutes)) {
       label = w.label;
+      quality = w.quality ?? 1;
       break;
     }
   }
@@ -125,19 +135,26 @@ export function sessionState(windows: ZoneWindow[], at: Date, opts?: { alwaysOpe
       DAY,
     );
   }
-  return { inside: Boolean(label) && !marketClosed, label: marketClosed ? null : label, minutesToOpen, windows: resolved, marketClosed };
+  return {
+    inside: Boolean(label) && !marketClosed,
+    label: marketClosed ? null : label,
+    minutesToOpen,
+    windows: resolved,
+    marketClosed,
+    quality: marketClosed ? 0 : quality,
+  };
 }
 
 // ---------------------------------------------------------------------------
 // the windows themselves
 // ---------------------------------------------------------------------------
 
-export const LONDON_MORNING: ZoneWindow = { tz: "Europe/London", start: "08:00", end: "12:00", label: "London morning" };
-export const LONDON_NY_OVERLAP: ZoneWindow = { tz: "America/New_York", start: "08:00", end: "12:00", label: "London/NY overlap" };
-export const TOKYO: ZoneWindow = { tz: "Asia/Tokyo", start: "09:00", end: "15:00", label: "Tokyo" };
-export const SYDNEY: ZoneWindow = { tz: "Australia/Sydney", start: "09:00", end: "16:00", label: "Sydney" };
+export const LONDON_MORNING: ZoneWindow = { tz: "Europe/London", start: "08:00", end: "12:00", label: "London morning", quality: 0.9 };
+export const LONDON_NY_OVERLAP: ZoneWindow = { tz: "America/New_York", start: "08:00", end: "12:00", label: "London/NY overlap", quality: 1 };
+export const TOKYO: ZoneWindow = { tz: "Asia/Tokyo", start: "09:00", end: "15:00", label: "Tokyo", quality: 0.8 };
+export const SYDNEY: ZoneWindow = { tz: "Australia/Sydney", start: "09:00", end: "16:00", label: "Sydney", quality: 0.7 };
 export const NY_CASH_OPEN: ZoneWindow = { tz: "America/New_York", start: "09:30", end: "11:00", label: "NY cash open" };
-export const NY_CLOSE: ZoneWindow = { tz: "America/New_York", start: "15:00", end: "16:00", label: "NY close" };
+export const NY_CLOSE: ZoneWindow = { tz: "America/New_York", start: "15:00", end: "16:00", label: "NY close", quality: 0.6 };
 export const COMEX_NY: ZoneWindow = { tz: "America/New_York", start: "08:20", end: "13:00", label: "COMEX/NY" };
 export const NYMEX_PIT: ZoneWindow = { tz: "America/New_York", start: "09:00", end: "14:30", label: "NYMEX pit hours" };
-export const CRYPTO_US_EUROPE: ZoneWindow = { tz: "America/New_York", start: "08:00", end: "17:00", label: "Europe/US overlap" };
+export const CRYPTO_US_EUROPE: ZoneWindow = { tz: "America/New_York", start: "08:00", end: "17:00", label: "Europe/US overlap", quality: 0.9 };
