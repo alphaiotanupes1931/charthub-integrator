@@ -320,15 +320,12 @@ export function photonAnalysis(candles: PhotonCandle[]): PhotonRead {
   const weakAhead = tp1 != null && (side === "long" ? tp1 > entry : tp1 < entry);
   let rr = tp1 != null && weakAhead ? Math.abs(tp1 - entry) / risk : null;
   if (tp1 == null || !weakAhead || rr == null || rr < 1.5) {
-    if (tp1 != null && !weakAhead) {
-      cap = `weak structure at ${fmt(tp1)} is already behind price - target is a 2R measured move instead`;
-      tp1 = null;
-    }
-    const measured = side === "long" ? entry + 2 * risk : entry - 2 * risk;
     cap = tp1 == null
       ? "no weak structure target mapped - target is a 2R measured move instead"
-      : `weak structure at ${fmt(tp1)} pays only ${(rr ?? 0).toFixed(2)}R - target is a 2R measured move instead`;
-    tp1 = measured;
+      : !weakAhead
+        ? `weak structure at ${fmt(tp1)} is already behind price - target is a 2R measured move instead`
+        : `weak structure at ${fmt(tp1)} pays only ${(rr ?? 0).toFixed(2)}R - target is a 2R measured move instead`;
+    tp1 = side === "long" ? entry + 2 * risk : entry - 2 * risk;
     rr = 2;
   }
   check(9, "Target weak structure, minimum 1.5R", cap == null,
