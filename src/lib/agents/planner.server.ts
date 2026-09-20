@@ -14,6 +14,8 @@ import type { AnalysisModelId } from "@/lib/analysis-models";
 import { focusAnalysis, focusContextBlock } from "@/lib/analysis-models/focus-engine";
 import { photonAnalysis, photonContextBlock } from "@/lib/analysis-models/photon-engine";
 import { tunedConfigFor, profileHintFor } from "../instrument-profile.server";
+import { stopMultipleFor } from "@/lib/stop-placement";
+
 
 import {
   readSessionVolume,
