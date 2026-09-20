@@ -2094,7 +2094,7 @@ function TradeFormModal({
         </div>
 
         <div className="p-5 space-y-4">
-          <Field label="Paste, drop, or upload a trade screenshot">
+          <Field label="Start with a screenshot">
             <input
               ref={fileInputRef}
               type="file"
@@ -2133,7 +2133,7 @@ function TradeFormModal({
               className={`w-full rounded-xl border border-dashed px-3 py-5 text-sm transition flex flex-col items-center gap-1.5 ${isDraggingImage ? "border-primary bg-primary/10 text-foreground" : "border-border/60 bg-background/40 text-muted-foreground hover:border-primary/40 hover:text-foreground"}`}
             >
               <Upload className="h-4 w-4" />
-              <span>{images.length ? "Add another screenshot" : "Paste, drop, or choose screenshots"}</span>
+              <span>{images.length ? "Add another screenshot" : "Drop or choose screenshot"}</span>
               <span className="text-[10px]">Broker positions and marked-up charts are supported, up to five images.</span>
             </button>
             {(images.length > 0 || autofilling) && (

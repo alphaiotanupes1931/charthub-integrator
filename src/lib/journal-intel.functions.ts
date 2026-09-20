@@ -95,7 +95,7 @@ export const reviewJournal = createServerFn({ method: "POST" })
     const apiKey = process.env.LOVABLE_API_KEY;
     if (apiKey && trades.length >= 5) {
       const { generateText, Output, NoObjectGeneratedError } = await import("ai");
-      const { createAiGatewayProvider } = await import("@/lib/ai-gateway.server");
+      const { runScanModel } = await import("@/lib/agents/scan-model.server");
       const Schema = z.object({
         summary: z.string(),
         mistakes: z.array(z.string()),
@@ -110,13 +110,14 @@ export const reviewJournal = createServerFn({ method: "POST" })
         .join("\n");
       const stats = JSON.stringify(correlations);
       try {
-        const res = await generateText({
-          model: createAiGatewayProvider(apiKey)("google/gemini-3-flash-preview"),
+        // Claude reads the journal; the gateway model is only the fallback.
+        const res = await runScanModel(apiKey, async (model) => generateText({
+          model,
           output: Output.object({ schema: Schema }),
           system:
             "You are a trading performance reviewer. Read the trade log and the pre-computed correlation stats and report what the trader is actually doing wrong and right. Be concrete and quote symbols, sessions, grades and numbers from the data. Never invent numbers that are not derivable from the log. Keep the summary under 700 characters. Give at most 5 mistakes and at most 4 strengths, each one sentence, plain language, no emoji, no marketing tone.",
           prompt: `Correlation stats (already computed, trust these): ${stats}\n\nTrade log:\n${rows}`,
-        });
+        }));
         summary = res.output.summary.slice(0, 1200);
         mistakes = res.output.mistakes.slice(0, 5).map((m) => m.slice(0, 300));
         strengths = res.output.strengths.slice(0, 4).map((m) => m.slice(0, 300));
