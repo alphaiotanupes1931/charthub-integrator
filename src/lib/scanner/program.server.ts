@@ -205,7 +205,7 @@ export async function recordProgramScore(args: {
         composite: result.sixDimension.composite,
         pass: result.sixDimension.pass,
         reason: result.sixDimension.reason,
-        dimensions: result.sixDimension.dimensions.map((d) => ({ ...d })) as unknown as Record<string, unknown>[],
+        dimensions: JSON.parse(JSON.stringify(result.sixDimension.dimensions)),
       },
       shadow: args.shadow,
     });
