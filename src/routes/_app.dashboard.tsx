@@ -655,6 +655,10 @@ function ScanTicket({
         )}
 
 
+        {!isNoEntry && (
+          <DouglasChecklist checked={douglasChecks} onToggle={toggleDouglas} />
+        )}
+
         <div className="space-y-2">
           {!isNoEntry && logged && (
             <Link
