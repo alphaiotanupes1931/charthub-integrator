@@ -554,18 +554,18 @@ function ScanTicket({
               <div className={`font-display text-5xl leading-none tracking-tight ${gradeColor[result.grade]}`}>
                 {result.grade}
               </div>
-              {/* Confidence is counted from the snapshot by the engine, never
-                  asserted by the model, so it is shown on every scan. */}
-              {typeof result.confidence === "number" && (
+              {/* Confidence now comes from the Mark Douglas checklist under the
+                  trade: the more yeses, the more confident you are in taking it. */}
+              {!isNoEntry && (
                 <div className="leading-none">
                   <div className="font-display text-2xl tracking-tight text-foreground">
-                    {Math.round(result.confidence)}%
+                    {checklistConfidence}%
                   </div>
                   <div className="mt-1 flex items-center gap-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                     Confidence
                     <InfoTip
                       term="Why this confidence"
-                      text={`Counted from the snapshot by the engine, never asserted by the model. Higher means more checks agreed: timeframe alignment, entry-zone quality, volatility conditions and structure. ${result.bias !== "Neutral" ? `This scan read ${result.bias} at grade ${result.grade}, and ${Math.round(result.confidence)}% reflects how many of those confirmations lined up.` : "This scan came out neutral, so confidence reflects how few confirmations lined up."}`}
+                      text={`Counted from the Mark Douglas checklist below this trade: ${douglasChecks.size} of ${DOUGLAS_CHECKLIST.length} answers are yes. Every yes raises it — the setup itself comes from your chart model, and this number is how ready you are to execute it.`}
                     />
                   </div>
                 </div>
