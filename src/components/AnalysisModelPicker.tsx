@@ -32,7 +32,7 @@ export function AnalysisModelPicker({ className = "" }: { className?: string }) 
       {open ? (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 z-50 mt-1 w-[19rem] border border-border/60 bg-card p-1 shadow-none">
+          <div className="absolute right-0 z-50 mt-2 w-[19rem] rounded-2xl border border-border/60 bg-card p-1 shadow-xl">
             {ANALYSIS_MODELS.map((m) => (
               <button
                 key={m.id}
