@@ -230,7 +230,18 @@ function ScoreboardPage() {
           )}
 
           <div className="mt-4 grid gap-4">
+            <BucketTable
+              title="By analysis model"
+              buckets={board.byModel}
+              empty="No model recorded yet."
+            />
+            <BucketTable
+              title="By grade, inside each model"
+              buckets={board.byModelGrade}
+              empty="No graded signals yet."
+            />
             <BucketTable title="By grade" buckets={board.byGrade} empty="No graded signals yet." />
+
             <BucketTable
               title="By grade, trades you actually took"
               buckets={board.takenByGrade}
