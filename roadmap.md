@@ -30,3 +30,10 @@
 - [x] Add a dedicated model library and account-level model selection.
 - [x] Link the dashboard picker and desktop navigation to the model library.
 - [x] Verify the route, selection behavior, type safety, and tests.
+
+## Mobile dashboard cleanup — Sep 20, 2026
+- [x] Move Scan Models under Insights.
+- [x] Keep Auto Trading desktop-only and combine its mode and grade controls.
+- [x] Reduce phone toolbar and signal-card crowding.
+- [x] Verify responsive visibility rules and the full automated suite (58 files, 865 tests).
+- [ ] Complete the signed-in visual pass when a preview account is available.
