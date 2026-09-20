@@ -51,8 +51,15 @@ export function HourlyScanAlertsCard({ enabled: hasSession }: { enabled: boolean
   }, [data]);
 
   const mSave = useMutation({
-    mutationFn: (payload: Parameters<typeof saveFn>[0] extends { data: infer D } ? D : never) =>
-      saveFn({ data: payload }),
+    mutationFn: (payload: {
+      enabled: boolean;
+      min_grade: AlertMinGrade;
+      symbols: string[];
+      models: AnalysisModelId[];
+      timezone: string;
+      quiet_from: number;
+      quiet_to: number;
+    }) => saveFn({ data: payload }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["signal-alert-prefs"] });
       toast.success("Hourly scan alerts saved");
