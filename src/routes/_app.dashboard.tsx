@@ -31,6 +31,7 @@ import { ActionLoader } from "@/components/ActionLoader";
 import { clearLastThreadId, readActiveCoach, writeActiveCoach, COACH_KEY, writeLastChart, readLastThreadId, writeLastThreadId } from "@/lib/chat-client";
 import { voiceForCoach } from "@/lib/coachVoices";
 import { COACH_ICON_META, DEFAULT_COACH_ICON } from "@/lib/coachMeta";
+import { AnalysisModelPicker } from "@/components/AnalysisModelPicker";
 import { reportSystemNotice } from "@/lib/notifications.functions";
 import { runResearchPlan } from "@/lib/agents/research.functions";
 import { recordHermesFeedback } from "@/lib/agents/hermes.functions";

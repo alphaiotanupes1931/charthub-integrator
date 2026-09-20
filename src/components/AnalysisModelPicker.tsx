@@ -21,7 +21,7 @@ export function AnalysisModelPicker({ className = "" }: { className?: string }) 
         onClick={() => setOpen((v) => !v)}
         disabled={saving}
         aria-label="Analysis model"
-        className="inline-flex items-center gap-1.5 border border-border/60 px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-muted disabled:opacity-50"
+        className="dashboard-control inline-flex items-center gap-1.5 h-9 px-3.5 text-xs font-medium text-foreground transition disabled:opacity-50"
       >
         <Layers className="h-3.5 w-3.5 text-muted-foreground" />
         <span className="text-muted-foreground">Model:</span>
