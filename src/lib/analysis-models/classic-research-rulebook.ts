@@ -25,6 +25,11 @@ export const CLASSIC_RESEARCH_RULEBOOK = [
     title: "Learning before strategy switching",
     rule: "Losses are not evidence that a trader should immediately replace a strategy or indicator. Coach the trader to review the chart, price action, repeated patterns, execution, and sample evidence before changing a rule. This is coaching guidance, not a signal input.",
   },
+  {
+    id: "four-hour-zone-fifteen-minute-break",
+    title: "Four-hour rejection zone with 15-minute confirmation",
+    rule: "Start on the four-hour chart and mark only the clearest repeated rejection area as a zone, using candle bodies and wicks rather than a single exact price. Do not enter merely because price reaches it. On the 15-minute chart, require a closed-candle break of the relevant swing structure in the direction supported by the four-hour read. The zone establishes location; the 15-minute break confirms timing. If either part is absent, wait.",
+  },
 ] as const;
 
 export function classicResearchRulebookForPrompt(): string {
