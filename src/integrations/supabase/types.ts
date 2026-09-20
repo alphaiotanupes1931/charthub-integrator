@@ -1786,6 +1786,48 @@ export type Database = {
         }
         Relationships: []
       }
+      signal_alert_prefs: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          last_alert_at: string | null
+          min_grade: string
+          models: string[]
+          quiet_from: number
+          quiet_to: number
+          symbols: string[]
+          timezone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          last_alert_at?: string | null
+          min_grade?: string
+          models?: string[]
+          quiet_from?: number
+          quiet_to?: number
+          symbols?: string[]
+          timezone?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          last_alert_at?: string | null
+          min_grade?: string
+          models?: string[]
+          quiet_from?: number
+          quiet_to?: number
+          symbols?: string[]
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       signal_corrections: {
         Row: {
           corrected_at: string

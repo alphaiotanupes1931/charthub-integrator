@@ -57,6 +57,13 @@
       "when": 1789873213630,
       "tag": "0007_analysis_model_selection",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1789882597835,
+      "tag": "0008_create_signal_alert_prefs",
+      "breakpoints": true
     }
   ]
 }
