@@ -5,13 +5,13 @@
 // confidence stay deterministic - this only decides who writes the words and
 // fills the structured draft.
 
+import type { LanguageModel } from "ai";
 import { createAiGatewayProvider } from "@/lib/ai-gateway.server";
 
 export const SCAN_FALLBACK_MODEL = "google/gemini-3-flash-preview";
 export const SCAN_CLAUDE_MODEL = "claude-sonnet-4-5";
 
-type AnyModel = never;
-export type ScanModelRun<T> = (model: AnyModel, modelLabel: string) => Promise<T>;
+export type ScanModelRun<T> = (model: LanguageModel, modelLabel: string) => Promise<T>;
 
 let healthCache: { ok: boolean; at: number } | null = null;
 const HEALTH_TTL_MS = 5 * 60 * 1000;
@@ -36,8 +36,8 @@ export function resetScanModelHealthCache() {
   healthCache = null;
 }
 
-function geminiModel(apiKey: string): AnyModel {
-  return createAiGatewayProvider(apiKey)(SCAN_FALLBACK_MODEL) as unknown as AnyModel;
+function geminiModel(apiKey: string): LanguageModel {
+  return createAiGatewayProvider(apiKey)(SCAN_FALLBACK_MODEL) as unknown as LanguageModel;
 }
 
 /**
@@ -51,7 +51,7 @@ export async function runScanModel<T>(apiKey: string, run: ScanModelRun<T>): Pro
       const { createAnthropic } = await import("@ai-sdk/anthropic");
       const model = createAnthropic({ apiKey: process.env['ANTHROPIC_API_KEY']! })(
         SCAN_CLAUDE_MODEL,
-      ) as unknown as AnyModel;
+      ) as unknown as LanguageModel;
       return await run(model, SCAN_CLAUDE_MODEL);
     } catch {
       healthCache = { ok: false, at: Date.now() };
