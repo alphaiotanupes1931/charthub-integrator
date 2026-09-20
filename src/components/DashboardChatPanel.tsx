@@ -850,6 +850,8 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
           </div>
 
           <div className="flex items-center gap-0.5 shrink-0">
+            <AnalysisModelPicker className="hidden sm:block" />
+
             {activeModel && (
               <span
                 className="hidden sm:inline text-[10px] font-medium text-muted-foreground truncate max-w-[120px]"
