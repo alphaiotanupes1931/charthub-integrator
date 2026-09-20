@@ -1,7 +1,5 @@
 import { PageInstructions } from "@/components/PageInstructions";
 import { InfoTip } from "@/components/InfoTip";
-import { DouglasChecklist, douglasConfidence } from "@/components/DouglasChecklist";
-import { DOUGLAS_CHECKLIST } from "@/lib/analysis-models/douglas-engine";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -528,18 +526,6 @@ function ScanTicket({
   const biasTrendConflict =
     (dailyBias === "bullish" && currentTrend === "down") || (dailyBias === "bearish" && currentTrend === "up");
 
-  // Mark Douglas is a mindset model, so it shows up under each trade as a
-  // discipline checklist. The count of yeses is the confidence on this scan.
-  const [douglasChecks, setDouglasChecks] = useState<ReadonlySet<number>>(() => new Set<number>());
-  const toggleDouglas = (i: number) =>
-    setDouglasChecks((prev) => {
-      const next = new Set(prev);
-      if (next.has(i)) next.delete(i);
-      else next.add(i);
-      return next;
-    });
-  const checklistConfidence = douglasConfidence(douglasChecks);
-
   // Volatility from the risk analyst read.
   const volatilityConf = riskNote?.confidence ?? 50;
   const volatilityTag = volatilityConf >= 65 ? "Elevated" : volatilityConf >= 40 ? "Normal" : "Quiet";
@@ -556,22 +542,6 @@ function ScanTicket({
               <div className={`font-display text-5xl leading-none tracking-tight ${gradeColor[result.grade]}`}>
                 {result.grade}
               </div>
-              {/* Confidence now comes from the Mark Douglas checklist under the
-                  trade: the more yeses, the more confident you are in taking it. */}
-              {!isNoEntry && (
-                <div className="leading-none">
-                  <div className="font-display text-2xl tracking-tight text-foreground">
-                    {checklistConfidence}%
-                  </div>
-                  <div className="mt-1 flex items-center gap-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    Confidence
-                    <InfoTip
-                      term="Why this confidence"
-                      text={`Counted from the Mark Douglas checklist below this trade: ${douglasChecks.size} of ${DOUGLAS_CHECKLIST.length} answers are yes. Every yes raises it — the setup itself comes from your chart model, and this number is how ready you are to execute it.`}
-                    />
-                  </div>
-                </div>
-              )}
             </div>
             {result.autoStrategy && (
               <div className="mt-3 rounded-xl border border-primary/25 bg-primary/5 px-3.5 py-2.5">
@@ -652,11 +622,6 @@ function ScanTicket({
               {" · "}{result.entryZone.distanceAtr.toFixed(2)}x ATR from price.
             </div>
           </div>
-        )}
-
-
-        {!isNoEntry && (
-          <DouglasChecklist checked={douglasChecks} onToggle={toggleDouglas} />
         )}
 
         <div className="space-y-2">
