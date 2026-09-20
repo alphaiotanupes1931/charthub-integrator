@@ -31,6 +31,7 @@ import { ActionLoader } from "@/components/ActionLoader";
 import { clearLastThreadId, readActiveCoach, writeActiveCoach, COACH_KEY, writeLastChart, readLastThreadId, writeLastThreadId } from "@/lib/chat-client";
 import { voiceForCoach } from "@/lib/coachVoices";
 import { COACH_ICON_META, DEFAULT_COACH_ICON } from "@/lib/coachMeta";
+import { AnalysisModelPicker } from "@/components/AnalysisModelPicker";
 import { reportSystemNotice } from "@/lib/notifications.functions";
 import { runResearchPlan } from "@/lib/agents/research.functions";
 import { recordHermesFeedback } from "@/lib/agents/hermes.functions";
@@ -1865,8 +1866,10 @@ function Dashboard() {
 
         <div className="flex-1" />
 
-        {/* Right-side pickers: Wyckoff (lens), The Analyst (coach) */}
+        {/* Right-side pickers: analysis model, Wyckoff (lens), The Analyst (coach) */}
         <div className="hidden md:flex items-center gap-2 shrink-0">
+
+          <AnalysisModelPicker />
 
           <div className="relative" ref={lensRef}>
             <button
