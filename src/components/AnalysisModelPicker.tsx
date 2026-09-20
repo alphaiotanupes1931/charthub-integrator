@@ -49,9 +49,28 @@ export function AnalysisModelPicker({ className = "" }: { className?: string }) 
                 <Check
                   className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${m.id === modelId ? "text-foreground" : "text-transparent"}`}
                 />
-                <span className="min-w-0">
+                <span className="min-w-0 flex-1">
                   <span className="flex items-center gap-2 text-sm font-medium text-foreground">
                     {m.name}
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`About ${m.name}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setInfoFor((v) => (v === m.id ? null : m.id));
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setInfoFor((v) => (v === m.id ? null : m.id));
+                        }
+                      }}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      <Info className="h-3.5 w-3.5" />
+                    </span>
                     {!m.ready ? (
                       <span className="border border-border/60 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
                         Empty
@@ -62,6 +81,11 @@ export function AnalysisModelPicker({ className = "" }: { className?: string }) 
                   <span className="mt-0.5 block text-[11px] text-muted-foreground/80">{m.version}</span>
                   {!m.ready && m.notReadyReason ? (
                     <span className="mt-1 block text-[11px] text-muted-foreground">{m.notReadyReason}</span>
+                  ) : null}
+                  {infoFor === m.id ? (
+                    <span className="mt-1.5 block border-t border-border/60 pt-1.5 text-[11px] leading-relaxed text-muted-foreground">
+                      {m.description}
+                    </span>
                   ) : null}
                 </span>
               </button>
