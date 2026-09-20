@@ -563,7 +563,7 @@ function ScanTicket({
             )}
             <button
               onClick={onRescan}
-              className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90 transition whitespace-nowrap"
+              className="inline-flex items-center gap-1.5 rounded-sm bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90 transition whitespace-nowrap"
               title="Run a new scan on the current chart"
             >
               <Crosshair className="h-3 w-3" /> New scan
