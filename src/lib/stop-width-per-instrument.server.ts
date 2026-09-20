@@ -12,9 +12,45 @@
 // reported with `enoughData: false` so a lucky handful of trades never becomes a
 // production constant.
 
-import { resolveSignal, signalDirection, type OpenSignal } from "@/lib/signal-scores.server";
+import { replayForward, replayDirection, type ReplayBar } from "@/lib/signal-replay";
 import { costInR } from "@/lib/trading-costs";
 import { PLANNER_STOP_MULT } from "@/lib/stop-width-test.server";
+
+/** Candle loader, injected so tests do not reach for market data. */
+export type BarLoader = (symbol: string, timeframe: string) => Promise<ReplayBar[]>;
+
+const HISTORY_TF: Record<string, "15" | "60" | "240" | "D"> = {
+  "1": "15", "5": "15", "15": "15", "30": "60", "60": "60", "240": "240", D: "D", W: "D",
+};
+
+/**
+ * One history fetch per (symbol, timeframe) for the whole sweep. Re-resolving
+ * each signal at six stop widths through `resolveSignal` meant six fetches per
+ * signal and the run never finished; the bars are identical every time, so they
+ * are loaded once and walked in memory.
+ */
+export function cachedBarLoader(): BarLoader {
+  const cache = new Map<string, Promise<ReplayBar[]>>();
+  return (symbol, timeframe) => {
+    const tf = HISTORY_TF[timeframe] ?? "60";
+    const key = `${symbol}:${tf}`;
+    let hit = cache.get(key);
+    if (!hit) {
+      hit = (async () => {
+        try {
+          const { getHistory } = await import("@/lib/backtest/history.server");
+          const res = await getHistory(symbol, tf, "1y");
+          return res.bars as ReplayBar[];
+        } catch {
+          return [];
+        }
+      })();
+      cache.set(key, hit);
+    }
+    return hit;
+  };
+}
+
 
 /** Below this, per-symbol differences are noise, not evidence. */
 export const PER_INSTRUMENT_SAMPLE_FLOOR = 30;
