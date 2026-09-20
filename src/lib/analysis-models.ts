@@ -7,7 +7,7 @@
 //
 // Model 1 ("TradeMind Classic") is exactly the content the platform has been
 // fed to date, given a name and a version so results can be attributed to it.
-// Model 2 ("TradeMind Focus") is fed only the strategies the owner supplies; it
+// Model 2 ("The Trading Channel") is fed only the strategies the owner supplies; it
 // deliberately inherits nothing from Classic, so its record can be judged on
 // its own.
 
@@ -23,6 +23,8 @@ export type AnalysisModel = {
   version: string;
   /** One line the trader reads in the picker. */
   tagline: string;
+  /** Full explanation behind the picker's info button: what the model is fed and what makes it different. */
+  description: string;
   /**
    * "full" = everything the platform knows (Classic).
    * "strategies-only" = nothing but the supplied rulebook (Focus).
@@ -42,14 +44,18 @@ export const ANALYSIS_MODELS: readonly AnalysisModel[] = [
     name: "TradeMind Classic",
     version: "classic-1.0",
     tagline: "The full library: order blocks, protected structure, per-market behaviour, journal and news.",
+    description:
+      "The original TradeMind model — everything the platform has been fed since day one. It reads multi-timeframe order-block cascades (1H order blocks, 15m confirmation, 5m refinement), protected break-of-structure with liquidity sweeps, fair value gaps, per-market sessions and grade ceilings, the economic calendar, and your own journal history. Every signal it has ever filed lives on the public record under this name, so its track record is the platform's track record.",
     knowledge: "full",
     ready: true,
   },
   {
     id: "focus",
-    name: "TradeMind Focus",
+    name: "The Trading Channel",
     version: `focus-1.0 (${FOCUS_RULEBOOK_VERSION})`,
-    tagline: "Fed only the strategies you supply. Inherits nothing from Classic.",
+    tagline: "Fed only The Trading Channel strategies. Inherits nothing from Classic.",
+    description:
+      "A clean-slate model fed only the strategies from The Trading Channel material you supply — nothing from Classic leaks in. It knows nothing about order blocks, protected structure, or any other TradeMind library unless that idea is written into its own rulebook. That isolation is the point: its signals are stamped with its own name and version and tracked on a separate scoreboard, so you can judge whether these strategies actually work on their own numbers before trusting them.",
     knowledge: "strategies-only",
     ready: focusRuleCount() > 0,
     notReadyReason:
