@@ -33,10 +33,24 @@
  * subtracted, stop widths comparable) — months, not weeks.
  */
 
+import {
+  COMEX_NY,
+  CRYPTO_US_EUROPE,
+  LONDON_MORNING,
+  LONDON_NY_OVERLAP,
+  NYMEX_PIT,
+  NY_CASH_OPEN,
+  NY_CLOSE,
+  SYDNEY,
+  TOKYO,
+  sessionState,
+  type ZoneWindow,
+} from "@/lib/instrument-sessions";
+
 export type Grade9 = "A+" | "A" | "A-" | "B+" | "B" | "B-" | "C+" | "C" | "C-";
 export type Tier = "A" | "B" | "C";
 export type EvidenceFamily = "regime" | "location" | "trigger" | "participation" | "execution" | "risk";
-export type InstrumentClass = "fx_major" | "fx_yen" | "metal" | "index" | "crypto" | "energy" | "unclassified";
+export type InstrumentClass = "fx_major" | "fx_yen" | "fx_commodity" | "metal" | "index" | "crypto" | "energy" | "unclassified";
 
 export const GRADE_BANDS: Grade9[] = ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-"];
 
@@ -245,8 +259,14 @@ export const FAMILY_THRESHOLD: Record<EvidenceFamily, number> = {
 export interface ClassSpec {
   klass: InstrumentClass;
   members: string[];
-  /** UTC windows where the instrument actually moves. */
-  liquidWindowsUtc: Array<{ startMin: number; endMin: number; label: string }>;
+  /**
+   * Windows where the instrument actually moves, quoted in the timezone of the
+   * venue that sets its price. Converted to UTC per day, so they hold through
+   * every daylight-saving change instead of sliding an hour out of position.
+   */
+  liquidWindows: ZoneWindow[];
+  /** True for instruments that never close, which is crypto only. */
+  alwaysOpen?: boolean;
   /** How much to trust this instrument's volume and delta. */
   flowTrust: "high" | "medium" | "low";
   flowNote: string;
@@ -257,10 +277,6 @@ export interface ClassSpec {
   characteristicTrap: string;
 }
 
-const win = (start: string, end: string, label: string) => {
-  const min = (s: string) => Number(s.slice(0, 2)) * 60 + Number(s.slice(3, 5));
-  return { startMin: min(start), endMin: min(end), label };
-};
 
 /**
  * The rules are identical across classes. Only the constants and the eligibility
@@ -273,8 +289,8 @@ const win = (start: string, end: string, label: string) => {
 export const INSTRUMENT_CLASS_SPEC: ClassSpec[] = [
   {
     klass: "fx_major",
-    members: ["EUR/USD", "GBP/USD", "AUD/USD", "USD/CAD", "USD/CHF", "NZD/USD"],
-    liquidWindowsUtc: [win("07:00", "11:00", "London morning"), win("12:00", "16:00", "London/NY overlap")],
+    members: ["EUR/USD", "GBP/USD", "USD/CAD", "USD/CHF"],
+    liquidWindows: [LONDON_MORNING, LONDON_NY_OVERLAP],
     flowTrust: "low",
     flowNote: "Spot FX is OTC and fragmented. Broker tick volume is one dealer's slice, not the market.",
     stopAtrRange: [0.8, 1.6],
@@ -286,7 +302,7 @@ export const INSTRUMENT_CLASS_SPEC: ClassSpec[] = [
   {
     klass: "fx_yen",
     members: ["USD/JPY", "EUR/JPY", "GBP/JPY", "AUD/JPY"],
-    liquidWindowsUtc: [win("00:00", "06:00", "Tokyo"), win("12:00", "16:00", "London/NY overlap")],
+    liquidWindows: [TOKYO, LONDON_NY_OVERLAP],
     flowTrust: "low",
     flowNote: "Same OTC limitation as the majors. CME JPY futures are a cleaner proxy.",
     stopAtrRange: [0.9, 1.8],
@@ -296,9 +312,24 @@ export const INSTRUMENT_CLASS_SPEC: ClassSpec[] = [
     characteristicTrap: "A London/NY session filter that misses the Tokyo regime, where a lot of the genuine movement is.",
   },
   {
+    // The Antipodean pairs were sitting in fx_major on London and New York
+    // windows, which is the quiet half of their day. Their liquidity is Sydney
+    // and the Asian session, so they get their own class rather than a shared row.
+    klass: "fx_commodity",
+    members: ["AUD/USD", "NZD/USD", "AUD/NZD", "AUD/CAD"],
+    liquidWindows: [SYDNEY, TOKYO, LONDON_MORNING],
+    flowTrust: "low",
+    flowNote: "Same OTC limitation as the majors, and thinner outside Asian hours.",
+    stopAtrRange: [0.9, 1.8],
+    eligiblePlaybooks: ["continuation", "breakout"],
+    typicalHold: "1 to 6 hours in Asia; London can reverse the Asian move",
+    eventRisk: "RBA and RBNZ, Chinese data, iron ore and dairy, risk sentiment.",
+    characteristicTrap: "Grading these on a London/New York clock, which is when they are least likely to be going anywhere.",
+  },
+  {
     klass: "metal",
     members: ["XAU/USD", "XAG/USD"],
-    liquidWindowsUtc: [win("08:00", "12:00", "London"), win("13:20", "17:00", "COMEX/NY")],
+    liquidWindows: [LONDON_MORNING, COMEX_NY],
     flowTrust: "medium",
     flowNote: "COMEX futures flow is high quality. Spot and CFD volume is provider-specific.",
     stopAtrRange: [1.0, 2.2],
@@ -310,7 +341,7 @@ export const INSTRUMENT_CLASS_SPEC: ClassSpec[] = [
   {
     klass: "index",
     members: ["SPX500", "NAS100", "US30"],
-    liquidWindowsUtc: [win("13:30", "15:00", "NY cash open"), win("19:00", "20:00", "NY close")],
+    liquidWindows: [NY_CASH_OPEN, NY_CLOSE],
     flowTrust: "high",
     flowNote: "ES/NQ/YM futures volume and delta are the real tape.",
     stopAtrRange: [0.8, 1.8],
@@ -322,7 +353,8 @@ export const INSTRUMENT_CLASS_SPEC: ClassSpec[] = [
   {
     klass: "crypto",
     members: ["BTC/USD", "ETH/USD", "XRP/USD", "SOL/USD"],
-    liquidWindowsUtc: [win("12:00", "21:00", "Europe/US overlap")],
+    liquidWindows: [CRYPTO_US_EUROPE],
+    alwaysOpen: true,
     flowTrust: "medium",
     flowNote: "Venue-specific data. Combine perpetual delta with spot flow, open interest and funding.",
     stopAtrRange: [1.2, 2.2],
@@ -334,7 +366,7 @@ export const INSTRUMENT_CLASS_SPEC: ClassSpec[] = [
   {
     klass: "energy",
     members: ["WTI Oil", "WTICO_USD", "BCO/USD"],
-    liquidWindowsUtc: [win("13:00", "18:30", "NYMEX pit hours")],
+    liquidWindows: [NYMEX_PIT],
     flowTrust: "high",
     flowNote: "CL futures flow is high quality during liquid hours; include calendar spread and open interest.",
     stopAtrRange: [1.2, 2.2],
@@ -348,7 +380,7 @@ export const INSTRUMENT_CLASS_SPEC: ClassSpec[] = [
 const UNCLASSIFIED: ClassSpec = {
   klass: "unclassified",
   members: [],
-  liquidWindowsUtc: [win("07:00", "16:00", "London and NY")],
+  liquidWindows: [LONDON_MORNING, LONDON_NY_OVERLAP],
   flowTrust: "low",
   flowNote: "No measured profile for this instrument, so flow is trusted least and the constants stay conservative.",
   stopAtrRange: [1.0, 2.0],
@@ -364,12 +396,16 @@ export function classifyInstrument(symbol: string): ClassSpec {
   for (const spec of INSTRUMENT_CLASS_SPEC) {
     if (spec.members.some((m) => m.toUpperCase() === s || m.toUpperCase() === norm)) return spec;
   }
-  if (/JPY/.test(norm)) return INSTRUMENT_CLASS_SPEC[1];
-  if (/^XAU|^XAG/.test(norm)) return INSTRUMENT_CLASS_SPEC[2];
-  if (/BTC|ETH|SOL|XRP|USDT/.test(norm)) return INSTRUMENT_CLASS_SPEC[4];
-  if (/NAS|SPX|US30|DE30|UK100|JP225/.test(norm)) return INSTRUMENT_CLASS_SPEC[3];
-  if (/WTI|BCO|OIL|NATGAS/.test(norm)) return INSTRUMENT_CLASS_SPEC[5];
-  if (/^(EUR|GBP|AUD|NZD|USD|CAD|CHF)\/(EUR|GBP|AUD|NZD|USD|CAD|CHF)$/.test(norm)) return INSTRUMENT_CLASS_SPEC[0];
+  // Looked up by name rather than array position: a new class used to renumber
+  // every one of these fallbacks silently.
+  const byKlass = (k: InstrumentClass) => INSTRUMENT_CLASS_SPEC.find((s) => s.klass === k) ?? UNCLASSIFIED;
+  if (/JPY/.test(norm)) return byKlass("fx_yen");
+  if (/^XAU|^XAG/.test(norm)) return byKlass("metal");
+  if (/BTC|ETH|SOL|XRP|USDT/.test(norm)) return byKlass("crypto");
+  if (/NAS|SPX|US30|DE30|UK100|JP225/.test(norm)) return byKlass("index");
+  if (/WTI|BCO|OIL|NATGAS/.test(norm)) return byKlass("energy");
+  if (/^(AUD|NZD)\//.test(norm)) return byKlass("fx_commodity");
+  if (/^(EUR|GBP|AUD|NZD|USD|CAD|CHF)\/(EUR|GBP|AUD|NZD|USD|CAD|CHF)$/.test(norm)) return byKlass("fx_major");
   return UNCLASSIFIED;
 }
 
@@ -380,15 +416,22 @@ export const FLOW_TRUST_FACTOR: Record<ClassSpec["flowTrust"], number> = {
   low: 0.25,
 };
 
-export function inLiquidWindow(spec: ClassSpec, at: Date): { inside: boolean; label: string | null } {
-  const minutes = at.getUTCHours() * 60 + at.getUTCMinutes();
-  for (const w of spec.liquidWindowsUtc) {
-    const inside = w.startMin <= w.endMin
-      ? minutes >= w.startMin && minutes <= w.endMin
-      : minutes >= w.startMin || minutes <= w.endMin;
-    if (inside) return { inside: true, label: w.label };
-  }
-  return { inside: false, label: null };
+/**
+ * Session check, resolved in the venue's own timezone for the day in question,
+ * so it holds through every daylight-saving change. Weekend closure counts as
+ * outside, because structure that forms with nobody there is not tradable.
+ */
+export function inLiquidWindow(
+  spec: ClassSpec,
+  at: Date,
+): { inside: boolean; label: string | null; minutesToOpen: number; marketClosed: boolean } {
+  const state = sessionState(spec.liquidWindows, at, { alwaysOpen: spec.alwaysOpen });
+  return { inside: state.inside, label: state.label, minutesToOpen: state.minutesToOpen, marketClosed: state.marketClosed };
+}
+
+/** Window labels for this instrument, resolved for a given instant. */
+export function liquidWindowLabels(spec: ClassSpec, at: Date): string[] {
+  return sessionState(spec.liquidWindows, at, { alwaysOpen: spec.alwaysOpen }).windows.map((w) => `${w.label} (${w.tz})`);
 }
 
 // ---------------------------------------------------------------------------

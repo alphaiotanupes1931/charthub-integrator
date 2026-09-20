@@ -27,6 +27,8 @@ import {
   type ProgramInput,
 } from "@/lib/scanner/score";
 import type { Veto } from "@/lib/scanner/program";
+import { inLiquidWindow } from "@/lib/scanner/program";
+import { sixDimensionShadow, type SixDimensionShadow } from "@/lib/six-dimension-shadow";
 
 export type ProgramResult = {
   symbol: string;
@@ -38,9 +40,20 @@ export type ProgramResult = {
   percentile: number;
   band: BandResult;
   legacy: "A+" | "A" | "B" | "C";
+  /**
+   * The taught six dimensions, measured in shadow next to the published grade.
+   * Recorded, never published: it only becomes visible if it separates resolved
+   * outcomes better than the current grade on data it was not built from.
+   */
+  sixDimension: SixDimensionShadow;
 };
 
-type CellStats = { sample: number; distribution: number[] };
+type CellStats = {
+  sample: number;
+  distribution: number[];
+  /** Resolved trades per symbol, and how many of those reached target. */
+  bySymbol: Record<string, { decided: number; targets: number }>;
+};
 
 const CACHE_MS = 10 * 60 * 1000;
 const cache = new Map<InstrumentClass, { at: number; stats: CellStats }>();
@@ -50,7 +63,7 @@ export async function getCellStats(klass: InstrumentClass): Promise<CellStats> {
   const hit = cache.get(klass);
   if (hit && Date.now() - hit.at < CACHE_MS) return hit.stats;
 
-  const empty: CellStats = { sample: 0, distribution: [] };
+  const empty: CellStats = { sample: 0, distribution: [], bySymbol: {} };
   let stats = empty;
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -60,8 +73,8 @@ export async function getCellStats(klass: InstrumentClass): Promise<CellStats> {
       // Void rows carry no direction, so they are not evidence either way.
       supabaseAdmin
         .from("signal_scores")
-        .select("symbol")
-        .not("status", "in", '("open","void")')
+        .select("symbol,status")
+        .not("status", "in", '("open","void","unfilled")')
         .limit(20000),
       supabaseAdmin
         .from("scanner_program_scores")
@@ -71,12 +84,18 @@ export async function getCellStats(klass: InstrumentClass): Promise<CellStats> {
         .limit(20000),
     ]);
 
-    const sample = ((resolved.data ?? []) as Array<{ symbol: string }>)
-      .filter((r) => classifyInstrument(r.symbol).klass === klass).length;
+    const rows = (resolved.data ?? []) as Array<{ symbol: string; status: string }>;
+    const sample = rows.filter((r) => classifyInstrument(r.symbol).klass === klass).length;
+    const bySymbol: CellStats["bySymbol"] = {};
+    for (const r of rows) {
+      const cell = (bySymbol[r.symbol] ??= { decided: 0, targets: 0 });
+      cell.decided += 1;
+      if (r.status === "target") cell.targets += 1;
+    }
     const distribution = ((scored.data ?? []) as Array<{ composite: number | string }>)
       .map((r) => Number(r.composite))
       .filter((n) => Number.isFinite(n));
-    stats = { sample, distribution };
+    stats = { sample, distribution, bySymbol };
   } catch {
     // No backend reachable: fall through with an empty sample, which keeps the
     // gate closed rather than letting a top grade through unmeasured.
@@ -92,7 +111,7 @@ export async function runScannerProgram(input: ProgramInput): Promise<ProgramRes
   const vetoes = evaluateVetoes(input, spec);
   const families = scoreFamilies(input, spec);
   const composite = compositeScore(families, spec);
-  const { sample, distribution } = await getCellStats(spec.klass);
+  const { sample, distribution, bySymbol } = await getCellStats(spec.klass);
   const percentile = percentileOf(composite, distribution);
   const expectancy = expectedNetR({
     composite,
@@ -119,6 +138,19 @@ export async function runScannerProgram(input: ProgramInput): Promise<ProgramRes
     band.reasons.unshift(...mandatory.map((v) => v.reason));
   }
 
+  const record = bySymbol[input.symbol] ?? { decided: 0, targets: 0 };
+  const window = inLiquidWindow(spec, input.at);
+  const sixDimension = sixDimensionShadow({
+    families,
+    sessionInside: window.inside,
+    sessionLabel: window.label,
+    marketClosed: window.marketClosed,
+    resolvedSample: record.decided,
+    measuredHitRate: record.decided > 0 ? record.targets / record.decided : null,
+    plannedRR: input.plannedRR ?? null,
+    costShare: input.costShare ?? null,
+  });
+
   return {
     symbol: input.symbol,
     instrumentClass: spec.klass,
@@ -129,6 +161,7 @@ export async function runScannerProgram(input: ProgramInput): Promise<ProgramRes
     percentile,
     band,
     legacy: legacyGrade(band.band),
+    sixDimension,
   };
 }
 
@@ -168,6 +201,12 @@ export async function recordProgramScore(args: {
       ),
       vetoes: result.vetoes.map((v) => ({ code: v.code, mandatory: v.mandatory, reason: v.reason })),
       reasons: result.band.reasons,
+      six_dimension: {
+        composite: result.sixDimension.composite,
+        pass: result.sixDimension.pass,
+        reason: result.sixDimension.reason,
+        dimensions: result.sixDimension.dimensions.map((d) => ({ ...d })) as unknown as Record<string, unknown>[],
+      },
       shadow: args.shadow,
     });
   } catch {
