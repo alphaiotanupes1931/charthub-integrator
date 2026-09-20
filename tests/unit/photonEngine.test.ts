@@ -32,7 +32,7 @@ const bearishContinuation = (): PhotonCandle[] => {
   const out: PhotonCandle[] = [];
   const push = (o: number, h: number, l: number, c: number) => out.push(bar(o, h, l, c));
   // Flat base.
-  for (let i = 0; i < 20; i++) push(100, 100.4, 99.6, 100);
+  for (let i = 0; i < 44; i++) push(100, 100.4, 99.6, 100);
   push(100, 100.2, 98.0, 98.6);   // 20: swing low 98.0 (pivot)
   push(98.6, 99.8, 98.4, 99.6);   // 21
   push(99.6, 101.0, 99.4, 100.8); // 22
@@ -59,7 +59,7 @@ const freshBreakOnly = (): PhotonCandle[] => bearishContinuation().slice(0, 31);
 const bullishContinuation = (): PhotonCandle[] => {
   const out: PhotonCandle[] = [];
   const push = (o: number, h: number, l: number, c: number) => out.push(bar(o, h, l, c));
-  for (let i = 0; i < 20; i++) push(100, 100.4, 99.6, 100);
+  for (let i = 0; i < 44; i++) push(100, 100.4, 99.6, 100);
   push(100, 102.0, 99.8, 101.4);   // 20: swing high 102.0 (pivot)
   push(101.4, 101.6, 100.2, 100.4); // 21
   push(100.4, 100.6, 99.0, 99.2);   // 22
