@@ -55,15 +55,30 @@ describe("analysis model registry", () => {
     }
   });
 
-  it("both models are ready once their rulebooks are written in", () => {
+  it("all models are ready once their rulebooks are written in", () => {
     expect(analysisModelReady("classic")).toBe(true);
     expect(analysisModelReady("focus")).toBe(true);
+    expect(analysisModelReady("photon")).toBe(true);
     // The safety copy stays in place in case the rulebook is ever emptied.
     expect(getAnalysisModel("focus").notReadyReason).toBeTruthy();
+    expect(getAnalysisModel("photon").notReadyReason).toBeTruthy();
   });
 
   it("The Trading Channel version tracks its rulebook version", () => {
     expect(analysisModelVersion("focus")).toContain("trading-channel-1.0");
+  });
+
+  it("names model 3 Photon Trading and tracks its rulebook version", () => {
+    expect(getAnalysisModel("photon").name).toBe("Photon Trading");
+    expect(analysisModelVersion("photon")).toContain("photon-1.0");
+    expect(analysisModelVersion("photon")).not.toBe(analysisModelVersion("focus"));
+    expect(normalizeAnalysisModel("photon")).toBe("photon");
+  });
+
+  it("Photon Trading carries its source link behind the info button", () => {
+    const photon = getAnalysisModel("photon");
+    expect(photon.sourceUrl).toBe("https://www.youtube.com/watch?v=Pd9ASRCHWmQ");
+    expect(photon.sourceLabel).toBeTruthy();
   });
 
   it("The Trading Channel is fed only its own rulebook and inherits nothing from Classic", () => {
@@ -72,6 +87,15 @@ describe("analysis model registry", () => {
     expect(block.toLowerCase()).not.toContain("order block");
     // Classic's knowledge still lives in the chat prompt, so its block stays empty.
     expect(analysisModelPromptBlock("classic")).toBe("");
+  });
+
+  it("Photon Trading is fed only its own rulebook and inherits nothing from the other models", () => {
+    const block = analysisModelPromptBlock("photon");
+    expect(block).toContain("Photon Trading");
+    expect(block).toContain("ONLY the strategies");
+    expect(block).toContain("photon-1.0");
+    expect(block.toLowerCase()).not.toContain("order block");
+    expect(block).not.toContain("38.2 candle");
   });
 
   it("every registered model has a name and version", () => {
