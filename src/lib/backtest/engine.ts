@@ -84,6 +84,8 @@ export type BtTrade = {
   outcome: "win" | "loss" | "timeout";
   holdBars: number;
   balanceAfter: number;
+  /** Read-only experiment cohort; absent from normal production replays. */
+  filterTag?: string;
 };
 
 export type BtBucket = {
@@ -134,6 +136,8 @@ export type BtResult = {
   bySession: BtBucket[];
   byMonth: BtBucket[];
   notes: string[];
+  /** Present only when a read-only signal filter was supplied. */
+  filterStats?: { candidates: number; retained: number };
 };
 
 // ---------- indicators ----------
@@ -191,6 +195,14 @@ type Signal = {
   withTrend: boolean;
   htfAligned: boolean;
   extensionAtr: number;
+};
+
+export type BtRunOptions = {
+  signalFilter?: (context: {
+    /** Bars visible at signal close; no future bar is included. */
+    bars: BtBar[];
+    signal: Signal;
+  }) => { accept: boolean; tag?: string };
 };
 
 function gradeFor(score: number): BtGrade | null {
@@ -369,6 +381,7 @@ export function runBacktest(
   bars: BtBar[],
   params: BtParams,
   meta: { symbol: string; timeframe: string; source: string },
+  options?: BtRunOptions,
 ): BtResult {
   const p = { ...DEFAULT_PARAMS, ...params };
   const notes: string[] = [];
@@ -389,6 +402,8 @@ export function runBacktest(
   let consec = 0;
   let maxConsec = 0;
   let id = 0;
+  let filterCandidates = 0;
+  let filterRetained = 0;
 
   // 200-EMA warm-up: earlier bars have no meaningful higher-timeframe read.
   const startIndex = 210;
@@ -420,6 +435,17 @@ export function runBacktest(
     if (p.direction !== "both" && sig.side.toLowerCase() !== p.direction) {
       i += 1;
       continue;
+    }
+    let filterTag: string | undefined;
+    if (options?.signalFilter) {
+      filterCandidates += 1;
+      const decision = options.signalFilter({ bars: bars.slice(0, i + 1), signal: sig });
+      if (!decision.accept) {
+        i += 1;
+        continue;
+      }
+      filterRetained += 1;
+      filterTag = decision.tag;
     }
     const fillBar = bars[i + 1];
     const session = sessionOf(fillBar.time);
@@ -494,6 +520,7 @@ export function runBacktest(
       outcome: outcome === "timeout" ? (r > 0 ? "win" : "loss") : outcome,
       holdBars: held + 1,
       balanceAfter: round(balance, 2),
+      ...(filterTag ? { filterTag } : {}),
     });
     equity.push({ time: exitTime, balance: round(balance, 2), netR: round(netR, 2) });
 
@@ -557,5 +584,6 @@ export function runBacktest(
     bySession: group(trades, (t) => t.session, ["Asia", "London", "New York", "Late US"]),
     byMonth: group(trades, (t) => monthOf(t.entryTime)),
     notes,
+    ...(options?.signalFilter ? { filterStats: { candidates: filterCandidates, retained: filterRetained } } : {}),
   };
 }
