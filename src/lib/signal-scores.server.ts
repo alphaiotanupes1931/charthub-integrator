@@ -27,7 +27,7 @@ export type Resolution = {
    * are excluded from hit rate and expectancy: scoring them silently bets short
    * on every no-opinion scan and folds coin flips into the record.
    */
-  status: "target" | "stop" | "expired" | "open" | "void";
+  status: "target" | "stop" | "expired" | "open" | "void" | "unfilled";
   realizedR: number | null;
   /**
    * Maximum adverse excursion, in R: how far price went AGAINST the entry
