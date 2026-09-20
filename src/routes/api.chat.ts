@@ -1084,7 +1084,7 @@ export const Route = createFileRoute("/api/chat")({
           }
         }
 
-        const staticSystem = staticSystemPrompt();
+        const staticSystem = staticSystemPrompt(analysisModelId);
         const forceDraw = shouldForceChartDraw(messages);
         let liveSystem = dynamicSystemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens), learningCtx, newsCtx, scoreCtx, forceDraw, previousCoach, hermesCtx, hitRateCtx);
         // Retrieved methodology / psychology reference for this exact question.
