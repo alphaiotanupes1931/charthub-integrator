@@ -45,7 +45,7 @@ const SaveInput = z.object({
   enabled: z.boolean(),
   min_grade: z.enum(ALERT_GRADES),
   symbols: z.array(z.string().min(1).max(20)).max(12),
-  models: z.array(z.enum(["classic", "focus", "photon"])).min(1).max(3),
+  models: z.array(z.enum(["classic", "focus", "photon", "jablonski"])).min(1).max(4),
   timezone: z.string().min(1).max(64),
   quiet_from: z.number().int().min(0).max(23),
   quiet_to: z.number().int().min(0).max(23),

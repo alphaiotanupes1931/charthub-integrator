@@ -13,8 +13,9 @@
 
 import { FOCUS_RULEBOOK, FOCUS_RULEBOOK_VERSION, focusRulebookForPrompt, focusRuleCount } from "./analysis-models/focus-rulebook";
 import { PHOTON_RULEBOOK, PHOTON_RULEBOOK_VERSION, photonRulebookForPrompt, photonRuleCount } from "./analysis-models/photon-rulebook";
+import { JABLONSKI_RULEBOOK, JABLONSKI_RULEBOOK_VERSION, jablonskiRulebookForPrompt, jablonskiRuleCount } from "./analysis-models/jablonski-rulebook";
 
-export type AnalysisModelId = "classic" | "focus" | "photon";
+export type AnalysisModelId = "classic" | "focus" | "photon" | "jablonski";
 
 export type AnalysisModel = {
   id: AnalysisModelId;
@@ -81,10 +82,22 @@ export const ANALYSIS_MODELS: readonly AnalysisModel[] = [
     notReadyReason:
       "This model has no strategies written into it yet, so it cannot grade setups or file signals. Send the strategies and they get written into its rulebook.",
   },
+  {
+    id: "jablonski",
+    name: "Eric Jablonski",
+    version: `jablonski-1.0 (${JABLONSKI_RULEBOOK_VERSION})`,
+    tagline: "Fed only the opening-range day trade: first two 15-minute candles, close outside the range, fixed 10-point target.",
+    description:
+      "A clean-slate model fed only Eric Jablonski's opening-range day trade — nothing from TradeMind Classic, The Trading Channel or Photon Trading leaks in. It works on the 15-minute chart alone: mark the high and low of the session's first two 15-minute candles, then wait for a 15-minute candle to CLOSE outside that range. A close above the high is a buy, a close below the low is a sell, the entry is that candle's close, the stop sits at the opposite end of the range, and the target is a fixed 10 points in the instrument's own points — no trailing, no partials, the trade simply plays out. Wins are deliberately small, so the method leans entirely on a high hit rate; the author describes it as a variation of a Tom Hougaard strategy and claims an 81% win rate from his own bot and manual back-testing, which is his claim and not a TradeMind measurement. Because a fixed 10-point target only means something where a point is defined, the model trades index CFDs, gold, silver, oil and FX pairs and returns NO ENTRY elsewhere. US index CFDs use the 9:30 New York cash open; FX, metals and oil use the London open. Every signal it files is stamped with its own name and version and tracked on its own scoreboard, so you can judge the 81% claim on live numbers before trusting it.",
+    knowledge: "strategies-only",
+    ready: jablonskiRuleCount() > 0,
+    notReadyReason:
+      "This model has no strategies written into it yet, so it cannot grade setups or file signals. Send the strategies and they get written into its rulebook.",
+  },
 ];
 
 export function normalizeAnalysisModel(raw: unknown): AnalysisModelId {
-  return raw === "focus" || raw === "photon" ? raw : DEFAULT_ANALYSIS_MODEL;
+  return raw === "focus" || raw === "photon" || raw === "jablonski" ? raw : DEFAULT_ANALYSIS_MODEL;
 }
 
 export function getAnalysisModel(id: unknown): AnalysisModel {
@@ -111,6 +124,9 @@ export function analysisModelReady(id: unknown): boolean {
  */
 /** The rulebook each strategies-only model is fed. */
 function rulebookFor(id: AnalysisModelId): { count: number; text: string } {
+  if (id === "jablonski") {
+    return { count: jablonskiRuleCount(), text: jablonskiRuleCount() > 0 ? jablonskiRulebookForPrompt() : "" };
+  }
   if (id === "photon") {
     return { count: photonRuleCount(), text: photonRuleCount() > 0 ? photonRulebookForPrompt() : "" };
   }
@@ -136,4 +152,4 @@ export function analysisModelPromptBlock(id: unknown): string {
     .join("\n");
 }
 
-export { FOCUS_RULEBOOK, FOCUS_RULEBOOK_VERSION, PHOTON_RULEBOOK, PHOTON_RULEBOOK_VERSION };
+export { FOCUS_RULEBOOK, FOCUS_RULEBOOK_VERSION, PHOTON_RULEBOOK, PHOTON_RULEBOOK_VERSION, JABLONSKI_RULEBOOK, JABLONSKI_RULEBOOK_VERSION };

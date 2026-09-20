@@ -13,6 +13,7 @@ import { computeBias } from "./bias-adapter.server";
 import type { AnalysisModelId } from "@/lib/analysis-models";
 import { focusAnalysis, focusContextBlock } from "@/lib/analysis-models/focus-engine";
 import { photonAnalysis, photonContextBlock } from "@/lib/analysis-models/photon-engine";
+import { jablonskiAnalysis, jablonskiContextBlock } from "@/lib/analysis-models/jablonski-engine";
 import { tunedConfigFor, profileHintFor } from "../instrument-profile.server";
 import { stopMultipleFor } from "@/lib/stop-placement";
 
@@ -1533,6 +1534,51 @@ export async function runPlanner(
       refPrice: snap.lastPrice,
       counterTrend: false,
       warnings: pWarnings.length ? pWarnings : undefined,
+      tradeStyle,
+    };
+  }
+
+  // ---- Model routing: Eric Jablonski ---------------------------------------
+  // Model 4 is fed ONLY the opening-range rulebook and decides on closed
+  // 15-minute bars (jablonski-engine.ts). The Classic bias engine, order-block
+  // cascade and AI-written levels below do not apply.
+  if (modelId === "jablonski") {
+    const jBars = (snap.candles15m?.length ? snap.candles15m : snap.candles)
+      .map((c) => ({ time: c.time, open: c.open, high: c.high, low: c.low, close: c.close }));
+    const read = jablonskiAnalysis(jBars, snap.ticker);
+    const jDec = decimalsFor(snap.lastPrice || read.lastPrice || 1);
+    let jGrade: TradePlan["grade"] = read.grade;
+    const jWarnings: string[] = [];
+    if (newsWarning && (jGrade === "A" || jGrade === "B")) {
+      jGrade = "B";
+      jWarnings.push(`High-impact news inside the hold window caps this at B.${newsWarning}`);
+    }
+    if (news48Warning) jWarnings.push(news48Warning);
+    const isNoEntryJ = jGrade === "NO ENTRY" || read.entry == null;
+    const trendWordJ = read.bias === "Long" ? "bullish" : read.bias === "Short" ? "bearish" : "neutral";
+    return {
+      methodologyVersion: read.rulebookVersion,
+      grade: jGrade,
+      bias: read.bias,
+      confidence: jGrade === "A" ? 80 : jGrade === "B" ? 60 : jGrade === "C" ? 40 : 0,
+      notes: `${read.note}${jWarnings.length ? ` ${jWarnings.join(" ")}` : ""}`,
+      entry: isNoEntryJ ? "-" : fmt(read.entry!, jDec),
+      stop: isNoEntryJ ? "-" : fmt(read.stop!, jDec),
+      tp1: isNoEntryJ ? "-" : fmt(read.tp1!, jDec),
+      tp2: "-",
+      rr: isNoEntryJ || read.rr == null ? "-" : `1 : ${read.rr.toFixed(2)}`,
+      details: jablonskiContextBlock(read, snap.ticker, snap.interval),
+      memo,
+      orderFlow: snap.orderFlow,
+      dailyBias: trendWordJ,
+      currentTrend: read.bias === "Neutral" ? "range" : read.bias === "Long" ? "up" : "down",
+      synopsis: read.note,
+      dataSource: snap.source,
+      dataFetchedAt: snap.fetchedAt,
+      candleCount: snap.candles.length,
+      refPrice: snap.lastPrice,
+      counterTrend: false,
+      warnings: jWarnings.length ? jWarnings : undefined,
       tradeStyle,
     };
   }
