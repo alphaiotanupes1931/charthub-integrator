@@ -87,6 +87,7 @@ function SignalsPage() {
           rr: s.rr,
           synopsis: s.notes,
           source: "engine",
+          refPrice: s.refPrice,
         });
       }
       setHistory(listSignals());
