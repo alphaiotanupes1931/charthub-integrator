@@ -2,7 +2,7 @@
 // measurable research inputs only; none may alter a live direction, grade,
 // confidence, entry, stop, or target until its held-out and forward tests pass.
 
-export const CLASSIC_RESEARCH_RULEBOOK_VERSION = "classic-research-0.2-shadow";
+export const CLASSIC_RESEARCH_RULEBOOK_VERSION = "classic-research-0.3-shadow";
 
 export const CLASSIC_RESEARCH_RULEBOOK = [
   {
