@@ -95,6 +95,7 @@ import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api.publi
 import { Route as ApiPublicSignalsFileRouteImport } from './routes/api.public.signals.file'
 import { Route as ApiPublicHooksWeeklyReviewRouteImport } from './routes/api.public.hooks.weekly-review'
 import { Route as ApiPublicHooksStopWidthTestRouteImport } from './routes/api.public.hooks.stop-width-test'
+import { Route as ApiPublicHooksStopWidthPerInstrumentRouteImport } from './routes/api.public.hooks.stop-width-per-instrument'
 import { Route as ApiPublicHooksSignalIntegrityRouteImport } from './routes/api.public.hooks.signal-integrity'
 import { Route as ApiPublicHooksSignalExcursionsRouteImport } from './routes/api.public.hooks.signal-excursions'
 import { Route as ApiPublicHooksSignalAlertsTickRouteImport } from './routes/api.public.hooks.signal-alerts-tick'
@@ -556,6 +557,12 @@ const ApiPublicHooksStopWidthTestRoute =
     path: '/api/public/hooks/stop-width-test',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksStopWidthPerInstrumentRoute =
+  ApiPublicHooksStopWidthPerInstrumentRouteImport.update({
+    id: '/api/public/hooks/stop-width-per-instrument',
+    path: '/api/public/hooks/stop-width-per-instrument',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksSignalIntegrityRoute =
   ApiPublicHooksSignalIntegrityRouteImport.update({
     id: '/api/public/hooks/signal-integrity',
@@ -788,6 +795,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/signal-alerts-tick': typeof ApiPublicHooksSignalAlertsTickRoute
   '/api/public/hooks/signal-excursions': typeof ApiPublicHooksSignalExcursionsRoute
   '/api/public/hooks/signal-integrity': typeof ApiPublicHooksSignalIntegrityRoute
+  '/api/public/hooks/stop-width-per-instrument': typeof ApiPublicHooksStopWidthPerInstrumentRoute
   '/api/public/hooks/stop-width-test': typeof ApiPublicHooksStopWidthTestRoute
   '/api/public/hooks/weekly-review': typeof ApiPublicHooksWeeklyReviewRoute
   '/api/public/signals/file': typeof ApiPublicSignalsFileRoute
@@ -893,6 +901,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/signal-alerts-tick': typeof ApiPublicHooksSignalAlertsTickRoute
   '/api/public/hooks/signal-excursions': typeof ApiPublicHooksSignalExcursionsRoute
   '/api/public/hooks/signal-integrity': typeof ApiPublicHooksSignalIntegrityRoute
+  '/api/public/hooks/stop-width-per-instrument': typeof ApiPublicHooksStopWidthPerInstrumentRoute
   '/api/public/hooks/stop-width-test': typeof ApiPublicHooksStopWidthTestRoute
   '/api/public/hooks/weekly-review': typeof ApiPublicHooksWeeklyReviewRoute
   '/api/public/signals/file': typeof ApiPublicSignalsFileRoute
@@ -1004,6 +1013,7 @@ export interface FileRoutesById {
   '/api/public/hooks/signal-alerts-tick': typeof ApiPublicHooksSignalAlertsTickRoute
   '/api/public/hooks/signal-excursions': typeof ApiPublicHooksSignalExcursionsRoute
   '/api/public/hooks/signal-integrity': typeof ApiPublicHooksSignalIntegrityRoute
+  '/api/public/hooks/stop-width-per-instrument': typeof ApiPublicHooksStopWidthPerInstrumentRoute
   '/api/public/hooks/stop-width-test': typeof ApiPublicHooksStopWidthTestRoute
   '/api/public/hooks/weekly-review': typeof ApiPublicHooksWeeklyReviewRoute
   '/api/public/signals/file': typeof ApiPublicSignalsFileRoute
@@ -1115,6 +1125,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/signal-alerts-tick'
     | '/api/public/hooks/signal-excursions'
     | '/api/public/hooks/signal-integrity'
+    | '/api/public/hooks/stop-width-per-instrument'
     | '/api/public/hooks/stop-width-test'
     | '/api/public/hooks/weekly-review'
     | '/api/public/signals/file'
@@ -1220,6 +1231,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/signal-alerts-tick'
     | '/api/public/hooks/signal-excursions'
     | '/api/public/hooks/signal-integrity'
+    | '/api/public/hooks/stop-width-per-instrument'
     | '/api/public/hooks/stop-width-test'
     | '/api/public/hooks/weekly-review'
     | '/api/public/signals/file'
@@ -1330,6 +1342,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/signal-alerts-tick'
     | '/api/public/hooks/signal-excursions'
     | '/api/public/hooks/signal-integrity'
+    | '/api/public/hooks/stop-width-per-instrument'
     | '/api/public/hooks/stop-width-test'
     | '/api/public/hooks/weekly-review'
     | '/api/public/signals/file'
@@ -1394,6 +1407,7 @@ export interface RootRouteChildren {
   ApiPublicHooksSignalAlertsTickRoute: typeof ApiPublicHooksSignalAlertsTickRoute
   ApiPublicHooksSignalExcursionsRoute: typeof ApiPublicHooksSignalExcursionsRoute
   ApiPublicHooksSignalIntegrityRoute: typeof ApiPublicHooksSignalIntegrityRoute
+  ApiPublicHooksStopWidthPerInstrumentRoute: typeof ApiPublicHooksStopWidthPerInstrumentRoute
   ApiPublicHooksStopWidthTestRoute: typeof ApiPublicHooksStopWidthTestRoute
   ApiPublicHooksWeeklyReviewRoute: typeof ApiPublicHooksWeeklyReviewRoute
   ApiPublicSignalsFileRoute: typeof ApiPublicSignalsFileRoute
@@ -2007,6 +2021,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksStopWidthTestRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/stop-width-per-instrument': {
+      id: '/api/public/hooks/stop-width-per-instrument'
+      path: '/api/public/hooks/stop-width-per-instrument'
+      fullPath: '/api/public/hooks/stop-width-per-instrument'
+      preLoaderRoute: typeof ApiPublicHooksStopWidthPerInstrumentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/signal-integrity': {
       id: '/api/public/hooks/signal-integrity'
       path: '/api/public/hooks/signal-integrity'
@@ -2380,6 +2401,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksSignalAlertsTickRoute: ApiPublicHooksSignalAlertsTickRoute,
   ApiPublicHooksSignalExcursionsRoute: ApiPublicHooksSignalExcursionsRoute,
   ApiPublicHooksSignalIntegrityRoute: ApiPublicHooksSignalIntegrityRoute,
+  ApiPublicHooksStopWidthPerInstrumentRoute:
+    ApiPublicHooksStopWidthPerInstrumentRoute,
   ApiPublicHooksStopWidthTestRoute: ApiPublicHooksStopWidthTestRoute,
   ApiPublicHooksWeeklyReviewRoute: ApiPublicHooksWeeklyReviewRoute,
   ApiPublicSignalsFileRoute: ApiPublicSignalsFileRoute,
