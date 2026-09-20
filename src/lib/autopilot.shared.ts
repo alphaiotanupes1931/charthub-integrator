@@ -66,6 +66,10 @@ export function evaluateRails(
   if (settings.allowedSymbols.length > 0 && !settings.allowedSymbols.includes(candidate.symbol)) {
     return { allowed: false, reason: `${candidate.symbol} is not on your allowed symbol list` };
   }
+  const review = instrumentReview(candidate.symbol);
+  if (review) {
+    return { allowed: false, reason: `${review.symbol} is under review and cannot be traded automatically` };
+  }
   if (!gradeMeets(candidate.grade, settings.minGrade)) {
     return {
       allowed: false,
