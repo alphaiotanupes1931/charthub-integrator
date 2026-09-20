@@ -313,11 +313,17 @@ export function photonAnalysis(candles: PhotonCandle[]): PhotonRead {
     return base;
   }
 
-  // Rule 9: target weak structure at minimum, and it must pay 1.5R.
+  // Rule 9: target weak structure at minimum, and it must pay 1.5R. The weak
+  // level only counts if it still lies ahead of price in the trade direction.
   let tp1 = r.weakTarget;
   let cap: string | null = null;
-  let rr = tp1 != null ? Math.abs(tp1 - entry) / risk : null;
-  if (tp1 == null || rr == null || rr < 1.5) {
+  const weakAhead = tp1 != null && (side === "long" ? tp1 > entry : tp1 < entry);
+  let rr = tp1 != null && weakAhead ? Math.abs(tp1 - entry) / risk : null;
+  if (tp1 == null || !weakAhead || rr == null || rr < 1.5) {
+    if (tp1 != null && !weakAhead) {
+      cap = `weak structure at ${fmt(tp1)} is already behind price - target is a 2R measured move instead`;
+      tp1 = null;
+    }
     const measured = side === "long" ? entry + 2 * risk : entry - 2 * risk;
     cap = tp1 == null
       ? "no weak structure target mapped - target is a 2R measured move instead"
