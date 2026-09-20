@@ -10,6 +10,8 @@ import { SCANNER_METHODOLOGY_VERSION } from "@/lib/scanner-methodology";
 import { formatOrderFlow } from "./order-flow.server";
 import { computeOrderBlocks } from "@/lib/orderBlocks";
 import { computeBias } from "./bias-adapter.server";
+import type { AnalysisModelId } from "@/lib/analysis-models";
+import { focusAnalysis, focusContextBlock } from "@/lib/analysis-models/focus-engine";
 import { tunedConfigFor, profileHintFor } from "../instrument-profile.server";
 
 import {
@@ -1403,6 +1405,7 @@ export async function runPlanner(
   perfDesc?: string,
   scoreDesc?: string,
   tradeStyle: TradeStyle = "intraday",
+  modelId: AnalysisModelId = "classic",
 ): Promise<TradePlan> {
 
   const provider = createAiGatewayProvider(apiKey);
@@ -1437,6 +1440,51 @@ export async function runPlanner(
     }
   } catch {
     // calendar unavailable; plan on price structure alone
+  }
+
+  // ---- Model routing: The Trading Channel ---------------------------------
+  // Model 2 is fed ONLY the Trading Channel rulebook. Its read comes from its
+  // own deterministic engine over closed bars (focus-engine.ts); the Classic
+  // bias engine, order-block cascade and AI-written levels below do not apply.
+  if (modelId === "focus") {
+    const focusBars = (snap.candles1h?.length ? snap.candles1h : snap.candles)
+      .map((c) => ({ time: c.time, open: c.open, high: c.high, low: c.low, close: c.close }));
+    const read = focusAnalysis(focusBars);
+    const fDec = decimalsFor(snap.lastPrice || read.lastPrice || 1);
+    let fGrade: TradePlan["grade"] = read.grade;
+    const fWarnings: string[] = [];
+    if (newsWarning && (fGrade === "A" || fGrade === "B")) {
+      fGrade = "B";
+      fWarnings.push(`High-impact news inside the hold window caps this at B.${newsWarning}`);
+    }
+    if (news48Warning) fWarnings.push(news48Warning);
+    const isNoEntryF = fGrade === "NO ENTRY" || read.entry == null;
+    const trendWord = read.trend === "up" ? "bullish" : read.trend === "down" ? "bearish" : "neutral";
+    return {
+      methodologyVersion: read.rulebookVersion,
+      grade: fGrade,
+      bias: read.bias,
+      confidence: fGrade === "A" ? 80 : fGrade === "B" ? 60 : fGrade === "C" ? 40 : 0,
+      notes: `${read.note}${fWarnings.length ? ` ${fWarnings.join(" ")}` : ""}`,
+      entry: isNoEntryF ? "-" : fmt(read.entry!, fDec),
+      stop: isNoEntryF ? "-" : fmt(read.stop!, fDec),
+      tp1: isNoEntryF ? "-" : fmt(read.tp1!, fDec),
+      tp2: "-",
+      rr: isNoEntryF || read.rr == null ? "-" : `1 : ${read.rr.toFixed(1)}`,
+      details: focusContextBlock(read, snap.ticker, snap.interval),
+      memo,
+      orderFlow: snap.orderFlow,
+      dailyBias: trendWord,
+      currentTrend: read.trend,
+      synopsis: read.note,
+      dataSource: snap.source,
+      dataFetchedAt: snap.fetchedAt,
+      candleCount: snap.candles.length,
+      refPrice: snap.lastPrice,
+      counterTrend: false,
+      warnings: fWarnings.length ? fWarnings : undefined,
+      tradeStyle,
+    };
   }
 
   // RULE 6: direction is computed here, from the closed candles of this scan,
