@@ -27,6 +27,6 @@
   GBP/USD and BTC/ETH remain excluded from any published performance figure until replay turns positive.
 
 ## Scan Models page — Sep 20, 2026
-- [ ] Add a dedicated model library and account-level model selection.
-- [ ] Link the dashboard picker and desktop navigation to the model library.
-- [ ] Verify the route, selection behavior, type safety, and tests.
+- [x] Add a dedicated model library and account-level model selection.
+- [x] Link the dashboard picker and desktop navigation to the model library.
+- [x] Verify the route, selection behavior, type safety, and tests.
