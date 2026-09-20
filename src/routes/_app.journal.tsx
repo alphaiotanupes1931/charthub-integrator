@@ -1731,6 +1731,7 @@ function TradeFormModal({
   const [reviewConfirmed, setReviewConfirmed] = useState(false);
   const [extractionConfidence, setExtractionConfidence] = useState<number | null>(null);
   const [isDraggingImage, setIsDraggingImage] = useState(false);
+  const [preparingImages, setPreparingImages] = useState(false);
   // The detailed form stays out of the way: uploading a screenshot or pasting
   // text is the primary path and opens these fields once numbers are read.
   // Editing a saved trade opens them too. Otherwise they wait behind a toggle.
@@ -1766,19 +1767,24 @@ function TradeFormModal({
   const handlePickFiles = async (files: FileList | File[] | null | undefined) => {
     const list = Array.from(files ?? []).filter((f) => f.type.startsWith("image/"));
     if (!list.length) return;
-    const added: { blob: Blob; url: string }[] = [];
-    for (const file of list.slice(0, MAX_TRADE_IMAGES)) {
-      const compressed = await compressImageFile(file);
-      added.push({ blob: compressed, url: URL.createObjectURL(compressed) });
-    }
-    setImages((prev) => {
-      const next = [...prev, ...added].slice(0, MAX_TRADE_IMAGES);
-      if (prev.length + added.length > MAX_TRADE_IMAGES) {
-        setAutofillNote(`Up to ${MAX_TRADE_IMAGES} images per trade (4H, 1H, 15m, 5m, 1m). The extras were skipped.`);
+    setPreparingImages(true);
+    try {
+      const added: { blob: Blob; url: string }[] = [];
+      for (const file of list.slice(0, MAX_TRADE_IMAGES)) {
+        const compressed = await compressImageFile(file);
+        added.push({ blob: compressed, url: URL.createObjectURL(compressed) });
       }
-      return next;
-    });
-    setImagesDirty(true);
+      setImages((prev) => {
+        const next = [...prev, ...added].slice(0, MAX_TRADE_IMAGES);
+        if (prev.length + added.length > MAX_TRADE_IMAGES) {
+          setAutofillNote(`Up to ${MAX_TRADE_IMAGES} images per trade (4H, 1H, 15m, 5m, 1m). The extras were skipped.`);
+        }
+        return next;
+      });
+      setImagesDirty(true);
+    } finally {
+      setPreparingImages(false);
+    }
   };
 
   // Extra photos are stored with the trade for later reference only — they are
@@ -2122,6 +2128,8 @@ function TradeFormModal({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
+              disabled={preparingImages || autofilling}
+              aria-busy={preparingImages || autofilling}
               onDragEnter={(event) => { event.preventDefault(); setIsDraggingImage(true); }}
               onDragOver={(event) => event.preventDefault()}
               onDragLeave={() => setIsDraggingImage(false)}
@@ -2130,16 +2138,26 @@ function TradeFormModal({
                 setIsDraggingImage(false);
                 void handlePickFiles(event.dataTransfer.files);
               }}
-              className={`w-full rounded-xl border border-dashed px-3 py-5 text-sm transition flex flex-col items-center gap-1.5 ${isDraggingImage ? "border-primary bg-primary/10 text-foreground" : "border-border/60 bg-background/40 text-muted-foreground hover:border-primary/40 hover:text-foreground"}`}
+              className={`w-full rounded-xl border border-dashed px-3 py-5 text-sm transition flex flex-col items-center gap-1.5 disabled:cursor-wait ${isDraggingImage ? "border-primary bg-primary/10 text-foreground" : "border-border/60 bg-background/40 text-muted-foreground hover:border-primary/40 hover:text-foreground"}`}
             >
-              <Upload className="h-4 w-4" />
-              <span>{images.length ? "Add another screenshot" : "Drop or choose screenshot"}</span>
-              <span className="text-[10px]">Broker positions and marked-up charts are supported, up to five images.</span>
+              {preparingImages || autofilling ? (
+                <ActionLoader
+                  label={preparingImages ? "Preparing screenshot" : "Gathering trade details"}
+                  size="sm"
+                  hint="Reading the chart and filling in your trade"
+                />
+              ) : (
+                <>
+                  <Upload className="h-4 w-4" />
+                  <span>{images.length ? "Add another screenshot" : "Drop or choose screenshot"}</span>
+                  <span className="text-[10px]">Broker positions and marked-up charts are supported, up to five images.</span>
+                </>
+              )}
             </button>
-            {(images.length > 0 || autofilling) && (
+            {(images.length > 0 || preparingImages || autofilling) && (
               <div className="mt-2 rounded-xl border border-border/60 bg-background/40 px-3 py-2 text-[11px] text-muted-foreground">
-                {autofilling
-                  ? "Reading the numbers off your screenshot…"
+                {preparingImages || autofilling
+                  ? "Your screenshot is being analyzed. The trade details will appear automatically."
                   : autofillNote || "Numbers are read automatically when you add a screenshot."}
                 {!autofilling && images.length > 0 && (
                   <button
