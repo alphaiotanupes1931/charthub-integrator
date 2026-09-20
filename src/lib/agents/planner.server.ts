@@ -133,7 +133,11 @@ function systematicPlan(
     : partialAligned || (memo.consensus !== "neutral" && hasTrigger) ? "B"
     : "C";
   const entry = last;
-  const stopDist = atr * (grade === "A" ? 1.1 : grade === "B" ? 1.25 : 1.5);
+  // Stop room is per market, measured on this market's own resolved trades, not
+  // per grade: see stop-placement.ts. The old grade ladder gave A setups the
+  // least room, which is where most of the loss was coming from.
+  const stopDist = atr * stopMultipleFor(snap.ticker, grade);
+
   const stop = bias === "Short" ? entry + stopDist : entry - stopDist;
   const tp1 = bias === "Short" ? entry - stopDist * 1.5 : entry + stopDist * 1.5;
   const tp2 = bias === "Short" ? entry - stopDist * 3 : entry + stopDist * 3;
