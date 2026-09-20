@@ -354,6 +354,10 @@ function SignalColumn({ title, tone, signals, onClick }: { title: string; tone: 
               <span>{s.action}</span>
               <span>R:R {s.rr}</span>
             </div>
+            <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
+              <span>Confidence</span>
+              <span className="text-foreground">{Math.round(s.confidence)}%</span>
+            </div>
             {s.state === "confirmed" && (
               <div className="mt-1 text-[10px] text-bull">Confirmed entry</div>
             )}
