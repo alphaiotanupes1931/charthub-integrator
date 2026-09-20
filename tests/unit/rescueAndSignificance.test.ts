@@ -176,3 +176,24 @@ describe("scoreboard with rescue and correlation", () => {
     expect(note).toContain("Not enough decided A grades");
   });
 });
+
+describe("alert gate and correlated families", () => {
+  it("holds back the weaker leg of a correlated pair", async () => {
+    const { decideAlert } = await import("@/lib/signal-alerts.shared");
+    const plan = { grade: "B", bias: "Short", entry: 100, stop: 101, tp1: 97, confidence: 60 };
+    expect(decideAlert({ plan, minGrade: "B", stale: false, quiet: false, correlated: true })).toEqual({
+      alert: false,
+      reason: "same bet as a better-graded correlated setup",
+    });
+    expect(decideAlert({ plan, minGrade: "B", stale: false, quiet: false, correlated: false })).toEqual({
+      alert: true,
+    });
+  });
+
+  it("ranks grades for family selection", async () => {
+    const { gradeRank } = await import("@/lib/correlation-clusters");
+    expect(gradeRank("A+")).toBeGreaterThan(gradeRank("A"));
+    expect(gradeRank("A")).toBeGreaterThan(gradeRank("C"));
+    expect(gradeRank("NO ENTRY")).toBe(0);
+  });
+});
