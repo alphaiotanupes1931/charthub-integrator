@@ -57,6 +57,8 @@ type Row = {
   cost_r: number | string | null;
   mae_r?: number | string | null;
   mfe_r?: number | string | null;
+  model_id?: string | null;
+  model_version?: string | null;
 };
 
 function toRow(r: Row): SignalScoreRow {
@@ -84,6 +86,8 @@ function toRow(r: Row): SignalScoreRow {
     costR: num(r.cost_r ?? null),
     maeR: num(r.mae_r ?? null),
     mfeR: num(r.mfe_r ?? null),
+    modelId: r.model_id ?? "classic",
+    modelVersion: r.model_version ?? null,
   };
 }
 
@@ -94,6 +98,22 @@ export const recordSignalScore = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<{ ok: boolean; id?: string; refused?: string }> => {
     const risk = Math.abs(data.entry - data.stop);
     if (!risk) return { ok: false };
+
+    // Which named analysis model produced this signal. Read from the account so
+    // the stamp cannot be spoofed by the caller, and refuse outright while the
+    // chosen model has no strategies written into it.
+    const { getAnalysisModel, normalizeAnalysisModel } = await import("@/lib/analysis-models");
+    const { data: profileRow } = await context.supabase
+      .from("profiles")
+      .select("analysis_model")
+      .eq("id", context.userId)
+      .maybeSingle();
+    const model = getAnalysisModel(
+      normalizeAnalysisModel((profileRow as { analysis_model?: string } | null)?.analysis_model),
+    );
+    if (!model.ready) {
+      return { ok: false, refused: model.notReadyReason ?? `${model.name} has no strategies yet.` };
+    }
 
     // Staleness guard. A signal whose entry price has already run away is not a
     // call, it is a report, so it never enters the record. The refusal is returned
@@ -106,6 +126,7 @@ export const recordSignalScore = createServerFn({ method: "POST" })
       lastPrice: data.lastPrice ?? null,
     });
     if (staleness.stale) return { ok: false, refused: staleness.reason ?? "Entry already gone." };
+
 
     const since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
     const { data: dupe } = await context.supabase
@@ -154,6 +175,9 @@ export const recordSignalScore = createServerFn({ method: "POST" })
         created_at: createdAt,
         filed_hash: filedHash,
         entry_distance_r: staleness.distanceR,
+        model_id: model.id,
+        model_version: model.version,
+
       } as never)
       .select("id")
       .single();
