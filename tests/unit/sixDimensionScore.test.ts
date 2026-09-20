@@ -137,14 +137,14 @@ describe("six dimension scoring", () => {
 
 describe("sizing", () => {
   it("keeps the money risk constant as the stop widens", () => {
-    const tight = positionSize({ accountBalance: 10000, riskPercent: 1, entry: 100, invalidation: 99 });
-    const wide = positionSize({ accountBalance: 10000, riskPercent: 1, entry: 100, invalidation: 98 });
-    expect(tight.riskAmount).toBeCloseTo(wide.riskAmount);
+    const tight = positionSize({ accountBalance: 10000, riskPercent: 1, entry: 100, invalidation: 99 })!;
+    const wide = positionSize({ accountBalance: 10000, riskPercent: 1, entry: 100, invalidation: 98 })!;
+    expect(tight.riskDollars).toBeCloseTo(wide.riskDollars);
     expect(wide.units).toBeLessThan(tight.units);
   });
 
   it("states what six losses in a row actually costs", () => {
-    expect(drawdownAfterLosses(1, 6).remainingPct).toBeGreaterThan(93);
-    expect(drawdownAfterLosses(5, 6).remainingPct).toBeLessThan(80);
+    expect(drawdownAfterLosses(1, 6)).toBeLessThan(6);
+    expect(drawdownAfterLosses(5, 6)).toBeGreaterThan(20);
   });
 });
