@@ -31,6 +31,8 @@ export function clusterOf(symbol: string): ClusterId {
 
 const GRADE_RANK: Record<string, number> = { "A+": 5, A: 4, B: 3, C: 2, D: 1 };
 const rankOf = (grade: string) => GRADE_RANK[grade.trim().toUpperCase()] ?? 0;
+/** Grade ordering, shared so alerts and the scoreboard rank a family the same way. */
+export const gradeRank = rankOf;
 
 /** Minutes within which two scans on correlated instruments count as one bet. */
 export const CLUSTER_WINDOW_MINUTES = 15;
