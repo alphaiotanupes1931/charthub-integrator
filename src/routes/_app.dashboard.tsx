@@ -582,6 +582,33 @@ function ScanTicket({
           </div>
         </div>
 
+        {/* Neal's note: say plainly whether this trades with the daily bias, is a
+            retracement against it, or fights everything. Label only. */}
+        {!isNoEntry && result.trendRelation && (
+          <div
+            className={`rounded-xl border px-3 py-2 ${
+              result.trendRelation.counterTrend
+                ? "border-destructive/40 bg-destructive/10"
+                : result.trendRelation.againstDaily
+                  ? "border-gold/40 bg-gold/10"
+                  : "border-border/60 bg-muted/20"
+            }`}
+          >
+            <div
+              className={`flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] ${
+                result.trendRelation.counterTrend
+                  ? "text-destructive"
+                  : result.trendRelation.againstDaily
+                    ? "text-gold"
+                    : "text-muted-foreground"
+              }`}
+            >
+              {result.trendRelation.label}
+              <InfoTip term="Daily bias check" text={result.trendRelation.note} />
+            </div>
+          </div>
+        )}
+
         {!isNoEntry && result.triggered === false && (
           <div className="rounded-xl border border-gold/40 bg-gold/10 px-3 py-2">
             <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-gold">
