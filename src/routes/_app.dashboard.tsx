@@ -1211,6 +1211,9 @@ function Dashboard() {
   const [setupOpen, setSetupOpen] = useState(false);
   const [modelInfoFor, setModelInfoFor] = useState<string | null>(null);
   const { modelId, select: selectModel, saving: modelSaving } = useAnalysisModel();
+  // Pre-scan confirmation checklist (teaching gate before every scan).
+  const [checkOpen, setCheckOpen] = useState(false);
+  const [checkFrom, setCheckFrom] = useState<"chat" | "analysis">("analysis");
   const [activeStrategy, setActiveStrategy] = useState<string | null>(null);
   const [tradeStyle, setTradeStyle] = useState<"auto" | TradeStyle>("auto");
   useEffect(() => {
