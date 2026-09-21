@@ -1663,7 +1663,7 @@ function Dashboard() {
     });
   };
 
-  const runScan = async (from: "chat" | "analysis" = "analysis") => {
+  const runScanNow = async (from: "chat" | "analysis" = "analysis") => {
     // Free plan: the 4th grade opens the paywall instead of running. Nothing is
     // consumed here - the charge happens only once an answer is delivered.
     if (ent.gradesExhausted) {
@@ -1763,7 +1763,17 @@ function Dashboard() {
       });
   };
 
-
+  // Teaching step: the trader confirms the setup conditions this model needs
+  // before any scan runs. Answers never change the scan, only what the coach
+  // explains afterwards.
+  const runScan = (from: "chat" | "analysis" = "analysis") => {
+    if (ent.gradesExhausted) {
+      setPaywall(true);
+      return;
+    }
+    setCheckFrom(from);
+    setCheckOpen(true);
+  };
 
   // Deep-linked scan (?symbol=X&scan=1): wait until the chart is actually on
   // that instrument, then run the scan straight into the chat conversation.
