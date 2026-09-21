@@ -49,6 +49,7 @@ import { AutoBacktestVerify } from "@/components/AutoBacktestVerify";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { QuotaBadge } from "@/components/QuotaBadge";
 import { UpgradeModal } from "@/components/UpgradeModal";
+import { PreScanCheck } from "@/components/PreScanCheck";
 import { AutoTradingToggle, AUTO_TRADE_CONTEXT_KEY } from "@/components/AutoTradingToggle";
 import { TradeOfferDialog, type TradeOffer } from "@/components/TradeOfferDialog";
 import { gradeMeets } from "@/lib/autopilot.shared";
@@ -1211,6 +1212,9 @@ function Dashboard() {
   const [setupOpen, setSetupOpen] = useState(false);
   const [modelInfoFor, setModelInfoFor] = useState<string | null>(null);
   const { modelId, select: selectModel, saving: modelSaving } = useAnalysisModel();
+  // Pre-scan confirmation checklist (teaching gate before every scan).
+  const [checkOpen, setCheckOpen] = useState(false);
+  const [checkFrom, setCheckFrom] = useState<"chat" | "analysis">("analysis");
   const [activeStrategy, setActiveStrategy] = useState<string | null>(null);
   const [tradeStyle, setTradeStyle] = useState<"auto" | TradeStyle>("auto");
   useEffect(() => {
@@ -1663,7 +1667,7 @@ function Dashboard() {
     });
   };
 
-  const runScan = async (from: "chat" | "analysis" = "analysis") => {
+  const runScanNow = async (from: "chat" | "analysis" = "analysis") => {
     // Free plan: the 4th grade opens the paywall instead of running. Nothing is
     // consumed here - the charge happens only once an answer is delivered.
     if (ent.gradesExhausted) {
@@ -1763,7 +1767,17 @@ function Dashboard() {
       });
   };
 
-
+  // Teaching step: the trader confirms the setup conditions this model needs
+  // before any scan runs. Answers never change the scan, only what the coach
+  // explains afterwards.
+  const runScan = (from: "chat" | "analysis" = "analysis") => {
+    if (ent.gradesExhausted) {
+      setPaywall(true);
+      return;
+    }
+    setCheckFrom(from);
+    setCheckOpen(true);
+  };
 
   // Deep-linked scan (?symbol=X&scan=1): wait until the chart is actually on
   // that instrument, then run the scan straight into the chat conversation.
@@ -2251,6 +2265,15 @@ function Dashboard() {
          <AutoTradingToggle className="hidden lg:inline-flex" />
 
         <TradeOfferDialog offer={tradeOffer} onClose={() => setTradeOffer(null)} />
+
+        <PreScanCheck
+          open={checkOpen}
+          modelId={modelId}
+          symbol={symbolLabel(symbol)}
+          timeframe={intervalLabel}
+          onCancel={() => setCheckOpen(false)}
+          onContinue={() => { setCheckOpen(false); void runScanNow(checkFrom); }}
+        />
 
         <QuotaBadge quota={ent.quota} className="hidden lg:inline-flex" />
 
