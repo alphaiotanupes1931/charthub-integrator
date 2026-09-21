@@ -2265,6 +2265,15 @@ function Dashboard() {
 
         <TradeOfferDialog offer={tradeOffer} onClose={() => setTradeOffer(null)} />
 
+        <PreScanCheck
+          open={checkOpen}
+          modelId={modelId}
+          symbol={symbolLabel(symbol)}
+          timeframe={intervalLabel}
+          onCancel={() => setCheckOpen(false)}
+          onContinue={() => { setCheckOpen(false); void runScanNow(checkFrom); }}
+        />
+
         <QuotaBadge quota={ent.quota} className="hidden lg:inline-flex" />
 
         <button
