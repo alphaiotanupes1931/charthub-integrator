@@ -16,6 +16,7 @@ import { photonAnalysis, photonContextBlock } from "@/lib/analysis-models/photon
 import { jablonskiAnalysis, jablonskiContextBlock } from "@/lib/analysis-models/jablonski-engine";
 import { tunedConfigFor, profileHintFor } from "../instrument-profile.server";
 import { stopMultipleFor } from "@/lib/stop-placement";
+import { classifyTrendRelation } from "@/lib/trend-relation";
 
 
 import {
