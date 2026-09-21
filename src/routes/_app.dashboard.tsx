@@ -49,6 +49,7 @@ import { AutoBacktestVerify } from "@/components/AutoBacktestVerify";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { QuotaBadge } from "@/components/QuotaBadge";
 import { UpgradeModal } from "@/components/UpgradeModal";
+import { PreScanCheck } from "@/components/PreScanCheck";
 import { AutoTradingToggle, AUTO_TRADE_CONTEXT_KEY } from "@/components/AutoTradingToggle";
 import { TradeOfferDialog, type TradeOffer } from "@/components/TradeOfferDialog";
 import { gradeMeets } from "@/lib/autopilot.shared";
