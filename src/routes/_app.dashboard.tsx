@@ -247,6 +247,13 @@ type ScanResult = {
   candleCount?: number;
   refPrice?: number;
   counterTrend?: boolean;
+  trendRelation?: {
+    label: string;
+    note: string;
+    againstDaily: boolean;
+    counterTrend: boolean;
+    pullbackIntoDaily: boolean;
+  };
   htfBias?: "bullish" | "bearish" | "neutral";
   autoStrategy?: { name: string; slug: string; regime: string; reason: string };
   tradeStyle?: TradeStyle;
