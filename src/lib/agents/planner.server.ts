@@ -16,6 +16,7 @@ import { photonAnalysis, photonContextBlock } from "@/lib/analysis-models/photon
 import { jablonskiAnalysis, jablonskiContextBlock } from "@/lib/analysis-models/jablonski-engine";
 import { tunedConfigFor, profileHintFor } from "../instrument-profile.server";
 import { stopMultipleFor } from "@/lib/stop-placement";
+import { classifyTrendRelation } from "@/lib/trend-relation";
 
 
 import {
@@ -2026,6 +2027,11 @@ export async function runPlanner(
     candleCount: snap.candles.length,
     refPrice: snap.lastPrice,
     counterTrend: counterTrend.counterTrend,
+    trendRelation: classifyTrendRelation({
+      bias,
+      dailyBias,
+      h4Direction: snap.mtf?.h4.direction ?? currentTrend,
+    }),
     gradeCaps: gradeCaps.length ? gradeCaps : undefined,
 
     setupType: setupRead.type,

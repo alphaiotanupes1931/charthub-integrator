@@ -206,6 +206,17 @@ export type TradePlan = {
   /** True when the setup fights the Daily and 4H direction. */
   counterTrend?: boolean;
   /**
+   * Label only: with the daily bias, against it (a retracement inside the daily
+   * move), or counter-trend to both. Does not change grading.
+   */
+  trendRelation?: {
+    label: string;
+    note: string;
+    againstDaily: boolean;
+    counterTrend: boolean;
+    pullbackIntoDaily: boolean;
+  };
+  /**
    * Whether the 4H and 1H agree (trend), disagree (fade, B at best), or the 4H
    * itself has turned (reversal, C at best).
    */
