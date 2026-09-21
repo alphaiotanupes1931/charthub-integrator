@@ -2026,6 +2026,11 @@ export async function runPlanner(
     candleCount: snap.candles.length,
     refPrice: snap.lastPrice,
     counterTrend: counterTrend.counterTrend,
+    trendRelation: classifyTrendRelation({
+      bias,
+      dailyBias,
+      h4Direction: snap.mtf?.h4.direction ?? currentTrend,
+    }),
     gradeCaps: gradeCaps.length ? gradeCaps : undefined,
 
     setupType: setupRead.type,
