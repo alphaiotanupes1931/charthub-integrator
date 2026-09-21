@@ -105,6 +105,7 @@ import { Route as ApiPublicHooksResolveSignalsRouteImport } from './routes/api.p
 import { Route as ApiPublicHooksReresolveFillsRouteImport } from './routes/api.public.hooks.reresolve-fills'
 import { Route as ApiPublicHooksReresolveExpiriesRouteImport } from './routes/api.public.hooks.reresolve-expiries'
 import { Route as ApiPublicHooksReplayRefreshRouteImport } from './routes/api.public.hooks.replay-refresh'
+import { Route as ApiPublicHooksRegimeSplitRouteImport } from './routes/api.public.hooks.regime-split'
 import { Route as ApiPublicHooksReconcilePaperRouteImport } from './routes/api.public.hooks.reconcile-paper'
 import { Route as ApiPublicHooksPriceAlertsTickRouteImport } from './routes/api.public.hooks.price-alerts-tick'
 import { Route as ApiPublicHooksPaperBotTickRouteImport } from './routes/api.public.hooks.paper-bot-tick'
@@ -618,6 +619,12 @@ const ApiPublicHooksReplayRefreshRoute =
     path: '/api/public/hooks/replay-refresh',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksRegimeSplitRoute =
+  ApiPublicHooksRegimeSplitRouteImport.update({
+    id: '/api/public/hooks/regime-split',
+    path: '/api/public/hooks/regime-split',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksReconcilePaperRoute =
   ApiPublicHooksReconcilePaperRouteImport.update({
     id: '/api/public/hooks/reconcile-paper',
@@ -794,6 +801,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/paper-bot-tick': typeof ApiPublicHooksPaperBotTickRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
   '/api/public/hooks/reconcile-paper': typeof ApiPublicHooksReconcilePaperRoute
+  '/api/public/hooks/regime-split': typeof ApiPublicHooksRegimeSplitRoute
   '/api/public/hooks/replay-refresh': typeof ApiPublicHooksReplayRefreshRoute
   '/api/public/hooks/reresolve-expiries': typeof ApiPublicHooksReresolveExpiriesRoute
   '/api/public/hooks/reresolve-fills': typeof ApiPublicHooksReresolveFillsRoute
@@ -901,6 +909,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/paper-bot-tick': typeof ApiPublicHooksPaperBotTickRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
   '/api/public/hooks/reconcile-paper': typeof ApiPublicHooksReconcilePaperRoute
+  '/api/public/hooks/regime-split': typeof ApiPublicHooksRegimeSplitRoute
   '/api/public/hooks/replay-refresh': typeof ApiPublicHooksReplayRefreshRoute
   '/api/public/hooks/reresolve-expiries': typeof ApiPublicHooksReresolveExpiriesRoute
   '/api/public/hooks/reresolve-fills': typeof ApiPublicHooksReresolveFillsRoute
@@ -1014,6 +1023,7 @@ export interface FileRoutesById {
   '/api/public/hooks/paper-bot-tick': typeof ApiPublicHooksPaperBotTickRoute
   '/api/public/hooks/price-alerts-tick': typeof ApiPublicHooksPriceAlertsTickRoute
   '/api/public/hooks/reconcile-paper': typeof ApiPublicHooksReconcilePaperRoute
+  '/api/public/hooks/regime-split': typeof ApiPublicHooksRegimeSplitRoute
   '/api/public/hooks/replay-refresh': typeof ApiPublicHooksReplayRefreshRoute
   '/api/public/hooks/reresolve-expiries': typeof ApiPublicHooksReresolveExpiriesRoute
   '/api/public/hooks/reresolve-fills': typeof ApiPublicHooksReresolveFillsRoute
@@ -1127,6 +1137,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/paper-bot-tick'
     | '/api/public/hooks/price-alerts-tick'
     | '/api/public/hooks/reconcile-paper'
+    | '/api/public/hooks/regime-split'
     | '/api/public/hooks/replay-refresh'
     | '/api/public/hooks/reresolve-expiries'
     | '/api/public/hooks/reresolve-fills'
@@ -1234,6 +1245,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/paper-bot-tick'
     | '/api/public/hooks/price-alerts-tick'
     | '/api/public/hooks/reconcile-paper'
+    | '/api/public/hooks/regime-split'
     | '/api/public/hooks/replay-refresh'
     | '/api/public/hooks/reresolve-expiries'
     | '/api/public/hooks/reresolve-fills'
@@ -1346,6 +1358,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/paper-bot-tick'
     | '/api/public/hooks/price-alerts-tick'
     | '/api/public/hooks/reconcile-paper'
+    | '/api/public/hooks/regime-split'
     | '/api/public/hooks/replay-refresh'
     | '/api/public/hooks/reresolve-expiries'
     | '/api/public/hooks/reresolve-fills'
@@ -1412,6 +1425,7 @@ export interface RootRouteChildren {
   ApiPublicHooksPaperBotTickRoute: typeof ApiPublicHooksPaperBotTickRoute
   ApiPublicHooksPriceAlertsTickRoute: typeof ApiPublicHooksPriceAlertsTickRoute
   ApiPublicHooksReconcilePaperRoute: typeof ApiPublicHooksReconcilePaperRoute
+  ApiPublicHooksRegimeSplitRoute: typeof ApiPublicHooksRegimeSplitRoute
   ApiPublicHooksReplayRefreshRoute: typeof ApiPublicHooksReplayRefreshRoute
   ApiPublicHooksReresolveExpiriesRoute: typeof ApiPublicHooksReresolveExpiriesRoute
   ApiPublicHooksReresolveFillsRoute: typeof ApiPublicHooksReresolveFillsRoute
@@ -2105,6 +2119,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksReplayRefreshRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/regime-split': {
+      id: '/api/public/hooks/regime-split'
+      path: '/api/public/hooks/regime-split'
+      fullPath: '/api/public/hooks/regime-split'
+      preLoaderRoute: typeof ApiPublicHooksRegimeSplitRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/reconcile-paper': {
       id: '/api/public/hooks/reconcile-paper'
       path: '/api/public/hooks/reconcile-paper'
@@ -2415,6 +2436,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksPaperBotTickRoute: ApiPublicHooksPaperBotTickRoute,
   ApiPublicHooksPriceAlertsTickRoute: ApiPublicHooksPriceAlertsTickRoute,
   ApiPublicHooksReconcilePaperRoute: ApiPublicHooksReconcilePaperRoute,
+  ApiPublicHooksRegimeSplitRoute: ApiPublicHooksRegimeSplitRoute,
   ApiPublicHooksReplayRefreshRoute: ApiPublicHooksReplayRefreshRoute,
   ApiPublicHooksReresolveExpiriesRoute: ApiPublicHooksReresolveExpiriesRoute,
   ApiPublicHooksReresolveFillsRoute: ApiPublicHooksReresolveFillsRoute,
