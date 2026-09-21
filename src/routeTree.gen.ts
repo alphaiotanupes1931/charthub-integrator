@@ -115,6 +115,7 @@ import { Route as ApiPublicHooksGradeSeparationRouteImport } from './routes/api.
 import { Route as ApiPublicHooksGradeInversionRouteImport } from './routes/api.public.hooks.grade-inversion'
 import { Route as ApiPublicHooksEntryFillTestRouteImport } from './routes/api.public.hooks.entry-fill-test'
 import { Route as ApiPublicHooksDripEmailsRouteImport } from './routes/api.public.hooks.drip-emails'
+import { Route as ApiPublicHooksDailyBiasSplitRouteImport } from './routes/api.public.hooks.daily-bias-split'
 import { Route as ApiPublicHooksClassicResearchBacktestRouteImport } from './routes/api.public.hooks.classic-research-backtest'
 import { Route as ApiPublicHooksAutopilotTickRouteImport } from './routes/api.public.hooks.autopilot-tick'
 import { Route as ApiPublicHooksAiCreditsRouteImport } from './routes/api.public.hooks.ai-credits'
@@ -679,6 +680,12 @@ const ApiPublicHooksDripEmailsRoute =
     path: '/api/public/hooks/drip-emails',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksDailyBiasSplitRoute =
+  ApiPublicHooksDailyBiasSplitRouteImport.update({
+    id: '/api/public/hooks/daily-bias-split',
+    path: '/api/public/hooks/daily-bias-split',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksClassicResearchBacktestRoute =
   ApiPublicHooksClassicResearchBacktestRouteImport.update({
     id: '/api/public/hooks/classic-research-backtest',
@@ -792,6 +799,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/ai-credits': typeof ApiPublicHooksAiCreditsRoute
   '/api/public/hooks/autopilot-tick': typeof ApiPublicHooksAutopilotTickRoute
   '/api/public/hooks/classic-research-backtest': typeof ApiPublicHooksClassicResearchBacktestRoute
+  '/api/public/hooks/daily-bias-split': typeof ApiPublicHooksDailyBiasSplitRoute
   '/api/public/hooks/drip-emails': typeof ApiPublicHooksDripEmailsRoute
   '/api/public/hooks/entry-fill-test': typeof ApiPublicHooksEntryFillTestRoute
   '/api/public/hooks/grade-inversion': typeof ApiPublicHooksGradeInversionRoute
@@ -900,6 +908,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/ai-credits': typeof ApiPublicHooksAiCreditsRoute
   '/api/public/hooks/autopilot-tick': typeof ApiPublicHooksAutopilotTickRoute
   '/api/public/hooks/classic-research-backtest': typeof ApiPublicHooksClassicResearchBacktestRoute
+  '/api/public/hooks/daily-bias-split': typeof ApiPublicHooksDailyBiasSplitRoute
   '/api/public/hooks/drip-emails': typeof ApiPublicHooksDripEmailsRoute
   '/api/public/hooks/entry-fill-test': typeof ApiPublicHooksEntryFillTestRoute
   '/api/public/hooks/grade-inversion': typeof ApiPublicHooksGradeInversionRoute
@@ -1014,6 +1023,7 @@ export interface FileRoutesById {
   '/api/public/hooks/ai-credits': typeof ApiPublicHooksAiCreditsRoute
   '/api/public/hooks/autopilot-tick': typeof ApiPublicHooksAutopilotTickRoute
   '/api/public/hooks/classic-research-backtest': typeof ApiPublicHooksClassicResearchBacktestRoute
+  '/api/public/hooks/daily-bias-split': typeof ApiPublicHooksDailyBiasSplitRoute
   '/api/public/hooks/drip-emails': typeof ApiPublicHooksDripEmailsRoute
   '/api/public/hooks/entry-fill-test': typeof ApiPublicHooksEntryFillTestRoute
   '/api/public/hooks/grade-inversion': typeof ApiPublicHooksGradeInversionRoute
@@ -1128,6 +1138,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/ai-credits'
     | '/api/public/hooks/autopilot-tick'
     | '/api/public/hooks/classic-research-backtest'
+    | '/api/public/hooks/daily-bias-split'
     | '/api/public/hooks/drip-emails'
     | '/api/public/hooks/entry-fill-test'
     | '/api/public/hooks/grade-inversion'
@@ -1236,6 +1247,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/ai-credits'
     | '/api/public/hooks/autopilot-tick'
     | '/api/public/hooks/classic-research-backtest'
+    | '/api/public/hooks/daily-bias-split'
     | '/api/public/hooks/drip-emails'
     | '/api/public/hooks/entry-fill-test'
     | '/api/public/hooks/grade-inversion'
@@ -1349,6 +1361,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/ai-credits'
     | '/api/public/hooks/autopilot-tick'
     | '/api/public/hooks/classic-research-backtest'
+    | '/api/public/hooks/daily-bias-split'
     | '/api/public/hooks/drip-emails'
     | '/api/public/hooks/entry-fill-test'
     | '/api/public/hooks/grade-inversion'
@@ -1416,6 +1429,7 @@ export interface RootRouteChildren {
   ApiPublicHooksAiCreditsRoute: typeof ApiPublicHooksAiCreditsRoute
   ApiPublicHooksAutopilotTickRoute: typeof ApiPublicHooksAutopilotTickRoute
   ApiPublicHooksClassicResearchBacktestRoute: typeof ApiPublicHooksClassicResearchBacktestRoute
+  ApiPublicHooksDailyBiasSplitRoute: typeof ApiPublicHooksDailyBiasSplitRoute
   ApiPublicHooksDripEmailsRoute: typeof ApiPublicHooksDripEmailsRoute
   ApiPublicHooksEntryFillTestRoute: typeof ApiPublicHooksEntryFillTestRoute
   ApiPublicHooksGradeInversionRoute: typeof ApiPublicHooksGradeInversionRoute
@@ -2189,6 +2203,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksDripEmailsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/daily-bias-split': {
+      id: '/api/public/hooks/daily-bias-split'
+      path: '/api/public/hooks/daily-bias-split'
+      fullPath: '/api/public/hooks/daily-bias-split'
+      preLoaderRoute: typeof ApiPublicHooksDailyBiasSplitRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/classic-research-backtest': {
       id: '/api/public/hooks/classic-research-backtest'
       path: '/api/public/hooks/classic-research-backtest'
@@ -2426,6 +2447,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksAutopilotTickRoute: ApiPublicHooksAutopilotTickRoute,
   ApiPublicHooksClassicResearchBacktestRoute:
     ApiPublicHooksClassicResearchBacktestRoute,
+  ApiPublicHooksDailyBiasSplitRoute: ApiPublicHooksDailyBiasSplitRoute,
   ApiPublicHooksDripEmailsRoute: ApiPublicHooksDripEmailsRoute,
   ApiPublicHooksEntryFillTestRoute: ApiPublicHooksEntryFillTestRoute,
   ApiPublicHooksGradeInversionRoute: ApiPublicHooksGradeInversionRoute,
