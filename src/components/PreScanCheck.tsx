@@ -128,9 +128,11 @@ export function PreScanCheck({
               Confirmations first
             </DialogTitle>
             <DialogDescription className="text-xs">
-              {revealed
-                ? `${score} of ${questions.length} correct. Read the answers, then run the scan.`
-                : `Answer these before ${modelName} scans${symbol ? ` ${symbol}` : ""}. Right or wrong, you get the answers after.`}
+              {loadingChart
+                ? `Reading ${symbol ?? "the chart"}${timeframe ? ` on ${timeframe}` : ""}…`
+                : revealed
+                  ? `${score} of ${questions.length} correct. Read the answers, then run the scan.`
+                  : `Answer these before ${modelName} scans${symbol ? ` ${symbol}` : ""}${timeframe ? ` on ${timeframe}` : ""}. Right or wrong, you get the answers after.`}
             </DialogDescription>
           </DialogHeader>
         </div>
