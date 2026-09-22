@@ -41,6 +41,10 @@ export async function oandaGetJson(path: string, timeoutMs = 8_000): Promise<Oan
   const apiKey = process.env.OANDA_API_KEY;
   if (!apiKey) throw new Error("OANDA_API_KEY not configured");
   let lastError: Error = new Error("OANDA unavailable");
+  // A wrong-environment 401 is expected noise: a practice token always gets 401
+  // on the live host. Keep the first substantive failure (timeout, 5xx) as the
+  // reported error so the real cause is not hidden behind that 401.
+  let substantiveError: Error | null = null;
 
   for (const host of oandaHostOrder()) {
     const controller = new AbortController();
@@ -56,16 +60,18 @@ export async function oandaGetJson(path: string, timeoutMs = 8_000): Promise<Oan
         continue;
       }
       if (!res.ok) {
-        lastError = new Error(`OANDA HTTP ${res.status}`);
+        lastError = new Error(`OANDA HTTP ${res.status} on ${host}`);
+        substantiveError ??= lastError;
         continue;
       }
       noteOandaAuthorized(host);
       return { host, json: await res.json() };
     } catch (e) {
       lastError = e instanceof Error ? e : new Error("OANDA request failed");
+      substantiveError ??= lastError;
     } finally {
       clearTimeout(timer);
     }
   }
-  throw lastError;
+  throw substantiveError ?? lastError;
 }
