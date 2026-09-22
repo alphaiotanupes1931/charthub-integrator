@@ -4,6 +4,7 @@ import { Check, ClipboardCheck, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { pickPreScanQuestions, type PreScanQuestion } from "@/lib/prescan-questions";
+import { buildChartQuestions, readChartFacts, type ChartFacts, type PreScanBar } from "@/lib/prescan-context";
 import { reviewPreScanAnswers } from "@/lib/prescan-check.functions";
 import { ANALYSIS_MODELS, type AnalysisModelId } from "@/lib/analysis-models";
 import { cn } from "@/lib/utils";
