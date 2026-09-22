@@ -4,6 +4,7 @@ import { Check, ClipboardCheck, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { pickPreScanQuestions, type PreScanQuestion } from "@/lib/prescan-questions";
+import { buildChartQuestions, readChartFacts, type ChartFacts, type PreScanBar } from "@/lib/prescan-context";
 import { reviewPreScanAnswers } from "@/lib/prescan-check.functions";
 import { ANALYSIS_MODELS, type AnalysisModelId } from "@/lib/analysis-models";
 import { cn } from "@/lib/utils";
@@ -18,6 +19,8 @@ export function PreScanCheck({
   open,
   modelId,
   symbol,
+  ticker,
+  interval,
   timeframe,
   onCancel,
   onContinue,
@@ -25,6 +28,10 @@ export function PreScanCheck({
   open: boolean;
   modelId: AnalysisModelId;
   symbol?: string;
+  /** Raw ticker for the OHLC feed, e.g. "XAU/USD". */
+  ticker?: string;
+  /** Raw chart interval for the OHLC feed, e.g. "60". */
+  interval?: string;
   timeframe?: string;
   onCancel: () => void;
   onContinue: () => void;
@@ -33,13 +40,29 @@ export function PreScanCheck({
   const reviewFn = useServerFn(reviewPreScanAnswers);
 
   const [seed, setSeed] = useState(() => Date.now());
-  const questions = useMemo<PreScanQuestion[]>(() => pickPreScanQuestions(modelId, seed), [modelId, seed]);
+  const [facts, setFacts] = useState<ChartFacts | null>(null);
+  const [loadingChart, setLoadingChart] = useState(false);
   const [chosen, setChosen] = useState<Record<string, number>>({});
   const [revealed, setRevealed] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Fresh questions each time the checklist opens.
+  // Two questions about the instrument and levels actually on screen, plus one
+  // about the confirmation this model requires. If the chart could not be read,
+  // fall back to the model/shared bank so the checklist still appears.
+  const questions = useMemo<PreScanQuestion[]>(() => {
+    const model = pickPreScanQuestions(modelId, seed);
+    if (!facts) return model;
+    const chart = buildChartQuestions({
+      facts,
+      instrument: symbol ?? "this market",
+      timeframe: timeframe ?? "this timeframe",
+      seed,
+    });
+    return [...chart, model[0]].filter((q, i, arr) => arr.findIndex((x) => x.id === q.id) === i);
+  }, [modelId, seed, facts, symbol, timeframe]);
+
+  // Fresh questions each time the checklist opens, read from the live chart.
   useEffect(() => {
     if (!open) return;
     setSeed(Date.now());
@@ -47,7 +70,23 @@ export function PreScanCheck({
     setRevealed(false);
     setFeedback(null);
     setLoading(false);
-  }, [open]);
+    setFacts(null);
+    if (!ticker || !interval) return;
+    let alive = true;
+    setLoadingChart(true);
+    fetch(`/api/ohlc?ticker=${encodeURIComponent(ticker)}&interval=${encodeURIComponent(interval)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j: { bars?: PreScanBar[] } | null) => {
+        if (alive) setFacts(readChartFacts(j?.bars));
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (alive) setLoadingChart(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [open, ticker, interval]);
 
   const answeredAll = questions.every((q) => chosen[q.id] !== undefined);
   const score = questions.filter((q) => chosen[q.id] === q.correct).length;
@@ -89,9 +128,11 @@ export function PreScanCheck({
               Confirmations first
             </DialogTitle>
             <DialogDescription className="text-xs">
-              {revealed
-                ? `${score} of ${questions.length} correct. Read the answers, then run the scan.`
-                : `Answer these before ${modelName} scans${symbol ? ` ${symbol}` : ""}. Right or wrong, you get the answers after.`}
+              {loadingChart
+                ? `Reading ${symbol ?? "the chart"}${timeframe ? ` on ${timeframe}` : ""}…`
+                : revealed
+                  ? `${score} of ${questions.length} correct. Read the answers, then run the scan.`
+                  : `Answer these before ${modelName} scans${symbol ? ` ${symbol}` : ""}${timeframe ? ` on ${timeframe}` : ""}. Right or wrong, you get the answers after.`}
             </DialogDescription>
           </DialogHeader>
         </div>

@@ -2270,6 +2270,8 @@ function Dashboard() {
           open={checkOpen}
           modelId={modelId}
           symbol={symbolLabel(symbol)}
+          ticker={symbol.ticker}
+          interval={interval}
           timeframe={intervalLabel}
           onCancel={() => setCheckOpen(false)}
           onContinue={() => { setCheckOpen(false); void runScanNow(checkFrom); }}
