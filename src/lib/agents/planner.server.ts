@@ -890,6 +890,7 @@ export function collectGradeCaps(
       reason: "The 4H/1H/15m ladder did not come back on this scan, so there was nothing to grade the setup against and it is held at C until the feed fills in.",
     });
   }
+  push("Against the Daily bias", dailyBiasGate(bias, snap));
   push("Counter-trend setup", counterTrendRead(bias, snap));
   push("Time Frame Combo gate", timeFrameComboGate(bias, snap));
   push("1H against the higher timeframes", lowerTimeframeOppositionRead(bias, snap));
