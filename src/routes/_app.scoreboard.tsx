@@ -265,7 +265,7 @@ function ScoreboardPage() {
 
           <div className="mt-4 grid gap-4">
             <BucketTable
-              title="By analysis model"
+              title="By alt. strategy"
               buckets={board.byModel}
               empty="No model recorded yet."
             />

@@ -18,7 +18,22 @@ import { useEntitlements } from "@/hooks/useEntitlements";
 
 
 export const Route = createFileRoute("/_app/strategies/")({
-  head: () => ({ meta: [{ title: "Strategies, TradeMind" }] }),
+  head: () => ({
+    meta: [
+      { title: "Strategies — TradeMind" },
+      {
+        name: "description",
+        content: "Build, compare, and select your TradeMind strategy playbooks for scan grading, risk rules, sessions, entries, and exits.",
+      },
+      { property: "og:title", content: "Strategies — TradeMind" },
+      {
+        property: "og:description",
+        content: "Build, compare, and select your TradeMind strategy playbooks for scan grading, risk rules, sessions, entries, and exits.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: StrategiesPage,
   validateSearch: (s: Record<string, unknown>) => ({ edit: typeof s.edit === "string" ? s.edit : undefined }),
 });
