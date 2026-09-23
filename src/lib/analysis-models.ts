@@ -30,6 +30,8 @@ export type AnalysisModel = {
   /** Where the material this model was fed comes from, shown behind the info button. */
   sourceUrl?: string;
   sourceLabel?: string;
+  /** Strategy-library ideas this alternate model is closest to. */
+  relatedStrategies: string[];
   /**
    * "full" = everything the platform knows (Classic).
    * "strategies-only" = nothing but the supplied rulebook (Focus).
@@ -51,6 +53,7 @@ export const ANALYSIS_MODELS: readonly AnalysisModel[] = [
     tagline: "The full library: order blocks, protected structure, per-market behaviour, journal and news.",
     description:
       "The original TradeMind model — everything the platform has been fed since day one. It reads multi-timeframe order-block cascades (1H order blocks, 15m confirmation, 5m refinement), protected break-of-structure with liquidity sweeps, fair value gaps, per-market sessions and grade ceilings, the economic calendar, and your own journal history. Every signal it has ever filed lives on the public record under this name, so its track record is the platform's track record.",
+    relatedStrategies: ["Supply & Demand Zones", "Order Block Continuation", "Protected Structure", "Session Liquidity"],
     knowledge: "full",
     ready: true,
   },
@@ -61,6 +64,7 @@ export const ANALYSIS_MODELS: readonly AnalysisModel[] = [
     tagline: "Fed only The Trading Channel strategies: objective trend, break and retest, pressure candles, ATR stops.",
     description:
       "A clean-slate model fed only The Trading Channel's technical-analysis material — nothing from Classic leaks in. It reads trend objectively (an impulsive close through a swing point, alive until the pullback's origin gives way), enters on the break-and-retest of the level that was just broken, and demands a pressure candle at the zone: a 38.2 candle, an engulfing candle, or a close beyond the previous candle's extreme. Stops sit one ATR(14) beyond the protecting swing, targets come from structure and must pay at least 1.5R, and continuation trades must ride the 20-period moving average. Double tops and bottoms, flags and wedges, and RSI divergence are taught as coach knowledge but are never traded on an indicator alone. It knows nothing about order blocks, fair value gaps, or any other TradeMind Classic library. Every signal it files is stamped with its own name and version and tracked on its own scoreboard, so you can judge these strategies on their own numbers before trusting them.",
+    relatedStrategies: ["Break and Retest", "Trend Continuation", "Pressure Candle Entry", "ATR Stop Placement"],
     knowledge: "strategies-only",
     sourceUrl: "https://www.youtube.com/watch?v=eynxyoKgpng",
     sourceLabel: "Watch the Trading Channel material this model was fed",
@@ -75,6 +79,7 @@ export const ANALYSIS_MODELS: readonly AnalysisModel[] = [
     tagline: "Fed only Photon Trading's mechanical market-structure mapping: swing breaks on closes, internal shifts on wicks, target weak structure.",
     description:
       "A clean-slate model fed only Photon Trading's mechanical market-structure material — nothing from TradeMind Classic or The Trading Channel leaks in. It maps the swing range from candle wicks (the swing low is the lowest point that caused the swing high, and everything in between is internal structure, not trend), takes direction only from a candle CLOSE through a swing level so liquidity grabs don't count as breaks, and after every break of structure it expects the pullback instead of chasing it. Internal changes of character on simple wick breaks time the pullback: the counter-trend shift says the pullback has started, the shift back in line with the swing trend says it has finished, and that realignment is the entry. Stops hide beyond the protecting swing — the level a lot of money had to defend — and targets aim at weak structure: the high that failed to make a lower low, or the low that failed to make a higher high, paying at least 1.5R. Reversal anticipation and supply/demand refinement are taught as coach knowledge but never auto-traded, and the model never issues A+ in v1. Every signal it files is stamped with its own name and version and tracked on its own scoreboard, so you can judge this methodology on its own numbers before trusting it.",
+    relatedStrategies: ["Market Structure", "Break of Structure", "Change of Character", "Weak Highs and Lows"],
     knowledge: "strategies-only",
     sourceUrl: "https://www.youtube.com/watch?v=Pd9ASRCHWmQ",
     sourceLabel: "Watch the Photon Trading material this model was fed",
@@ -89,6 +94,7 @@ export const ANALYSIS_MODELS: readonly AnalysisModel[] = [
     tagline: "Fed only the opening-range day trade: first two 15-minute candles, close outside the range, fixed 10-point target.",
     description:
       "A clean-slate model fed only Eric Jablonski's opening-range day trade — nothing from TradeMind Classic, The Trading Channel or Photon Trading leaks in. It works on the 15-minute chart alone: mark the high and low of the session's first two 15-minute candles, then wait for a 15-minute candle to CLOSE outside that range. A close above the high is a buy, a close below the low is a sell, the entry is that candle's close, the stop sits at the opposite end of the range, and the target is a fixed 10 points in the instrument's own points — no trailing, no partials, the trade simply plays out. Wins are deliberately small, so the method leans entirely on a high hit rate; the author describes it as a variation of a Tom Hougaard strategy and claims an 81% win rate from his own bot and manual back-testing, which is his claim and not a TradeMind measurement. Because a fixed 10-point target only means something where a point is defined, the model trades index CFDs, gold, silver, oil and FX pairs and returns NO ENTRY elsewhere. US index CFDs use the 9:30 New York cash open; FX, metals and oil use the London open. Every signal it files is stamped with its own name and version and tracked on its own scoreboard, so you can judge the 81% claim on live numbers before trusting it.",
+    relatedStrategies: ["Opening Range Breakout", "Day Trading", "Fixed Target", "Session Open Break"],
     knowledge: "strategies-only",
     ready: jablonskiRuleCount() > 0,
     notReadyReason:

@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Check, ExternalLink, Info, Layers3, ScanSearch } from "lucide-react";
+import { Check, ExternalLink, Info, Layers3, Library, ScanSearch } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/PageHeader";
@@ -10,21 +10,21 @@ import { ANALYSIS_MODELS, type AnalysisModel } from "@/lib/analysis-models";
 export const Route = createFileRoute("/_app/strategies/alt-strategies")({
   head: () => ({
     meta: [
-      { title: "Scan Models — TradeMind" },
+      { title: "Alt. Strategies — TradeMind" },
       {
         name: "description",
-        content: "Compare and select the rulebook TradeMind uses for chart analysis, scans, and signal grading.",
+        content: "Compare and select alternate professional-trader rulebooks for TradeMind scans, coaching, and signal grading.",
       },
-      { property: "og:title", content: "Scan Models — TradeMind" },
+      { property: "og:title", content: "Alt. Strategies — TradeMind" },
       {
         property: "og:description",
-        content: "Compare and select the rulebook TradeMind uses for chart analysis, scans, and signal grading.",
+        content: "Compare and select alternate professional-trader rulebooks for TradeMind scans, coaching, and signal grading.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: ScanModelsPage,
+  component: AltStrategiesPage,
 });
 
 function modelNumber(model: AnalysisModel): string {
@@ -32,7 +32,7 @@ function modelNumber(model: AnalysisModel): string {
   return `Model ${index + 1}`;
 }
 
-function ScanModelsPage() {
+function AltStrategiesPage() {
   const { modelId, select, saving } = useAnalysisModel();
   const [openInfoId, setOpenInfoId] = useState<string | null>(null);
   const activeModel = ANALYSIS_MODELS.find((model) => model.id === modelId) ?? ANALYSIS_MODELS[0];
@@ -44,22 +44,39 @@ function ScanModelsPage() {
       toast.error(result.error.message);
       return;
     }
-    toast.success(`${model.name} is now your active scan model`);
+    toast.success(`${model.name} is now your active alt. strategy`);
   }
 
   return (
     <main className="mx-auto max-w-[1200px] px-4 py-6 sm:px-6 sm:py-10">
       <PageHeader
-        title="Scan Models"
+        title="Alt. Strategies"
         icon={<ScanSearch className="h-7 w-7 text-primary" />}
-        description="Choose the rulebook used for chart analysis, scan grades, entries, stops, and targets. Each model keeps its own methodology and track record."
+        description="Choose the outside professional-trader methodology used by the scan coach for chart analysis, grades, entries, stops, and targets."
         instructions={false}
       />
+
+      <section className="mb-6 rounded-md border border-border/60 bg-card p-4 sm:p-5">
+        <div className="flex items-start gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border/60 bg-background">
+            <Library className="h-4 w-4 text-primary" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="font-display text-lg font-semibold">How Alt. Strategies are different</h2>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Regular Strategies are your own trading playbooks: risk rules, sessions, entry rules, and exit rules that scans are checked against. Alt. Strategies are separate scan-coach rulebooks built from professional trader videos, transcripts, and source material, then kept isolated so each one can build its own track record.
+            </p>
+            <Link to="/strategies" className="inline-flex text-xs font-medium text-primary hover:underline">
+              View regular strategies
+            </Link>
+          </div>
+        </div>
+      </section>
 
       <section className="mb-7 border-y border-border/60 py-5">
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 sm:flex sm:flex-wrap sm:justify-between">
           <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase text-muted-foreground">Active scan model</p>
+            <p className="text-[11px] font-semibold uppercase text-muted-foreground">Active alt. strategy</p>
             <h2 className="mt-1 font-display text-xl font-semibold">{activeModel.name}</h2>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{activeModel.tagline}</p>
           </div>
@@ -103,6 +120,16 @@ function ScanModelsPage() {
               <div className="mt-5">
                 <h2 className="font-display text-xl font-semibold">{model.name}</h2>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{model.tagline}</p>
+                <div className="mt-4">
+                  <p className="text-[11px] font-semibold uppercase text-muted-foreground">Related strategies</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {model.relatedStrategies.map((strategy) => (
+                      <span key={strategy} className="rounded border border-border/60 bg-background px-2 py-1 text-[11px] text-muted-foreground">
+                        {strategy}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               {infoOpen && (
@@ -138,7 +165,7 @@ function ScanModelsPage() {
                   disabled={isActive || saving || !model.ready}
                   onClick={() => void chooseModel(model)}
                 >
-                  {isActive ? <><Check /> Active model</> : `Use ${model.name}`}
+                  {isActive ? <><Check /> Active alt. strategy</> : `Use ${model.name}`}
                 </Button>
               </div>
             </article>
