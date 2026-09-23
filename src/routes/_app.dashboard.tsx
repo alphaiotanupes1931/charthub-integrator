@@ -1988,11 +1988,11 @@ function Dashboard() {
                   </div>
                 ))}
                 <Link
-                  to="/scan-models"
+                  to="/strategies/alt-strategies"
                   onClick={() => setSetupOpen(false)}
                   className="mt-1 block border-t border-border/40 px-2 py-2 text-[11px] font-medium text-muted-foreground hover:text-foreground"
                 >
-                  Manage all scan models →
+                  Manage all alt. strategies →
                 </Link>
 
                 <div className="mt-1 border-t border-border/40 px-2 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Scan lens</div>
