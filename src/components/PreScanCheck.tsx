@@ -133,7 +133,7 @@ export function PreScanCheck({
       <DialogContent className="max-w-xl rounded-sm p-0 overflow-hidden">
         <div className="border-b border-border/60 px-5 py-4">
           <DialogHeader className="space-y-1">
-            <DialogTitle className="flex items-center justify-between gap-2 text-base font-semibold">
+            <DialogTitle className="flex items-center justify-between gap-2 pr-6 text-base font-semibold">
               <span className="flex items-center gap-2">
                 <ClipboardCheck className="h-4 w-4 text-primary" />
                 One question before the scan
