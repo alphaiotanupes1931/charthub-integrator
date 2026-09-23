@@ -41,7 +41,6 @@ import { Route as AppStrategiesRouteImport } from './routes/_app.strategies'
 import { Route as AppSignalsRouteImport } from './routes/_app.signals'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppScoreboardRouteImport } from './routes/_app.scoreboard'
-import { Route as AppScanModelsRouteImport } from './routes/_app.scan-models'
 import { Route as AppScanLensRouteImport } from './routes/_app.scan-lens'
 import { Route as AppNewsRouteImport } from './routes/_app.news'
 import { Route as AppMentorRouteImport } from './routes/_app.mentor'
@@ -79,6 +78,7 @@ import { Route as ApiTradelockerImportRouteImport } from './routes/api.tradelock
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api.public.stripe-webhook'
 import { Route as ApiPublicLeadUnsubscribeRouteImport } from './routes/api.public.lead-unsubscribe'
 import { Route as ApiPublicBridgeRouteImport } from './routes/api.public.bridge'
+import { Route as AppStrategiesAltStrategiesRouteImport } from './routes/_app.strategies.alt-strategies'
 import { Route as AppStrategiesStrategyIdRouteImport } from './routes/_app.strategies.$strategyId'
 import { Route as AppChatThreadIdRouteImport } from './routes/_app.chat.$threadId'
 import { Route as AppAdminSubscribersRouteImport } from './routes/_app.admin.subscribers'
@@ -282,11 +282,6 @@ const AppScoreboardRoute = AppScoreboardRouteImport.update({
   path: '/scoreboard',
   getParentRoute: () => AppRoute,
 } as any)
-const AppScanModelsRoute = AppScanModelsRouteImport.update({
-  id: '/scan-models',
-  path: '/scan-models',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppScanLensRoute = AppScanLensRouteImport.update({
   id: '/scan-lens',
   path: '/scan-lens',
@@ -475,6 +470,12 @@ const ApiPublicBridgeRoute = ApiPublicBridgeRouteImport.update({
   path: '/api/public/bridge',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppStrategiesAltStrategiesRoute =
+  AppStrategiesAltStrategiesRouteImport.update({
+    id: '/alt-strategies',
+    path: '/alt-strategies',
+    getParentRoute: () => AppStrategiesRoute,
+  } as any)
 const AppStrategiesStrategyIdRoute = AppStrategiesStrategyIdRouteImport.update({
   id: '/$strategyId',
   path: '/$strategyId',
@@ -766,7 +767,6 @@ export interface FileRoutesByFullPath {
   '/mentor': typeof AppMentorRoute
   '/news': typeof AppNewsRoute
   '/scan-lens': typeof AppScanLensRoute
-  '/scan-models': typeof AppScanModelsRoute
   '/scoreboard': typeof AppScoreboardRoute
   '/settings': typeof AppSettingsRoute
   '/signals': typeof AppSignalsRoute
@@ -792,6 +792,7 @@ export interface FileRoutesByFullPath {
   '/admin/subscribers': typeof AppAdminSubscribersRoute
   '/chat/$threadId': typeof AppChatThreadIdRoute
   '/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
+  '/strategies/alt-strategies': typeof AppStrategiesAltStrategiesRoute
   '/api/public/bridge': typeof ApiPublicBridgeRoute
   '/api/public/lead-unsubscribe': typeof ApiPublicLeadUnsubscribeRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
@@ -878,7 +879,6 @@ export interface FileRoutesByTo {
   '/mentor': typeof AppMentorRoute
   '/news': typeof AppNewsRoute
   '/scan-lens': typeof AppScanLensRoute
-  '/scan-models': typeof AppScanModelsRoute
   '/scoreboard': typeof AppScoreboardRoute
   '/settings': typeof AppSettingsRoute
   '/signals': typeof AppSignalsRoute
@@ -902,6 +902,7 @@ export interface FileRoutesByTo {
   '/admin/subscribers': typeof AppAdminSubscribersRoute
   '/chat/$threadId': typeof AppChatThreadIdRoute
   '/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
+  '/strategies/alt-strategies': typeof AppStrategiesAltStrategiesRoute
   '/api/public/bridge': typeof ApiPublicBridgeRoute
   '/api/public/lead-unsubscribe': typeof ApiPublicLeadUnsubscribeRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
@@ -992,7 +993,6 @@ export interface FileRoutesById {
   '/_app/mentor': typeof AppMentorRoute
   '/_app/news': typeof AppNewsRoute
   '/_app/scan-lens': typeof AppScanLensRoute
-  '/_app/scan-models': typeof AppScanModelsRoute
   '/_app/scoreboard': typeof AppScoreboardRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/signals': typeof AppSignalsRoute
@@ -1018,6 +1018,7 @@ export interface FileRoutesById {
   '/_app/admin/subscribers': typeof AppAdminSubscribersRoute
   '/_app/chat/$threadId': typeof AppChatThreadIdRoute
   '/_app/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
+  '/_app/strategies/alt-strategies': typeof AppStrategiesAltStrategiesRoute
   '/api/public/bridge': typeof ApiPublicBridgeRoute
   '/api/public/lead-unsubscribe': typeof ApiPublicLeadUnsubscribeRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
@@ -1108,7 +1109,6 @@ export interface FileRouteTypes {
     | '/mentor'
     | '/news'
     | '/scan-lens'
-    | '/scan-models'
     | '/scoreboard'
     | '/settings'
     | '/signals'
@@ -1134,6 +1134,7 @@ export interface FileRouteTypes {
     | '/admin/subscribers'
     | '/chat/$threadId'
     | '/strategies/$strategyId'
+    | '/strategies/alt-strategies'
     | '/api/public/bridge'
     | '/api/public/lead-unsubscribe'
     | '/api/public/stripe-webhook'
@@ -1220,7 +1221,6 @@ export interface FileRouteTypes {
     | '/mentor'
     | '/news'
     | '/scan-lens'
-    | '/scan-models'
     | '/scoreboard'
     | '/settings'
     | '/signals'
@@ -1244,6 +1244,7 @@ export interface FileRouteTypes {
     | '/admin/subscribers'
     | '/chat/$threadId'
     | '/strategies/$strategyId'
+    | '/strategies/alt-strategies'
     | '/api/public/bridge'
     | '/api/public/lead-unsubscribe'
     | '/api/public/stripe-webhook'
@@ -1333,7 +1334,6 @@ export interface FileRouteTypes {
     | '/_app/mentor'
     | '/_app/news'
     | '/_app/scan-lens'
-    | '/_app/scan-models'
     | '/_app/scoreboard'
     | '/_app/settings'
     | '/_app/signals'
@@ -1359,6 +1359,7 @@ export interface FileRouteTypes {
     | '/_app/admin/subscribers'
     | '/_app/chat/$threadId'
     | '/_app/strategies/$strategyId'
+    | '/_app/strategies/alt-strategies'
     | '/api/public/bridge'
     | '/api/public/lead-unsubscribe'
     | '/api/public/stripe-webhook'
@@ -1698,13 +1699,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppScoreboardRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/scan-models': {
-      id: '/_app/scan-models'
-      path: '/scan-models'
-      fullPath: '/scan-models'
-      preLoaderRoute: typeof AppScanModelsRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/scan-lens': {
       id: '/_app/scan-lens'
       path: '/scan-lens'
@@ -1963,6 +1957,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/public/bridge'
       preLoaderRoute: typeof ApiPublicBridgeRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_app/strategies/alt-strategies': {
+      id: '/_app/strategies/alt-strategies'
+      path: '/alt-strategies'
+      fullPath: '/strategies/alt-strategies'
+      preLoaderRoute: typeof AppStrategiesAltStrategiesRouteImport
+      parentRoute: typeof AppStrategiesRoute
     }
     '/_app/strategies/$strategyId': {
       id: '/_app/strategies/$strategyId'
@@ -2330,11 +2331,13 @@ const AppChatRouteWithChildren =
 
 interface AppStrategiesRouteChildren {
   AppStrategiesStrategyIdRoute: typeof AppStrategiesStrategyIdRoute
+  AppStrategiesAltStrategiesRoute: typeof AppStrategiesAltStrategiesRoute
   AppStrategiesIndexRoute: typeof AppStrategiesIndexRoute
 }
 
 const AppStrategiesRouteChildren: AppStrategiesRouteChildren = {
   AppStrategiesStrategyIdRoute: AppStrategiesStrategyIdRoute,
+  AppStrategiesAltStrategiesRoute: AppStrategiesAltStrategiesRoute,
   AppStrategiesIndexRoute: AppStrategiesIndexRoute,
 }
 
@@ -2369,7 +2372,6 @@ interface AppRouteChildren {
   AppMentorRoute: typeof AppMentorRoute
   AppNewsRoute: typeof AppNewsRoute
   AppScanLensRoute: typeof AppScanLensRoute
-  AppScanModelsRoute: typeof AppScanModelsRoute
   AppScoreboardRoute: typeof AppScoreboardRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppSignalsRoute: typeof AppSignalsRoute
@@ -2406,7 +2408,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppMentorRoute: AppMentorRoute,
   AppNewsRoute: AppNewsRoute,
   AppScanLensRoute: AppScanLensRoute,
-  AppScanModelsRoute: AppScanModelsRoute,
   AppScoreboardRoute: AppScoreboardRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppSignalsRoute: AppSignalsRoute,
