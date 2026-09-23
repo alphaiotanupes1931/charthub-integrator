@@ -8,6 +8,7 @@ import { getMarketNews } from "@/lib/news.functions";
 import { getBriefingState } from "@/lib/briefings.functions";
 import { useTimezone } from "@/hooks/useTimezone";
 import { NewsChatPanel } from "@/components/NewsChatPanel";
+import { MarketClock } from "@/components/MarketClock";
 
 
 export const Route = createFileRoute("/_app/news")({
@@ -58,7 +59,7 @@ function surpriseRead(e: { actual?: string; forecast?: string; title: string }):
 }
 
 function NewsPage() {
-  const { resolvedTimezone } = useTimezone();
+  const { effectiveTimezone: resolvedTimezone } = useTimezone();
   const [filter, setFilter] = useState<Impact>("high");
   const [openKey, setOpenKey] = useState<string | null>(null);
 
@@ -113,6 +114,7 @@ function NewsPage() {
           <RefreshCw className={`size-4 ${news.isFetching ? "animate-spin" : ""}`} /> Refresh
         </button>
       </header>
+      <MarketClock className="rounded-xl border border-border/60 bg-card/40 px-4 py-3" />
       <PageInstructions className="mb-6" />
 
       <section className="rounded-xl border border-border/60 bg-card/40 p-4">
@@ -173,6 +175,9 @@ function NewsPage() {
                       className={`shrink-0 rounded border px-1.5 py-0.5 text-[10px] ${impactClass(e.impact)}`}
                     >
                       {e.impact}
+                    </span>
+                    <span className="w-14 shrink-0 text-[10px] text-muted-foreground">
+                      {new Date(e.date).getTime() <= Date.now() ? "Released" : "Upcoming"}
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="text-sm font-medium">

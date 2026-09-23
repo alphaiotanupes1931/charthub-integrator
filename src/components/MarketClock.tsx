@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useTimezone } from "@/hooks/useTimezone";
+import { useTimezone, TIMEZONE_OPTIONS, AUTO_TZ } from "@/hooks/useTimezone";
 
 /** Exchange-style clock: moving analog dial, digital time, date and which market centres are open. */
 const CENTRES = [
@@ -22,9 +22,22 @@ export function isCentreOpen(c: (typeof CENTRES)[number], d: Date): boolean {
 }
 
 export function MarketClock({ className = "" }: { className?: string }) {
-  const { resolvedTimezone } = useTimezone();
-  const tz = resolvedTimezone || "UTC";
+  const { timezone, effectiveTimezone, setTimezone } = useTimezone();
+  const tz = effectiveTimezone || "UTC";
   const [now, setNow] = useState<Date | null>(null);
+  /** Device clock minus server clock, in ms. Null until checked. */
+  const [drift, setDrift] = useState<number | null>(null);
+
+  useEffect(() => {
+    const t0 = Date.now();
+    fetch("/api/time", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((j: { now: number }) => {
+        const rtt = Date.now() - t0;
+        setDrift(Date.now() - (j.now + rtt / 2));
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     let raf = 0;
@@ -66,9 +79,35 @@ export function MarketClock({ className = "" }: { className?: string }) {
       </svg>
       <div className="min-w-0 leading-tight">
         <div className="font-mono text-base font-semibold tabular-nums sm:text-lg" data-testid="market-clock-time">
-          {time} <span className="text-[10px] font-medium text-muted-foreground">{zone}</span>
+          {time}{" "}
+          <label className="relative inline-flex items-center">
+            <span className="sr-only">Time zone</span>
+            <select
+              value={timezone}
+              onChange={(e) => setTimezone(e.target.value)}
+              data-testid="market-clock-zone"
+              title="Change time zone"
+              className="cursor-pointer appearance-none rounded-sm border border-border/60 bg-background py-0 pl-1.5 pr-4 text-[10px] font-medium text-muted-foreground hover:border-primary/60 hover:text-foreground focus:outline-none"
+            >
+              {TIMEZONE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.value === timezone ? (o.value === AUTO_TZ ? `${zone} (auto)` : zone) : o.label}
+                </option>
+              ))}
+            </select>
+            <span className="pointer-events-none absolute right-1 text-[8px] text-muted-foreground">▾</span>
+          </label>
         </div>
-        <div className="truncate text-[11px] text-muted-foreground" data-testid="market-clock-date">{date}</div>
+        <div className="truncate text-[11px] text-muted-foreground" data-testid="market-clock-date">
+          {date}
+          {drift !== null && (
+            <span data-testid="market-clock-check" className={Math.abs(drift) > 60_000 ? "ml-2 text-destructive" : "ml-2 text-bull"}>
+              {Math.abs(drift) > 60_000
+                ? `Your device clock is ${Math.round(Math.abs(drift) / 60_000)} min ${drift > 0 ? "fast" : "slow"}`
+                : "Clock verified"}
+            </span>
+          )}
+        </div>
       </div>
       <div className="ml-auto hidden items-center gap-3 md:flex">
         {CENTRES.map((c) => {
