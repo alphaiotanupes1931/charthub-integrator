@@ -273,15 +273,29 @@ function resolveDirection(
     else if (d === "bearish") votes.push({ dir: "bearish", weight, label });
   };
 
-  if (mtf?.alignment === "aligned-long") return { bias: "Long", reason: "MTF aligned long" };
-  if (mtf?.alignment === "aligned-short") return { bias: "Short", reason: "MTF aligned short" };
+  // Timeframe cascade: Weekly sets the long-term direction, DAILY is today's
+  // intent and the primary directional gate, 4H only confirms or contradicts it,
+  // and 1H/15m are triggers. The 4H used to outweigh the Daily, which produced
+  // longs into a bearish Daily (the US30 case). Daily now outranks the 4H.
+  const ladderRows = mtf?.ladder ?? [];
+  const rowBias = (label: string) => ladderRows.find((r) => r.label === label)?.bias;
+  const dailyDir = rowBias("Daily") ?? snap.cisd.htfBias;
+  const dailyDecisive = dailyDir === "bullish" || dailyDir === "bearish";
 
-  vote(mtf?.h4.direction, 3, "4H direction");
+  // The aligned-* shortcut may only be taken when the Daily agrees with it.
+  if (mtf?.alignment === "aligned-long" && dailyDir !== "bearish") {
+    return { bias: "Long", reason: "MTF aligned long" };
+  }
+  if (mtf?.alignment === "aligned-short" && dailyDir !== "bullish") {
+    return { bias: "Short", reason: "MTF aligned short" };
+  }
+
+  vote(dailyDir, 4, "Daily bias");
+  vote(rowBias("Weekly"), 2, "Weekly bias");
+  vote(rowBias("Monthly"), 1, "Monthly bias");
+  vote(mtf?.h4.direction, 2, "4H direction");
   vote(mtf?.h1.structureBreak, 2, "1H structure break");
   vote(mtf?.m15.confirmation, 1, "15m confirmation");
-  for (const label of ["Monthly", "Weekly", "Daily"]) {
-    vote((mtf?.ladder ?? []).find((r) => r.label === label)?.bias, 1, label);
-  }
   vote(snap.cisd.state !== "none" ? snap.cisd.state : undefined, 2, "CISD");
   vote(snap.cisd.htfBias, 1, "HTF bias");
   vote(memo.consensus !== "neutral" ? memo.consensus : undefined, 2, "analyst consensus");
@@ -289,8 +303,37 @@ function resolveDirection(
 
   const bull = votes.filter((v) => v.dir === "bullish").reduce((s, v) => s + v.weight, 0);
   const bear = votes.filter((v) => v.dir === "bearish").reduce((s, v) => s + v.weight, 0);
-  if (bull > bear) return { bias: "Long", reason: `weight of evidence bullish ${bull} to ${bear}` };
-  if (bear > bull) return { bias: "Short", reason: `weight of evidence bearish ${bear} to ${bull}` };
+
+  // Daily is the primary gate: a winner that fights a decisive Daily bias is
+  // only allowed when the Daily or 4H has actually broken structure that way.
+  const dailyBrokenFor = (want: "bullish" | "bearish") =>
+    ladderRows.find((r) => r.label === "Daily")?.structure === want ||
+    ladderRows.find((r) => r.label === "4H")?.structure === want;
+  const allowed = (dir: "bullish" | "bearish") =>
+    !dailyDecisive || dir === dailyDir || dailyBrokenFor(dir);
+
+  if (bull > bear) {
+    if (allowed("bullish")) return { bias: "Long", reason: `weight of evidence bullish ${bull} to ${bear}` };
+    return {
+      bias: "Neutral",
+      reason: `evidence leaned bullish ${bull} to ${bear}, but the Daily bias is ${dailyDir} and nothing has broken structure bullish, so the cascade returns no trade`,
+    };
+  }
+  if (bear > bull) {
+    if (allowed("bearish")) return { bias: "Short", reason: `weight of evidence bearish ${bear} to ${bull}` };
+    return {
+      bias: "Neutral",
+      reason: `evidence leaned bearish ${bear} to ${bull}, but the Daily bias is ${dailyDir} and nothing has broken structure bearish, so the cascade returns no trade`,
+    };
+  }
+
+  // Tie: follow the Daily before anything lower down the cascade.
+  if (dailyDecisive) {
+    return {
+      bias: dailyDir === "bullish" ? "Long" : "Short",
+      reason: `evidence tied ${bull} to ${bear}, so the ${dailyDir} Daily bias decides the direction`,
+    };
+  }
 
   // Nothing structural to lean on: fall back to where price sits in the 20-bar
   // range, then to the model. Only a genuinely flat tape returns Neutral.
@@ -345,6 +388,40 @@ export function counterTrendRead(
     counterTrend: true,
     cap: "C",
     reason: `Counter-trend ${bias.toLowerCase()}: the Daily is ${dailyBias} and the 4H is ${h4Dir} with no confirmed higher-timeframe break, so the grade is capped at C no matter how clean the 1H/15m looks. Skip it or cut risk to 0.5R.`,
+  };
+}
+
+// ---------- Daily bias gate ----------
+// The cascade is Weekly > Daily > 4H > 1H > 15m. A bullish 4H inside a bearish
+// Daily is a retracement into the next sell, not a new uptrend, so a long there
+// can never be a B or better: it is held at C unless the Daily (or the 4H) has
+// actually broken structure in the trade's direction. This is separate from the
+// counter-trend guard, which only fires when the Daily AND the 4H both oppose.
+export function dailyBiasGate(
+  bias: typeof BIASES[number],
+  snap: MarketSnapshot,
+): { cap: typeof GRADES[number] | null; reason: string | null } {
+  const none = { cap: null, reason: null };
+  if (bias === "Neutral") return none;
+  const wanted = bias === "Long" ? "bullish" : "bearish";
+  const opposite = wanted === "bullish" ? "bearish" : "bullish";
+  const ladder = snap.mtf?.ladder ?? [];
+  const daily = ladder.find((r) => r.label === "Daily");
+  const dailyBias = daily?.bias ?? snap.cisd.htfBias;
+  if (dailyBias !== opposite) return none;
+
+  const h4Row = ladder.find((r) => r.label === "4H");
+  const h4Dir = snap.mtf?.h4.direction ?? h4Row?.bias ?? "neutral";
+  const broken = daily?.structure === wanted || h4Row?.structure === wanted;
+  if (broken) {
+    return {
+      cap: "B",
+      reason: `The Daily bias is ${dailyBias} while this is a ${bias.toLowerCase()}. Structure has already broken ${wanted} on the Daily or 4H, so it is allowed but held at B until the Daily itself turns.`,
+    };
+  }
+  return {
+    cap: "C",
+    reason: `Timeframe cascade: the Daily bias is ${dailyBias} and the 4H is ${h4Dir}, so this ${bias.toLowerCase()} is a retracement inside the daily move, not a trend trade. Daily outranks the 4H, so the grade is held at C — the higher-probability trade is the ${dailyBias === "bearish" ? "sell" : "buy"} that follows the Daily.`,
   };
 }
 
@@ -813,6 +890,7 @@ export function collectGradeCaps(
       reason: "The 4H/1H/15m ladder did not come back on this scan, so there was nothing to grade the setup against and it is held at C until the feed fills in.",
     });
   }
+  push("Against the Daily bias", dailyBiasGate(bias, snap));
   push("Counter-trend setup", counterTrendRead(bias, snap));
   push("Time Frame Combo gate", timeFrameComboGate(bias, snap));
   push("1H against the higher timeframes", lowerTimeframeOppositionRead(bias, snap));
