@@ -219,8 +219,8 @@ export function PreScanCheck({
               Run the scan
             </Button>
           ) : (
-            <Button size="sm" className="rounded-sm" onClick={submit} disabled={!answeredAll}>
-              {answeredAll ? "Check my answers" : `Answer all ${questions.length}`}
+            <Button size="sm" className="rounded-sm" onClick={submit} disabled={loadingChart || !answeredAll}>
+              {loadingChart ? "Reading the chart…" : answeredAll ? "Check my answers" : `Answer all ${questions.length}`}
             </Button>
           )}
         </div>
