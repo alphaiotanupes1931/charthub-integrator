@@ -167,6 +167,8 @@ type StrategyCtx = {
 type LensCtx = { id?: string; name?: string; promptEmphasis?: string };
 
 type ChatRequestBody = {
+  timezone?: string;
+  clientNow?: string;
   messages?: UIMessage[];
   threadId?: string;
   coach?: string;
@@ -599,7 +601,7 @@ SCREENSHOT ANALYSIS RULES (when the user attaches an image):
 
 // The per-request half: coach voice plus every live context block.
 /** Live clock stamped into every reply so the coach never guesses the day. */
-function nowContextBlock(): string {
+function nowContextBlock(userTz?: string, clientNow?: string): string {
   const now = new Date();
   const utc = now.toISOString().slice(0, 16).replace("T", " ");
   const weekday = now.toLocaleDateString("en-US", { weekday: "long", timeZone: "UTC" });
@@ -618,10 +620,23 @@ function nowContextBlock(): string {
     minute: "2-digit",
     timeZoneName: "short",
   });
-  return `Current date and time: ${weekday}, ${date}, ${utc} UTC. New York (market) time: ${ny}.`;
+  let local = "";
+  if (userTz) {
+    try {
+      const l = now.toLocaleString("en-US", { timeZone: userTz, weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" });
+      local = ` The trader's own time (${userTz}): ${l}. Quote times to the trader in this zone unless they ask for another.`;
+    } catch { /* invalid zone */ }
+  }
+  let drift = "";
+  const c = clientNow ? Date.parse(clientNow) : NaN;
+  if (Number.isFinite(c) && Math.abs(c - now.getTime()) > 2 * 60_000) {
+    const mins = Math.round((c - now.getTime()) / 60_000);
+    drift = ` Note: the trader's device clock is off by about ${Math.abs(mins)} minutes (${mins > 0 ? "ahead" : "behind"}). Trust the server time above, and tell them if timing matters.`;
+  }
+  return `Current date and time: ${weekday}, ${date}, ${utc} UTC. New York (market) time: ${ny}.${local}${drift}`;
 }
 
-function dynamicSystemPrompt(coach: string | undefined, journalContext: string, chartCtx: string, strategyCtx: string, lensCtx: string, learningCtx: string, newsCtx?: string, scoreCtx?: string, forceDraw?: boolean, previousCoach?: string | null, hermesCtx?: string, hitRateCtx?: string) {
+function dynamicSystemPrompt(coach: string | undefined, journalContext: string, chartCtx: string, strategyCtx: string, lensCtx: string, learningCtx: string, newsCtx?: string, scoreCtx?: string, forceDraw?: boolean, previousCoach?: string | null, hermesCtx?: string, hitRateCtx?: string, userTz?: string, clientNow?: string) {
   const switched = !!previousCoach && !!coach && previousCoach !== coach;
   const switchBlock = switched
     ? `\n=== COACH SWITCH (applies to THIS reply) ===
@@ -629,7 +644,7 @@ The trader just switched coaches mid-conversation: earlier assistant turns in th
 === END COACH SWITCH ===\n`
     : "";
   return switchBlock + `=== RIGHT NOW (the only clock and calendar you may use) ===
-${nowContextBlock()}
+${nowContextBlock(userTz, clientNow)}
 Rules for time:
 - Every "today", "tomorrow", "in X hours", "later this session" you write must be computed from the timestamp above, never from anything said earlier in this thread and never from a scan printed on a previous day.
 - Before you mention a release, check its weekday and date in the economic calendar block. If it is not on today's date above, say the weekday and date ("CPI is Thursday at 12:30 UTC"), and never say it is minutes or hours away.
@@ -1106,7 +1121,7 @@ export const Route = createFileRoute("/api/chat")({
 
         const staticSystem = staticSystemPrompt(analysisModelId);
         const forceDraw = shouldForceChartDraw(messages);
-        let liveSystem = dynamicSystemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens), learningCtx, newsCtx, scoreCtx, forceDraw, previousCoach, hermesCtx, hitRateCtx);
+        let liveSystem = dynamicSystemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens), learningCtx, newsCtx, scoreCtx, forceDraw, previousCoach, hermesCtx, hitRateCtx, typeof body.timezone === "string" ? body.timezone.slice(0, 64) : undefined, typeof body.clientNow === "string" ? body.clientNow : undefined);
         // Retrieved methodology / psychology reference for this exact question.
         try {
           const { methodologyContextBlock } = await import("@/lib/agents/methodology-kb");
