@@ -25,6 +25,15 @@ import {
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { supabase } from "@/integrations/supabase/client";
 import { useTimezone, formatInTimezone } from "@/hooks/useTimezone";
+
+/** The trader's chosen zone (Settings or the clock), else the device zone. */
+function readChatTimezone(): string {
+  try {
+    const v = localStorage.getItem("trademind.timezone");
+    if (v && v !== "auto") return v;
+  } catch { /* ignore */ }
+  try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"; } catch { return "UTC"; }
+}
 import { getOrCreateDashboardThread, getChatMessages, getActiveModel, appendAssistantChatMessage, type ActiveModelInfo } from "@/lib/chat.functions";
 import { ActionLoader } from "@/components/ActionLoader";
 import { clearLastThreadId, readJournal, readActiveCoach, writeActiveCoach, readActiveStrategy, readLastThreadId, writeLastThreadId } from "@/lib/chat-client";
@@ -602,6 +611,8 @@ const ChatInner = forwardRef<DashboardChatHandle, { threadId: string; initial: U
               lens: { id: lens.id, name: lens.name, promptEmphasis: lens.promptEmphasis },
               signalLearning: buildLearningPromptBlock(),
               analysisModel: readAnalysisModel(),
+              timezone: readChatTimezone(),
+              clientNow: new Date().toISOString(),
 
             },
           };
