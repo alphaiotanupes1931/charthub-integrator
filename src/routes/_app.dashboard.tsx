@@ -1925,7 +1925,7 @@ function Dashboard() {
               className="dashboard-control inline-flex items-center gap-1.5 h-9 px-3.5 text-xs font-medium text-foreground transition"
               aria-haspopup="menu"
               aria-expanded={setupOpen}
-              title="Analysis setup: model, lens, coach, strategy, style"
+            title="Analysis setup: alt. strategy, lens, coach, strategy, style"
             >
               <Settings2 className="h-3.5 w-3.5 text-primary" />
               <span>Setup</span>
@@ -1934,7 +1934,7 @@ function Dashboard() {
             {setupOpen && (
               <div className="absolute right-0 mt-2 w-80 max-h-[70vh] overflow-y-auto rounded-2xl border border-border/60 bg-card shadow-xl z-50 p-2">
 
-                <div className="px-2 pb-1 pt-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Analysis model</div>
+                <div className="px-2 pb-1 pt-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Alt. strategy</div>
                 {ANALYSIS_MODELS.map((m) => (
                   <div key={m.id}>
                     <button
@@ -1988,11 +1988,11 @@ function Dashboard() {
                   </div>
                 ))}
                 <Link
-                  to="/scan-models"
+                  to="/strategies/alt-strategies"
                   onClick={() => setSetupOpen(false)}
                   className="mt-1 block border-t border-border/40 px-2 py-2 text-[11px] font-medium text-muted-foreground hover:text-foreground"
                 >
-                  Manage all scan models →
+                  Manage all alt. strategies →
                 </Link>
 
                 <div className="mt-1 border-t border-border/40 px-2 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Scan lens</div>

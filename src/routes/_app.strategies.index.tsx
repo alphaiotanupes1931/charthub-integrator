@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-r
 import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { type Level, type Style, type Strategy } from "@/data/strategies";
-import { Search, Plus, ChevronDown, BarChart2, TrendingUp, CircleDot, Zap, X, CheckCircle2, Trash2, Pencil, Sparkles } from "lucide-react";
+import { Search, Plus, ChevronDown, BarChart2, TrendingUp, CircleDot, Zap, X, CheckCircle2, Trash2, Pencil, Sparkles, ScanSearch } from "lucide-react";
 import { toast } from "sonner";
 import {
   type CustomStrategy,
@@ -18,7 +18,22 @@ import { useEntitlements } from "@/hooks/useEntitlements";
 
 
 export const Route = createFileRoute("/_app/strategies/")({
-  head: () => ({ meta: [{ title: "Strategies, TradeMind" }] }),
+  head: () => ({
+    meta: [
+      { title: "Strategies — TradeMind" },
+      {
+        name: "description",
+        content: "Build, compare, and select your TradeMind strategy playbooks for scan grading, risk rules, sessions, entries, and exits.",
+      },
+      { property: "og:title", content: "Strategies — TradeMind" },
+      {
+        property: "og:description",
+        content: "Build, compare, and select your TradeMind strategy playbooks for scan grading, risk rules, sessions, entries, and exits.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: StrategiesPage,
   validateSearch: (s: Record<string, unknown>) => ({ edit: typeof s.edit === "string" ? s.edit : undefined }),
 });
@@ -93,12 +108,20 @@ function StrategiesPage() {
           </>
         }
         action={
-          <button
-            onClick={() => { setEditing(null); setBuilderOpen(true); }}
-            className="flex items-center gap-1.5 rounded-xl border border-primary/40 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/20"
-          >
-            <Plus className="h-4 w-4" /> Create Your Own
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              to="/strategies/alt-strategies"
+              className="flex items-center gap-1.5 rounded-xl border border-border/60 bg-card px-4 py-2 text-sm font-semibold text-muted-foreground hover:bg-accent/40 hover:text-foreground"
+            >
+              <ScanSearch className="h-4 w-4" /> Alt. Strategies
+            </Link>
+            <button
+              onClick={() => { setEditing(null); setBuilderOpen(true); }}
+              className="flex items-center gap-1.5 rounded-xl border border-primary/40 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/20"
+            >
+              <Plus className="h-4 w-4" /> Create Your Own
+            </button>
+          </div>
         }
       />
 
