@@ -39,8 +39,8 @@
 - [ ] Complete the signed-in visual pass when a preview account is available.
 
 ## Clock, news timing, one-question flashcard check — Sep 23, 2026
-- [ ] News write-up and chat calendar lines carry weekday, date and the current time
-- [ ] Chat also knows the trader's local time
-- [ ] Live moving clock with date and market status on the dashboard
-- [ ] Pre-scan check: one flashcard question, never repeat a correctly answered one, beginner -> intermediate -> advanced
-- [ ] Record every question asked and whether it was right; tests + browser check
+- [x] News write-up and chat calendar lines carry weekday, date and the current time
+- [x] Chat also knows the trader's local time
+- [x] Live moving clock with date and market status on the dashboard
+- [x] Pre-scan check: one flashcard question, never repeat a correctly answered one, beginner -> intermediate -> advanced
+- [x] Record every question asked and whether it was right; tests + browser check
