@@ -1462,6 +1462,39 @@ export type Database = {
         }
         Relationships: []
       }
+      prescan_question_attempts: {
+        Row: {
+          chosen_index: number
+          correct: boolean
+          created_at: string
+          id: string
+          level: string
+          model_id: string | null
+          question_id: string
+          user_id: string
+        }
+        Insert: {
+          chosen_index: number
+          correct: boolean
+          created_at?: string
+          id?: string
+          level: string
+          model_id?: string | null
+          question_id: string
+          user_id: string
+        }
+        Update: {
+          chosen_index?: number
+          correct?: boolean
+          created_at?: string
+          id?: string
+          level?: string
+          model_id?: string | null
+          question_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       price_alerts: {
         Row: {
           active: boolean

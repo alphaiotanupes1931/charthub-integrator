@@ -1,19 +1,22 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Check, ClipboardCheck, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { pickPreScanQuestions, type PreScanQuestion } from "@/lib/prescan-questions";
-import { buildChartQuestions, readChartFacts, type ChartFacts, type PreScanBar } from "@/lib/prescan-context";
+import type { PreScanQuestion } from "@/lib/prescan-questions";
+import { buildChartQuestions, readChartFacts, type PreScanBar } from "@/lib/prescan-context";
 import { reviewPreScanAnswers } from "@/lib/prescan-check.functions";
+import { getNextPreScanQuestion, recordPreScanAnswer } from "@/lib/prescan-progress.functions";
+import { LEVEL_LABEL, type Progress } from "@/lib/prescan-progress";
 import { ANALYSIS_MODELS, type AnalysisModelId } from "@/lib/analysis-models";
 import { cn } from "@/lib/utils";
 
 /**
- * Confirmation checklist shown before a scan runs. The trader answers a few
- * questions about the confirmations this model needs, then sees the right
- * answers with coach feedback, then continues to the scan. Answers never change
- * the scan itself - this is the teaching step.
+ * One flashcard question before each scan. The front shows the question and
+ * choices; answering flips the card to show the right answer and the coach's
+ * note. Questions answered correctly are never asked again for this trader,
+ * and they move from Beginner to Intermediate to Advanced as they master each
+ * level. Answers never change the scan itself.
  */
 export function PreScanCheck({
   open,
@@ -28,184 +31,191 @@ export function PreScanCheck({
   open: boolean;
   modelId: AnalysisModelId;
   symbol?: string;
-  /** Raw ticker for the OHLC feed, e.g. "XAU/USD". */
   ticker?: string;
-  /** Raw chart interval for the OHLC feed, e.g. "60". */
   interval?: string;
   timeframe?: string;
   onCancel: () => void;
   onContinue: () => void;
 }) {
   const modelName = ANALYSIS_MODELS.find((m) => m.id === modelId)?.name ?? "TradeMind Classic";
+  const nextFn = useServerFn(getNextPreScanQuestion);
+  const recordFn = useServerFn(recordPreScanAnswer);
   const reviewFn = useServerFn(reviewPreScanAnswers);
 
-  const [seed, setSeed] = useState(() => Date.now());
-  const [facts, setFacts] = useState<ChartFacts | null>(null);
-  const [loadingChart, setLoadingChart] = useState(false);
-  const [chosen, setChosen] = useState<Record<string, number>>({});
-  const [revealed, setRevealed] = useState(false);
+  const [question, setQuestion] = useState<PreScanQuestion | null>(null);
+  const [fromBank, setFromBank] = useState(true);
+  const [progress, setProgress] = useState<Progress | null>(null);
+  const [loadingQ, setLoadingQ] = useState(false);
+  const [pick, setPick] = useState<number | null>(null);
+  const [flipped, setFlipped] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loadingFb, setLoadingFb] = useState(false);
+  const [levelUp, setLevelUp] = useState<string | null>(null);
 
-  // Two questions about the instrument and levels actually on screen, plus one
-  // about the confirmation this model requires. If the chart could not be read,
-  // fall back to the model/shared bank so the checklist still appears.
-  const questions = useMemo<PreScanQuestion[]>(() => {
-    const model = pickPreScanQuestions(modelId, seed);
-    if (!facts) return model;
-    const chart = buildChartQuestions({
-      facts,
-      instrument: symbol ?? "this market",
-      timeframe: timeframe ?? "this timeframe",
-      seed,
-    });
-    return [...chart, model[0]].filter((q, i, arr) => arr.findIndex((x) => x.id === q.id) === i);
-  }, [modelId, seed, facts, symbol, timeframe]);
-
-  // Fresh questions each time the checklist opens, read from the live chart.
   useEffect(() => {
     if (!open) return;
-    setSeed(Date.now());
-    setChosen({});
-    setRevealed(false);
-    setFeedback(null);
-    setLoading(false);
-    setFacts(null);
-    if (!ticker || !interval) return;
     let alive = true;
-    setLoadingChart(true);
-    fetch(`/api/ohlc?ticker=${encodeURIComponent(ticker)}&interval=${encodeURIComponent(interval)}`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((j: { bars?: PreScanBar[] } | null) => {
-        if (alive) setFacts(readChartFacts(j?.bars));
-      })
-      .catch(() => {})
-      .finally(() => {
-        if (alive) setLoadingChart(false);
-      });
+    setQuestion(null);
+    setPick(null);
+    setFlipped(false);
+    setFeedback(null);
+    setLevelUp(null);
+    setLoadingQ(true);
+    (async () => {
+      try {
+        const res = await nextFn({ data: { modelId } });
+        if (!alive) return;
+        setProgress(res.progress);
+        if (res.question) {
+          setQuestion(res.question);
+          setFromBank(true);
+          return;
+        }
+        // Everything in the bank is mastered: ask about the live chart instead.
+        if (ticker && interval) {
+          const r = await fetch(`/api/ohlc?ticker=${encodeURIComponent(ticker)}&interval=${encodeURIComponent(interval)}`);
+          const j = r.ok ? ((await r.json()) as { bars?: PreScanBar[] }) : null;
+          const facts = readChartFacts(j?.bars);
+          if (alive && facts) {
+            const qs = buildChartQuestions({ facts, instrument: symbol ?? "this market", timeframe: timeframe ?? "this timeframe", seed: Date.now() });
+            setQuestion(qs[0] ?? null);
+            setFromBank(false);
+          }
+        }
+      } catch {
+        /* no question: trader can still continue */
+      } finally {
+        if (alive) setLoadingQ(false);
+      }
+    })();
     return () => {
       alive = false;
     };
-  }, [open, ticker, interval]);
+  }, [open, modelId, ticker, interval, symbol, timeframe, nextFn]);
 
-  const answeredAll = questions.every((q) => chosen[q.id] !== undefined);
-  const score = questions.filter((q) => chosen[q.id] === q.correct).length;
-
-  const submit = async () => {
-    if (!answeredAll || loading) return;
-    setRevealed(true);
-    setLoading(true);
+  const answer = async (oi: number) => {
+    if (!question || flipped) return;
+    setPick(oi);
+    setFlipped(true);
+    setLoadingFb(true);
+    const wasCorrect = oi === question.correct;
+    if (fromBank) {
+      recordFn({ data: { modelId, questionId: question.id, chosen: oi } })
+        .then((r) => {
+          if (r?.progress && progress && r.progress.level !== progress.level) {
+            setLevelUp(LEVEL_LABEL[r.progress.level]);
+          }
+          if (r?.progress) setProgress(r.progress);
+        })
+        .catch(() => {});
+    }
     try {
       const res = await reviewFn({
         data: {
           modelName,
           symbol,
           timeframe,
-          answers: questions.map((q) => ({
-            question: q.question,
-            chosen: q.options[chosen[q.id]] ?? "",
-            correct: q.options[q.correct],
-            why: q.why,
-            wasCorrect: chosen[q.id] === q.correct,
-          })),
+          answers: [{ question: question.question, chosen: question.options[oi], correct: question.options[question.correct], why: question.why, wasCorrect }],
         },
       });
       setFeedback(res?.feedback ?? null);
     } catch {
       setFeedback(null);
     } finally {
-      setLoading(false);
+      setLoadingFb(false);
     }
   };
 
+  const right = question && pick === question.correct;
+
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onCancel(); }}>
-      <DialogContent className="max-w-2xl rounded-sm p-0 overflow-hidden">
+      <DialogContent className="max-w-xl rounded-sm p-0 overflow-hidden">
         <div className="border-b border-border/60 px-5 py-4">
           <DialogHeader className="space-y-1">
-            <DialogTitle className="flex items-center gap-2 text-base font-semibold">
-              <ClipboardCheck className="h-4 w-4 text-primary" />
-              Confirmations first
+            <DialogTitle className="flex items-center justify-between gap-2 pr-6 text-base font-semibold">
+              <span className="flex items-center gap-2">
+                <ClipboardCheck className="h-4 w-4 text-primary" />
+                One question before the scan
+              </span>
+              {progress && (
+                <span className="rounded-sm border border-primary/40 px-2 py-0.5 text-[10px] font-medium tracking-wide text-primary" data-testid="prescan-level">
+                  {LEVEL_LABEL[progress.level]}
+                </span>
+              )}
             </DialogTitle>
             <DialogDescription className="text-xs">
-              {loadingChart
-                ? `Reading ${symbol ?? "the chart"}${timeframe ? ` on ${timeframe}` : ""}…`
-                : revealed
-                  ? `${score} of ${questions.length} correct. Read the answers, then run the scan.`
-                  : `Answer these before ${modelName} scans${symbol ? ` ${symbol}` : ""}${timeframe ? ` on ${timeframe}` : ""}. Right or wrong, you get the answers after.`}
+              {progress
+                ? `${progress.correctAtLevel} of ${progress.neededAtLevel} mastered at this level. Questions you get right are never asked again.`
+                : `Answer before ${modelName} scans${symbol ? ` ${symbol}` : ""}.`}
             </DialogDescription>
           </DialogHeader>
+          {progress && (
+            <div className="mt-3 h-1 overflow-hidden rounded-full bg-muted">
+              <div className="h-full bg-primary transition-all duration-500" style={{ width: `${Math.min(100, (progress.correctAtLevel / Math.max(1, progress.neededAtLevel)) * 100)}%` }} />
+            </div>
+          )}
         </div>
 
-        <div className="max-h-[60vh] overflow-y-auto px-5 py-4 space-y-5" aria-busy={loadingChart}>
-          {/* Nothing is shown until the chart read finishes, otherwise the
-              generic questions would be replaced by the chart-specific ones
-              mid-answer and discard what the trader already picked. */}
-          {loadingChart && (
-            <p className="py-6 text-center text-xs text-muted-foreground">
-              Reading {symbol ?? "the chart"}
-              {timeframe ? ` on ${timeframe}` : ""}…
-            </p>
-          )}
-          {!loadingChart && questions.map((q, qi) => {
-            const pick = chosen[q.id];
-            const right = pick === q.correct;
-            return (
-              <div key={q.id} className="space-y-2">
-                <div className="flex items-start gap-2">
-                  <span className="mt-0.5 font-mono text-[10px] text-muted-foreground">{qi + 1}</span>
-                  <p className="text-sm font-medium leading-snug">{q.question}</p>
-                </div>
-                <div className="space-y-1.5 pl-5">
-                  {q.options.map((opt, oi) => {
-                    const selected = pick === oi;
-                    const showCorrect = revealed && oi === q.correct;
-                    const showWrong = revealed && selected && oi !== q.correct;
-                    return (
+        <div className="px-5 py-5">
+          {loadingQ ? (
+            <p className="py-16 text-center text-xs text-muted-foreground">Picking your question…</p>
+          ) : !question ? (
+            <p className="py-16 text-center text-xs text-muted-foreground">No question available right now. You can run the scan.</p>
+          ) : (
+            <div className="relative w-full" style={{ perspective: "1200px" }}>
+              <div
+                className="relative grid transition-transform duration-500"
+                style={{ transformStyle: "preserve-3d", transform: flipped ? "rotateY(180deg)" : "rotateY(0)" }}
+              >
+                {/* Front: question */}
+                <div className="col-start-1 row-start-1 rounded-sm border border-border/60 bg-card p-5" style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}>
+                  <div className="mb-3 text-[10px] tracking-[0.2em] text-muted-foreground">QUESTION</div>
+                  <p className="mb-4 text-base font-medium leading-snug">{question.question}</p>
+                  <div className="space-y-1.5">
+                    {question.options.map((opt, oi) => (
                       <button
                         key={oi}
                         type="button"
-                        disabled={revealed}
-                        onClick={() => setChosen((p) => ({ ...p, [q.id]: oi }))}
-                        className={cn(
-                          "w-full flex items-start gap-2 rounded-sm border px-3 py-2 text-left text-xs transition",
-                          "border-border/60 hover:bg-accent/40 disabled:cursor-default disabled:hover:bg-transparent",
-                          selected && !revealed && "border-primary/60 bg-primary/10",
-                          showCorrect && "border-primary bg-primary/10 text-foreground",
-                          showWrong && "border-destructive/60 bg-destructive/10",
-                        )}
+                        onClick={() => answer(oi)}
+                        className="w-full rounded-sm border border-border/60 px-3 py-2 text-left text-sm transition hover:border-primary/60 hover:bg-primary/5"
                       >
-                        <span className="mt-[2px] h-3 w-3 shrink-0">
-                          {showCorrect ? <Check className="h-3 w-3 text-primary" /> : null}
-                          {showWrong ? <X className="h-3 w-3 text-destructive" /> : null}
-                        </span>
-                        <span>{opt}</span>
+                        {opt}
                       </button>
-                    );
-                  })}
+                    ))}
+                  </div>
                 </div>
-                {revealed && (
-                  <p className={cn("pl-5 text-xs", right ? "text-muted-foreground" : "text-foreground/90")}>
-                    <span className="font-semibold">{right ? "Correct. " : "Right answer: "}</span>
-                    {q.why}
-                  </p>
-                )}
+                {/* Back: answer */}
+                <div
+                  className={cn("col-start-1 row-start-1 rounded-sm border p-5", right ? "border-primary/50 bg-primary/[0.06]" : "border-destructive/40 bg-destructive/[0.05]")}
+                  style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
+                >
+                  <div className={cn("mb-3 flex items-center gap-1.5 text-[10px] tracking-[0.2em]", right ? "text-primary" : "text-destructive")}>
+                    {right ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                    {right ? "CORRECT" : "NOT QUITE"}
+                  </div>
+                  <p className="mb-1 text-xs text-muted-foreground">{question.question}</p>
+                  {!right && pick !== null && (
+                    <p className="mb-2 text-xs text-muted-foreground line-through">{question.options[pick]}</p>
+                  )}
+                  <p className="mb-3 text-base font-medium leading-snug">{question.options[question.correct]}</p>
+                  <p className="mb-3 text-sm leading-relaxed text-foreground/90">{question.why}</p>
+                  <div className="border-t border-border/60 pt-3">
+                    <p className="mb-1 text-[10px] font-semibold tracking-wide text-muted-foreground">Coach</p>
+                    <p className="whitespace-pre-wrap text-xs leading-relaxed text-muted-foreground">
+                      {loadingFb ? "Reading your answer…" : feedback ?? "Learn the answer above, then run the scan."}
+                    </p>
+                  </div>
+                  {levelUp && (
+                    <p className="mt-3 rounded-sm border border-primary/50 px-3 py-2 text-xs font-medium text-primary">
+                      You moved up to {levelUp}.
+                    </p>
+                  )}
+                  {!right && fromBank && (
+                    <p className="mt-3 text-[11px] text-muted-foreground">This one will come back later so you can get it right.</p>
+                  )}
+                </div>
               </div>
-            );
-          })}
-
-          {revealed && (
-            <div className="rounded-sm border border-border/60 bg-card/60 p-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
-                Coach review
-              </p>
-              {loading ? (
-                <p className="text-xs text-muted-foreground">Reading your answers…</p>
-              ) : (
-                <p className="text-xs leading-relaxed whitespace-pre-wrap">
-                  {feedback ?? "Coach review is unavailable right now, but the answers above are the ones to learn."}
-                </p>
-              )}
             </div>
           )}
         </div>
@@ -214,15 +224,9 @@ export function PreScanCheck({
           <button type="button" onClick={onCancel} className="text-xs text-muted-foreground hover:text-foreground">
             Cancel
           </button>
-          {revealed ? (
-            <Button size="sm" className="rounded-sm" onClick={onContinue} disabled={loading}>
-              Run the scan
-            </Button>
-          ) : (
-            <Button size="sm" className="rounded-sm" onClick={submit} disabled={loadingChart || !answeredAll}>
-              {loadingChart ? "Reading the chart…" : answeredAll ? "Check my answers" : `Answer all ${questions.length}`}
-            </Button>
-          )}
+          <Button size="sm" className="rounded-sm" onClick={onContinue} disabled={loadingQ || (!!question && !flipped)}>
+            {question && !flipped ? "Answer to continue" : "Run the scan"}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
