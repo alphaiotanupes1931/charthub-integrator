@@ -1,4 +1,4 @@
-// Settings for the hourly scan alert: which instruments, which scan models,
+// Settings for the hourly scan alert: which instruments, which alternate strategies,
 // which grade is worth a ping, and when to stay quiet.
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -175,7 +175,7 @@ export function HourlyScanAlertsCard({ enabled: hasSession }: { enabled: boolean
       </div>
 
       <div>
-        <div className="text-xs tracking-wide text-muted-foreground mb-2">Scan models</div>
+        <div className="text-xs tracking-wide text-muted-foreground mb-2">Alt. strategies</div>
         <div className="flex flex-wrap gap-2">
           {ANALYSIS_MODELS.map((m) => (
             <button

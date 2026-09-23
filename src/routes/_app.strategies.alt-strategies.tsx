@@ -66,7 +66,7 @@ function AltStrategiesPage() {
             <p className="text-sm leading-relaxed text-muted-foreground">
               Regular Strategies are your own trading playbooks: risk rules, sessions, entry rules, and exit rules that scans are checked against. Alt. Strategies are separate scan-coach rulebooks built from professional trader videos, transcripts, and source material, then kept isolated so each one can build its own track record.
             </p>
-            <Link to="/strategies" className="inline-flex text-xs font-medium text-primary hover:underline">
+            <Link to="/strategies" search={{ edit: undefined }} className="inline-flex text-xs font-medium text-primary hover:underline">
               View regular strategies
             </Link>
           </div>
