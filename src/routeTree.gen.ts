@@ -79,6 +79,7 @@ import { Route as ApiTradelockerImportRouteImport } from './routes/api.tradelock
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api.public.stripe-webhook'
 import { Route as ApiPublicLeadUnsubscribeRouteImport } from './routes/api.public.lead-unsubscribe'
 import { Route as ApiPublicBridgeRouteImport } from './routes/api.public.bridge'
+import { Route as AppStrategiesAltStrategiesRouteImport } from './routes/_app.strategies.alt-strategies'
 import { Route as AppStrategiesStrategyIdRouteImport } from './routes/_app.strategies.$strategyId'
 import { Route as AppChatThreadIdRouteImport } from './routes/_app.chat.$threadId'
 import { Route as AppAdminSubscribersRouteImport } from './routes/_app.admin.subscribers'
@@ -475,6 +476,12 @@ const ApiPublicBridgeRoute = ApiPublicBridgeRouteImport.update({
   path: '/api/public/bridge',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppStrategiesAltStrategiesRoute =
+  AppStrategiesAltStrategiesRouteImport.update({
+    id: '/alt-strategies',
+    path: '/alt-strategies',
+    getParentRoute: () => AppStrategiesRoute,
+  } as any)
 const AppStrategiesStrategyIdRoute = AppStrategiesStrategyIdRouteImport.update({
   id: '/$strategyId',
   path: '/$strategyId',
@@ -792,6 +799,7 @@ export interface FileRoutesByFullPath {
   '/admin/subscribers': typeof AppAdminSubscribersRoute
   '/chat/$threadId': typeof AppChatThreadIdRoute
   '/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
+  '/strategies/alt-strategies': typeof AppStrategiesAltStrategiesRoute
   '/api/public/bridge': typeof ApiPublicBridgeRoute
   '/api/public/lead-unsubscribe': typeof ApiPublicLeadUnsubscribeRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
@@ -902,6 +910,7 @@ export interface FileRoutesByTo {
   '/admin/subscribers': typeof AppAdminSubscribersRoute
   '/chat/$threadId': typeof AppChatThreadIdRoute
   '/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
+  '/strategies/alt-strategies': typeof AppStrategiesAltStrategiesRoute
   '/api/public/bridge': typeof ApiPublicBridgeRoute
   '/api/public/lead-unsubscribe': typeof ApiPublicLeadUnsubscribeRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
@@ -1018,6 +1027,7 @@ export interface FileRoutesById {
   '/_app/admin/subscribers': typeof AppAdminSubscribersRoute
   '/_app/chat/$threadId': typeof AppChatThreadIdRoute
   '/_app/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
+  '/_app/strategies/alt-strategies': typeof AppStrategiesAltStrategiesRoute
   '/api/public/bridge': typeof ApiPublicBridgeRoute
   '/api/public/lead-unsubscribe': typeof ApiPublicLeadUnsubscribeRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
@@ -1134,6 +1144,7 @@ export interface FileRouteTypes {
     | '/admin/subscribers'
     | '/chat/$threadId'
     | '/strategies/$strategyId'
+    | '/strategies/alt-strategies'
     | '/api/public/bridge'
     | '/api/public/lead-unsubscribe'
     | '/api/public/stripe-webhook'
@@ -1244,6 +1255,7 @@ export interface FileRouteTypes {
     | '/admin/subscribers'
     | '/chat/$threadId'
     | '/strategies/$strategyId'
+    | '/strategies/alt-strategies'
     | '/api/public/bridge'
     | '/api/public/lead-unsubscribe'
     | '/api/public/stripe-webhook'
@@ -1359,6 +1371,7 @@ export interface FileRouteTypes {
     | '/_app/admin/subscribers'
     | '/_app/chat/$threadId'
     | '/_app/strategies/$strategyId'
+    | '/_app/strategies/alt-strategies'
     | '/api/public/bridge'
     | '/api/public/lead-unsubscribe'
     | '/api/public/stripe-webhook'
@@ -1964,6 +1977,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicBridgeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/strategies/alt-strategies': {
+      id: '/_app/strategies/alt-strategies'
+      path: '/alt-strategies'
+      fullPath: '/strategies/alt-strategies'
+      preLoaderRoute: typeof AppStrategiesAltStrategiesRouteImport
+      parentRoute: typeof AppStrategiesRoute
+    }
     '/_app/strategies/$strategyId': {
       id: '/_app/strategies/$strategyId'
       path: '/$strategyId'
@@ -2330,11 +2350,13 @@ const AppChatRouteWithChildren =
 
 interface AppStrategiesRouteChildren {
   AppStrategiesStrategyIdRoute: typeof AppStrategiesStrategyIdRoute
+  AppStrategiesAltStrategiesRoute: typeof AppStrategiesAltStrategiesRoute
   AppStrategiesIndexRoute: typeof AppStrategiesIndexRoute
 }
 
 const AppStrategiesRouteChildren: AppStrategiesRouteChildren = {
   AppStrategiesStrategyIdRoute: AppStrategiesStrategyIdRoute,
+  AppStrategiesAltStrategiesRoute: AppStrategiesAltStrategiesRoute,
   AppStrategiesIndexRoute: AppStrategiesIndexRoute,
 }
 

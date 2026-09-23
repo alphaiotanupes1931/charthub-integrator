@@ -7,7 +7,22 @@ import { ArrowLeft, CheckCircle2, CircleDot, Pencil, Trash2, TrendingUp, Zap, Ba
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/strategies/$strategyId")({
-  head: () => ({ meta: [{ title: "Strategy Details | TradeMind" }] }),
+  head: () => ({
+    meta: [
+      { title: "Strategy Details — TradeMind" },
+      {
+        name: "description",
+        content: "Review a TradeMind strategy playbook, including its setup rules, bias checks, entries, exits, sessions, and risk plan.",
+      },
+      { property: "og:title", content: "Strategy Details — TradeMind" },
+      {
+        property: "og:description",
+        content: "Review a TradeMind strategy playbook, including its setup rules, bias checks, entries, exits, sessions, and risk plan.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: StrategyDetailPage,
 });
 
