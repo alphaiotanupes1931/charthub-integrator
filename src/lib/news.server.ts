@@ -251,7 +251,7 @@ export function formatCalendarLines(events: CalendarEvent[], tz = "UTC", limit =
     const status = e.allDay ? "" : new Date(e.date).getTime() <= now ? "already released" : "upcoming";
     const bits = [
       `${when} ${e.country} ${e.impact.toUpperCase()}: ${e.title}`,
-      status, ${e.country} ${e.impact.toUpperCase()}: ${e.title}`,
+      status,
       e.actual ? `actual ${e.actual}` : "",
       e.forecast ? `forecast ${e.forecast}` : "",
       e.previous ? `previous ${e.previous}` : "",
