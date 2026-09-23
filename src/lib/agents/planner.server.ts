@@ -303,8 +303,37 @@ function resolveDirection(
 
   const bull = votes.filter((v) => v.dir === "bullish").reduce((s, v) => s + v.weight, 0);
   const bear = votes.filter((v) => v.dir === "bearish").reduce((s, v) => s + v.weight, 0);
-  if (bull > bear) return { bias: "Long", reason: `weight of evidence bullish ${bull} to ${bear}` };
-  if (bear > bull) return { bias: "Short", reason: `weight of evidence bearish ${bear} to ${bull}` };
+
+  // Daily is the primary gate: a winner that fights a decisive Daily bias is
+  // only allowed when the Daily or 4H has actually broken structure that way.
+  const dailyBrokenFor = (want: "bullish" | "bearish") =>
+    ladderRows.find((r) => r.label === "Daily")?.structure === want ||
+    ladderRows.find((r) => r.label === "4H")?.structure === want;
+  const allowed = (dir: "bullish" | "bearish") =>
+    !dailyDecisive || dir === dailyDir || dailyBrokenFor(dir);
+
+  if (bull > bear) {
+    if (allowed("bullish")) return { bias: "Long", reason: `weight of evidence bullish ${bull} to ${bear}` };
+    return {
+      bias: "Neutral",
+      reason: `evidence leaned bullish ${bull} to ${bear}, but the Daily bias is ${dailyDir} and nothing has broken structure bullish, so the cascade returns no trade`,
+    };
+  }
+  if (bear > bull) {
+    if (allowed("bearish")) return { bias: "Short", reason: `weight of evidence bearish ${bear} to ${bull}` };
+    return {
+      bias: "Neutral",
+      reason: `evidence leaned bearish ${bear} to ${bull}, but the Daily bias is ${dailyDir} and nothing has broken structure bearish, so the cascade returns no trade`,
+    };
+  }
+
+  // Tie: follow the Daily before anything lower down the cascade.
+  if (dailyDecisive) {
+    return {
+      bias: dailyDir === "bullish" ? "Long" : "Short",
+      reason: `evidence tied ${bull} to ${bear}, so the ${dailyDir} Daily bias decides the direction`,
+    };
+  }
 
   // Nothing structural to lean on: fall back to where price sits in the 20-bar
   // range, then to the model. Only a genuinely flat tape returns Neutral.
