@@ -609,7 +609,16 @@ function nowContextBlock(): string {
     year: "numeric",
     timeZone: "UTC",
   });
-  return `Current date and time: ${weekday}, ${date}, ${utc} UTC.`;
+  const ny = now.toLocaleString("en-US", {
+    timeZone: "America/New_York",
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+  });
+  return `Current date and time: ${weekday}, ${date}, ${utc} UTC. New York (market) time: ${ny}.`;
 }
 
 function dynamicSystemPrompt(coach: string | undefined, journalContext: string, chartCtx: string, strategyCtx: string, lensCtx: string, learningCtx: string, newsCtx?: string, scoreCtx?: string, forceDraw?: boolean, previousCoach?: string | null, hermesCtx?: string, hitRateCtx?: string) {

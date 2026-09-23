@@ -1,0 +1,87 @@
+import { useEffect, useState } from "react";
+import { useTimezone } from "@/hooks/useTimezone";
+
+/** Exchange-style clock: moving analog dial, digital time, date and which market centres are open. */
+const CENTRES = [
+  { name: "Sydney", tz: "Australia/Sydney", open: 7, close: 16 },
+  { name: "Tokyo", tz: "Asia/Tokyo", open: 9, close: 18 },
+  { name: "London", tz: "Europe/London", open: 8, close: 17 },
+  { name: "New York", tz: "America/New_York", open: 8, close: 17 },
+];
+
+function partsIn(tz: string, d: Date) {
+  const p = new Intl.DateTimeFormat("en-US", { timeZone: tz, hour12: false, weekday: "short", hour: "2-digit", minute: "2-digit", second: "2-digit" }).formatToParts(d);
+  const g = (t: string) => p.find((x) => x.type === t)?.value ?? "0";
+  return { h: Number(g("hour")) % 24, m: Number(g("minute")), s: Number(g("second")), wd: g("weekday") };
+}
+
+export function isCentreOpen(c: (typeof CENTRES)[number], d: Date): boolean {
+  const { h, wd } = partsIn(c.tz, d);
+  if (wd === "Sat" || wd === "Sun") return false;
+  return h >= c.open && h < c.close;
+}
+
+export function MarketClock({ className = "" }: { className?: string }) {
+  const { resolvedTimezone } = useTimezone();
+  const tz = resolvedTimezone || "UTC";
+  const [now, setNow] = useState<Date | null>(null);
+
+  useEffect(() => {
+    let raf = 0;
+    const tick = () => {
+      setNow(new Date());
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  if (!now) return <div className={`h-12 ${className}`} />;
+
+  const { h, m, s } = partsIn(tz, now);
+  const ms = now.getMilliseconds();
+  const sec = s + ms / 1000;
+  const secDeg = sec * 6;
+  const minDeg = (m + sec / 60) * 6;
+  const hrDeg = ((h % 12) + m / 60) * 30;
+  const time = new Intl.DateTimeFormat("en-US", { timeZone: tz, hour: "numeric", minute: "2-digit", second: "2-digit" }).format(now);
+  const date = new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "long", month: "long", day: "numeric", year: "numeric" }).format(now);
+  const zone = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "short" }).formatToParts(now).find((p) => p.type === "timeZoneName")?.value ?? tz;
+
+  const hand = (deg: number, len: number, w: number, cls: string) => (
+    <line x1="50" y1="50" x2="50" y2={50 - len} strokeWidth={w} strokeLinecap="round" className={cls} transform={`rotate(${deg} 50 50)`} />
+  );
+
+  return (
+    <div className={`flex items-center gap-3 sm:gap-4 ${className}`} data-testid="market-clock">
+      <svg viewBox="0 0 100 100" className="h-11 w-11 shrink-0" aria-hidden>
+        <circle cx="50" cy="50" r="47" className="fill-card stroke-border" strokeWidth="2" />
+        {Array.from({ length: 12 }).map((_, i) => (
+          <line key={i} x1="50" y1="7" x2="50" y2={i % 3 === 0 ? 15 : 11} strokeWidth={i % 3 === 0 ? 3 : 1.5} className="stroke-muted-foreground" transform={`rotate(${i * 30} 50 50)`} />
+        ))}
+        {hand(hrDeg, 24, 5, "stroke-foreground")}
+        {hand(minDeg, 35, 3.5, "stroke-foreground")}
+        {hand(secDeg, 40, 1.5, "stroke-primary")}
+        <circle cx="50" cy="50" r="3.5" className="fill-primary" />
+      </svg>
+      <div className="min-w-0 leading-tight">
+        <div className="font-mono text-base font-semibold tabular-nums sm:text-lg" data-testid="market-clock-time">
+          {time} <span className="text-[10px] font-medium text-muted-foreground">{zone}</span>
+        </div>
+        <div className="truncate text-[11px] text-muted-foreground" data-testid="market-clock-date">{date}</div>
+      </div>
+      <div className="ml-auto hidden items-center gap-3 md:flex">
+        {CENTRES.map((c) => {
+          const open = isCentreOpen(c, now);
+          return (
+            <span key={c.name} className="flex items-center gap-1.5 text-[11px]">
+              <span className={`h-1.5 w-1.5 rounded-full ${open ? "bg-bull animate-pulse" : "bg-muted-foreground/40"}`} />
+              <span className={open ? "text-foreground" : "text-muted-foreground"}>{c.name}</span>
+              <span className="text-[10px] text-muted-foreground">{open ? "open" : "closed"}</span>
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

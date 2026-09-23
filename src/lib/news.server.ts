@@ -226,6 +226,9 @@ export function formatCalendarLines(events: CalendarEvent[], tz = "UTC", limit =
       // traders read UTC releases as their own local time.
       return new Intl.DateTimeFormat("en-US", {
         timeZone: tz,
+        weekday: "short",
+        month: "short",
+        day: "numeric",
         hour: "numeric",
         minute: "2-digit",
         timeZoneName: "short",
@@ -234,9 +237,21 @@ export function formatCalendarLines(events: CalendarEvent[], tz = "UTC", limit =
       return `${new Date(iso).toISOString().slice(11, 16)} UTC`;
     }
   };
+  const day = (iso: string) => {
+    try {
+      return new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "short", month: "short", day: "numeric" }).format(new Date(iso));
+    } catch {
+      return new Date(iso).toISOString().slice(0, 10);
+    }
+  };
+  const now = Date.now();
   return events.slice(0, limit).map((e) => {
+    // Released vs still ahead, so no reader treats a past print as upcoming.
+    const when = e.allDay ? `${day(e.date)} all day` : fmt(e.date);
+    const status = e.allDay ? "" : new Date(e.date).getTime() <= now ? "already released" : "upcoming";
     const bits = [
-      `${e.allDay ? "All day" : fmt(e.date)} ${e.country} ${e.impact.toUpperCase()}: ${e.title}`,
+      `${when} ${e.country} ${e.impact.toUpperCase()}: ${e.title}`,
+      status,
       e.actual ? `actual ${e.actual}` : "",
       e.forecast ? `forecast ${e.forecast}` : "",
       e.previous ? `previous ${e.previous}` : "",
@@ -308,7 +323,8 @@ export async function writeNewsBriefing(
   const prompt = [
     "You are a trading desk analyst writing a short pre-session note for a retail trader.",
     `Their watchlist: ${watchlist.length ? watchlist.join(", ") : "XAU/USD, EUR/USD, indices"}.`,
-    "Economic calendar for the session (Forex Factory, UTC):",
+    `Right now it is ${new Date().toUTCString()} (New York: ${new Date().toLocaleString("en-US", { timeZone: "America/New_York", weekday: "long", hour: "numeric", minute: "2-digit" })}). Every "today", "later" or "already out" must be judged from this time and each release's weekday and date.`,
+    "Economic calendar (Forex Factory, times in UTC, each line marked already released or upcoming):",
     list,
     "",
     "Write 4 to 6 plain sentences: what the session's risk events are, which watchlist instruments they hit, and what a disciplined trader should do around those times (stand aside, tighten risk, wait for the reaction). No hype, no price predictions, no percentages of confidence, no emoji, no em dashes or en dashes. If the calendar is quiet, say so plainly.",

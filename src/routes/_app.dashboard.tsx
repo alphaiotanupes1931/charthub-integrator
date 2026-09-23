@@ -50,6 +50,7 @@ import { useEntitlements } from "@/hooks/useEntitlements";
 import { QuotaBadge } from "@/components/QuotaBadge";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { PreScanCheck } from "@/components/PreScanCheck";
+import { MarketClock } from "@/components/MarketClock";
 import { AutoTradingToggle, AUTO_TRADE_CONTEXT_KEY } from "@/components/AutoTradingToggle";
 import { TradeOfferDialog, type TradeOffer } from "@/components/TradeOfferDialog";
 import { gradeMeets } from "@/lib/autopilot.shared";
@@ -1805,6 +1806,7 @@ function Dashboard() {
 
   return (
     <div className="trade-dashboard h-full flex flex-col overflow-hidden">
+      <MarketClock className="shrink-0 border-b border-border/60 bg-background px-3 py-2 sm:px-4" />
       {/* Row 1: symbol + timeframes + right-side pickers */}
       <div className="shrink-0 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-2 px-3 py-2 border-b border-border/60 bg-background sm:flex sm:gap-3 sm:px-4 sm:py-2.5">
 
