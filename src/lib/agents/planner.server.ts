@@ -391,6 +391,40 @@ export function counterTrendRead(
   };
 }
 
+// ---------- Daily bias gate ----------
+// The cascade is Weekly > Daily > 4H > 1H > 15m. A bullish 4H inside a bearish
+// Daily is a retracement into the next sell, not a new uptrend, so a long there
+// can never be a B or better: it is held at C unless the Daily (or the 4H) has
+// actually broken structure in the trade's direction. This is separate from the
+// counter-trend guard, which only fires when the Daily AND the 4H both oppose.
+export function dailyBiasGate(
+  bias: typeof BIASES[number],
+  snap: MarketSnapshot,
+): { cap: typeof GRADES[number] | null; reason: string | null } {
+  const none = { cap: null, reason: null };
+  if (bias === "Neutral") return none;
+  const wanted = bias === "Long" ? "bullish" : "bearish";
+  const opposite = wanted === "bullish" ? "bearish" : "bullish";
+  const ladder = snap.mtf?.ladder ?? [];
+  const daily = ladder.find((r) => r.label === "Daily");
+  const dailyBias = daily?.bias ?? snap.cisd.htfBias;
+  if (dailyBias !== opposite) return none;
+
+  const h4Row = ladder.find((r) => r.label === "4H");
+  const h4Dir = snap.mtf?.h4.direction ?? h4Row?.bias ?? "neutral";
+  const broken = daily?.structure === wanted || h4Row?.structure === wanted;
+  if (broken) {
+    return {
+      cap: "B",
+      reason: `The Daily bias is ${dailyBias} while this is a ${bias.toLowerCase()}. Structure has already broken ${wanted} on the Daily or 4H, so it is allowed but held at B until the Daily itself turns.`,
+    };
+  }
+  return {
+    cap: "C",
+    reason: `Timeframe cascade: the Daily bias is ${dailyBias} and the 4H is ${h4Dir}, so this ${bias.toLowerCase()} is a retracement inside the daily move, not a trend trade. Daily outranks the 4H, so the grade is held at C — the higher-probability trade is the ${dailyBias === "bearish" ? "sell" : "buy"} that follows the Daily.`,
+  };
+}
+
 // ---------- Hard-coded Time Frame Combo ----------
 // 4H = DIRECTION, 1H = LIQUIDITY, 15m = BOS/ChoCH, 5m = execution.
 // This is a gate, not a hint: a setup that fights the 4H direction is NO ENTRY,
