@@ -273,15 +273,29 @@ function resolveDirection(
     else if (d === "bearish") votes.push({ dir: "bearish", weight, label });
   };
 
-  if (mtf?.alignment === "aligned-long") return { bias: "Long", reason: "MTF aligned long" };
-  if (mtf?.alignment === "aligned-short") return { bias: "Short", reason: "MTF aligned short" };
+  // Timeframe cascade: Weekly sets the long-term direction, DAILY is today's
+  // intent and the primary directional gate, 4H only confirms or contradicts it,
+  // and 1H/15m are triggers. The 4H used to outweigh the Daily, which produced
+  // longs into a bearish Daily (the US30 case). Daily now outranks the 4H.
+  const ladderRows = mtf?.ladder ?? [];
+  const rowBias = (label: string) => ladderRows.find((r) => r.label === label)?.bias;
+  const dailyDir = rowBias("Daily") ?? snap.cisd.htfBias;
+  const dailyDecisive = dailyDir === "bullish" || dailyDir === "bearish";
 
-  vote(mtf?.h4.direction, 3, "4H direction");
+  // The aligned-* shortcut may only be taken when the Daily agrees with it.
+  if (mtf?.alignment === "aligned-long" && dailyDir !== "bearish") {
+    return { bias: "Long", reason: "MTF aligned long" };
+  }
+  if (mtf?.alignment === "aligned-short" && dailyDir !== "bullish") {
+    return { bias: "Short", reason: "MTF aligned short" };
+  }
+
+  vote(dailyDir, 4, "Daily bias");
+  vote(rowBias("Weekly"), 2, "Weekly bias");
+  vote(rowBias("Monthly"), 1, "Monthly bias");
+  vote(mtf?.h4.direction, 2, "4H direction");
   vote(mtf?.h1.structureBreak, 2, "1H structure break");
   vote(mtf?.m15.confirmation, 1, "15m confirmation");
-  for (const label of ["Monthly", "Weekly", "Daily"]) {
-    vote((mtf?.ladder ?? []).find((r) => r.label === label)?.bias, 1, label);
-  }
   vote(snap.cisd.state !== "none" ? snap.cisd.state : undefined, 2, "CISD");
   vote(snap.cisd.htfBias, 1, "HTF bias");
   vote(memo.consensus !== "neutral" ? memo.consensus : undefined, 2, "analyst consensus");
