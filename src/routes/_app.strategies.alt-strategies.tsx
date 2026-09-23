@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { useAnalysisModel } from "@/hooks/useAnalysisModel";
 import { ANALYSIS_MODELS, type AnalysisModel } from "@/lib/analysis-models";
 
-export const Route = createFileRoute("/_app/scan-models")({
+export const Route = createFileRoute("/_app/strategies/alt-strategies")({
   head: () => ({
     meta: [
       { title: "Scan Models — TradeMind" },
