@@ -29,6 +29,7 @@ import { Route as InviteCodeRouteImport } from './routes/invite.$code'
 import { Route as HelpSlugRouteImport } from './routes/help.$slug'
 import { Route as ApiVersionRouteImport } from './routes/api.version'
 import { Route as ApiTtsRouteImport } from './routes/api.tts'
+import { Route as ApiTimeRouteImport } from './routes/api.time'
 import { Route as ApiOhlcRouteImport } from './routes/api.ohlc'
 import { Route as ApiNewsChatRouteImport } from './routes/api.news-chat'
 import { Route as ApiHealthRouteImport } from './routes/api.health'
@@ -219,6 +220,11 @@ const ApiVersionRoute = ApiVersionRouteImport.update({
 const ApiTtsRoute = ApiTtsRouteImport.update({
   id: '/api/tts',
   path: '/api/tts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTimeRoute = ApiTimeRouteImport.update({
+  id: '/api/time',
+  path: '/api/time',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiOhlcRoute = ApiOhlcRouteImport.update({
@@ -772,6 +778,7 @@ export interface FileRoutesByFullPath {
   '/api/health': typeof ApiHealthRoute
   '/api/news-chat': typeof ApiNewsChatRoute
   '/api/ohlc': typeof ApiOhlcRoute
+  '/api/time': typeof ApiTimeRoute
   '/api/tts': typeof ApiTtsRoute
   '/api/version': typeof ApiVersionRoute
   '/help/$slug': typeof HelpSlugRoute
@@ -882,6 +889,7 @@ export interface FileRoutesByTo {
   '/api/health': typeof ApiHealthRoute
   '/api/news-chat': typeof ApiNewsChatRoute
   '/api/ohlc': typeof ApiOhlcRoute
+  '/api/time': typeof ApiTimeRoute
   '/api/tts': typeof ApiTtsRoute
   '/api/version': typeof ApiVersionRoute
   '/help/$slug': typeof HelpSlugRoute
@@ -996,6 +1004,7 @@ export interface FileRoutesById {
   '/api/health': typeof ApiHealthRoute
   '/api/news-chat': typeof ApiNewsChatRoute
   '/api/ohlc': typeof ApiOhlcRoute
+  '/api/time': typeof ApiTimeRoute
   '/api/tts': typeof ApiTtsRoute
   '/api/version': typeof ApiVersionRoute
   '/help/$slug': typeof HelpSlugRoute
@@ -1111,6 +1120,7 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/api/news-chat'
     | '/api/ohlc'
+    | '/api/time'
     | '/api/tts'
     | '/api/version'
     | '/help/$slug'
@@ -1221,6 +1231,7 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/api/news-chat'
     | '/api/ohlc'
+    | '/api/time'
     | '/api/tts'
     | '/api/version'
     | '/help/$slug'
@@ -1334,6 +1345,7 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/api/news-chat'
     | '/api/ohlc'
+    | '/api/time'
     | '/api/tts'
     | '/api/version'
     | '/help/$slug'
@@ -1415,6 +1427,7 @@ export interface RootRouteChildren {
   ApiHealthRoute: typeof ApiHealthRoute
   ApiNewsChatRoute: typeof ApiNewsChatRoute
   ApiOhlcRoute: typeof ApiOhlcRoute
+  ApiTimeRoute: typeof ApiTimeRoute
   ApiTtsRoute: typeof ApiTtsRoute
   ApiVersionRoute: typeof ApiVersionRoute
   InviteCodeRoute: typeof InviteCodeRoute
@@ -1599,6 +1612,13 @@ declare module '@tanstack/react-router' {
       path: '/api/tts'
       fullPath: '/api/tts'
       preLoaderRoute: typeof ApiTtsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/time': {
+      id: '/api/time'
+      path: '/api/time'
+      fullPath: '/api/time'
+      preLoaderRoute: typeof ApiTimeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/ohlc': {
@@ -2432,6 +2452,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiHealthRoute: ApiHealthRoute,
   ApiNewsChatRoute: ApiNewsChatRoute,
   ApiOhlcRoute: ApiOhlcRoute,
+  ApiTimeRoute: ApiTimeRoute,
   ApiTtsRoute: ApiTtsRoute,
   ApiVersionRoute: ApiVersionRoute,
   InviteCodeRoute: InviteCodeRoute,
