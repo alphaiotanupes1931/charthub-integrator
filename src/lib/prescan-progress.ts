@@ -188,8 +188,10 @@ export function pickNextQuestion(
     const t = a.created_at ? Date.parse(a.created_at) : i;
     lastSeen.set(a.question_id, Math.max(lastSeen.get(a.question_id) ?? -Infinity, t));
   });
-  for (let li = start; li < LEVELS.length; li++) {
-    const open = bank.filter((q) => q.level === LEVELS[li] && !mastered.has(q.id));
+  // Current level first, then higher, then any lower ones still unmastered.
+  const order = [...LEVELS.slice(start), ...LEVELS.slice(0, start).reverse()];
+  for (const lvl of order) {
+    const open = bank.filter((q) => q.level === lvl && !mastered.has(q.id));
     if (!open.length) continue;
     const unseen = open.filter((q) => !lastSeen.has(q.id));
     if (unseen.length) return unseen[Math.abs(Math.floor(seed / 1000)) % unseen.length];
