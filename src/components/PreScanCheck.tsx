@@ -137,8 +137,17 @@ export function PreScanCheck({
           </DialogHeader>
         </div>
 
-        <div className="max-h-[60vh] overflow-y-auto px-5 py-4 space-y-5">
-          {questions.map((q, qi) => {
+        <div className="max-h-[60vh] overflow-y-auto px-5 py-4 space-y-5" aria-busy={loadingChart}>
+          {/* Nothing is shown until the chart read finishes, otherwise the
+              generic questions would be replaced by the chart-specific ones
+              mid-answer and discard what the trader already picked. */}
+          {loadingChart && (
+            <p className="py-6 text-center text-xs text-muted-foreground">
+              Reading {symbol ?? "the chart"}
+              {timeframe ? ` on ${timeframe}` : ""}…
+            </p>
+          )}
+          {!loadingChart && questions.map((q, qi) => {
             const pick = chosen[q.id];
             const right = pick === q.correct;
             return (
@@ -210,8 +219,8 @@ export function PreScanCheck({
               Run the scan
             </Button>
           ) : (
-            <Button size="sm" className="rounded-sm" onClick={submit} disabled={!answeredAll}>
-              {answeredAll ? "Check my answers" : `Answer all ${questions.length}`}
+            <Button size="sm" className="rounded-sm" onClick={submit} disabled={loadingChart || !answeredAll}>
+              {loadingChart ? "Reading the chart…" : answeredAll ? "Check my answers" : `Answer all ${questions.length}`}
             </Button>
           )}
         </div>
