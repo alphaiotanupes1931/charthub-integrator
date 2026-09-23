@@ -267,7 +267,7 @@ function ScoreboardPage() {
             <BucketTable
               title="By alt. strategy"
               buckets={board.byModel}
-              empty="No model recorded yet."
+              empty="No alt. strategy recorded yet."
             />
             <BucketTable
               title="By grade, inside each model"
