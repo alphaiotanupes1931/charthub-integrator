@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { stopMultipleFor, hasMeasuredStop } from "./stop-placement";
+import { stopMultipleFor, hasMeasuredStop } from "@/lib/stop-placement";
 describe("crypto stop widths", () => {
   it("uses measured BTC and ETH widths", () => {
     expect(stopMultipleFor("BTC/USD")).toBe(2);
