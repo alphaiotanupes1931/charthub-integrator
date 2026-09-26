@@ -22,7 +22,20 @@
 //
 // Where two widths were within 0.02R of each other the tighter one is chosen, so
 // less capital is risked for the same measured result. Markets under the 30-trade
-// floor (BTC, ETH, XRP) get no constant and keep the shared default.
+// floor (XRP) get no constant and keep the shared default.
+//
+// BTC and ETH were measured separately on two years of hourly bars through the
+// backtest engine (costs included, 70/30 observation/held-out split):
+//
+//   market   grade  1.25   1.5    1.75   2.0    2.5    3.0   (held-out net R)
+//   BTC/USD  B+     -0.06  -0.01  -0.02  +0.01  +0.06  +0.00
+//   BTC/USD  A+     -0.00  +0.05  +0.05  +0.06  +0.06  +0.05
+//   ETH/USD  B+     -0.13  -0.13  -0.06  -0.11  -0.20  -0.19
+//   ETH/USD  A+     -0.10  -0.12  -0.02  -0.02  -0.17  -0.17
+//
+// BTC: 2.0x was best in the observation window and positive held-out for both
+// grade sets. ETH: only ~8 months of hourly history was available and no width
+// was positive held-out; 1.75x lost least, so it is pinned there explicitly.
 //
 // This is in-sample on the signals filed so far, so it is a correction of a known
 // mechanical bias, not a claim of edge. Grades are deliberately left alone: stop
@@ -47,6 +60,8 @@ export const MEASURED_STOP_MULT: Record<string, number> = {
   GBPUSD: 2,
   XAGUSD: 2.5,
   EURUSD: 2.5,
+  BTCUSD: 2,
+  ETHUSD: 1.75,
 };
 
 /** "XAU/USD", "XAU_USD" and "xauusd" are the same market. */
@@ -62,6 +77,10 @@ const ALIASES: Record<string, string> = {
   SILVER: "XAGUSD",
   NASDAQ100: "NAS100",
   DOW: "US30",
+  BTCUSDT: "BTCUSD",
+  ETHUSDT: "ETHUSD",
+  BITCOIN: "BTCUSD",
+  ETHEREUM: "ETHUSD",
 };
 
 /**
