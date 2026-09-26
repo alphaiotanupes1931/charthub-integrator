@@ -133,6 +133,12 @@ export const recordSignalScore = createServerFn({ method: "POST" })
     });
     if (staleness.stale) return { ok: false, refused: staleness.reason ?? "Entry already gone." };
 
+    if (data.bias === "Long" || data.bias === "Short") {
+      const { checkSignalGeometry } = await import("@/lib/signal-geometry");
+      const geo = checkSignalGeometry({ ...data, lastPrice: data.lastPrice ?? null });
+      if (!geo.ok) return { ok: false, refused: geo.reason };
+    }
+
 
     const since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
     const { data: dupe } = await context.supabase
