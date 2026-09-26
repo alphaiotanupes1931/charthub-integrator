@@ -27,8 +27,8 @@ describe("per-instrument stop placement", () => {
   });
 
   it("falls back to the shared default for thin-sample markets", () => {
-    expect(hasMeasuredStop("BTC/USD")).toBe(false);
-    expect(stopMultipleFor("BTC/USD")).toBe(DEFAULT_STOP_MULT);
+    expect(hasMeasuredStop("XRP/USD")).toBe(false);
+    expect(stopMultipleFor("XRP/USD")).toBe(DEFAULT_STOP_MULT);
     expect(stopMultipleFor("SOMETHING_NEW")).toBe(DEFAULT_STOP_MULT);
   });
 
