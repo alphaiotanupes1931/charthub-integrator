@@ -2083,7 +2083,26 @@ export async function runPlanner(
     })();
   }
 
+  let instrumentEntryShadowRead: import("../instrument-entry-shadow").EntryShadow | null = null;
+  if (bias !== "Neutral" && !isNoEntry) {
+    try {
+      const { profileMap } = await import("../instrument-profile.server");
+      const { engineSymbolFor } = await import("./biasEngine");
+      const { instrumentEntryShadow } = await import("../instrument-entry-shadow");
+      const p = (await profileMap()).get(engineSymbolFor(snap.ticker));
+      instrumentEntryShadowRead = instrumentEntryShadow({
+        bias,
+        high: snap.stats.high20,
+        low: snap.stats.low20,
+        atr: snap.stats.atr14,
+        liveEntry: finalPlan.entry,
+        profile: p ? { medianPullback: p.medianPullback, deepPullback: p.deepPullback, stopBufferAtr: p.cfg.stopBufferAtr, barsSampled: p.barsSampled } : null,
+      });
+    } catch { /* trial read must never affect a scan */ }
+  }
+
   return {
+    instrumentEntryShadow: instrumentEntryShadowRead,
     methodologyVersion: SCANNER_METHODOLOGY_VERSION,
     grade,
     bias,
