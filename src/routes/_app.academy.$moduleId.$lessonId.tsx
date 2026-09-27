@@ -1,5 +1,7 @@
 import { createFileRoute, Link, notFound, useNavigate, useRouter } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { getQuiz } from "@/lib/academy-quizzes";
+import { LessonCheck } from "@/components/academy/LessonCheck";
 import { findLesson, type Lesson, type LessonBlock, type CalloutTone } from "@/lib/academy-content";
 import { useAcademyProgress } from "@/hooks/useAcademyProgress";
 import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
@@ -77,6 +79,11 @@ function LessonView() {
   const { isDone, markDone, clear, setLastViewed } = useAcademyProgress();
   const navigate = useNavigate();
   const done = isDone(lesson.id);
+  const quiz = getQuiz(mod.id);
+  const check = quiz && quiz.length ? quiz[index % quiz.length] : null;
+  const [checkPassed, setCheckPassed] = useState(false);
+  useEffect(() => { setCheckPassed(false); }, [lesson.id]);
+  const unlocked = !check || done || checkPassed;
 
   useEffect(() => {
     setLastViewed(mod.id, lesson.id);
@@ -149,6 +156,10 @@ function LessonView() {
         {lesson.blocks.map((block: LessonBlock, i: number) => <BlockRenderer key={i} block={block} />)}
       </div>
 
+      {check && (
+        <LessonCheck question={check} accent={mod.accent} alreadyPassed={done} onPassed={() => setCheckPassed(true)} />
+      )}
+
       {/* Completion + navigation */}
       <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-border/60 pt-5">
         <div className="flex items-center gap-2">
@@ -170,7 +181,8 @@ function LessonView() {
             </Link>
           )}
           <button
-            onClick={() => done ? clear(lesson.id) : markDone(lesson.id)}
+            onClick={() => done ? clear(lesson.id) : unlocked && markDone(lesson.id)}
+            disabled={!done && !unlocked}
             className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border transition ${
               done
                 ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
@@ -184,9 +196,11 @@ function LessonView() {
 
         <button
           onClick={completeAndAdvance}
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90"
+          disabled={!unlocked}
+          title={unlocked ? undefined : "Answer the question correctly to continue"}
+          className="disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90"
         >
-          {next ? "Next lesson" : "Finish module"} <ArrowRight className="h-4 w-4" />
+          {!unlocked ? "Answer to continue" : next ? "Next lesson" : "Finish module"} <ArrowRight className="h-4 w-4" />
         </button>
       </div>
     </div>
