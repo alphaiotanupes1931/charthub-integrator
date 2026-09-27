@@ -190,6 +190,8 @@ export type TradePlan = {
   currentTrend?: "up" | "down" | "range";
   /** Short plain-language synopsis of why this grade was given. */
   synopsis?: string;
+  /** Trial-only entry/stop from this market's measured pullbacks. Never traded. */
+  instrumentEntryShadow?: import("../instrument-entry-shadow").EntryShadow | null;
   /** Every rule that capped this grade, with the binding one flagged. */
   gradeCaps?: Array<{
     label: string;
