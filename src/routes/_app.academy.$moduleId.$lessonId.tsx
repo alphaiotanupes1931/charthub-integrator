@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound, useNavigate, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { getQuiz } from "@/lib/academy-quizzes";
+import { getLessonCheck } from "@/lib/academy-quizzes";
 import { LessonCheck } from "@/components/academy/LessonCheck";
 import { findLesson, type Lesson, type LessonBlock, type CalloutTone } from "@/lib/academy-content";
 import { useAcademyProgress } from "@/hooks/useAcademyProgress";
@@ -79,10 +79,8 @@ function LessonView() {
   const { isDone, markDone, clear, setLastViewed } = useAcademyProgress();
   const navigate = useNavigate();
   const done = isDone(lesson.id);
-  const quiz = getQuiz(mod.id);
-  // Only gate lessons that have a matching question. Modules have more lessons
-  // than quiz questions, so never recycle questions onto unrelated lessons.
-  const check = quiz && index < quiz.length ? quiz[index] : null;
+  // Every lesson has its own question matched to its content, keyed by lesson id.
+  const check = getLessonCheck(lesson.id);
   const [checkPassed, setCheckPassed] = useState(false);
   useEffect(() => { setCheckPassed(false); }, [lesson.id]);
   const unlocked = !check || done || checkPassed;
