@@ -80,7 +80,9 @@ function LessonView() {
   const navigate = useNavigate();
   const done = isDone(lesson.id);
   const quiz = getQuiz(mod.id);
-  const check = quiz && quiz.length ? quiz[index % quiz.length] : null;
+  // Only gate lessons that have a matching question. Modules have more lessons
+  // than quiz questions, so never recycle questions onto unrelated lessons.
+  const check = quiz && index < quiz.length ? quiz[index] : null;
   const [checkPassed, setCheckPassed] = useState(false);
   useEffect(() => { setCheckPassed(false); }, [lesson.id]);
   const unlocked = !check || done || checkPassed;
