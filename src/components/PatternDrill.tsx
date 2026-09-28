@@ -36,7 +36,7 @@ function PatternChart({ p }: { p: FoundPattern }) {
       {bars.map((bar, i) => {
         const x = i * step + step / 2;
         const green = bar.close >= bar.open;
-        const cls = green ? "stroke-success fill-success" : "stroke-destructive fill-destructive";
+        const cls = green ? "stroke-bull fill-bull" : "stroke-bear fill-bear";
         const top = y(Math.max(bar.open, bar.close));
         const h = Math.max(1, Math.abs(y(bar.open) - y(bar.close)));
         return (
