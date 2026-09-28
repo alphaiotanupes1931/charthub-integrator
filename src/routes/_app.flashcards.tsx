@@ -3,6 +3,7 @@ import { useMemo, useState, useEffect } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { ChevronLeft, ChevronRight, Shuffle, RotateCcw, Check, X, Search } from "lucide-react";
 import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
+import { PatternDrill } from "@/components/PatternDrill";
 
 export const Route = createFileRoute("/_app/flashcards")({
   head: () => ({
@@ -173,6 +174,8 @@ function FlashcardsPage() {
         title="Flashcards"
         description="Bite-sized lessons on trading concepts, chart patterns, risk, psychology and how to use TradeMind. Flip a card, mark what you know, come back to what you don't."
       />
+
+      <PatternDrill />
 
       <div className="relative mb-5">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
