@@ -55,12 +55,18 @@ const GRADE_RANK: Record<string, number> = {
   F: 0,
 };
 
-export function gradeRank(grade: string): number {
+export function gradeRank(grade: string | null | undefined): number {
+  if (typeof grade !== "string") return 0;
   return GRADE_RANK[grade] ?? 0;
 }
 
-export function gradeMeets(grade: string, minGrade: string): boolean {
-  return gradeRank(grade) >= gradeRank(minGrade);
+/** Fails closed: a missing/unknown grade or an unknown minimum never trades. */
+export function gradeMeets(grade: string | null | undefined, minGrade: string | null | undefined): boolean {
+  const g = gradeRank(grade);
+  const min = gradeRank(minGrade);
+  // Ranks 0-1 are F / NO ENTRY / unknown: never a tradeable grade or minimum.
+  if (g < 2 || min < 2) return false;
+  return g >= min;
 }
 
 export type BotDecision =
