@@ -39,12 +39,17 @@ export const DEFAULT_AUTOPILOT_SETTINGS: AutopilotSettings = {
   trailAfterTp1: true,
 };
 
-const GRADE_RANK: Record<string, number> = { "A+": 3, A: 2, B: 1, C: 0, D: 0, F: 0 };
+// Only real letter grades carry a rank. Anything else - null, undefined, the
+// strings "null"/"undefined", HOLD, NO ENTRY, an empty string - is not a grade
+// and can never clear the minimum-grade rail. Fail closed, explicitly.
+const GRADE_RANK: Record<string, number> = { "A+": 4, A: 3, B: 2, C: 1 };
 
-export function gradeMeets(grade: string | null, minGrade: string): boolean {
-  if (!grade) return false;
-  const g = GRADE_RANK[grade.trim().toUpperCase()] ?? 0;
-  const min = GRADE_RANK[minGrade.trim().toUpperCase()] ?? 2;
+export function gradeMeets(grade: string | null | undefined, minGrade: string | null | undefined): boolean {
+  if (typeof grade !== "string" || typeof minGrade !== "string") return false;
+  const g = GRADE_RANK[grade.trim().toUpperCase()];
+  const min = GRADE_RANK[minGrade.trim().toUpperCase()];
+  // Unknown grade or unknown minimum: refuse rather than guess.
+  if (g === undefined || min === undefined) return false;
   return g >= min;
 }
 
