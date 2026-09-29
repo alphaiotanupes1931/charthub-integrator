@@ -63,7 +63,8 @@ export async function buildProposalDraft(
     symbol,
     timeframe,
     side: plan.bias === "Long" ? "long" : "short",
-    grade: String(plan.grade),
+    // String(null) is the truthy text "null"; keep a missing grade missing.
+    grade: typeof plan.grade === "string" && plan.grade.trim() ? plan.grade : "",
     confidence: Number(plan.confidence) || 0,
     entry,
     stopLoss,
