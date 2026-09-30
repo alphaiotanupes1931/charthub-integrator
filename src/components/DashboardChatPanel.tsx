@@ -1,3 +1,4 @@
+import { deriveOrderType } from "@/lib/order-type";
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useChat } from "@ai-sdk/react";
@@ -322,19 +323,9 @@ function sanitizeGradeForPrice(grade: ChartGrade, lastPrice?: number): ChartGrad
 
 
 function orderTypeFor(grade: ChartGrade, lastPrice?: number): string | null {
-  if (!lastPrice || typeof grade.entry !== "number" || !isFinite(lastPrice) || !isFinite(grade.entry)) return null;
-  const tol = Math.max(lastPrice * 0.0005, 0);
-  if (grade.bias === "long") {
-    if (grade.entry > lastPrice + tol) return "BUY STOP";
-    if (grade.entry < lastPrice - tol) return "BUY LIMIT";
-    return "BUY MARKET";
-  }
-  if (grade.bias === "short") {
-    if (grade.entry < lastPrice - tol) return "SELL STOP";
-    if (grade.entry > lastPrice + tol) return "SELL LIMIT";
-    return "SELL MARKET";
-  }
-  return null;
+  const ref = (grade as { refPrice?: number }).refPrice ?? lastPrice;
+  const risk = typeof grade.entry === "number" && typeof grade.stop === "number" ? Math.abs(grade.entry - grade.stop) : null;
+  return deriveOrderType(grade.bias, grade.entry, ref, risk);
 }
 
 /**
