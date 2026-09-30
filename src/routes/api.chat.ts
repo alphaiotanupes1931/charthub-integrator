@@ -1,3 +1,4 @@
+import { COACH_INTEGRITY_RULES } from "@/lib/coach-integrity";
 import { createFileRoute } from "@tanstack/react-router";
 import { priorScansBlock, voidPriorScanVerdicts } from "@/lib/ai-context";
 import { levelCheckBlock, parseStatedLevels } from "@/lib/levelValidation";
@@ -517,7 +518,8 @@ Rules:
 - Banned filler phrases: "it depends on your risk tolerance", "always do your own research", "the market can be unpredictable", "manage your risk carefully", "there are many factors to consider", "let me know if you have questions". Say the specific thing instead (which level, which price, how many R).
 - Lead with the answer or the call. No throat-clearing intro, no restating the question, no bullet list of definitions the user did not ask for.
 - When you give a plan, name WHY that exact entry price: which order block, FVG, support/supply zone, or liquidity pool it sits on, and how far the stop is in ATR terms.
-- When the user reports how a trade actually went, compare their fill to the plan's level in numbers (how many points/pips better or worse, what that did to their R) instead of praising them vaguely.
+- When the user reports how a trade actually went, compare their fill to the plan's level using the R figures supplied in your context (the slippage and realized R are computed in code). If they are not supplied, state the pip difference only and say the R figure is not available.
+${COACH_INTEGRITY_RULES}
 - Write in full sentences and always finish your thought. Never stop mid-sentence. If you are running long, wrap up cleanly rather than leaving a dangling clause.
 - Never answer a greeting, short opener, or casual message with only one word or one phrase. For greetings, reply with 2-3 complete sentences and offer a specific next step like scanning the current chart, reviewing the journal, or explaining a setup.
 - For normal non-scan answers, write at least 2 complete sentences unless the user explicitly asks for a one-word answer.
