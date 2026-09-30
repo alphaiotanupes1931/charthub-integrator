@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { deriveOrderType, orderTypeHelp } from "@/lib/order-type";
 import { ArrowUpRight, ArrowDownRight, Minus, Target, Shield, Flag, Clock, ChevronDown, ChevronUp, X, Zap, BookOpen, FlaskConical, Check, Crosshair, Loader2 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
@@ -110,20 +111,11 @@ export function ChartSignalCards({ grade, lastPrice, symbol, interval, onClear, 
   // Determine order type from entry vs current price.
   // Long: entry above price = Buy Stop (breakout), entry below price = Buy Limit (pullback)
   // Short: entry below price = Sell Stop (breakdown), entry above price = Sell Limit (pullback)
-  let orderType: string | null = null;
-  let orderHelp = "";
-  if (typeof grade.entry === "number" && typeof lastPrice === "number" && isFinite(grade.entry) && isFinite(lastPrice)) {
-    const tol = Math.max(lastPrice * 0.0005, 0);
-    if (isLong) {
-      if (grade.entry > lastPrice + tol) { orderType = "BUY STOP"; orderHelp = "Entry is above current price - triggers on breakout"; }
-      else if (grade.entry < lastPrice - tol) { orderType = "BUY LIMIT"; orderHelp = "Entry is below current price - waits for pullback"; }
-      else { orderType = "BUY MARKET"; orderHelp = "Entry is at current price"; }
-    } else if (isShort) {
-      if (grade.entry < lastPrice - tol) { orderType = "SELL STOP"; orderHelp = "Entry is below current price - triggers on breakdown"; }
-      else if (grade.entry > lastPrice + tol) { orderType = "SELL LIMIT"; orderHelp = "Entry is above current price - waits for pullback"; }
-      else { orderType = "SELL MARKET"; orderHelp = "Entry is at current price"; }
-    }
-  }
+  // Shared rule, measured against the price the scan used when it is known.
+  const scanRef = (grade as { refPrice?: number }).refPrice ?? lastPrice;
+  const derivedType = deriveOrderType(bias, grade.entry, scanRef, typeof grade.stop === "number" && typeof grade.entry === "number" ? Math.abs(grade.entry - grade.stop) : null);
+  const orderType: string | null = derivedType;
+  const orderHelp = derivedType ? orderTypeHelp(derivedType) : "";
   const actionLabel = isLong ? "BUY" : isShort ? "SELL" : "WAIT";
 
   const timing = computeTiming({

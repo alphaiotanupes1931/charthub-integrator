@@ -54,6 +54,7 @@ import { MarketClock } from "@/components/MarketClock";
 import { AutoTradingToggle, AUTO_TRADE_CONTEXT_KEY } from "@/components/AutoTradingToggle";
 import { TradeOfferDialog, type TradeOffer } from "@/components/TradeOfferDialog";
 import { gradeMeets } from "@/lib/autopilot.shared";
+import { deriveOrderType } from "@/lib/order-type";
 import { getAutoTradeContext } from "@/lib/auto-trade.functions";
 import { SCANNER_METHODOLOGY_VERSION } from "@/lib/scanner-methodology";
 import { useQuery } from "@tanstack/react-query";
@@ -350,14 +351,8 @@ function buildLevelAnnotations(
   const fmt = (v: number) => v.toFixed(dp);
   const risk = Math.abs(entry - stop) || entry * 0.001;
   const side = bias === "long" ? "BUY" : "SELL";
-  let orderType = "MARKET";
-  if (last && isFinite(last)) {
-    const tol = Math.max(last * 0.0002, risk * 0.05);
-    if (Math.abs(entry - last) > tol) {
-      if (bias === "long") orderType = entry > last ? "STOP" : "LIMIT";
-      else orderType = entry < last ? "STOP" : "LIMIT";
-    }
-  }
+  const derived = deriveOrderType(bias, entry, last ?? null, risk);
+  const orderType = derived ? derived.split(" ")[1] : "MARKET";
   const entryColor = bias === "long" ? "#22c55e" : "#ef4444";
   const band = risk * 0.12;
   const r1 = Math.abs(tp1 - entry) / risk;

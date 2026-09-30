@@ -115,6 +115,7 @@ import { Route as ApiPublicHooksJournalVerifyTickRouteImport } from './routes/ap
 import { Route as ApiPublicHooksJournalDailyCheckinRouteImport } from './routes/api.public.hooks.journal-daily-checkin'
 import { Route as ApiPublicHooksGradeSeparationRouteImport } from './routes/api.public.hooks.grade-separation'
 import { Route as ApiPublicHooksGradeInversionRouteImport } from './routes/api.public.hooks.grade-inversion'
+import { Route as ApiPublicHooksGateVolumeRouteImport } from './routes/api.public.hooks.gate-volume'
 import { Route as ApiPublicHooksEntryFillTestRouteImport } from './routes/api.public.hooks.entry-fill-test'
 import { Route as ApiPublicHooksDripEmailsRouteImport } from './routes/api.public.hooks.drip-emails'
 import { Route as ApiPublicHooksDailyBiasSplitRouteImport } from './routes/api.public.hooks.daily-bias-split'
@@ -681,6 +682,12 @@ const ApiPublicHooksGradeInversionRoute =
     path: '/api/public/hooks/grade-inversion',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksGateVolumeRoute =
+  ApiPublicHooksGateVolumeRouteImport.update({
+    id: '/api/public/hooks/gate-volume',
+    path: '/api/public/hooks/gate-volume',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksEntryFillTestRoute =
   ApiPublicHooksEntryFillTestRouteImport.update({
     id: '/api/public/hooks/entry-fill-test',
@@ -817,6 +824,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/daily-bias-split': typeof ApiPublicHooksDailyBiasSplitRoute
   '/api/public/hooks/drip-emails': typeof ApiPublicHooksDripEmailsRoute
   '/api/public/hooks/entry-fill-test': typeof ApiPublicHooksEntryFillTestRoute
+  '/api/public/hooks/gate-volume': typeof ApiPublicHooksGateVolumeRoute
   '/api/public/hooks/grade-inversion': typeof ApiPublicHooksGradeInversionRoute
   '/api/public/hooks/grade-separation': typeof ApiPublicHooksGradeSeparationRoute
   '/api/public/hooks/journal-daily-checkin': typeof ApiPublicHooksJournalDailyCheckinRoute
@@ -928,6 +936,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/daily-bias-split': typeof ApiPublicHooksDailyBiasSplitRoute
   '/api/public/hooks/drip-emails': typeof ApiPublicHooksDripEmailsRoute
   '/api/public/hooks/entry-fill-test': typeof ApiPublicHooksEntryFillTestRoute
+  '/api/public/hooks/gate-volume': typeof ApiPublicHooksGateVolumeRoute
   '/api/public/hooks/grade-inversion': typeof ApiPublicHooksGradeInversionRoute
   '/api/public/hooks/grade-separation': typeof ApiPublicHooksGradeSeparationRoute
   '/api/public/hooks/journal-daily-checkin': typeof ApiPublicHooksJournalDailyCheckinRoute
@@ -1045,6 +1054,7 @@ export interface FileRoutesById {
   '/api/public/hooks/daily-bias-split': typeof ApiPublicHooksDailyBiasSplitRoute
   '/api/public/hooks/drip-emails': typeof ApiPublicHooksDripEmailsRoute
   '/api/public/hooks/entry-fill-test': typeof ApiPublicHooksEntryFillTestRoute
+  '/api/public/hooks/gate-volume': typeof ApiPublicHooksGateVolumeRoute
   '/api/public/hooks/grade-inversion': typeof ApiPublicHooksGradeInversionRoute
   '/api/public/hooks/grade-separation': typeof ApiPublicHooksGradeSeparationRoute
   '/api/public/hooks/journal-daily-checkin': typeof ApiPublicHooksJournalDailyCheckinRoute
@@ -1162,6 +1172,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/daily-bias-split'
     | '/api/public/hooks/drip-emails'
     | '/api/public/hooks/entry-fill-test'
+    | '/api/public/hooks/gate-volume'
     | '/api/public/hooks/grade-inversion'
     | '/api/public/hooks/grade-separation'
     | '/api/public/hooks/journal-daily-checkin'
@@ -1273,6 +1284,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/daily-bias-split'
     | '/api/public/hooks/drip-emails'
     | '/api/public/hooks/entry-fill-test'
+    | '/api/public/hooks/gate-volume'
     | '/api/public/hooks/grade-inversion'
     | '/api/public/hooks/grade-separation'
     | '/api/public/hooks/journal-daily-checkin'
@@ -1389,6 +1401,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/daily-bias-split'
     | '/api/public/hooks/drip-emails'
     | '/api/public/hooks/entry-fill-test'
+    | '/api/public/hooks/gate-volume'
     | '/api/public/hooks/grade-inversion'
     | '/api/public/hooks/grade-separation'
     | '/api/public/hooks/journal-daily-checkin'
@@ -1458,6 +1471,7 @@ export interface RootRouteChildren {
   ApiPublicHooksDailyBiasSplitRoute: typeof ApiPublicHooksDailyBiasSplitRoute
   ApiPublicHooksDripEmailsRoute: typeof ApiPublicHooksDripEmailsRoute
   ApiPublicHooksEntryFillTestRoute: typeof ApiPublicHooksEntryFillTestRoute
+  ApiPublicHooksGateVolumeRoute: typeof ApiPublicHooksGateVolumeRoute
   ApiPublicHooksGradeInversionRoute: typeof ApiPublicHooksGradeInversionRoute
   ApiPublicHooksGradeSeparationRoute: typeof ApiPublicHooksGradeSeparationRoute
   ApiPublicHooksJournalDailyCheckinRoute: typeof ApiPublicHooksJournalDailyCheckinRoute
@@ -2229,6 +2243,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksGradeInversionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/gate-volume': {
+      id: '/api/public/hooks/gate-volume'
+      path: '/api/public/hooks/gate-volume'
+      fullPath: '/api/public/hooks/gate-volume'
+      preLoaderRoute: typeof ApiPublicHooksGateVolumeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/entry-fill-test': {
       id: '/api/public/hooks/entry-fill-test'
       path: '/api/public/hooks/entry-fill-test'
@@ -2493,6 +2514,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksDailyBiasSplitRoute: ApiPublicHooksDailyBiasSplitRoute,
   ApiPublicHooksDripEmailsRoute: ApiPublicHooksDripEmailsRoute,
   ApiPublicHooksEntryFillTestRoute: ApiPublicHooksEntryFillTestRoute,
+  ApiPublicHooksGateVolumeRoute: ApiPublicHooksGateVolumeRoute,
   ApiPublicHooksGradeInversionRoute: ApiPublicHooksGradeInversionRoute,
   ApiPublicHooksGradeSeparationRoute: ApiPublicHooksGradeSeparationRoute,
   ApiPublicHooksJournalDailyCheckinRoute:
