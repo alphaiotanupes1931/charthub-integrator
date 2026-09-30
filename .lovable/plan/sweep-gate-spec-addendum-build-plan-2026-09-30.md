@@ -40,3 +40,8 @@ Follows Marcus's order, with coach integrity pulled forward. Step 1 is already d
 
 ## Baseline correction (addendum item 5)
 - The database has 65 decided EUR/USD signals from Aug 11 to Sep 29: -0.11R gross, -0.355R after costs. The coach's 120 / -0.06R does not hold up. The backtest uses the database figures.
+
+## Fill-time replay result (Sep 30)
+- Staleness now reconstructed from the last closed bar at filing for the 828 rows that lacked it; all 907 measured (0.5R tolerance).
+- Avg R per signal: none -0.175 (122/wk), sweep -0.223 (70/wk), stale -0.257 (91/wk), both -0.283 (52/wk).
+- Neither gate, alone or together, improves pooled average R. Both stay off. HOLD card and open-position notice are parked until a gate is chosen.
