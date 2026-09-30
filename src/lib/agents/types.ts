@@ -229,6 +229,8 @@ export type TradePlan = {
   triggered?: boolean;
   /** Price that has to trade/close before the plan is valid. */
   triggerLevel?: number;
+  /** Liquidity sweep gate, recorded in shadow next to the published plan. */
+  sweepGate?: import("@/lib/sweep-gate").SweepGateResult;
   /** Plain-language confirmation rule for this setup. */
   triggerRule?: string;
   /** Machine-readable risk flags, e.g. COUNTER_TREND_FADE. */
