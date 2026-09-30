@@ -44,3 +44,13 @@
 - [x] Live moving clock with date and market status on the dashboard
 - [x] Pre-scan check: one flashcard question, never repeat a correctly answered one, beginner -> intermediate -> advanced
 - [x] Record every question asked and whether it was right; tests + browser check
+
+## Sweep gate (Marcus spec + addendum, Sep 29)
+- [x] Autopilot/paper-bot null-grade rail fails closed, with tests
+- [x] One shared order-type rule on all three screens
+- [x] Coach integrity rules + code-side R math, price precision, dedup, streak helpers
+- [x] Sweep gate built, shadow only (all models off), recorded on every plan
+- [x] Gate volume report (/api/public/hooks/gate-volume)
+- [ ] Staleness guard volume: 828 of 907 historical signals lack entry distance; needs a fill-time replay (blocked on Marcus's call about re-measuring)
+- [ ] HOLD card design + open-position thesis notice (waiting on Marcus to confirm defaults; only needed once the gate is switched on)
+- [ ] Coach: feed journal-verified R and streak into chat context (helpers exist, not wired)
