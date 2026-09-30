@@ -32,9 +32,9 @@ const SECTIONS: Section[] = [
     title: "Signal grades",
     blurb: "What each grade means and how the AI assigns them.",
     items: [
-      { q: "A+ - Highest confidence", a: "Phase C confirmed + Phase D BOS + R:R above 3:1. All three phases of the Sweep → BOS → Retest sequence confirmed with volume spike and LTF BOS. The setup you wait all day for." },
-      { q: "A - Strong setup", a: "Phase D BOS + Retest confirmed + R:R above 2:1. Full Wyckoff sequence complete. High-probability entry with structurally valid stop loss." },
-      { q: "B+ - Good setup", a: "Phase C forming, awaiting reversal + R:R above 2:1. Sweep + BOS confirmed, retest pullback starting. Trade with proper risk management." },
+      { q: "A+ - Highest confidence", a: "Sweep, break of structure and retest all confirmed, with a tick-volume spike and a lower-timeframe break, and R:R above 3:1. The setup you wait all day for." },
+      { q: "A - Strong setup", a: "Break of structure and retest confirmed, R:R above 2:1, with a structurally valid stop loss." },
+      { q: "B+ - Good setup", a: "Sweep and break of structure confirmed, retest pullback starting, R:R above 2:1. Trade with proper risk management." },
       { q: "B - Caution", a: "Partial phase confirmation + R:R above 2:1. Some sequence elements confirmed but not all three. Reduce size or wait for more confirmation." },
       { q: "C - No trade", a: "R:R below 2:1 regardless of phase - flagged as invalid. The risk/reward does not justify the entry. Wait for better structure." },
       { q: "NO ENTRY - Consolidation", a: "Sniper Filter active - price is in consolidation or no structural extreme detected. Wait for a Spring, Upthrust, or BOS to form." },

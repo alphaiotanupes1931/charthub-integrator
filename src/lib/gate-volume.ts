@@ -33,6 +33,8 @@ export type GateVolumeReport = {
   to: string | null;
   unmeasured: { sweep: number; stale: number };
   pooled: Record<Scenario, ScenarioCell>;
+  /** Change vs no gate, pooled: average R and total R. */
+  deltaVsNone: Record<Scenario, { avgR: number | null; totalR: number }>;
   bySymbol: Array<{ symbol: string } & Record<Scenario, ScenarioCell>>;
   /** Signals kept per ISO week per instrument, per scenario. */
   weekly: Array<{ week: string; symbol: string } & Record<Scenario, number>>;
@@ -121,6 +123,10 @@ export function analyzeGateVolume(rows: GateTaggedSignal[]): GateVolumeReport {
     to,
     unmeasured: { sweep: rows.filter((r) => r.sweepPass == null).length, stale: rows.filter((r) => r.stalePass == null).length },
     pooled,
+    deltaVsNone: Object.fromEntries(SCENARIOS.map((sc) => [sc, {
+      avgR: pooled[sc].avgR != null && pooled.none.avgR != null ? round(pooled[sc].avgR! - pooled.none.avgR) : null,
+      totalR: round(pooled[sc].totalR - pooled.none.totalR, 2),
+    }])) as Record<Scenario, { avgR: number | null; totalR: number }>,
     bySymbol,
     weekly,
     overlap,
