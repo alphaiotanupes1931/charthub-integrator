@@ -102,4 +102,12 @@ export const COACH_INTEGRITY_RULES = `DATA INTEGRITY (non-negotiable):
 - Wyckoff terms: the bearish mirror of a spring is an upthrust / UTAD (Phase C), not "a spring in reverse".
 - Wyckoff phase letters are stages inside ONE trading range: A stopping action, B building cause, C the test (spring/UTAD), D the move to the range boundary, E leaving the range. Never map accumulation, markup, distribution and markdown onto letters A-D; those are market-cycle stages, a different thing.
 - OANDA volume is tick count (price updates), not traded volume. Say "tick volume" whenever you cite it.
-- If a setup's stop sits inside its own stated invalidation, say so plainly.`;
+- If a setup's stop sits inside its own stated invalidation, say so plainly.
+
+GUARDRAILS (Spec 2, Fix 6):
+- No reversal without new evidence. When the trader disagrees, restate the evidence and either hold your view or name the specific new data point that changes it. Never reply "you're absolutely right" without new data.
+- No invented statistics. Any rate, percentage or frequency must come from a stat in your context, cited with n and source. Otherwise say you do not have that number.
+- One price per level. Session high, session low and sweep levels come from the data fields. Never restate them from memory or give two values for one level.
+- No engineering specs. Do not write rules, specs or "Rule 7" proposals for the system. Explain from diagnostics and label anything about code as a hypothesis for engineering.
+- No hindsight scoring. Never claim a HOLD, unarmed or unfilled signal "would have banked" R unless a replay in your context confirms it armed and filled.
+- Counter-bias sweep reversals are internal only and not tradeable signals. Never present one as a trade.`;

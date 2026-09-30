@@ -1,3 +1,5 @@
+import { detectSweepReversal } from "@/lib/sweep-reversal";
+import { readWyckoffContext, wyckoffContextCap } from "@/lib/wyckoff-context";
 import { validateBosProtection } from "@/lib/sweep-gate";
 import { formatPrice, priceDecimals } from "@/lib/coach-integrity";
 // Layer 3 - Planner. Paperclip-style plan → critique → refine loop (max 2 iterations)
@@ -555,6 +557,19 @@ export function shadowSweepGate(bias: typeof BIASES[number], snap: MarketSnapsho
     tick,
     fmt: (n) => formatPrice(snap.ticker, n),
   });
+}
+
+/** Spec 2 Fix 4 + Fix 5, recorded in shadow. Never changes the published grade. */
+export function shadowSpec2(bias: typeof BIASES[number], snap: MarketSnapshot) {
+  const candles = snap.candles ?? [];
+  if (candles.length < 20) return undefined;
+  const fmt = (n: number) => formatPrice(snap.ticker, n);
+  const reversal = detectSweepReversal(candles, {
+    atr: snap.stats.atr14, h4: snap.mtf?.h4.direction, h1: snap.mtf?.h1.structureBreak === "none" ? undefined : snap.mtf?.h1.structureBreak, fmt,
+  });
+  const context = readWyckoffContext(candles, snap.mtf?.h4.trend);
+  const ctxCap = wyckoffContextCap(bias, context);
+  return { reversal, context, contextCap: ctxCap };
 }
 
 /** One sentence for the written plan describing the break of structure quality. */
@@ -2157,6 +2172,7 @@ export async function runPlanner(
     triggerLevel: triggerRead.level ?? undefined,
     triggerRule: triggerRead.rule ?? undefined,
     sweepGate: shadowSweepGate(bias, snap),
+    spec2Shadow: shadowSpec2(bias, snap),
     flags: setupFlags.length ? setupFlags : undefined,
     htfBias: dailyBias,
     warnings: warnings.length ? warnings : undefined,

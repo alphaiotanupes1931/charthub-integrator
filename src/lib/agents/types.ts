@@ -231,6 +231,12 @@ export type TradePlan = {
   triggerLevel?: number;
   /** Liquidity sweep gate, recorded in shadow next to the published plan. */
   sweepGate?: import("@/lib/sweep-gate").SweepGateResult;
+  /** Spec 2 Fix 4/5 shadow: reversal (internal only) and Wyckoff context labels. */
+  spec2Shadow?: {
+    reversal: import("@/lib/sweep-reversal").SweepReversal;
+    context: import("@/lib/wyckoff-context").WyckoffContext;
+    contextCap: import("@/lib/spec2").GradeCap | null;
+  };
   /** Plain-language confirmation rule for this setup. */
   triggerRule?: string;
   /** Machine-readable risk flags, e.g. COUNTER_TREND_FADE. */
