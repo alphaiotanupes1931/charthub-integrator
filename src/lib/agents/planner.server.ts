@@ -565,7 +565,7 @@ export function shadowSpec2(bias: typeof BIASES[number], snap: MarketSnapshot) {
   if (candles.length < 20) return undefined;
   const fmt = (n: number) => formatPrice(snap.ticker, n);
   const reversal = detectSweepReversal(candles, {
-    atr: snap.stats.atr14, h4: snap.mtf?.h4.direction, h1: snap.mtf?.h1.direction, fmt,
+    atr: snap.stats.atr14, h4: snap.mtf?.h4.direction, h1: snap.mtf?.h1.structureBreak === "none" ? undefined : snap.mtf?.h1.structureBreak, fmt,
   });
   const context = readWyckoffContext(candles, snap.mtf?.h4.trend);
   const ctxCap = wyckoffContextCap(bias, context);
