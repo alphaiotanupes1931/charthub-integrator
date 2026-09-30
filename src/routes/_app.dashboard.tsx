@@ -389,7 +389,7 @@ function gradeFor(symbol: Symbol, lastPrice?: number): ScanResult {
   const confidence = 55 + ((h >> 8) % 40);
   const notesByGrade: Record<ScanResult["grade"], string> = {
     "A+": "Sweep then BOS confirmed. Clean retest forming. Stop is structurally tight.",
-    A:   "Strong Phase D setup. Wait for first 5m close back inside range before entry.",
+    A:   "Strong setup. Wait for first 5m close back inside range before entry.",
     B:   "Confluence is partial. R:R only justifies a half size.",
     C:   "Choppy structure. Liquidity above and below. Skip until one side resolves.",
     "NO ENTRY": "No edge. Range mid with conflicting HTF bias. Stand down.",

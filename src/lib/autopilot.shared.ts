@@ -55,8 +55,23 @@ export function gradeMeets(grade: string | null | undefined, minGrade: string | 
 
 export function evaluateRails(
   settings: AutopilotSettings,
-  candidate: { symbol: string; grade: string | null; openPositions: number; dailyLossPct?: number },
+  candidate: {
+    symbol: string;
+    grade: string | null;
+    openPositions: number;
+    dailyLossPct?: number;
+    /** Sweep-gate state. Only ACTIVE (or unset) may execute; HOLD/ARMED/INVALIDATED never do. */
+    gateState?: string | null;
+    /** Fix 4 counter-bias reversal: internal only, never auto-executed. */
+    counterBiasReversal?: boolean;
+  },
 ): { allowed: boolean; reason: string | null } {
+  if (candidate.gateState != null && candidate.gateState !== "ACTIVE") {
+    return { allowed: false, reason: `Setup is ${candidate.gateState}, not an active entry` };
+  }
+  if (candidate.counterBiasReversal) {
+    return { allowed: false, reason: "Counter-bias reversals are not traded automatically" };
+  }
   if (candidate.dailyLossPct !== undefined && candidate.dailyLossPct >= settings.maxDailyLossPct) {
     return {
       allowed: false,

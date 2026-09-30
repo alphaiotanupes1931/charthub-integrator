@@ -33,6 +33,8 @@ export type GateVolumeReport = {
   to: string | null;
   unmeasured: { sweep: number; stale: number };
   pooled: Record<Scenario, ScenarioCell>;
+  /** Change vs no gate, pooled: average R and total R. */
+  deltaVsNone: Record<Scenario, { avgR: number | null; totalR: number }>;
   bySymbol: Array<{ symbol: string } & Record<Scenario, ScenarioCell>>;
   /** Signals kept per ISO week per instrument, per scenario. */
   weekly: Array<{ week: string; symbol: string } & Record<Scenario, number>>;
