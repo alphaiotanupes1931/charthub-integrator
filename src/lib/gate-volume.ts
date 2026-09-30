@@ -123,6 +123,10 @@ export function analyzeGateVolume(rows: GateTaggedSignal[]): GateVolumeReport {
     to,
     unmeasured: { sweep: rows.filter((r) => r.sweepPass == null).length, stale: rows.filter((r) => r.stalePass == null).length },
     pooled,
+    deltaVsNone: Object.fromEntries(SCENARIOS.map((sc) => [sc, {
+      avgR: pooled[sc].avgR != null && pooled.none.avgR != null ? round(pooled[sc].avgR! - pooled.none.avgR) : null,
+      totalR: round(pooled[sc].totalR - pooled.none.totalR, 2),
+    }])) as Record<Scenario, { avgR: number | null; totalR: number }>,
     bySymbol,
     weekly,
     overlap,
