@@ -1,3 +1,5 @@
+import { validateBosProtection } from "@/lib/sweep-gate";
+import { formatPrice, priceDecimals } from "@/lib/coach-integrity";
 // Layer 3 - Planner. Paperclip-style plan → critique → refine loop (max 2 iterations)
 // that consumes a ResearchMemo + MarketSnapshot and produces a concrete TradePlan.
 
@@ -535,6 +537,24 @@ export function protectedStructureRead(
     cap: "C",
     reason: `Bad break of structure: the 1H ${side} at ${bos.originLevel} expanded without sweeping the ${side} at ${bos.priorLevel ?? "the prior swing"} first, so that liquidity is still resting ${where} it. There is no protected ${side} to hide the stop behind, so this caps at C - wait for the sweep, then the break.`,
   };
+}
+
+/** Sweep gate on the 1H break, shadow only: recorded, never changes the plan here. */
+export function shadowSweepGate(bias: typeof BIASES[number], snap: MarketSnapshot) {
+  if (bias === "Neutral") return undefined;
+  const bos = snap.mtf?.h1.bos;
+  if (!bos) return undefined;
+  const h1 = snap.candles1h ?? (snap.interval === "60" ? snap.candles : []);
+  const after = h1.filter((c) => c.time > bos.breakTime);
+  const tick = Math.pow(10, -priceDecimals(snap.ticker, snap.lastPrice));
+  return validateBosProtection({
+    bos,
+    side: bias === "Long" ? "long" : "short",
+    after,
+    atr: snap.stats.atr14,
+    tick,
+    fmt: (n) => formatPrice(snap.ticker, n),
+  });
 }
 
 /** One sentence for the written plan describing the break of structure quality. */
@@ -2136,6 +2156,7 @@ export async function runPlanner(
     triggered: bias === "Neutral" ? undefined : triggerRead.triggered,
     triggerLevel: triggerRead.level ?? undefined,
     triggerRule: triggerRead.rule ?? undefined,
+    sweepGate: shadowSweepGate(bias, snap),
     flags: setupFlags.length ? setupFlags : undefined,
     htfBias: dailyBias,
     warnings: warnings.length ? warnings : undefined,
