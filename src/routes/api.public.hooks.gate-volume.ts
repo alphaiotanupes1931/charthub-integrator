@@ -13,7 +13,7 @@ export const Route = createFileRoute("/api/public/hooks/gate-volume")({
         }
         const url = new URL(request.url);
         const limit = Math.min(Number(url.searchParams.get("limit")) || 1500, 5000);
-        const staleR = Number(url.searchParams.get("staleR")) || 0.25;
+        const staleR = Number(url.searchParams.get("staleR")) || 0.5;
 
         const { analyzeGateVolume } = await import("@/lib/gate-volume");
         const { readProtectedStructure } = await import("@/lib/protectedStructure");
@@ -22,14 +22,16 @@ export const Route = createFileRoute("/api/public/hooks/gate-volume")({
 
         const { data, error } = await supabaseAdmin
           .from("signal_scores")
-          .select("symbol,timeframe,bias,status,realized_r,net_r,entry_distance_r,created_at")
+          .select("symbol,timeframe,bias,status,realized_r,net_r,entry_distance_r,entry,stop,created_at")
           .in("status", ["target", "stop", "expired"])
           .order("created_at", { ascending: false })
           .limit(limit);
         if (error) return Response.json({ error: error.message }, { status: 500 });
 
         const loadBars = cachedBarLoader();
+        const { evaluateEntryStaleness } = await import("@/lib/signal-staleness");
         const rows = [];
+        const staleSource = { recorded: 0, reconstructed: 0, unmeasured: 0 };
         for (const row of data ?? []) {
           const bias = String(row.bias).toLowerCase();
           if (bias !== "long" && bias !== "short") continue;
@@ -43,7 +45,18 @@ export const Route = createFileRoute("/api/public/hooks/gate-volume")({
             const wanted = bias === "long" ? "bullish" : "bearish";
             sweepPass = !bos || bos.kind !== wanted ? true : bos.swept;
           }
-          const d = row.entry_distance_r == null ? null : Number(row.entry_distance_r);
+          // Fill-time reconstruction: when the filing path did not record how far
+          // past entry price sat, rebuild it from the last closed bar at or before
+          // filing, the same price the scanner could see. No look-ahead.
+          let d = row.entry_distance_r == null ? null : Number(row.entry_distance_r);
+          if (d != null && isFinite(d)) staleSource.recorded += 1;
+          else {
+            const ref = upto.length ? upto[upto.length - 1]!.close : null;
+            const read = evaluateEntryStaleness({ bias, entry: Number(row.entry), stop: Number(row.stop), lastPrice: ref, toleranceR: staleR });
+            d = read.distanceR;
+            if (d == null) staleSource.unmeasured += 1;
+            else staleSource.reconstructed += 1;
+          }
           rows.push({
             symbol: row.symbol,
             created_at: row.created_at,
@@ -52,7 +65,7 @@ export const Route = createFileRoute("/api/public/hooks/gate-volume")({
             stalePass: d == null || !isFinite(d) ? null : d <= staleR,
           });
         }
-        return Response.json({ staleToleranceR: staleR, ...analyzeGateVolume(rows) });
+        return Response.json({ staleToleranceR: staleR, staleSource, ...analyzeGateVolume(rows) });
       },
     },
   },
