@@ -9,185 +9,129 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
-import { Route as TermsRouteImport } from './routes/terms'
-import { Route as StatusRouteImport } from './routes/status'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as RecordRouteImport } from './routes/record'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as PricingRouteImport } from './routes/pricing'
-import { Route as OnboardingRouteImport } from './routes/onboarding'
-import { Route as McpRouteImport } from './routes/mcp'
-import { Route as HelpRouteImport } from './routes/help'
-import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
-import { Route as FaqRouteImport } from './routes/faq'
-import { Route as CookiesRouteImport } from './routes/cookies'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as InviteCodeRouteImport } from './routes/invite.$code'
-import { Route as HelpSlugRouteImport } from './routes/help.$slug'
-import { Route as ApiVersionRouteImport } from './routes/api.version'
-import { Route as ApiTtsRouteImport } from './routes/api.tts'
-import { Route as ApiTimeRouteImport } from './routes/api.time'
-import { Route as ApiOhlcRouteImport } from './routes/api.ohlc'
-import { Route as ApiNewsChatRouteImport } from './routes/api.news-chat'
-import { Route as ApiHealthRouteImport } from './routes/api.health'
-import { Route as ApiChatRouteImport } from './routes/api.chat'
-import { Route as AppWyckoffRouteImport } from './routes/_app.wyckoff'
-import { Route as AppVoiceCoachRouteImport } from './routes/_app.voice-coach'
-import { Route as AppTestingRouteImport } from './routes/_app.testing'
-import { Route as AppStrategiesRouteImport } from './routes/_app.strategies'
-import { Route as AppSignalsRouteImport } from './routes/_app.signals'
-import { Route as AppSettingsRouteImport } from './routes/_app.settings'
-import { Route as AppScoreboardRouteImport } from './routes/_app.scoreboard'
-import { Route as AppScanModelsRouteImport } from './routes/_app.scan-models'
-import { Route as AppScanLensRouteImport } from './routes/_app.scan-lens'
-import { Route as AppNewsRouteImport } from './routes/_app.news'
-import { Route as AppMentorRouteImport } from './routes/_app.mentor'
-import { Route as AppMentalRouteImport } from './routes/_app.mental'
-import { Route as AppMemoryRouteImport } from './routes/_app.memory'
-import { Route as AppLevelsRouteImport } from './routes/_app.levels'
-import { Route as AppLeaderboardRouteImport } from './routes/_app.leaderboard'
-import { Route as AppJournalRouteImport } from './routes/_app.journal'
-import { Route as AppGuideRouteImport } from './routes/_app.guide'
-import { Route as AppFriendsRouteImport } from './routes/_app.friends'
-import { Route as AppFlashcardsRouteImport } from './routes/_app.flashcards'
-import { Route as AppFirstWeekRouteImport } from './routes/_app.first-week'
-import { Route as AppDiscordRouteImport } from './routes/_app.discord'
-import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
-import { Route as AppContactRouteImport } from './routes/_app.contact'
-import { Route as AppConnectionsRouteImport } from './routes/_app.connections'
-import { Route as AppCoachesRouteImport } from './routes/_app.coaches'
-import { Route as AppCoachDashboardRouteImport } from './routes/_app.coach-dashboard'
-import { Route as AppChatRouteImport } from './routes/_app.chat'
-import { Route as AppCalculatorRouteImport } from './routes/_app.calculator'
-import { Route as AppBrokerRouteImport } from './routes/_app.broker'
-import { Route as AppAutopilotRouteImport } from './routes/_app.autopilot'
-import { Route as AppAnalyticsRouteImport } from './routes/_app.analytics'
-import { Route as AppAlertsRouteImport } from './routes/_app.alerts'
-import { Route as AppAdminRouteImport } from './routes/_app.admin'
-import { Route as AppAcademyRouteImport } from './routes/_app.academy'
-import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as AppRouteImport } from './routes/_app'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CookiesRouteImport } from './routes/cookies'
+import { Route as FaqRouteImport } from './routes/faq'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as HelpRouteImport } from './routes/help'
+import { Route as McpRouteImport } from './routes/mcp'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as RecordRouteImport } from './routes/record'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as StatusRouteImport } from './routes/status'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
-import { Route as AppStrategiesIndexRouteImport } from './routes/_app.strategies.index'
-import { Route as AppChatIndexRouteImport } from './routes/_app.chat.index'
-import { Route as AppAcademyIndexRouteImport } from './routes/_app.academy.index'
-import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
-import { Route as BrokerAlpacaCallbackRouteImport } from './routes/broker.alpaca.callback'
-import { Route as ApiTradelockerImportRouteImport } from './routes/api.tradelocker.import'
-import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api.public.stripe-webhook'
-import { Route as ApiPublicLeadUnsubscribeRouteImport } from './routes/api.public.lead-unsubscribe'
-import { Route as ApiPublicBridgeRouteImport } from './routes/api.public.bridge'
-import { Route as AppStrategiesAltStrategiesRouteImport } from './routes/_app.strategies.alt-strategies'
-import { Route as AppStrategiesStrategyIdRouteImport } from './routes/_app.strategies.$strategyId'
-import { Route as AppChatThreadIdRouteImport } from './routes/_app.chat.$threadId'
-import { Route as AppAdminSubscribersRouteImport } from './routes/_app.admin.subscribers'
-import { Route as AppAcademyReviewRouteImport } from './routes/_app.academy.review'
-import { Route as AppAcademyMasterCertificateRouteImport } from './routes/_app.academy.master-certificate'
-import { Route as AppAcademyExamRouteImport } from './routes/_app.academy.exam'
-import { Route as AppAcademyModuleIdRouteImport } from './routes/_app.academy.$moduleId'
-import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as AppAcademyRouteImport } from './routes/_app.academy'
+import { Route as AppAdminRouteImport } from './routes/_app.admin'
+import { Route as AppAlertsRouteImport } from './routes/_app.alerts'
+import { Route as AppAnalyticsRouteImport } from './routes/_app.analytics'
+import { Route as AppAutopilotRouteImport } from './routes/_app.autopilot'
+import { Route as AppBrokerRouteImport } from './routes/_app.broker'
+import { Route as AppCalculatorRouteImport } from './routes/_app.calculator'
+import { Route as AppChatRouteImport } from './routes/_app.chat'
+import { Route as AppCoachDashboardRouteImport } from './routes/_app.coach-dashboard'
+import { Route as AppCoachesRouteImport } from './routes/_app.coaches'
+import { Route as AppConnectionsRouteImport } from './routes/_app.connections'
+import { Route as AppContactRouteImport } from './routes/_app.contact'
+import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
+import { Route as AppDiscordRouteImport } from './routes/_app.discord'
+import { Route as AppFirstWeekRouteImport } from './routes/_app.first-week'
+import { Route as AppFlashcardsRouteImport } from './routes/_app.flashcards'
+import { Route as AppFriendsRouteImport } from './routes/_app.friends'
+import { Route as AppGuideRouteImport } from './routes/_app.guide'
+import { Route as AppJournalRouteImport } from './routes/_app.journal'
+import { Route as AppLeaderboardRouteImport } from './routes/_app.leaderboard'
+import { Route as AppLevelsRouteImport } from './routes/_app.levels'
+import { Route as AppMemoryRouteImport } from './routes/_app.memory'
+import { Route as AppMentalRouteImport } from './routes/_app.mental'
+import { Route as AppMentorRouteImport } from './routes/_app.mentor'
+import { Route as AppNewsRouteImport } from './routes/_app.news'
+import { Route as AppScanLensRouteImport } from './routes/_app.scan-lens'
+import { Route as AppScanModelsRouteImport } from './routes/_app.scan-models'
+import { Route as AppScoreboardRouteImport } from './routes/_app.scoreboard'
+import { Route as AppSettingsRouteImport } from './routes/_app.settings'
+import { Route as AppSignalsRouteImport } from './routes/_app.signals'
+import { Route as AppStrategiesRouteImport } from './routes/_app.strategies'
+import { Route as AppTestingRouteImport } from './routes/_app.testing'
+import { Route as AppVoiceCoachRouteImport } from './routes/_app.voice-coach'
+import { Route as AppWyckoffRouteImport } from './routes/_app.wyckoff'
+import { Route as ApiChatRouteImport } from './routes/api.chat'
+import { Route as ApiHealthRouteImport } from './routes/api.health'
+import { Route as ApiNewsChatRouteImport } from './routes/api.news-chat'
+import { Route as ApiOhlcRouteImport } from './routes/api.ohlc'
+import { Route as ApiTimeRouteImport } from './routes/api.time'
+import { Route as ApiTtsRouteImport } from './routes/api.tts'
+import { Route as ApiVersionRouteImport } from './routes/api.version'
+import { Route as HelpSlugRouteImport } from './routes/help.$slug'
+import { Route as InviteCodeRouteImport } from './routes/invite.$code'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as AppAcademyIndexRouteImport } from './routes/_app.academy.index'
+import { Route as AppAcademyModuleIdRouteImport } from './routes/_app.academy.$moduleId'
+import { Route as AppAcademyExamRouteImport } from './routes/_app.academy.exam'
+import { Route as AppAcademyMasterCertificateRouteImport } from './routes/_app.academy.master-certificate'
+import { Route as AppAcademyReviewRouteImport } from './routes/_app.academy.review'
+import { Route as AppAdminSubscribersRouteImport } from './routes/_app.admin.subscribers'
+import { Route as AppChatIndexRouteImport } from './routes/_app.chat.index'
+import { Route as AppChatThreadIdRouteImport } from './routes/_app.chat.$threadId'
+import { Route as AppStrategiesIndexRouteImport } from './routes/_app.strategies.index'
+import { Route as AppStrategiesStrategyIdRouteImport } from './routes/_app.strategies.$strategyId'
+import { Route as AppStrategiesAltStrategiesRouteImport } from './routes/_app.strategies.alt-strategies'
+import { Route as ApiPublicBridgeRouteImport } from './routes/api.public.bridge'
+import { Route as ApiPublicLeadUnsubscribeRouteImport } from './routes/api.public.lead-unsubscribe'
+import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api.public.stripe-webhook'
+import { Route as ApiTradelockerImportRouteImport } from './routes/api.tradelocker.import'
+import { Route as BrokerAlpacaCallbackRouteImport } from './routes/broker.alpaca.callback'
+import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
 import { Route as AppAcademyModuleIdIndexRouteImport } from './routes/_app.academy.$moduleId.index'
-import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
-import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
-import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
-import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api.public.telegram.webhook'
-import { Route as ApiPublicSignalsFileRouteImport } from './routes/api.public.signals.file'
-import { Route as ApiPublicHooksWeeklyReviewRouteImport } from './routes/api.public.hooks.weekly-review'
-import { Route as ApiPublicHooksStopWidthTestRouteImport } from './routes/api.public.hooks.stop-width-test'
-import { Route as ApiPublicHooksStopWidthPerInstrumentRouteImport } from './routes/api.public.hooks.stop-width-per-instrument'
-import { Route as ApiPublicHooksSignalIntegrityRouteImport } from './routes/api.public.hooks.signal-integrity'
-import { Route as ApiPublicHooksSignalExcursionsRouteImport } from './routes/api.public.hooks.signal-excursions'
-import { Route as ApiPublicHooksSignalAlertsTickRouteImport } from './routes/api.public.hooks.signal-alerts-tick'
-import { Route as ApiPublicHooksSendBriefingsRouteImport } from './routes/api.public.hooks.send-briefings'
-import { Route as ApiPublicHooksScanSignalsRouteImport } from './routes/api.public.hooks.scan-signals'
-import { Route as ApiPublicHooksResolveSignalsRouteImport } from './routes/api.public.hooks.resolve-signals'
-import { Route as ApiPublicHooksReresolveFillsRouteImport } from './routes/api.public.hooks.reresolve-fills'
-import { Route as ApiPublicHooksReresolveExpiriesRouteImport } from './routes/api.public.hooks.reresolve-expiries'
-import { Route as ApiPublicHooksReplayRefreshRouteImport } from './routes/api.public.hooks.replay-refresh'
-import { Route as ApiPublicHooksRegimeSplitRouteImport } from './routes/api.public.hooks.regime-split'
-import { Route as ApiPublicHooksReconcilePaperRouteImport } from './routes/api.public.hooks.reconcile-paper'
-import { Route as ApiPublicHooksPriceAlertsTickRouteImport } from './routes/api.public.hooks.price-alerts-tick'
-import { Route as ApiPublicHooksPaperBotTickRouteImport } from './routes/api.public.hooks.paper-bot-tick'
-import { Route as ApiPublicHooksJournalVerifyTickRouteImport } from './routes/api.public.hooks.journal-verify-tick'
-import { Route as ApiPublicHooksJournalDailyCheckinRouteImport } from './routes/api.public.hooks.journal-daily-checkin'
-import { Route as ApiPublicHooksGradeSeparationRouteImport } from './routes/api.public.hooks.grade-separation'
-import { Route as ApiPublicHooksGradeInversionRouteImport } from './routes/api.public.hooks.grade-inversion'
-import { Route as ApiPublicHooksGateVolumeRouteImport } from './routes/api.public.hooks.gate-volume'
-import { Route as ApiPublicHooksEntryFillTestRouteImport } from './routes/api.public.hooks.entry-fill-test'
-import { Route as ApiPublicHooksDripEmailsRouteImport } from './routes/api.public.hooks.drip-emails'
-import { Route as ApiPublicHooksDailyBiasSplitRouteImport } from './routes/api.public.hooks.daily-bias-split'
-import { Route as ApiPublicHooksClassicResearchBacktestRouteImport } from './routes/api.public.hooks.classic-research-backtest'
-import { Route as ApiPublicHooksAutopilotTickRouteImport } from './routes/api.public.hooks.autopilot-tick'
-import { Route as ApiPublicHooksAiCreditsRouteImport } from './routes/api.public.hooks.ai-credits'
-import { Route as AppAcademyCertificateModuleIdRouteImport } from './routes/_app.academy.certificate.$moduleId'
 import { Route as AppAcademyModuleIdLessonIdRouteImport } from './routes/_app.academy.$moduleId.$lessonId'
+import { Route as AppAcademyCertificateModuleIdRouteImport } from './routes/_app.academy.certificate.$moduleId'
+import { Route as ApiPublicHooksAiCreditsRouteImport } from './routes/api.public.hooks.ai-credits'
+import { Route as ApiPublicHooksAutopilotTickRouteImport } from './routes/api.public.hooks.autopilot-tick'
+import { Route as ApiPublicHooksClassicResearchBacktestRouteImport } from './routes/api.public.hooks.classic-research-backtest'
+import { Route as ApiPublicHooksDailyBiasSplitRouteImport } from './routes/api.public.hooks.daily-bias-split'
+import { Route as ApiPublicHooksDripEmailsRouteImport } from './routes/api.public.hooks.drip-emails'
+import { Route as ApiPublicHooksEntryFillTestRouteImport } from './routes/api.public.hooks.entry-fill-test'
+import { Route as ApiPublicHooksGateVolumeRouteImport } from './routes/api.public.hooks.gate-volume'
+import { Route as ApiPublicHooksGradeInversionRouteImport } from './routes/api.public.hooks.grade-inversion'
+import { Route as ApiPublicHooksGradeSeparationRouteImport } from './routes/api.public.hooks.grade-separation'
+import { Route as ApiPublicHooksJournalDailyCheckinRouteImport } from './routes/api.public.hooks.journal-daily-checkin'
+import { Route as ApiPublicHooksJournalVerifyTickRouteImport } from './routes/api.public.hooks.journal-verify-tick'
+import { Route as ApiPublicHooksPaperBotTickRouteImport } from './routes/api.public.hooks.paper-bot-tick'
+import { Route as ApiPublicHooksPriceAlertsTickRouteImport } from './routes/api.public.hooks.price-alerts-tick'
+import { Route as ApiPublicHooksReconcilePaperRouteImport } from './routes/api.public.hooks.reconcile-paper'
+import { Route as ApiPublicHooksRegimeSplitRouteImport } from './routes/api.public.hooks.regime-split'
+import { Route as ApiPublicHooksReplayRefreshRouteImport } from './routes/api.public.hooks.replay-refresh'
+import { Route as ApiPublicHooksReresolveExpiriesRouteImport } from './routes/api.public.hooks.reresolve-expiries'
+import { Route as ApiPublicHooksReresolveFillsRouteImport } from './routes/api.public.hooks.reresolve-fills'
+import { Route as ApiPublicHooksResolveSignalsRouteImport } from './routes/api.public.hooks.resolve-signals'
+import { Route as ApiPublicHooksScanSignalsRouteImport } from './routes/api.public.hooks.scan-signals'
+import { Route as ApiPublicHooksSendBriefingsRouteImport } from './routes/api.public.hooks.send-briefings'
+import { Route as ApiPublicHooksSignalAlertsTickRouteImport } from './routes/api.public.hooks.signal-alerts-tick'
+import { Route as ApiPublicHooksSignalExcursionsRouteImport } from './routes/api.public.hooks.signal-excursions'
+import { Route as ApiPublicHooksSignalIntegrityRouteImport } from './routes/api.public.hooks.signal-integrity'
+import { Route as ApiPublicHooksStopWidthPerInstrumentRouteImport } from './routes/api.public.hooks.stop-width-per-instrument'
+import { Route as ApiPublicHooksStopWidthTestRouteImport } from './routes/api.public.hooks.stop-width-test'
+import { Route as ApiPublicHooksWeeklyReviewRouteImport } from './routes/api.public.hooks.weekly-review'
+import { Route as ApiPublicSignalsFileRouteImport } from './routes/api.public.signals.file'
+import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api.public.telegram.webhook'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 
-const UnsubscribeRoute = UnsubscribeRouteImport.update({
-  id: '/unsubscribe',
-  path: '/unsubscribe',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TermsRoute = TermsRouteImport.update({
-  id: '/terms',
-  path: '/terms',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const StatusRoute = StatusRouteImport.update({
-  id: '/status',
-  path: '/status',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RecordRoute = RecordRouteImport.update({
-  id: '/record',
-  path: '/record',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PricingRoute = PricingRouteImport.update({
-  id: '/pricing',
-  path: '/pricing',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OnboardingRoute = OnboardingRouteImport.update({
-  id: '/onboarding',
-  path: '/onboarding',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const McpRoute = McpRouteImport.update({
-  id: '/mcp',
-  path: '/mcp',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HelpRoute = HelpRouteImport.update({
-  id: '/help',
-  path: '/help',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
-  id: '/forgot-password',
-  path: '/forgot-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FaqRoute = FaqRouteImport.update({
-  id: '/faq',
-  path: '/faq',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CookiesRoute = CookiesRouteImport.update({
-  id: '/cookies',
-  path: '/cookies',
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -195,218 +139,86 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppRoute = AppRouteImport.update({
-  id: '/_app',
+const CookiesRoute = CookiesRouteImport.update({
+  id: '/cookies',
+  path: '/cookies',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const FaqRoute = FaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
   getParentRoute: () => rootRouteImport,
 } as any)
-const InviteCodeRoute = InviteCodeRouteImport.update({
-  id: '/invite/$code',
-  path: '/invite/$code',
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const HelpSlugRoute = HelpSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => HelpRoute,
-} as any)
-const ApiVersionRoute = ApiVersionRouteImport.update({
-  id: '/api/version',
-  path: '/api/version',
+const HelpRoute = HelpRouteImport.update({
+  id: '/help',
+  path: '/help',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiTtsRoute = ApiTtsRouteImport.update({
-  id: '/api/tts',
-  path: '/api/tts',
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiTimeRoute = ApiTimeRouteImport.update({
-  id: '/api/time',
-  path: '/api/time',
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiOhlcRoute = ApiOhlcRouteImport.update({
-  id: '/api/ohlc',
-  path: '/api/ohlc',
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiNewsChatRoute = ApiNewsChatRouteImport.update({
-  id: '/api/news-chat',
-  path: '/api/news-chat',
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiHealthRoute = ApiHealthRouteImport.update({
-  id: '/api/health',
-  path: '/api/health',
+const RecordRoute = RecordRouteImport.update({
+  id: '/record',
+  path: '/record',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiChatRoute = ApiChatRouteImport.update({
-  id: '/api/chat',
-  path: '/api/chat',
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppWyckoffRoute = AppWyckoffRouteImport.update({
-  id: '/wyckoff',
-  path: '/wyckoff',
-  getParentRoute: () => AppRoute,
+const StatusRoute = StatusRouteImport.update({
+  id: '/status',
+  path: '/status',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AppVoiceCoachRoute = AppVoiceCoachRouteImport.update({
-  id: '/voice-coach',
-  path: '/voice-coach',
-  getParentRoute: () => AppRoute,
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AppTestingRoute = AppTestingRouteImport.update({
-  id: '/testing',
-  path: '/testing',
-  getParentRoute: () => AppRoute,
+const UnsubscribeRoute = UnsubscribeRouteImport.update({
+  id: '/unsubscribe',
+  path: '/unsubscribe',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AppStrategiesRoute = AppStrategiesRouteImport.update({
-  id: '/strategies',
-  path: '/strategies',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppSignalsRoute = AppSignalsRouteImport.update({
-  id: '/signals',
-  path: '/signals',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppSettingsRoute = AppSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppScoreboardRoute = AppScoreboardRouteImport.update({
-  id: '/scoreboard',
-  path: '/scoreboard',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppScanModelsRoute = AppScanModelsRouteImport.update({
-  id: '/scan-models',
-  path: '/scan-models',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppScanLensRoute = AppScanLensRouteImport.update({
-  id: '/scan-lens',
-  path: '/scan-lens',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppNewsRoute = AppNewsRouteImport.update({
-  id: '/news',
-  path: '/news',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppMentorRoute = AppMentorRouteImport.update({
-  id: '/mentor',
-  path: '/mentor',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppMentalRoute = AppMentalRouteImport.update({
-  id: '/mental',
-  path: '/mental',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppMemoryRoute = AppMemoryRouteImport.update({
-  id: '/memory',
-  path: '/memory',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppLevelsRoute = AppLevelsRouteImport.update({
-  id: '/levels',
-  path: '/levels',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppLeaderboardRoute = AppLeaderboardRouteImport.update({
-  id: '/leaderboard',
-  path: '/leaderboard',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppJournalRoute = AppJournalRouteImport.update({
-  id: '/journal',
-  path: '/journal',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppGuideRoute = AppGuideRouteImport.update({
-  id: '/guide',
-  path: '/guide',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppFriendsRoute = AppFriendsRouteImport.update({
-  id: '/friends',
-  path: '/friends',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppFlashcardsRoute = AppFlashcardsRouteImport.update({
-  id: '/flashcards',
-  path: '/flashcards',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppFirstWeekRoute = AppFirstWeekRouteImport.update({
-  id: '/first-week',
-  path: '/first-week',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppDiscordRoute = AppDiscordRouteImport.update({
-  id: '/discord',
-  path: '/discord',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppDashboardRoute = AppDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppContactRoute = AppContactRouteImport.update({
-  id: '/contact',
-  path: '/contact',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppConnectionsRoute = AppConnectionsRouteImport.update({
-  id: '/connections',
-  path: '/connections',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppCoachesRoute = AppCoachesRouteImport.update({
-  id: '/coaches',
-  path: '/coaches',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppCoachDashboardRoute = AppCoachDashboardRouteImport.update({
-  id: '/coach-dashboard',
-  path: '/coach-dashboard',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppChatRoute = AppChatRouteImport.update({
-  id: '/chat',
-  path: '/chat',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppCalculatorRoute = AppCalculatorRouteImport.update({
-  id: '/calculator',
-  path: '/calculator',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppBrokerRoute = AppBrokerRouteImport.update({
-  id: '/broker',
-  path: '/broker',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAutopilotRoute = AppAutopilotRouteImport.update({
-  id: '/autopilot',
-  path: '/autopilot',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAnalyticsRoute = AppAnalyticsRouteImport.update({
-  id: '/analytics',
-  path: '/analytics',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAlertsRoute = AppAlertsRouteImport.update({
-  id: '/alerts',
-  path: '/alerts',
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AppAcademyRoute = AppAcademyRouteImport.update({
+  id: '/academy',
+  path: '/academy',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAdminRoute = AppAdminRouteImport.update({
@@ -414,93 +226,235 @@ const AppAdminRoute = AppAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AppRoute,
 } as any)
-const AppAcademyRoute = AppAcademyRouteImport.update({
-  id: '/academy',
-  path: '/academy',
+const AppAlertsRoute = AppAlertsRouteImport.update({
+  id: '/alerts',
+  path: '/alerts',
   getParentRoute: () => AppRoute,
 } as any)
-const Char91DotwellKnownChar93OauthProtectedResourceRoute =
-  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
-    id: '/.well-known/oauth-protected-resource',
-    path: '/.well-known/oauth-protected-resource',
+const AppAnalyticsRoute = AppAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAutopilotRoute = AppAutopilotRouteImport.update({
+  id: '/autopilot',
+  path: '/autopilot',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppBrokerRoute = AppBrokerRouteImport.update({
+  id: '/broker',
+  path: '/broker',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCalculatorRoute = AppCalculatorRouteImport.update({
+  id: '/calculator',
+  path: '/calculator',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppChatRoute = AppChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCoachDashboardRoute = AppCoachDashboardRouteImport.update({
+  id: '/coach-dashboard',
+  path: '/coach-dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCoachesRoute = AppCoachesRouteImport.update({
+  id: '/coaches',
+  path: '/coaches',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppConnectionsRoute = AppConnectionsRouteImport.update({
+  id: '/connections',
+  path: '/connections',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppContactRoute = AppContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDashboardRoute = AppDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDiscordRoute = AppDiscordRouteImport.update({
+  id: '/discord',
+  path: '/discord',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFirstWeekRoute = AppFirstWeekRouteImport.update({
+  id: '/first-week',
+  path: '/first-week',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFlashcardsRoute = AppFlashcardsRouteImport.update({
+  id: '/flashcards',
+  path: '/flashcards',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFriendsRoute = AppFriendsRouteImport.update({
+  id: '/friends',
+  path: '/friends',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppGuideRoute = AppGuideRouteImport.update({
+  id: '/guide',
+  path: '/guide',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppJournalRoute = AppJournalRouteImport.update({
+  id: '/journal',
+  path: '/journal',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppLeaderboardRoute = AppLeaderboardRouteImport.update({
+  id: '/leaderboard',
+  path: '/leaderboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppLevelsRoute = AppLevelsRouteImport.update({
+  id: '/levels',
+  path: '/levels',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMemoryRoute = AppMemoryRouteImport.update({
+  id: '/memory',
+  path: '/memory',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMentalRoute = AppMentalRouteImport.update({
+  id: '/mental',
+  path: '/mental',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMentorRoute = AppMentorRouteImport.update({
+  id: '/mentor',
+  path: '/mentor',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppNewsRoute = AppNewsRouteImport.update({
+  id: '/news',
+  path: '/news',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppScanLensRoute = AppScanLensRouteImport.update({
+  id: '/scan-lens',
+  path: '/scan-lens',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppScanModelsRoute = AppScanModelsRouteImport.update({
+  id: '/scan-models',
+  path: '/scan-models',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppScoreboardRoute = AppScoreboardRouteImport.update({
+  id: '/scoreboard',
+  path: '/scoreboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSignalsRoute = AppSignalsRouteImport.update({
+  id: '/signals',
+  path: '/signals',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppStrategiesRoute = AppStrategiesRouteImport.update({
+  id: '/strategies',
+  path: '/strategies',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppTestingRoute = AppTestingRouteImport.update({
+  id: '/testing',
+  path: '/testing',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppVoiceCoachRoute = AppVoiceCoachRouteImport.update({
+  id: '/voice-coach',
+  path: '/voice-coach',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppWyckoffRoute = AppWyckoffRouteImport.update({
+  id: '/wyckoff',
+  path: '/wyckoff',
+  getParentRoute: () => AppRoute,
+} as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiNewsChatRoute = ApiNewsChatRouteImport.update({
+  id: '/api/news-chat',
+  path: '/api/news-chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiOhlcRoute = ApiOhlcRouteImport.update({
+  id: '/api/ohlc',
+  path: '/api/ohlc',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTimeRoute = ApiTimeRouteImport.update({
+  id: '/api/time',
+  path: '/api/time',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTtsRoute = ApiTtsRouteImport.update({
+  id: '/api/tts',
+  path: '/api/tts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiVersionRoute = ApiVersionRouteImport.update({
+  id: '/api/version',
+  path: '/api/version',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HelpSlugRoute = HelpSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => HelpRoute,
+} as any)
+const InviteCodeRoute = InviteCodeRouteImport.update({
+  id: '/invite/$code',
+  path: '/invite/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Char91DotmcpChar93InvokeToolToolRoute =
+  Char91DotmcpChar93InvokeToolToolRouteImport.update({
+    id: '/.mcp/invoke-tool/$tool',
+    path: '/.mcp/invoke-tool/$tool',
     getParentRoute: () => rootRouteImport,
   } as any)
-const Char91DotmcpChar93ListToolsRoute =
-  Char91DotmcpChar93ListToolsRouteImport.update({
-    id: '/.mcp/list-tools',
-    path: '/.mcp/list-tools',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const AppStrategiesIndexRoute = AppStrategiesIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AppStrategiesRoute,
-} as any)
-const AppChatIndexRoute = AppChatIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AppChatRoute,
-} as any)
 const AppAcademyIndexRoute = AppAcademyIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AppAcademyRoute,
 } as any)
-const LovableEmailEventsRoute = LovableEmailEventsRouteImport.update({
-  id: '/lovable/email/events',
-  path: '/lovable/email/events',
-  getParentRoute: () => rootRouteImport,
+const AppAcademyModuleIdRoute = AppAcademyModuleIdRouteImport.update({
+  id: '/$moduleId',
+  path: '/$moduleId',
+  getParentRoute: () => AppAcademyRoute,
 } as any)
-const BrokerAlpacaCallbackRoute = BrokerAlpacaCallbackRouteImport.update({
-  id: '/broker/alpaca/callback',
-  path: '/broker/alpaca/callback',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiTradelockerImportRoute = ApiTradelockerImportRouteImport.update({
-  id: '/api/tradelocker/import',
-  path: '/api/tradelocker/import',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
-  id: '/api/public/stripe-webhook',
-  path: '/api/public/stripe-webhook',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicLeadUnsubscribeRoute =
-  ApiPublicLeadUnsubscribeRouteImport.update({
-    id: '/api/public/lead-unsubscribe',
-    path: '/api/public/lead-unsubscribe',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicBridgeRoute = ApiPublicBridgeRouteImport.update({
-  id: '/api/public/bridge',
-  path: '/api/public/bridge',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppStrategiesAltStrategiesRoute =
-  AppStrategiesAltStrategiesRouteImport.update({
-    id: '/alt-strategies',
-    path: '/alt-strategies',
-    getParentRoute: () => AppStrategiesRoute,
-  } as any)
-const AppStrategiesStrategyIdRoute = AppStrategiesStrategyIdRouteImport.update({
-  id: '/$strategyId',
-  path: '/$strategyId',
-  getParentRoute: () => AppStrategiesRoute,
-} as any)
-const AppChatThreadIdRoute = AppChatThreadIdRouteImport.update({
-  id: '/$threadId',
-  path: '/$threadId',
-  getParentRoute: () => AppChatRoute,
-} as any)
-const AppAdminSubscribersRoute = AppAdminSubscribersRouteImport.update({
-  id: '/subscribers',
-  path: '/subscribers',
-  getParentRoute: () => AppAdminRoute,
-} as any)
-const AppAcademyReviewRoute = AppAcademyReviewRouteImport.update({
-  id: '/review',
-  path: '/review',
+const AppAcademyExamRoute = AppAcademyExamRouteImport.update({
+  id: '/exam',
+  path: '/exam',
   getParentRoute: () => AppAcademyRoute,
 } as any)
 const AppAcademyMasterCertificateRoute =
@@ -509,25 +463,71 @@ const AppAcademyMasterCertificateRoute =
     path: '/master-certificate',
     getParentRoute: () => AppAcademyRoute,
   } as any)
-const AppAcademyExamRoute = AppAcademyExamRouteImport.update({
-  id: '/exam',
-  path: '/exam',
+const AppAcademyReviewRoute = AppAcademyReviewRouteImport.update({
+  id: '/review',
+  path: '/review',
   getParentRoute: () => AppAcademyRoute,
 } as any)
-const AppAcademyModuleIdRoute = AppAcademyModuleIdRouteImport.update({
-  id: '/$moduleId',
-  path: '/$moduleId',
-  getParentRoute: () => AppAcademyRoute,
+const AppAdminSubscribersRoute = AppAdminSubscribersRouteImport.update({
+  id: '/subscribers',
+  path: '/subscribers',
+  getParentRoute: () => AppAdminRoute,
 } as any)
-const Char91DotmcpChar93InvokeToolToolRoute =
-  Char91DotmcpChar93InvokeToolToolRouteImport.update({
-    id: '/.mcp/invoke-tool/$tool',
-    path: '/.mcp/invoke-tool/$tool',
+const AppChatIndexRoute = AppChatIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppChatRoute,
+} as any)
+const AppChatThreadIdRoute = AppChatThreadIdRouteImport.update({
+  id: '/$threadId',
+  path: '/$threadId',
+  getParentRoute: () => AppChatRoute,
+} as any)
+const AppStrategiesIndexRoute = AppStrategiesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppStrategiesRoute,
+} as any)
+const AppStrategiesStrategyIdRoute = AppStrategiesStrategyIdRouteImport.update({
+  id: '/$strategyId',
+  path: '/$strategyId',
+  getParentRoute: () => AppStrategiesRoute,
+} as any)
+const AppStrategiesAltStrategiesRoute =
+  AppStrategiesAltStrategiesRouteImport.update({
+    id: '/alt-strategies',
+    path: '/alt-strategies',
+    getParentRoute: () => AppStrategiesRoute,
+  } as any)
+const ApiPublicBridgeRoute = ApiPublicBridgeRouteImport.update({
+  id: '/api/public/bridge',
+  path: '/api/public/bridge',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicLeadUnsubscribeRoute =
+  ApiPublicLeadUnsubscribeRouteImport.update({
+    id: '/api/public/lead-unsubscribe',
+    path: '/api/public/lead-unsubscribe',
     getParentRoute: () => rootRouteImport,
   } as any)
-const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
-  id: '/.lovable/oauth/consent',
-  path: '/.lovable/oauth/consent',
+const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
+  id: '/api/public/stripe-webhook',
+  path: '/api/public/stripe-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTradelockerImportRoute = ApiTradelockerImportRouteImport.update({
+  id: '/api/tradelocker/import',
+  path: '/api/tradelocker/import',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BrokerAlpacaCallbackRoute = BrokerAlpacaCallbackRouteImport.update({
+  id: '/broker/alpaca/callback',
+  path: '/broker/alpaca/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailEventsRoute = LovableEmailEventsRouteImport.update({
+  id: '/lovable/email/events',
+  path: '/lovable/email/events',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppAcademyModuleIdIndexRoute = AppAcademyModuleIdIndexRouteImport.update({
@@ -535,175 +535,27 @@ const AppAcademyModuleIdIndexRoute = AppAcademyModuleIdIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppAcademyModuleIdRoute,
 } as any)
-const LovableEmailTransactionalPreviewRoute =
-  LovableEmailTransactionalPreviewRouteImport.update({
-    id: '/lovable/email/transactional/preview',
-    path: '/lovable/email/transactional/preview',
-    getParentRoute: () => rootRouteImport,
+const AppAcademyModuleIdLessonIdRoute =
+  AppAcademyModuleIdLessonIdRouteImport.update({
+    id: '/$lessonId',
+    path: '/$lessonId',
+    getParentRoute: () => AppAcademyModuleIdRoute,
   } as any)
-const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
-  id: '/lovable/email/auth/webhook',
-  path: '/lovable/email/auth/webhook',
+const AppAcademyCertificateModuleIdRoute =
+  AppAcademyCertificateModuleIdRouteImport.update({
+    id: '/certificate/$moduleId',
+    path: '/certificate/$moduleId',
+    getParentRoute: () => AppAcademyRoute,
+  } as any)
+const ApiPublicHooksAiCreditsRoute = ApiPublicHooksAiCreditsRouteImport.update({
+  id: '/api/public/hooks/ai-credits',
+  path: '/api/public/hooks/ai-credits',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
-  id: '/lovable/email/auth/preview',
-  path: '/lovable/email/auth/preview',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicTelegramWebhookRoute =
-  ApiPublicTelegramWebhookRouteImport.update({
-    id: '/api/public/telegram/webhook',
-    path: '/api/public/telegram/webhook',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicSignalsFileRoute = ApiPublicSignalsFileRouteImport.update({
-  id: '/api/public/signals/file',
-  path: '/api/public/signals/file',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicHooksWeeklyReviewRoute =
-  ApiPublicHooksWeeklyReviewRouteImport.update({
-    id: '/api/public/hooks/weekly-review',
-    path: '/api/public/hooks/weekly-review',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksStopWidthTestRoute =
-  ApiPublicHooksStopWidthTestRouteImport.update({
-    id: '/api/public/hooks/stop-width-test',
-    path: '/api/public/hooks/stop-width-test',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksStopWidthPerInstrumentRoute =
-  ApiPublicHooksStopWidthPerInstrumentRouteImport.update({
-    id: '/api/public/hooks/stop-width-per-instrument',
-    path: '/api/public/hooks/stop-width-per-instrument',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksSignalIntegrityRoute =
-  ApiPublicHooksSignalIntegrityRouteImport.update({
-    id: '/api/public/hooks/signal-integrity',
-    path: '/api/public/hooks/signal-integrity',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksSignalExcursionsRoute =
-  ApiPublicHooksSignalExcursionsRouteImport.update({
-    id: '/api/public/hooks/signal-excursions',
-    path: '/api/public/hooks/signal-excursions',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksSignalAlertsTickRoute =
-  ApiPublicHooksSignalAlertsTickRouteImport.update({
-    id: '/api/public/hooks/signal-alerts-tick',
-    path: '/api/public/hooks/signal-alerts-tick',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksSendBriefingsRoute =
-  ApiPublicHooksSendBriefingsRouteImport.update({
-    id: '/api/public/hooks/send-briefings',
-    path: '/api/public/hooks/send-briefings',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksScanSignalsRoute =
-  ApiPublicHooksScanSignalsRouteImport.update({
-    id: '/api/public/hooks/scan-signals',
-    path: '/api/public/hooks/scan-signals',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksResolveSignalsRoute =
-  ApiPublicHooksResolveSignalsRouteImport.update({
-    id: '/api/public/hooks/resolve-signals',
-    path: '/api/public/hooks/resolve-signals',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksReresolveFillsRoute =
-  ApiPublicHooksReresolveFillsRouteImport.update({
-    id: '/api/public/hooks/reresolve-fills',
-    path: '/api/public/hooks/reresolve-fills',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksReresolveExpiriesRoute =
-  ApiPublicHooksReresolveExpiriesRouteImport.update({
-    id: '/api/public/hooks/reresolve-expiries',
-    path: '/api/public/hooks/reresolve-expiries',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksReplayRefreshRoute =
-  ApiPublicHooksReplayRefreshRouteImport.update({
-    id: '/api/public/hooks/replay-refresh',
-    path: '/api/public/hooks/replay-refresh',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksRegimeSplitRoute =
-  ApiPublicHooksRegimeSplitRouteImport.update({
-    id: '/api/public/hooks/regime-split',
-    path: '/api/public/hooks/regime-split',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksReconcilePaperRoute =
-  ApiPublicHooksReconcilePaperRouteImport.update({
-    id: '/api/public/hooks/reconcile-paper',
-    path: '/api/public/hooks/reconcile-paper',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksPriceAlertsTickRoute =
-  ApiPublicHooksPriceAlertsTickRouteImport.update({
-    id: '/api/public/hooks/price-alerts-tick',
-    path: '/api/public/hooks/price-alerts-tick',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksPaperBotTickRoute =
-  ApiPublicHooksPaperBotTickRouteImport.update({
-    id: '/api/public/hooks/paper-bot-tick',
-    path: '/api/public/hooks/paper-bot-tick',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksJournalVerifyTickRoute =
-  ApiPublicHooksJournalVerifyTickRouteImport.update({
-    id: '/api/public/hooks/journal-verify-tick',
-    path: '/api/public/hooks/journal-verify-tick',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksJournalDailyCheckinRoute =
-  ApiPublicHooksJournalDailyCheckinRouteImport.update({
-    id: '/api/public/hooks/journal-daily-checkin',
-    path: '/api/public/hooks/journal-daily-checkin',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksGradeSeparationRoute =
-  ApiPublicHooksGradeSeparationRouteImport.update({
-    id: '/api/public/hooks/grade-separation',
-    path: '/api/public/hooks/grade-separation',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksGradeInversionRoute =
-  ApiPublicHooksGradeInversionRouteImport.update({
-    id: '/api/public/hooks/grade-inversion',
-    path: '/api/public/hooks/grade-inversion',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksGateVolumeRoute =
-  ApiPublicHooksGateVolumeRouteImport.update({
-    id: '/api/public/hooks/gate-volume',
-    path: '/api/public/hooks/gate-volume',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksEntryFillTestRoute =
-  ApiPublicHooksEntryFillTestRouteImport.update({
-    id: '/api/public/hooks/entry-fill-test',
-    path: '/api/public/hooks/entry-fill-test',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksDripEmailsRoute =
-  ApiPublicHooksDripEmailsRouteImport.update({
-    id: '/api/public/hooks/drip-emails',
-    path: '/api/public/hooks/drip-emails',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksDailyBiasSplitRoute =
-  ApiPublicHooksDailyBiasSplitRouteImport.update({
-    id: '/api/public/hooks/daily-bias-split',
-    path: '/api/public/hooks/daily-bias-split',
+const ApiPublicHooksAutopilotTickRoute =
+  ApiPublicHooksAutopilotTickRouteImport.update({
+    id: '/api/public/hooks/autopilot-tick',
+    path: '/api/public/hooks/autopilot-tick',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicHooksClassicResearchBacktestRoute =
@@ -712,28 +564,176 @@ const ApiPublicHooksClassicResearchBacktestRoute =
     path: '/api/public/hooks/classic-research-backtest',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicHooksAutopilotTickRoute =
-  ApiPublicHooksAutopilotTickRouteImport.update({
-    id: '/api/public/hooks/autopilot-tick',
-    path: '/api/public/hooks/autopilot-tick',
+const ApiPublicHooksDailyBiasSplitRoute =
+  ApiPublicHooksDailyBiasSplitRouteImport.update({
+    id: '/api/public/hooks/daily-bias-split',
+    path: '/api/public/hooks/daily-bias-split',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicHooksAiCreditsRoute = ApiPublicHooksAiCreditsRouteImport.update({
-  id: '/api/public/hooks/ai-credits',
-  path: '/api/public/hooks/ai-credits',
+const ApiPublicHooksDripEmailsRoute =
+  ApiPublicHooksDripEmailsRouteImport.update({
+    id: '/api/public/hooks/drip-emails',
+    path: '/api/public/hooks/drip-emails',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksEntryFillTestRoute =
+  ApiPublicHooksEntryFillTestRouteImport.update({
+    id: '/api/public/hooks/entry-fill-test',
+    path: '/api/public/hooks/entry-fill-test',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksGateVolumeRoute =
+  ApiPublicHooksGateVolumeRouteImport.update({
+    id: '/api/public/hooks/gate-volume',
+    path: '/api/public/hooks/gate-volume',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksGradeInversionRoute =
+  ApiPublicHooksGradeInversionRouteImport.update({
+    id: '/api/public/hooks/grade-inversion',
+    path: '/api/public/hooks/grade-inversion',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksGradeSeparationRoute =
+  ApiPublicHooksGradeSeparationRouteImport.update({
+    id: '/api/public/hooks/grade-separation',
+    path: '/api/public/hooks/grade-separation',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksJournalDailyCheckinRoute =
+  ApiPublicHooksJournalDailyCheckinRouteImport.update({
+    id: '/api/public/hooks/journal-daily-checkin',
+    path: '/api/public/hooks/journal-daily-checkin',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksJournalVerifyTickRoute =
+  ApiPublicHooksJournalVerifyTickRouteImport.update({
+    id: '/api/public/hooks/journal-verify-tick',
+    path: '/api/public/hooks/journal-verify-tick',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksPaperBotTickRoute =
+  ApiPublicHooksPaperBotTickRouteImport.update({
+    id: '/api/public/hooks/paper-bot-tick',
+    path: '/api/public/hooks/paper-bot-tick',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksPriceAlertsTickRoute =
+  ApiPublicHooksPriceAlertsTickRouteImport.update({
+    id: '/api/public/hooks/price-alerts-tick',
+    path: '/api/public/hooks/price-alerts-tick',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksReconcilePaperRoute =
+  ApiPublicHooksReconcilePaperRouteImport.update({
+    id: '/api/public/hooks/reconcile-paper',
+    path: '/api/public/hooks/reconcile-paper',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksRegimeSplitRoute =
+  ApiPublicHooksRegimeSplitRouteImport.update({
+    id: '/api/public/hooks/regime-split',
+    path: '/api/public/hooks/regime-split',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksReplayRefreshRoute =
+  ApiPublicHooksReplayRefreshRouteImport.update({
+    id: '/api/public/hooks/replay-refresh',
+    path: '/api/public/hooks/replay-refresh',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksReresolveExpiriesRoute =
+  ApiPublicHooksReresolveExpiriesRouteImport.update({
+    id: '/api/public/hooks/reresolve-expiries',
+    path: '/api/public/hooks/reresolve-expiries',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksReresolveFillsRoute =
+  ApiPublicHooksReresolveFillsRouteImport.update({
+    id: '/api/public/hooks/reresolve-fills',
+    path: '/api/public/hooks/reresolve-fills',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksResolveSignalsRoute =
+  ApiPublicHooksResolveSignalsRouteImport.update({
+    id: '/api/public/hooks/resolve-signals',
+    path: '/api/public/hooks/resolve-signals',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksScanSignalsRoute =
+  ApiPublicHooksScanSignalsRouteImport.update({
+    id: '/api/public/hooks/scan-signals',
+    path: '/api/public/hooks/scan-signals',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksSendBriefingsRoute =
+  ApiPublicHooksSendBriefingsRouteImport.update({
+    id: '/api/public/hooks/send-briefings',
+    path: '/api/public/hooks/send-briefings',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksSignalAlertsTickRoute =
+  ApiPublicHooksSignalAlertsTickRouteImport.update({
+    id: '/api/public/hooks/signal-alerts-tick',
+    path: '/api/public/hooks/signal-alerts-tick',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksSignalExcursionsRoute =
+  ApiPublicHooksSignalExcursionsRouteImport.update({
+    id: '/api/public/hooks/signal-excursions',
+    path: '/api/public/hooks/signal-excursions',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksSignalIntegrityRoute =
+  ApiPublicHooksSignalIntegrityRouteImport.update({
+    id: '/api/public/hooks/signal-integrity',
+    path: '/api/public/hooks/signal-integrity',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksStopWidthPerInstrumentRoute =
+  ApiPublicHooksStopWidthPerInstrumentRouteImport.update({
+    id: '/api/public/hooks/stop-width-per-instrument',
+    path: '/api/public/hooks/stop-width-per-instrument',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksStopWidthTestRoute =
+  ApiPublicHooksStopWidthTestRouteImport.update({
+    id: '/api/public/hooks/stop-width-test',
+    path: '/api/public/hooks/stop-width-test',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksWeeklyReviewRoute =
+  ApiPublicHooksWeeklyReviewRouteImport.update({
+    id: '/api/public/hooks/weekly-review',
+    path: '/api/public/hooks/weekly-review',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicSignalsFileRoute = ApiPublicSignalsFileRouteImport.update({
+  id: '/api/public/signals/file',
+  path: '/api/public/signals/file',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppAcademyCertificateModuleIdRoute =
-  AppAcademyCertificateModuleIdRouteImport.update({
-    id: '/certificate/$moduleId',
-    path: '/certificate/$moduleId',
-    getParentRoute: () => AppAcademyRoute,
+const ApiPublicTelegramWebhookRoute =
+  ApiPublicTelegramWebhookRouteImport.update({
+    id: '/api/public/telegram/webhook',
+    path: '/api/public/telegram/webhook',
+    getParentRoute: () => rootRouteImport,
   } as any)
-const AppAcademyModuleIdLessonIdRoute =
-  AppAcademyModuleIdLessonIdRouteImport.update({
-    id: '/$lessonId',
-    path: '/$lessonId',
-    getParentRoute: () => AppAcademyModuleIdRoute,
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
+    getParentRoute: () => rootRouteImport,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -1501,102 +1501,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/unsubscribe': {
-      id: '/unsubscribe'
-      path: '/unsubscribe'
-      fullPath: '/unsubscribe'
-      preLoaderRoute: typeof UnsubscribeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/terms': {
-      id: '/terms'
-      path: '/terms'
-      fullPath: '/terms'
-      preLoaderRoute: typeof TermsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/status': {
-      id: '/status'
-      path: '/status'
-      fullPath: '/status'
-      preLoaderRoute: typeof StatusRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/record': {
-      id: '/record'
-      path: '/record'
-      fullPath: '/record'
-      preLoaderRoute: typeof RecordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pricing': {
-      id: '/pricing'
-      path: '/pricing'
-      fullPath: '/pricing'
-      preLoaderRoute: typeof PricingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/onboarding': {
-      id: '/onboarding'
-      path: '/onboarding'
-      fullPath: '/onboarding'
-      preLoaderRoute: typeof OnboardingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mcp': {
-      id: '/mcp'
-      path: '/mcp'
-      fullPath: '/mcp'
-      preLoaderRoute: typeof McpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/help': {
-      id: '/help'
-      path: '/help'
-      fullPath: '/help'
-      preLoaderRoute: typeof HelpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/forgot-password': {
-      id: '/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof ForgotPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/faq': {
-      id: '/faq'
-      path: '/faq'
-      fullPath: '/faq'
-      preLoaderRoute: typeof FaqRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/cookies': {
-      id: '/cookies'
-      path: '/cookies'
-      fullPath: '/cookies'
-      preLoaderRoute: typeof CookiesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app': {
@@ -1606,319 +1515,102 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/invite/$code': {
-      id: '/invite/$code'
-      path: '/invite/$code'
-      fullPath: '/invite/$code'
-      preLoaderRoute: typeof InviteCodeRouteImport
+    '/cookies': {
+      id: '/cookies'
+      path: '/cookies'
+      fullPath: '/cookies'
+      preLoaderRoute: typeof CookiesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/help/$slug': {
-      id: '/help/$slug'
-      path: '/$slug'
-      fullPath: '/help/$slug'
-      preLoaderRoute: typeof HelpSlugRouteImport
-      parentRoute: typeof HelpRoute
-    }
-    '/api/version': {
-      id: '/api/version'
-      path: '/api/version'
-      fullPath: '/api/version'
-      preLoaderRoute: typeof ApiVersionRouteImport
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/tts': {
-      id: '/api/tts'
-      path: '/api/tts'
-      fullPath: '/api/tts'
-      preLoaderRoute: typeof ApiTtsRouteImport
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/time': {
-      id: '/api/time'
-      path: '/api/time'
-      fullPath: '/api/time'
-      preLoaderRoute: typeof ApiTimeRouteImport
+    '/help': {
+      id: '/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof HelpRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/ohlc': {
-      id: '/api/ohlc'
-      path: '/api/ohlc'
-      fullPath: '/api/ohlc'
-      preLoaderRoute: typeof ApiOhlcRouteImport
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/news-chat': {
-      id: '/api/news-chat'
-      path: '/api/news-chat'
-      fullPath: '/api/news-chat'
-      preLoaderRoute: typeof ApiNewsChatRouteImport
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/health': {
-      id: '/api/health'
-      path: '/api/health'
-      fullPath: '/api/health'
-      preLoaderRoute: typeof ApiHealthRouteImport
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/chat': {
-      id: '/api/chat'
-      path: '/api/chat'
-      fullPath: '/api/chat'
-      preLoaderRoute: typeof ApiChatRouteImport
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_app/wyckoff': {
-      id: '/_app/wyckoff'
-      path: '/wyckoff'
-      fullPath: '/wyckoff'
-      preLoaderRoute: typeof AppWyckoffRouteImport
-      parentRoute: typeof AppRoute
+    '/record': {
+      id: '/record'
+      path: '/record'
+      fullPath: '/record'
+      preLoaderRoute: typeof RecordRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_app/voice-coach': {
-      id: '/_app/voice-coach'
-      path: '/voice-coach'
-      fullPath: '/voice-coach'
-      preLoaderRoute: typeof AppVoiceCoachRouteImport
-      parentRoute: typeof AppRoute
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_app/testing': {
-      id: '/_app/testing'
-      path: '/testing'
-      fullPath: '/testing'
-      preLoaderRoute: typeof AppTestingRouteImport
-      parentRoute: typeof AppRoute
+    '/status': {
+      id: '/status'
+      path: '/status'
+      fullPath: '/status'
+      preLoaderRoute: typeof StatusRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_app/strategies': {
-      id: '/_app/strategies'
-      path: '/strategies'
-      fullPath: '/strategies'
-      preLoaderRoute: typeof AppStrategiesRouteImport
-      parentRoute: typeof AppRoute
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_app/signals': {
-      id: '/_app/signals'
-      path: '/signals'
-      fullPath: '/signals'
-      preLoaderRoute: typeof AppSignalsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/settings': {
-      id: '/_app/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AppSettingsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/scoreboard': {
-      id: '/_app/scoreboard'
-      path: '/scoreboard'
-      fullPath: '/scoreboard'
-      preLoaderRoute: typeof AppScoreboardRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/scan-models': {
-      id: '/_app/scan-models'
-      path: '/scan-models'
-      fullPath: '/scan-models'
-      preLoaderRoute: typeof AppScanModelsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/scan-lens': {
-      id: '/_app/scan-lens'
-      path: '/scan-lens'
-      fullPath: '/scan-lens'
-      preLoaderRoute: typeof AppScanLensRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/news': {
-      id: '/_app/news'
-      path: '/news'
-      fullPath: '/news'
-      preLoaderRoute: typeof AppNewsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/mentor': {
-      id: '/_app/mentor'
-      path: '/mentor'
-      fullPath: '/mentor'
-      preLoaderRoute: typeof AppMentorRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/mental': {
-      id: '/_app/mental'
-      path: '/mental'
-      fullPath: '/mental'
-      preLoaderRoute: typeof AppMentalRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/memory': {
-      id: '/_app/memory'
-      path: '/memory'
-      fullPath: '/memory'
-      preLoaderRoute: typeof AppMemoryRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/levels': {
-      id: '/_app/levels'
-      path: '/levels'
-      fullPath: '/levels'
-      preLoaderRoute: typeof AppLevelsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/leaderboard': {
-      id: '/_app/leaderboard'
-      path: '/leaderboard'
-      fullPath: '/leaderboard'
-      preLoaderRoute: typeof AppLeaderboardRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/journal': {
-      id: '/_app/journal'
-      path: '/journal'
-      fullPath: '/journal'
-      preLoaderRoute: typeof AppJournalRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/guide': {
-      id: '/_app/guide'
-      path: '/guide'
-      fullPath: '/guide'
-      preLoaderRoute: typeof AppGuideRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/friends': {
-      id: '/_app/friends'
-      path: '/friends'
-      fullPath: '/friends'
-      preLoaderRoute: typeof AppFriendsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/flashcards': {
-      id: '/_app/flashcards'
-      path: '/flashcards'
-      fullPath: '/flashcards'
-      preLoaderRoute: typeof AppFlashcardsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/first-week': {
-      id: '/_app/first-week'
-      path: '/first-week'
-      fullPath: '/first-week'
-      preLoaderRoute: typeof AppFirstWeekRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/discord': {
-      id: '/_app/discord'
-      path: '/discord'
-      fullPath: '/discord'
-      preLoaderRoute: typeof AppDiscordRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/dashboard': {
-      id: '/_app/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AppDashboardRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/contact': {
-      id: '/_app/contact'
-      path: '/contact'
-      fullPath: '/contact'
-      preLoaderRoute: typeof AppContactRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/connections': {
-      id: '/_app/connections'
-      path: '/connections'
-      fullPath: '/connections'
-      preLoaderRoute: typeof AppConnectionsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/coaches': {
-      id: '/_app/coaches'
-      path: '/coaches'
-      fullPath: '/coaches'
-      preLoaderRoute: typeof AppCoachesRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/coach-dashboard': {
-      id: '/_app/coach-dashboard'
-      path: '/coach-dashboard'
-      fullPath: '/coach-dashboard'
-      preLoaderRoute: typeof AppCoachDashboardRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/chat': {
-      id: '/_app/chat'
-      path: '/chat'
-      fullPath: '/chat'
-      preLoaderRoute: typeof AppChatRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/calculator': {
-      id: '/_app/calculator'
-      path: '/calculator'
-      fullPath: '/calculator'
-      preLoaderRoute: typeof AppCalculatorRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/broker': {
-      id: '/_app/broker'
-      path: '/broker'
-      fullPath: '/broker'
-      preLoaderRoute: typeof AppBrokerRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/autopilot': {
-      id: '/_app/autopilot'
-      path: '/autopilot'
-      fullPath: '/autopilot'
-      preLoaderRoute: typeof AppAutopilotRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/analytics': {
-      id: '/_app/analytics'
-      path: '/analytics'
-      fullPath: '/analytics'
-      preLoaderRoute: typeof AppAnalyticsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/alerts': {
-      id: '/_app/alerts'
-      path: '/alerts'
-      fullPath: '/alerts'
-      preLoaderRoute: typeof AppAlertsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/admin': {
-      id: '/_app/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AppAdminRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/academy': {
-      id: '/_app/academy'
-      path: '/academy'
-      fullPath: '/academy'
-      preLoaderRoute: typeof AppAcademyRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/.well-known/oauth-protected-resource': {
-      id: '/.well-known/oauth-protected-resource'
-      path: '/.well-known/oauth-protected-resource'
-      fullPath: '/.well-known/oauth-protected-resource'
-      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+    '/unsubscribe': {
+      id: '/unsubscribe'
+      path: '/unsubscribe'
+      fullPath: '/unsubscribe'
+      preLoaderRoute: typeof UnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.mcp/list-tools': {
@@ -1928,130 +1620,312 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_app/strategies/': {
-      id: '/_app/strategies/'
-      path: '/'
-      fullPath: '/strategies/'
-      preLoaderRoute: typeof AppStrategiesIndexRouteImport
-      parentRoute: typeof AppStrategiesRoute
-    }
-    '/_app/chat/': {
-      id: '/_app/chat/'
-      path: '/'
-      fullPath: '/chat/'
-      preLoaderRoute: typeof AppChatIndexRouteImport
-      parentRoute: typeof AppChatRoute
-    }
-    '/_app/academy/': {
-      id: '/_app/academy/'
-      path: '/'
-      fullPath: '/academy/'
-      preLoaderRoute: typeof AppAcademyIndexRouteImport
-      parentRoute: typeof AppAcademyRoute
-    }
-    '/lovable/email/events': {
-      id: '/lovable/email/events'
-      path: '/lovable/email/events'
-      fullPath: '/lovable/email/events'
-      preLoaderRoute: typeof LovableEmailEventsRouteImport
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/broker/alpaca/callback': {
-      id: '/broker/alpaca/callback'
-      path: '/broker/alpaca/callback'
-      fullPath: '/broker/alpaca/callback'
-      preLoaderRoute: typeof BrokerAlpacaCallbackRouteImport
+    '/_app/academy': {
+      id: '/_app/academy'
+      path: '/academy'
+      fullPath: '/academy'
+      preLoaderRoute: typeof AppAcademyRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/admin': {
+      id: '/_app/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AppAdminRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/alerts': {
+      id: '/_app/alerts'
+      path: '/alerts'
+      fullPath: '/alerts'
+      preLoaderRoute: typeof AppAlertsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/analytics': {
+      id: '/_app/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AppAnalyticsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/autopilot': {
+      id: '/_app/autopilot'
+      path: '/autopilot'
+      fullPath: '/autopilot'
+      preLoaderRoute: typeof AppAutopilotRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/broker': {
+      id: '/_app/broker'
+      path: '/broker'
+      fullPath: '/broker'
+      preLoaderRoute: typeof AppBrokerRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/calculator': {
+      id: '/_app/calculator'
+      path: '/calculator'
+      fullPath: '/calculator'
+      preLoaderRoute: typeof AppCalculatorRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/chat': {
+      id: '/_app/chat'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof AppChatRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/coach-dashboard': {
+      id: '/_app/coach-dashboard'
+      path: '/coach-dashboard'
+      fullPath: '/coach-dashboard'
+      preLoaderRoute: typeof AppCoachDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/coaches': {
+      id: '/_app/coaches'
+      path: '/coaches'
+      fullPath: '/coaches'
+      preLoaderRoute: typeof AppCoachesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/connections': {
+      id: '/_app/connections'
+      path: '/connections'
+      fullPath: '/connections'
+      preLoaderRoute: typeof AppConnectionsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/contact': {
+      id: '/_app/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof AppContactRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/dashboard': {
+      id: '/_app/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/discord': {
+      id: '/_app/discord'
+      path: '/discord'
+      fullPath: '/discord'
+      preLoaderRoute: typeof AppDiscordRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/first-week': {
+      id: '/_app/first-week'
+      path: '/first-week'
+      fullPath: '/first-week'
+      preLoaderRoute: typeof AppFirstWeekRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/flashcards': {
+      id: '/_app/flashcards'
+      path: '/flashcards'
+      fullPath: '/flashcards'
+      preLoaderRoute: typeof AppFlashcardsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/friends': {
+      id: '/_app/friends'
+      path: '/friends'
+      fullPath: '/friends'
+      preLoaderRoute: typeof AppFriendsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/guide': {
+      id: '/_app/guide'
+      path: '/guide'
+      fullPath: '/guide'
+      preLoaderRoute: typeof AppGuideRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/journal': {
+      id: '/_app/journal'
+      path: '/journal'
+      fullPath: '/journal'
+      preLoaderRoute: typeof AppJournalRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/leaderboard': {
+      id: '/_app/leaderboard'
+      path: '/leaderboard'
+      fullPath: '/leaderboard'
+      preLoaderRoute: typeof AppLeaderboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/levels': {
+      id: '/_app/levels'
+      path: '/levels'
+      fullPath: '/levels'
+      preLoaderRoute: typeof AppLevelsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/memory': {
+      id: '/_app/memory'
+      path: '/memory'
+      fullPath: '/memory'
+      preLoaderRoute: typeof AppMemoryRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/mental': {
+      id: '/_app/mental'
+      path: '/mental'
+      fullPath: '/mental'
+      preLoaderRoute: typeof AppMentalRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/mentor': {
+      id: '/_app/mentor'
+      path: '/mentor'
+      fullPath: '/mentor'
+      preLoaderRoute: typeof AppMentorRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/news': {
+      id: '/_app/news'
+      path: '/news'
+      fullPath: '/news'
+      preLoaderRoute: typeof AppNewsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/scan-lens': {
+      id: '/_app/scan-lens'
+      path: '/scan-lens'
+      fullPath: '/scan-lens'
+      preLoaderRoute: typeof AppScanLensRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/scan-models': {
+      id: '/_app/scan-models'
+      path: '/scan-models'
+      fullPath: '/scan-models'
+      preLoaderRoute: typeof AppScanModelsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/scoreboard': {
+      id: '/_app/scoreboard'
+      path: '/scoreboard'
+      fullPath: '/scoreboard'
+      preLoaderRoute: typeof AppScoreboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/settings': {
+      id: '/_app/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/signals': {
+      id: '/_app/signals'
+      path: '/signals'
+      fullPath: '/signals'
+      preLoaderRoute: typeof AppSignalsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/strategies': {
+      id: '/_app/strategies'
+      path: '/strategies'
+      fullPath: '/strategies'
+      preLoaderRoute: typeof AppStrategiesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/testing': {
+      id: '/_app/testing'
+      path: '/testing'
+      fullPath: '/testing'
+      preLoaderRoute: typeof AppTestingRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/voice-coach': {
+      id: '/_app/voice-coach'
+      path: '/voice-coach'
+      fullPath: '/voice-coach'
+      preLoaderRoute: typeof AppVoiceCoachRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/wyckoff': {
+      id: '/_app/wyckoff'
+      path: '/wyckoff'
+      fullPath: '/wyckoff'
+      preLoaderRoute: typeof AppWyckoffRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/tradelocker/import': {
-      id: '/api/tradelocker/import'
-      path: '/api/tradelocker/import'
-      fullPath: '/api/tradelocker/import'
-      preLoaderRoute: typeof ApiTradelockerImportRouteImport
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/stripe-webhook': {
-      id: '/api/public/stripe-webhook'
-      path: '/api/public/stripe-webhook'
-      fullPath: '/api/public/stripe-webhook'
-      preLoaderRoute: typeof ApiPublicStripeWebhookRouteImport
+    '/api/news-chat': {
+      id: '/api/news-chat'
+      path: '/api/news-chat'
+      fullPath: '/api/news-chat'
+      preLoaderRoute: typeof ApiNewsChatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/lead-unsubscribe': {
-      id: '/api/public/lead-unsubscribe'
-      path: '/api/public/lead-unsubscribe'
-      fullPath: '/api/public/lead-unsubscribe'
-      preLoaderRoute: typeof ApiPublicLeadUnsubscribeRouteImport
+    '/api/ohlc': {
+      id: '/api/ohlc'
+      path: '/api/ohlc'
+      fullPath: '/api/ohlc'
+      preLoaderRoute: typeof ApiOhlcRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/bridge': {
-      id: '/api/public/bridge'
-      path: '/api/public/bridge'
-      fullPath: '/api/public/bridge'
-      preLoaderRoute: typeof ApiPublicBridgeRouteImport
+    '/api/time': {
+      id: '/api/time'
+      path: '/api/time'
+      fullPath: '/api/time'
+      preLoaderRoute: typeof ApiTimeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_app/strategies/alt-strategies': {
-      id: '/_app/strategies/alt-strategies'
-      path: '/alt-strategies'
-      fullPath: '/strategies/alt-strategies'
-      preLoaderRoute: typeof AppStrategiesAltStrategiesRouteImport
-      parentRoute: typeof AppStrategiesRoute
+    '/api/tts': {
+      id: '/api/tts'
+      path: '/api/tts'
+      fullPath: '/api/tts'
+      preLoaderRoute: typeof ApiTtsRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_app/strategies/$strategyId': {
-      id: '/_app/strategies/$strategyId'
-      path: '/$strategyId'
-      fullPath: '/strategies/$strategyId'
-      preLoaderRoute: typeof AppStrategiesStrategyIdRouteImport
-      parentRoute: typeof AppStrategiesRoute
+    '/api/version': {
+      id: '/api/version'
+      path: '/api/version'
+      fullPath: '/api/version'
+      preLoaderRoute: typeof ApiVersionRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_app/chat/$threadId': {
-      id: '/_app/chat/$threadId'
-      path: '/$threadId'
-      fullPath: '/chat/$threadId'
-      preLoaderRoute: typeof AppChatThreadIdRouteImport
-      parentRoute: typeof AppChatRoute
+    '/help/$slug': {
+      id: '/help/$slug'
+      path: '/$slug'
+      fullPath: '/help/$slug'
+      preLoaderRoute: typeof HelpSlugRouteImport
+      parentRoute: typeof HelpRoute
     }
-    '/_app/admin/subscribers': {
-      id: '/_app/admin/subscribers'
-      path: '/subscribers'
-      fullPath: '/admin/subscribers'
-      preLoaderRoute: typeof AppAdminSubscribersRouteImport
-      parentRoute: typeof AppAdminRoute
-    }
-    '/_app/academy/review': {
-      id: '/_app/academy/review'
-      path: '/review'
-      fullPath: '/academy/review'
-      preLoaderRoute: typeof AppAcademyReviewRouteImport
-      parentRoute: typeof AppAcademyRoute
-    }
-    '/_app/academy/master-certificate': {
-      id: '/_app/academy/master-certificate'
-      path: '/master-certificate'
-      fullPath: '/academy/master-certificate'
-      preLoaderRoute: typeof AppAcademyMasterCertificateRouteImport
-      parentRoute: typeof AppAcademyRoute
-    }
-    '/_app/academy/exam': {
-      id: '/_app/academy/exam'
-      path: '/exam'
-      fullPath: '/academy/exam'
-      preLoaderRoute: typeof AppAcademyExamRouteImport
-      parentRoute: typeof AppAcademyRoute
-    }
-    '/_app/academy/$moduleId': {
-      id: '/_app/academy/$moduleId'
-      path: '/$moduleId'
-      fullPath: '/academy/$moduleId'
-      preLoaderRoute: typeof AppAcademyModuleIdRouteImport
-      parentRoute: typeof AppAcademyRoute
-    }
-    '/.mcp/invoke-tool/$tool': {
-      id: '/.mcp/invoke-tool/$tool'
-      path: '/.mcp/invoke-tool/$tool'
-      fullPath: '/.mcp/invoke-tool/$tool'
-      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+    '/invite/$code': {
+      id: '/invite/$code'
+      path: '/invite/$code'
+      fullPath: '/invite/$code'
+      preLoaderRoute: typeof InviteCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.lovable/oauth/consent': {
@@ -2061,6 +1935,132 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DotlovableOauthConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app/academy/': {
+      id: '/_app/academy/'
+      path: '/'
+      fullPath: '/academy/'
+      preLoaderRoute: typeof AppAcademyIndexRouteImport
+      parentRoute: typeof AppAcademyRoute
+    }
+    '/_app/academy/$moduleId': {
+      id: '/_app/academy/$moduleId'
+      path: '/$moduleId'
+      fullPath: '/academy/$moduleId'
+      preLoaderRoute: typeof AppAcademyModuleIdRouteImport
+      parentRoute: typeof AppAcademyRoute
+    }
+    '/_app/academy/exam': {
+      id: '/_app/academy/exam'
+      path: '/exam'
+      fullPath: '/academy/exam'
+      preLoaderRoute: typeof AppAcademyExamRouteImport
+      parentRoute: typeof AppAcademyRoute
+    }
+    '/_app/academy/master-certificate': {
+      id: '/_app/academy/master-certificate'
+      path: '/master-certificate'
+      fullPath: '/academy/master-certificate'
+      preLoaderRoute: typeof AppAcademyMasterCertificateRouteImport
+      parentRoute: typeof AppAcademyRoute
+    }
+    '/_app/academy/review': {
+      id: '/_app/academy/review'
+      path: '/review'
+      fullPath: '/academy/review'
+      preLoaderRoute: typeof AppAcademyReviewRouteImport
+      parentRoute: typeof AppAcademyRoute
+    }
+    '/_app/admin/subscribers': {
+      id: '/_app/admin/subscribers'
+      path: '/subscribers'
+      fullPath: '/admin/subscribers'
+      preLoaderRoute: typeof AppAdminSubscribersRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/_app/chat/': {
+      id: '/_app/chat/'
+      path: '/'
+      fullPath: '/chat/'
+      preLoaderRoute: typeof AppChatIndexRouteImport
+      parentRoute: typeof AppChatRoute
+    }
+    '/_app/chat/$threadId': {
+      id: '/_app/chat/$threadId'
+      path: '/$threadId'
+      fullPath: '/chat/$threadId'
+      preLoaderRoute: typeof AppChatThreadIdRouteImport
+      parentRoute: typeof AppChatRoute
+    }
+    '/_app/strategies/': {
+      id: '/_app/strategies/'
+      path: '/'
+      fullPath: '/strategies/'
+      preLoaderRoute: typeof AppStrategiesIndexRouteImport
+      parentRoute: typeof AppStrategiesRoute
+    }
+    '/_app/strategies/$strategyId': {
+      id: '/_app/strategies/$strategyId'
+      path: '/$strategyId'
+      fullPath: '/strategies/$strategyId'
+      preLoaderRoute: typeof AppStrategiesStrategyIdRouteImport
+      parentRoute: typeof AppStrategiesRoute
+    }
+    '/_app/strategies/alt-strategies': {
+      id: '/_app/strategies/alt-strategies'
+      path: '/alt-strategies'
+      fullPath: '/strategies/alt-strategies'
+      preLoaderRoute: typeof AppStrategiesAltStrategiesRouteImport
+      parentRoute: typeof AppStrategiesRoute
+    }
+    '/api/public/bridge': {
+      id: '/api/public/bridge'
+      path: '/api/public/bridge'
+      fullPath: '/api/public/bridge'
+      preLoaderRoute: typeof ApiPublicBridgeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/lead-unsubscribe': {
+      id: '/api/public/lead-unsubscribe'
+      path: '/api/public/lead-unsubscribe'
+      fullPath: '/api/public/lead-unsubscribe'
+      preLoaderRoute: typeof ApiPublicLeadUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/stripe-webhook': {
+      id: '/api/public/stripe-webhook'
+      path: '/api/public/stripe-webhook'
+      fullPath: '/api/public/stripe-webhook'
+      preLoaderRoute: typeof ApiPublicStripeWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tradelocker/import': {
+      id: '/api/tradelocker/import'
+      path: '/api/tradelocker/import'
+      fullPath: '/api/tradelocker/import'
+      preLoaderRoute: typeof ApiTradelockerImportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/broker/alpaca/callback': {
+      id: '/broker/alpaca/callback'
+      path: '/broker/alpaca/callback'
+      fullPath: '/broker/alpaca/callback'
+      preLoaderRoute: typeof BrokerAlpacaCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/events': {
+      id: '/lovable/email/events'
+      path: '/lovable/email/events'
+      fullPath: '/lovable/email/events'
+      preLoaderRoute: typeof LovableEmailEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app/academy/$moduleId/': {
       id: '/_app/academy/$moduleId/'
       path: '/'
@@ -2068,214 +2068,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAcademyModuleIdIndexRouteImport
       parentRoute: typeof AppAcademyModuleIdRoute
     }
-    '/lovable/email/transactional/preview': {
-      id: '/lovable/email/transactional/preview'
-      path: '/lovable/email/transactional/preview'
-      fullPath: '/lovable/email/transactional/preview'
-      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_app/academy/$moduleId/$lessonId': {
+      id: '/_app/academy/$moduleId/$lessonId'
+      path: '/$lessonId'
+      fullPath: '/academy/$moduleId/$lessonId'
+      preLoaderRoute: typeof AppAcademyModuleIdLessonIdRouteImport
+      parentRoute: typeof AppAcademyModuleIdRoute
     }
-    '/lovable/email/auth/webhook': {
-      id: '/lovable/email/auth/webhook'
-      path: '/lovable/email/auth/webhook'
-      fullPath: '/lovable/email/auth/webhook'
-      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_app/academy/certificate/$moduleId': {
+      id: '/_app/academy/certificate/$moduleId'
+      path: '/certificate/$moduleId'
+      fullPath: '/academy/certificate/$moduleId'
+      preLoaderRoute: typeof AppAcademyCertificateModuleIdRouteImport
+      parentRoute: typeof AppAcademyRoute
     }
-    '/lovable/email/auth/preview': {
-      id: '/lovable/email/auth/preview'
-      path: '/lovable/email/auth/preview'
-      fullPath: '/lovable/email/auth/preview'
-      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/telegram/webhook': {
-      id: '/api/public/telegram/webhook'
-      path: '/api/public/telegram/webhook'
-      fullPath: '/api/public/telegram/webhook'
-      preLoaderRoute: typeof ApiPublicTelegramWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/signals/file': {
-      id: '/api/public/signals/file'
-      path: '/api/public/signals/file'
-      fullPath: '/api/public/signals/file'
-      preLoaderRoute: typeof ApiPublicSignalsFileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/weekly-review': {
-      id: '/api/public/hooks/weekly-review'
-      path: '/api/public/hooks/weekly-review'
-      fullPath: '/api/public/hooks/weekly-review'
-      preLoaderRoute: typeof ApiPublicHooksWeeklyReviewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/stop-width-test': {
-      id: '/api/public/hooks/stop-width-test'
-      path: '/api/public/hooks/stop-width-test'
-      fullPath: '/api/public/hooks/stop-width-test'
-      preLoaderRoute: typeof ApiPublicHooksStopWidthTestRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/stop-width-per-instrument': {
-      id: '/api/public/hooks/stop-width-per-instrument'
-      path: '/api/public/hooks/stop-width-per-instrument'
-      fullPath: '/api/public/hooks/stop-width-per-instrument'
-      preLoaderRoute: typeof ApiPublicHooksStopWidthPerInstrumentRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/signal-integrity': {
-      id: '/api/public/hooks/signal-integrity'
-      path: '/api/public/hooks/signal-integrity'
-      fullPath: '/api/public/hooks/signal-integrity'
-      preLoaderRoute: typeof ApiPublicHooksSignalIntegrityRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/signal-excursions': {
-      id: '/api/public/hooks/signal-excursions'
-      path: '/api/public/hooks/signal-excursions'
-      fullPath: '/api/public/hooks/signal-excursions'
-      preLoaderRoute: typeof ApiPublicHooksSignalExcursionsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/signal-alerts-tick': {
-      id: '/api/public/hooks/signal-alerts-tick'
-      path: '/api/public/hooks/signal-alerts-tick'
-      fullPath: '/api/public/hooks/signal-alerts-tick'
-      preLoaderRoute: typeof ApiPublicHooksSignalAlertsTickRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/send-briefings': {
-      id: '/api/public/hooks/send-briefings'
-      path: '/api/public/hooks/send-briefings'
-      fullPath: '/api/public/hooks/send-briefings'
-      preLoaderRoute: typeof ApiPublicHooksSendBriefingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/scan-signals': {
-      id: '/api/public/hooks/scan-signals'
-      path: '/api/public/hooks/scan-signals'
-      fullPath: '/api/public/hooks/scan-signals'
-      preLoaderRoute: typeof ApiPublicHooksScanSignalsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/resolve-signals': {
-      id: '/api/public/hooks/resolve-signals'
-      path: '/api/public/hooks/resolve-signals'
-      fullPath: '/api/public/hooks/resolve-signals'
-      preLoaderRoute: typeof ApiPublicHooksResolveSignalsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/reresolve-fills': {
-      id: '/api/public/hooks/reresolve-fills'
-      path: '/api/public/hooks/reresolve-fills'
-      fullPath: '/api/public/hooks/reresolve-fills'
-      preLoaderRoute: typeof ApiPublicHooksReresolveFillsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/reresolve-expiries': {
-      id: '/api/public/hooks/reresolve-expiries'
-      path: '/api/public/hooks/reresolve-expiries'
-      fullPath: '/api/public/hooks/reresolve-expiries'
-      preLoaderRoute: typeof ApiPublicHooksReresolveExpiriesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/replay-refresh': {
-      id: '/api/public/hooks/replay-refresh'
-      path: '/api/public/hooks/replay-refresh'
-      fullPath: '/api/public/hooks/replay-refresh'
-      preLoaderRoute: typeof ApiPublicHooksReplayRefreshRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/regime-split': {
-      id: '/api/public/hooks/regime-split'
-      path: '/api/public/hooks/regime-split'
-      fullPath: '/api/public/hooks/regime-split'
-      preLoaderRoute: typeof ApiPublicHooksRegimeSplitRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/reconcile-paper': {
-      id: '/api/public/hooks/reconcile-paper'
-      path: '/api/public/hooks/reconcile-paper'
-      fullPath: '/api/public/hooks/reconcile-paper'
-      preLoaderRoute: typeof ApiPublicHooksReconcilePaperRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/price-alerts-tick': {
-      id: '/api/public/hooks/price-alerts-tick'
-      path: '/api/public/hooks/price-alerts-tick'
-      fullPath: '/api/public/hooks/price-alerts-tick'
-      preLoaderRoute: typeof ApiPublicHooksPriceAlertsTickRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/paper-bot-tick': {
-      id: '/api/public/hooks/paper-bot-tick'
-      path: '/api/public/hooks/paper-bot-tick'
-      fullPath: '/api/public/hooks/paper-bot-tick'
-      preLoaderRoute: typeof ApiPublicHooksPaperBotTickRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/journal-verify-tick': {
-      id: '/api/public/hooks/journal-verify-tick'
-      path: '/api/public/hooks/journal-verify-tick'
-      fullPath: '/api/public/hooks/journal-verify-tick'
-      preLoaderRoute: typeof ApiPublicHooksJournalVerifyTickRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/journal-daily-checkin': {
-      id: '/api/public/hooks/journal-daily-checkin'
-      path: '/api/public/hooks/journal-daily-checkin'
-      fullPath: '/api/public/hooks/journal-daily-checkin'
-      preLoaderRoute: typeof ApiPublicHooksJournalDailyCheckinRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/grade-separation': {
-      id: '/api/public/hooks/grade-separation'
-      path: '/api/public/hooks/grade-separation'
-      fullPath: '/api/public/hooks/grade-separation'
-      preLoaderRoute: typeof ApiPublicHooksGradeSeparationRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/grade-inversion': {
-      id: '/api/public/hooks/grade-inversion'
-      path: '/api/public/hooks/grade-inversion'
-      fullPath: '/api/public/hooks/grade-inversion'
-      preLoaderRoute: typeof ApiPublicHooksGradeInversionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/gate-volume': {
-      id: '/api/public/hooks/gate-volume'
-      path: '/api/public/hooks/gate-volume'
-      fullPath: '/api/public/hooks/gate-volume'
-      preLoaderRoute: typeof ApiPublicHooksGateVolumeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/entry-fill-test': {
-      id: '/api/public/hooks/entry-fill-test'
-      path: '/api/public/hooks/entry-fill-test'
-      fullPath: '/api/public/hooks/entry-fill-test'
-      preLoaderRoute: typeof ApiPublicHooksEntryFillTestRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/drip-emails': {
-      id: '/api/public/hooks/drip-emails'
-      path: '/api/public/hooks/drip-emails'
-      fullPath: '/api/public/hooks/drip-emails'
-      preLoaderRoute: typeof ApiPublicHooksDripEmailsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/daily-bias-split': {
-      id: '/api/public/hooks/daily-bias-split'
-      path: '/api/public/hooks/daily-bias-split'
-      fullPath: '/api/public/hooks/daily-bias-split'
-      preLoaderRoute: typeof ApiPublicHooksDailyBiasSplitRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/classic-research-backtest': {
-      id: '/api/public/hooks/classic-research-backtest'
-      path: '/api/public/hooks/classic-research-backtest'
-      fullPath: '/api/public/hooks/classic-research-backtest'
-      preLoaderRoute: typeof ApiPublicHooksClassicResearchBacktestRouteImport
+    '/api/public/hooks/ai-credits': {
+      id: '/api/public/hooks/ai-credits'
+      path: '/api/public/hooks/ai-credits'
+      fullPath: '/api/public/hooks/ai-credits'
+      preLoaderRoute: typeof ApiPublicHooksAiCreditsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/autopilot-tick': {
@@ -2285,26 +2096,215 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksAutopilotTickRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/hooks/ai-credits': {
-      id: '/api/public/hooks/ai-credits'
-      path: '/api/public/hooks/ai-credits'
-      fullPath: '/api/public/hooks/ai-credits'
-      preLoaderRoute: typeof ApiPublicHooksAiCreditsRouteImport
+    '/api/public/hooks/classic-research-backtest': {
+      id: '/api/public/hooks/classic-research-backtest'
+      path: '/api/public/hooks/classic-research-backtest'
+      fullPath: '/api/public/hooks/classic-research-backtest'
+      preLoaderRoute: typeof ApiPublicHooksClassicResearchBacktestRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_app/academy/certificate/$moduleId': {
-      id: '/_app/academy/certificate/$moduleId'
-      path: '/certificate/$moduleId'
-      fullPath: '/academy/certificate/$moduleId'
-      preLoaderRoute: typeof AppAcademyCertificateModuleIdRouteImport
-      parentRoute: typeof AppAcademyRoute
+    '/api/public/hooks/daily-bias-split': {
+      id: '/api/public/hooks/daily-bias-split'
+      path: '/api/public/hooks/daily-bias-split'
+      fullPath: '/api/public/hooks/daily-bias-split'
+      preLoaderRoute: typeof ApiPublicHooksDailyBiasSplitRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_app/academy/$moduleId/$lessonId': {
-      id: '/_app/academy/$moduleId/$lessonId'
-      path: '/$lessonId'
-      fullPath: '/academy/$moduleId/$lessonId'
-      preLoaderRoute: typeof AppAcademyModuleIdLessonIdRouteImport
-      parentRoute: typeof AppAcademyModuleIdRoute
+    '/api/public/hooks/drip-emails': {
+      id: '/api/public/hooks/drip-emails'
+      path: '/api/public/hooks/drip-emails'
+      fullPath: '/api/public/hooks/drip-emails'
+      preLoaderRoute: typeof ApiPublicHooksDripEmailsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/entry-fill-test': {
+      id: '/api/public/hooks/entry-fill-test'
+      path: '/api/public/hooks/entry-fill-test'
+      fullPath: '/api/public/hooks/entry-fill-test'
+      preLoaderRoute: typeof ApiPublicHooksEntryFillTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/gate-volume': {
+      id: '/api/public/hooks/gate-volume'
+      path: '/api/public/hooks/gate-volume'
+      fullPath: '/api/public/hooks/gate-volume'
+      preLoaderRoute: typeof ApiPublicHooksGateVolumeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/grade-inversion': {
+      id: '/api/public/hooks/grade-inversion'
+      path: '/api/public/hooks/grade-inversion'
+      fullPath: '/api/public/hooks/grade-inversion'
+      preLoaderRoute: typeof ApiPublicHooksGradeInversionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/grade-separation': {
+      id: '/api/public/hooks/grade-separation'
+      path: '/api/public/hooks/grade-separation'
+      fullPath: '/api/public/hooks/grade-separation'
+      preLoaderRoute: typeof ApiPublicHooksGradeSeparationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/journal-daily-checkin': {
+      id: '/api/public/hooks/journal-daily-checkin'
+      path: '/api/public/hooks/journal-daily-checkin'
+      fullPath: '/api/public/hooks/journal-daily-checkin'
+      preLoaderRoute: typeof ApiPublicHooksJournalDailyCheckinRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/journal-verify-tick': {
+      id: '/api/public/hooks/journal-verify-tick'
+      path: '/api/public/hooks/journal-verify-tick'
+      fullPath: '/api/public/hooks/journal-verify-tick'
+      preLoaderRoute: typeof ApiPublicHooksJournalVerifyTickRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/paper-bot-tick': {
+      id: '/api/public/hooks/paper-bot-tick'
+      path: '/api/public/hooks/paper-bot-tick'
+      fullPath: '/api/public/hooks/paper-bot-tick'
+      preLoaderRoute: typeof ApiPublicHooksPaperBotTickRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/price-alerts-tick': {
+      id: '/api/public/hooks/price-alerts-tick'
+      path: '/api/public/hooks/price-alerts-tick'
+      fullPath: '/api/public/hooks/price-alerts-tick'
+      preLoaderRoute: typeof ApiPublicHooksPriceAlertsTickRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/reconcile-paper': {
+      id: '/api/public/hooks/reconcile-paper'
+      path: '/api/public/hooks/reconcile-paper'
+      fullPath: '/api/public/hooks/reconcile-paper'
+      preLoaderRoute: typeof ApiPublicHooksReconcilePaperRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/regime-split': {
+      id: '/api/public/hooks/regime-split'
+      path: '/api/public/hooks/regime-split'
+      fullPath: '/api/public/hooks/regime-split'
+      preLoaderRoute: typeof ApiPublicHooksRegimeSplitRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/replay-refresh': {
+      id: '/api/public/hooks/replay-refresh'
+      path: '/api/public/hooks/replay-refresh'
+      fullPath: '/api/public/hooks/replay-refresh'
+      preLoaderRoute: typeof ApiPublicHooksReplayRefreshRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/reresolve-expiries': {
+      id: '/api/public/hooks/reresolve-expiries'
+      path: '/api/public/hooks/reresolve-expiries'
+      fullPath: '/api/public/hooks/reresolve-expiries'
+      preLoaderRoute: typeof ApiPublicHooksReresolveExpiriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/reresolve-fills': {
+      id: '/api/public/hooks/reresolve-fills'
+      path: '/api/public/hooks/reresolve-fills'
+      fullPath: '/api/public/hooks/reresolve-fills'
+      preLoaderRoute: typeof ApiPublicHooksReresolveFillsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/resolve-signals': {
+      id: '/api/public/hooks/resolve-signals'
+      path: '/api/public/hooks/resolve-signals'
+      fullPath: '/api/public/hooks/resolve-signals'
+      preLoaderRoute: typeof ApiPublicHooksResolveSignalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/scan-signals': {
+      id: '/api/public/hooks/scan-signals'
+      path: '/api/public/hooks/scan-signals'
+      fullPath: '/api/public/hooks/scan-signals'
+      preLoaderRoute: typeof ApiPublicHooksScanSignalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/send-briefings': {
+      id: '/api/public/hooks/send-briefings'
+      path: '/api/public/hooks/send-briefings'
+      fullPath: '/api/public/hooks/send-briefings'
+      preLoaderRoute: typeof ApiPublicHooksSendBriefingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/signal-alerts-tick': {
+      id: '/api/public/hooks/signal-alerts-tick'
+      path: '/api/public/hooks/signal-alerts-tick'
+      fullPath: '/api/public/hooks/signal-alerts-tick'
+      preLoaderRoute: typeof ApiPublicHooksSignalAlertsTickRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/signal-excursions': {
+      id: '/api/public/hooks/signal-excursions'
+      path: '/api/public/hooks/signal-excursions'
+      fullPath: '/api/public/hooks/signal-excursions'
+      preLoaderRoute: typeof ApiPublicHooksSignalExcursionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/signal-integrity': {
+      id: '/api/public/hooks/signal-integrity'
+      path: '/api/public/hooks/signal-integrity'
+      fullPath: '/api/public/hooks/signal-integrity'
+      preLoaderRoute: typeof ApiPublicHooksSignalIntegrityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/stop-width-per-instrument': {
+      id: '/api/public/hooks/stop-width-per-instrument'
+      path: '/api/public/hooks/stop-width-per-instrument'
+      fullPath: '/api/public/hooks/stop-width-per-instrument'
+      preLoaderRoute: typeof ApiPublicHooksStopWidthPerInstrumentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/stop-width-test': {
+      id: '/api/public/hooks/stop-width-test'
+      path: '/api/public/hooks/stop-width-test'
+      fullPath: '/api/public/hooks/stop-width-test'
+      preLoaderRoute: typeof ApiPublicHooksStopWidthTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/weekly-review': {
+      id: '/api/public/hooks/weekly-review'
+      path: '/api/public/hooks/weekly-review'
+      fullPath: '/api/public/hooks/weekly-review'
+      preLoaderRoute: typeof ApiPublicHooksWeeklyReviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/signals/file': {
+      id: '/api/public/signals/file'
+      path: '/api/public/signals/file'
+      fullPath: '/api/public/signals/file'
+      preLoaderRoute: typeof ApiPublicSignalsFileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/telegram/webhook': {
+      id: '/api/public/telegram/webhook'
+      path: '/api/public/telegram/webhook'
+      fullPath: '/api/public/telegram/webhook'
+      preLoaderRoute: typeof ApiPublicTelegramWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
