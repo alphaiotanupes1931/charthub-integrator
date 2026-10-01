@@ -65,6 +65,8 @@ export const Route = createFileRoute("/api/public/hooks/resolve-signals")({
                 bars_to_resolve: res.barsToResolve ?? null,
                 // Stopped, then the target printed anyway: a stop-width problem.
                 rescued: res.rescued ?? false,
+                // Shadow only: what a 1R target would have made. Never live.
+                shadow_tp1r_r: res.shadowTp1rR ?? null,
               } as never)
               .eq("id", sig.id);
             resolved += 1;
