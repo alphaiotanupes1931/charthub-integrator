@@ -141,7 +141,7 @@ function Landing() {
       <Nav isAuthed={isAuthed} />
 
       {/* COVER — full-viewport 3D stage. One centered column, no screenshots. */}
-      <section className="relative px-5 sm:px-6 min-h-[100svh] flex items-center pt-24 pb-24">
+      <section className="relative px-5 sm:px-6 min-h-[100svh] flex items-start pt-28 sm:pt-32 pb-16">
         <motion.div
           variants={heroContainer}
           initial="hidden"
