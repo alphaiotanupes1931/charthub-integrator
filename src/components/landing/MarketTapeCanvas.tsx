@@ -136,7 +136,7 @@ export function MarketTapeCanvas() {
   return (
     <Canvas
       dpr={[1, 1.75]}
-      camera={{ position: [0, 7.5, 14], fov: 55, near: 0.1, far: 90 }}
+      camera={{ position: [0, 5.2, 13], fov: 55, near: 0.1, far: 90 }}
       gl={{ antialias: true, powerPreference: "low-power" }}
     >
       <color attach="background" args={[BG]} />
