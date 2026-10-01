@@ -1,0 +1,2 @@
+ALTER TABLE public.signal_scores ADD COLUMN IF NOT EXISTS shadow_tp1r_r numeric;
+COMMENT ON COLUMN public.signal_scores.shadow_tp1r_r IS 'Shadow only: net R this signal would have made with the take-profit at exactly 1R. Never affects the live verdict; collected for review of the 1R-target idea.';
