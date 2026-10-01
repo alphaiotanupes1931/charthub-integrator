@@ -4,6 +4,7 @@ import { motion, useScroll, useTransform, type MotionValue } from "motion/react"
 import { ArrowRight, Check, Menu } from "lucide-react";
 import { TickerTape } from "@/components/TickerTape";
 import { MarketTapeScene } from "@/components/landing/MarketTapeScene";
+import { MorphGrade } from "@/components/landing/MorphGrade";
 
 import { MiniChart, SymbolOverview } from "@/components/MiniChart";
 import {
@@ -202,27 +203,9 @@ function Landing() {
             <Bullet>{freeTier ? "Journal and Academy free forever" : "No card to browse"}</Bullet>
           </motion.div>
 
-          {/* Grade rail: the product's core idea, drawn rather than screenshotted. */}
-          <motion.div
-            variants={heroItem}
-            className="mt-12 grid grid-cols-4 gap-2 sm:gap-3 max-w-lg mx-auto"
-          >
-            {[
-              { g: "A+", l: "Take it", cls: "text-primary border-primary/60" },
-              { g: "A", l: "Strong", cls: "text-bull border-border/60" },
-              { g: "B", l: "Optional", cls: "text-foreground/70 border-border/60" },
-              { g: "C", l: "Skip", cls: "text-destructive border-border/60" },
-            ].map((x) => (
-              <div
-                key={x.g}
-                className={`rounded-xl border bg-card/50 backdrop-blur-md px-2 py-4 ${x.cls}`}
-              >
-                <div className="font-display text-2xl sm:text-3xl font-semibold leading-none">{x.g}</div>
-                <div className="mt-2 text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-                  {x.l}
-                </div>
-              </div>
-            ))}
+          {/* One shape morphing through the grading flow. */}
+          <motion.div variants={heroItem} className="mt-8">
+            <MorphGrade />
           </motion.div>
 
           <motion.div
