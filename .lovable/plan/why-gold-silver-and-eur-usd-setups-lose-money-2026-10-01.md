@@ -28,3 +28,9 @@ For each of Gold, Silver, EUR/USD, using decided signals only (no Neutral, void 
 - Gold: 85 of 153 stops never reached 0.5R (wrong direction/entry); 42 reached 1R first. Grade does not separate (A n=6 worst).
 - Exit what-if (MFE upper bound, 9 comparisons): break-even at 1R improves pooled total to -40.5 / -20.9 / -13.3; fixed 1R target to -24.2 / -14.7 / -11.8. Both improve both halves on all three, but none turns positive and only Gold has 30+ per half.
 - Next: bar-order replay to confirm the 1R exit, then shadow it. EUR/USD long side and cost per trade are the other leads. No live change.
+
+## Bar-order replay (Oct 1, hourly public feed, fill required, same-bar = stop)
+- Replayed 182 Gold / 58 Silver / 43 EUR/USD; matched stored outcome 90% / 83% / 77% (Gold/Silver futures, basis-adjusted weekly).
+- Net R pooled, base -> 1R target -> BE at 1R: Gold -42.0 / -32.4 / -39.3; Silver -13.8 / -12.1 / -12.5; EUR/USD -19.8 / -12.2 / -18.2.
+- 1R target improves both halves on all three. Break-even barely helps. Nothing turns positive; Silver and EUR/USD cells under 30.
+- Real gains are ~25-45% of the MFE estimate. Exits are not the main problem: entries/direction are.
