@@ -42,6 +42,7 @@ export const Route = createFileRoute("/api/public/hooks/signal-excursions")({
           mfe_r: r.mfe_r == null ? null : Number(r.mfe_r),
           mae_r: r.mae_r == null ? null : Number(r.mae_r),
           net_r: r.net_r == null ? null : Number(r.net_r),
+          shadow_tp1r_r: r.shadow_tp1r_r == null ? null : Number(r.shadow_tp1r_r),
         })) as Parameters<typeof computeExcursions>[0];
 
         // One history fetch per symbol/timeframe pair, reused across its rows.
