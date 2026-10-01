@@ -2006,6 +2006,7 @@ export type Database = {
           realized_r: number | null
           rescued: boolean
           resolved_at: string | null
+          shadow_tp1r_r: number | null
           source: string
           status: string
           stop: number
@@ -2042,6 +2043,7 @@ export type Database = {
           realized_r?: number | null
           rescued?: boolean
           resolved_at?: string | null
+          shadow_tp1r_r?: number | null
           source?: string
           status?: string
           stop: number
@@ -2078,6 +2080,7 @@ export type Database = {
           realized_r?: number | null
           rescued?: boolean
           resolved_at?: string | null
+          shadow_tp1r_r?: number | null
           source?: string
           status?: string
           stop?: number

@@ -1,4 +1,4 @@
-import { createFileRoute, Link, notFound, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useRouter, type ErrorComponentProps } from "@tanstack/react-router";
 import type { Lesson } from "@/lib/academy-content";
 import { findModule } from "@/lib/academy-content";
 import { useAcademyProgress } from "@/hooks/useAcademyProgress";
@@ -14,12 +14,12 @@ function ModuleNotFound() {
   );
 }
 
-function ModuleError({ error, reset }: { error: Error; reset: () => void }) {
+function ModuleError({ error, reset }: ErrorComponentProps) {
   const router = useRouter();
   return (
     <div className="max-w-3xl mx-auto py-12 text-center">
       <div className="text-lg font-semibold mb-2">Module did not load</div>
-      <p className="text-sm text-muted-foreground mb-4">{error.message || "Open the module again."}</p>
+      <p className="text-sm text-muted-foreground mb-4">{error instanceof Error ? error.message : "Open the module again."}</p>
       <div className="flex justify-center gap-2">
         <button
           onClick={() => {

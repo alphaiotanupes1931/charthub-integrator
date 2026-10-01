@@ -27,7 +27,7 @@ export const Route = createFileRoute("/api/public/hooks/signal-excursions")({
 
         const { data, error } = await supabaseAdmin
           .from("signal_scores")
-          .select("id,symbol,timeframe,bias,grade,entry,stop,tp1,status,realized_r,mfe_r,mae_r,net_r,created_at,resolved_at")
+          .select("id,symbol,timeframe,bias,grade,entry,stop,tp1,status,realized_r,mfe_r,mae_r,net_r,shadow_tp1r_r,created_at,resolved_at")
           .in("status", ["target", "stop", "expired"])
           .order("created_at", { ascending: oldestFirst })
           .limit(limit);
@@ -42,6 +42,7 @@ export const Route = createFileRoute("/api/public/hooks/signal-excursions")({
           mfe_r: r.mfe_r == null ? null : Number(r.mfe_r),
           mae_r: r.mae_r == null ? null : Number(r.mae_r),
           net_r: r.net_r == null ? null : Number(r.net_r),
+          shadow_tp1r_r: r.shadow_tp1r_r == null ? null : Number(r.shadow_tp1r_r),
         })) as Parameters<typeof computeExcursions>[0];
 
         // One history fetch per symbol/timeframe pair, reused across its rows.

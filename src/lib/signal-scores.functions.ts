@@ -317,9 +317,67 @@ export const resolveMySignalScores = createServerFn({ method: "POST" })
           mfe_r: res.mfeR ?? null,
           bars_to_resolve: res.barsToResolve ?? null,
           rescued: res.rescued ?? false,
+          shadow_tp1r_r: res.shadowTp1rR ?? null,
         } as never)
         .eq("id", sig.id);
       resolved += 1;
     }
     return { checked: open.length, resolved };
+  });
+
+export type ShadowTp1rRow = {
+  symbol: string;
+  trades: number;
+  actualNetR: number;
+  shadowNetR: number;
+  deltaR: number;
+};
+
+/**
+ * Read-only review of the 1R-target idea: per instrument, what the book made
+ * versus what it would have made with every target at exactly 1R. Shadow data
+ * only; nothing here changes a live signal.
+ */
+export const getShadowTp1rReport = createServerFn({ method: "GET" })
+  .middleware([requireCapability("signal_engine")])
+  .handler(async ({ context }): Promise<{ rows: ShadowTp1rRow[]; total: ShadowTp1rRow | null }> => {
+    const { data, error } = await context.supabase
+      .from("signal_scores")
+      .select("symbol, net_r, shadow_tp1r_r")
+      .eq("user_id", context.userId)
+      .in("status", ["target", "stop", "expired"])
+      .not("shadow_tp1r_r", "is", null)
+      .limit(2000);
+    if (error) throw new Error(error.message);
+
+    const bySymbol = new Map<string, { trades: number; actual: number; shadow: number }>();
+    for (const r of data ?? []) {
+      const actual = r.net_r == null ? 0 : Number(r.net_r);
+      const shadow = Number(r.shadow_tp1r_r);
+      const agg = bySymbol.get(r.symbol) ?? { trades: 0, actual: 0, shadow: 0 };
+      agg.trades += 1;
+      agg.actual += actual;
+      agg.shadow += shadow;
+      bySymbol.set(r.symbol, agg);
+    }
+    const round = (n: number) => Math.round(n * 100) / 100;
+    const rows: ShadowTp1rRow[] = [...bySymbol.entries()]
+      .map(([symbol, a]) => ({
+        symbol,
+        trades: a.trades,
+        actualNetR: round(a.actual),
+        shadowNetR: round(a.shadow),
+        deltaR: round(a.shadow - a.actual),
+      }))
+      .sort((x, y) => y.deltaR - x.deltaR);
+    const total = rows.length
+      ? {
+          symbol: "ALL",
+          trades: rows.reduce((s, r) => s + r.trades, 0),
+          actualNetR: round(rows.reduce((s, r) => s + r.actualNetR, 0)),
+          shadowNetR: round(rows.reduce((s, r) => s + r.shadowNetR, 0)),
+          deltaR: round(rows.reduce((s, r) => s + r.deltaR, 0)),
+        }
+      : null;
+    return { rows, total };
   });

@@ -40,6 +40,7 @@ export type StoredSignal = {
   mfe_r: number | null;
   mae_r: number | null;
   net_r: number | null;
+  shadow_tp1r_r?: number | null;
   created_at: string;
   resolved_at: string | null;
 };
@@ -51,6 +52,8 @@ export type ExcursionUpdate = {
   bars_to_resolve: number;
   net_r?: number;
   cost_r?: number;
+  /** Shadow only: net R with the target at exactly 1R. Additive, never a correction. */
+  shadow_tp1r_r?: number;
 };
 
 export type Mismatch = {
@@ -161,7 +164,34 @@ export function computeExcursions(
       });
     }
 
-    if (row.mfe_r != null && row.mae_r != null) {
+    // Shadow 1R target: a second walk with only the target moved. Computed for
+    // every row that lacks it, even when excursions are already stored.
+    let shadowTp1r: number | null = null;
+    if (row.shadow_tp1r_r == null) {
+      const dir = row.bias.trim().toLowerCase().startsWith("l") ? "long" : "short";
+      const risk = Math.abs(Number(row.entry) - Number(row.stop));
+      if (risk > 0) {
+        const tp1r = dir === "long" ? Number(row.entry) + risk : Number(row.entry) - risk;
+        const shadow = replayForward({ ...row, tp1: tp1r }, bars, { requireFill: true });
+        if (shadow && shadow.status !== "unfilled") {
+          const gross =
+            shadow.status === "target"
+              ? 1
+              : shadow.status === "stop"
+                ? -1
+                : (() => {
+                    const last = shadow.lastClose ?? Number(row.entry);
+                    const move = dir === "long" ? last - Number(row.entry) : Number(row.entry) - last;
+                    return Math.round((move / risk) * 100) / 100;
+                  })();
+          const cost = costInR(row.symbol, Number(row.entry), risk);
+          shadowTp1r = Math.round((gross - cost) * 1000) / 1000;
+        }
+      }
+    }
+
+    const hasExcursions = row.mfe_r != null && row.mae_r != null;
+    if (hasExcursions && shadowTp1r == null) {
       alreadyHad += 1;
       continue;
     }
@@ -171,6 +201,7 @@ export function computeExcursions(
       mfe_r: verdict.mfeR,
       bars_to_resolve: verdict.bars,
     };
+    if (shadowTp1r != null) update.shadow_tp1r_r = shadowTp1r;
     // Fill costs at the same time when the row predates cost recording, using the
     // static per-instrument table. Estimated, not the true spread at the minute.
     if (row.net_r == null && storedR != null) {
