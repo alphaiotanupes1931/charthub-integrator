@@ -142,6 +142,7 @@ export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
       mfeR: verdict.mfeR,
       barsToResolve: verdict.bars,
       rescued: verdict.rescued,
+      shadowTp1rR: shadowTp1r(sig, bars, direction, risk, cost),
     };
   }
 
