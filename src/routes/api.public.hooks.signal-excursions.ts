@@ -27,7 +27,7 @@ export const Route = createFileRoute("/api/public/hooks/signal-excursions")({
 
         const { data, error } = await supabaseAdmin
           .from("signal_scores")
-          .select("id,symbol,timeframe,bias,grade,entry,stop,tp1,status,realized_r,mfe_r,mae_r,net_r,created_at,resolved_at")
+          .select("id,symbol,timeframe,bias,grade,entry,stop,tp1,status,realized_r,mfe_r,mae_r,net_r,shadow_tp1r_r,created_at,resolved_at")
           .in("status", ["target", "stop", "expired"])
           .order("created_at", { ascending: oldestFirst })
           .limit(limit);
