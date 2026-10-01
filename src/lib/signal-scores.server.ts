@@ -170,3 +170,32 @@ export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
     barsToResolve: verdict.bars,
   };
 }
+
+/**
+ * Shadow replay with the target moved to exactly 1R. Same bars, same fill
+ * rules, same conservative both-in-one-bar read; only the target changes.
+ * Returns net R (1R win, -1R stop, mark-to-market when neither printed), or
+ * null when the shadow entry never filled.
+ */
+function shadowTp1r(
+  sig: OpenSignal,
+  bars: BtBar[],
+  direction: "long" | "short",
+  risk: number,
+  cost: number,
+): number | null {
+  const tp1r = direction === "long" ? sig.entry + risk : sig.entry - risk;
+  const shadow = replayForward({ ...sig, tp1: tp1r }, bars, { requireFill: true });
+  if (!shadow || shadow.status === "unfilled") return null;
+  const gross =
+    shadow.status === "target"
+      ? 1
+      : shadow.status === "stop"
+        ? -1
+        : (() => {
+            const last = shadow.lastClose ?? sig.entry;
+            const move = direction === "long" ? last - sig.entry : sig.entry - last;
+            return Math.round((move / risk) * 100) / 100;
+          })();
+  return Math.round((gross - cost) * 1000) / 1000;
+}
