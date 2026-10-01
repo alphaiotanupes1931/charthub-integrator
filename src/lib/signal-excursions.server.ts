@@ -40,6 +40,7 @@ export type StoredSignal = {
   mfe_r: number | null;
   mae_r: number | null;
   net_r: number | null;
+  shadow_tp1r_r?: number | null;
   created_at: string;
   resolved_at: string | null;
 };
@@ -51,6 +52,8 @@ export type ExcursionUpdate = {
   bars_to_resolve: number;
   net_r?: number;
   cost_r?: number;
+  /** Shadow only: net R with the target at exactly 1R. Additive, never a correction. */
+  shadow_tp1r_r?: number;
 };
 
 export type Mismatch = {
