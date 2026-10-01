@@ -19,7 +19,7 @@ function ModuleError({ error, reset }: ErrorComponentProps) {
   return (
     <div className="max-w-3xl mx-auto py-12 text-center">
       <div className="text-lg font-semibold mb-2">Module did not load</div>
-      <p className="text-sm text-muted-foreground mb-4">{error.message || "Open the module again."}</p>
+      <p className="text-sm text-muted-foreground mb-4">{error instanceof Error ? error.message : "Open the module again."}</p>
       <div className="flex justify-center gap-2">
         <button
           onClick={() => {
