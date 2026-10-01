@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { motion, useScroll, useTransform, type MotionValue } from "motion/react";
+import { motion } from "motion/react";
 import { ArrowRight, Check, Menu } from "lucide-react";
 import { TickerTape } from "@/components/TickerTape";
 import { MarketTapeScene } from "@/components/landing/MarketTapeScene";
@@ -250,7 +250,7 @@ function Landing() {
         <TickerTape symbols={TICKER} />
       </div>
 
-      {/* PINNED CASCADE — the camera flies over the terrain while these panels advance. */}
+      {/* ENGINE — compact overview without a long scroll-jacked spacer. */}
       <PinnedCascade />
 
 
@@ -695,14 +695,7 @@ function WatchRow({ symbol, label }: { symbol: string; label: string }) {
   );
 }
 
-/**
- * Scroll-pinned cascade. The heading stays pinned while three panels advance,
- * matching the stretch of the camera path that flies across the terrain.
- */
 function PinnedCascade() {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
-
   const steps = [
     {
       k: "structure",
@@ -722,81 +715,26 @@ function PinnedCascade() {
   ];
 
   return (
-    <div ref={ref} className="relative h-[280svh]">
-      <div className="sticky top-0 h-[100svh] flex items-center px-5 sm:px-6">
-        <div className="max-w-6xl mx-auto w-full grid lg:grid-cols-[0.9fr_1.1fr] gap-10 items-center">
-          <div>
-            <SectionEyebrow align="left">The engine</SectionEyebrow>
-            <h2 className="font-display font-semibold tracking-[-0.03em] text-[1.9rem] sm:text-4xl md:text-[3rem] leading-[1.05]">
-              A grade you can
-              <br />
-              defend out loud.
-            </h2>
-            <p className="mt-5 text-sm sm:text-base text-muted-foreground max-w-md leading-relaxed">
-              Every signal is built from the same three checks, in the same order, every time.
-            </p>
-          </div>
+    <section className="border-b border-border/60 px-5 py-16 sm:px-6 sm:py-24">
+      <div className="mx-auto w-full max-w-6xl">
+        <SectionEyebrow>The engine</SectionEyebrow>
+        <h2 className="text-center font-display text-[1.9rem] font-semibold leading-[1.05] sm:text-4xl md:text-[3rem]">
+          A grade you can defend out loud.
+        </h2>
+        <p className="mx-auto mt-5 max-w-lg text-center text-sm leading-relaxed text-muted-foreground sm:text-base">
+          Every signal is built from the same three checks, in the same order, every time.
+        </p>
 
-          <div className="relative">
-            {steps.map((s, i) => (
-              <CascadePanel
-                key={s.k}
-                index={i}
-                total={steps.length}
-                progress={scrollYProgress}
-                title={s.title}
-                body={s.body}
-              />
-            ))}
-          </div>
+        <div className="mt-10 grid gap-4 md:grid-cols-3">
+          {steps.map((step, index) => (
+            <div key={step.k} className="border-t border-border/60 py-6 md:px-6 md:first:pl-0 md:last:pr-0">
+              <div className="text-[11px] font-semibold text-primary">0{index + 1} / 0{steps.length}</div>
+              <h3 className="mt-4 font-display text-2xl">{step.title}</h3>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{step.body}</p>
+            </div>
+          ))}
         </div>
       </div>
-    </div>
-  );
-}
-
-function CascadePanel({
-  index,
-  total,
-  progress,
-  title,
-  body,
-}: {
-  index: number;
-  total: number;
-  progress: MotionValue<number>;
-  title: string;
-  body: string;
-}) {
-  const span = 1 / total;
-  const start = index * span;
-  // Keyframe offsets must stay inside [0,1] and strictly increase, otherwise the
-  // animation engine rejects them and the section fails to render.
-  const stops = ((): [number, number, number, number] => {
-    const clamp = (n: number) => Math.min(1, Math.max(0, n));
-    let a = clamp(start - span * 0.35);
-    let b = clamp(start + span * 0.2);
-    let c = clamp(start + span * 0.85);
-    let d = clamp(start + span * 1.2);
-    const eps = 0.001;
-    b = Math.max(b, a + eps);
-    c = Math.max(c, b + eps);
-    d = Math.max(d, c + eps);
-    return [a, b, Math.min(c, 1), Math.min(d, 1)];
-  })();
-  const opacity = useTransform(progress, stops, [0, 1, 1, 0]);
-  const y = useTransform(progress, [stops[0], stops[1]], [40, 0]);
-
-  return (
-    <motion.div
-      style={{ opacity, y }}
-      className="absolute inset-x-0 top-0 rounded-2xl border border-border/60 bg-card/70 backdrop-blur-md p-6 sm:p-9"
-    >
-      <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-primary">
-        0{index + 1} / 0{total}
-      </div>
-      <h3 className="font-display text-2xl sm:text-3xl mt-4">{title}</h3>
-      <p className="text-sm sm:text-base text-muted-foreground mt-4 leading-relaxed max-w-lg">{body}</p>
-    </motion.div>
+    </section>
   );
 }
