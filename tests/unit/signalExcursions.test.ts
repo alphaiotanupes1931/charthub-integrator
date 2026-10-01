@@ -105,9 +105,8 @@ describe("historical backfill", () => {
       () => [bar(1, 101.5, 99.8), bar(2, 101.2, 100)],
     );
     expect(updates).toHaveLength(1);
-    const shadow = updates[0]!.shadow_tp1r_r!;
-    expect(shadow).toBeGreaterThan(0.9); // +1R minus estimated cost
-    expect(shadow).toBeLessThan(1);
+    // +1R minus Gold's estimated 0.5R cost.
+    expect(updates[0]!.shadow_tp1r_r!).toBeCloseTo(0.5, 2);
   });
 
   it("shadows a 1R target: a stop stays -1R net of cost", () => {
@@ -115,9 +114,8 @@ describe("historical backfill", () => {
       [stored({ mfe_r: 1, mae_r: 0.1, status: "stop", realized_r: -1 })],
       () => [bar(1, 100.5, 98.9)],
     );
-    const shadow = updates[0]!.shadow_tp1r_r!;
-    expect(shadow).toBeLessThan(-1);
-    expect(shadow).toBeGreaterThan(-1.2);
+    // -1R minus Gold's estimated 0.5R cost.
+    expect(updates[0]!.shadow_tp1r_r!).toBeCloseTo(-1.5, 2);
   });
 
   it("marks to market when the shadow neither wins nor stops", () => {
