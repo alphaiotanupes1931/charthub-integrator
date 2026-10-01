@@ -57,6 +57,12 @@ export type Resolution = {
    * need opposite fixes.
    */
   rescued?: boolean;
+  /**
+   * Shadow only: net R had the take-profit sat at exactly 1R. Computed from a
+   * second bar walk with the target moved; never touches the live verdict.
+   * Collected so the 1R-target idea can be reviewed on forward data.
+   */
+  shadowTp1rR?: number | null;
 };
 
 /** Long or short, or null when the scan had no directional opinion. */
