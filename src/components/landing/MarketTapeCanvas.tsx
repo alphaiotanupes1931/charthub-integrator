@@ -112,9 +112,9 @@ function CandleField() {
     const t = state.clock.elapsedTime;
     const cam = state.camera;
     cam.position.x = Math.sin(t * 0.11) * 2.4;
-    cam.position.y = 7.5 + Math.sin(t * 0.07) * 0.8;
-    cam.position.z = 14;
-    cam.lookAt(0, 1.4, -16);
+    cam.position.y = 5.2 + Math.sin(t * 0.07) * 0.6;
+    cam.position.z = 13;
+    cam.lookAt(0, 2.6, -14);
   });
 
   const count = COLS * ROWS;
@@ -136,7 +136,7 @@ export function MarketTapeCanvas() {
   return (
     <Canvas
       dpr={[1, 1.75]}
-      camera={{ position: [0, 7.5, 14], fov: 55, near: 0.1, far: 90 }}
+      camera={{ position: [0, 5.2, 13], fov: 55, near: 0.1, far: 90 }}
       gl={{ antialias: true, powerPreference: "low-power" }}
     >
       <color attach="background" args={[BG]} />
