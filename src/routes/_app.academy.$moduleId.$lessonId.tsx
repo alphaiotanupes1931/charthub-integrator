@@ -1,4 +1,4 @@
-import { createFileRoute, Link, notFound, useNavigate, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useNavigate, useRouter, type ErrorComponentProps } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getLessonCheck } from "@/lib/academy-quizzes";
 import { LessonCheck } from "@/components/academy/LessonCheck";
@@ -50,7 +50,7 @@ function LessonNotFound() {
   );
 }
 
-function LessonError({ error, reset }: { error: Error; reset: () => void }) {
+function LessonError({ error, reset }: ErrorComponentProps) {
   const router = useRouter();
   return (
     <div className="max-w-3xl mx-auto py-12 text-center">
