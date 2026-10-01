@@ -89,10 +89,44 @@ describe("historical backfill", () => {
     expect(updates[0]!.net_r).toBeLessThan(2);
   });
 
-  it("leaves rows that already carry excursions alone", () => {
-    const { updates, report } = computeExcursions([stored({ mfe_r: 1, mae_r: 0.1 })], barsFor);
+  it("leaves rows that already carry excursions and a shadow alone", () => {
+    const { updates, report } = computeExcursions(
+      [stored({ mfe_r: 1, mae_r: 0.1, shadow_tp1r_r: 0.5 })],
+      barsFor,
+    );
     expect(updates).toHaveLength(0);
     expect(report.alreadyHad).toBe(1);
+  });
+
+  it("shadows a 1R target: target at 1R wins +1R net of cost", () => {
+    // Bars reach 101.5 but not 102: live target missed, 1R shadow target hit.
+    const { updates } = computeExcursions(
+      [stored({ mfe_r: 1, mae_r: 0.1, status: "stop", realized_r: -1 })],
+      () => [bar(1, 101.5, 99.8), bar(2, 101.2, 100)],
+    );
+    expect(updates).toHaveLength(1);
+    const shadow = updates[0]!.shadow_tp1r_r!;
+    expect(shadow).toBeGreaterThan(0.9); // +1R minus estimated cost
+    expect(shadow).toBeLessThan(1);
+  });
+
+  it("shadows a 1R target: a stop stays -1R net of cost", () => {
+    const { updates } = computeExcursions(
+      [stored({ mfe_r: 1, mae_r: 0.1, status: "stop", realized_r: -1 })],
+      () => [bar(1, 100.5, 98.9)],
+    );
+    const shadow = updates[0]!.shadow_tp1r_r!;
+    expect(shadow).toBeLessThan(-1);
+    expect(shadow).toBeGreaterThan(-1.2);
+  });
+
+  it("marks to market when the shadow neither wins nor stops", () => {
+    const { updates } = computeExcursions(
+      [stored({ mfe_r: 1, mae_r: 0.1, status: "expired", realized_r: 0.3 })],
+      () => [bar(1, 100.6, 99.6, 100.5)],
+    );
+    const shadow = updates[0]!.shadow_tp1r_r!;
+    expect(shadow).toBeCloseTo(0.5 - updates[0]!.cost_r!, 2);
   });
 
   it("reports a disagreement instead of rewriting the stored verdict", () => {
