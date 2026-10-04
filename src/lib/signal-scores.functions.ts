@@ -294,6 +294,8 @@ export const resolveMySignalScores = createServerFn({ method: "POST" })
       stop: number | string;
       tp1: number | string;
       created_at: string;
+      ob_shadow_entry: number | string | null;
+      ob_shadow_stop: number | string | null;
     }>;
     if (!open.length) return { checked: 0, resolved: 0 };
 
@@ -309,6 +311,8 @@ export const resolveMySignalScores = createServerFn({ method: "POST" })
         stop: Number(sig.stop),
         tp1: Number(sig.tp1),
         created_at: sig.created_at,
+        ob_shadow_entry: sig.ob_shadow_entry == null ? null : Number(sig.ob_shadow_entry),
+        ob_shadow_stop: sig.ob_shadow_stop == null ? null : Number(sig.ob_shadow_stop),
       });
       if (res.status === "open") continue;
       await context.supabase
