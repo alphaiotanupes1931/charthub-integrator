@@ -17,7 +17,7 @@ export const Route = createFileRoute("/api/public/hooks/resolve-signals")({
 
         const { data, error } = await supabaseAdmin
           .from("signal_scores")
-          .select("id, symbol, timeframe, bias, entry, stop, tp1, created_at")
+          .select("id, symbol, timeframe, bias, entry, stop, tp1, created_at, ob_shadow_entry, ob_shadow_stop")
           .eq("status", "open")
           .lt("created_at", new Date(Date.now() - 30 * 60 * 1000).toISOString())
           .order("created_at", { ascending: true })
@@ -47,6 +47,8 @@ export const Route = createFileRoute("/api/public/hooks/resolve-signals")({
               stop: Number(sig.stop),
               tp1: Number(sig.tp1),
               created_at: sig.created_at,
+              ob_shadow_entry: sig.ob_shadow_entry == null ? null : Number(sig.ob_shadow_entry),
+              ob_shadow_stop: sig.ob_shadow_stop == null ? null : Number(sig.ob_shadow_stop),
             });
             if (res.status === "open") continue;
             await supabaseAdmin
@@ -67,6 +69,8 @@ export const Route = createFileRoute("/api/public/hooks/resolve-signals")({
                 rescued: res.rescued ?? false,
                 // Shadow only: what a 1R target would have made. Never live.
                 shadow_tp1r_r: res.shadowTp1rR ?? null,
+                // Shadow only: the 15m-inside-1H order-block entry. Never live.
+                ob_shadow_r: res.obShadowR ?? null,
               } as never)
               .eq("id", sig.id);
             resolved += 1;
