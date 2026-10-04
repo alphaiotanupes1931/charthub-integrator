@@ -2002,6 +2002,10 @@ export type Database = {
           model_id: string
           model_version: string
           net_r: number | null
+          ob_shadow_entry: number | null
+          ob_shadow_label: string | null
+          ob_shadow_r: number | null
+          ob_shadow_stop: number | null
           planned_r: number | null
           realized_r: number | null
           rescued: boolean
@@ -2039,6 +2043,10 @@ export type Database = {
           model_id?: string
           model_version?: string
           net_r?: number | null
+          ob_shadow_entry?: number | null
+          ob_shadow_label?: string | null
+          ob_shadow_r?: number | null
+          ob_shadow_stop?: number | null
           planned_r?: number | null
           realized_r?: number | null
           rescued?: boolean
@@ -2076,6 +2084,10 @@ export type Database = {
           model_id?: string
           model_version?: string
           net_r?: number | null
+          ob_shadow_entry?: number | null
+          ob_shadow_label?: string | null
+          ob_shadow_r?: number | null
+          ob_shadow_stop?: number | null
           planned_r?: number | null
           realized_r?: number | null
           rescued?: boolean
