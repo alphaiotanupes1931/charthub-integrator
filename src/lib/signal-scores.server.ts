@@ -19,6 +19,8 @@ export type OpenSignal = {
   stop: number;
   tp1: number;
   created_at: string;
+  ob_shadow_entry?: number | null;
+  ob_shadow_stop?: number | null;
 };
 
 export type Resolution = {
@@ -63,6 +65,8 @@ export type Resolution = {
    * Collected so the 1R-target idea can be reviewed on forward data.
    */
   shadowTp1rR?: number | null;
+  /** Shadow only: net R of the order-block entry against the same target. */
+  obShadowR?: number | null;
 };
 
 /** Long or short, or null when the scan had no directional opinion. */
@@ -143,6 +147,7 @@ export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
       barsToResolve: verdict.bars,
       rescued: verdict.rescued,
       shadowTp1rR: shadowTp1r(sig, bars, direction, risk, cost),
+      obShadowR: obShadowR(sig, bars, direction),
     };
   }
 
@@ -197,5 +202,30 @@ function shadowTp1r(
             const move = direction === "long" ? last - sig.entry : sig.entry - last;
             return Math.round((move / risk) * 100) / 100;
           })();
+  return Math.round((gross - cost) * 1000) / 1000;
+}
+
+/**
+ * Shadow replay of the order-block entry: same bars, same target, same fill and
+ * same-bar-is-a-stop rules; only entry and stop move to the order block.
+ * Null when there was no order-block entry or it never filled.
+ */
+function obShadowR(sig: OpenSignal, bars: BtBar[], direction: "long" | "short"): number | null {
+  const entry = sig.ob_shadow_entry;
+  const stop = sig.ob_shadow_stop;
+  if (entry == null || stop == null || !Number.isFinite(entry) || !Number.isFinite(stop)) return null;
+  const long = direction === "long";
+  const risk = long ? entry - stop : stop - entry;
+  if (!(risk > 0)) return null;
+  if (long ? sig.tp1 <= entry : sig.tp1 >= entry) return null;
+  const shadow = replayForward({ ...sig, entry, stop }, bars, { requireFill: true });
+  if (!shadow || shadow.status === "unfilled") return null;
+  const gross =
+    shadow.status === "target"
+      ? Math.abs(sig.tp1 - entry) / risk
+      : shadow.status === "stop"
+        ? -1
+        : ((long ? (shadow.lastClose ?? entry) - entry : entry - (shadow.lastClose ?? entry)) / risk);
+  const cost = costInR(sig.symbol, entry, risk);
   return Math.round((gross - cost) * 1000) / 1000;
 }

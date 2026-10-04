@@ -1518,6 +1518,9 @@ function Dashboard() {
       counterTrend: plan.counterTrend ?? false,
       htfBias: plan.htfBias ?? null,
       methodologyVersion: plan.methodologyVersion,
+      obShadowEntry: plan.obEntryShadow?.entry ?? null,
+      obShadowStop: plan.obEntryShadow?.stop ?? null,
+      obShadowLabel: plan.obEntryShadow?.label ?? null,
     });
 
   };

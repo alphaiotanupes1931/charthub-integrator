@@ -32,6 +32,9 @@ const RecordInput = z.object({
   methodologyVersion: z.string().min(1).max(40).optional(),
   /** Market price the plan was measured against. Required for the staleness guard. */
   lastPrice: z.number().finite().nullable().optional(),
+  obShadowEntry: z.number().finite().nullable().optional(),
+  obShadowStop: z.number().finite().nullable().optional(),
+  obShadowLabel: z.string().max(80).nullable().optional(),
 });
 
 type Row = {
@@ -211,6 +214,9 @@ export const recordSignalScore = createServerFn({ method: "POST" })
         created_at: createdAt,
         filed_hash: filedHash,
         entry_distance_r: staleness.distanceR,
+        ob_shadow_entry: data.obShadowEntry ?? null,
+        ob_shadow_stop: data.obShadowStop ?? null,
+        ob_shadow_label: data.obShadowLabel ?? null,
         model_id: model.id,
         model_version: model.version,
         correlation_cluster: cluster,
@@ -274,7 +280,7 @@ export const resolveMySignalScores = createServerFn({ method: "POST" })
   .handler(async ({ context }): Promise<{ checked: number; resolved: number }> => {
     const { data } = await context.supabase
       .from("signal_scores")
-      .select("id, symbol, timeframe, bias, entry, stop, tp1, created_at")
+      .select("id, symbol, timeframe, bias, entry, stop, tp1, created_at, ob_shadow_entry, ob_shadow_stop")
       .eq("user_id", context.userId)
       .eq("status", "open")
       .order("created_at", { ascending: true })
@@ -318,6 +324,7 @@ export const resolveMySignalScores = createServerFn({ method: "POST" })
           bars_to_resolve: res.barsToResolve ?? null,
           rescued: res.rescued ?? false,
           shadow_tp1r_r: res.shadowTp1rR ?? null,
+          ob_shadow_r: res.obShadowR ?? null,
         } as never)
         .eq("id", sig.id);
       resolved += 1;

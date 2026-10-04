@@ -34,6 +34,10 @@ export type SignalRecord = {
   htfBias?: string | null;
   /** Deterministic scanner ruleset that produced this record. */
   methodologyVersion?: string;
+  /** Trial-only order-block entry/stop, filed beside the live levels. */
+  obShadowEntry?: number | null;
+  obShadowStop?: number | null;
+  obShadowLabel?: string | null;
 };
 
 /** One scan of a symbol/timeframe, numbered oldest-first, with its deltas. */
@@ -201,6 +205,9 @@ export function recordSignal(input: Omit<SignalRecord, "id" | "at">): SignalReco
             // The price the plan was measured against. The server refuses to file
             // the signal if the entry has already been left behind by this price.
             lastPrice: input.refPrice ?? null,
+            obShadowEntry: input.obShadowEntry ?? null,
+            obShadowStop: input.obShadowStop ?? null,
+            obShadowLabel: input.obShadowLabel ?? null,
           },
         }),
       )
