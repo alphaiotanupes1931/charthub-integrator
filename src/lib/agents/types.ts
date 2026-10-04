@@ -192,6 +192,8 @@ export type TradePlan = {
   synopsis?: string;
   /** Trial-only entry/stop from this market's measured pullbacks. Never traded. */
   instrumentEntryShadow?: import("../instrument-entry-shadow").EntryShadow | null;
+  /** Trial-only entry at the 15m order block inside the 1H order block. Never traded. */
+  obEntryShadow?: import("../ob-entry-shadow").ObEntryShadow | null;
   /** Every rule that capped this grade, with the binding one flagged. */
   gradeCaps?: Array<{
     label: string;

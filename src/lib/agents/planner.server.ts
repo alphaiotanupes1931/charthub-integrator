@@ -2136,8 +2136,24 @@ export async function runPlanner(
     } catch { /* trial read must never affect a scan */ }
   }
 
+  let obEntryShadowRead: import("../ob-entry-shadow").ObEntryShadow | null = null;
+  if (bias !== "Neutral" && !isNoEntry) {
+    try {
+      const { obEntryShadow } = await import("../ob-entry-shadow");
+      obEntryShadowRead = obEntryShadow({
+        bias,
+        lastPrice: snap.lastPrice,
+        atr: snap.stats.atr14,
+        candles1h: snap.candles1h,
+        candles15m: snap.candles15m,
+        liveEntry: finalPlan.entry,
+      });
+    } catch { /* trial read must never affect a scan */ }
+  }
+
   return {
     instrumentEntryShadow: instrumentEntryShadowRead,
+    obEntryShadow: obEntryShadowRead,
     methodologyVersion: SCANNER_METHODOLOGY_VERSION,
     grade,
     bias,
