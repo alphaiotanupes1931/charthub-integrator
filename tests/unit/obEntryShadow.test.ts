@@ -28,3 +28,17 @@ describe("order-block entry shadow", () => {
     expect(obEntryShadow({ bias: "Short", lastPrice: 118, atr: 3, candles1h: series(), candles15m: [] })).toBeNull();
   });
 });
+
+import { hasAdjacentFvg, hasChochAfter } from "@/lib/ob-entry-shadow";
+import { describe as d2, it as i2, expect as e2 } from "vitest";
+d2("strict sequence", () => {
+  const mk = (arr: [number, number, number, number][]) =>
+    arr.map(([o, h, l, c], i) => ({ time: i, open: o, high: h, low: l, close: c }));
+  // swing high at idx1 (12), block idx3, gap between idx3 high 10 and idx5 low 11, close 13 > 12
+  const cs = mk([[10,11,9,10],[11,12,10,11],[10,11,9,10],[10,10,8,9],[9,14,9,13],[13,15,11,14],[14,16,13,15]]);
+  i2("finds FVG and CHoCH", () => {
+    e2(hasAdjacentFvg(cs, 3, true)).toBe(true);
+    e2(hasChochAfter(cs, 3, true)).toBe(true);
+  });
+  i2("no FVG for short", () => e2(hasAdjacentFvg(cs, 3, false)).toBe(false));
+});
