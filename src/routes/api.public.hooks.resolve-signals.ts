@@ -33,6 +33,8 @@ export const Route = createFileRoute("/api/public/hooks/resolve-signals")({
           stop: number | string;
           tp1: number | string;
           created_at: string;
+            ob_shadow_entry?: number | string | null;
+            ob_shadow_stop?: number | string | null;
         }>;
 
         let resolved = 0;
