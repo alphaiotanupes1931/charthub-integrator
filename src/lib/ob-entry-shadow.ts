@@ -21,7 +21,39 @@ export type ObEntryShadow = {
   /** Signed difference vs the live entry, in ATR. Positive = deeper than live. */
   entryShiftAtr: number | null;
   note: string;
+  /** Stricter sequence: BOS -> CHoCH -> FVG -> order block (all on 1H, after the block). */
+  strict: { choch: boolean; fvg: boolean; pass: boolean };
 };
+
+/** A fair value gap in the signal direction formed within 3 bars after the block candle. */
+export function hasAdjacentFvg(candles: ObCandle[], blockTime: number, long: boolean): boolean {
+  const i0 = candles.findIndex((c) => c.time === blockTime);
+  if (i0 < 0) return false;
+  for (let i = i0 + 1; i <= i0 + 3 && i + 1 < candles.length; i++) {
+    const a = candles[i - 1]!, c = candles[i + 1]!;
+    if (long ? c.low > a.high : c.high < a.low) return true;
+  }
+  return false;
+}
+
+/**
+ * Change of character after the block: price closes beyond the most recent
+ * opposing swing (3-bar fractal) that formed before the break away from the block.
+ * Long: close above a prior swing high. Short: close below a prior swing low.
+ */
+export function hasChochAfter(candles: ObCandle[], blockTime: number, long: boolean): boolean {
+  const i0 = candles.findIndex((c) => c.time === blockTime);
+  if (i0 < 2) return false;
+  let level: number | null = null;
+  for (let i = i0 - 1; i >= 1 && i >= i0 - 30; i--) {
+    const p = candles[i - 1]!, c = candles[i]!, n = candles[i + 1]!;
+    if (long ? c.high > p.high && c.high > n.high : c.low < p.low && c.low < n.low) {
+      level = long ? c.high : c.low; break;
+    }
+  }
+  if (level == null) return false;
+  return candles.slice(i0 + 1).some((c) => (long ? c.close > level! : c.close < level!));
+}
 
 const MAX_MITIGATIONS = 1;
 
@@ -73,7 +105,13 @@ export function obEntryShadow(args: {
     ? +(((long ? live - entry : entry - live) / atr)).toFixed(2)
     : null;
   const source = m15 ? "15m inside 1H" : "1H";
-  const label = m15 ? `15m ${kind} order block inside the 1H block` : `1H ${kind} order block`;
+  const base = m15 ? `15m ${kind} order block inside the 1H block` : `1H ${kind} order block`;
+  const c1h = args.candles1h ?? [];
+  const choch = hasChochAfter(c1h, h1.time, long);
+  const fvg = hasAdjacentFvg(c1h, h1.time, long);
+  const pass = choch && fvg;
+  // Saved label carries the strict tag so results can be split without a new column.
+  const label = pass ? `Strict: ${base}` : base;
   return {
     entry,
     stop,
@@ -83,6 +121,7 @@ export function obEntryShadow(args: {
     m15: m15 ? { top: m15.top, bot: m15.bot, time: m15.time } : null,
     riskAtr: +(risk / atr).toFixed(2),
     entryShiftAtr: shift,
+    strict: { choch, fvg, pass },
     note: `Trial only: entry on the retest into the ${label}; the break of structure is confirmation only.`,
   };
 }
