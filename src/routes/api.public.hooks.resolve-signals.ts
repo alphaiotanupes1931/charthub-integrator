@@ -35,8 +35,6 @@ export const Route = createFileRoute("/api/public/hooks/resolve-signals")({
           created_at: string;
           ob_shadow_entry?: number | string | null;
           ob_shadow_stop?: number | string | null;
-            ob_shadow_entry?: number | string | null;
-            ob_shadow_stop?: number | string | null;
         }>;
 
         let resolved = 0;
