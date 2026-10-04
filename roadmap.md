@@ -11,3 +11,8 @@
 - Entries & direction: investigate Gold losers that never moved in our favour
   (wrong direction or bad entry price) and the EUR/USD long side.
 - EUR/USD trading costs: check whether costs eat the edge on that pair.
+- Entry location (waiting on user's video): entry must be the 1H order block,
+  refined to the 15m order block inside it; break of structure is confirmation
+  only. Today the planner can fall back to CISD/break levels, liquidity, 4H
+  levels, or price minus 0.5 ATR when no 1H OB sits 0.4-2.2 ATR away. No 15m
+  refinement exists. Shadow-test before changing live.
