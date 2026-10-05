@@ -21,6 +21,9 @@ export type OpenSignal = {
   created_at: string;
   ob_shadow_entry?: number | null;
   ob_shadow_stop?: number | null;
+  seq_shadow_entry?: number | null;
+  seq_shadow_stop?: number | null;
+  seq_shadow_target?: number | null;
 };
 
 export type Resolution = {
@@ -67,6 +70,8 @@ export type Resolution = {
   shadowTp1rR?: number | null;
   /** Shadow only: net R of the order-block entry against the same target. */
   obShadowR?: number | null;
+  /** Shadow only: net R of the full-sequence entry against its own swing target. */
+  seqShadowR?: number | null;
 };
 
 /** Long or short, or null when the scan had no directional opinion. */
@@ -148,6 +153,7 @@ export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
       rescued: verdict.rescued,
       shadowTp1rR: shadowTp1r(sig, bars, direction, risk, cost),
       obShadowR: obShadowR(sig, bars, direction),
+      seqShadowR: shadowEntryR(sig, bars, direction, sig.seq_shadow_entry, sig.seq_shadow_stop, sig.seq_shadow_target ?? sig.tp1),
     };
   }
 
@@ -211,18 +217,28 @@ function shadowTp1r(
  * Null when there was no order-block entry or it never filled.
  */
 function obShadowR(sig: OpenSignal, bars: BtBar[], direction: "long" | "short"): number | null {
-  const entry = sig.ob_shadow_entry;
-  const stop = sig.ob_shadow_stop;
+  return shadowEntryR(sig, bars, direction, sig.ob_shadow_entry, sig.ob_shadow_stop, sig.tp1);
+}
+
+/** Shared shadow replay: alternative entry, stop and target on the same bars and rules. */
+export function shadowEntryR(
+  sig: OpenSignal,
+  bars: BtBar[],
+  direction: "long" | "short",
+  entry: number | null | undefined,
+  stop: number | null | undefined,
+  target: number,
+): number | null {
   if (entry == null || stop == null || !Number.isFinite(entry) || !Number.isFinite(stop)) return null;
   const long = direction === "long";
   const risk = long ? entry - stop : stop - entry;
   if (!(risk > 0)) return null;
-  if (long ? sig.tp1 <= entry : sig.tp1 >= entry) return null;
-  const shadow = replayForward({ ...sig, entry, stop }, bars, { requireFill: true });
+  if (long ? target <= entry : target >= entry) return null;
+  const shadow = replayForward({ ...sig, entry, stop, tp1: target }, bars, { requireFill: true });
   if (!shadow || shadow.status === "unfilled") return null;
   const gross =
     shadow.status === "target"
-      ? Math.abs(sig.tp1 - entry) / risk
+      ? Math.abs(target - entry) / risk
       : shadow.status === "stop"
         ? -1
         : ((long ? (shadow.lastClose ?? entry) - entry : entry - (shadow.lastClose ?? entry)) / risk);

@@ -2010,6 +2010,14 @@ export type Database = {
           realized_r: number | null
           rescued: boolean
           resolved_at: string | null
+          seq_h1_phase: string | null
+          seq_session_phase: string | null
+          seq_shadow_entry: number | null
+          seq_shadow_label: string | null
+          seq_shadow_r: number | null
+          seq_shadow_status: string | null
+          seq_shadow_stop: number | null
+          seq_shadow_target: number | null
           shadow_tp1r_r: number | null
           source: string
           status: string
@@ -2051,6 +2059,14 @@ export type Database = {
           realized_r?: number | null
           rescued?: boolean
           resolved_at?: string | null
+          seq_h1_phase?: string | null
+          seq_session_phase?: string | null
+          seq_shadow_entry?: number | null
+          seq_shadow_label?: string | null
+          seq_shadow_r?: number | null
+          seq_shadow_status?: string | null
+          seq_shadow_stop?: number | null
+          seq_shadow_target?: number | null
           shadow_tp1r_r?: number | null
           source?: string
           status?: string
@@ -2092,6 +2108,14 @@ export type Database = {
           realized_r?: number | null
           rescued?: boolean
           resolved_at?: string | null
+          seq_h1_phase?: string | null
+          seq_session_phase?: string | null
+          seq_shadow_entry?: number | null
+          seq_shadow_label?: string | null
+          seq_shadow_r?: number | null
+          seq_shadow_status?: string | null
+          seq_shadow_stop?: number | null
+          seq_shadow_target?: number | null
           shadow_tp1r_r?: number | null
           source?: string
           status?: string
