@@ -37,3 +37,7 @@
   41 trades -0.13R avg vs 37 against -0.19R vs 150 no bias -0.43R (cells <30);
   44 Gold losers reached +1R before stopping (-44.3R); EUR/USD cost<=0.1R 11
   trades +0.40R vs 57 -0.50R. Wider-stop outcome needs candle replay.
+- Exit trials replay (Oct 5, `src/lib/exit-trials.ts`, 1y hourly, fill required,
+  net of costs): Gold breakeven at +1R n=207, -82.1R -> -77.4R (36 changed);
+  EUR/USD min stop width (cost <=0.1R) n=63, -26.3R -> -18.2R (18 changed).
+  Both still negative; neither ready for live.
