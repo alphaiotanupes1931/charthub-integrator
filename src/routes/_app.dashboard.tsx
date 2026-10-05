@@ -229,6 +229,7 @@ function findSymbolFromTag(tag?: string | null): Symbol | null {
 
 type ScanResult = {
   obEntryShadow?: import("@/lib/ob-entry-shadow").ObEntryShadow | null;
+  sequenceShadow?: import("@/lib/sequence-entry-shadow").SequenceShadow | null;
   methodologyVersion: string;
   grade: "A+" | "A" | "B" | "C" | "NO ENTRY";
   bias: "Long" | "Short" | "Neutral";
