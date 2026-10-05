@@ -1601,6 +1601,9 @@ function Dashboard() {
       ...(plan.tradeStyle ? [`Trade style: ${plan.tradeStyle}.`] : []),
       ...levelLines,
       `Why take this trade: ${plan.notes}`,
+      ...(plan.sequenceShadow
+        ? [`Session sequence (trial, not used for the live levels): ${plan.sequenceShadow.sessionPhase ? `last session ${plan.sequenceShadow.sessionPhase.session} ${plan.sequenceShadow.sessionPhase.phase}; ` : ""}1H phase ${plan.sequenceShadow.h1Phase}; step reached: ${plan.sequenceShadow.status}. ${plan.sequenceShadow.note}`]
+        : []),
       ...(plan.details && plan.details !== plan.notes ? [`Risk and invalidation: ${plan.details}`] : []),
       "```chart-grade",
       JSON.stringify(gradePayload),

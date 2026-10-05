@@ -413,3 +413,66 @@ export const getShadowTp1rReport = createServerFn({ method: "GET" })
       : null;
     return { rows, total };
   });
+
+export type EntryTrialRow = {
+  key: string;
+  trades: number;
+  liveNetR: number;
+  obTrades: number;
+  obNetR: number;
+  seqTrades: number;
+  seqNetR: number;
+};
+
+export type EntryTrialReport = {
+  bySymbol: EntryTrialRow[];
+  bySessionPhase: EntryTrialRow[];
+  seqStatus: Array<{ status: string; count: number }>;
+  total: EntryTrialRow | null;
+};
+
+/**
+ * Read-only comparison of the three entry rules on the same signals: the live
+ * entry, the order-block trial and the full-sequence trial. Also splits results
+ * by the session phase recorded at scan time. Nothing here changes a signal.
+ */
+export const getEntryTrialReport = createServerFn({ method: "GET" })
+  .middleware([requireCapability("signal_engine")])
+  .handler(async ({ context }): Promise<EntryTrialReport> => {
+    const { data, error } = await context.supabase
+      .from("signal_scores")
+      .select("symbol, status, net_r, ob_shadow_r, seq_shadow_r, seq_shadow_status, seq_session_phase, ob_shadow_entry, seq_shadow_entry")
+      .eq("user_id", context.userId)
+      .or("ob_shadow_entry.not.is.null,seq_shadow_status.not.is.null")
+      .order("created_at", { ascending: false })
+      .limit(3000);
+    if (error) throw new Error(error.message);
+    const round = (n: number) => Math.round(n * 100) / 100;
+    const blank = (key: string): EntryTrialRow => ({ key, trades: 0, liveNetR: 0, obTrades: 0, obNetR: 0, seqTrades: 0, seqNetR: 0 });
+    const sym = new Map<string, EntryTrialRow>();
+    const ses = new Map<string, EntryTrialRow>();
+    const status = new Map<string, number>();
+    const total = blank("ALL");
+    for (const r of data ?? []) {
+      if (r.seq_shadow_status) status.set(r.seq_shadow_status, (status.get(r.seq_shadow_status) ?? 0) + 1);
+      const decided = ["target", "stop", "expired"].includes(r.status);
+      if (!decided) continue;
+      for (const row of [
+        sym.get(r.symbol) ?? sym.set(r.symbol, blank(r.symbol)).get(r.symbol)!,
+        ses.get(r.seq_session_phase ?? "unknown") ?? ses.set(r.seq_session_phase ?? "unknown", blank(r.seq_session_phase ?? "unknown")).get(r.seq_session_phase ?? "unknown")!,
+        total,
+      ]) {
+        row.trades += 1;
+        row.liveNetR += r.net_r == null ? 0 : Number(r.net_r);
+        if (r.ob_shadow_r != null) { row.obTrades += 1; row.obNetR += Number(r.ob_shadow_r); }
+        if (r.seq_shadow_r != null) { row.seqTrades += 1; row.seqNetR += Number(r.seq_shadow_r); }
+      }
+    }
+    const fin = (r: EntryTrialRow): EntryTrialRow => ({ ...r, liveNetR: round(r.liveNetR), obNetR: round(r.obNetR), seqNetR: round(r.seqNetR) });
+    return {
+      bySymbol: [...sym.values()].map(fin).sort((a, b) => b.trades - a.trades),
+      bySessionPhase: [...ses.values()].map(fin).sort((a, b) => b.trades - a.trades),
+      seqStatus: [...status.entries()].map(([s, count]) => ({ status: s, count })).sort((a, b) => b.count - a.count),
+      total: total.trades ? fin(total) : null,
+    };
+  });
