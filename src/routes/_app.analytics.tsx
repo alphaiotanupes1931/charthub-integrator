@@ -1,4 +1,5 @@
 import { InfoTip } from "@/components/InfoTip";
+import EntryTrialPanel from "@/components/EntryTrialPanel";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
@@ -569,6 +570,8 @@ function AnalyticsPage() {
           </div>
         </div>
       )}
+
+      <EntryTrialPanel />
 
       <div className="rounded-xl border border-border/60 bg-card p-6">
         <h2 className="flex items-center gap-2 text-sm font-semibold mb-4">
