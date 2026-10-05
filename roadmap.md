@@ -33,3 +33,7 @@
   bias recorded average -0.16R vs -0.43R without. Costs on Gold are small.
 - Order-block entry: compare live vs test-mode results once ~30 resolved per
   instrument have filed (ob_shadow_r on signal_scores), then decide.
+- Oct 5 history checks (full suite 1,138 passing first): Gold daily-bias match
+  41 trades -0.13R avg vs 37 against -0.19R vs 150 no bias -0.43R (cells <30);
+  44 Gold losers reached +1R before stopping (-44.3R); EUR/USD cost<=0.1R 11
+  trades +0.40R vs 57 -0.50R. Wider-stop outcome needs candle replay.
