@@ -35,6 +35,13 @@ const RecordInput = z.object({
   obShadowEntry: z.number().finite().nullable().optional(),
   obShadowStop: z.number().finite().nullable().optional(),
   obShadowLabel: z.string().max(80).nullable().optional(),
+  seqShadowEntry: z.number().finite().nullable().optional(),
+  seqShadowStop: z.number().finite().nullable().optional(),
+  seqShadowTarget: z.number().finite().nullable().optional(),
+  seqShadowStatus: z.string().max(40).nullable().optional(),
+  seqShadowLabel: z.string().max(120).nullable().optional(),
+  seqSessionPhase: z.string().max(40).nullable().optional(),
+  seqH1Phase: z.string().max(40).nullable().optional(),
 });
 
 type Row = {
@@ -217,6 +224,13 @@ export const recordSignalScore = createServerFn({ method: "POST" })
         ob_shadow_entry: data.obShadowEntry ?? null,
         ob_shadow_stop: data.obShadowStop ?? null,
         ob_shadow_label: data.obShadowLabel ?? null,
+        seq_shadow_entry: data.seqShadowEntry ?? null,
+        seq_shadow_stop: data.seqShadowStop ?? null,
+        seq_shadow_target: data.seqShadowTarget ?? null,
+        seq_shadow_status: data.seqShadowStatus ?? null,
+        seq_shadow_label: data.seqShadowLabel ?? null,
+        seq_session_phase: data.seqSessionPhase ?? null,
+        seq_h1_phase: data.seqH1Phase ?? null,
         model_id: model.id,
         model_version: model.version,
         correlation_cluster: cluster,
@@ -280,7 +294,7 @@ export const resolveMySignalScores = createServerFn({ method: "POST" })
   .handler(async ({ context }): Promise<{ checked: number; resolved: number }> => {
     const { data } = await context.supabase
       .from("signal_scores")
-      .select("id, symbol, timeframe, bias, entry, stop, tp1, created_at, ob_shadow_entry, ob_shadow_stop")
+      .select("id, symbol, timeframe, bias, entry, stop, tp1, created_at, ob_shadow_entry, ob_shadow_stop, seq_shadow_entry, seq_shadow_stop, seq_shadow_target")
       .eq("user_id", context.userId)
       .eq("status", "open")
       .order("created_at", { ascending: true })
@@ -296,6 +310,9 @@ export const resolveMySignalScores = createServerFn({ method: "POST" })
       created_at: string;
       ob_shadow_entry: number | string | null;
       ob_shadow_stop: number | string | null;
+      seq_shadow_entry?: number | string | null;
+      seq_shadow_stop?: number | string | null;
+      seq_shadow_target?: number | string | null;
     }>;
     if (!open.length) return { checked: 0, resolved: 0 };
 
@@ -313,6 +330,9 @@ export const resolveMySignalScores = createServerFn({ method: "POST" })
         created_at: sig.created_at,
         ob_shadow_entry: sig.ob_shadow_entry == null ? null : Number(sig.ob_shadow_entry),
         ob_shadow_stop: sig.ob_shadow_stop == null ? null : Number(sig.ob_shadow_stop),
+        seq_shadow_entry: sig.seq_shadow_entry == null ? null : Number(sig.seq_shadow_entry),
+        seq_shadow_stop: sig.seq_shadow_stop == null ? null : Number(sig.seq_shadow_stop),
+        seq_shadow_target: sig.seq_shadow_target == null ? null : Number(sig.seq_shadow_target),
       });
       if (res.status === "open") continue;
       await context.supabase
@@ -329,6 +349,7 @@ export const resolveMySignalScores = createServerFn({ method: "POST" })
           rescued: res.rescued ?? false,
           shadow_tp1r_r: res.shadowTp1rR ?? null,
           ob_shadow_r: res.obShadowR ?? null,
+          seq_shadow_r: res.seqShadowR ?? null,
         } as never)
         .eq("id", sig.id);
       resolved += 1;
