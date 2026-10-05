@@ -14,10 +14,18 @@
   phase, sweep -> opposite break -> retest -> 15m-in-1H OB body entry; attached
   to every scan result as `sequenceShadow`. Live unchanged.
 
+- Full sequence wired end to end: saved on every scan, scored at resolution
+  (seq_shadow_r), Entry trials panel in analytics (live vs OB vs sequence, by
+  instrument and session phase), steps passed to the coach text.
+- 2-year replay (OANDA 1H, 15m where available, 70/30, costs, fill required,
+  daily 20-SMA as bias proxy): Gold -0.42R avg (n=262), Silver -0.91, EUR/USD
+  -0.60, GBP/USD -0.65, USD/JPY -0.32; held-out 30% also negative everywhere.
+  Win rate 8-25% against far swing targets; tight stops make costs large.
+  Raw output: .lovable/sequence-replay-2026-10-05.json.
+
 ## Open
-- Full sequence: save to signal history + score at resolution, show the
-  "Sequence" row on the scan card and a Session phase panel in analytics,
-  feed the steps to the coach, then run the 2-year 70/30 held-out replay.
+- Full sequence: decide next step after the 2-year replay came back negative
+  on every instrument (see Done). Keep collecting forward results.
 - Entries & direction: investigate Gold losers that never moved in our favour
   (wrong direction or bad entry price) and the EUR/USD long side.
 - EUR/USD trading costs: check whether costs eat the edge on that pair.
