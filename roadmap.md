@@ -41,3 +41,9 @@
   net of costs): Gold breakeven at +1R n=207, -82.1R -> -77.4R (36 changed);
   EUR/USD min stop width (cost <=0.1R) n=63, -26.3R -> -18.2R (18 changed).
   Both still negative; neither ready for live.
+- EUR/USD min stop width runs as an on-demand trial (`getMinStopTrialReport`);
+  every new EUR/USD signal is included automatically. Revisit at ~100 trades.
+- Claude loser review (351 Gold/Silver/EUR/USD, numbers rechecked in DB): filed
+  13-15 UTC n=99 -0.07R avg; 16-19 UTC n=88 -0.62R (-54.7R); other n=164 -0.50R.
+  Longs into bearish daily bias n=18 -0.75R (weak). Grade shows no edge.
+  Next: hour-window trial (13-15 UTC only), needs candle replay + held-out check.

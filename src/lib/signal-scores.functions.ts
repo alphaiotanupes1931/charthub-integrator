@@ -476,3 +476,40 @@ export const getEntryTrialReport = createServerFn({ method: "GET" })
       total: total.trades ? fin(total) : null,
     };
   });
+
+/**
+ * EUR/USD minimum-stop-width trial. Recomputed on demand from stored levels and
+ * candles, so every new signal joins automatically; nothing live changes.
+ */
+export const getMinStopTrialReport = createServerFn({ method: "GET" })
+  .middleware([requireCapability("signal_engine")])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("signal_scores")
+      .select("symbol,bias,entry,stop,tp1,created_at")
+      .eq("user_id", context.userId)
+      .eq("symbol", "EUR/USD")
+      .in("status", ["target", "stop"])
+      .limit(1000);
+    if (error) throw new Error(error.message);
+    const { getHistory } = await import("@/lib/backtest/history.server");
+    const { replayForward } = await import("@/lib/signal-replay");
+    const { replayMinStopWidth } = await import("@/lib/exit-trials");
+    const { costInR } = await import("@/lib/trading-costs");
+    const bars = (await getHistory("EUR/USD", "60", "1y")).bars as never[];
+    let trades = 0, actual = 0, trial = 0;
+    for (const r of data ?? []) {
+      const s = { bias: r.bias, entry: +r.entry, stop: +r.stop, tp1: +r.tp1, created_at: r.created_at };
+      const risk = Math.abs(s.entry - s.stop);
+      const base = replayForward(s, bars, { requireFill: true });
+      const t = replayMinStopWidth(s, bars, "EUR/USD");
+      if (base?.realizedR == null || t?.r == null) continue;
+      const cost = costInR("EUR/USD", s.entry, risk);
+      const newRisk = Math.max(risk, (cost * risk) / 0.1);
+      trades++;
+      actual += base.realizedR - cost;
+      trial += t.r - costInR("EUR/USD", s.entry, newRisk);
+    }
+    const round = (n: number) => Math.round(n * 100) / 100;
+    return { trades, actualNetR: round(actual), trialNetR: round(trial), deltaR: round(trial - actual) };
+  });
