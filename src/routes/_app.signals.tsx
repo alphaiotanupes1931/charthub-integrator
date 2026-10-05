@@ -88,6 +88,7 @@ function SignalsPage() {
           synopsis: s.notes,
           source: "engine",
           refPrice: s.refPrice,
+          ...(s.trials ?? {}),
         });
       }
       setHistory(listSignals());

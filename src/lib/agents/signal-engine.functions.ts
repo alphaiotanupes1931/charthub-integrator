@@ -39,7 +39,39 @@ export type Signal = {
   triggerLevel?: number;
   /** Seconds until the bar being watched closes; 0 when it already has. */
   secondsToBarClose?: number;
+  /** Background entry trials, saved with the signal and never used for live levels. */
+  trials?: SignalTrials;
 };
+
+export type SignalTrials = {
+  obShadowEntry: number | null;
+  obShadowStop: number | null;
+  obShadowLabel: string | null;
+  seqShadowEntry: number | null;
+  seqShadowStop: number | null;
+  seqShadowTarget: number | null;
+  seqShadowStatus: string | null;
+  seqShadowLabel: string | null;
+  seqSessionPhase: string | null;
+  seqH1Phase: string | null;
+};
+
+export function trialFields(plan: TradePlan): SignalTrials {
+  const ob = plan.obEntryShadow;
+  const seq = plan.sequenceShadow;
+  return {
+    obShadowEntry: ob?.entry ?? null,
+    obShadowStop: ob?.stop ?? null,
+    obShadowLabel: ob?.label ?? null,
+    seqShadowEntry: seq?.entry ?? null,
+    seqShadowStop: seq?.stop ?? null,
+    seqShadowTarget: seq?.target ?? null,
+    seqShadowStatus: seq?.status ?? null,
+    seqShadowLabel: seq?.label ?? null,
+    seqSessionPhase: seq?.sessionPhase ? `${seq.sessionPhase.session}:${seq.sessionPhase.phase}` : null,
+    seqH1Phase: seq?.h1Phase ?? null,
+  };
+}
 
 const DEFAULT_WATCHLIST = [
   "XAU/USD", "XAG/USD", "WTI Oil",
@@ -138,6 +170,7 @@ export const runSignalScan = createServerFn({ method: "POST" })
           stateReason: lifecycle.stateReason,
           triggerLevel: plan.triggerLevel,
           secondsToBarClose: snap.bar?.secondsToClose ?? 0,
+          trials: trialFields(plan),
         };
       } catch { return null; }
     }));
