@@ -41,3 +41,5 @@
   net of costs): Gold breakeven at +1R n=207, -82.1R -> -77.4R (36 changed);
   EUR/USD min stop width (cost <=0.1R) n=63, -26.3R -> -18.2R (18 changed).
   Both still negative; neither ready for live.
+- EUR/USD min stop width runs as an on-demand trial (`getMinStopTrialReport`);
+  every new EUR/USD signal is included automatically. Revisit at ~100 trades.
