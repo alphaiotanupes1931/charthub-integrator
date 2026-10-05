@@ -194,6 +194,8 @@ export type TradePlan = {
   instrumentEntryShadow?: import("../instrument-entry-shadow").EntryShadow | null;
   /** Trial-only entry at the 15m order block inside the 1H order block. Never traded. */
   obEntryShadow?: import("../ob-entry-shadow").ObEntryShadow | null;
+  /** Trial-only full sequence: session phase, 1H phase, sweep, break, retest, OB entry. Never traded. */
+  sequenceShadow?: import("../sequence-entry-shadow").SequenceShadow | null;
   /** Every rule that capped this grade, with the binding one flagged. */
   gradeCaps?: Array<{
     label: string;
