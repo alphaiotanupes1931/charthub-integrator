@@ -1,0 +1,705 @@
+{
+ "XAU/USD": {
+  "bars": 12614,
+  "m15Bars": 19999,
+  "from": "2024-08-16",
+  "all": {
+   "n": 262,
+   "totalR": -109.5,
+   "avgR": -0.418,
+   "win": 0.12
+  },
+  "train70": {
+   "n": 183,
+   "totalR": -60.9,
+   "avgR": -0.333,
+   "win": 0.13
+  },
+  "heldOut30": {
+   "n": 79,
+   "totalR": -48.6,
+   "avgR": -0.615,
+   "win": 0.1
+  },
+  "perWeek": 2.41,
+  "with15m": 37,
+  "bySession": {
+   "Asia:broke-up": {
+    "n": 30,
+    "totalR": -24.5,
+    "avgR": -0.815,
+    "win": 0.07
+   },
+   "London:broke-up": {
+    "n": 38,
+    "totalR": 2.4,
+    "avgR": 0.064,
+    "win": 0.18
+   },
+   "New York:broke-up": {
+    "n": 32,
+    "totalR": -7.5,
+    "avgR": -0.234,
+    "win": 0.16
+   },
+   "New York:expansion": {
+    "n": 19,
+    "totalR": -14.8,
+    "avgR": -0.776,
+    "win": 0.05
+   },
+   "Asia:consolidation": {
+    "n": 18,
+    "totalR": -14.5,
+    "avgR": -0.807,
+    "win": 0.11
+   },
+   "Asia:broke-down": {
+    "n": 11,
+    "totalR": -2.2,
+    "avgR": -0.195,
+    "win": 0.18
+   },
+   "London:broke-down": {
+    "n": 11,
+    "totalR": -6.9,
+    "avgR": -0.626,
+    "win": 0.09
+   },
+   "London:swept-high": {
+    "n": 17,
+    "totalR": -3.5,
+    "avgR": -0.207,
+    "win": 0.12
+   },
+   "New York:broke-down": {
+    "n": 37,
+    "totalR": -29.5,
+    "avgR": -0.798,
+    "win": 0.05
+   },
+   "London:consolidation": {
+    "n": 19,
+    "totalR": -2,
+    "avgR": -0.105,
+    "win": 0.21
+   },
+   "Asia:swept-high": {
+    "n": 1,
+    "totalR": -1.1,
+    "avgR": -1.104,
+    "win": 0
+   },
+   "Asia:swept-low": {
+    "n": 9,
+    "totalR": -6.1,
+    "avgR": -0.683,
+    "win": 0.11
+   },
+   "New York:swept-low": {
+    "n": 2,
+    "totalR": -2.3,
+    "avgR": -1.144,
+    "win": 0
+   },
+   "London:swept-low": {
+    "n": 13,
+    "totalR": -14.2,
+    "avgR": -1.09,
+    "win": 0
+   },
+   "New York:swept-high": {
+    "n": 4,
+    "totalR": 18.3,
+    "avgR": 4.567,
+    "win": 0.75
+   },
+   "New York:consolidation": {
+    "n": 1,
+    "totalR": -1.1,
+    "avgR": -1.142,
+    "win": 0
+   }
+  },
+  "statuses": {
+   "retesting": 1573,
+   "against-bias": 4088,
+   "broke-structure": 2918,
+   "no-order-block": 1957,
+   "ready": 12,
+   "waiting-for-sweep": 76
+  }
+ },
+ "XAG/USD": {
+  "bars": 12614,
+  "m15Bars": 19999,
+  "from": "2024-08-16",
+  "all": {
+   "n": 234,
+   "totalR": -213.5,
+   "avgR": -0.912,
+   "win": 0.12
+  },
+  "train70": {
+   "n": 163,
+   "totalR": -163.6,
+   "avgR": -1.004,
+   "win": 0.13
+  },
+  "heldOut30": {
+   "n": 71,
+   "totalR": -49.9,
+   "avgR": -0.703,
+   "win": 0.1
+  },
+  "perWeek": 2.15,
+  "with15m": 27,
+  "bySession": {
+   "London:broke-up": {
+    "n": 36,
+    "totalR": -23.7,
+    "avgR": -0.658,
+    "win": 0.17
+   },
+   "New York:broke-up": {
+    "n": 24,
+    "totalR": -27.7,
+    "avgR": -1.155,
+    "win": 0.04
+   },
+   "Asia:consolidation": {
+    "n": 21,
+    "totalR": -22.6,
+    "avgR": -1.076,
+    "win": 0.1
+   },
+   "London:consolidation": {
+    "n": 22,
+    "totalR": -9.8,
+    "avgR": -0.444,
+    "win": 0.23
+   },
+   "New York:expansion": {
+    "n": 33,
+    "totalR": -22.7,
+    "avgR": -0.687,
+    "win": 0.18
+   },
+   "New York:broke-down": {
+    "n": 20,
+    "totalR": -18.3,
+    "avgR": -0.917,
+    "win": 0.1
+   },
+   "Asia:swept-low": {
+    "n": 5,
+    "totalR": -4.6,
+    "avgR": -0.912,
+    "win": 0.2
+   },
+   "Asia:broke-down": {
+    "n": 12,
+    "totalR": -18.5,
+    "avgR": -1.542,
+    "win": 0
+   },
+   "London:swept-high": {
+    "n": 7,
+    "totalR": -6.5,
+    "avgR": -0.925,
+    "win": 0.14
+   },
+   "London:broke-down": {
+    "n": 12,
+    "totalR": -15.4,
+    "avgR": -1.283,
+    "win": 0
+   },
+   "Asia:swept-high": {
+    "n": 4,
+    "totalR": -8.2,
+    "avgR": -2.054,
+    "win": 0
+   },
+   "London:expansion": {
+    "n": 4,
+    "totalR": -6.6,
+    "avgR": -1.641,
+    "win": 0
+   },
+   "Asia:broke-up": {
+    "n": 15,
+    "totalR": -11.7,
+    "avgR": -0.782,
+    "win": 0.2
+   },
+   "London:swept-low": {
+    "n": 10,
+    "totalR": -12,
+    "avgR": -1.197,
+    "win": 0
+   },
+   "New York:consolidation": {
+    "n": 2,
+    "totalR": -0.6,
+    "avgR": -0.315,
+    "win": 0.5
+   },
+   "Asia:expansion": {
+    "n": 3,
+    "totalR": -3.7,
+    "avgR": -1.235,
+    "win": 0
+   },
+   "New York:swept-low": {
+    "n": 2,
+    "totalR": 1.3,
+    "avgR": 0.67,
+    "win": 0.5
+   },
+   "New York:swept-high": {
+    "n": 2,
+    "totalR": -2.3,
+    "avgR": -1.154,
+    "win": 0
+   }
+  },
+  "statuses": {
+   "no-order-block": 1821,
+   "broke-structure": 2923,
+   "retesting": 1559,
+   "against-bias": 4241,
+   "waiting-for-sweep": 46,
+   "ready": 25
+  }
+ },
+ "EUR/USD": {
+  "bars": 12614,
+  "m15Bars": 19999,
+  "from": "2024-09-24",
+  "all": {
+   "n": 294,
+   "totalR": -175.2,
+   "avgR": -0.596,
+   "win": 0.14
+  },
+  "train70": {
+   "n": 205,
+   "totalR": -104.1,
+   "avgR": -0.508,
+   "win": 0.17
+  },
+  "heldOut30": {
+   "n": 89,
+   "totalR": -71,
+   "avgR": -0.798,
+   "win": 0.08
+  },
+  "perWeek": 2.84,
+  "with15m": 30,
+  "bySession": {
+   "New York:broke-up": {
+    "n": 32,
+    "totalR": -6.9,
+    "avgR": -0.215,
+    "win": 0.25
+   },
+   "Asia:broke-down": {
+    "n": 19,
+    "totalR": -10.2,
+    "avgR": -0.539,
+    "win": 0.16
+   },
+   "London:expansion": {
+    "n": 27,
+    "totalR": -6.1,
+    "avgR": -0.225,
+    "win": 0.15
+   },
+   "London:broke-down": {
+    "n": 29,
+    "totalR": -9,
+    "avgR": -0.309,
+    "win": 0.17
+   },
+   "Asia:broke-up": {
+    "n": 18,
+    "totalR": -24.2,
+    "avgR": -1.342,
+    "win": 0
+   },
+   "New York:expansion": {
+    "n": 26,
+    "totalR": -10.8,
+    "avgR": -0.415,
+    "win": 0.15
+   },
+   "New York:broke-down": {
+    "n": 44,
+    "totalR": -26.4,
+    "avgR": -0.599,
+    "win": 0.2
+   },
+   "New York:consolidation": {
+    "n": 3,
+    "totalR": -0.3,
+    "avgR": -0.11,
+    "win": 0.33
+   },
+   "London:broke-up": {
+    "n": 27,
+    "totalR": -11.1,
+    "avgR": -0.41,
+    "win": 0.11
+   },
+   "Asia:consolidation": {
+    "n": 23,
+    "totalR": -12.6,
+    "avgR": -0.548,
+    "win": 0.13
+   },
+   "New York:swept-high": {
+    "n": 7,
+    "totalR": -9.4,
+    "avgR": -1.337,
+    "win": 0
+   },
+   "New York:swept-low": {
+    "n": 11,
+    "totalR": -14.6,
+    "avgR": -1.325,
+    "win": 0
+   },
+   "London:swept-high": {
+    "n": 7,
+    "totalR": -9.5,
+    "avgR": -1.352,
+    "win": 0
+   },
+   "London:consolidation": {
+    "n": 7,
+    "totalR": -6,
+    "avgR": -0.85,
+    "win": 0.14
+   },
+   "Asia:swept-low": {
+    "n": 5,
+    "totalR": -6.4,
+    "avgR": -1.289,
+    "win": 0
+   },
+   "Asia:swept-high": {
+    "n": 3,
+    "totalR": -4.1,
+    "avgR": -1.371,
+    "win": 0
+   },
+   "London:swept-low": {
+    "n": 4,
+    "totalR": -5.3,
+    "avgR": -1.321,
+    "win": 0
+   },
+   "Asia:expansion": {
+    "n": 2,
+    "totalR": -2.5,
+    "avgR": -1.25,
+    "win": 0
+   }
+  },
+  "statuses": {
+   "broke-structure": 2876,
+   "retesting": 1315,
+   "no-order-block": 2073,
+   "against-bias": 4606,
+   "ready": 38,
+   "waiting-for-sweep": 43
+  }
+ },
+ "GBP/USD": {
+  "bars": 12614,
+  "m15Bars": 19999,
+  "from": "2024-09-24",
+  "all": {
+   "n": 269,
+   "totalR": -175.8,
+   "avgR": -0.653,
+   "win": 0.15
+  },
+  "train70": {
+   "n": 188,
+   "totalR": -141.2,
+   "avgR": -0.751,
+   "win": 0.15
+  },
+  "heldOut30": {
+   "n": 81,
+   "totalR": -34.6,
+   "avgR": -0.427,
+   "win": 0.16
+  },
+  "perWeek": 2.6,
+  "with15m": 17,
+  "bySession": {
+   "New York:swept-high": {
+    "n": 5,
+    "totalR": -6.6,
+    "avgR": -1.319,
+    "win": 0
+   },
+   "Asia:broke-down": {
+    "n": 20,
+    "totalR": 0.4,
+    "avgR": 0.019,
+    "win": 0.25
+   },
+   "New York:broke-up": {
+    "n": 26,
+    "totalR": -12.4,
+    "avgR": -0.475,
+    "win": 0.15
+   },
+   "Asia:swept-high": {
+    "n": 6,
+    "totalR": -8,
+    "avgR": -1.33,
+    "win": 0
+   },
+   "London:broke-up": {
+    "n": 32,
+    "totalR": -18.9,
+    "avgR": -0.591,
+    "win": 0.16
+   },
+   "Asia:consolidation": {
+    "n": 22,
+    "totalR": -14.5,
+    "avgR": -0.658,
+    "win": 0.18
+   },
+   "New York:broke-down": {
+    "n": 23,
+    "totalR": -14.9,
+    "avgR": -0.648,
+    "win": 0.13
+   },
+   "London:swept-low": {
+    "n": 5,
+    "totalR": 2.9,
+    "avgR": 0.578,
+    "win": 0.4
+   },
+   "London:broke-down": {
+    "n": 16,
+    "totalR": -19.2,
+    "avgR": -1.2,
+    "win": 0.06
+   },
+   "New York:expansion": {
+    "n": 26,
+    "totalR": -11.3,
+    "avgR": -0.436,
+    "win": 0.27
+   },
+   "London:expansion": {
+    "n": 26,
+    "totalR": -12.1,
+    "avgR": -0.467,
+    "win": 0.15
+   },
+   "Asia:broke-up": {
+    "n": 24,
+    "totalR": -26.9,
+    "avgR": -1.119,
+    "win": 0.08
+   },
+   "New York:consolidation": {
+    "n": 3,
+    "totalR": -4.1,
+    "avgR": -1.363,
+    "win": 0
+   },
+   "New York:swept-low": {
+    "n": 5,
+    "totalR": -6.8,
+    "avgR": -1.363,
+    "win": 0
+   },
+   "London:swept-high": {
+    "n": 7,
+    "totalR": -9.2,
+    "avgR": -1.32,
+    "win": 0
+   },
+   "Asia:expansion": {
+    "n": 1,
+    "totalR": -1.2,
+    "avgR": -1.221,
+    "win": 0
+   },
+   "London:consolidation": {
+    "n": 16,
+    "totalR": -19.3,
+    "avgR": -1.204,
+    "win": 0.06
+   },
+   "Asia:swept-low": {
+    "n": 6,
+    "totalR": 6.3,
+    "avgR": 1.051,
+    "win": 0.5
+   }
+  },
+  "statuses": {
+   "broke-structure": 2961,
+   "retesting": 1386,
+   "against-bias": 4737,
+   "no-order-block": 2191,
+   "waiting-for-sweep": 61,
+   "ready": 36
+  }
+ },
+ "USD/JPY": {
+  "bars": 12614,
+  "m15Bars": 19999,
+  "from": "2024-09-24",
+  "all": {
+   "n": 235,
+   "totalR": -76,
+   "avgR": -0.324,
+   "win": 0.19
+  },
+  "train70": {
+   "n": 164,
+   "totalR": -73.4,
+   "avgR": -0.448,
+   "win": 0.16
+  },
+  "heldOut30": {
+   "n": 71,
+   "totalR": -2.6,
+   "avgR": -0.037,
+   "win": 0.25
+  },
+  "perWeek": 2.27,
+  "with15m": 26,
+  "bySession": {
+   "New York:expansion": {
+    "n": 22,
+    "totalR": -9.2,
+    "avgR": -0.417,
+    "win": 0.23
+   },
+   "Asia:swept-low": {
+    "n": 9,
+    "totalR": 1.2,
+    "avgR": 0.136,
+    "win": 0.56
+   },
+   "Asia:consolidation": {
+    "n": 9,
+    "totalR": 7.1,
+    "avgR": 0.793,
+    "win": 0.22
+   },
+   "London:broke-up": {
+    "n": 33,
+    "totalR": -6.4,
+    "avgR": -0.193,
+    "win": 0.18
+   },
+   "New York:consolidation": {
+    "n": 7,
+    "totalR": -5.6,
+    "avgR": -0.802,
+    "win": 0.14
+   },
+   "New York:broke-up": {
+    "n": 25,
+    "totalR": -5,
+    "avgR": -0.198,
+    "win": 0.28
+   },
+   "London:broke-down": {
+    "n": 22,
+    "totalR": -10.2,
+    "avgR": -0.464,
+    "win": 0.09
+   },
+   "New York:broke-down": {
+    "n": 28,
+    "totalR": -8.8,
+    "avgR": -0.316,
+    "win": 0.18
+   },
+   "London:consolidation": {
+    "n": 16,
+    "totalR": -6,
+    "avgR": -0.372,
+    "win": 0.19
+   },
+   "Asia:broke-up": {
+    "n": 18,
+    "totalR": -4,
+    "avgR": -0.22,
+    "win": 0.17
+   },
+   "London:swept-low": {
+    "n": 6,
+    "totalR": -7.1,
+    "avgR": -1.18,
+    "win": 0
+   },
+   "New York:swept-high": {
+    "n": 12,
+    "totalR": -4.2,
+    "avgR": -0.352,
+    "win": 0.17
+   },
+   "Asia:broke-down": {
+    "n": 5,
+    "totalR": -6,
+    "avgR": -1.198,
+    "win": 0
+   },
+   "Asia:swept-high": {
+    "n": 4,
+    "totalR": -4.9,
+    "avgR": -1.225,
+    "win": 0
+   },
+   "London:expansion": {
+    "n": 7,
+    "totalR": -0.1,
+    "avgR": -0.021,
+    "win": 0.14
+   },
+   "Asia:expansion": {
+    "n": 5,
+    "totalR": -0.6,
+    "avgR": -0.13,
+    "win": 0.4
+   },
+   "New York:swept-low": {
+    "n": 2,
+    "totalR": -0.3,
+    "avgR": -0.137,
+    "win": 0.5
+   },
+   "London:swept-high": {
+    "n": 5,
+    "totalR": -6,
+    "avgR": -1.208,
+    "win": 0
+   }
+  },
+  "statuses": {
+   "broke-structure": 2973,
+   "no-order-block": 2158,
+   "retesting": 1215,
+   "against-bias": 4709,
+   "waiting-for-sweep": 30,
+   "ready": 32
+  }
+ }
+}
