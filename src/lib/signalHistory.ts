@@ -38,6 +38,13 @@ export type SignalRecord = {
   obShadowEntry?: number | null;
   obShadowStop?: number | null;
   obShadowLabel?: string | null;
+  seqShadowEntry?: number | null;
+  seqShadowStop?: number | null;
+  seqShadowTarget?: number | null;
+  seqShadowStatus?: string | null;
+  seqShadowLabel?: string | null;
+  seqSessionPhase?: string | null;
+  seqH1Phase?: string | null;
 };
 
 /** One scan of a symbol/timeframe, numbered oldest-first, with its deltas. */
@@ -208,6 +215,13 @@ export function recordSignal(input: Omit<SignalRecord, "id" | "at">): SignalReco
             obShadowEntry: input.obShadowEntry ?? null,
             obShadowStop: input.obShadowStop ?? null,
             obShadowLabel: input.obShadowLabel ?? null,
+            seqShadowEntry: input.seqShadowEntry ?? null,
+            seqShadowStop: input.seqShadowStop ?? null,
+            seqShadowTarget: input.seqShadowTarget ?? null,
+            seqShadowStatus: input.seqShadowStatus ?? null,
+            seqShadowLabel: input.seqShadowLabel ?? null,
+            seqSessionPhase: input.seqSessionPhase ?? null,
+            seqH1Phase: input.seqH1Phase ?? null,
           },
         }),
       )

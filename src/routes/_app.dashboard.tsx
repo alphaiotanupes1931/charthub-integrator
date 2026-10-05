@@ -229,6 +229,7 @@ function findSymbolFromTag(tag?: string | null): Symbol | null {
 
 type ScanResult = {
   obEntryShadow?: import("@/lib/ob-entry-shadow").ObEntryShadow | null;
+  sequenceShadow?: import("@/lib/sequence-entry-shadow").SequenceShadow | null;
   methodologyVersion: string;
   grade: "A+" | "A" | "B" | "C" | "NO ENTRY";
   bias: "Long" | "Short" | "Neutral";
@@ -1522,6 +1523,13 @@ function Dashboard() {
       obShadowEntry: plan.obEntryShadow?.entry ?? null,
       obShadowStop: plan.obEntryShadow?.stop ?? null,
       obShadowLabel: plan.obEntryShadow?.label ?? null,
+      seqShadowEntry: plan.sequenceShadow?.entry ?? null,
+      seqShadowStop: plan.sequenceShadow?.stop ?? null,
+      seqShadowTarget: plan.sequenceShadow?.target ?? null,
+      seqShadowStatus: plan.sequenceShadow?.status ?? null,
+      seqShadowLabel: plan.sequenceShadow?.label ?? null,
+      seqSessionPhase: plan.sequenceShadow?.sessionPhase ? `${plan.sequenceShadow.sessionPhase.session}:${plan.sequenceShadow.sessionPhase.phase}` : null,
+      seqH1Phase: plan.sequenceShadow?.h1Phase ?? null,
     });
 
   };
