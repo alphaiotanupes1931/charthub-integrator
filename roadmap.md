@@ -26,8 +26,10 @@
 ## Open
 - Full sequence: decide next step after the 2-year replay came back negative
   on every instrument (see Done). Keep collecting forward results.
-- Entries & direction: investigate Gold losers that never moved in our favour
-  (wrong direction or bad entry price) and the EUR/USD long side.
-- EUR/USD trading costs: check whether costs eat the edge on that pair.
+- Decide on findings from the Gold / EUR/USD loser review (waiting on user):
+  EUR/USD longs -33R over 49, 44 of them in Aug 2026, costs 0.27R per trade
+  (13R of the loss); shorts +9R over 19. Gold longs -46R/99, shorts -31R/129;
+  ~25-30% of Gold stops never reached +0.3R; Gold signals filed with a daily
+  bias recorded average -0.16R vs -0.43R without. Costs on Gold are small.
 - Order-block entry: compare live vs test-mode results once ~30 resolved per
   instrument have filed (ob_shadow_r on signal_scores), then decide.
