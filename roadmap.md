@@ -46,4 +46,7 @@
 - Claude loser review (351 Gold/Silver/EUR/USD, numbers rechecked in DB): filed
   13-15 UTC n=99 -0.07R avg; 16-19 UTC n=88 -0.62R (-54.7R); other n=164 -0.50R.
   Longs into bearish daily bias n=18 -0.75R (weak). Grade shows no edge.
-  Next: hour-window trial (13-15 UTC only), needs candle replay + held-out check.
+  Hour-window trial (9-12 NY, Oct 5, net R, oldest 70% build / newest 30% held):
+  build window n=59 -0.10R (-6.0R) vs other n=187 -0.55R (-103.5R); held window
+  n=40 -0.02R (-0.9R) vs other n=65 -0.52R (-33.5R). Holds out of sample but the
+  window is still not profitable; keeps ~35% of signals. Not live; user decides.
