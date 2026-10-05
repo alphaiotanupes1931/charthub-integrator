@@ -10,7 +10,14 @@
 - Order-block entry test mode: every new chart scan files a trial entry at the
   15m OB inside the 1H OB (stop past the 1H block); scored at resolution.
 
+- Full-sequence trial (Oct 4 call): rulebook + engine for session phase, 1H
+  phase, sweep -> opposite break -> retest -> 15m-in-1H OB body entry; attached
+  to every scan result as `sequenceShadow`. Live unchanged.
+
 ## Open
+- Full sequence: save to signal history + score at resolution, show the
+  "Sequence" row on the scan card and a Session phase panel in analytics,
+  feed the steps to the coach, then run the 2-year 70/30 held-out replay.
 - Entries & direction: investigate Gold losers that never moved in our favour
   (wrong direction or bad entry price) and the EUR/USD long side.
 - EUR/USD trading costs: check whether costs eat the edge on that pair.
