@@ -1642,6 +1642,51 @@ export type Database = {
         }
         Relationships: []
       }
+      rule_evidence: {
+        Row: {
+          avg_r: number | null
+          created_at: string
+          created_by: string | null
+          hypothesis: string | null
+          id: string
+          n: number
+          null_model: string | null
+          result: Json
+          rule_id: string
+          test: string
+          tier: string
+          total_r: number | null
+        }
+        Insert: {
+          avg_r?: number | null
+          created_at?: string
+          created_by?: string | null
+          hypothesis?: string | null
+          id?: string
+          n?: number
+          null_model?: string | null
+          result?: Json
+          rule_id: string
+          test: string
+          tier: string
+          total_r?: number | null
+        }
+        Update: {
+          avg_r?: number | null
+          created_at?: string
+          created_by?: string | null
+          hypothesis?: string | null
+          id?: string
+          n?: number
+          null_model?: string | null
+          result?: Json
+          rule_id?: string
+          test?: string
+          tier?: string
+          total_r?: number | null
+        }
+        Relationships: []
+      }
       scan_cache: {
         Row: {
           cache_key: string
@@ -1991,7 +2036,11 @@ export type Database = {
           counter_trend: boolean
           created_at: string
           entry: number
+          entry_candidate_r: Json | null
+          entry_candidates: Json | null
+          entry_diff_r: number | null
           entry_distance_r: number | null
+          entry_model: string
           filed_hash: string | null
           grade: string
           htf_bias: string | null
@@ -2040,7 +2089,11 @@ export type Database = {
           counter_trend?: boolean
           created_at?: string
           entry: number
+          entry_candidate_r?: Json | null
+          entry_candidates?: Json | null
+          entry_diff_r?: number | null
           entry_distance_r?: number | null
+          entry_model?: string
           filed_hash?: string | null
           grade: string
           htf_bias?: string | null
@@ -2089,7 +2142,11 @@ export type Database = {
           counter_trend?: boolean
           created_at?: string
           entry?: number
+          entry_candidate_r?: Json | null
+          entry_candidates?: Json | null
+          entry_diff_r?: number | null
           entry_distance_r?: number | null
+          entry_model?: string
           filed_hash?: string | null
           grade?: string
           htf_bias?: string | null
