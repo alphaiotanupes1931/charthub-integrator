@@ -1642,6 +1642,57 @@ export type Database = {
         }
         Relationships: []
       }
+      research_trials: {
+        Row: {
+          avg_r: number | null
+          comparisons: number
+          created_at: string
+          hypothesis: string
+          id: string
+          n: number
+          null_model: string
+          prereg_id: string
+          primary_outcome: string
+          result: Json
+          split: string | null
+          total_r: number | null
+          variant: string | null
+          verdict: string | null
+        }
+        Insert: {
+          avg_r?: number | null
+          comparisons?: number
+          created_at?: string
+          hypothesis: string
+          id?: string
+          n?: number
+          null_model: string
+          prereg_id: string
+          primary_outcome: string
+          result?: Json
+          split?: string | null
+          total_r?: number | null
+          variant?: string | null
+          verdict?: string | null
+        }
+        Update: {
+          avg_r?: number | null
+          comparisons?: number
+          created_at?: string
+          hypothesis?: string
+          id?: string
+          n?: number
+          null_model?: string
+          prereg_id?: string
+          primary_outcome?: string
+          result?: Json
+          split?: string | null
+          total_r?: number | null
+          variant?: string | null
+          verdict?: string | null
+        }
+        Relationships: []
+      }
       rule_evidence: {
         Row: {
           avg_r: number | null
