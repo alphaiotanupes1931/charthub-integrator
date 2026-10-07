@@ -2163,10 +2163,25 @@ export async function runPlanner(
     });
   } catch { /* trial read must never affect a scan */ }
 
+  let entryCandidatesRead: import("../entry-candidates").EntryCandidates | null = null;
+  try {
+    const { computeEntryCandidates } = await import("../entry-candidates");
+    entryCandidatesRead = computeEntryCandidates({
+      bias,
+      atr: snap.stats.atr14,
+      lastPrice: snap.lastPrice,
+      candles1h: snap.candles1h,
+    });
+  } catch { /* trial read must never affect a scan */ }
+
   return {
     instrumentEntryShadow: instrumentEntryShadowRead,
     obEntryShadow: obEntryShadowRead,
     sequenceShadow: sequenceShadowRead,
+    entryCandidates: entryCandidatesRead,
+    // Live levels still come from the legacy planner. Switching an instrument
+    // needs the entry_model_v2 flag plus an approved ENTRY_MODEL_V2_LIVE entry.
+    entryModel: "legacy",
     methodologyVersion: SCANNER_METHODOLOGY_VERSION,
     grade,
     bias,
