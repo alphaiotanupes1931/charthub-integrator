@@ -537,3 +537,29 @@ export const getMinStopTrialReport = createServerFn({ method: "GET" })
     const round = (n: number) => Math.round(n * 100) / 100;
     return { trades, actualNetR: round(actual), trialNetR: round(trial), deltaR: round(trial - actual) };
   });
+
+export type CandidateReportRow = {
+  symbol: string;
+  armed: number;
+  candidates: Array<{ model: string; n: number; filled: number; fillRate: number; totalR: number; avgR: number }>;
+  avgDiffR: number | null;
+};
+
+/**
+ * Entry framework v2 comparison: the four candidates off the same confirmed
+ * break, equal risk, unfilled counted as 0R. Read-only.
+ */
+export const getEntryCandidateReport = createServerFn({ method: "GET" })
+  .middleware([requireCapability("signal_engine")])
+  .handler(async ({ context }): Promise<{ rows: CandidateReportRow[]; total: CandidateReportRow | null }> => {
+    const { data, error } = await context.supabase
+      .from("signal_scores")
+      .select("symbol, entry_candidate_r, entry_diff_r")
+      .eq("user_id", context.userId)
+      .not("entry_candidate_r", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(3000);
+    if (error) throw new Error(error.message);
+    const { summarizeCandidates } = await import("@/lib/entry-candidate-report");
+    return summarizeCandidates((data ?? []) as never);
+  });
