@@ -120,6 +120,13 @@
       "when": 1791336837131,
       "tag": "0016_entry_framework_v2",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791339378792,
+      "tag": "0017_research_trials",
+      "breakpoints": true
     }
   ]
 }

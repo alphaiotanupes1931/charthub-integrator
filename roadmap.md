@@ -37,7 +37,26 @@
   (+3.8pp). Real only on EUR/USD (+12pp), GBP/USD (+15pp), US30 (+7pp); none on
   Gold, Silver, crypto.
 
+- Backtest rig (Oct 6 brief): OANDA M15+H1 bid/ask 2015-2026 for 9
+  instruments in research/data (gitignored, rerun only fetches new bars);
+  no-future feeder; ONE shared detector (src/lib/detector/entry-detector.ts)
+  imported by planner and rig; bid/ask fill simulator (buffer, stop slippage,
+  M1 for same-bar ambiguity, else pessimistic); opportunity ledger (CSV);
+  stats (day bootstrap, walk-forward+embargo, PBO, deflated Sharpe); trials
+  registry (research/registry/trials.jsonl + research_trials table).
+- Rig vs app audit: of 1,367 filed signals, 328 matched a rig setup, 211 the
+  rig read the opposite way, 828 had no sweep+break at all (legacy planner);
+  168 (12%) had an entry price had already passed. 615 rig setups never filed.
+- First pre-registered test break-vs-retest-v1: gate verdict ADOPT. Retest beat
+  the break by +0.078R build, +0.047R holdout, +0.143R at 1.5x costs. BUT both
+  lose money in absolute terms, the gain is below the 0.1R decision effect, and
+  it shrank to ~+0.01R in the three most recent folds.
+
 ## Open
+- Decide on break-vs-retest-v1 (user): relative ADOPT, but under 0.1R and
+  decaying. Next pre-registration should require delta >= decision effect.
+- Resolve audit divergences: 828 app-only signals (planner not gated on
+  sweep+break) and 168 already-passed entries. Production behaviour, not rig bugs.
 - Entry v2 switch: needs user approval per instrument. Evidence so far favours
   waiting for a retest over entering at the break; it does not single out the
   order block. Confirm on forward entry_candidate_r before switching.
