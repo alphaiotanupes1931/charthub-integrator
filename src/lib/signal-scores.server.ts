@@ -39,8 +39,6 @@ export function scoreEntryCandidates(
 ): Record<string, { filled: boolean; r: number }> | null {
   const cand = sig.entry_candidates;
   if (!cand || cand.state !== "armed" || !cand.risk || cand.target == null || !cand.direction) return null;
-  // Lazy import keeps this module light for callers that never use v2.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const fromSec = Math.floor(new Date(sig.created_at).getTime() / 1000);
   const fwd = bars.filter((b) => b.time > fromSec && b.time <= untilSec);
   if (!fwd.length) return null;
