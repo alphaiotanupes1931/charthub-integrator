@@ -23,7 +23,25 @@
   Win rate 8-25% against far swing targets; tight stops make costs large.
   Raw output: .lovable/sequence-replay-2026-10-05.json.
 
+- Entry framework v2 (Oct 5 brief): break only advances a state machine; four
+  equal-risk candidates (order block, imbalance, broken level, 0.618-0.79) saved
+  on every scan (entry_candidates) and scored at resolution (entry_candidate_r,
+  unfilled = 0R); entry_model on every signal (all 'legacy'); shadow diff
+  (entry_diff_r); evidence tiers (A block / B grade+size / C,D record) with a
+  rule_evidence log; golden set of 30 frozen windows in CI; analytics section.
+- Research run 1, break vs retest (2y OANDA 1H, 10,373 setups, power check OK):
+  market entry at the break close -0.13R avg; retest at the broken level +0.02R;
+  +0.14R pooled, +0.12R held-out. OB, imbalance and 0.618-0.79 did NOT beat the
+  broken level (all within +/-0.013R). Raw: .lovable/research/.
+- Session null benchmark: London breaches Asia 82.5% vs 78.7% matched null
+  (+3.8pp). Real only on EUR/USD (+12pp), GBP/USD (+15pp), US30 (+7pp); none on
+  Gold, Silver, crypto.
+
 ## Open
+- Entry v2 switch: needs user approval per instrument. Evidence so far favours
+  waiting for a retest over entering at the break; it does not single out the
+  order block. Confirm on forward entry_candidate_r before switching.
+- Resend of the framework attachment (research prompt + six non-negotiables).
 - Full sequence: decide next step after the 2-year replay came back negative
   on every instrument (see Done). Keep collecting forward results.
 - Decide on findings from the Gold / EUR/USD loser review (waiting on user):
