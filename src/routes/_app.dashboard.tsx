@@ -1530,6 +1530,8 @@ function Dashboard() {
       seqShadowLabel: plan.sequenceShadow?.label ?? null,
       seqSessionPhase: plan.sequenceShadow?.sessionPhase ? `${plan.sequenceShadow.sessionPhase.session}:${plan.sequenceShadow.sessionPhase.phase}` : null,
       seqH1Phase: plan.sequenceShadow?.h1Phase ?? null,
+      entryModel: plan.entryModel ?? "legacy",
+      entryCandidates: plan.entryCandidates ?? null,
     });
 
   };

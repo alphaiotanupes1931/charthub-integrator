@@ -196,6 +196,10 @@ export type TradePlan = {
   obEntryShadow?: import("../ob-entry-shadow").ObEntryShadow | null;
   /** Trial-only full sequence: session phase, 1H phase, sweep, break, retest, OB entry. Never traded. */
   sequenceShadow?: import("../sequence-entry-shadow").SequenceShadow | null;
+  /** Entry framework v2: four candidate entries off one confirmed break. Recorded only. */
+  entryCandidates?: import("../entry-candidates").EntryCandidates | null;
+  /** Which entry model produced the live entry price. */
+  entryModel?: import("../entry-candidates").EntryModel;
   /** Every rule that capped this grade, with the binding one flagged. */
   gradeCaps?: Array<{
     label: string;
