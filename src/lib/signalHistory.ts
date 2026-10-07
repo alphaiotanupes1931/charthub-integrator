@@ -45,6 +45,8 @@ export type SignalRecord = {
   seqShadowLabel?: string | null;
   seqSessionPhase?: string | null;
   seqH1Phase?: string | null;
+  entryModel?: string;
+  entryCandidates?: import("./entry-candidates").EntryCandidates | null;
 };
 
 /** One scan of a symbol/timeframe, numbered oldest-first, with its deltas. */
@@ -222,6 +224,8 @@ export function recordSignal(input: Omit<SignalRecord, "id" | "at">): SignalReco
             seqShadowLabel: input.seqShadowLabel ?? null,
             seqSessionPhase: input.seqSessionPhase ?? null,
             seqH1Phase: input.seqH1Phase ?? null,
+            entryModel: input.entryModel ?? "legacy",
+            entryCandidates: input.entryCandidates ?? null,
           },
         }),
       )

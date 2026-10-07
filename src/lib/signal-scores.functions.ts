@@ -42,6 +42,20 @@ const RecordInput = z.object({
   seqShadowLabel: z.string().max(120).nullable().optional(),
   seqSessionPhase: z.string().max(40).nullable().optional(),
   seqH1Phase: z.string().max(40).nullable().optional(),
+  entryModel: z.enum(["legacy", "order_block", "imbalance", "broken_level", "retracement_618_79"]).optional(),
+  entryCandidates: z
+    .object({
+      version: z.string().max(40),
+      state: z.string().max(20),
+      direction: z.enum(["long", "short"]).nullable(),
+      breakTime: z.number().nullable(),
+      breakLevel: z.number().finite().nullable(),
+      risk: z.number().finite().nullable(),
+      target: z.number().finite().nullable(),
+      levels: z.record(z.string().max(30), z.number().finite()),
+    })
+    .nullable()
+    .optional(),
 });
 
 type Row = {
@@ -231,6 +245,13 @@ export const recordSignalScore = createServerFn({ method: "POST" })
         seq_shadow_label: data.seqShadowLabel ?? null,
         seq_session_phase: data.seqSessionPhase ?? null,
         seq_h1_phase: data.seqH1Phase ?? null,
+        entry_model: data.entryModel ?? "legacy",
+        entry_candidates: data.entryCandidates ?? null,
+        // Shadow diff: how far the baseline candidate sits from the live entry, in R.
+        entry_diff_r:
+          data.entryCandidates?.risk && data.entryCandidates.levels.broken_level != null
+            ? Math.round(((data.entryCandidates.levels.broken_level - data.entry) / data.entryCandidates.risk) * 1000) / 1000
+            : null,
         model_id: model.id,
         model_version: model.version,
         correlation_cluster: cluster,
@@ -294,7 +315,7 @@ export const resolveMySignalScores = createServerFn({ method: "POST" })
   .handler(async ({ context }): Promise<{ checked: number; resolved: number }> => {
     const { data } = await context.supabase
       .from("signal_scores")
-      .select("id, symbol, timeframe, bias, entry, stop, tp1, created_at, ob_shadow_entry, ob_shadow_stop, seq_shadow_entry, seq_shadow_stop, seq_shadow_target")
+      .select("id, symbol, timeframe, bias, entry, stop, tp1, created_at, ob_shadow_entry, ob_shadow_stop, seq_shadow_entry, seq_shadow_stop, seq_shadow_target, entry_candidates")
       .eq("user_id", context.userId)
       .eq("status", "open")
       .order("created_at", { ascending: true })
@@ -313,6 +334,7 @@ export const resolveMySignalScores = createServerFn({ method: "POST" })
       seq_shadow_entry?: number | string | null;
       seq_shadow_stop?: number | string | null;
       seq_shadow_target?: number | string | null;
+      entry_candidates?: unknown;
     }>;
     if (!open.length) return { checked: 0, resolved: 0 };
 
@@ -333,6 +355,7 @@ export const resolveMySignalScores = createServerFn({ method: "POST" })
         seq_shadow_entry: sig.seq_shadow_entry == null ? null : Number(sig.seq_shadow_entry),
         seq_shadow_stop: sig.seq_shadow_stop == null ? null : Number(sig.seq_shadow_stop),
         seq_shadow_target: sig.seq_shadow_target == null ? null : Number(sig.seq_shadow_target),
+        entry_candidates: (sig.entry_candidates ?? null) as never,
       });
       if (res.status === "open") continue;
       await context.supabase
@@ -350,6 +373,7 @@ export const resolveMySignalScores = createServerFn({ method: "POST" })
           shadow_tp1r_r: res.shadowTp1rR ?? null,
           ob_shadow_r: res.obShadowR ?? null,
           seq_shadow_r: res.seqShadowR ?? null,
+          entry_candidate_r: res.candidateR ?? null,
         } as never)
         .eq("id", sig.id);
       resolved += 1;
@@ -512,4 +536,30 @@ export const getMinStopTrialReport = createServerFn({ method: "GET" })
     }
     const round = (n: number) => Math.round(n * 100) / 100;
     return { trades, actualNetR: round(actual), trialNetR: round(trial), deltaR: round(trial - actual) };
+  });
+
+export type CandidateReportRow = {
+  symbol: string;
+  armed: number;
+  candidates: Array<{ model: string; n: number; filled: number; fillRate: number; totalR: number; avgR: number }>;
+  avgDiffR: number | null;
+};
+
+/**
+ * Entry framework v2 comparison: the four candidates off the same confirmed
+ * break, equal risk, unfilled counted as 0R. Read-only.
+ */
+export const getEntryCandidateReport = createServerFn({ method: "GET" })
+  .middleware([requireCapability("signal_engine")])
+  .handler(async ({ context }): Promise<{ rows: CandidateReportRow[]; total: CandidateReportRow | null }> => {
+    const { data, error } = await context.supabase
+      .from("signal_scores")
+      .select("symbol, entry_candidate_r, entry_diff_r")
+      .eq("user_id", context.userId)
+      .not("entry_candidate_r", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(3000);
+    if (error) throw new Error(error.message);
+    const { summarizeCandidates } = await import("@/lib/entry-candidate-report");
+    return summarizeCandidates((data ?? []) as never);
   });
