@@ -230,6 +230,8 @@ function findSymbolFromTag(tag?: string | null): Symbol | null {
 type ScanResult = {
   obEntryShadow?: import("@/lib/ob-entry-shadow").ObEntryShadow | null;
   sequenceShadow?: import("@/lib/sequence-entry-shadow").SequenceShadow | null;
+  entryCandidates?: import("@/lib/entry-candidates").EntryCandidates | null;
+  entryModel?: import("@/lib/entry-candidates").EntryModel;
   methodologyVersion: string;
   grade: "A+" | "A" | "B" | "C" | "NO ENTRY";
   bias: "Long" | "Short" | "Neutral";

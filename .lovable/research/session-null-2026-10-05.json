@@ -1,0 +1,68 @@
+{
+ "XAU/USD": {
+  "n": 549,
+  "realRate": 0.734,
+  "nullRate": 0.747,
+  "excess": -0.013
+ },
+ "XAG/USD": {
+  "n": 548,
+  "realRate": 0.75,
+  "nullRate": 0.754,
+  "excess": -0.004
+ },
+ "EUR/USD": {
+  "n": 524,
+  "realRate": 0.903,
+  "nullRate": 0.78,
+  "excess": 0.123
+ },
+ "GBP/USD": {
+  "n": 524,
+  "realRate": 0.931,
+  "nullRate": 0.784,
+  "excess": 0.147
+ },
+ "USD/JPY": {
+  "n": 524,
+  "realRate": 0.771,
+  "nullRate": 0.725,
+  "excess": 0.046
+ },
+ "NAS100": {
+  "n": 550,
+  "realRate": 0.858,
+  "nullRate": 0.846,
+  "excess": 0.012
+ },
+ "SPX500": {
+  "n": 550,
+  "realRate": 0.871,
+  "nullRate": 0.851,
+  "excess": 0.02
+ },
+ "US30": {
+  "n": 550,
+  "realRate": 0.933,
+  "nullRate": 0.858,
+  "excess": 0.075
+ },
+ "BTC/USD": {
+  "n": 524,
+  "realRate": 0.737,
+  "nullRate": 0.767,
+  "excess": -0.03
+ },
+ "ETH/USD": {
+  "n": 248,
+  "realRate": 0.694,
+  "nullRate": 0.701,
+  "excess": -0.007
+ },
+ "ALL": {
+  "n": 5091,
+  "realRate": 0.825,
+  "nullRate": 0.787,
+  "excess": 0.038
+ }
+}
