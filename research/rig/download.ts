@@ -19,11 +19,11 @@ const host = () => (process.env.OANDA_ENV === "live" ? "https://api-fxtrade.oand
 
 export async function fetchRange(inst: string, tf: string, fromSec: number, toSec?: number): Promise<RigBar[]> {
   const out: RigBar[] = [];
-  let from = fromSec;
+  let from = Math.floor(fromSec);
   const end = toSec ?? Math.floor(Date.now() / 1000);
   for (;;) {
     const u = `${host()}/v3/instruments/${inst}/candles?price=MBA&granularity=${tf}&count=5000&from=${from}`;
-    const r = await fetch(u, { headers: { Authorization: `Bearer ${process.env.OANDA_API_KEY}` } });
+    const r = await fetch(u, { headers: { Authorization: `Bearer ${process.env.OANDA_API_KEY}`, "Accept-Datetime-Format": "UNIX" } });
     if (!r.ok) throw new Error(`${inst} ${tf} ${r.status} ${(await r.text()).slice(0, 200)}`);
     const j = (await r.json()) as { candles: Array<{ time: string; complete: boolean; volume: number; mid: Record<string, string>; bid: Record<string, string>; ask: Record<string, string> }> };
     const done = j.candles.filter((c) => c.complete);
