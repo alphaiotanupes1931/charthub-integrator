@@ -9,6 +9,7 @@ import type { BtBar } from "@/lib/backtest/engine";
 import type { BacktestTimeframe } from "@/lib/backtest/catalog";
 import { costInR } from "@/lib/trading-costs";
 import { replayForward, replayDirection } from "@/lib/signal-replay";
+import { scoreCandidate as scoreCandidateSync } from "@/lib/entry-candidates";
 
 export type OpenSignal = {
   id: string;
@@ -24,7 +25,31 @@ export type OpenSignal = {
   seq_shadow_entry?: number | null;
   seq_shadow_stop?: number | null;
   seq_shadow_target?: number | null;
+  entry_candidates?: import("@/lib/entry-candidates").EntryCandidates | null;
 };
+
+/**
+ * Equal-risk score for each of the four v2 entry candidates over the signal's
+ * life. Unfilled candidates score 0R and are kept. Null when nothing was armed.
+ */
+export function scoreEntryCandidates(
+  sig: OpenSignal,
+  bars: BtBar[],
+  untilSec: number,
+): Record<string, { filled: boolean; r: number }> | null {
+  const cand = sig.entry_candidates;
+  if (!cand || cand.state !== "armed" || !cand.risk || cand.target == null || !cand.direction) return null;
+  const fromSec = Math.floor(new Date(sig.created_at).getTime() / 1000);
+  const fwd = bars.filter((b) => b.time > fromSec && b.time <= untilSec);
+  if (!fwd.length) return null;
+  const long = cand.direction === "long";
+  const out: Record<string, { filled: boolean; r: number }> = {};
+  for (const [model, level] of Object.entries(cand.levels)) {
+    if (level == null) continue;
+    out[model] = scoreCandidateSync(fwd, long, level, cand.risk, cand.target, costInR(sig.symbol, level, cand.risk));
+  }
+  return out;
+}
 
 export type Resolution = {
   /**
@@ -72,6 +97,8 @@ export type Resolution = {
   obShadowR?: number | null;
   /** Shadow only: net R of the full-sequence entry against its own swing target. */
   seqShadowR?: number | null;
+  /** v2 entry candidates, equal risk, unfilled = 0R. */
+  candidateR?: Record<string, { filled: boolean; r: number }> | null;
 };
 
 /** Long or short, or null when the scan had no directional opinion. */
@@ -124,6 +151,7 @@ export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
   const cost = costInR(sig.symbol, sig.entry, risk);
   const net = (gross: number) => Math.round((gross - cost) * 1000) / 1000;
   const round = (n: number) => Math.round(n * 100) / 100;
+  const candidateR = scoreEntryCandidates(sig, bars, Math.floor(Date.now() / 1000));
 
   if (verdict.status === "unfilled") {
     // Still inside its clock: the entry may yet be traded back to.
@@ -132,6 +160,7 @@ export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
     }
     return {
       status: "unfilled",
+      candidateR,
       realizedR: null,
       netR: null,
       costR: null,
@@ -144,6 +173,7 @@ export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
   if (verdict.status !== "unresolved") {
     return {
       status: verdict.status,
+      candidateR,
       realizedR: verdict.realizedR,
       netR: net(verdict.realizedR ?? 0),
       costR: cost,
@@ -163,6 +193,7 @@ export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
     const move = long ? last - sig.entry : sig.entry - last;
     return {
       status: "expired",
+      candidateR,
       realizedR: round(move / risk),
       netR: net(round(move / risk)),
       costR: cost,

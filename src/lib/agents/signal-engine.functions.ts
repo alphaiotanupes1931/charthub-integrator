@@ -54,6 +54,8 @@ export type SignalTrials = {
   seqShadowLabel: string | null;
   seqSessionPhase: string | null;
   seqH1Phase: string | null;
+  entryModel: string;
+  entryCandidates: import("../entry-candidates").EntryCandidates | null;
 };
 
 export function trialFields(plan: TradePlan): SignalTrials {
@@ -70,6 +72,8 @@ export function trialFields(plan: TradePlan): SignalTrials {
     seqShadowLabel: seq?.label ?? null,
     seqSessionPhase: seq?.sessionPhase ? `${seq.sessionPhase.session}:${seq.sessionPhase.phase}` : null,
     seqH1Phase: seq?.h1Phase ?? null,
+    entryModel: plan.entryModel ?? "legacy",
+    entryCandidates: plan.entryCandidates ?? null,
   };
 }
 

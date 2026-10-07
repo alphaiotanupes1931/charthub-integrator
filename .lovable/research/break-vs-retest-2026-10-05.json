@@ -1,0 +1,673 @@
+{
+ "ranAt": "2026-10-07T01:39:12.270Z",
+ "hypothesis": "Entering on a retest level beats entering at the break close, equal risk, unfilled=0R",
+ "null": "No difference in mean net R",
+ "pooled": {
+  "retestVsBreak": {
+   "model": "broken_level",
+   "baseline": "break_close",
+   "pooled": {
+    "n": 10373,
+    "fillRate": 0.906,
+    "totalR": 169.804,
+    "avgR": 0.016,
+    "baselineTotalR": -1315.588,
+    "baselineAvgR": -0.127,
+    "deltaTotalR": 1485.392,
+    "deltaAvgR": 0.143,
+    "t": 14.869
+   },
+   "build": {
+    "n": 7261,
+    "fillRate": 0.907,
+    "totalR": 166.143,
+    "avgR": 0.023,
+    "baselineTotalR": -938.095,
+    "baselineAvgR": -0.129,
+    "deltaTotalR": 1104.238,
+    "deltaAvgR": 0.152,
+    "t": 13.057
+   },
+   "heldOut": {
+    "n": 3112,
+    "fillRate": 0.904,
+    "totalR": 3.661,
+    "avgR": 0.001,
+    "baselineTotalR": -377.493,
+    "baselineAvgR": -0.121,
+    "deltaTotalR": 381.154,
+    "deltaAvgR": 0.122,
+    "t": 7.17
+   }
+  },
+  "order_block": {
+   "model": "order_block",
+   "baseline": "broken_level",
+   "pooled": {
+    "n": 10373,
+    "fillRate": 0.47,
+    "totalR": 48.716,
+    "avgR": 0.005,
+    "baselineTotalR": 169.804,
+    "baselineAvgR": 0.016,
+    "deltaTotalR": -121.088,
+    "deltaAvgR": -0.012,
+    "t": -1.103
+   },
+   "build": {
+    "n": 7261,
+    "fillRate": 0.472,
+    "totalR": 43.5,
+    "avgR": 0.006,
+    "baselineTotalR": 166.143,
+    "baselineAvgR": 0.023,
+    "deltaTotalR": -122.643,
+    "deltaAvgR": -0.017,
+    "t": -1.325
+   },
+   "heldOut": {
+    "n": 3112,
+    "fillRate": 0.466,
+    "totalR": 5.216,
+    "avgR": 0.002,
+    "baselineTotalR": 3.661,
+    "baselineAvgR": 0.001,
+    "deltaTotalR": 1.555,
+    "deltaAvgR": 0,
+    "t": 0.026
+   }
+  },
+  "imbalance": {
+   "model": "imbalance",
+   "baseline": "broken_level",
+   "pooled": {
+    "n": 10373,
+    "fillRate": 0.273,
+    "totalR": 102.983,
+    "avgR": 0.01,
+    "baselineTotalR": 169.804,
+    "baselineAvgR": 0.016,
+    "deltaTotalR": -66.821,
+    "deltaAvgR": -0.006,
+    "t": -0.677
+   },
+   "build": {
+    "n": 7261,
+    "fillRate": 0.269,
+    "totalR": 120.306,
+    "avgR": 0.017,
+    "baselineTotalR": 166.143,
+    "baselineAvgR": 0.023,
+    "deltaTotalR": -45.837,
+    "deltaAvgR": -0.006,
+    "t": -0.549
+   },
+   "heldOut": {
+    "n": 3112,
+    "fillRate": 0.282,
+    "totalR": -17.323,
+    "avgR": -0.006,
+    "baselineTotalR": 3.661,
+    "baselineAvgR": 0.001,
+    "deltaTotalR": -20.984,
+    "deltaAvgR": -0.007,
+    "t": -0.399
+   }
+  },
+  "retracement_618_79": {
+   "model": "retracement_618_79",
+   "baseline": "broken_level",
+   "pooled": {
+    "n": 10373,
+    "fillRate": 0.786,
+    "totalR": 105.443,
+    "avgR": 0.01,
+    "baselineTotalR": 169.804,
+    "baselineAvgR": 0.016,
+    "deltaTotalR": -64.361,
+    "deltaAvgR": -0.006,
+    "t": -0.558
+   },
+   "build": {
+    "n": 7261,
+    "fillRate": 0.788,
+    "totalR": 142.843,
+    "avgR": 0.02,
+    "baselineTotalR": 166.143,
+    "baselineAvgR": 0.023,
+    "deltaTotalR": -23.3,
+    "deltaAvgR": -0.003,
+    "t": -0.236
+   },
+   "heldOut": {
+    "n": 3112,
+    "fillRate": 0.78,
+    "totalR": -37.4,
+    "avgR": -0.012,
+    "baselineTotalR": 3.661,
+    "baselineAvgR": 0.001,
+    "deltaTotalR": -41.061,
+    "deltaAvgR": -0.013,
+    "t": -0.688
+   }
+  }
+ },
+ "power": {
+  "retestVsBreak": {
+   "n": 10373,
+   "sdDiff": 0.981,
+   "mdeR": 0.027,
+   "adequate": true
+  },
+  "order_block": {
+   "n": 10373,
+   "sdDiff": 1.078,
+   "mdeR": 0.03,
+   "adequate": true
+  },
+  "imbalance": {
+   "n": 10373,
+   "sdDiff": 0.968,
+   "mdeR": 0.027,
+   "adequate": true
+  },
+  "retracement_618_79": {
+   "n": 10373,
+   "sdDiff": 1.133,
+   "mdeR": 0.031,
+   "adequate": true
+  }
+ },
+ "per": {
+  "XAU/USD": {
+   "n": 998,
+   "retests": [
+    {
+     "n": 998,
+     "fillRate": 0.456,
+     "totalR": 32.257,
+     "avgR": 0.032,
+     "baselineTotalR": 29.484,
+     "baselineAvgR": 0.03,
+     "deltaTotalR": 2.773,
+     "deltaAvgR": 0.003,
+     "t": 0.078
+    },
+    {
+     "n": 998,
+     "fillRate": 0.287,
+     "totalR": 30.201,
+     "avgR": 0.03,
+     "baselineTotalR": 29.484,
+     "baselineAvgR": 0.03,
+     "deltaTotalR": 0.717,
+     "deltaAvgR": 0.001,
+     "t": 0.023
+    },
+    {
+     "n": 998,
+     "fillRate": 0.779,
+     "totalR": 39.55,
+     "avgR": 0.04,
+     "baselineTotalR": 29.484,
+     "baselineAvgR": 0.03,
+     "deltaTotalR": 10.066,
+     "deltaAvgR": 0.01,
+     "t": 0.264
+    }
+   ],
+   "breakClose": {
+    "n": 998,
+    "fillRate": 1,
+    "totalR": -74.548,
+    "avgR": -0.075,
+    "baselineTotalR": 29.484,
+    "baselineAvgR": 0.03,
+    "deltaTotalR": -104.032,
+    "deltaAvgR": -0.104,
+    "t": -3.118
+   }
+  },
+  "XAG/USD": {
+   "n": 1077,
+   "retests": [
+    {
+     "n": 1077,
+     "fillRate": 0.468,
+     "totalR": -41.449,
+     "avgR": -0.038,
+     "baselineTotalR": -31.948,
+     "baselineAvgR": -0.03,
+     "deltaTotalR": -9.501,
+     "deltaAvgR": -0.009,
+     "t": -0.249
+    },
+    {
+     "n": 1077,
+     "fillRate": 0.285,
+     "totalR": -1.345,
+     "avgR": -0.001,
+     "baselineTotalR": -31.948,
+     "baselineAvgR": -0.03,
+     "deltaTotalR": 30.603,
+     "deltaAvgR": 0.028,
+     "t": 0.938
+    },
+    {
+     "n": 1077,
+     "fillRate": 0.784,
+     "totalR": -71.917,
+     "avgR": -0.067,
+     "baselineTotalR": -31.948,
+     "baselineAvgR": -0.03,
+     "deltaTotalR": -39.969,
+     "deltaAvgR": -0.037,
+     "t": -1.004
+    }
+   ],
+   "breakClose": {
+    "n": 1077,
+    "fillRate": 1,
+    "totalR": -205.92,
+    "avgR": -0.191,
+    "baselineTotalR": -31.948,
+    "baselineAvgR": -0.03,
+    "deltaTotalR": -173.972,
+    "deltaAvgR": -0.162,
+    "t": -5.316
+   }
+  },
+  "EUR/USD": {
+   "n": 1121,
+   "retests": [
+    {
+     "n": 1121,
+     "fillRate": 0.479,
+     "totalR": 1.081,
+     "avgR": 0.001,
+     "baselineTotalR": 29.785,
+     "baselineAvgR": 0.027,
+     "deltaTotalR": -28.704,
+     "deltaAvgR": -0.026,
+     "t": -0.802
+    },
+    {
+     "n": 1121,
+     "fillRate": 0.297,
+     "totalR": -7.587,
+     "avgR": -0.007,
+     "baselineTotalR": 29.785,
+     "baselineAvgR": 0.027,
+     "deltaTotalR": -37.372,
+     "deltaAvgR": -0.033,
+     "t": -1.139
+    },
+    {
+     "n": 1121,
+     "fillRate": 0.785,
+     "totalR": -39.469,
+     "avgR": -0.035,
+     "baselineTotalR": 29.785,
+     "baselineAvgR": 0.027,
+     "deltaTotalR": -69.254,
+     "deltaAvgR": -0.062,
+     "t": -1.832
+    }
+   ],
+   "breakClose": {
+    "n": 1121,
+    "fillRate": 1,
+    "totalR": -167.904,
+    "avgR": -0.15,
+    "baselineTotalR": 29.785,
+    "baselineAvgR": 0.027,
+    "deltaTotalR": -197.689,
+    "deltaAvgR": -0.176,
+    "t": -5.771
+   }
+  },
+  "GBP/USD": {
+   "n": 1117,
+   "retests": [
+    {
+     "n": 1117,
+     "fillRate": 0.457,
+     "totalR": 0.401,
+     "avgR": 0,
+     "baselineTotalR": -2.03,
+     "baselineAvgR": -0.002,
+     "deltaTotalR": 2.431,
+     "deltaAvgR": 0.002,
+     "t": 0.072
+    },
+    {
+     "n": 1117,
+     "fillRate": 0.255,
+     "totalR": 21.182,
+     "avgR": 0.019,
+     "baselineTotalR": -2.03,
+     "baselineAvgR": -0.002,
+     "deltaTotalR": 23.212,
+     "deltaAvgR": 0.021,
+     "t": 0.766
+    },
+    {
+     "n": 1117,
+     "fillRate": 0.797,
+     "totalR": 13.391,
+     "avgR": 0.012,
+     "baselineTotalR": -2.03,
+     "baselineAvgR": -0.002,
+     "deltaTotalR": 15.421,
+     "deltaAvgR": 0.014,
+     "t": 0.432
+    }
+   ],
+   "breakClose": {
+    "n": 1117,
+    "fillRate": 1,
+    "totalR": -173.294,
+    "avgR": -0.155,
+    "baselineTotalR": -2.03,
+    "baselineAvgR": -0.002,
+    "deltaTotalR": -171.264,
+    "deltaAvgR": -0.153,
+    "t": -5.619
+   }
+  },
+  "USD/JPY": {
+   "n": 1079,
+   "retests": [
+    {
+     "n": 1079,
+     "fillRate": 0.456,
+     "totalR": -28.646,
+     "avgR": -0.027,
+     "baselineTotalR": 10.614,
+     "baselineAvgR": 0.01,
+     "deltaTotalR": -39.26,
+     "deltaAvgR": -0.036,
+     "t": -1.294
+    },
+    {
+     "n": 1079,
+     "fillRate": 0.284,
+     "totalR": 19.394,
+     "avgR": 0.018,
+     "baselineTotalR": 10.614,
+     "baselineAvgR": 0.01,
+     "deltaTotalR": 8.78,
+     "deltaAvgR": 0.008,
+     "t": 0.312
+    },
+    {
+     "n": 1079,
+     "fillRate": 0.76,
+     "totalR": -17.775,
+     "avgR": -0.016,
+     "baselineTotalR": 10.614,
+     "baselineAvgR": 0.01,
+     "deltaTotalR": -28.389,
+     "deltaAvgR": -0.026,
+     "t": -0.854
+    }
+   ],
+   "breakClose": {
+    "n": 1079,
+    "fillRate": 1,
+    "totalR": -124.833,
+    "avgR": -0.116,
+    "baselineTotalR": 10.614,
+    "baselineAvgR": 0.01,
+    "deltaTotalR": -135.447,
+    "deltaAvgR": -0.126,
+    "t": -4.833
+   }
+  },
+  "NAS100": {
+   "n": 1144,
+   "retests": [
+    {
+     "n": 1144,
+     "fillRate": 0.455,
+     "totalR": 30.4,
+     "avgR": 0.027,
+     "baselineTotalR": 63.632,
+     "baselineAvgR": 0.056,
+     "deltaTotalR": -33.232,
+     "deltaAvgR": -0.029,
+     "t": -0.806
+    },
+    {
+     "n": 1144,
+     "fillRate": 0.258,
+     "totalR": 20.534,
+     "avgR": 0.018,
+     "baselineTotalR": 63.632,
+     "baselineAvgR": 0.056,
+     "deltaTotalR": -43.098,
+     "deltaAvgR": -0.038,
+     "t": -1.199
+    },
+    {
+     "n": 1144,
+     "fillRate": 0.796,
+     "totalR": 66.676,
+     "avgR": 0.058,
+     "baselineTotalR": 63.632,
+     "baselineAvgR": 0.056,
+     "deltaTotalR": 3.044,
+     "deltaAvgR": 0.003,
+     "t": 0.066
+    }
+   ],
+   "breakClose": {
+    "n": 1144,
+    "fillRate": 1,
+    "totalR": -124.226,
+    "avgR": -0.109,
+    "baselineTotalR": 63.632,
+    "baselineAvgR": 0.056,
+    "deltaTotalR": -187.858,
+    "deltaAvgR": -0.164,
+    "t": -5.253
+   }
+  },
+  "SPX500": {
+   "n": 1130,
+   "retests": [
+    {
+     "n": 1130,
+     "fillRate": 0.488,
+     "totalR": 23.055,
+     "avgR": 0.02,
+     "baselineTotalR": 21.169,
+     "baselineAvgR": 0.019,
+     "deltaTotalR": 1.886,
+     "deltaAvgR": 0.002,
+     "t": 0.052
+    },
+    {
+     "n": 1130,
+     "fillRate": 0.263,
+     "totalR": -5.804,
+     "avgR": -0.005,
+     "baselineTotalR": 21.169,
+     "baselineAvgR": 0.019,
+     "deltaTotalR": -26.973,
+     "deltaAvgR": -0.024,
+     "t": -0.809
+    },
+    {
+     "n": 1130,
+     "fillRate": 0.798,
+     "totalR": 73.543,
+     "avgR": 0.065,
+     "baselineTotalR": 21.169,
+     "baselineAvgR": 0.019,
+     "deltaTotalR": 52.374,
+     "deltaAvgR": 0.046,
+     "t": 1.379
+    }
+   ],
+   "breakClose": {
+    "n": 1130,
+    "fillRate": 1,
+    "totalR": -119.97,
+    "avgR": -0.106,
+    "baselineTotalR": 21.169,
+    "baselineAvgR": 0.019,
+    "deltaTotalR": -141.139,
+    "deltaAvgR": -0.125,
+    "t": -4.167
+   }
+  },
+  "US30": {
+   "n": 1119,
+   "retests": [
+    {
+     "n": 1119,
+     "fillRate": 0.513,
+     "totalR": 14.913,
+     "avgR": 0.013,
+     "baselineTotalR": 43.58,
+     "baselineAvgR": 0.039,
+     "deltaTotalR": -28.667,
+     "deltaAvgR": -0.026,
+     "t": -0.861
+    },
+    {
+     "n": 1119,
+     "fillRate": 0.237,
+     "totalR": 33.314,
+     "avgR": 0.03,
+     "baselineTotalR": 43.58,
+     "baselineAvgR": 0.039,
+     "deltaTotalR": -10.266,
+     "deltaAvgR": -0.009,
+     "t": -0.332
+    },
+    {
+     "n": 1119,
+     "fillRate": 0.786,
+     "totalR": 31.003,
+     "avgR": 0.028,
+     "baselineTotalR": 43.58,
+     "baselineAvgR": 0.039,
+     "deltaTotalR": -12.577,
+     "deltaAvgR": -0.011,
+     "t": -0.37
+    }
+   ],
+   "breakClose": {
+    "n": 1119,
+    "fillRate": 1,
+    "totalR": -131.705,
+    "avgR": -0.118,
+    "baselineTotalR": 43.58,
+    "baselineAvgR": 0.039,
+    "deltaTotalR": -175.285,
+    "deltaAvgR": -0.157,
+    "t": -5.725
+   }
+  },
+  "BTC/USD": {
+   "n": 1083,
+   "retests": [
+    {
+     "n": 1083,
+     "fillRate": 0.464,
+     "totalR": 43.208,
+     "avgR": 0.04,
+     "baselineTotalR": 37.458,
+     "baselineAvgR": 0.035,
+     "deltaTotalR": 5.75,
+     "deltaAvgR": 0.005,
+     "t": 0.153
+    },
+    {
+     "n": 1083,
+     "fillRate": 0.271,
+     "totalR": -0.585,
+     "avgR": -0.001,
+     "baselineTotalR": 37.458,
+     "baselineAvgR": 0.035,
+     "deltaTotalR": -38.043,
+     "deltaAvgR": -0.035,
+     "t": -1.16
+    },
+    {
+     "n": 1083,
+     "fillRate": 0.784,
+     "totalR": 30.554,
+     "avgR": 0.028,
+     "baselineTotalR": 37.458,
+     "baselineAvgR": 0.035,
+     "deltaTotalR": -6.904,
+     "deltaAvgR": -0.006,
+     "t": -0.19
+    }
+   ],
+   "breakClose": {
+    "n": 1083,
+    "fillRate": 1,
+    "totalR": -103.886,
+    "avgR": -0.096,
+    "baselineTotalR": 37.458,
+    "baselineAvgR": 0.035,
+    "deltaTotalR": -141.344,
+    "deltaAvgR": -0.131,
+    "t": -4.275
+   }
+  },
+  "ETH/USD": {
+   "n": 505,
+   "retests": [
+    {
+     "n": 505,
+     "fillRate": 0.45,
+     "totalR": -26.504,
+     "avgR": -0.052,
+     "baselineTotalR": -31.94,
+     "baselineAvgR": -0.063,
+     "deltaTotalR": 5.436,
+     "deltaAvgR": 0.011,
+     "t": 0.253
+    },
+    {
+     "n": 505,
+     "fillRate": 0.325,
+     "totalR": -6.321,
+     "avgR": -0.013,
+     "baselineTotalR": -31.94,
+     "baselineAvgR": -0.063,
+     "deltaTotalR": 25.619,
+     "deltaAvgR": 0.051,
+     "t": 1.24
+    },
+    {
+     "n": 505,
+     "fillRate": 0.784,
+     "totalR": -20.113,
+     "avgR": -0.04,
+     "baselineTotalR": -31.94,
+     "baselineAvgR": -0.063,
+     "deltaTotalR": 11.827,
+     "deltaAvgR": 0.023,
+     "t": 0.547
+    }
+   ],
+   "breakClose": {
+    "n": 505,
+    "fillRate": 1,
+    "totalR": -89.302,
+    "avgR": -0.177,
+    "baselineTotalR": -31.94,
+    "baselineAvgR": -0.063,
+    "deltaTotalR": -57.362,
+    "deltaAvgR": -0.114,
+    "t": -2.695
+   }
+  }
+ }
+}
