@@ -42,6 +42,20 @@ const RecordInput = z.object({
   seqShadowLabel: z.string().max(120).nullable().optional(),
   seqSessionPhase: z.string().max(40).nullable().optional(),
   seqH1Phase: z.string().max(40).nullable().optional(),
+  entryModel: z.enum(["legacy", "order_block", "imbalance", "broken_level", "retracement_618_79"]).optional(),
+  entryCandidates: z
+    .object({
+      version: z.string().max(40),
+      state: z.string().max(20),
+      direction: z.enum(["long", "short"]).nullable(),
+      breakTime: z.number().nullable(),
+      breakLevel: z.number().finite().nullable(),
+      risk: z.number().finite().nullable(),
+      target: z.number().finite().nullable(),
+      levels: z.record(z.string().max(30), z.number().finite()),
+    })
+    .nullable()
+    .optional(),
 });
 
 type Row = {
@@ -231,6 +245,13 @@ export const recordSignalScore = createServerFn({ method: "POST" })
         seq_shadow_label: data.seqShadowLabel ?? null,
         seq_session_phase: data.seqSessionPhase ?? null,
         seq_h1_phase: data.seqH1Phase ?? null,
+        entry_model: data.entryModel ?? "legacy",
+        entry_candidates: data.entryCandidates ?? null,
+        // Shadow diff: how far the baseline candidate sits from the live entry, in R.
+        entry_diff_r:
+          data.entryCandidates?.risk && data.entryCandidates.levels.broken_level != null
+            ? Math.round(((data.entryCandidates.levels.broken_level - data.entry) / data.entryCandidates.risk) * 1000) / 1000
+            : null,
         model_id: model.id,
         model_version: model.version,
         correlation_cluster: cluster,
