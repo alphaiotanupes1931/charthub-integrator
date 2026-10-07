@@ -93,7 +93,11 @@ async function main() {
   register("trial", { runId, prereg: PREREG.id, variant: "broken_level-vs-break_close", split: "holdout", n: ph.length, avgR: holdout.avgDelta, totalR: holdout.totalDelta });
 
   const gate = { pboOk: overfit.pbo <= 0.05, holdoutOk: holdout.avgDelta > 0 && holdout.boot.lo > 0, costOk: cost15.avgDelta > 0 };
-  const verdict = mde > PREREG.decisionEffectR ? "UNDERPOWERED" : boot.lo > 0 && gate.pboOk && gate.holdoutOk && gate.costOk ? "ADOPT" : "REJECT";
+  // From v2 on, the effect must also reach the pre-registered decision size in the
+// holdout; a real but smaller gain is REJECT (too small to act on). v1 ran without
+// this rule and its verdict stands as recorded.
+const bigEnough = PREREG.id === "break-vs-retest-v1" || holdout.avgDelta >= PREREG.decisionEffectR;
+  const verdict = mde > PREREG.decisionEffectR ? "UNDERPOWERED" : boot.lo > 0 && gate.pboOk && gate.holdoutOk && gate.costOk && bigEnough ? "ADOPT" : "REJECT";
   const decidedBy = verdict === "UNDERPOWERED" ? `MDE ${round(mde)}R > ${PREREG.decisionEffectR}R` : `build delta ${round(boot.mean)}R (95% CI ${round(boot.lo)} to ${round(boot.hi)}), holdout delta ${holdout.avgDelta}R, PBO ${round(overfit.pbo)}, 1.5x cost delta ${cost15.avgDelta}R`;
   const report = { runId, prereg: PREREG, holdoutFrom: new Date(HOLDOUT_FROM * 1000).toISOString(), comparisons: trials, power: { n: pb.length, mdeR: round(mde) }, primary: { ...boot, mean: round(boot.mean), lo: round(boot.lo), hi: round(boot.hi) }, folds, buildSummary, pbo: overfit, deflatedSharpe: dsr, cost15, holdout, ambiguous, m1Calls, gate, verdict, decidedBy, dataLimits: ["Volume is tick count", "Candles not ticks; same-bar stop+target resolved at M1 or counted as stop", "Index prices are OANDA CFDs"] };
   register("verdict", { runId, prereg: PREREG.id, verdict, decidedBy });
