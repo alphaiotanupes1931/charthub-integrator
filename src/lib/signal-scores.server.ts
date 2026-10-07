@@ -151,6 +151,7 @@ export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
   const cost = costInR(sig.symbol, sig.entry, risk);
   const net = (gross: number) => Math.round((gross - cost) * 1000) / 1000;
   const round = (n: number) => Math.round(n * 100) / 100;
+  const candidateR = scoreEntryCandidates(sig, bars, Math.floor(Date.now() / 1000));
 
   if (verdict.status === "unfilled") {
     // Still inside its clock: the entry may yet be traded back to.
@@ -159,6 +160,7 @@ export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
     }
     return {
       status: "unfilled",
+      candidateR,
       realizedR: null,
       netR: null,
       costR: null,
@@ -171,6 +173,7 @@ export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
   if (verdict.status !== "unresolved") {
     return {
       status: verdict.status,
+      candidateR,
       realizedR: verdict.realizedR,
       netR: net(verdict.realizedR ?? 0),
       costR: cost,
@@ -190,6 +193,7 @@ export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
     const move = long ? last - sig.entry : sig.entry - last;
     return {
       status: "expired",
+      candidateR,
       realizedR: round(move / risk),
       netR: net(round(move / risk)),
       costR: cost,
