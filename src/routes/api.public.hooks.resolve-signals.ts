@@ -17,7 +17,7 @@ export const Route = createFileRoute("/api/public/hooks/resolve-signals")({
 
         const { data, error } = await supabaseAdmin
           .from("signal_scores")
-          .select("id, symbol, timeframe, bias, entry, stop, tp1, created_at, ob_shadow_entry, ob_shadow_stop, seq_shadow_entry, seq_shadow_stop, seq_shadow_target")
+          .select("id, symbol, timeframe, bias, entry, stop, tp1, created_at, ob_shadow_entry, ob_shadow_stop, seq_shadow_entry, seq_shadow_stop, seq_shadow_target, entry_candidates")
           .eq("status", "open")
           .lt("created_at", new Date(Date.now() - 30 * 60 * 1000).toISOString())
           .order("created_at", { ascending: true })
@@ -38,6 +38,7 @@ export const Route = createFileRoute("/api/public/hooks/resolve-signals")({
           seq_shadow_entry?: number | string | null;
           seq_shadow_stop?: number | string | null;
           seq_shadow_target?: number | string | null;
+      entry_candidates?: unknown;
         }>;
 
         let resolved = 0;
@@ -57,6 +58,7 @@ export const Route = createFileRoute("/api/public/hooks/resolve-signals")({
               seq_shadow_entry: sig.seq_shadow_entry == null ? null : Number(sig.seq_shadow_entry),
               seq_shadow_stop: sig.seq_shadow_stop == null ? null : Number(sig.seq_shadow_stop),
               seq_shadow_target: sig.seq_shadow_target == null ? null : Number(sig.seq_shadow_target),
+              entry_candidates: (sig.entry_candidates ?? null) as never,
             });
             if (res.status === "open") continue;
             await supabaseAdmin
@@ -80,6 +82,7 @@ export const Route = createFileRoute("/api/public/hooks/resolve-signals")({
                 // Shadow only: the 15m-inside-1H order-block entry. Never live.
                 ob_shadow_r: res.obShadowR ?? null,
                 seq_shadow_r: res.seqShadowR ?? null,
+                entry_candidate_r: res.candidateR ?? null,
               } as never)
               .eq("id", sig.id);
             resolved += 1;
