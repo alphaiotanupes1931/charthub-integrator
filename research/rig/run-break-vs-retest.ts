@@ -38,7 +38,7 @@ async function main() {
     // Resolve same-bar stop+target at M1 (capped); the rest stay pessimistic.
     const need = [...new Set(rows.filter((r) => r.ambiguous === "pessimistic" && r.ambiguousBar).map((r) => r.ambiguousBar))].filter((t): t is number => t != null);
     for (const t of need) {
-      if (m1Calls >= 1500 || m1Cache.has(t)) continue;
+      if (m1Calls >= 600 || m1Cache.has(t)) continue;
       m1Calls++;
       try { m1Cache.set(t, (await fetchRange(inst, "M1", t, t + 899)).map((b) => ({ t: b.t, bh: b.bh, bl: b.bl, ah: b.ah, al: b.al, bc: b.bc, ac: b.ac, ao: b.ao, bo: b.bo }))); } catch { /* stays pessimistic */ }
     }
