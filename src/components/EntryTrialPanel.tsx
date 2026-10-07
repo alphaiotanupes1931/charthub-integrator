@@ -2,7 +2,7 @@
 // session phase. Trial results never change a live signal.
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getEntryTrialReport, type EntryTrialRow } from "@/lib/signal-scores.functions";
+import { getEntryTrialReport, getEntryCandidateReport, type EntryTrialRow } from "@/lib/signal-scores.functions";
 import { InfoTip } from "@/components/InfoTip";
 
 const MIN_SAMPLE = 30;
@@ -67,6 +67,61 @@ export default function EntryTrialPanel() {
           Sequence step reached on scans: {data.seqStatus.map((s) => `${s.status} ${s.count}`).join(", ")}
         </div>
       ) : null}
+      <CandidateSection />
+    </div>
+  );
+}
+
+const MODEL_LABEL: Record<string, string> = {
+  broken_level: "Broken level (baseline)",
+  order_block: "Order block",
+  imbalance: "Imbalance",
+  retracement_618_79: "0.618-0.79 band",
+};
+
+function CandidateSection() {
+  const fetchCands = useServerFn(getEntryCandidateReport);
+  const { data } = useQuery({ queryKey: ["entry-candidate-report"], queryFn: () => fetchCands() });
+  const rows = data?.total ? [data.total, ...data.rows] : [];
+  return (
+    <div className="space-y-2 border-t border-border/40 pt-4">
+      <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+        Four entry candidates off the same break
+        <InfoTip text={`Equal risk and the same target for every candidate. Every armed setup counts; a level that never filled scores 0R. The broken level is the baseline the others must beat. Tiers: broken level B, the other three C (recorded only). Diff is how far the baseline sits from the live entry, in R.`} />
+      </div>
+      {!rows.length ? (
+        <p className="text-xs text-muted-foreground">No finished armed setups yet. Results build up from new scans.</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead className="text-muted-foreground">
+              <tr className="text-left">
+                <th className="py-1 pr-3 font-normal"></th>
+                {Object.values(MODEL_LABEL).map((l) => (
+                  <th key={l} className="py-1 pr-3 font-normal">{l}</th>
+                ))}
+                <th className="py-1 pr-3 font-normal">Diff vs live</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.symbol} className={`border-t border-border/40 ${r.armed < MIN_SAMPLE ? "text-muted-foreground" : ""}`}>
+                  <td className="py-1.5 pr-3 font-medium">{r.symbol} ({r.armed})</td>
+                  {Object.keys(MODEL_LABEL).map((m) => {
+                    const c = r.candidates.find((x) => x.model === m);
+                    return (
+                      <td key={m} className="py-1.5 pr-3">
+                        {c ? `${Math.round(c.fillRate * 100)}% fill / ${c.totalR}R / ${c.avgR}` : "-"}
+                      </td>
+                    );
+                  })}
+                  <td className="py-1.5 pr-3">{r.avgDiffR ?? "-"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
