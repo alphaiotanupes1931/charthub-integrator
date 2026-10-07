@@ -93,3 +93,7 @@
 - [x] No-sweep/no-break signals: record only (gate has no tier A evidence); shadow sweep records keep labelling them.
 - [x] Break vs retest: no live switch; held-out gain below the 0.1R decision size. Rig verdicts from v2 on require reaching that size.
 - [ ] Re-run break-vs-retest v2 once forward entry candidates reach 30 per instrument (waiting on new scans).
+- [x] Oct 7 check: 39 signals filed in the last 3 days, none carry trial entries.
+  Sandbox scan of EUR/USD produces all three trials (OB, sequence, 4 candidates),
+  so the code is right; the live site is running a build from before the fix.
+  Blocker: publish, then confirm the next filed signals carry trial data.
