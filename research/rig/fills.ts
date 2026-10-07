@@ -15,6 +15,8 @@ export type FillResult = {
   maeR: number;
   barsToFavourable: number | null; // bars until +1R
   ambiguous: "none" | "m1-resolved" | "pessimistic";
+  /** Bar that held both stop and target, for M1 lookup. */
+  ambiguousBar?: number;
 };
 
 export type FillCfg = { buffer: number; stopSlip: number; costMult: number };
@@ -56,7 +58,7 @@ export function simulate(args: {
       const order = sub ? firstHit(sub, long, stop, target) : null;
       if (order === "target") return done("target", "m1-resolved");
       amb = order === "stop" ? "m1-resolved" : "pessimistic";
-      return done("stop", amb);
+      return { ...done("stop", amb), ambiguousBar: b.t };
     }
     if (hitStop) return done("stop", amb);
     if (hitTgt) return done("target", amb);

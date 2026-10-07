@@ -36,7 +36,7 @@ async function main() {
     const { setups } = buildSetups(inst, h1);
     let rows = scoreSetups(inst, setups, m15, cfg);
     // Resolve same-bar stop+target at M1 (capped); the rest stay pessimistic.
-    const need = [...new Set(rows.filter((r) => r.ambiguous === "pessimistic" && r.fillTime).map((r) => barOf(r, m15)))].filter((t): t is number => t != null);
+    const need = [...new Set(rows.filter((r) => r.ambiguous === "pessimistic" && r.ambiguousBar).map((r) => r.ambiguousBar))].filter((t): t is number => t != null);
     for (const t of need) {
       if (m1Calls >= 1500 || m1Cache.has(t)) continue;
       m1Calls++;
@@ -100,6 +100,5 @@ async function main() {
   writeFileSync(`${OUT}${runId}-report.json`, JSON.stringify(report, null, 1));
   console.log(JSON.stringify(report, null, 1));
 }
-function barOf(r: LedgerRow, m15: { t: number }[]) { void m15; return r.fillTime; }
 const round = (n: number) => Math.round(n * 1000) / 1000;
 if (import.meta.main) await main();
