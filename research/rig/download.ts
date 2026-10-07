@@ -22,17 +22,18 @@ export async function fetchRange(inst: string, tf: string, fromSec: number, toSe
   let from = Math.floor(fromSec);
   const end = toSec ?? Math.floor(Date.now() / 1000);
   for (;;) {
-    const u = `${host()}/v3/instruments/${inst}/candles?price=MBA&granularity=${tf}&count=5000&from=${from}`;
+    const u = `${host()}/v3/instruments/${inst}/candles?price=MBA&granularity=${tf}${toSec ? `&from=${from}&to=${end}` : `&count=5000&from=${from}`}`;
     const r = await fetch(u, { headers: { Authorization: `Bearer ${process.env.OANDA_API_KEY}`, "Accept-Datetime-Format": "UNIX" } });
     if (!r.ok) throw new Error(`${inst} ${tf} ${r.status} ${(await r.text()).slice(0, 200)}`);
     const j = (await r.json()) as { candles: Array<{ time: string; complete: boolean; volume: number; mid: Record<string, string>; bid: Record<string, string>; ask: Record<string, string> }> };
     const done = j.candles.filter((c) => c.complete);
+    let past = false;
     for (const c of done) {
       const t = Math.floor(Number(c.time.split(".")[0]));
-      if (t > end) break;
+      if (t > end) { past = true; break; }
       out.push({ t, o: +c.mid.o, h: +c.mid.h, l: +c.mid.l, c: +c.mid.c, v: c.volume, bo: +c.bid.o, bc: +c.bid.c, bh: +c.bid.h, bl: +c.bid.l, ao: +c.ask.o, ac: +c.ask.c, ah: +c.ask.h, al: +c.ask.l });
     }
-    if (j.candles.length < 5000 || !done.length) break;
+    if (past || j.candles.length < 5000 || !done.length) break;
     from = out[out.length - 1]!.t + 1;
     if (from > end) break;
   }
