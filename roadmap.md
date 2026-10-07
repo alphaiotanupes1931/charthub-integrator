@@ -87,3 +87,9 @@
   build window n=59 -0.10R (-6.0R) vs other n=187 -0.55R (-103.5R); held window
   n=40 -0.02R (-0.9R) vs other n=65 -0.52R (-33.5R). Holds out of sample but the
   window is still not profitable; keeps ~35% of signals. Not live; user decides.
+
+## Decisions 2026-10-07 (per framework doc)
+- [x] Already-passed entries: existing 0.5R staleness guard covers it; 0 of 199 signals filed since 2026-09-20 broke it. The 168 found by the audit predate the guard.
+- [x] No-sweep/no-break signals: record only (gate has no tier A evidence); shadow sweep records keep labelling them.
+- [x] Break vs retest: no live switch; held-out gain below the 0.1R decision size. Rig verdicts from v2 on require reaching that size.
+- [ ] Re-run break-vs-retest v2 once forward entry candidates reach 30 per instrument (waiting on new scans).
