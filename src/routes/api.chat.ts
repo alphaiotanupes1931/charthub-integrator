@@ -1124,6 +1124,19 @@ export const Route = createFileRoute("/api/chat")({
         const staticSystem = staticSystemPrompt(analysisModelId);
         const forceDraw = shouldForceChartDraw(messages);
         let liveSystem = dynamicSystemPrompt(coach, journalCtx, chartContextBlock(enrichedChart, ladderText, orderFlowText), strategyContextBlock(strategy), lensContextBlock(lens), learningCtx, newsCtx, scoreCtx, forceDraw, previousCoach, hermesCtx, hitRateCtx, typeof body.timezone === "string" ? body.timezone.slice(0, 64) : undefined, typeof body.clientNow === "string" ? body.clientNow : undefined);
+        // Trader profile from onboarding: type and preferred feedback tone.
+        if (sb && userId) {
+          try {
+            const { data: tp } = await sb.from("trader_profiles").select("trader_type,coach_tone,answers")
+              .eq("user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle();
+            if (tp) {
+              const { traderProfilePromptBlock } = await import("@/lib/trader-profile/prompt");
+              liveSystem += "\n\n" + traderProfilePromptBlock(tp.trader_type, tp.coach_tone, (tp.answers ?? {}) as Record<string, string>);
+            }
+          } catch (e) {
+            console.warn(`[chat] req=${reqId} trader_profile_failed`, (e as Error).message);
+          }
+        }
         // Retrieved methodology / psychology reference for this exact question.
         try {
           const { methodologyContextBlock } = await import("@/lib/agents/methodology-kb");
