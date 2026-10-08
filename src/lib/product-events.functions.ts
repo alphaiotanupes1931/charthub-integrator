@@ -68,3 +68,21 @@ export const trackProductEvent = createServerFn({ method: "POST" })
 
     return { ok: true };
   });
+
+const PUBLIC_EVENTS = new Set(["profile_started", "profile_question_answered", "profile_completed", "profile_shared"]);
+
+/** Anonymous quiz funnel events (public quiz page, no account yet). Only the quiz events are accepted. */
+export const trackPublicEvent = createServerFn({ method: "POST" })
+  .inputValidator((input: { event: ProductEventName; props?: ProductEventProps }) => {
+    if (!PUBLIC_EVENTS.has(input.event)) throw new Error("event not allowed");
+    const props: ProductEventProps = {};
+    for (const [k, v] of Object.entries(input.props ?? {}).slice(0, 12)) {
+      props[k.slice(0, 40)] = typeof v === "string" ? v.slice(0, 120) : v;
+    }
+    return { event: input.event, props };
+  })
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("product_events").insert({ user_id: null, event: data.event, props: { ...data.props, anon: true } });
+    return { ok: true };
+  });
