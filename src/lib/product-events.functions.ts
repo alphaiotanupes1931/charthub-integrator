@@ -9,7 +9,16 @@ export type ProductEventName =
   | "paywall_dismissed"
   | "upgrade_cta_clicked"
   | "analytics_preview_viewed"
-  | "checkout_started";
+  | "checkout_started"
+  | "profile_started"
+  | "profile_question_answered"
+  | "profile_completed"
+  | "profile_shared"
+  | "signup_from_profile"
+  | "setup_accepted"
+  | "setup_changed"
+  | "first_week_day_completed"
+  | "first_grade";
 
 export type ProductEventProps = Record<string, string | number | boolean | null>;
 
