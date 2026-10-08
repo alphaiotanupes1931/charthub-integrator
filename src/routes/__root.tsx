@@ -18,6 +18,7 @@ import logoAsset from "../assets/logo.png.asset.json";
 import { CookieBanner } from "../components/CookieBanner";
 import { Toaster } from "../components/ui/sonner";
 import { VersionWatcher } from "../components/VersionWatcher";
+import { captureAttribution } from "../lib/trader-profile/draft";
 
 
 
@@ -136,6 +137,7 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  useEffect(() => { captureAttribution(); }, []);
   const router = useRouter();
 
   useEffect(() => {
