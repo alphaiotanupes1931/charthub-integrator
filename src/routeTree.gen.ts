@@ -20,7 +20,6 @@ import { Route as McpRouteImport } from './routes/mcp'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as QuizRouteImport } from './routes/quiz'
 import { Route as RecordRouteImport } from './routes/record'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as StatusRouteImport } from './routes/status'
@@ -72,6 +71,7 @@ import { Route as ApiTtsRouteImport } from './routes/api.tts'
 import { Route as ApiVersionRouteImport } from './routes/api.version'
 import { Route as HelpSlugRouteImport } from './routes/help.$slug'
 import { Route as InviteCodeRouteImport } from './routes/invite.$code'
+import { Route as QuizIndexRouteImport } from './routes/quiz.index'
 import { Route as QuizTypeRouteImport } from './routes/quiz.$type'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
@@ -180,11 +180,6 @@ const PricingRoute = PricingRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const QuizRoute = QuizRouteImport.update({
-  id: '/quiz',
-  path: '/quiz',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecordRoute = RecordRouteImport.update({
@@ -444,10 +439,15 @@ const InviteCodeRoute = InviteCodeRouteImport.update({
   path: '/invite/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
+const QuizIndexRoute = QuizIndexRouteImport.update({
+  id: '/quiz/',
+  path: '/quiz/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const QuizTypeRoute = QuizTypeRouteImport.update({
-  id: '/$type',
-  path: '/$type',
-  getParentRoute: () => QuizRoute,
+  id: '/quiz/$type',
+  path: '/quiz/$type',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
   id: '/.lovable/oauth/consent',
@@ -765,7 +765,6 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
-  '/quiz': typeof QuizRouteWithChildren
   '/record': typeof RecordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/status': typeof StatusRoute
@@ -818,6 +817,7 @@ export interface FileRoutesByFullPath {
   '/help/$slug': typeof HelpSlugRoute
   '/invite/$code': typeof InviteCodeRoute
   '/quiz/$type': typeof QuizTypeRoute
+  '/quiz/': typeof QuizIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/academy/$moduleId': typeof AppAcademyModuleIdRouteWithChildren
@@ -884,7 +884,6 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
-  '/quiz': typeof QuizRouteWithChildren
   '/record': typeof RecordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/status': typeof StatusRoute
@@ -934,6 +933,7 @@ export interface FileRoutesByTo {
   '/help/$slug': typeof HelpSlugRoute
   '/invite/$code': typeof InviteCodeRoute
   '/quiz/$type': typeof QuizTypeRoute
+  '/quiz': typeof QuizIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/academy/exam': typeof AppAcademyExamRoute
@@ -1001,7 +1001,6 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
-  '/quiz': typeof QuizRouteWithChildren
   '/record': typeof RecordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/status': typeof StatusRoute
@@ -1054,6 +1053,7 @@ export interface FileRoutesById {
   '/help/$slug': typeof HelpSlugRoute
   '/invite/$code': typeof InviteCodeRoute
   '/quiz/$type': typeof QuizTypeRoute
+  '/quiz/': typeof QuizIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_app/academy/$moduleId': typeof AppAcademyModuleIdRouteWithChildren
@@ -1122,7 +1122,6 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/pricing'
     | '/privacy'
-    | '/quiz'
     | '/record'
     | '/reset-password'
     | '/status'
@@ -1175,6 +1174,7 @@ export interface FileRouteTypes {
     | '/help/$slug'
     | '/invite/$code'
     | '/quiz/$type'
+    | '/quiz/'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/academy/$moduleId'
@@ -1241,7 +1241,6 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/pricing'
     | '/privacy'
-    | '/quiz'
     | '/record'
     | '/reset-password'
     | '/status'
@@ -1291,6 +1290,7 @@ export interface FileRouteTypes {
     | '/help/$slug'
     | '/invite/$code'
     | '/quiz/$type'
+    | '/quiz'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/academy/exam'
@@ -1357,7 +1357,6 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/pricing'
     | '/privacy'
-    | '/quiz'
     | '/record'
     | '/reset-password'
     | '/status'
@@ -1410,6 +1409,7 @@ export interface FileRouteTypes {
     | '/help/$slug'
     | '/invite/$code'
     | '/quiz/$type'
+    | '/quiz/'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/_app/academy/$moduleId'
@@ -1478,7 +1478,6 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
-  QuizRoute: typeof QuizRouteWithChildren
   RecordRoute: typeof RecordRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   StatusRoute: typeof StatusRoute
@@ -1494,6 +1493,8 @@ export interface RootRouteChildren {
   ApiTtsRoute: typeof ApiTtsRoute
   ApiVersionRoute: typeof ApiVersionRoute
   InviteCodeRoute: typeof InviteCodeRoute
+  QuizTypeRoute: typeof QuizTypeRoute
+  QuizIndexRoute: typeof QuizIndexRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicBridgeRoute: typeof ApiPublicBridgeRoute
@@ -1613,13 +1614,6 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/quiz': {
-      id: '/quiz'
-      path: '/quiz'
-      fullPath: '/quiz'
-      preLoaderRoute: typeof QuizRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/record': {
@@ -1979,12 +1973,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InviteCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/quiz/': {
+      id: '/quiz/'
+      path: '/quiz'
+      fullPath: '/quiz/'
+      preLoaderRoute: typeof QuizIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/quiz/$type': {
       id: '/quiz/$type'
-      path: '/$type'
+      path: '/quiz/$type'
       fullPath: '/quiz/$type'
       preLoaderRoute: typeof QuizTypeRouteImport
-      parentRoute: typeof QuizRoute
+      parentRoute: typeof rootRouteImport
     }
     '/.lovable/oauth/consent': {
       id: '/.lovable/oauth/consent'
@@ -2531,16 +2532,6 @@ const HelpRouteChildren: HelpRouteChildren = {
 
 const HelpRouteWithChildren = HelpRoute._addFileChildren(HelpRouteChildren)
 
-interface QuizRouteChildren {
-  QuizTypeRoute: typeof QuizTypeRoute
-}
-
-const QuizRouteChildren: QuizRouteChildren = {
-  QuizTypeRoute: QuizTypeRoute,
-}
-
-const QuizRouteWithChildren = QuizRoute._addFileChildren(QuizRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
@@ -2553,7 +2544,6 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
-  QuizRoute: QuizRouteWithChildren,
   RecordRoute: RecordRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   StatusRoute: StatusRoute,
@@ -2570,6 +2560,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiTtsRoute: ApiTtsRoute,
   ApiVersionRoute: ApiVersionRoute,
   InviteCodeRoute: InviteCodeRoute,
+  QuizTypeRoute: QuizTypeRoute,
+  QuizIndexRoute: QuizIndexRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicBridgeRoute: ApiPublicBridgeRoute,
