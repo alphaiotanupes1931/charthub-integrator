@@ -1,4 +1,5 @@
 import { PageInstructions } from "@/components/PageInstructions";
+import { TraderTypePrompt } from "@/components/trader-profile/TraderTypePrompt";
 import { InfoTip } from "@/components/InfoTip";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -2582,6 +2583,7 @@ function Dashboard() {
             <div className="flex-1 min-h-0 overflow-hidden relative">
             <div className={`absolute inset-0 overflow-y-auto ${rightTab === "analysis" ? "" : "hidden"}`}>
               <div className="p-5">
+                <TraderTypePrompt className="mb-4" />
                 <PageInstructions path="/dashboard" className="mb-4" />
                 <ScanBody
                   result={result}

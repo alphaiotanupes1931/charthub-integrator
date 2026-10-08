@@ -6,3 +6,5 @@
 - Entry candidates are compared at equal risk and the same target, with unfilled orders scored 0R. Why: tighter inner levels otherwise inflate quoted R:R.
 - The backtest rig (research/rig) must import setups only from `src/lib/detector/`; never reimplement detection there. Why: a research copy that drifts from live is the main cause of backtest/live disagreement.
 - Rig runs must register their pre-registration before scoring and may open a holdout once per pre-registration (`research/rig/registry.ts`). Why: the comparison count and single-use holdout are inputs to the statistics.
+- Trader-type questions, scoring weights, coach/strategy/risk mappings and first-week tasks live only in `src/lib/trader-profile/config.ts`; screens and server code read from it. Why: Marcus tunes the rules without touching UI or server code.
+- Quiz answers carry into signup via a server-stored short code (`quiz_drafts`) plus a localStorage copy, never URL-only. Why: Google sign-in and the separate marketing domain drop query strings and storage.
