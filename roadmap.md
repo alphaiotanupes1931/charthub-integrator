@@ -97,3 +97,10 @@
   Sandbox scan of EUR/USD produces all three trials (OB, sequence, 4 candidates),
   so the code is right; the live site is running a build from before the fix.
   Blocker: publish, then confirm the next filed signals carry trial data.
+
+## Trader type onboarding (Oct 8)
+- [x] Phase 1: in-app trader type step after signup, Your Setup screen, profile-driven first week, coach tone in chat, dashboard prompt for existing users
+- [x] Phase 2: public /quiz ("What's your trader type?"), share cards and per-type share pages, answer carry-over, UTM/ref capture
+- [ ] GoHighLevel lead sync: built, waiting on GHL_API_KEY and GHL_LOCATION_ID
+- [ ] Marcus to confirm the strategy table and question wording
+- [ ] go.trademindai.ai/quiz to link to /auth?answers=<code> (or just to /quiz)
