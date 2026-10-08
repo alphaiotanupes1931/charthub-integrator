@@ -105,7 +105,7 @@ function QuizPage() {
                 Your full breakdown is ready: your coach, starter strategy, risk rails and a 5-day plan, already set up.
               </div>
               <Button asChild className="w-full h-11">
-                <Link to="/auth" search={{ mode: "signup" } as never}>Unlock my full setup, free</Link>
+                <Link to="/auth" search={{ mode: "signup" }}>Unlock my full setup, free</Link>
               </Button>
               <Button variant="outline" className="w-full" onClick={share}>Share my trader type</Button>
               {!sentEmail ? (
