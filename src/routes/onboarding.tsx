@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { LogoLink } from "@/components/LogoLink";
 import { generateRecoveryCode } from "@/lib/recoveryCode";
+import { TraderTypeOnboarding } from "@/components/trader-profile/TraderTypeOnboarding";
 
 async function hashRecoveryCode(code: string): Promise<string> {
   const bytes = new TextEncoder().encode(code.trim().toUpperCase());
@@ -44,7 +45,7 @@ const schema = z.object({
   source: z.string().min(1, "Pick one"),
 });
 
-type Step = "profile" | "recovery" | "confirm-skip";
+type Step = "profile" | "type" | "recovery" | "confirm-skip";
 
 function OnboardingPage() {
   const navigate = useNavigate();
@@ -78,7 +79,7 @@ function OnboardingPage() {
     e.preventDefault();
     const parsed = schema.safeParse({ name, source });
     if (!parsed.success) { toast.error(parsed.error.issues[0]?.message ?? "Invalid"); return; }
-    setStep("recovery");
+    setStep("type");
   }
 
   async function copyCode() {
@@ -206,6 +207,8 @@ function OnboardingPage() {
               </form>
             </>
           )}
+
+          {step === "type" && <TraderTypeOnboarding onDone={() => setStep("recovery")} />}
 
           {step === "recovery" && (
             <>

@@ -59,6 +59,7 @@ import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppSignalsRouteImport } from './routes/_app.signals'
 import { Route as AppStrategiesRouteImport } from './routes/_app.strategies'
 import { Route as AppTestingRouteImport } from './routes/_app.testing'
+import { Route as AppTraderTypeRouteImport } from './routes/_app.trader-type'
 import { Route as AppVoiceCoachRouteImport } from './routes/_app.voice-coach'
 import { Route as AppWyckoffRouteImport } from './routes/_app.wyckoff'
 import { Route as ApiChatRouteImport } from './routes/api.chat'
@@ -70,6 +71,8 @@ import { Route as ApiTtsRouteImport } from './routes/api.tts'
 import { Route as ApiVersionRouteImport } from './routes/api.version'
 import { Route as HelpSlugRouteImport } from './routes/help.$slug'
 import { Route as InviteCodeRouteImport } from './routes/invite.$code'
+import { Route as QuizIndexRouteImport } from './routes/quiz.index'
+import { Route as QuizTypeRouteImport } from './routes/quiz.$type'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as AppAcademyIndexRouteImport } from './routes/_app.academy.index'
@@ -376,6 +379,11 @@ const AppTestingRoute = AppTestingRouteImport.update({
   path: '/testing',
   getParentRoute: () => AppRoute,
 } as any)
+const AppTraderTypeRoute = AppTraderTypeRouteImport.update({
+  id: '/trader-type',
+  path: '/trader-type',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppVoiceCoachRoute = AppVoiceCoachRouteImport.update({
   id: '/voice-coach',
   path: '/voice-coach',
@@ -429,6 +437,16 @@ const HelpSlugRoute = HelpSlugRouteImport.update({
 const InviteCodeRoute = InviteCodeRouteImport.update({
   id: '/invite/$code',
   path: '/invite/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QuizIndexRoute = QuizIndexRouteImport.update({
+  id: '/quiz/',
+  path: '/quiz/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QuizTypeRoute = QuizTypeRouteImport.update({
+  id: '/quiz/$type',
+  path: '/quiz/$type',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
@@ -786,6 +804,7 @@ export interface FileRoutesByFullPath {
   '/signals': typeof AppSignalsRoute
   '/strategies': typeof AppStrategiesRouteWithChildren
   '/testing': typeof AppTestingRoute
+  '/trader-type': typeof AppTraderTypeRoute
   '/voice-coach': typeof AppVoiceCoachRoute
   '/wyckoff': typeof AppWyckoffRoute
   '/api/chat': typeof ApiChatRoute
@@ -797,6 +816,8 @@ export interface FileRoutesByFullPath {
   '/api/version': typeof ApiVersionRoute
   '/help/$slug': typeof HelpSlugRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/quiz/$type': typeof QuizTypeRoute
+  '/quiz/': typeof QuizIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/academy/$moduleId': typeof AppAcademyModuleIdRouteWithChildren
@@ -899,6 +920,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AppSettingsRoute
   '/signals': typeof AppSignalsRoute
   '/testing': typeof AppTestingRoute
+  '/trader-type': typeof AppTraderTypeRoute
   '/voice-coach': typeof AppVoiceCoachRoute
   '/wyckoff': typeof AppWyckoffRoute
   '/api/chat': typeof ApiChatRoute
@@ -910,6 +932,8 @@ export interface FileRoutesByTo {
   '/api/version': typeof ApiVersionRoute
   '/help/$slug': typeof HelpSlugRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/quiz/$type': typeof QuizTypeRoute
+  '/quiz': typeof QuizIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/academy/exam': typeof AppAcademyExamRoute
@@ -1016,6 +1040,7 @@ export interface FileRoutesById {
   '/_app/signals': typeof AppSignalsRoute
   '/_app/strategies': typeof AppStrategiesRouteWithChildren
   '/_app/testing': typeof AppTestingRoute
+  '/_app/trader-type': typeof AppTraderTypeRoute
   '/_app/voice-coach': typeof AppVoiceCoachRoute
   '/_app/wyckoff': typeof AppWyckoffRoute
   '/api/chat': typeof ApiChatRoute
@@ -1027,6 +1052,8 @@ export interface FileRoutesById {
   '/api/version': typeof ApiVersionRoute
   '/help/$slug': typeof HelpSlugRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/quiz/$type': typeof QuizTypeRoute
+  '/quiz/': typeof QuizIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_app/academy/$moduleId': typeof AppAcademyModuleIdRouteWithChildren
@@ -1134,6 +1161,7 @@ export interface FileRouteTypes {
     | '/signals'
     | '/strategies'
     | '/testing'
+    | '/trader-type'
     | '/voice-coach'
     | '/wyckoff'
     | '/api/chat'
@@ -1145,6 +1173,8 @@ export interface FileRouteTypes {
     | '/api/version'
     | '/help/$slug'
     | '/invite/$code'
+    | '/quiz/$type'
+    | '/quiz/'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/academy/$moduleId'
@@ -1247,6 +1277,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signals'
     | '/testing'
+    | '/trader-type'
     | '/voice-coach'
     | '/wyckoff'
     | '/api/chat'
@@ -1258,6 +1289,8 @@ export interface FileRouteTypes {
     | '/api/version'
     | '/help/$slug'
     | '/invite/$code'
+    | '/quiz/$type'
+    | '/quiz'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/academy/exam'
@@ -1363,6 +1396,7 @@ export interface FileRouteTypes {
     | '/_app/signals'
     | '/_app/strategies'
     | '/_app/testing'
+    | '/_app/trader-type'
     | '/_app/voice-coach'
     | '/_app/wyckoff'
     | '/api/chat'
@@ -1374,6 +1408,8 @@ export interface FileRouteTypes {
     | '/api/version'
     | '/help/$slug'
     | '/invite/$code'
+    | '/quiz/$type'
+    | '/quiz/'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/_app/academy/$moduleId'
@@ -1457,6 +1493,8 @@ export interface RootRouteChildren {
   ApiTtsRoute: typeof ApiTtsRoute
   ApiVersionRoute: typeof ApiVersionRoute
   InviteCodeRoute: typeof InviteCodeRoute
+  QuizTypeRoute: typeof QuizTypeRoute
+  QuizIndexRoute: typeof QuizIndexRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicBridgeRoute: typeof ApiPublicBridgeRoute
@@ -1851,6 +1889,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTestingRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/trader-type': {
+      id: '/_app/trader-type'
+      path: '/trader-type'
+      fullPath: '/trader-type'
+      preLoaderRoute: typeof AppTraderTypeRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/voice-coach': {
       id: '/_app/voice-coach'
       path: '/voice-coach'
@@ -1926,6 +1971,20 @@ declare module '@tanstack/react-router' {
       path: '/invite/$code'
       fullPath: '/invite/$code'
       preLoaderRoute: typeof InviteCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/quiz/': {
+      id: '/quiz/'
+      path: '/quiz'
+      fullPath: '/quiz/'
+      preLoaderRoute: typeof QuizIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/quiz/$type': {
+      id: '/quiz/$type'
+      path: '/quiz/$type'
+      fullPath: '/quiz/$type'
+      preLoaderRoute: typeof QuizTypeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.lovable/oauth/consent': {
@@ -2418,6 +2477,7 @@ interface AppRouteChildren {
   AppSignalsRoute: typeof AppSignalsRoute
   AppStrategiesRoute: typeof AppStrategiesRouteWithChildren
   AppTestingRoute: typeof AppTestingRoute
+  AppTraderTypeRoute: typeof AppTraderTypeRoute
   AppVoiceCoachRoute: typeof AppVoiceCoachRoute
   AppWyckoffRoute: typeof AppWyckoffRoute
 }
@@ -2455,6 +2515,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppSignalsRoute: AppSignalsRoute,
   AppStrategiesRoute: AppStrategiesRouteWithChildren,
   AppTestingRoute: AppTestingRoute,
+  AppTraderTypeRoute: AppTraderTypeRoute,
   AppVoiceCoachRoute: AppVoiceCoachRoute,
   AppWyckoffRoute: AppWyckoffRoute,
 }
@@ -2499,6 +2560,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiTtsRoute: ApiTtsRoute,
   ApiVersionRoute: ApiVersionRoute,
   InviteCodeRoute: InviteCodeRoute,
+  QuizTypeRoute: QuizTypeRoute,
+  QuizIndexRoute: QuizIndexRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicBridgeRoute: ApiPublicBridgeRoute,
