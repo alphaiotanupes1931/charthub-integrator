@@ -127,6 +127,13 @@
       "when": 1791339378792,
       "tag": "0017_research_trials",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791464207690,
+      "tag": "0018_trader_profiles",
+      "breakpoints": true
     }
   ]
 }
