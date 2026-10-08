@@ -1569,6 +1569,8 @@ export type Database = {
       }
       profiles: {
         Row: {
+          active_coach: string | null
+          active_strategy: string | null
           ai_model_pref: string
           analysis_model: string
           banned: boolean
@@ -1586,6 +1588,7 @@ export type Database = {
           referral_source: string | null
           scan_retention_days: number
           tour_completed_at: string | null
+          trader_type_prompt_dismissed_at: string | null
           updated_at: string
           username: string | null
           voice_enabled: boolean
@@ -1593,6 +1596,8 @@ export type Database = {
           wins: number
         }
         Insert: {
+          active_coach?: string | null
+          active_strategy?: string | null
           ai_model_pref?: string
           analysis_model?: string
           banned?: boolean
@@ -1610,6 +1615,7 @@ export type Database = {
           referral_source?: string | null
           scan_retention_days?: number
           tour_completed_at?: string | null
+          trader_type_prompt_dismissed_at?: string | null
           updated_at?: string
           username?: string | null
           voice_enabled?: boolean
@@ -1617,6 +1623,8 @@ export type Database = {
           wins?: number
         }
         Update: {
+          active_coach?: string | null
+          active_strategy?: string | null
           ai_model_pref?: string
           analysis_model?: string
           banned?: boolean
@@ -1634,11 +1642,84 @@ export type Database = {
           referral_source?: string | null
           scan_retention_days?: number
           tour_completed_at?: string | null
+          trader_type_prompt_dismissed_at?: string | null
           updated_at?: string
           username?: string | null
           voice_enabled?: boolean
           voice_id_override?: string | null
           wins?: number
+        }
+        Relationships: []
+      }
+      quiz_drafts: {
+        Row: {
+          answers: Json
+          claimed_at: string | null
+          claimed_by: string | null
+          code: string
+          created_at: string
+          expires_at: string
+          ref: string | null
+          trader_type: string
+          utm: Json
+        }
+        Insert: {
+          answers: Json
+          claimed_at?: string | null
+          claimed_by?: string | null
+          code: string
+          created_at?: string
+          expires_at?: string
+          ref?: string | null
+          trader_type: string
+          utm?: Json
+        }
+        Update: {
+          answers?: Json
+          claimed_at?: string | null
+          claimed_by?: string | null
+          code?: string
+          created_at?: string
+          expires_at?: string
+          ref?: string | null
+          trader_type?: string
+          utm?: Json
+        }
+        Relationships: []
+      }
+      quiz_leads: {
+        Row: {
+          answers: Json
+          created_at: string
+          email: string
+          ghl_error: string | null
+          ghl_status: string
+          id: string
+          ref: string | null
+          trader_type: string
+          utm: Json
+        }
+        Insert: {
+          answers?: Json
+          created_at?: string
+          email: string
+          ghl_error?: string | null
+          ghl_status?: string
+          id?: string
+          ref?: string | null
+          trader_type: string
+          utm?: Json
+        }
+        Update: {
+          answers?: Json
+          created_at?: string
+          email?: string
+          ghl_error?: string | null
+          ghl_status?: string
+          id?: string
+          ref?: string | null
+          trader_type?: string
+          utm?: Json
         }
         Relationships: []
       }
@@ -2469,6 +2550,63 @@ export type Database = {
           id?: string
           inviter_id?: string
           note?: string | null
+        }
+        Relationships: []
+      }
+      trader_profiles: {
+        Row: {
+          accepted: boolean | null
+          answers: Json
+          chosen_coach: string | null
+          chosen_risk: Json | null
+          chosen_strategies: string[] | null
+          coach_tone: string
+          created_at: string
+          id: string
+          recommended_coach: string
+          recommended_strategies: string[]
+          ref: string | null
+          risk_defaults: Json
+          source: string
+          trader_type: string
+          user_id: string
+          utm: Json
+        }
+        Insert: {
+          accepted?: boolean | null
+          answers?: Json
+          chosen_coach?: string | null
+          chosen_risk?: Json | null
+          chosen_strategies?: string[] | null
+          coach_tone: string
+          created_at?: string
+          id?: string
+          recommended_coach: string
+          recommended_strategies?: string[]
+          ref?: string | null
+          risk_defaults?: Json
+          source: string
+          trader_type: string
+          user_id: string
+          utm?: Json
+        }
+        Update: {
+          accepted?: boolean | null
+          answers?: Json
+          chosen_coach?: string | null
+          chosen_risk?: Json | null
+          chosen_strategies?: string[] | null
+          coach_tone?: string
+          created_at?: string
+          id?: string
+          recommended_coach?: string
+          recommended_strategies?: string[]
+          ref?: string | null
+          risk_defaults?: Json
+          source?: string
+          trader_type?: string
+          user_id?: string
+          utm?: Json
         }
         Relationships: []
       }
