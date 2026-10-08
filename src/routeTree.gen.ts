@@ -59,6 +59,7 @@ import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppSignalsRouteImport } from './routes/_app.signals'
 import { Route as AppStrategiesRouteImport } from './routes/_app.strategies'
 import { Route as AppTestingRouteImport } from './routes/_app.testing'
+import { Route as AppTraderTypeRouteImport } from './routes/_app.trader-type'
 import { Route as AppVoiceCoachRouteImport } from './routes/_app.voice-coach'
 import { Route as AppWyckoffRouteImport } from './routes/_app.wyckoff'
 import { Route as ApiChatRouteImport } from './routes/api.chat'
@@ -374,6 +375,11 @@ const AppStrategiesRoute = AppStrategiesRouteImport.update({
 const AppTestingRoute = AppTestingRouteImport.update({
   id: '/testing',
   path: '/testing',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppTraderTypeRoute = AppTraderTypeRouteImport.update({
+  id: '/trader-type',
+  path: '/trader-type',
   getParentRoute: () => AppRoute,
 } as any)
 const AppVoiceCoachRoute = AppVoiceCoachRouteImport.update({
@@ -786,6 +792,7 @@ export interface FileRoutesByFullPath {
   '/signals': typeof AppSignalsRoute
   '/strategies': typeof AppStrategiesRouteWithChildren
   '/testing': typeof AppTestingRoute
+  '/trader-type': typeof AppTraderTypeRoute
   '/voice-coach': typeof AppVoiceCoachRoute
   '/wyckoff': typeof AppWyckoffRoute
   '/api/chat': typeof ApiChatRoute
@@ -899,6 +906,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AppSettingsRoute
   '/signals': typeof AppSignalsRoute
   '/testing': typeof AppTestingRoute
+  '/trader-type': typeof AppTraderTypeRoute
   '/voice-coach': typeof AppVoiceCoachRoute
   '/wyckoff': typeof AppWyckoffRoute
   '/api/chat': typeof ApiChatRoute
@@ -1016,6 +1024,7 @@ export interface FileRoutesById {
   '/_app/signals': typeof AppSignalsRoute
   '/_app/strategies': typeof AppStrategiesRouteWithChildren
   '/_app/testing': typeof AppTestingRoute
+  '/_app/trader-type': typeof AppTraderTypeRoute
   '/_app/voice-coach': typeof AppVoiceCoachRoute
   '/_app/wyckoff': typeof AppWyckoffRoute
   '/api/chat': typeof ApiChatRoute
@@ -1134,6 +1143,7 @@ export interface FileRouteTypes {
     | '/signals'
     | '/strategies'
     | '/testing'
+    | '/trader-type'
     | '/voice-coach'
     | '/wyckoff'
     | '/api/chat'
@@ -1247,6 +1257,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signals'
     | '/testing'
+    | '/trader-type'
     | '/voice-coach'
     | '/wyckoff'
     | '/api/chat'
@@ -1363,6 +1374,7 @@ export interface FileRouteTypes {
     | '/_app/signals'
     | '/_app/strategies'
     | '/_app/testing'
+    | '/_app/trader-type'
     | '/_app/voice-coach'
     | '/_app/wyckoff'
     | '/api/chat'
@@ -1849,6 +1861,13 @@ declare module '@tanstack/react-router' {
       path: '/testing'
       fullPath: '/testing'
       preLoaderRoute: typeof AppTestingRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/trader-type': {
+      id: '/_app/trader-type'
+      path: '/trader-type'
+      fullPath: '/trader-type'
+      preLoaderRoute: typeof AppTraderTypeRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/voice-coach': {
@@ -2418,6 +2437,7 @@ interface AppRouteChildren {
   AppSignalsRoute: typeof AppSignalsRoute
   AppStrategiesRoute: typeof AppStrategiesRouteWithChildren
   AppTestingRoute: typeof AppTestingRoute
+  AppTraderTypeRoute: typeof AppTraderTypeRoute
   AppVoiceCoachRoute: typeof AppVoiceCoachRoute
   AppWyckoffRoute: typeof AppWyckoffRoute
 }
@@ -2455,6 +2475,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppSignalsRoute: AppSignalsRoute,
   AppStrategiesRoute: AppStrategiesRouteWithChildren,
   AppTestingRoute: AppTestingRoute,
+  AppTraderTypeRoute: AppTraderTypeRoute,
   AppVoiceCoachRoute: AppVoiceCoachRoute,
   AppWyckoffRoute: AppWyckoffRoute,
 }
