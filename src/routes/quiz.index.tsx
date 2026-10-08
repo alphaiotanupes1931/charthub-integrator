@@ -10,12 +10,12 @@ import { TRADER_TYPES, type Answers } from "@/lib/trader-profile/config";
 import { saveQuizDraft, submitQuizLead } from "@/lib/trader-profile.functions";
 import { trackPublicEvent } from "@/lib/product-events.functions";
 import { writeDraft, readAttribution } from "@/lib/trader-profile/draft";
-import { SHARE_IMAGES, SLUG_FOR, SITE_ORIGIN, absolute } from "@/lib/trader-profile/share";
+import { SHARE_IMAGES, SLUG_FOR, SITE_ORIGIN } from "@/lib/trader-profile/share";
 
 const TITLE = "What's your trader type? — TradeMind";
 const DESC = "Sixty seconds, one tap per question. Find out what kind of trader you are and what's really costing you money.";
 
-export const Route = createFileRoute("/quiz")({
+export const Route = createFileRoute("/quiz/")({
   head: () => ({
     meta: [
       { title: TITLE },
@@ -127,4 +127,3 @@ function QuizPage() {
   );
 }
 
-export { absolute };
