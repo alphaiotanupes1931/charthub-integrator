@@ -1,4 +1,5 @@
 import { PageInstructions } from "@/components/PageInstructions";
+import { TraderWeekPanel } from "@/components/trader-profile/TraderWeekPanel";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useFirstWeek, FIRST_WEEK_TASKS, emitFirstWeekEvent, startFirstWeek } from "@/hooks/useFirstWeek";
 import { CheckCircle2, Circle, ArrowRight, Calendar, RotateCcw, Sparkles } from "lucide-react";
@@ -40,6 +41,7 @@ function FirstWeekPage() {
         </p>
       </div>
       <PageInstructions className="mb-6" />
+      <TraderWeekPanel />
 
       {!active && (
         <div className="rounded-xl border border-border/60 bg-card p-5 mb-6">
