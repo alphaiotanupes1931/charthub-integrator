@@ -10,6 +10,7 @@ import { exportMyData, deleteMyAccount } from "@/lib/privacy.functions";
 import { cancelMySubscription, createPortalSession, getMySubscription } from "@/lib/billing.functions";
 import { FreeTierUsagePanel } from "@/components/FreeTierUsagePanel";
 import { RetentionSettingsPanel } from "@/components/RetentionSettingsPanel";
+import { EmailPrefsCard } from "@/components/EmailPrefsCard";
 
 import { toast } from "sonner";
 
@@ -296,6 +297,10 @@ function SettingsPage() {
 
       <div className="mt-4">
         <EmailCard currentEmail={profile?.email ?? null} />
+      </div>
+
+      <div className="mt-4">
+        <EmailPrefsCard userId={profile?.id ?? null} />
       </div>
 
 
