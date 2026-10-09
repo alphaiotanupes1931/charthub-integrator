@@ -179,12 +179,11 @@ export async function placeLiveOrder(
     "POST",
     { order },
   );
-  if (!res.ok) {
-    return { ok: false, detail: `Venue rejected the order (HTTP ${res.status}): ${res.text.slice(0, 240)}` };
-  }
-  const reject = res.json["orderRejectTransaction"] as { rejectReason?: string } | undefined;
-  if (reject?.rejectReason) {
-    return { ok: false, detail: `Venue rejected the order: ${reject.rejectReason}` };
+  const reject = res.json?.["orderRejectTransaction"] as { rejectReason?: string } | undefined;
+  const reason = reject?.rejectReason ?? (res.json?.["errorCode"] as string | undefined);
+  if (!res.ok || reject?.rejectReason) {
+    if (reason) return { ok: false, detail: oandaRejectMessage(reason, intent.symbol) };
+    return { ok: false, detail: `OANDA turned the order down (HTTP ${res.status}). Try again in a moment.` };
   }
   const fill = res.json["orderFillTransaction"] as { id?: string; price?: string } | undefined;
   const created = res.json["orderCreateTransaction"] as { id?: string } | undefined;
@@ -335,3 +334,27 @@ export async function manageLiveTrades(
   return out;
 }
 
+
+/** Plain-language text for OANDA reject codes, so traders never see raw JSON. */
+export function oandaRejectMessage(reason: string, symbol: string): string {
+  switch (reason) {
+    case "INSTRUMENT_NOT_TRADEABLE":
+      return `OANDA won't let this account trade ${symbol}. US OANDA accounts can only trade forex pairs, not gold, silver, oil, indices or crypto. Either the market is closed right now or this instrument isn't offered on your account.`;
+    case "MARKET_HALTED":
+      return `The ${symbol} market is closed or paused at OANDA right now. Try again when it reopens.`;
+    case "INSUFFICIENT_MARGIN":
+    case "INSUFFICIENT_LIQUIDITY":
+      return `Not enough free margin on your OANDA account to open this size on ${symbol}.`;
+    case "FIFO_VIOLATION_SAFEGUARD_VIOLATION":
+    case "FIFO_VIOLATION":
+      return `OANDA's US first-in-first-out rule blocked this ${symbol} order because of another open position on the same instrument.`;
+    case "STOP_LOSS_ON_FILL_LOSS":
+    case "TAKE_PROFIT_ON_FILL_LOSS":
+      return `Price has already moved past the stop or target for ${symbol}, so OANDA refused the order. Rescan for fresh levels.`;
+    case "UNITS_LIMIT_EXCEEDED":
+    case "POSITION_SIZE_EXCEEDED":
+      return `This size is larger than OANDA allows on ${symbol} for your account.`;
+    default:
+      return `OANDA turned the order down (${reason.replace(/_/g, " ").toLowerCase()}).`;
+  }
+}
