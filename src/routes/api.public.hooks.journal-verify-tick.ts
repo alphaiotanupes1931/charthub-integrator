@@ -56,8 +56,36 @@ export const Route = createFileRoute("/api/public/hooks/journal-verify-tick")({
         let resolved = 0;
 
         for (const row of rows) {
-          const t = row.data;
+          let t = row.data;
           if (!t) continue;
+
+          // The locked plan (levels at log time) is scored on its own, whatever
+          // the trader edits or marks by hand later.
+          const lp = t["lockedPlan"] as { entry?: number; stop?: number; takeProfit?: number | null; lockedAt?: number } | undefined;
+          const lockedDone = t["lockedResult"] && t["lockedResult"] !== "open";
+          const lockedLast = num(t["lockedResultCheckedAt"]) ?? 0;
+          const lpEntry = num(lp?.entry), lpStop = num(lp?.stop);
+          if (lp && !lockedDone && lpEntry != null && lpStop != null && lpEntry !== lpStop && typeof t["symbol"] === "string"
+              && Date.now() - lockedLast >= 10 * 60_000) {
+            try {
+              const lr = await verifyTrade({
+                symbol: t["symbol"] as string,
+                timeframe: typeof t["timeframe"] === "string" ? (t["timeframe"] as string) : "1H",
+                side: t["side"] === "Short" ? "Short" : "Long",
+                entry: lpEntry,
+                stop: lpStop,
+                takeProfit: num(lp.takeProfit),
+                since: num(lp.lockedAt) ?? num(t["createdAt"]) ?? Date.now(),
+              });
+              t = { ...t, lockedResult: lr.status, lockedResultR: lr.r, lockedResultCheckedAt: Date.now() };
+              await supabaseAdmin
+                .from("journal_trades")
+                .update({ data: t as never, updated_at: new Date().toISOString() })
+                .eq("id", row.id)
+                .eq("user_id", row.user_id);
+            } catch { /* try again next sweep */ }
+          }
+
 
           // Manual calls are the trader's word: never overwrite them.
           if (t["resultSource"] === "manual") continue;

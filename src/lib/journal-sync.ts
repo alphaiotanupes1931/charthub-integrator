@@ -54,6 +54,17 @@ export async function pullAndMerge(local: SyncTrade[]): Promise<SyncTrade[]> {
       } else {
         merged.set(t.id, t);
       }
+      // The locked-plan result is only ever written by the server checker.
+      const cur = merged.get(t.id)!;
+      if (remote && Number(remote["lockedResultCheckedAt"] ?? 0) > Number(cur["lockedResultCheckedAt"] ?? 0)) {
+        merged.set(t.id, {
+          ...cur,
+          lockedPlan: cur["lockedPlan"] ?? remote["lockedPlan"],
+          lockedResult: remote["lockedResult"],
+          lockedResultR: remote["lockedResultR"],
+          lockedResultCheckedAt: remote["lockedResultCheckedAt"],
+        });
+      }
     }
   }
   return [...merged.values()];

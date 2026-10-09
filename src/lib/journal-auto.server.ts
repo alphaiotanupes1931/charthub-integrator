@@ -21,7 +21,8 @@ export async function journalPlacedTrade(input: {
     const now = Date.now();
     const date = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(now));
     const id = `auto-${input.proposalId}`;
-    const trade = {
+    const { withLockedPlan } = await import("@/lib/journal-lock.shared");
+    const trade = withLockedPlan({
       id,
       date,
       timeframe: journalTimeframe(input.timeframe),
@@ -39,7 +40,7 @@ export async function journalPlacedTrade(input: {
       followedPlan: true,
       result: "open",
       createdAt: now,
-    };
+    }, now);
     await supabaseAdmin
       .from("journal_trades")
       .upsert({ id, user_id: input.userId, data: trade as never, trade_date: date }, { onConflict: "user_id,id" });
