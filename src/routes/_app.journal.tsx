@@ -955,6 +955,9 @@ function JournalPage() {
                 />
               ))}
             </div>
+            <JournalDayScans date={dayView} />
+
+
           </div>
         </div>
       )}
@@ -1242,6 +1245,16 @@ function TradeRow({ t, onEdit, onDelete, onUpdate }: { t: Trade; onEdit: (t: Tra
           <span>Size <span className="text-foreground font-medium">{t.size}</span></span>
         </div>
         {t.resultNote && <div className="mt-1 text-[11px] text-muted-foreground">{t.resultNote}</div>}
+        {t.lockedPlan && planEdited(t) && (
+          <div className="mt-1 text-[11px] text-muted-foreground tabular-nums">
+            Original plan (locked): entry {t.lockedPlan.entry}, stop {t.lockedPlan.stop}
+            {t.lockedPlan.takeProfit != null ? `, TP ${t.lockedPlan.takeProfit}` : ""}
+            {" · "}
+            {t.lockedResult && t.lockedResult !== "open"
+              ? `${RESULT_META[t.lockedResult].label}${t.lockedResultR != null ? ` (${t.lockedResultR > 0 ? "+" : ""}${t.lockedResultR}R)` : ""}`
+              : "still tracking"}
+          </div>
+        )}
         {t.notes && <div className="mt-1 text-xs text-muted-foreground line-clamp-1">{t.notes}</div>}
 
       </button>
