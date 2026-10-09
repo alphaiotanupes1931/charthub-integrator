@@ -41,6 +41,7 @@ import { Route as AppConnectionsRouteImport } from './routes/_app.connections'
 import { Route as AppContactRouteImport } from './routes/_app.contact'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppDiscordRouteImport } from './routes/_app.discord'
+import { Route as AppFirstScanRouteImport } from './routes/_app.first-scan'
 import { Route as AppFirstWeekRouteImport } from './routes/_app.first-week'
 import { Route as AppFlashcardsRouteImport } from './routes/_app.flashcards'
 import { Route as AppFriendsRouteImport } from './routes/_app.friends'
@@ -115,6 +116,7 @@ import { Route as ApiPublicHooksReplayRefreshRouteImport } from './routes/api.pu
 import { Route as ApiPublicHooksReresolveExpiriesRouteImport } from './routes/api.public.hooks.reresolve-expiries'
 import { Route as ApiPublicHooksReresolveFillsRouteImport } from './routes/api.public.hooks.reresolve-fills'
 import { Route as ApiPublicHooksResolveSignalsRouteImport } from './routes/api.public.hooks.resolve-signals'
+import { Route as ApiPublicHooksRetentionEmailsRouteImport } from './routes/api.public.hooks.retention-emails'
 import { Route as ApiPublicHooksScanSignalsRouteImport } from './routes/api.public.hooks.scan-signals'
 import { Route as ApiPublicHooksSendBriefingsRouteImport } from './routes/api.public.hooks.send-briefings'
 import { Route as ApiPublicHooksSignalAlertsTickRouteImport } from './routes/api.public.hooks.signal-alerts-tick'
@@ -288,6 +290,11 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
 const AppDiscordRoute = AppDiscordRouteImport.update({
   id: '/discord',
   path: '/discord',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFirstScanRoute = AppFirstScanRouteImport.update({
+  id: '/first-scan',
+  path: '/first-scan',
   getParentRoute: () => AppRoute,
 } as any)
 const AppFirstWeekRoute = AppFirstWeekRouteImport.update({
@@ -685,6 +692,12 @@ const ApiPublicHooksResolveSignalsRoute =
     path: '/api/public/hooks/resolve-signals',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksRetentionEmailsRoute =
+  ApiPublicHooksRetentionEmailsRouteImport.update({
+    id: '/api/public/hooks/retention-emails',
+    path: '/api/public/hooks/retention-emails',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksScanSignalsRoute =
   ApiPublicHooksScanSignalsRouteImport.update({
     id: '/api/public/hooks/scan-signals',
@@ -793,6 +806,7 @@ export interface FileRoutesByFullPath {
   '/contact': typeof AppContactRoute
   '/dashboard': typeof AppDashboardRoute
   '/discord': typeof AppDiscordRoute
+  '/first-scan': typeof AppFirstScanRoute
   '/first-week': typeof AppFirstWeekRoute
   '/flashcards': typeof AppFlashcardsRoute
   '/friends': typeof AppFriendsRoute
@@ -866,6 +880,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/reresolve-expiries': typeof ApiPublicHooksReresolveExpiriesRoute
   '/api/public/hooks/reresolve-fills': typeof ApiPublicHooksReresolveFillsRoute
   '/api/public/hooks/resolve-signals': typeof ApiPublicHooksResolveSignalsRoute
+  '/api/public/hooks/retention-emails': typeof ApiPublicHooksRetentionEmailsRoute
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
   '/api/public/hooks/signal-alerts-tick': typeof ApiPublicHooksSignalAlertsTickRoute
@@ -911,6 +926,7 @@ export interface FileRoutesByTo {
   '/contact': typeof AppContactRoute
   '/dashboard': typeof AppDashboardRoute
   '/discord': typeof AppDiscordRoute
+  '/first-scan': typeof AppFirstScanRoute
   '/first-week': typeof AppFirstWeekRoute
   '/flashcards': typeof AppFlashcardsRoute
   '/friends': typeof AppFriendsRoute
@@ -982,6 +998,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/reresolve-expiries': typeof ApiPublicHooksReresolveExpiriesRoute
   '/api/public/hooks/reresolve-fills': typeof ApiPublicHooksReresolveFillsRoute
   '/api/public/hooks/resolve-signals': typeof ApiPublicHooksResolveSignalsRoute
+  '/api/public/hooks/retention-emails': typeof ApiPublicHooksRetentionEmailsRoute
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
   '/api/public/hooks/signal-alerts-tick': typeof ApiPublicHooksSignalAlertsTickRoute
@@ -1031,6 +1048,7 @@ export interface FileRoutesById {
   '/_app/contact': typeof AppContactRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/discord': typeof AppDiscordRoute
+  '/_app/first-scan': typeof AppFirstScanRoute
   '/_app/first-week': typeof AppFirstWeekRoute
   '/_app/flashcards': typeof AppFlashcardsRoute
   '/_app/friends': typeof AppFriendsRoute
@@ -1104,6 +1122,7 @@ export interface FileRoutesById {
   '/api/public/hooks/reresolve-expiries': typeof ApiPublicHooksReresolveExpiriesRoute
   '/api/public/hooks/reresolve-fills': typeof ApiPublicHooksReresolveFillsRoute
   '/api/public/hooks/resolve-signals': typeof ApiPublicHooksResolveSignalsRoute
+  '/api/public/hooks/retention-emails': typeof ApiPublicHooksRetentionEmailsRoute
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
   '/api/public/hooks/signal-alerts-tick': typeof ApiPublicHooksSignalAlertsTickRoute
@@ -1153,6 +1172,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/dashboard'
     | '/discord'
+    | '/first-scan'
     | '/first-week'
     | '/flashcards'
     | '/friends'
@@ -1226,6 +1246,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/reresolve-expiries'
     | '/api/public/hooks/reresolve-fills'
     | '/api/public/hooks/resolve-signals'
+    | '/api/public/hooks/retention-emails'
     | '/api/public/hooks/scan-signals'
     | '/api/public/hooks/send-briefings'
     | '/api/public/hooks/signal-alerts-tick'
@@ -1271,6 +1292,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/dashboard'
     | '/discord'
+    | '/first-scan'
     | '/first-week'
     | '/flashcards'
     | '/friends'
@@ -1342,6 +1364,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/reresolve-expiries'
     | '/api/public/hooks/reresolve-fills'
     | '/api/public/hooks/resolve-signals'
+    | '/api/public/hooks/retention-emails'
     | '/api/public/hooks/scan-signals'
     | '/api/public/hooks/send-briefings'
     | '/api/public/hooks/signal-alerts-tick'
@@ -1390,6 +1413,7 @@ export interface FileRouteTypes {
     | '/_app/contact'
     | '/_app/dashboard'
     | '/_app/discord'
+    | '/_app/first-scan'
     | '/_app/first-week'
     | '/_app/flashcards'
     | '/_app/friends'
@@ -1463,6 +1487,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/reresolve-expiries'
     | '/api/public/hooks/reresolve-fills'
     | '/api/public/hooks/resolve-signals'
+    | '/api/public/hooks/retention-emails'
     | '/api/public/hooks/scan-signals'
     | '/api/public/hooks/send-briefings'
     | '/api/public/hooks/signal-alerts-tick'
@@ -1536,6 +1561,7 @@ export interface RootRouteChildren {
   ApiPublicHooksReresolveExpiriesRoute: typeof ApiPublicHooksReresolveExpiriesRoute
   ApiPublicHooksReresolveFillsRoute: typeof ApiPublicHooksReresolveFillsRoute
   ApiPublicHooksResolveSignalsRoute: typeof ApiPublicHooksResolveSignalsRoute
+  ApiPublicHooksRetentionEmailsRoute: typeof ApiPublicHooksRetentionEmailsRoute
   ApiPublicHooksScanSignalsRoute: typeof ApiPublicHooksScanSignalsRoute
   ApiPublicHooksSendBriefingsRoute: typeof ApiPublicHooksSendBriefingsRoute
   ApiPublicHooksSignalAlertsTickRoute: typeof ApiPublicHooksSignalAlertsTickRoute
@@ -1775,6 +1801,13 @@ declare module '@tanstack/react-router' {
       path: '/discord'
       fullPath: '/discord'
       preLoaderRoute: typeof AppDiscordRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/first-scan': {
+      id: '/_app/first-scan'
+      path: '/first-scan'
+      fullPath: '/first-scan'
+      preLoaderRoute: typeof AppFirstScanRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/first-week': {
@@ -2295,6 +2328,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksResolveSignalsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/retention-emails': {
+      id: '/api/public/hooks/retention-emails'
+      path: '/api/public/hooks/retention-emails'
+      fullPath: '/api/public/hooks/retention-emails'
+      preLoaderRoute: typeof ApiPublicHooksRetentionEmailsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/scan-signals': {
       id: '/api/public/hooks/scan-signals'
       path: '/api/public/hooks/scan-signals'
@@ -2480,6 +2520,7 @@ interface AppRouteChildren {
   AppContactRoute: typeof AppContactRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDiscordRoute: typeof AppDiscordRoute
+  AppFirstScanRoute: typeof AppFirstScanRoute
   AppFirstWeekRoute: typeof AppFirstWeekRoute
   AppFlashcardsRoute: typeof AppFlashcardsRoute
   AppFriendsRoute: typeof AppFriendsRoute
@@ -2518,6 +2559,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppContactRoute: AppContactRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDiscordRoute: AppDiscordRoute,
+  AppFirstScanRoute: AppFirstScanRoute,
   AppFirstWeekRoute: AppFirstWeekRoute,
   AppFlashcardsRoute: AppFlashcardsRoute,
   AppFriendsRoute: AppFriendsRoute,
@@ -2613,6 +2655,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksReresolveExpiriesRoute: ApiPublicHooksReresolveExpiriesRoute,
   ApiPublicHooksReresolveFillsRoute: ApiPublicHooksReresolveFillsRoute,
   ApiPublicHooksResolveSignalsRoute: ApiPublicHooksResolveSignalsRoute,
+  ApiPublicHooksRetentionEmailsRoute: ApiPublicHooksRetentionEmailsRoute,
   ApiPublicHooksScanSignalsRoute: ApiPublicHooksScanSignalsRoute,
   ApiPublicHooksSendBriefingsRoute: ApiPublicHooksSendBriefingsRoute,
   ApiPublicHooksSignalAlertsTickRoute: ApiPublicHooksSignalAlertsTickRoute,
