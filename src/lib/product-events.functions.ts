@@ -3,6 +3,9 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /** Funnel events for the permanent free tier (§11 of the spec). */
 export type ProductEventName =
+  | "first_scan_viewed"
+  | "first_scan_tracked"
+  | "first_scan_skipped"
   | "free_grade_used"
   | "free_quota_exhausted"
   | "paywall_shown"
