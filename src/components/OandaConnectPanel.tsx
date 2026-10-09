@@ -157,8 +157,8 @@ export function OandaConnectPanel({ onChange }: { onChange?: () => void }) {
       ) : (
         <div className="space-y-3">
           <p className="text-xs text-muted-foreground">
-            One step: paste your OANDA access token. TradeMind trades live accounts only, and
-            the token stays encrypted on the server.
+            Paste an OANDA access token from a live or paper (demo) account. We detect which
+            one it is, and the token stays encrypted on the server.
           </p>
           <input
             value={apiKey}
