@@ -1,5 +1,5 @@
 import React from 'react'
-import { Body, Button, Container, Head, Heading, Hr, Html, Preview, Section, Text } from '@react-email/components'
+import { Body, Button, Container, Head, Heading, Hr, Html, Link, Preview, Section, Text } from '@react-email/components'
 import type { TemplateEntry } from './registry'
 
 interface Props {
@@ -12,9 +12,12 @@ interface Props {
   bestPnl?: string
   balance?: string
   appUrl?: string
+  unsubscribeUrl?: string
 }
 
-const DailyProfitEmail = ({ name, pnl = '', dateLabel = 'today', trades = 0, wins = 0, bestSymbol, bestPnl, balance, appUrl = 'https://trademindaicoach.com/dashboard' }: Props) => (
+const unsubLink = { color: '#64748b', textDecoration: 'underline' }
+
+const DailyProfitEmail = ({ name, pnl = '', dateLabel = 'today', trades = 0, wins = 0, bestSymbol, bestPnl, balance, appUrl = 'https://trademindaicoach.com/dashboard', unsubscribeUrl = 'https://www.trademindaicoach.com/unsubscribe' }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>{`You finished ${dateLabel} up ${pnl}.`}</Preview>
@@ -37,7 +40,10 @@ const DailyProfitEmail = ({ name, pnl = '', dateLabel = 'today', trades = 0, win
         </Text>
         <Button style={button} href={appUrl}>Open TradeMind</Button>
         <Hr style={hr} />
-        <Text style={footer}>You get this email only on days you finish in profit. You can turn it off in Settings.</Text>
+        <Text style={footer}>You get this email only on days you finish in profit.</Text>
+        <Text style={footer}>
+          <Link href={unsubscribeUrl} style={unsubLink}>Unsubscribe from TradeMind emails</Link>
+        </Text>
       </Container>
     </Body>
   </Html>
