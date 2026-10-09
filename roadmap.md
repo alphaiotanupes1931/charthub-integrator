@@ -104,3 +104,8 @@
 - [ ] GoHighLevel lead sync: built, waiting on GHL_API_KEY and GHL_LOCATION_ID
 - [ ] Marcus to confirm the strategy table and question wording
 - [ ] go.trademindai.ai/quiz to link to /auth?answers=<code> (or just to /quiz)
+
+## Journal overhaul (requested Oct 9)
+- [ ] Daily scan record: every scan of the day saved, with which were taken vs skipped and outcome
+- [ ] One-click Log: captures entry, stop, TP and locks in to track outcome regardless of later edits
+- [ ] AI conversations + scans feed analytics/learning so the coach knows the user better
