@@ -226,6 +226,20 @@ export async function runAutopilotForUser(
             .eq("id", inserted.id as string);
           result.executed += 1;
           openPositions += 1;
+          const { journalPlacedTrade } = await import("@/lib/journal-auto.server");
+          await journalPlacedTrade({
+            userId,
+            proposalId: inserted.id as string,
+            symbol: draft.symbol,
+            side: draft.side,
+            timeframe: (draft as { timeframe?: string | null }).timeframe ?? null,
+            entry: draft.entry,
+            stopLoss: draft.stopLoss,
+            takeProfit: draft.takeProfit ?? null,
+            units: size,
+            grade: (draft as { grade?: string | null }).grade ?? null,
+            detail: sent.detail,
+          });
           await logAutopilotEvent(
             userId,
             "filled",
