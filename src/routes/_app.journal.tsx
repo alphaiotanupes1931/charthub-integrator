@@ -40,6 +40,8 @@ import { exportMyData } from "@/lib/privacy.functions";
 import { verifyJournalTrade } from "@/lib/trade-verify.functions";
 import { toast } from "sonner";
 import { pullAndMerge, pushAll, type SyncTrade } from "@/lib/journal-sync";
+import { planEdited, withLockedPlan, type LockedPlan } from "@/lib/journal-lock.shared";
+import { JournalDayScans } from "@/components/JournalDayScans";
 import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
 import { markTradeLogged, unmarkTradeLogged } from "@/lib/loggedTrades";
 import { loadPassedTrades, onPassedTradesChange, unpassTrade, type PassedTrade } from "@/lib/passedTrades";
@@ -134,6 +136,11 @@ type Trade = {
   /** Coaching conversation attached from the dashboard chat ("To journal"). */
   chatLog?: string;
   chatLogSavedAt?: number;
+  /** Entry/stop/target frozen at log time; scored separately from later edits. */
+  lockedPlan?: LockedPlan;
+  lockedResult?: TradeResult;
+  lockedResultR?: number | null;
+  lockedResultCheckedAt?: number;
   createdAt: number;
 };
 
@@ -405,6 +412,40 @@ function JournalPage() {
         markTradeLogged({ tradeId: t.id, symbol: t.symbol, threadId: t.threadId ?? null, entry: t.entry, date: t.date, at: t.createdAt });
       }
     };
+    // One-click log: a scan that already carries entry and stop is saved and
+    // locked straight away instead of opening the form.
+    try {
+      const raw = localStorage.getItem("trademind.journal.prefill.v1");
+      const p = raw ? (JSON.parse(raw) as { symbol?: string; timeframe?: string; notes?: string; entry?: number; stop?: number; tp1?: number; side?: Side; setup?: string; threadId?: string }) : null;
+      if (p && p.symbol && Number.isFinite(p.entry) && Number.isFinite(p.stop) && p.entry !== p.stop) {
+        localStorage.removeItem("trademind.journal.prefill.v1");
+        const now = Date.now();
+        const tf = (TIMEFRAMES as readonly string[]).includes(p.timeframe ?? "") ? (p.timeframe as Timeframe) : "1H";
+        const quick = withLockedPlan({
+          id: `t_${now.toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
+          date: todayYmd(),
+          timeframe: tf,
+          symbol: p.symbol,
+          side: p.side ?? "Long",
+          entry: p.entry as number,
+          exit: p.entry as number,
+          stop: p.stop as number,
+          takeProfit: Number.isFinite(p.tp1) ? p.tp1 : undefined,
+          size: 1,
+          notes: p.notes ?? "",
+          setup: p.setup,
+          threadId: p.threadId,
+          executed: true,
+          executedAt: now,
+          result: "open",
+          createdAt: now,
+        } as Trade);
+        saveTrades([quick, ...loadTrades()]);
+        markTradeLogged({ tradeId: quick.id, symbol: quick.symbol, threadId: quick.threadId ?? null, entry: quick.entry, date: quick.date });
+        emitFirstWeekEvent("journal-log");
+        toast.success(`${quick.symbol} logged and locked`, { description: "Entry, stop and target are saved. The journal tracks the result automatically." });
+      }
+    } catch { /* fall back to the form */ }
     const local = loadTrades();
     setTrades(local);
     backfill(local);
@@ -580,7 +621,10 @@ function JournalPage() {
   const openNew = (date: string) => { setEditingId(null); setFormDate(date); setFormOpen(true); };
   const openEdit = (t: Trade) => { setEditingId(t.id); setFormDate(t.date); setFormOpen(true); };
 
-  const handleSave = (t: Trade) => {
+  const handleSave = (raw: Trade) => {
+    // Keep the plan from the first save; a brand-new entry gets locked now.
+    const prior = trades.find((p) => p.id === raw.id);
+    const t = withLockedPlan({ ...raw, lockedPlan: raw.lockedPlan ?? prior?.lockedPlan, lockedResult: prior?.lockedResult, lockedResultR: prior?.lockedResultR, lockedResultCheckedAt: prior?.lockedResultCheckedAt });
     setTrades((prev) => {
       const exists = prev.some((p) => p.id === t.id);
       return exists ? prev.map((p) => (p.id === t.id ? t : p)) : [t, ...prev];
@@ -911,6 +955,9 @@ function JournalPage() {
                 />
               ))}
             </div>
+            <JournalDayScans date={dayView} />
+
+
           </div>
         </div>
       )}
@@ -1198,6 +1245,16 @@ function TradeRow({ t, onEdit, onDelete, onUpdate }: { t: Trade; onEdit: (t: Tra
           <span>Size <span className="text-foreground font-medium">{t.size}</span></span>
         </div>
         {t.resultNote && <div className="mt-1 text-[11px] text-muted-foreground">{t.resultNote}</div>}
+        {t.lockedPlan && planEdited(t) && (
+          <div className="mt-1 text-[11px] text-muted-foreground tabular-nums">
+            Original plan (locked): entry {t.lockedPlan.entry}, stop {t.lockedPlan.stop}
+            {t.lockedPlan.takeProfit != null ? `, TP ${t.lockedPlan.takeProfit}` : ""}
+            {" · "}
+            {t.lockedResult && t.lockedResult !== "open"
+              ? `${RESULT_META[t.lockedResult].label}${t.lockedResultR != null ? ` (${t.lockedResultR > 0 ? "+" : ""}${t.lockedResultR}R)` : ""}`
+              : "still tracking"}
+          </div>
+        )}
         {t.notes && <div className="mt-1 text-xs text-muted-foreground line-clamp-1">{t.notes}</div>}
 
       </button>
