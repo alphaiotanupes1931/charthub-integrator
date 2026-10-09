@@ -56,7 +56,18 @@ export async function sendTemplateEmail(
     throw new Error('Recipient is required (the template defines no fixed recipient)')
   }
 
-  const templateData = options.templateData ?? {}
+  const templateData: Record<string, any> = { ...(options.templateData ?? {}) }
+  // Branded TradeMind unsubscribe link for every email, unless the caller set one.
+  if (!templateData.unsubscribeUrl) {
+    try {
+      const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
+      const { unsubscribeToken, unsubscribeUrl } = await import('../unsubscribe-link.server')
+      const token = await unsubscribeToken(supabaseAdmin as any, recipient)
+      if (token) templateData.unsubscribeUrl = unsubscribeUrl(token)
+    } catch (e) {
+      console.error('[send-email] unsubscribe link failed', (e as Error).message)
+    }
+  }
   const element = React.createElement(template.component, templateData)
   const html = await render(element)
   const text = await render(element, { plainText: true })
