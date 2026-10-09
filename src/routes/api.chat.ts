@@ -1136,6 +1136,14 @@ export const Route = createFileRoute("/api/chat")({
           } catch (e) {
             console.warn(`[chat] req=${reqId} trader_profile_failed`, (e as Error).message);
           }
+          // Running memory from their scans, journal and past chats.
+          try {
+            const { traderMemoryBlock } = await import("@/lib/trader-memory.server");
+            const mem = await traderMemoryBlock(sb as never, userId);
+            if (mem) liveSystem += "\n\n" + mem;
+          } catch (e) {
+            console.warn(`[chat] req=${reqId} trader_memory_failed`, (e as Error).message);
+          }
         }
         // Retrieved methodology / psychology reference for this exact question.
         try {
