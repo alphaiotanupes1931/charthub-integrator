@@ -607,6 +607,30 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_profit_emails: {
+        Row: {
+          created_at: string
+          currency: string | null
+          pnl: number | null
+          trading_day: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string | null
+          pnl?: number | null
+          trading_day: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string | null
+          pnl?: number | null
+          trading_day?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -1578,15 +1602,19 @@ export type Database = {
           broker_connected: boolean
           broker_name: string | null
           created_at: string
+          daily_profit_email: boolean
           display_name: string | null
           email: string | null
+          first_scan_done_at: string | null
           id: string
           losses: number
+          morning_brief_email: boolean
           must_change_password: boolean
           onboarded: boolean
           recovery_code_hash: string | null
           referral_source: string | null
           scan_retention_days: number
+          scanner_wins_email: boolean
           tour_completed_at: string | null
           trader_type_prompt_dismissed_at: string | null
           updated_at: string
@@ -1605,15 +1633,19 @@ export type Database = {
           broker_connected?: boolean
           broker_name?: string | null
           created_at?: string
+          daily_profit_email?: boolean
           display_name?: string | null
           email?: string | null
+          first_scan_done_at?: string | null
           id: string
           losses?: number
+          morning_brief_email?: boolean
           must_change_password?: boolean
           onboarded?: boolean
           recovery_code_hash?: string | null
           referral_source?: string | null
           scan_retention_days?: number
+          scanner_wins_email?: boolean
           tour_completed_at?: string | null
           trader_type_prompt_dismissed_at?: string | null
           updated_at?: string
@@ -1632,15 +1664,19 @@ export type Database = {
           broker_connected?: boolean
           broker_name?: string | null
           created_at?: string
+          daily_profit_email?: boolean
           display_name?: string | null
           email?: string | null
+          first_scan_done_at?: string | null
           id?: string
           losses?: number
+          morning_brief_email?: boolean
           must_change_password?: boolean
           onboarded?: boolean
           recovery_code_hash?: string | null
           referral_source?: string | null
           scan_retention_days?: number
+          scanner_wins_email?: boolean
           tour_completed_at?: string | null
           trader_type_prompt_dismissed_at?: string | null
           updated_at?: string
@@ -1771,6 +1807,27 @@ export type Database = {
           total_r?: number | null
           variant?: string | null
           verdict?: string | null
+        }
+        Relationships: []
+      }
+      retention_emails: {
+        Row: {
+          created_at: string
+          kind: string
+          trading_day: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          kind: string
+          trading_day: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          kind?: string
+          trading_day?: string
+          user_id?: string
         }
         Relationships: []
       }
