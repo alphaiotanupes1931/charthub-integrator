@@ -234,7 +234,7 @@ export async function runAutopilotForUser(
             side: draft.side,
             timeframe: (draft as { timeframe?: string | null }).timeframe ?? null,
             entry: draft.entry,
-            stopLoss: draft.stopLoss,
+            stopLoss: Number(draft.stopLoss),
             takeProfit: draft.takeProfit ?? null,
             units: size,
             grade: (draft as { grade?: string | null }).grade ?? null,
