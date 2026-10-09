@@ -1,5 +1,5 @@
 import React from 'react'
-import { Body, Button, Container, Head, Heading, Hr, Html, Preview, Section, Text } from '@react-email/components'
+import { Body, Button, Container, Head, Heading, Hr, Html, Link, Preview, Section, Text } from '@react-email/components'
 import type { TemplateEntry } from './registry'
 
 interface Props {
@@ -13,9 +13,12 @@ interface Props {
   confidence?: number
   modelName?: string
   appUrl?: string
+  unsubscribeUrl?: string
 }
 
-const TradeSetupEmail = ({ name, symbol = '', grade = '', direction = '', entry, stop, target, confidence, modelName, appUrl = 'https://trademindaicoach.com/dashboard' }: Props) => (
+const unsubLink = { color: '#64748b', textDecoration: 'underline' }
+
+const TradeSetupEmail = ({ name, symbol = '', grade = '', direction = '', entry, stop, target, confidence, modelName, appUrl = 'https://trademindaicoach.com/dashboard', unsubscribeUrl = 'https://www.trademindaicoach.com/unsubscribe' }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>{`${grade} ${direction} setup on ${symbol} is ready.`}</Preview>
@@ -41,6 +44,9 @@ const TradeSetupEmail = ({ name, symbol = '', grade = '', direction = '', entry,
         <Hr style={hr} />
         <Text style={footer}>
           You get this email for A and B setups on the instruments you follow. This is a trade idea, not a guarantee of profit.
+        </Text>
+        <Text style={footer}>
+          <Link href={unsubscribeUrl} style={unsubLink}>Unsubscribe from TradeMind emails</Link>
         </Text>
       </Container>
     </Body>
