@@ -115,6 +115,7 @@ import { Route as ApiPublicHooksReplayRefreshRouteImport } from './routes/api.pu
 import { Route as ApiPublicHooksReresolveExpiriesRouteImport } from './routes/api.public.hooks.reresolve-expiries'
 import { Route as ApiPublicHooksReresolveFillsRouteImport } from './routes/api.public.hooks.reresolve-fills'
 import { Route as ApiPublicHooksResolveSignalsRouteImport } from './routes/api.public.hooks.resolve-signals'
+import { Route as ApiPublicHooksRetentionEmailsRouteImport } from './routes/api.public.hooks.retention-emails'
 import { Route as ApiPublicHooksScanSignalsRouteImport } from './routes/api.public.hooks.scan-signals'
 import { Route as ApiPublicHooksSendBriefingsRouteImport } from './routes/api.public.hooks.send-briefings'
 import { Route as ApiPublicHooksSignalAlertsTickRouteImport } from './routes/api.public.hooks.signal-alerts-tick'
@@ -685,6 +686,12 @@ const ApiPublicHooksResolveSignalsRoute =
     path: '/api/public/hooks/resolve-signals',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksRetentionEmailsRoute =
+  ApiPublicHooksRetentionEmailsRouteImport.update({
+    id: '/api/public/hooks/retention-emails',
+    path: '/api/public/hooks/retention-emails',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksScanSignalsRoute =
   ApiPublicHooksScanSignalsRouteImport.update({
     id: '/api/public/hooks/scan-signals',
@@ -866,6 +873,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/reresolve-expiries': typeof ApiPublicHooksReresolveExpiriesRoute
   '/api/public/hooks/reresolve-fills': typeof ApiPublicHooksReresolveFillsRoute
   '/api/public/hooks/resolve-signals': typeof ApiPublicHooksResolveSignalsRoute
+  '/api/public/hooks/retention-emails': typeof ApiPublicHooksRetentionEmailsRoute
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
   '/api/public/hooks/signal-alerts-tick': typeof ApiPublicHooksSignalAlertsTickRoute
@@ -982,6 +990,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/reresolve-expiries': typeof ApiPublicHooksReresolveExpiriesRoute
   '/api/public/hooks/reresolve-fills': typeof ApiPublicHooksReresolveFillsRoute
   '/api/public/hooks/resolve-signals': typeof ApiPublicHooksResolveSignalsRoute
+  '/api/public/hooks/retention-emails': typeof ApiPublicHooksRetentionEmailsRoute
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
   '/api/public/hooks/signal-alerts-tick': typeof ApiPublicHooksSignalAlertsTickRoute
@@ -1104,6 +1113,7 @@ export interface FileRoutesById {
   '/api/public/hooks/reresolve-expiries': typeof ApiPublicHooksReresolveExpiriesRoute
   '/api/public/hooks/reresolve-fills': typeof ApiPublicHooksReresolveFillsRoute
   '/api/public/hooks/resolve-signals': typeof ApiPublicHooksResolveSignalsRoute
+  '/api/public/hooks/retention-emails': typeof ApiPublicHooksRetentionEmailsRoute
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
   '/api/public/hooks/send-briefings': typeof ApiPublicHooksSendBriefingsRoute
   '/api/public/hooks/signal-alerts-tick': typeof ApiPublicHooksSignalAlertsTickRoute
@@ -1226,6 +1236,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/reresolve-expiries'
     | '/api/public/hooks/reresolve-fills'
     | '/api/public/hooks/resolve-signals'
+    | '/api/public/hooks/retention-emails'
     | '/api/public/hooks/scan-signals'
     | '/api/public/hooks/send-briefings'
     | '/api/public/hooks/signal-alerts-tick'
@@ -1342,6 +1353,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/reresolve-expiries'
     | '/api/public/hooks/reresolve-fills'
     | '/api/public/hooks/resolve-signals'
+    | '/api/public/hooks/retention-emails'
     | '/api/public/hooks/scan-signals'
     | '/api/public/hooks/send-briefings'
     | '/api/public/hooks/signal-alerts-tick'
@@ -1463,6 +1475,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/reresolve-expiries'
     | '/api/public/hooks/reresolve-fills'
     | '/api/public/hooks/resolve-signals'
+    | '/api/public/hooks/retention-emails'
     | '/api/public/hooks/scan-signals'
     | '/api/public/hooks/send-briefings'
     | '/api/public/hooks/signal-alerts-tick'
@@ -1536,6 +1549,7 @@ export interface RootRouteChildren {
   ApiPublicHooksReresolveExpiriesRoute: typeof ApiPublicHooksReresolveExpiriesRoute
   ApiPublicHooksReresolveFillsRoute: typeof ApiPublicHooksReresolveFillsRoute
   ApiPublicHooksResolveSignalsRoute: typeof ApiPublicHooksResolveSignalsRoute
+  ApiPublicHooksRetentionEmailsRoute: typeof ApiPublicHooksRetentionEmailsRoute
   ApiPublicHooksScanSignalsRoute: typeof ApiPublicHooksScanSignalsRoute
   ApiPublicHooksSendBriefingsRoute: typeof ApiPublicHooksSendBriefingsRoute
   ApiPublicHooksSignalAlertsTickRoute: typeof ApiPublicHooksSignalAlertsTickRoute
@@ -2295,6 +2309,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksResolveSignalsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/retention-emails': {
+      id: '/api/public/hooks/retention-emails'
+      path: '/api/public/hooks/retention-emails'
+      fullPath: '/api/public/hooks/retention-emails'
+      preLoaderRoute: typeof ApiPublicHooksRetentionEmailsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/scan-signals': {
       id: '/api/public/hooks/scan-signals'
       path: '/api/public/hooks/scan-signals'
@@ -2613,6 +2634,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksReresolveExpiriesRoute: ApiPublicHooksReresolveExpiriesRoute,
   ApiPublicHooksReresolveFillsRoute: ApiPublicHooksReresolveFillsRoute,
   ApiPublicHooksResolveSignalsRoute: ApiPublicHooksResolveSignalsRoute,
+  ApiPublicHooksRetentionEmailsRoute: ApiPublicHooksRetentionEmailsRoute,
   ApiPublicHooksScanSignalsRoute: ApiPublicHooksScanSignalsRoute,
   ApiPublicHooksSendBriefingsRoute: ApiPublicHooksSendBriefingsRoute,
   ApiPublicHooksSignalAlertsTickRoute: ApiPublicHooksSignalAlertsTickRoute,
