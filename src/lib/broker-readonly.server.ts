@@ -135,7 +135,7 @@ async function oandaSnapshot(userId: string): Promise<BrokerSnapshot | null> {
   const account = (target.summary.account ?? {}) as Record<string, string>;
   const [open, closed] = await Promise.all([
     oandaGet(target.host, creds.apiKey, `/accounts/${target.accountId}/openTrades`),
-    oandaGet(target.host, creds.apiKey, `/accounts/${target.accountId}/trades?state=CLOSED&count=10`),
+    oandaGet(target.host, creds.apiKey, `/accounts/${target.accountId}/trades?state=CLOSED&count=50`),
   ]);
 
   const positions: ReadOnlyPosition[] = (

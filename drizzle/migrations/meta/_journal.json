@@ -141,6 +141,13 @@
       "when": 1791513823446,
       "tag": "0019_allow_all_grades_autopilot",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1791520000000,
+      "tag": "0020_daily_profit_emails",
+      "breakpoints": true
     }
   ]
 }
