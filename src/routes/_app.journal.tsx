@@ -621,7 +621,10 @@ function JournalPage() {
   const openNew = (date: string) => { setEditingId(null); setFormDate(date); setFormOpen(true); };
   const openEdit = (t: Trade) => { setEditingId(t.id); setFormDate(t.date); setFormOpen(true); };
 
-  const handleSave = (t: Trade) => {
+  const handleSave = (raw: Trade) => {
+    // Keep the plan from the first save; a brand-new entry gets locked now.
+    const prior = trades.find((p) => p.id === raw.id);
+    const t = withLockedPlan({ ...raw, lockedPlan: raw.lockedPlan ?? prior?.lockedPlan, lockedResult: prior?.lockedResult, lockedResultR: prior?.lockedResultR, lockedResultCheckedAt: prior?.lockedResultCheckedAt });
     setTrades((prev) => {
       const exists = prev.some((p) => p.id === t.id);
       return exists ? prev.map((p) => (p.id === t.id ? t : p)) : [t, ...prev];
