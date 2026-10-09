@@ -41,6 +41,7 @@ import { Route as AppConnectionsRouteImport } from './routes/_app.connections'
 import { Route as AppContactRouteImport } from './routes/_app.contact'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppDiscordRouteImport } from './routes/_app.discord'
+import { Route as AppFirstScanRouteImport } from './routes/_app.first-scan'
 import { Route as AppFirstWeekRouteImport } from './routes/_app.first-week'
 import { Route as AppFlashcardsRouteImport } from './routes/_app.flashcards'
 import { Route as AppFriendsRouteImport } from './routes/_app.friends'
@@ -289,6 +290,11 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
 const AppDiscordRoute = AppDiscordRouteImport.update({
   id: '/discord',
   path: '/discord',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFirstScanRoute = AppFirstScanRouteImport.update({
+  id: '/first-scan',
+  path: '/first-scan',
   getParentRoute: () => AppRoute,
 } as any)
 const AppFirstWeekRoute = AppFirstWeekRouteImport.update({
@@ -800,6 +806,7 @@ export interface FileRoutesByFullPath {
   '/contact': typeof AppContactRoute
   '/dashboard': typeof AppDashboardRoute
   '/discord': typeof AppDiscordRoute
+  '/first-scan': typeof AppFirstScanRoute
   '/first-week': typeof AppFirstWeekRoute
   '/flashcards': typeof AppFlashcardsRoute
   '/friends': typeof AppFriendsRoute
@@ -919,6 +926,7 @@ export interface FileRoutesByTo {
   '/contact': typeof AppContactRoute
   '/dashboard': typeof AppDashboardRoute
   '/discord': typeof AppDiscordRoute
+  '/first-scan': typeof AppFirstScanRoute
   '/first-week': typeof AppFirstWeekRoute
   '/flashcards': typeof AppFlashcardsRoute
   '/friends': typeof AppFriendsRoute
@@ -1040,6 +1048,7 @@ export interface FileRoutesById {
   '/_app/contact': typeof AppContactRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/discord': typeof AppDiscordRoute
+  '/_app/first-scan': typeof AppFirstScanRoute
   '/_app/first-week': typeof AppFirstWeekRoute
   '/_app/flashcards': typeof AppFlashcardsRoute
   '/_app/friends': typeof AppFriendsRoute
@@ -1163,6 +1172,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/dashboard'
     | '/discord'
+    | '/first-scan'
     | '/first-week'
     | '/flashcards'
     | '/friends'
@@ -1282,6 +1292,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/dashboard'
     | '/discord'
+    | '/first-scan'
     | '/first-week'
     | '/flashcards'
     | '/friends'
@@ -1402,6 +1413,7 @@ export interface FileRouteTypes {
     | '/_app/contact'
     | '/_app/dashboard'
     | '/_app/discord'
+    | '/_app/first-scan'
     | '/_app/first-week'
     | '/_app/flashcards'
     | '/_app/friends'
@@ -1789,6 +1801,13 @@ declare module '@tanstack/react-router' {
       path: '/discord'
       fullPath: '/discord'
       preLoaderRoute: typeof AppDiscordRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/first-scan': {
+      id: '/_app/first-scan'
+      path: '/first-scan'
+      fullPath: '/first-scan'
+      preLoaderRoute: typeof AppFirstScanRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/first-week': {
@@ -2501,6 +2520,7 @@ interface AppRouteChildren {
   AppContactRoute: typeof AppContactRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDiscordRoute: typeof AppDiscordRoute
+  AppFirstScanRoute: typeof AppFirstScanRoute
   AppFirstWeekRoute: typeof AppFirstWeekRoute
   AppFlashcardsRoute: typeof AppFlashcardsRoute
   AppFriendsRoute: typeof AppFriendsRoute
@@ -2539,6 +2559,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppContactRoute: AppContactRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDiscordRoute: AppDiscordRoute,
+  AppFirstScanRoute: AppFirstScanRoute,
   AppFirstWeekRoute: AppFirstWeekRoute,
   AppFlashcardsRoute: AppFlashcardsRoute,
   AppFriendsRoute: AppFriendsRoute,
