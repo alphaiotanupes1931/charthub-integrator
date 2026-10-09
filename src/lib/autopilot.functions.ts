@@ -46,7 +46,7 @@ export const updateAutopilotSettings = createServerFn({ method: "POST" })
         manageTrades: z.boolean().optional(),
         managePartials: z.boolean().optional(),
         trailAfterTp1: z.boolean().optional(),
-        minGrade: z.enum(["A+", "A", "B"]).optional(),
+        minGrade: z.enum(["A+", "A", "B", "ALL"]).optional(),
         riskPct: z.number().min(0.1).max(5).optional(),
         maxOpenPositions: z.number().int().min(1).max(20).optional(),
         maxDailyLossPct: z.number().min(0.5).max(20).optional(),

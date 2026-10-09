@@ -134,6 +134,13 @@
       "when": 1791464207690,
       "tag": "0018_trader_profiles",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1791513823446,
+      "tag": "0019_allow_all_grades_autopilot",
+      "breakpoints": true
     }
   ]
 }

@@ -1522,8 +1522,17 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       {noLiveSource && !showLoader && (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/60 backdrop-blur-sm animate-fade-in">
           <div className="max-w-xs text-center text-xs text-muted-foreground">
-            <p className="font-medium text-foreground mb-1">Live chart data not loading</p>
-            <p>We can’t reach the {ticker} feed right now. Check your connection, then retry.</p>
+            {marketClosedNow(ticker) ? (
+              <>
+                <p className="font-medium text-foreground mb-1">Market closed</p>
+                <p>{ticker} is not trading right now. The chart will fill in when the market reopens (Sunday 22:00 UTC, with a daily break 21:00 to 22:00 UTC).</p>
+              </>
+            ) : (
+              <>
+                <p className="font-medium text-foreground mb-1">Live chart data not loading</p>
+                <p>We can’t reach the {ticker} feed right now. Check your connection, then retry.</p>
+              </>
+            )}
             <button
               type="button"
               onClick={() => { void refetch(); }}
@@ -1710,3 +1719,14 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
   );
 }
 
+
+/** Rough FX/CFD hours: closed Fri 21:00 to Sun 22:00 UTC plus the daily 21:00-22:00 UTC break. Crypto never closes. */
+function marketClosedNow(ticker: string, now = new Date()): boolean {
+  if (/BTC|ETH|SOL|XRP|DOGE|CRYPTO/i.test(ticker)) return false;
+  const day = now.getUTCDay();
+  const h = now.getUTCHours();
+  if (day === 6) return true;
+  if (day === 5 && h >= 21) return true;
+  if (day === 0 && h < 22) return true;
+  return h === 21;
+}
