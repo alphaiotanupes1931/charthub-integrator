@@ -181,8 +181,8 @@ function BrokerPage() {
       <div className="rounded-xl border border-border/60 bg-card p-5 mb-6">
         <div className="text-sm font-semibold">Account used for Auto Trading</div>
         <p className="mt-1 text-xs text-muted-foreground">
-          Approved setups are placed and managed at your connected broker account. Switch Auto Trading on from
-          the home page; sign out above at any time and nothing can be placed.
+          Auto Trading places trades on whichever OANDA account is marked Active above. To test with fake
+          money first, add a paper (demo) account and tap "Use this". Switch Auto Trading on from the home page.
         </p>
       </div>
 
@@ -203,6 +203,16 @@ function BrokerPage() {
             <Metric label="NAV" value={fmtMoney(status.nav, status.currency)} />
             <Metric label="Unrealized P/L" value={fmtMoney(status.unrealizedPL, status.currency)} />
             <Metric label="Open trades" value={String(status.openTradeCount)} />
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-3 text-xs">
+            {status.env === "live" ? (
+              <a href="https://hub.oanda.com/" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-xl bg-primary px-3 py-1.5 font-semibold text-primary-foreground hover:opacity-90">
+                Add funds at OANDA <ExternalLink className="h-3 w-3" />
+              </a>
+            ) : (
+              <span className="text-muted-foreground">Paper account: balance is practice money, set or reset it inside OANDA.</span>
+            )}
+            <span className="text-muted-foreground">Deposits are made at OANDA, then tap Refresh here.</span>
           </div>
           {status.usingDiscoveredAccount && (
             <p className="mt-3 text-xs text-muted-foreground">
