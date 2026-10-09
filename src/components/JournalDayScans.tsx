@@ -6,9 +6,10 @@ type DayData = Awaited<ReturnType<typeof getJournalDay>>;
 function outcomeLabel(status: string | null, r: number | null): string {
   if (!status || status === "open" || status === "pending") return "Still tracking";
   const rTxt = r == null ? "" : ` (${r > 0 ? "+" : ""}${r.toFixed(2)}R)`;
-  if (status === "tp" || status === "win" || status === "tp1") return `Hit target${rTxt}`;
+  if (status === "target" || status === "tp") return `Hit target${rTxt}`;
   if (status === "stop" || status === "loss") return `Hit stop${rTxt}`;
   if (status === "expired" || status === "unfilled") return "Never filled";
+  if (status === "void") return "Cancelled";
   return `${status}${rTxt}`;
 }
 
