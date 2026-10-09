@@ -243,6 +243,21 @@ export const placeAutoTrade = createServerFn({ method: "POST" })
       { symbol: data.symbol, units, entry: data.entry, proposalId, live: true },
     );
 
+    const { journalPlacedTrade } = await import("@/lib/journal-auto.server");
+    await journalPlacedTrade({
+      userId: context.userId,
+      proposalId,
+      symbol: data.symbol,
+      side: data.side,
+      timeframe: data.timeframe,
+      entry: data.entry,
+      stopLoss: data.stopLoss,
+      takeProfit: data.takeProfit ?? null,
+      units,
+      grade: data.grade ?? null,
+      detail: sent.detail,
+    });
+
     return { ok: true as const, units, detail: sent.detail };
   });
 
