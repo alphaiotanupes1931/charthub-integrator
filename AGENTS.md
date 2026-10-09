@@ -10,3 +10,5 @@
 - Quiz answers carry into signup via a server-stored short code (`quiz_drafts`) plus a localStorage copy, never URL-only. Why: Google sign-in and the separate marketing domain drop query strings and storage.
 - Journal trades carry an immutable `lockedPlan` (src/lib/journal-lock.shared.ts) set on first save; the verify tick scores it separately from edited levels. Why: shows whether moving stops/targets helped or hurt.
 - Coach trader memory is built deterministically from scans, journal and chats in `src/lib/trader-memory.shared.ts`, not by an extra AI call. Why: no per-message cost and it stays testable.
+- Retention email timing and selection rules (morning picks, scanner wins) live only in `src/lib/retention-emails.shared.ts`; the cron route just reads them. Why: keeps send rules testable and in one place.
+- New signups land on `/first-scan` after onboarding, before the dashboard. Why: every user sees and tracks one live setup in their first session.

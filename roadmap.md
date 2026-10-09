@@ -109,3 +109,6 @@
 - [x] Daily scan record: every scan of the day saved, with which were taken vs skipped and outcome
 - [x] One-click Log: captures entry, stop, TP and locks in to track outcome regardless of later edits
 - [x] AI conversations + scans feed analytics/learning so the coach knows the user better
+
+## Retention (Oct 9)
+- Done: first-scan screen after onboarding, 8 AM NY morning picks email, 6 PM NY scanner wins email, email switches in Settings, daily profit email schedule + send record fixed.
