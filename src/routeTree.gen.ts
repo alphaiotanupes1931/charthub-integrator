@@ -99,6 +99,7 @@ import { Route as ApiPublicHooksAiCreditsRouteImport } from './routes/api.public
 import { Route as ApiPublicHooksAutopilotTickRouteImport } from './routes/api.public.hooks.autopilot-tick'
 import { Route as ApiPublicHooksClassicResearchBacktestRouteImport } from './routes/api.public.hooks.classic-research-backtest'
 import { Route as ApiPublicHooksDailyBiasSplitRouteImport } from './routes/api.public.hooks.daily-bias-split'
+import { Route as ApiPublicHooksDailyProfitEmailRouteImport } from './routes/api.public.hooks.daily-profit-email'
 import { Route as ApiPublicHooksDripEmailsRouteImport } from './routes/api.public.hooks.drip-emails'
 import { Route as ApiPublicHooksEntryFillTestRouteImport } from './routes/api.public.hooks.entry-fill-test'
 import { Route as ApiPublicHooksGateVolumeRouteImport } from './routes/api.public.hooks.gate-volume'
@@ -588,6 +589,12 @@ const ApiPublicHooksDailyBiasSplitRoute =
     path: '/api/public/hooks/daily-bias-split',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksDailyProfitEmailRoute =
+  ApiPublicHooksDailyProfitEmailRouteImport.update({
+    id: '/api/public/hooks/daily-profit-email',
+    path: '/api/public/hooks/daily-profit-email',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksDripEmailsRoute =
   ApiPublicHooksDripEmailsRouteImport.update({
     id: '/api/public/hooks/drip-emails',
@@ -843,6 +850,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/autopilot-tick': typeof ApiPublicHooksAutopilotTickRoute
   '/api/public/hooks/classic-research-backtest': typeof ApiPublicHooksClassicResearchBacktestRoute
   '/api/public/hooks/daily-bias-split': typeof ApiPublicHooksDailyBiasSplitRoute
+  '/api/public/hooks/daily-profit-email': typeof ApiPublicHooksDailyProfitEmailRoute
   '/api/public/hooks/drip-emails': typeof ApiPublicHooksDripEmailsRoute
   '/api/public/hooks/entry-fill-test': typeof ApiPublicHooksEntryFillTestRoute
   '/api/public/hooks/gate-volume': typeof ApiPublicHooksGateVolumeRoute
@@ -958,6 +966,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/autopilot-tick': typeof ApiPublicHooksAutopilotTickRoute
   '/api/public/hooks/classic-research-backtest': typeof ApiPublicHooksClassicResearchBacktestRoute
   '/api/public/hooks/daily-bias-split': typeof ApiPublicHooksDailyBiasSplitRoute
+  '/api/public/hooks/daily-profit-email': typeof ApiPublicHooksDailyProfitEmailRoute
   '/api/public/hooks/drip-emails': typeof ApiPublicHooksDripEmailsRoute
   '/api/public/hooks/entry-fill-test': typeof ApiPublicHooksEntryFillTestRoute
   '/api/public/hooks/gate-volume': typeof ApiPublicHooksGateVolumeRoute
@@ -1079,6 +1088,7 @@ export interface FileRoutesById {
   '/api/public/hooks/autopilot-tick': typeof ApiPublicHooksAutopilotTickRoute
   '/api/public/hooks/classic-research-backtest': typeof ApiPublicHooksClassicResearchBacktestRoute
   '/api/public/hooks/daily-bias-split': typeof ApiPublicHooksDailyBiasSplitRoute
+  '/api/public/hooks/daily-profit-email': typeof ApiPublicHooksDailyProfitEmailRoute
   '/api/public/hooks/drip-emails': typeof ApiPublicHooksDripEmailsRoute
   '/api/public/hooks/entry-fill-test': typeof ApiPublicHooksEntryFillTestRoute
   '/api/public/hooks/gate-volume': typeof ApiPublicHooksGateVolumeRoute
@@ -1200,6 +1210,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/autopilot-tick'
     | '/api/public/hooks/classic-research-backtest'
     | '/api/public/hooks/daily-bias-split'
+    | '/api/public/hooks/daily-profit-email'
     | '/api/public/hooks/drip-emails'
     | '/api/public/hooks/entry-fill-test'
     | '/api/public/hooks/gate-volume'
@@ -1315,6 +1326,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/autopilot-tick'
     | '/api/public/hooks/classic-research-backtest'
     | '/api/public/hooks/daily-bias-split'
+    | '/api/public/hooks/daily-profit-email'
     | '/api/public/hooks/drip-emails'
     | '/api/public/hooks/entry-fill-test'
     | '/api/public/hooks/gate-volume'
@@ -1435,6 +1447,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/autopilot-tick'
     | '/api/public/hooks/classic-research-backtest'
     | '/api/public/hooks/daily-bias-split'
+    | '/api/public/hooks/daily-profit-email'
     | '/api/public/hooks/drip-emails'
     | '/api/public/hooks/entry-fill-test'
     | '/api/public/hooks/gate-volume'
@@ -1507,6 +1520,7 @@ export interface RootRouteChildren {
   ApiPublicHooksAutopilotTickRoute: typeof ApiPublicHooksAutopilotTickRoute
   ApiPublicHooksClassicResearchBacktestRoute: typeof ApiPublicHooksClassicResearchBacktestRoute
   ApiPublicHooksDailyBiasSplitRoute: typeof ApiPublicHooksDailyBiasSplitRoute
+  ApiPublicHooksDailyProfitEmailRoute: typeof ApiPublicHooksDailyProfitEmailRoute
   ApiPublicHooksDripEmailsRoute: typeof ApiPublicHooksDripEmailsRoute
   ApiPublicHooksEntryFillTestRoute: typeof ApiPublicHooksEntryFillTestRoute
   ApiPublicHooksGateVolumeRoute: typeof ApiPublicHooksGateVolumeRoute
@@ -2169,6 +2183,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksDailyBiasSplitRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/daily-profit-email': {
+      id: '/api/public/hooks/daily-profit-email'
+      path: '/api/public/hooks/daily-profit-email'
+      fullPath: '/api/public/hooks/daily-profit-email'
+      preLoaderRoute: typeof ApiPublicHooksDailyProfitEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/drip-emails': {
       id: '/api/public/hooks/drip-emails'
       path: '/api/public/hooks/drip-emails'
@@ -2575,6 +2596,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksClassicResearchBacktestRoute:
     ApiPublicHooksClassicResearchBacktestRoute,
   ApiPublicHooksDailyBiasSplitRoute: ApiPublicHooksDailyBiasSplitRoute,
+  ApiPublicHooksDailyProfitEmailRoute: ApiPublicHooksDailyProfitEmailRoute,
   ApiPublicHooksDripEmailsRoute: ApiPublicHooksDripEmailsRoute,
   ApiPublicHooksEntryFillTestRoute: ApiPublicHooksEntryFillTestRoute,
   ApiPublicHooksGateVolumeRoute: ApiPublicHooksGateVolumeRoute,
