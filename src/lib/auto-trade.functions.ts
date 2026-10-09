@@ -74,7 +74,7 @@ export const setAutoTradingMode = createServerFn({ method: "POST" })
     z
       .object({
         mode: z.enum(["manual", "auto"]),
-        minGrade: z.enum(["A+", "A", "B"]).optional(),
+        minGrade: z.enum(["A+", "A", "B", "ALL"]).optional(),
         acknowledgeLive: z.boolean().optional(),
       })
       .parse(raw),

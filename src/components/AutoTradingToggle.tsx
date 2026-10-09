@@ -98,7 +98,7 @@ export function AutoTradingToggle({ className = "" }: { className?: string }) {
           <Bot className="h-3 w-3" />
           <span>Auto Trading</span>
           <span className={`rounded-full px-2 py-0.5 text-[10px] ${auto ? "bg-emerald-600/20" : "bg-accent/60"}`}>
-             {auto ? `${minGrade}+` : "Off"}
+             {auto ? (minGrade === "ALL" ? "All" : `${minGrade}+`) : "Off"}
           </span>
            <ChevronDown className={`h-3 w-3 transition-transform ${open ? "rotate-180" : ""}`} />
         </button>
@@ -109,6 +109,7 @@ export function AutoTradingToggle({ className = "" }: { className?: string }) {
                { grade: "A+" as const, label: "A+ only" },
                { grade: "A" as const, label: "A and better" },
                { grade: "B" as const, label: "B and better" },
+               { grade: "ALL" as const, label: "All scans (any grade)" },
              ]).map((option) => (
                <button
                  key={option.grade}
