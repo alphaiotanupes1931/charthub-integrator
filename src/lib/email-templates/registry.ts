@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react'
 import { template as dailyProfit } from './daily-profit'
+import { template as tradeSetup } from './trade-setup'
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -20,6 +21,7 @@ export interface TemplateEntry {
  */
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'daily-profit': dailyProfit,
+  'trade-setup': tradeSetup,
   // Add templates here as they are created, e.g.:
   // 'welcome': welcomeTemplate,
 }

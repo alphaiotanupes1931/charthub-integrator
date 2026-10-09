@@ -199,6 +199,33 @@ export const Route = createFileRoute("/api/public/hooks/signal-alerts-tick")({
                 },
               }, 24);
               if (id) alerts += 1;
+              // A and B setups also go out by email, once per new alert.
+              if (id && ["A+", "A", "B"].includes(String(scan.grade).toUpperCase())) {
+                try {
+                  const { data: u } = await supabaseAdmin.auth.admin.getUserById(p.user_id);
+                  const email = u?.user?.email;
+                  if (email) {
+                    const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+                    const fmt = (v: number | null) => (v == null ? undefined : v.toFixed(decimals));
+                    await sendTemplateEmail("trade-setup", email, {
+                      idempotencyKey: `trade-setup-${key}-${p.user_id}`,
+                      templateData: {
+                        symbol: scan.symbol,
+                        grade: scan.grade,
+                        direction: /short|bear|sell/i.test(scan.bias) ? "Short" : "Long",
+                        entry: fmt(scan.entry),
+                        stop: fmt(scan.stop),
+                        target: fmt(scan.tp1),
+                        confidence: Math.round(scan.confidence),
+                        modelName: model.name,
+                        appUrl: `https://trademindaicoach.com/dashboard?symbol=${encodeURIComponent(scan.symbol)}`,
+                      },
+                    });
+                  }
+                } catch {
+                  skipped.push(`${p.user_id}:${scan.symbol}:email-failed`);
+                }
+              }
             } catch {
               skipped.push(`${p.user_id}:${scan.symbol}:notify-failed`);
             }
