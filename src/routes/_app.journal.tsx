@@ -412,6 +412,40 @@ function JournalPage() {
         markTradeLogged({ tradeId: t.id, symbol: t.symbol, threadId: t.threadId ?? null, entry: t.entry, date: t.date, at: t.createdAt });
       }
     };
+    // One-click log: a scan that already carries entry and stop is saved and
+    // locked straight away instead of opening the form.
+    try {
+      const raw = localStorage.getItem("trademind.journal.prefill.v1");
+      const p = raw ? (JSON.parse(raw) as { symbol?: string; timeframe?: string; notes?: string; entry?: number; stop?: number; tp1?: number; side?: Side; setup?: string; threadId?: string }) : null;
+      if (p && p.symbol && Number.isFinite(p.entry) && Number.isFinite(p.stop) && p.entry !== p.stop) {
+        localStorage.removeItem("trademind.journal.prefill.v1");
+        const now = Date.now();
+        const tf = (TIMEFRAMES as readonly string[]).includes(p.timeframe ?? "") ? (p.timeframe as Timeframe) : "1H";
+        const quick = withLockedPlan({
+          id: `t_${now.toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
+          date: todayYmd(),
+          timeframe: tf,
+          symbol: p.symbol,
+          side: p.side ?? "Long",
+          entry: p.entry as number,
+          exit: p.entry as number,
+          stop: p.stop as number,
+          takeProfit: Number.isFinite(p.tp1) ? p.tp1 : undefined,
+          size: 1,
+          notes: p.notes ?? "",
+          setup: p.setup,
+          threadId: p.threadId,
+          executed: true,
+          executedAt: now,
+          result: "open",
+          createdAt: now,
+        } as Trade);
+        saveTrades([quick, ...loadTrades()]);
+        markTradeLogged({ tradeId: quick.id, symbol: quick.symbol, threadId: quick.threadId ?? null, entry: quick.entry, date: quick.date });
+        emitFirstWeekEvent("journal-log");
+        toast.success(`${quick.symbol} logged and locked`, { description: "Entry, stop and target are saved. The journal tracks the result automatically." });
+      }
+    } catch { /* fall back to the form */ }
     const local = loadTrades();
     setTrades(local);
     backfill(local);
