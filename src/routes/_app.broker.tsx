@@ -14,6 +14,7 @@ import {
   cancelBrokerOrder,
 } from "@/lib/broker-oanda.functions";
 import { OandaConnectPanel } from "@/components/OandaConnectPanel";
+import { TradeLockerPanel } from "@/components/TradeLockerPanel";
 
 type BrokerSearch = {
   symbol?: string;
@@ -36,17 +37,52 @@ export const Route = createFileRoute("/_app/broker")({
   head: () => ({
     meta: [
       { title: "Brokers — TradeMind" },
-      { name: "description", content: "Connect your OANDA account and place real trades straight from your scans." },
+      { name: "description", content: "Connect OANDA or TradeLocker and place real trades straight from your scans." },
       { property: "og:title", content: "Brokers — TradeMind" },
-      { property: "og:description", content: "Connect your OANDA account and place real trades straight from your scans." },
+      { property: "og:description", content: "Connect OANDA or TradeLocker and place real trades straight from your scans." },
     ],
   }),
-  component: BrokerPage,
+  component: BrokersPage,
 });
 
 type Status = Awaited<ReturnType<typeof getBrokerStatus>>;
 type Position = Awaited<ReturnType<typeof listBrokerPositions>>[number];
 type PendingOrder = Awaited<ReturnType<typeof listBrokerPendingOrders>>[number];
+
+function BrokersPage() {
+  const [tab, setTab] = useState<"oanda" | "tradelocker">("oanda");
+  const tabs = [
+    { id: "oanda" as const, label: "OANDA", sub: "Forex" },
+    { id: "tradelocker" as const, label: "TradeLocker", sub: "Gold, indices, oil, crypto" },
+  ];
+  return (
+    <div>
+      <div className="max-w-4xl mx-auto mb-6 grid grid-cols-2 gap-2 rounded-xl border border-border/60 bg-card p-1">
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            className={`rounded-lg px-3 py-2 text-left transition-colors ${tab === t.id ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+          >
+            <div className="text-sm font-semibold">{t.label}</div>
+            <div className={`text-[11px] ${tab === t.id ? "opacity-80" : "text-muted-foreground"}`}>{t.sub}</div>
+          </button>
+        ))}
+      </div>
+      {tab === "oanda" ? (
+        <BrokerPage />
+      ) : (
+        <div className="max-w-4xl mx-auto">
+          <h1 className="font-display text-2xl md:text-3xl font-semibold mb-2">TradeLocker</h1>
+          <p className="text-sm text-muted-foreground mb-6">
+            Sign in to your TradeLocker demo or live account to trade gold, indices, oil and crypto. This is separate from your OANDA account. Pick TradeLocker as the venue on the Auto Trading page to route trades here.
+          </p>
+          <TradeLockerPanel />
+        </div>
+      )}
+    </div>
+  );
+}
 
 function BrokerPage() {
   const fetchStatus = useServerFn(getBrokerStatus);
@@ -145,7 +181,7 @@ function BrokerPage() {
     <div className="max-w-4xl mx-auto">
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl md:text-3xl font-semibold mb-2">Brokers</h1>
+          <h1 className="font-display text-2xl md:text-3xl font-semibold mb-2">OANDA</h1>
           <p className="text-sm text-muted-foreground">
             Connect your OANDA account, then place trades straight from your scans. Your API token is encrypted on the server and never exposed to the browser.
           </p>
