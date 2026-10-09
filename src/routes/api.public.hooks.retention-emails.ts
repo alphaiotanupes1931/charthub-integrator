@@ -2,6 +2,7 @@
 // "scanner wins" recap of setups that hit target today. One of each per user per day,
 // each user can switch either off in Settings.
 import { createFileRoute } from "@tanstack/react-router";
+import type { SetupRow, ResolvedRow } from "@/lib/retention-emails.shared";
 
 export const Route = createFileRoute("/api/public/hooks/retention-emails")({
   server: {
@@ -34,7 +35,7 @@ export const Route = createFileRoute("/api/public/hooks/retention-emails")({
           const { data } = await supabaseAdmin.from("signal_feed")
             .select("symbol, grade, bias, entry, stop, tp1, confidence, created_at")
             .gte("created_at", since).order("created_at", { ascending: false }).limit(200);
-          const picks = R.pickMorningSetups((data ?? []) as R.SetupRow[], now);
+          const picks = R.pickMorningSetups((data ?? []) as SetupRow[], now);
           if (!picks.length) return Response.json({ ok: true, kind, sent: 0, skipped: "no setups" });
           payload = { dateLabel, picks: picks.map((p) => ({ symbol: p.symbol, grade: p.grade, direction: dir(p.bias), entry: fmt(p.entry), stop: fmt(p.stop), target: fmt(p.tp1) })) };
         } else {
@@ -42,7 +43,7 @@ export const Route = createFileRoute("/api/public/hooks/retention-emails")({
           const { data } = await supabaseAdmin.from("signal_scores")
             .select("symbol, bias, grade, status, realized_r, resolved_at")
             .eq("status", "target").gte("resolved_at", since).limit(500);
-          const wins = R.scannerWinsForDay((data ?? []) as R.ResolvedRow[], day);
+          const wins = R.scannerWinsForDay((data ?? []) as ResolvedRow[], day);
           if (!R.shouldSendWins(wins)) return Response.json({ ok: true, kind, sent: 0, skipped: "no wins" });
           payload = { dateLabel, wins: wins.slice(0, 6).map((w) => ({ symbol: w.symbol, direction: dir(w.bias), grade: w.grade ?? undefined, r: w.r.toFixed(1) })) };
         }
