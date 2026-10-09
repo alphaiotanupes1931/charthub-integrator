@@ -8,3 +8,5 @@
 - Rig runs must register their pre-registration before scoring and may open a holdout once per pre-registration (`research/rig/registry.ts`). Why: the comparison count and single-use holdout are inputs to the statistics.
 - Trader-type questions, scoring weights, coach/strategy/risk mappings and first-week tasks live only in `src/lib/trader-profile/config.ts`; screens and server code read from it. Why: Marcus tunes the rules without touching UI or server code.
 - Quiz answers carry into signup via a server-stored short code (`quiz_drafts`) plus a localStorage copy, never URL-only. Why: Google sign-in and the separate marketing domain drop query strings and storage.
+- Journal trades carry an immutable `lockedPlan` (src/lib/journal-lock.shared.ts) set on first save; the verify tick scores it separately from edited levels. Why: shows whether moving stops/targets helped or hurt.
+- Coach trader memory is built deterministically from scans, journal and chats in `src/lib/trader-memory.shared.ts`, not by an extra AI call. Why: no per-message cost and it stays testable.
