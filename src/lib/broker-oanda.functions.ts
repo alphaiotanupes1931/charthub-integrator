@@ -59,7 +59,10 @@ function hostFor(env: OandaEnv): OandaEndpoint {
 // separate tokens on fxTrade (live) and fxTrade Practice (demo); a token pasted
 // into the wrong slot returns "Insufficient authorization" on that host only, so
 // checking both lets us connect anyway and tell the user which one it belongs to.
-function endpointsFor(preferred: OandaEnv, _pinned = false): OandaEndpoint[] {
+// When the trader picked an Active account, stay on that environment only, so a
+// paper selection can never silently show (or trade) the live account.
+function endpointsFor(preferred: OandaEnv, pinned = false): OandaEndpoint[] {
+  if (pinned) return [hostFor(preferred)];
   const other: OandaEnv = preferred === "live" ? "practice" : "live";
   return [hostFor(preferred), hostFor(other)];
 }
