@@ -138,7 +138,7 @@ function OnboardingPage() {
       }).eq("id", userId);
       if (error) throw error;
       toast.success("Welcome aboard");
-      window.location.assign("/dashboard");
+      window.location.assign("/first-scan");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Couldn't save your profile";
       toast.error(msg);
