@@ -40,6 +40,8 @@ import { exportMyData } from "@/lib/privacy.functions";
 import { verifyJournalTrade } from "@/lib/trade-verify.functions";
 import { toast } from "sonner";
 import { pullAndMerge, pushAll, type SyncTrade } from "@/lib/journal-sync";
+import { planEdited, withLockedPlan, type LockedPlan } from "@/lib/journal-lock.shared";
+import { JournalDayScans } from "@/components/JournalDayScans";
 import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
 import { markTradeLogged, unmarkTradeLogged } from "@/lib/loggedTrades";
 import { loadPassedTrades, onPassedTradesChange, unpassTrade, type PassedTrade } from "@/lib/passedTrades";
@@ -134,6 +136,11 @@ type Trade = {
   /** Coaching conversation attached from the dashboard chat ("To journal"). */
   chatLog?: string;
   chatLogSavedAt?: number;
+  /** Entry/stop/target frozen at log time; scored separately from later edits. */
+  lockedPlan?: LockedPlan;
+  lockedResult?: TradeResult;
+  lockedResultR?: number | null;
+  lockedResultCheckedAt?: number;
   createdAt: number;
 };
 
