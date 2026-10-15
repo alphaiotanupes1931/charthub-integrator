@@ -46,6 +46,8 @@ export type SignalRecord = {
   seqSessionPhase?: string | null;
   seqH1Phase?: string | null;
   entryModel?: string;
+  /** Rules that held the grade down on this scan (label + capped grade). */
+  gradeCaps?: Array<{ label: string; cap: string }> | null;
   entryCandidates?: import("./entry-candidates").EntryCandidates | null;
 };
 
@@ -219,6 +221,7 @@ export function recordSignal(input: Omit<SignalRecord, "id" | "at">): SignalReco
           htfBias: input.htfBias ?? null,
           methodologyVersion: input.methodologyVersion ?? null,
           entryModel: input.entryModel ?? null,
+          gradeCaps: input.gradeCaps?.map((c) => ({ label: c.label, cap: c.cap })) ?? null,
         },
       }),
     )
