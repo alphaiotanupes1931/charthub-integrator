@@ -14,7 +14,8 @@ export const TIER_ALLOWS: Record<EvidenceTier, readonly RuleAction[]> = {
 
 export type RuleId =
   | "entry.broken_level" | "entry.order_block" | "entry.imbalance" | "entry.retracement_618_79"
-  | "context.fvg_presence" | "context.nesting_15m_in_1h" | "context.session_sequence";
+  | "context.fvg_presence" | "context.nesting_15m_in_1h" | "context.session_sequence"
+  | "context.scan_track_record";
 
 export const RULE_TIERS: Record<RuleId, EvidenceTier> = {
   "entry.broken_level": "B",
@@ -24,6 +25,8 @@ export const RULE_TIERS: Record<RuleId, EvidenceTier> = {
   "context.fvg_presence": "C",
   "context.nesting_15m_in_1h": "D",
   "context.session_sequence": "D",
+  // Adjusts only from its own logged outcomes, gated at 30 settled results per cell.
+  "context.scan_track_record": "B",
 };
 
 export function ruleMay(rule: RuleId, action: RuleAction): boolean {
