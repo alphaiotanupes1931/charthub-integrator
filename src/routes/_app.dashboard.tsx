@@ -316,6 +316,8 @@ function normalizePlanLevels(plan: ScanResult, last?: number): NormalizedLevels 
     return isFinite(n) ? n : undefined;
   };
   const bias = (plan.bias === "Long" ? "long" : plan.bias === "Short" ? "short" : "neutral") as NormalizedLevels["bias"];
+  // A Neutral or NO ENTRY read is not a trade: never show entry, stop or target.
+  if (bias === "neutral" || plan.grade === "NO ENTRY") return { bias };
   let entry = num(plan.entry);
   let stop = num(plan.stop);
   let tp1 = num(plan.tp1);
