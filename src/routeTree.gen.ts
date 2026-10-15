@@ -115,6 +115,7 @@ import { Route as ApiPublicHooksRegimeSplitRouteImport } from './routes/api.publ
 import { Route as ApiPublicHooksReplayRefreshRouteImport } from './routes/api.public.hooks.replay-refresh'
 import { Route as ApiPublicHooksReresolveExpiriesRouteImport } from './routes/api.public.hooks.reresolve-expiries'
 import { Route as ApiPublicHooksReresolveFillsRouteImport } from './routes/api.public.hooks.reresolve-fills'
+import { Route as ApiPublicHooksResolveScanLogRouteImport } from './routes/api.public.hooks.resolve-scan-log'
 import { Route as ApiPublicHooksResolveSignalsRouteImport } from './routes/api.public.hooks.resolve-signals'
 import { Route as ApiPublicHooksRetentionEmailsRouteImport } from './routes/api.public.hooks.retention-emails'
 import { Route as ApiPublicHooksScanSignalsRouteImport } from './routes/api.public.hooks.scan-signals'
@@ -686,6 +687,12 @@ const ApiPublicHooksReresolveFillsRoute =
     path: '/api/public/hooks/reresolve-fills',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksResolveScanLogRoute =
+  ApiPublicHooksResolveScanLogRouteImport.update({
+    id: '/api/public/hooks/resolve-scan-log',
+    path: '/api/public/hooks/resolve-scan-log',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksResolveSignalsRoute =
   ApiPublicHooksResolveSignalsRouteImport.update({
     id: '/api/public/hooks/resolve-signals',
@@ -879,6 +886,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/replay-refresh': typeof ApiPublicHooksReplayRefreshRoute
   '/api/public/hooks/reresolve-expiries': typeof ApiPublicHooksReresolveExpiriesRoute
   '/api/public/hooks/reresolve-fills': typeof ApiPublicHooksReresolveFillsRoute
+  '/api/public/hooks/resolve-scan-log': typeof ApiPublicHooksResolveScanLogRoute
   '/api/public/hooks/resolve-signals': typeof ApiPublicHooksResolveSignalsRoute
   '/api/public/hooks/retention-emails': typeof ApiPublicHooksRetentionEmailsRoute
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
@@ -997,6 +1005,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/replay-refresh': typeof ApiPublicHooksReplayRefreshRoute
   '/api/public/hooks/reresolve-expiries': typeof ApiPublicHooksReresolveExpiriesRoute
   '/api/public/hooks/reresolve-fills': typeof ApiPublicHooksReresolveFillsRoute
+  '/api/public/hooks/resolve-scan-log': typeof ApiPublicHooksResolveScanLogRoute
   '/api/public/hooks/resolve-signals': typeof ApiPublicHooksResolveSignalsRoute
   '/api/public/hooks/retention-emails': typeof ApiPublicHooksRetentionEmailsRoute
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
@@ -1121,6 +1130,7 @@ export interface FileRoutesById {
   '/api/public/hooks/replay-refresh': typeof ApiPublicHooksReplayRefreshRoute
   '/api/public/hooks/reresolve-expiries': typeof ApiPublicHooksReresolveExpiriesRoute
   '/api/public/hooks/reresolve-fills': typeof ApiPublicHooksReresolveFillsRoute
+  '/api/public/hooks/resolve-scan-log': typeof ApiPublicHooksResolveScanLogRoute
   '/api/public/hooks/resolve-signals': typeof ApiPublicHooksResolveSignalsRoute
   '/api/public/hooks/retention-emails': typeof ApiPublicHooksRetentionEmailsRoute
   '/api/public/hooks/scan-signals': typeof ApiPublicHooksScanSignalsRoute
@@ -1245,6 +1255,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/replay-refresh'
     | '/api/public/hooks/reresolve-expiries'
     | '/api/public/hooks/reresolve-fills'
+    | '/api/public/hooks/resolve-scan-log'
     | '/api/public/hooks/resolve-signals'
     | '/api/public/hooks/retention-emails'
     | '/api/public/hooks/scan-signals'
@@ -1363,6 +1374,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/replay-refresh'
     | '/api/public/hooks/reresolve-expiries'
     | '/api/public/hooks/reresolve-fills'
+    | '/api/public/hooks/resolve-scan-log'
     | '/api/public/hooks/resolve-signals'
     | '/api/public/hooks/retention-emails'
     | '/api/public/hooks/scan-signals'
@@ -1486,6 +1498,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/replay-refresh'
     | '/api/public/hooks/reresolve-expiries'
     | '/api/public/hooks/reresolve-fills'
+    | '/api/public/hooks/resolve-scan-log'
     | '/api/public/hooks/resolve-signals'
     | '/api/public/hooks/retention-emails'
     | '/api/public/hooks/scan-signals'
@@ -1560,6 +1573,7 @@ export interface RootRouteChildren {
   ApiPublicHooksReplayRefreshRoute: typeof ApiPublicHooksReplayRefreshRoute
   ApiPublicHooksReresolveExpiriesRoute: typeof ApiPublicHooksReresolveExpiriesRoute
   ApiPublicHooksReresolveFillsRoute: typeof ApiPublicHooksReresolveFillsRoute
+  ApiPublicHooksResolveScanLogRoute: typeof ApiPublicHooksResolveScanLogRoute
   ApiPublicHooksResolveSignalsRoute: typeof ApiPublicHooksResolveSignalsRoute
   ApiPublicHooksRetentionEmailsRoute: typeof ApiPublicHooksRetentionEmailsRoute
   ApiPublicHooksScanSignalsRoute: typeof ApiPublicHooksScanSignalsRoute
@@ -2321,6 +2335,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksReresolveFillsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/resolve-scan-log': {
+      id: '/api/public/hooks/resolve-scan-log'
+      path: '/api/public/hooks/resolve-scan-log'
+      fullPath: '/api/public/hooks/resolve-scan-log'
+      preLoaderRoute: typeof ApiPublicHooksResolveScanLogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/resolve-signals': {
       id: '/api/public/hooks/resolve-signals'
       path: '/api/public/hooks/resolve-signals'
@@ -2654,6 +2675,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksReplayRefreshRoute: ApiPublicHooksReplayRefreshRoute,
   ApiPublicHooksReresolveExpiriesRoute: ApiPublicHooksReresolveExpiriesRoute,
   ApiPublicHooksReresolveFillsRoute: ApiPublicHooksReresolveFillsRoute,
+  ApiPublicHooksResolveScanLogRoute: ApiPublicHooksResolveScanLogRoute,
   ApiPublicHooksResolveSignalsRoute: ApiPublicHooksResolveSignalsRoute,
   ApiPublicHooksRetentionEmailsRoute: ApiPublicHooksRetentionEmailsRoute,
   ApiPublicHooksScanSignalsRoute: ApiPublicHooksScanSignalsRoute,
