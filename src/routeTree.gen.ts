@@ -88,6 +88,7 @@ import { Route as AppStrategiesIndexRouteImport } from './routes/_app.strategies
 import { Route as AppStrategiesStrategyIdRouteImport } from './routes/_app.strategies.$strategyId'
 import { Route as AppStrategiesAltStrategiesRouteImport } from './routes/_app.strategies.alt-strategies'
 import { Route as ApiPublicBridgeRouteImport } from './routes/api.public.bridge'
+import { Route as ApiPublicDailyLogRouteImport } from './routes/api.public.daily-log'
 import { Route as ApiPublicLeadUnsubscribeRouteImport } from './routes/api.public.lead-unsubscribe'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api.public.stripe-webhook'
 import { Route as ApiTradelockerImportRouteImport } from './routes/api.tradelocker.import'
@@ -531,6 +532,11 @@ const ApiPublicBridgeRoute = ApiPublicBridgeRouteImport.update({
   path: '/api/public/bridge',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicDailyLogRoute = ApiPublicDailyLogRouteImport.update({
+  id: '/api/public/daily-log',
+  path: '/api/public/daily-log',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicLeadUnsubscribeRoute =
   ApiPublicLeadUnsubscribeRouteImport.update({
     id: '/api/public/lead-unsubscribe',
@@ -857,6 +863,7 @@ export interface FileRoutesByFullPath {
   '/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
   '/strategies/alt-strategies': typeof AppStrategiesAltStrategiesRoute
   '/api/public/bridge': typeof ApiPublicBridgeRoute
+  '/api/public/daily-log': typeof ApiPublicDailyLogRoute
   '/api/public/lead-unsubscribe': typeof ApiPublicLeadUnsubscribeRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
@@ -976,6 +983,7 @@ export interface FileRoutesByTo {
   '/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
   '/strategies/alt-strategies': typeof AppStrategiesAltStrategiesRoute
   '/api/public/bridge': typeof ApiPublicBridgeRoute
+  '/api/public/daily-log': typeof ApiPublicDailyLogRoute
   '/api/public/lead-unsubscribe': typeof ApiPublicLeadUnsubscribeRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
@@ -1101,6 +1109,7 @@ export interface FileRoutesById {
   '/_app/strategies/$strategyId': typeof AppStrategiesStrategyIdRoute
   '/_app/strategies/alt-strategies': typeof AppStrategiesAltStrategiesRoute
   '/api/public/bridge': typeof ApiPublicBridgeRoute
+  '/api/public/daily-log': typeof ApiPublicDailyLogRoute
   '/api/public/lead-unsubscribe': typeof ApiPublicLeadUnsubscribeRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/tradelocker/import': typeof ApiTradelockerImportRoute
@@ -1226,6 +1235,7 @@ export interface FileRouteTypes {
     | '/strategies/$strategyId'
     | '/strategies/alt-strategies'
     | '/api/public/bridge'
+    | '/api/public/daily-log'
     | '/api/public/lead-unsubscribe'
     | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
@@ -1345,6 +1355,7 @@ export interface FileRouteTypes {
     | '/strategies/$strategyId'
     | '/strategies/alt-strategies'
     | '/api/public/bridge'
+    | '/api/public/daily-log'
     | '/api/public/lead-unsubscribe'
     | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
@@ -1469,6 +1480,7 @@ export interface FileRouteTypes {
     | '/_app/strategies/$strategyId'
     | '/_app/strategies/alt-strategies'
     | '/api/public/bridge'
+    | '/api/public/daily-log'
     | '/api/public/lead-unsubscribe'
     | '/api/public/stripe-webhook'
     | '/api/tradelocker/import'
@@ -1549,6 +1561,7 @@ export interface RootRouteChildren {
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicBridgeRoute: typeof ApiPublicBridgeRoute
+  ApiPublicDailyLogRoute: typeof ApiPublicDailyLogRoute
   ApiPublicLeadUnsubscribeRoute: typeof ApiPublicLeadUnsubscribeRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
   ApiTradelockerImportRoute: typeof ApiTradelockerImportRoute
@@ -2146,6 +2159,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicBridgeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/daily-log': {
+      id: '/api/public/daily-log'
+      path: '/api/public/daily-log'
+      fullPath: '/api/public/daily-log'
+      preLoaderRoute: typeof ApiPublicDailyLogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/lead-unsubscribe': {
       id: '/api/public/lead-unsubscribe'
       path: '/api/public/lead-unsubscribe'
@@ -2649,6 +2669,7 @@ const rootRouteChildren: RootRouteChildren = {
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicBridgeRoute: ApiPublicBridgeRoute,
+  ApiPublicDailyLogRoute: ApiPublicDailyLogRoute,
   ApiPublicLeadUnsubscribeRoute: ApiPublicLeadUnsubscribeRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
   ApiTradelockerImportRoute: ApiTradelockerImportRoute,
