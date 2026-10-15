@@ -158,15 +158,17 @@ export const runSignalScan = createServerFn({ method: "POST" })
         const plan = await runPlanner(apiKey, snap, memo);
         const action = toAction(plan);
         const lifecycle = signalState(plan, action);
+        // Neutral / NO ENTRY carries no trade levels.
+        const noTrade = plan.grade === "NO ENTRY" || plan.bias === "Neutral";
         return {
           ticker,
           refPrice: snap.lastPrice,
           action,
           grade: plan.grade,
           confidence: plan.confidence,
-          entry: plan.entry,
-          stop: plan.stop,
-          tp1: plan.tp1,
+          entry: noTrade ? "-" : plan.entry,
+          stop: noTrade ? "-" : plan.stop,
+          tp1: noTrade ? "-" : plan.tp1,
           rr: plan.rr,
           notes: plan.notes,
           generatedAt: new Date().toISOString(),
