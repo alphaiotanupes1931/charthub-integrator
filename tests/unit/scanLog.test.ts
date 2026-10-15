@@ -29,3 +29,14 @@ describe("daily summary", () => {
     expect(s).toMatchObject({ settled: 2, wins: 1, losses: 1, totalR: 0.5 });
   });
 });
+
+describe("daily cap counts", () => {
+  it("counts how often each rule held a grade down", () => {
+    const base = { symbol: "EUR/USD", timeframe: "60", bias: "Long", grade: "C", data_feed: "OANDA", status: "open", realized_r: null, taken: false };
+    const s = summarizeDay([
+      { ...base, created_at: "a", grade_caps: [{ label: "Counter-trend setup", cap: "C" }] },
+      { ...base, created_at: "b", grade_caps: [{ label: "Counter-trend setup", cap: "C" }, { label: "Setup type", cap: "B" }] },
+    ]);
+    expect(s.capCounts).toEqual({ "Counter-trend setup": 2, "Setup type": 1 });
+  });
+});
