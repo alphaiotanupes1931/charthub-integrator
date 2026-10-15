@@ -1,0 +1,1 @@
+ALTER TABLE public.scan_log ADD COLUMN grade_caps jsonb;

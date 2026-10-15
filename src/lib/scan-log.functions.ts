@@ -27,6 +27,7 @@ const LogInput = z.object({
   htfBias: z.string().max(12).nullable().optional(),
   methodologyVersion: z.string().max(40).nullable().optional(),
   entryModel: z.string().max(40).nullable().optional(),
+  gradeCaps: z.array(z.object({ label: z.string().max(80), cap: z.string().max(10) })).max(20).nullable().optional(),
 });
 
 export const logScan = createServerFn({ method: "POST" })
@@ -57,6 +58,7 @@ export const logScan = createServerFn({ method: "POST" })
         htf_bias: data.htfBias ?? null,
         methodology_version: data.methodologyVersion ?? null,
         entry_model: data.entryModel ?? null,
+        grade_caps: data.gradeCaps ?? null,
         status: lv.status,
       })
       .select("id")

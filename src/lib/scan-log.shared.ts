@@ -48,6 +48,7 @@ export type DailyLogScan = {
   status: string;
   realized_r: number | null;
   taken: boolean;
+  grade_caps?: Array<{ label: string; cap: string }> | null;
 };
 
 export type DailyLogSummary = {
@@ -59,6 +60,8 @@ export type DailyLogSummary = {
   totalR: number;
   gradeMix: Record<string, number>;
   feeds: Record<string, number>;
+  /** How often each rule held a grade down that day. */
+  capCounts: Record<string, number>;
   /** Same symbol + timeframe called both Long and Short on the same day. */
   flips: Array<{ symbol: string; timeframe: string; sequence: string[] }>;
 };
@@ -68,12 +71,14 @@ export function summarizeDay(rows: DailyLogScan[]): DailyLogSummary {
   const sorted = [...rows].sort((a, b) => a.created_at.localeCompare(b.created_at));
   const gradeMix: Record<string, number> = {};
   const feeds: Record<string, number> = {};
+  const capCounts: Record<string, number> = {};
   const seq = new Map<string, string[]>();
   let directional = 0, settled = 0, wins = 0, losses = 0, totalR = 0;
   for (const r of sorted) {
     gradeMix[r.grade] = (gradeMix[r.grade] ?? 0) + 1;
     const f = r.data_feed ?? "unknown";
     feeds[f] = (feeds[f] ?? 0) + 1;
+    for (const c of r.grade_caps ?? []) capCounts[c.label] = (capCounts[c.label] ?? 0) + 1;
     if (r.bias === "Long" || r.bias === "Short") {
       directional += 1;
       const k = `${r.symbol}|${r.timeframe}`;
@@ -96,6 +101,6 @@ export function summarizeDay(rows: DailyLogScan[]): DailyLogSummary {
     });
   return {
     scans: rows.length, directional, settled, wins, losses,
-    totalR: Math.round(totalR * 100) / 100, gradeMix, feeds, flips,
+    totalR: Math.round(totalR * 100) / 100, gradeMix, feeds, capCounts, flips,
   };
 }
