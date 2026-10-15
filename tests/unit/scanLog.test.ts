@@ -14,3 +14,18 @@ describe("scan log levels", () => {
     expect(r).toMatchObject({ bias: "Short", entry: 4182.14, status: "open" });
   });
 });
+
+import { summarizeDay } from "@/lib/scan-log.shared";
+describe("daily summary", () => {
+  const row = (t: string, bias: string, r: number | null = null) => ({
+    created_at: t, symbol: "XAU/USD", timeframe: "60", bias, grade: "C", data_feed: "OANDA", status: "open", realized_r: r, taken: false,
+  });
+  it("flags gold called Long then Short on the same day", () => {
+    const s = summarizeDay([row("2026-10-12T10:00Z", "Short"), row("2026-10-12T08:00Z", "Long")]);
+    expect(s.flips).toEqual([{ symbol: "XAU/USD", timeframe: "60", sequence: ["Long", "Short"] }]);
+  });
+  it("totals settled R and ignores open scans", () => {
+    const s = summarizeDay([row("a", "Long", 1.5), row("b", "Long", -1), row("c", "Short")]);
+    expect(s).toMatchObject({ settled: 2, wins: 1, losses: 1, totalR: 0.5 });
+  });
+});
