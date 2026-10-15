@@ -123,6 +123,7 @@ const NAV_GROUPS: NavGroup[] = [
     icon: Plug,
      items: [
       { to: "/broker",  label: "Broker", icon: Plug },
+      { to: "/scan-data", label: "Scan Data", icon: ScanSearch },
       { to: "/discord", label: "Discord", icon: MessageSquare },
       { to: "/contact", label: "Contact & Support", icon: LifeBuoy },
     ],
