@@ -90,6 +90,7 @@ function SignalsPage() {
           source: "engine",
           refPrice: s.refPrice,
           ...(s.trials ?? {}),
+          gradeCaps: s.gradeCaps ?? null,
         });
       }
       setHistory(listSignals());

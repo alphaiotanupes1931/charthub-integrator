@@ -1537,6 +1537,7 @@ function Dashboard() {
       seqH1Phase: plan.sequenceShadow?.h1Phase ?? null,
       entryModel: plan.entryModel ?? "legacy",
       entryCandidates: plan.entryCandidates ?? null,
+      gradeCaps: plan.gradeCaps ?? null,
     });
 
   };
