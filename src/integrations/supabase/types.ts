@@ -1897,6 +1897,108 @@ export type Database = {
         }
         Relationships: []
       }
+      scan_log: {
+        Row: {
+          bias: string
+          confidence: number | null
+          counter_trend: boolean | null
+          created_at: string
+          data_feed: string | null
+          entry: number | null
+          entry_model: string | null
+          grade: string
+          htf_bias: string | null
+          id: string
+          mae_r: number | null
+          methodology_version: string | null
+          mfe_r: number | null
+          realized_r: number | null
+          reason: string | null
+          ref_price: number | null
+          refused_reason: string | null
+          resolved_at: string | null
+          rr: string | null
+          signal_score_id: string | null
+          source: string
+          status: string
+          stop: number | null
+          strategy_id: string | null
+          symbol: string
+          taken: boolean
+          taken_at: string | null
+          timeframe: string
+          tp1: number | null
+          tp2: number | null
+          user_id: string
+        }
+        Insert: {
+          bias: string
+          confidence?: number | null
+          counter_trend?: boolean | null
+          created_at?: string
+          data_feed?: string | null
+          entry?: number | null
+          entry_model?: string | null
+          grade: string
+          htf_bias?: string | null
+          id?: string
+          mae_r?: number | null
+          methodology_version?: string | null
+          mfe_r?: number | null
+          realized_r?: number | null
+          reason?: string | null
+          ref_price?: number | null
+          refused_reason?: string | null
+          resolved_at?: string | null
+          rr?: string | null
+          signal_score_id?: string | null
+          source?: string
+          status?: string
+          stop?: number | null
+          strategy_id?: string | null
+          symbol: string
+          taken?: boolean
+          taken_at?: string | null
+          timeframe: string
+          tp1?: number | null
+          tp2?: number | null
+          user_id: string
+        }
+        Update: {
+          bias?: string
+          confidence?: number | null
+          counter_trend?: boolean | null
+          created_at?: string
+          data_feed?: string | null
+          entry?: number | null
+          entry_model?: string | null
+          grade?: string
+          htf_bias?: string | null
+          id?: string
+          mae_r?: number | null
+          methodology_version?: string | null
+          mfe_r?: number | null
+          realized_r?: number | null
+          reason?: string | null
+          ref_price?: number | null
+          refused_reason?: string | null
+          resolved_at?: string | null
+          rr?: string | null
+          signal_score_id?: string | null
+          source?: string
+          status?: string
+          stop?: number | null
+          strategy_id?: string | null
+          symbol?: string
+          taken?: boolean
+          taken_at?: string | null
+          timeframe?: string
+          tp1?: number | null
+          tp2?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       scanner_expert_reviews: {
         Row: {
           corrected_levels: Json
