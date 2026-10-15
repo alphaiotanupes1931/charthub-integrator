@@ -194,6 +194,36 @@ export function recordSignal(input: Omit<SignalRecord, "id" | "at">): SignalReco
   // Only directional scans go on the scoreboard: a Neutral read has no side to
   // score, so filing it would put a coin flip inside the hit rate.
   const directional = /^(long|short)$/i.test((input.bias ?? "").trim());
+  // Durable server-side log of EVERY scan (Neutral and NO ENTRY included), with
+  // the price feed used, for the daily review. Survives device changes.
+  const scanIdP: Promise<string | null> = import("@/lib/scan-log.functions")
+    .then(({ logScan }) =>
+      logScan({
+        data: {
+          source: input.source,
+          symbol: input.symbol,
+          timeframe: input.interval,
+          dataFeed: input.dataSource ?? null,
+          refPrice: input.refPrice ?? null,
+          bias: input.bias,
+          grade: input.grade,
+          confidence: input.confidence ?? null,
+          strategyId: input.strategyId ?? null,
+          entry: input.entry ?? null,
+          stop: input.stop ?? null,
+          tp1: input.tp1 ?? null,
+          tp2: input.tp2 ?? null,
+          rr: input.rr ?? null,
+          reason: input.synopsis?.slice(0, 4000) ?? null,
+          counterTrend: input.counterTrend ?? null,
+          htfBias: input.htfBias ?? null,
+          methodologyVersion: input.methodologyVersion ?? null,
+          entryModel: input.entryModel ?? null,
+        },
+      }),
+    )
+    .then((r) => r.id)
+    .catch(() => null);
   if (input.entry && input.stop && input.tp1 && input.grade !== "NO ENTRY" && directional) {
     void import("@/lib/signal-scores.functions")
       .then(({ recordSignalScore }) =>
@@ -229,6 +259,12 @@ export function recordSignal(input: Omit<SignalRecord, "id" | "at">): SignalReco
           },
         }),
       )
+      .then(async (res) => {
+        const scanId = await scanIdP;
+        if (!scanId) return;
+        const { linkScanScore } = await import("@/lib/scan-log.functions");
+        await linkScanScore({ data: { scanId, signalScoreId: res.ok ? (res.id ?? null) : null, refused: res.refused ?? null } });
+      })
       .catch(() => undefined);
   }
   return rec;
@@ -307,6 +343,9 @@ export function takeTrade(rec: {
   markLatestTaken(rec.symbol);
   void import("@/lib/signal-scores.functions")
     .then(({ markSignalScoreTaken }) => markSignalScoreTaken({ data: { symbol: rec.symbol } }))
+    .catch(() => undefined);
+  void import("@/lib/scan-log.functions")
+    .then(({ markScanTaken }) => markScanTaken({ data: { symbol: rec.symbol } }))
     .catch(() => undefined);
   window.location.assign("/journal");
 }
