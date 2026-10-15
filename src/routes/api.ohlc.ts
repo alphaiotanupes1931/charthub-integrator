@@ -216,9 +216,7 @@ async function fetchTwelveData(symbol: string, interval: string): Promise<OhlcBa
 function tickerToBinance(ticker: string): string | null {
   const t = ticker.toUpperCase().replace(/\s+/g, "");
   const map: Record<string, string> = {
-    "XAU/USD": "PAXGUSDT",
-    XAUUSD: "PAXGUSDT",
-    GOLD: "PAXGUSDT",
+    // Gold intentionally absent: PAXG is not broker spot gold.
     "BTC/USD": "BTCUSDT",
     "ETH/USD": "ETHUSDT",
     "XRP/USD": "XRPUSDT",

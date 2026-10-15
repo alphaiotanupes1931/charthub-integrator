@@ -1907,6 +1907,7 @@ export type Database = {
           entry: number | null
           entry_model: string | null
           grade: string
+          grade_caps: Json | null
           htf_bias: string | null
           id: string
           mae_r: number | null
@@ -1940,6 +1941,7 @@ export type Database = {
           entry?: number | null
           entry_model?: string | null
           grade: string
+          grade_caps?: Json | null
           htf_bias?: string | null
           id?: string
           mae_r?: number | null
@@ -1973,6 +1975,7 @@ export type Database = {
           entry?: number | null
           entry_model?: string | null
           grade?: string
+          grade_caps?: Json | null
           htf_bias?: string | null
           id?: string
           mae_r?: number | null

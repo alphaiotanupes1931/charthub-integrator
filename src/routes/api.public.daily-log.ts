@@ -29,7 +29,7 @@ export const Route = createFileRoute("/api/public/daily-log")({
         const end = new Date(start.getTime() + 86_400_000);
         const { data: rows, error } = await supabaseAdmin
           .from("scan_log")
-          .select("created_at, source, symbol, timeframe, data_feed, ref_price, bias, grade, confidence, entry, stop, tp1, tp2, rr, reason, counter_trend, htf_bias, refused_reason, status, realized_r, mae_r, mfe_r, resolved_at, taken")
+          .select("created_at, source, symbol, timeframe, data_feed, ref_price, bias, grade, confidence, entry, stop, tp1, tp2, rr, reason, counter_trend, htf_bias, refused_reason, grade_caps, status, realized_r, mae_r, mfe_r, resolved_at, taken")
           .eq("user_id", (keyRow as { user_id: string }).user_id)
           .gte("created_at", start.toISOString())
           .lt("created_at", end.toISOString())
@@ -42,6 +42,7 @@ export const Route = createFileRoute("/api/public/daily-log")({
           ...r,
           ref_price: num(r.ref_price), confidence: num(r.confidence), entry: num(r.entry), stop: num(r.stop),
           tp1: num(r.tp1), tp2: num(r.tp2), realized_r: num(r.realized_r), mae_r: num(r.mae_r), mfe_r: num(r.mfe_r),
+          grade_caps: (Array.isArray(r.grade_caps) ? r.grade_caps : null) as Array<{ label: string; cap: string }> | null,
         }));
         const { summarizeDay } = await import("@/lib/scan-log.shared");
         return Response.json(

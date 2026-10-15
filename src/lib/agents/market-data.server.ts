@@ -183,10 +183,10 @@ async function fromTwelveData(ticker: string, interval: string): Promise<Candle[
 }
 
 // ----- Binance klines (no key, very reliable) -----
-// Gold trades on Binance as PAXG (Paxos Gold, 1 token = 1 troy oz) which tracks
-// XAU/USD spot closely, so it is a usable last-resort history source for gold.
+// Gold is deliberately NOT mapped to Binance PAXG: PAXG is a token, not broker
+// spot gold, and grading off it put levels where the broker never traded. When
+// the broker feeds are down, gold reports "price unavailable" instead.
 const BINANCE: Record<string, string> = {
-  "XAU/USD": "PAXGUSDT",
   "SOL/USD": "SOLUSDT",
   "DOGE/USD": "DOGEUSDT",
   "BTC/USD": "BTCUSDT",

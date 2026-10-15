@@ -41,6 +41,8 @@ export type Signal = {
   secondsToBarClose?: number;
   /** Background entry trials, saved with the signal and never used for live levels. */
   trials?: SignalTrials;
+  /** Rules that held the grade down. */
+  gradeCaps?: Array<{ label: string; cap: string }>;
 };
 
 export type SignalTrials = {
@@ -177,6 +179,7 @@ export const runSignalScan = createServerFn({ method: "POST" })
           triggerLevel: plan.triggerLevel,
           secondsToBarClose: snap.bar?.secondsToClose ?? 0,
           trials: trialFields(plan),
+          gradeCaps: (plan.gradeCaps ?? []).map((c) => ({ label: c.label, cap: c.cap })),
         };
       } catch { return null; }
     }));
