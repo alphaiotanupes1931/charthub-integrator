@@ -1999,6 +1999,33 @@ export async function runPlanner(
   const capOrder: string[] = ["NO ENTRY", "C", "B", "A", "A+"];
   for (const c of gradeCaps) c.binding = c.cap === grade && capOrder.indexOf(c.cap) <= capOrder.indexOf(grade);
 
+  // Track record from the scan log: how past calls on this market, timeframe
+  // and direction actually ended. Rules in scan-track-record.shared.ts.
+  if (bias !== "Neutral" && !isNoEntry) {
+    try {
+      const tr = await import("@/lib/scan-track-record.shared");
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const since = new Date(Date.now() - tr.TRACK_RECORD_LOOKBACK_DAYS * 86400000).toISOString();
+      const { data: past } = await (supabaseAdmin.from("scan_log") as any)
+        .select("status, realized_r")
+        .eq("symbol", snap.ticker).eq("timeframe", snap.interval).eq("bias", bias)
+        .gte("created_at", since).limit(1000);
+      const tfLabel = snap.interval === "60" ? "1H" : snap.interval === "240" ? "4H" : snap.interval === "D" ? "1D" : `${snap.interval}m`;
+      const rec = tr.evaluateTrackRecord(
+        ((past ?? []) as Array<{ status: string; realized_r: number | string | null }>).map((r) => ({
+          status: r.status, realized_r: r.realized_r == null ? null : Number(r.realized_r),
+        })),
+        grade,
+        { otherCapBinding: gradeCaps.some((c) => c.binding), label: `${snap.ticker} ${tfLabel} ${bias.toLowerCase()}` },
+      );
+      if (rec.text) warnings.push(rec.text);
+      if (rec.action === "down" || rec.action === "up") {
+        if (rec.action === "down") gradeCaps.push({ label: "Scan track record", cap: rec.newGrade as GradeCapReason["cap"], reason: rec.text, binding: true });
+        grade = rec.newGrade as typeof grade;
+      }
+    } catch { /* track record is advisory; never fail a scan over it */ }
+  }
+
   const triggerRead = entryTriggerRead(
     bias,
     snap,
