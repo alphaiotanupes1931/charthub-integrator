@@ -6,7 +6,8 @@ const partial: ASetupRead = { ...done, step: "fvg", stepsDone: 3, complete: fals
 
 describe("A-setup grade rule", () => {
   it("complete sequence lifts B to A", () => expect(applyASetup("B", done, false).grade).toBe("A"));
-  it("complete sequence never lifts past A", () => expect(applyASetup("A", done, false).grade).toBe("A"));
+  it("complete sequence lifts a clean A to A+", () => expect(applyASetup("A", done, false).grade).toBe("A+"));
+  it("A+ stays A+", () => expect(applyASetup("A+", done, false).grade).toBe("A+"));
   it("does not lift when another cap binds", () => expect(applyASetup("B", done, true).grade).toBe("B"));
   it("A without the full sequence drops to B", () => expect(applyASetup("A", partial, false).grade).toBe("B"));
   it("never blocks: C stays C", () => expect(applyASetup("C", partial, false).grade).toBe("C"));

@@ -57,14 +57,14 @@ export function readASetup(bias: "Long" | "Short" | "Neutral", c: ObCandle[]): A
 }
 
 /**
- * Grade effect. Complete sequence lifts one letter (max A) when no other cap binds.
+ * Grade effect. Complete sequence lifts one letter (A becomes A+) when no other cap binds.
  * An A without the sequence drops to B. Never produces NO ENTRY.
  */
 export function applyASetup(grade: string, read: ASetupRead, otherCapBinding: boolean): { grade: string; action: "up" | "down" | "none" } {
   const i = GRADE_ORDER.indexOf(grade as G);
   if (i < 1) return { grade, action: "none" };
   if (read.complete) {
-    if (!otherCapBinding && i < GRADE_ORDER.indexOf("A")) return { grade: GRADE_ORDER[i + 1]!, action: "up" };
+    if (!otherCapBinding && i < GRADE_ORDER.indexOf("A+")) return { grade: GRADE_ORDER[i + 1]!, action: "up" };
     return { grade, action: "none" };
   }
   if (i >= GRADE_ORDER.indexOf("A")) return { grade: "B", action: "down" };
