@@ -2026,6 +2026,18 @@ export async function runPlanner(
     } catch { /* track record is advisory; never fail a scan over it */ }
   }
 
+  // Marcus's A-setup sequence: sweep -> CHoCH -> FVG in reversal leg -> retest.
+  if (bias !== "Neutral" && !isNoEntry) {
+    try {
+      const as = await import("@/lib/a-setup-sequence.shared");
+      const read = as.readASetup(bias, snap.candles1h?.length ? snap.candles1h : snap.candles);
+      const res = as.applyASetup(grade, read, gradeCaps.some((c) => c.binding));
+      warnings.push(read.text);
+      if (res.action === "down") gradeCaps.push({ label: "A-setup sequence", cap: "B", reason: `${read.text} A needs the full sequence.`, binding: true });
+      if (res.action !== "none") grade = res.grade as typeof grade;
+    } catch { /* advisory; never fail a scan over it */ }
+  }
+
   const triggerRead = entryTriggerRead(
     bias,
     snap,
