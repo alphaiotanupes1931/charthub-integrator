@@ -72,7 +72,55 @@ export const PATTERN_CARDS: PatternCard[] = [
   { id: "ihs", name: "Inverse head and shoulders", kind: "chart", bias: "bullish",
     why: "Three dips, the middle one lowest. When price breaks the neckline above them, the downtrend is usually over.",
     bars: path([110, 107, 104.5, 107, 108, 105, 101.5, 105, 108, 105.5, 104.6, 107.5, 110.5]), highlight: [1, 11] },
+  // From Marcus's "25 chart patterns" sheet (Oct 18).
+  chart("triple_top", "Triple top", "bearish", "Price fails at the same high three times. Buyers keep getting rejected, so a drop is likely.",
+    [100, 108, 104, 108, 104, 108, 99]),
+  chart("triple_bottom", "Triple bottom", "bullish", "Price holds the same low three times. Sellers keep failing, so a rise is likely.",
+    [110, 102, 106, 102, 106, 102, 111]),
+  chart("asc_triangle", "Ascending triangle", "bullish", "Flat ceiling with higher lows. Buyers keep pressing, so it usually breaks up.",
+    [100, 108, 102, 108, 104, 108, 106, 112]),
+  chart("desc_triangle", "Descending triangle", "bearish", "Flat floor with lower highs. Sellers keep pressing, so it usually breaks down.",
+    [110, 102, 108, 102, 106, 102, 104, 98]),
+  chart("sym_triangle", "Symmetrical triangle", "neutral", "Highs and lows squeeze together. Trade the direction it breaks out.",
+    [100, 110, 102, 108, 104, 106.5, 105]),
+  chart("rising_wedge", "Rising wedge", "bearish", "Price climbs but the moves get smaller. Buyers are tiring, so it usually breaks down.",
+    [100, 106, 103, 108, 106, 109.5, 108.5, 104]),
+  chart("falling_wedge", "Falling wedge", "bullish", "Price falls but the moves get smaller. Sellers are tiring, so it usually breaks up.",
+    [110, 104, 107, 102, 104, 100.5, 101.5, 106]),
+  chart("bull_pennant", "Bull pennant", "bullish", "A sharp rise, then a small tightening triangle. Usually continues up.",
+    [100, 104, 108, 112, 109, 111.5, 110, 111, 110.5, 114]),
+  chart("bear_pennant", "Bear pennant", "bearish", "A sharp drop, then a small tightening triangle. Usually continues down.",
+    [112, 108, 104, 100, 103, 100.5, 102, 101, 101.5, 98]),
+  chart("cup_handle", "Cup and handle", "bullish", "A rounded dip back to the old high, then a small pullback. Usually breaks up.",
+    [110, 105, 102, 101, 102, 105, 110, 108, 109, 113]),
+  chart("inv_cup_handle", "Inverted cup and handle", "bearish", "A rounded hump back to the old low, then a small bounce. Usually breaks down.",
+    [100, 105, 108, 109, 108, 105, 100, 102, 101, 97]),
+  chart("rectangle", "Rectangle", "neutral", "Price bounces between a flat ceiling and floor. Trade the side it breaks.",
+    [100, 108, 102, 108, 102, 108, 102, 105]),
+  chart("rounding_bottom", "Rounding bottom", "bullish", "A slow, smooth U-shaped turn. Selling fades and buyers slowly take over.",
+    [110, 106, 103, 101, 100.5, 101, 103, 106, 110]),
+  chart("rounding_top", "Rounding top", "bearish", "A slow, smooth upside-down U. Buying fades and sellers slowly take over.",
+    [100, 104, 107, 109, 109.5, 109, 107, 104, 100]),
+  chart("diamond_top", "Diamond top", "bearish", "Swings widen then narrow after a rise, forming a diamond. Often a top.",
+    [100, 105, 103, 107, 101, 106, 103.5, 104.5, 99]),
+  chart("diamond_bottom", "Diamond bottom", "bullish", "Swings widen then narrow after a drop, forming a diamond. Often a bottom.",
+    [110, 105, 107, 103, 109, 104, 106.5, 105.5, 111]),
+  chart("broadening", "Broadening wedge", "neutral", "Each swing is bigger than the last. Very volatile, can break either way.",
+    [105, 107, 103, 109, 101, 111, 99]),
+  chart("channel", "Channel", "neutral", "Price moves between two parallel lines. Buy the bottom, sell the top until it breaks.",
+    [100, 105, 102, 107, 104, 109, 106, 111]),
 ];
+
+/** Chart card from swing points; candles fill in between. */
+function chart(id: string, name: string, bias: Bias, why: string, pivots: number[]): PatternCard {
+  const closes: number[] = [pivots[0]];
+  for (let i = 1; i < pivots.length; i++) {
+    const a = pivots[i - 1], b = pivots[i];
+    closes.push(a + (b - a) / 2, b);
+  }
+  const bars = path(closes, 0.3);
+  return { id, name, kind: "chart", bias, why, bars, highlight: [0, bars.length - 1] };
+}
 
 /** Four short name choices including the right one, deterministic per seed. */
 export function nameChoices(card: PatternCard, seed: number): string[] {
