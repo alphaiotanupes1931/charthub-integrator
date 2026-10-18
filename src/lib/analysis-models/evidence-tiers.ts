@@ -15,7 +15,7 @@ export const TIER_ALLOWS: Record<EvidenceTier, readonly RuleAction[]> = {
 export type RuleId =
   | "entry.broken_level" | "entry.order_block" | "entry.imbalance" | "entry.retracement_618_79"
   | "context.fvg_presence" | "context.nesting_15m_in_1h" | "context.session_sequence"
-  | "context.scan_track_record";
+  | "context.scan_track_record" | "context.a_setup_sequence";
 
 export const RULE_TIERS: Record<RuleId, EvidenceTier> = {
   "entry.broken_level": "B",
@@ -27,6 +27,8 @@ export const RULE_TIERS: Record<RuleId, EvidenceTier> = {
   "context.session_sequence": "D",
   // Adjusts only from its own logged outcomes, gated at 30 settled results per cell.
   "context.scan_track_record": "B",
+  // Marcus's A-setup definition (sweep, CHoCH, FVG, retest). Grade moves only.
+  "context.a_setup_sequence": "B",
 };
 
 export function ruleMay(rule: RuleId, action: RuleAction): boolean {
