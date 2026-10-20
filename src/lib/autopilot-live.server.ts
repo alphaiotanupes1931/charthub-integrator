@@ -99,6 +99,30 @@ async function oandaSend(
  */
 export async function placeLiveOrder(
   userId: string,
+  requestedVenue: string,
+  intent: LiveOrderIntent,
+): Promise<LiveOrderOutcome> {
+  const venue = await routeForInstrument(userId, requestedVenue, intent.symbol);
+  return placeOnVenue(userId, venue, intent);
+}
+
+async function routeForInstrument(userId: string, requested: string, symbol: string): Promise<string> {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await supabaseAdmin
+      .from("user_broker_credentials")
+      .select("broker")
+      .eq("user_id", userId)
+      .in("broker", ["tradelocker", "oanda"]);
+    const { chooseVenue } = await import("@/lib/venue-routing.shared");
+    return chooseVenue(requested, symbol, (data ?? []).map((r) => r.broker as string));
+  } catch {
+    return requested;
+  }
+}
+
+async function placeOnVenue(
+  userId: string,
   venue: string,
   intent: LiveOrderIntent,
 ): Promise<LiveOrderOutcome> {
@@ -107,7 +131,7 @@ export async function placeLiveOrder(
     const row = await resolveTradeVenue(userId);
     if (!row) return { ok: false, detail: "No trading account is connected." };
     // Traders who only connected OANDA keep routing there.
-    if (row.broker !== venue) return placeLiveOrder(userId, row.broker, intent);
+    if (row.broker !== venue) return placeOnVenue(userId, row.broker, intent);
     if (venue === "tradelocker") {
       try {
         const { tradeLockerSession, tradeLockerPlaceOrder } = await import("@/lib/venues/tradelocker.server");
