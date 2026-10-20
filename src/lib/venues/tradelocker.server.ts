@@ -4,6 +4,7 @@
 // and crypto that most OANDA retail accounts refuse, and it has a real
 // credential login (email + password + server) so the trader connects it once.
 // Credentials are decrypted per request and never leave the server.
+import { unitsToTradeLockerLots, type TLVolumeRules } from "./tradelocker-volume.shared";
 import { tlBase, tlFetch, tlSession, type TLAccount, type TLEnv } from "@/lib/broker-tradelocker.server";
 
 export type TLTradeSession = {
@@ -138,6 +139,35 @@ export async function tradeLockerQuote(s: TLTradeSession, inst: TLInstrument): P
   return { bid: b, ask: a, mid: b != null && a != null ? (b + a) / 2 : (b ?? a) };
 }
 
+/** Contract size and lot limits for one instrument. */
+export async function tradeLockerVolumeRules(s: TLTradeSession, inst: TLInstrument): Promise<TLVolumeRules> {
+  const empty: TLVolumeRules = { contractSize: null, minLots: null, maxLots: null, stepLots: null };
+  if (inst.infoRouteId == null) return empty;
+  try {
+    const resp = await tlFetch<{ d?: Record<string, unknown> }>(
+      `${tlBase(s.env)}/trade/instruments/${inst.tradableInstrumentId}?routeId=${inst.infoRouteId}&locale=en`,
+      { headers: headers(s) },
+      "Loading TradeLocker instrument details failed",
+    );
+    const d = resp.d ?? {};
+    const num = (...keys: string[]) => {
+      for (const k of keys) {
+        const v = Number(d[k]);
+        if (Number.isFinite(v) && v > 0) return v;
+      }
+      return null;
+    };
+    return {
+      contractSize: num("lotSize", "contractSize"),
+      minLots: num("minOrderSize", "minQty", "minVolume"),
+      maxLots: num("maxOrderSize", "maxQty", "maxVolume"),
+      stepLots: num("lotStep", "qtyStep", "volumeStep"),
+    };
+  } catch {
+    return empty;
+  }
+}
+
 /** Margin rate for one instrument, when the venue publishes it. */
 export async function tradeLockerMarginRate(s: TLTradeSession, inst: TLInstrument): Promise<number | null> {
   if (inst.infoRouteId == null) return null;
@@ -180,9 +210,12 @@ export async function tradeLockerPlaceOrder(s: TLTradeSession, intent: TLOrderIn
     throw new Error(`${intent.symbol} cannot be traded on this TradeLocker account.`);
   }
   const quote = await tradeLockerQuote(s, inst).catch(() => ({ bid: null, ask: null, mid: null }) as TLQuote);
+  const rules = await tradeLockerVolumeRules(s, inst);
+  const vol = unitsToTradeLockerLots(intent.size, rules);
+  if (!vol.ok) throw new Error(`${intent.symbol}: ${vol.reason}`);
   const body: Record<string, unknown> = {
     price: 0,
-    qty: intent.size,
+    qty: vol.lots,
     routeId: inst.tradeRouteId,
     side: intent.side === "long" ? "buy" : "sell",
     validity: "IOC",
@@ -212,13 +245,18 @@ export async function tradeLockerPlaceOrder(s: TLTradeSession, intent: TLOrderIn
         `There is not enough money available for ${intent.size} of ${intent.symbol}. Lower the size or add funds, then try again.`,
       );
     }
+    if (/1015|volume|qty|quantity|lot/i.test(msg)) {
+      throw new Error(
+        `HeroFX/TradeLocker rejected the size (${vol.lots} lots of ${intent.symbol}). Lower your risk per trade or try a smaller size.`,
+      );
+    }
     throw new Error(`Your broker did not accept the order: ${msg.replace(/^Order rejected:\s*/i, "")}`);
   }
   const orderId = String(resp.d?.orderId ?? resp.orderId ?? "");
   return {
     orderId: orderId || "pending",
     instrument: inst.name,
-    size: intent.size,
+    size: vol.lots,
     fillPrice: quote.mid,
     accountId: s.accountId,
     env: s.env,
