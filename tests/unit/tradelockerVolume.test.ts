@@ -15,3 +15,20 @@ describe("unitsToTradeLockerLots", () => {
     expect(r.ok).toBe(false);
   });
 });
+
+import { pickVolumeRules, standardContractSize } from "@/lib/venues/tradelocker-volume.shared";
+
+describe("TradeLocker contract sizes", () => {
+  it("falls back to 5000 oz per lot for silver", () => {
+    expect(standardContractSize("XAG/USD")).toBe(5000);
+    const r = unitsToTradeLockerLots(957, { contractSize: standardContractSize("XAG/USD"), minLots: null, maxLots: null, stepLots: null });
+    expect(r).toEqual({ ok: true, lots: 0.19, capped: false });
+  });
+  it("uses 100 for gold and 100000 for forex", () => {
+    expect(standardContractSize("XAUUSD")).toBe(100);
+    expect(standardContractSize("EUR/USD")).toBe(100000);
+  });
+  it("reads broker keys regardless of case", () => {
+    expect(pickVolumeRules([{ LotSize: "5000", MinOrderSize: 0.01 }])).toMatchObject({ contractSize: 5000, minLots: 0.01 });
+  });
+});

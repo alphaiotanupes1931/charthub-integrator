@@ -4,7 +4,12 @@
 // and crypto that most OANDA retail accounts refuse, and it has a real
 // credential login (email + password + server) so the trader connects it once.
 // Credentials are decrypted per request and never leave the server.
-import { unitsToTradeLockerLots, type TLVolumeRules } from "./tradelocker-volume.shared";
+import {
+  pickVolumeRules,
+  standardContractSize,
+  unitsToTradeLockerLots,
+  type TLVolumeRules,
+} from "./tradelocker-volume.shared";
 import { tlBase, tlFetch, tlSession, type TLAccount, type TLEnv } from "@/lib/broker-tradelocker.server";
 
 export type TLTradeSession = {
@@ -46,6 +51,7 @@ type TLInstrument = {
   name: string;
   tradeRouteId: number | null;
   infoRouteId: number | null;
+  raw?: Record<string, unknown>;
 };
 
 function normalize(symbol: string): string[] {
@@ -90,6 +96,7 @@ async function instruments(s: TLTradeSession): Promise<TLInstrument[]> {
       name: String(r.name ?? r.symbol ?? ""),
       tradeRouteId: routes.find((x) => String(x.type).toUpperCase() === "TRADE")?.id ?? null,
       infoRouteId: routes.find((x) => String(x.type).toUpperCase() === "INFO")?.id ?? null,
+      raw: r,
     };
   });
 }
@@ -139,33 +146,33 @@ export async function tradeLockerQuote(s: TLTradeSession, inst: TLInstrument): P
   return { bid: b, ask: a, mid: b != null && a != null ? (b + a) / 2 : (b ?? a) };
 }
 
-/** Contract size and lot limits for one instrument. */
-export async function tradeLockerVolumeRules(s: TLTradeSession, inst: TLInstrument): Promise<TLVolumeRules> {
-  const empty: TLVolumeRules = { contractSize: null, minLots: null, maxLots: null, stepLots: null };
-  if (inst.infoRouteId == null) return empty;
-  try {
-    const resp = await tlFetch<{ d?: Record<string, unknown> }>(
-      `${tlBase(s.env)}/trade/instruments/${inst.tradableInstrumentId}?routeId=${inst.infoRouteId}&locale=en`,
-      { headers: headers(s) },
-      "Loading TradeLocker instrument details failed",
-    );
-    const d = resp.d ?? {};
-    const num = (...keys: string[]) => {
-      for (const k of keys) {
-        const v = Number(d[k]);
-        if (Number.isFinite(v) && v > 0) return v;
-      }
-      return null;
-    };
-    return {
-      contractSize: num("lotSize", "contractSize"),
-      minLots: num("minOrderSize", "minQty", "minVolume"),
-      maxLots: num("maxOrderSize", "maxQty", "maxVolume"),
-      stepLots: num("lotStep", "qtyStep", "volumeStep"),
-    };
-  } catch {
-    return empty;
+/** Contract size and lot limits for one instrument. Reads the instrument
+ * details, then the instrument list row, then standard contract sizes. */
+export async function tradeLockerVolumeRules(
+  s: TLTradeSession,
+  inst: TLInstrument,
+  symbol: string,
+): Promise<TLVolumeRules> {
+  const sources: Record<string, unknown>[] = [];
+  if (inst.infoRouteId != null) {
+    try {
+      const resp = await tlFetch<{ d?: Record<string, unknown> }>(
+        `${tlBase(s.env)}/trade/instruments/${inst.tradableInstrumentId}?routeId=${inst.infoRouteId}&locale=en`,
+        { headers: headers(s) },
+        "Loading TradeLocker instrument details failed",
+      );
+      if (resp.d) sources.push(resp.d);
+    } catch (e) {
+      console.warn("[tradelocker] instrument details failed", (e as Error).message);
+    }
   }
+  if (inst.raw) sources.push(inst.raw);
+  const fromSources = pickVolumeRules(sources);
+  console.info("[tradelocker] volume rules", symbol, inst.name, JSON.stringify(fromSources));
+  return {
+    ...fromSources,
+    contractSize: fromSources.contractSize ?? standardContractSize(symbol, inst.name),
+  };
 }
 
 /** Margin rate for one instrument, when the venue publishes it. */
@@ -210,7 +217,7 @@ export async function tradeLockerPlaceOrder(s: TLTradeSession, intent: TLOrderIn
     throw new Error(`${intent.symbol} cannot be traded on this TradeLocker account.`);
   }
   const quote = await tradeLockerQuote(s, inst).catch(() => ({ bid: null, ask: null, mid: null }) as TLQuote);
-  const rules = await tradeLockerVolumeRules(s, inst);
+  const rules = await tradeLockerVolumeRules(s, inst, intent.symbol);
   const vol = unitsToTradeLockerLots(intent.size, rules);
   if (!vol.ok) throw new Error(`${intent.symbol}: ${vol.reason}`);
   const body: Record<string, unknown> = {
