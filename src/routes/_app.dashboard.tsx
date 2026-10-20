@@ -61,6 +61,7 @@ import { SCANNER_METHODOLOGY_VERSION } from "@/lib/scanner-methodology";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn as useServerFnForAutoTrade } from "@tanstack/react-start";
 import { listOandaInstruments } from "@/lib/broker-oanda.functions";
+import { listTradeLockerTradable } from "@/lib/broker-tradelocker.functions";
 import { OANDA_NAME_BY_TICKER, tvSymbolForOanda, oandaLabel, FUTURES_ONLY_TICKERS } from "@/lib/oanda-instruments";
 
 
@@ -981,6 +982,15 @@ function Dashboard() {
     },
     [oandaConnected, supportedOanda],
   );
+  const loadTlTradable = useServerFn(listTradeLockerTradable);
+  const tlTradable = useQuery({
+    queryKey: ["tradelocker", "tradable"],
+    queryFn: () => loadTlTradable({ data: { tickers: SYMBOLS.map((s) => s.ticker) } }),
+    retry: false,
+    staleTime: 10 * 60_000,
+  });
+  const tlConnected = tlTradable.data?.connected === true;
+  const tlSet = useMemo(() => new Set(tlTradable.data?.tickers ?? []), [tlTradable.data]);
   const untradableReason = useCallback(
     (s: Symbol) =>
       FUTURES_ONLY_TICKERS.has(s.ticker)
@@ -1844,7 +1854,10 @@ function Dashboard() {
             <div role="listbox" className="dashboard-popover absolute left-0 mt-2 w-[min(20rem,calc(100vw-2rem))] max-h-80 overflow-y-auto border border-border/60 bg-card z-50">
               {SYMBOLS.map((s) => {
                 const active = s.tv === symbol.tv;
-                const tradable = isTradableHere(s);
+                const oandaOk = isTradableHere(s);
+                const tlOk = tlSet.has(s.ticker);
+                const tradable = oandaOk === true || tlOk ? true : oandaOk === false && !tlOk ? false : null;
+                const venues = [oandaOk === true ? "OANDA" : null, tlOk ? "TradeLocker" : null].filter(Boolean).join(" + ");
                 return (
                   <button
                     key={s.tv}
@@ -1852,19 +1865,24 @@ function Dashboard() {
                     aria-selected={active}
                     onClick={() => { setSymbol(s); setPickerOpen(false); }}
                     className={`w-full text-left px-3 py-2.5 text-sm flex items-center justify-between gap-3 hover:bg-accent/40 transition ${
-                      active ? "bg-primary/10 text-primary" : tradable === true ? "text-oanda" : "text-foreground"
+                      active ? "bg-primary/10 text-primary" : oandaOk === true ? "text-oanda" : "text-foreground"
                     }`}
                   >
                     <div className="min-w-0">
                       <div className="font-medium truncate flex items-center gap-1.5">
                         {s.ticker}
-                        {tradable === true && !active && <span className="h-1.5 w-1.5 rounded-full bg-oanda shrink-0" />}
+                        {oandaOk === true && !active && <span className="h-1.5 w-1.5 rounded-full bg-oanda shrink-0" />}
+                        {tlOk && (
+                          <span className="rounded border border-primary/40 bg-primary/10 px-1 text-[9px] font-semibold uppercase tracking-wide text-primary">
+                            TL
+                          </span>
+                        )}
                       </div>
                       <div
-                        className={`text-[11px] truncate ${tradable === true && !active ? "text-oanda/70" : "text-muted-foreground"}`}
+                        className={`text-[11px] truncate ${oandaOk === true && !active ? "text-oanda/70" : "text-muted-foreground"}`}
                         title={tradable === false ? untradableReason(s) : undefined}
                       >
-                        {tradable === false ? `${s.name} · Analysis only` : tradable === true ? `${s.name} · OANDA` : `${s.name} · ${s.venue}`}
+                        {tradable === false ? `${s.name} · Analysis only` : venues ? `${s.name} · ${venues}` : `${s.name} · ${s.venue}`}
                       </div>
                     </div>
                     {active && <Check className="h-4 w-4 shrink-0" />}
