@@ -1926,7 +1926,7 @@ function Dashboard() {
               >
                 <span className="flex items-center gap-1.5">
                   <Plug className="h-3.5 w-3.5 text-primary" />
-                  {oandaConnected ? "Manage OANDA account" : "Load OANDA account"}
+                  {oandaConnected || tlConnected ? "Manage broker accounts" : "Connect a broker"}
                 </span>
                 <span className="text-muted-foreground">→</span>
               </Link>
