@@ -131,7 +131,7 @@ async function placeOnVenue(
     const row = await resolveTradeVenue(userId);
     if (!row) return { ok: false, detail: "No trading account is connected." };
     // Traders who only connected OANDA keep routing there.
-    if (row.broker !== venue) return placeLiveOrder(userId, row.broker, intent);
+    if (row.broker !== venue) return placeOnVenue(userId, row.broker, intent);
     if (venue === "tradelocker") {
       try {
         const { tradeLockerSession, tradeLockerPlaceOrder } = await import("@/lib/venues/tradelocker.server");
