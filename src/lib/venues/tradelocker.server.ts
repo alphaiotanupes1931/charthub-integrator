@@ -247,17 +247,23 @@ export async function tradeLockerPlaceOrder(s: TLTradeSession, intent: TLOrderIn
     );
   } catch (e) {
     const msg = (e as Error).message;
+    const brokerSays = msg.replace(/^Order rejected:\s*/i, "");
+    console.warn("[tradelocker] order rejected", intent.symbol, JSON.stringify({ body, rules, brokerSays }));
     if (/margin|fund|balance|insufficient/i.test(msg)) {
       throw new Error(
-        `There is not enough money available for ${intent.size} of ${intent.symbol}. Lower the size or add funds, then try again.`,
+        `There is not enough money available for ${vol.lots} lots of ${intent.symbol}. Lower the size or add funds, then try again.`,
       );
     }
-    if (/1015|volume|qty|quantity|lot/i.test(msg)) {
-      throw new Error(
-        `HeroFX/TradeLocker rejected the size (${vol.lots} lots of ${intent.symbol}). Lower your risk per trade or try a smaller size.`,
-      );
-    }
-    throw new Error(`Your broker did not accept the order: ${msg.replace(/^Order rejected:\s*/i, "")}`);
+    const limits = [
+      rules.minLots ? `min ${rules.minLots}` : null,
+      rules.maxLots ? `max ${rules.maxLots}` : null,
+      rules.stepLots ? `step ${rules.stepLots}` : null,
+    ].filter(Boolean).join(", ");
+    throw new Error(
+      `HeroFX/TradeLocker did not accept ${vol.lots} lots of ${intent.symbol}` +
+        (limits ? ` (its limits: ${limits})` : "") +
+        `. Broker said: ${brokerSays}`,
+    );
   }
   const orderId = String(resp.d?.orderId ?? resp.orderId ?? "");
   return {
