@@ -109,6 +109,18 @@ export async function tradeLockerInstrument(s: TLTradeSession, symbol: string): 
   throw new Error(`TradeLocker does not list ${symbol} on this account.`);
 }
 
+/** Which of these platform tickers the account can trade (one instruments fetch). */
+export async function tradeLockerTradableTickers(s: TLTradeSession, tickers: string[]): Promise<string[]> {
+  const list = await instruments(s);
+  const key = (v: string) => v.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const names = list.map((i) => key(i.name));
+  return tickers.filter((t) => {
+    const wanted = normalize(t).map(key);
+    return wanted.some((w) => names.some((n) => n === w)) ||
+      wanted.some((w) => w.length >= 5 && names.some((n) => n.startsWith(w)));
+  });
+}
+
 export type TLQuote = { bid: number | null; ask: number | null; mid: number | null };
 
 export async function tradeLockerQuote(s: TLTradeSession, inst: TLInstrument): Promise<TLQuote> {

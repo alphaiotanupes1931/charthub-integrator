@@ -99,6 +99,23 @@ export const getTradeLockerStatus = createServerFn({ method: "GET" })
     }
   });
 
+/** Which of the given chart tickers the active TradeLocker account can trade. */
+export const listTradeLockerTradable = createServerFn({ method: "POST" })
+  .middleware([requireCapability("broker_live")])
+  .inputValidator((raw: unknown) => z.object({ tickers: z.array(z.string().max(32)).max(100) }).parse(raw))
+  .handler(async ({ data, context }) => {
+    const { tradeLockerSession, tradeLockerTradableTickers } = await import("@/lib/venues/tradelocker.server");
+    try {
+      const s = await tradeLockerSession(context.userId);
+      const alias: Record<string, string> = { "WTI Oil": "WTI" };
+      const lookup = data.tickers.map((t) => alias[t] ?? t);
+      const ok = new Set(await tradeLockerTradableTickers(s, lookup));
+      return { connected: true as const, tickers: data.tickers.filter((t, i) => ok.has(lookup[i])) };
+    } catch {
+      return { connected: false as const, tickers: [] as string[] };
+    }
+  });
+
 /** Choose which TradeLocker account this login trades. */
 export const setTradeLockerAccount = createServerFn({ method: "POST" })
   .middleware([requireCapability("broker_live")])
