@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Bot, X } from "lucide-react";
 import { placeAutoTrade, previewAutoTrade, skipAutoTrade } from "@/lib/auto-trade.functions";
 import { AUTO_TRADE_CONTEXT_KEY } from "@/components/AutoTradingToggle";
+import { standardContractSize } from "@/lib/venues/tradelocker-volume.shared";
 
 export type TradeOffer = {
   symbol: string;
@@ -152,6 +153,12 @@ export function TradeOfferDialog({
             <div className="space-y-1">
               <div>
                 Size: <span className="font-mono">{units}</span> units
+                {standardContractSize(offer.symbol) > 1 && (
+                  <span className="text-muted-foreground">
+                    {" "}
+                    (about {(units / standardContractSize(offer.symbol)).toFixed(2)} lots on TradeLocker)
+                  </span>
+                )}
               </div>
               {sizing.data.positionValue !== null && sizing.data.positionValue !== undefined && (
                 <div>
