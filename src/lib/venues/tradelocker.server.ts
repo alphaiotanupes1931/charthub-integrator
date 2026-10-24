@@ -204,7 +204,10 @@ export type TLOrderIntent = {
 export type TLOrderResult = {
   orderId: string;
   instrument: string;
+  /** Units the trader asked for (same unit as the intent). */
   size: number;
+  /** Lots actually sent to TradeLocker. */
+  lots: number;
   fillPrice: number | null;
   accountId: string;
   env: TLEnv;
@@ -269,7 +272,8 @@ export async function tradeLockerPlaceOrder(s: TLTradeSession, intent: TLOrderIn
   return {
     orderId: orderId || "pending",
     instrument: inst.name,
-    size: vol.lots,
+    size: intent.size,
+    lots: vol.lots,
     fillPrice: quote.mid,
     accountId: s.accountId,
     env: s.env,
