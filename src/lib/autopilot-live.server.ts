@@ -145,7 +145,7 @@ async function placeOnVenue(
         });
         return {
           ok: true,
-          detail: `Opened ${intent.side} ${res.size} ${res.instrument}${res.fillPrice ? ` at ${res.fillPrice}` : ""} on TradeLocker.`,
+          detail: `Opened ${intent.side} ${res.size} units (${res.lots} lots) of ${res.instrument}${res.fillPrice ? ` at ${res.fillPrice}` : ""} on TradeLocker.`,
           orderId: res.orderId,
         };
       } catch (e) {
