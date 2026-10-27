@@ -13,3 +13,4 @@
 - Retention email timing and selection rules (morning picks, scanner wins) live only in `src/lib/retention-emails.shared.ts`; the cron route just reads them. Why: keeps send rules testable and in one place.
 - New signups land on `/first-scan` after onboarding, before the dashboard. Why: every user sees and tracks one live setup in their first session.
 - Before publishing a directional scan, the planner checks past scan_log results for the same symbol/timeframe/direction via `src/lib/scan-track-record.shared.ts`; it moves the grade at most one letter, never blocks, and only past the minimum sample. Why: lets the scanner learn from its logged outcomes inside evidence-tier B limits.
+- Autopilot `demo_only` refuses any order whose resolved account env is not practice/demo (`demoOnlyRefusal` in src/lib/autopilot-live.server.ts); unknown env counts as live. Why: test runs must never reach a real-money account.
