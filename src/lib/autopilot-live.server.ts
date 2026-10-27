@@ -239,7 +239,7 @@ export type ManageOptions = {
 /**
  * Trade management for filled live trades:
  *   - at 1R ahead, close half (optional) and move the stop to entry
- *   - beyond 2R, keep the stop trailing 1R behind price
+ *   - beyond 3R, keep the stop trailing 1.5R behind price
  * Targets already rest at the venue and close themselves.
  */
 export async function manageLiveTrades(
