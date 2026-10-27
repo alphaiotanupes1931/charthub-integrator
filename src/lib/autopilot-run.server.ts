@@ -39,6 +39,7 @@ export function settingsFromRow(row: Record<string, unknown> | null): AutopilotS
     manageTrades: row.manage_trades !== false,
     managePartials: row.manage_partials !== false,
     trailAfterTp1: row.trail_after_tp1 !== false,
+    demoOnly: row.demo_only === true,
   };
 }
 
@@ -209,7 +210,7 @@ export async function runAutopilotForUser(
           entry: draft.entry,
           stopLoss: draft.stopLoss,
           takeProfit: draft.takeProfit,
-        });
+        }, { demoOnly: settings.demoOnly });
         if (!sent.ok) {
           await client
             .from("autopilot_proposals")
