@@ -101,9 +101,18 @@ export async function placeLiveOrder(
   userId: string,
   requestedVenue: string,
   intent: LiveOrderIntent,
+  opts: { demoOnly?: boolean } = {},
 ): Promise<LiveOrderOutcome> {
   const venue = await routeForInstrument(userId, requestedVenue, intent.symbol);
-  return placeOnVenue(userId, venue, intent);
+  return placeOnVenue(userId, venue, intent, opts);
+}
+
+/** Demo-only lock: refuse any order that would land on a real-money account. */
+export function demoOnlyRefusal(env: string | null | undefined, demoOnly: boolean | undefined): string | null {
+  if (!demoOnly) return null;
+  const e = (env ?? "live").toLowerCase();
+  if (e === "practice" || e === "demo") return null;
+  return "Demo-only test is on, so this order was not sent to your live account.";
 }
 
 async function routeForInstrument(userId: string, requested: string, symbol: string): Promise<string> {
@@ -125,13 +134,16 @@ async function placeOnVenue(
   userId: string,
   venue: string,
   intent: LiveOrderIntent,
+  opts: { demoOnly?: boolean } = {},
 ): Promise<LiveOrderOutcome> {
   if (venue === "tradelocker" || venue === "capitalcom") {
     const { resolveTradeVenue } = await import("@/lib/broker-trade.functions");
     const row = await resolveTradeVenue(userId);
     if (!row) return { ok: false, detail: "No trading account is connected." };
     // Traders who only connected OANDA keep routing there.
-    if (row.broker !== venue) return placeOnVenue(userId, row.broker, intent);
+    if (row.broker !== venue) return placeOnVenue(userId, row.broker, intent, opts);
+    const refusedTl = demoOnlyRefusal(row.env, opts.demoOnly);
+    if (refusedTl) return { ok: false, detail: refusedTl };
     if (venue === "tradelocker") {
       try {
         const { tradeLockerSession, tradeLockerPlaceOrder } = await import("@/lib/venues/tradelocker.server");
@@ -176,6 +188,8 @@ async function placeOnVenue(
   }
   const target = await oandaTarget(userId);
   if (!target) return { ok: false, detail: "No usable OANDA account is connected." };
+  const refusedOanda = demoOnlyRefusal(target.env, opts.demoOnly);
+  if (refusedOanda) return { ok: false, detail: refusedOanda };
 
 
   const instrument = oandaInstrument(intent.symbol);

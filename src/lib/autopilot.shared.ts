@@ -22,6 +22,8 @@ export type AutopilotSettings = {
   managePartials: boolean;
   /** Trail the remainder behind structure once the first target is paid. */
   trailAfterTp1: boolean;
+  /** Refuse any order that would reach a real-money account (test runs). */
+  demoOnly?: boolean;
 };
 
 export const DEFAULT_AUTOPILOT_SETTINGS: AutopilotSettings = {
