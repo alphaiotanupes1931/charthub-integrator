@@ -25,7 +25,7 @@ export const RULE_TIERS: Record<RuleId, EvidenceTier> = {
   "context.fvg_presence": "C",
   "context.nesting_15m_in_1h": "D",
   "context.session_sequence": "D",
-  // Adjusts only from its own logged outcomes, gated at 30 settled results per cell.
+  // Adjusts only from its own logged outcomes: early lift at 15 strong results, full review at 30.
   "context.scan_track_record": "B",
   // Marcus's A-setup definition (sweep, CHoCH, FVG, retest). Grade moves only.
   "context.a_setup_sequence": "B",
