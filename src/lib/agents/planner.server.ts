@@ -2456,7 +2456,7 @@ function buildDetails(
 
   // 5. Management, unchanged rules.
   sections.push(
-    `Management: invalidation is ${plan.invalidation} Move to break-even at TP1 (${fmt(plan.tp1, dec)}), trail the runner to TP2 (${fmt(plan.tp2, dec)}), risk 0.5-1R of the account.${newsWarning}${dataNote}`,
+    `Management: invalidation is ${plan.invalidation} At TP1 (${fmt(plan.tp1, dec)}) bank half and move the stop to break-even, not to TP1 - a pullback into TP1 that holds is an add, not an exit. Let the runner work toward TP2 (${fmt(plan.tp2, dec)}), trailing only once it is about 3R ahead. Risk 0.5-1R of the account.${newsWarning}${dataNote}`,
   );
 
   return sections.join("\n\n");
