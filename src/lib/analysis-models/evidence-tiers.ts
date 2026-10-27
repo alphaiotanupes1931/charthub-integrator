@@ -13,13 +13,14 @@ export const TIER_ALLOWS: Record<EvidenceTier, readonly RuleAction[]> = {
 };
 
 export type RuleId =
-  | "entry.broken_level" | "entry.order_block" | "entry.imbalance" | "entry.retracement_618_79"
+  | "entry.broken_level" | "entry.order_block" | "entry.order_block_mid" | "entry.imbalance" | "entry.retracement_618_79"
   | "context.fvg_presence" | "context.nesting_15m_in_1h" | "context.session_sequence"
   | "context.scan_track_record" | "context.a_setup_sequence";
 
 export const RULE_TIERS: Record<RuleId, EvidenceTier> = {
   "entry.broken_level": "B",
   "entry.order_block": "C",
+  "entry.order_block_mid": "C",
   "entry.imbalance": "C",
   "entry.retracement_618_79": "C",
   "context.fvg_presence": "C",

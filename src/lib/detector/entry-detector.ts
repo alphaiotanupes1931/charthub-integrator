@@ -15,8 +15,8 @@ import { findSweepAndBreak } from "@/lib/sequence-entry-shadow";
 
 export const ENTRY_FRAMEWORK_VERSION = "entry-framework-2.0-shadow";
 
-export type EntryModel = "order_block" | "imbalance" | "broken_level" | "retracement_618_79" | "legacy";
-export const CANDIDATE_MODELS = ["order_block", "imbalance", "broken_level", "retracement_618_79"] as const;
+export type EntryModel = "order_block" | "order_block_mid" | "imbalance" | "broken_level" | "retracement_618_79" | "legacy";
+export const CANDIDATE_MODELS = ["order_block", "order_block_mid", "imbalance", "broken_level", "retracement_618_79"] as const;
 export type CandidateModel = (typeof CANDIDATE_MODELS)[number];
 
 export type EntryState = "idle" | "swept" | "broke" | "armed" | "invalidated";
@@ -90,6 +90,9 @@ export function computeEntryCandidates(args: {
   if (ob) {
     const bar = c.find((x) => x.time === ob.time);
     levels.order_block = bar ? (long ? Math.max(bar.open, bar.close) : Math.min(bar.open, bar.close)) : (long ? ob.top : ob.bot);
+    // Deep entry: the block's 50% line, not its near edge. Less drawdown before
+    // profit, but fills less often; measured, never live by default.
+    levels.order_block_mid = (ob.top + ob.bot) / 2;
   }
   // Imbalance: near edge of the first directional gap inside the impulse.
   for (let i = confirm.sweepI + 1; i + 1 <= confirm.breakI + 3 && i + 1 < c.length; i++) {

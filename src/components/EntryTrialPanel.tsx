@@ -75,6 +75,7 @@ export default function EntryTrialPanel() {
 const MODEL_LABEL: Record<string, string> = {
   broken_level: "Broken level (baseline)",
   order_block: "Order block",
+  order_block_mid: "Order block 50%",
   imbalance: "Imbalance",
   retracement_618_79: "0.618-0.79 band",
 };

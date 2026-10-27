@@ -42,7 +42,7 @@ const RecordInput = z.object({
   seqShadowLabel: z.string().max(120).nullable().optional(),
   seqSessionPhase: z.string().max(40).nullable().optional(),
   seqH1Phase: z.string().max(40).nullable().optional(),
-  entryModel: z.enum(["legacy", "order_block", "imbalance", "broken_level", "retracement_618_79"]).optional(),
+  entryModel: z.enum(["legacy", "order_block", "order_block_mid", "imbalance", "broken_level", "retracement_618_79"]).optional(),
   entryCandidates: z
     .object({
       version: z.string().max(40),
