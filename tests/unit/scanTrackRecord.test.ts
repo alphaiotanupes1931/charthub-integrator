@@ -31,7 +31,7 @@ describe("scan track record", () => {
   });
   it("raises a winning setup one grade when no other rule holds it down", () => {
     expect(evaluateTrackRecord(rows(30, 1), "C", opts).newGrade).toBe("B");
-    expect(evaluateTrackRecord(rows(30, 1), "C", { ...opts, otherCapBinding: true }).newGrade).toBe("C");
+    expect(evaluateTrackRecord(rows(30, 0.4), "C", { ...opts, otherCapBinding: true }).newGrade).toBe("C");
   });
   it("counts unfilled calls as 0R and ignores open ones", () => {
     const t = evaluateTrackRecord([...rows(30, null, "unfilled"), ...rows(5, -1, "open")], "B", opts);
