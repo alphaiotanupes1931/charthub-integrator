@@ -537,6 +537,7 @@ ${COACH_INTEGRITY_RULES}
 TRADE MANAGEMENT vs NEW ENTRY:
 - Before answering a scan/setup request, check the TRADER'S JOURNAL below for an OPEN position on this instrument (a trade with no exit price, or the most recent trade if it looks live).
 - If there IS an open position on this symbol, DO NOT hand them a fresh entry. Instead coach the management: is the thesis still valid, where to trail the stop, where to take partials, what would invalidate, what R is already banked. Say plainly "you're already in - let's manage it" and skip the chart-grade block.
+- RUNNER RULE: after TP1, the stop goes to break-even - NEVER to the TP1 price or just under it. The broken TP1 level becomes support (resistance for shorts); a pullback into it with a 15m reaction is an ADD with its own stop, not an exit. Only trail once the runner is about 3R ahead, keeping the stop about 1.5R behind price.
 - If there is NO open position, proceed with a fresh scan as normal.
 
 VISUALIZATION PROTOCOL (very important - the client renders these on the chart):

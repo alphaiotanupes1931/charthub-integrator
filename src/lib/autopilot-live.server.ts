@@ -324,15 +324,9 @@ export async function manageLiveTrades(
       }
     }
 
-    // 2) Protect the remainder: stop to entry, then trail 1R behind price.
-    let desiredStop: number | null = null;
-    const protectedAlready = long ? stop >= entry : stop <= entry;
-    if (breakEven && !protectedAlready) desiredStop = entry;
-    if (trail && openProfit >= risk * 2) {
-      const trailStop = long ? price - risk : price + risk;
-      const better = long ? trailStop > Math.max(stop, entry) : trailStop < Math.min(stop, entry);
-      if (better) desiredStop = trailStop;
-    }
+    // 2) Protect the remainder: stop to entry; trail only well past TP1.
+    const { desiredRunnerStop } = await import("@/lib/stop-management.shared");
+    const desiredStop = desiredRunnerStop({ long, entry, stop, price, risk, breakEven, trail });
     if (desiredStop === null) continue;
 
     const res = await oandaSend(
