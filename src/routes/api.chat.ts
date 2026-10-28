@@ -1,3 +1,4 @@
+import { TRADE_MANAGEMENT_RULES_PROMPT } from "@/lib/trade-management-rules.shared";
 import { COACH_INTEGRITY_RULES } from "@/lib/coach-integrity";
 import { createFileRoute } from "@tanstack/react-router";
 import { priorScansBlock, voidPriorScanVerdicts } from "@/lib/ai-context";
