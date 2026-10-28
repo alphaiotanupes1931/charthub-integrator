@@ -274,6 +274,7 @@ export type Database = {
           account_target: string
           allowed_symbols: string[]
           created_at: string
+          demo_only: boolean
           live_acknowledged_at: string | null
           live_venue: string
           manage_partials: boolean
@@ -293,6 +294,7 @@ export type Database = {
           account_target?: string
           allowed_symbols?: string[]
           created_at?: string
+          demo_only?: boolean
           live_acknowledged_at?: string | null
           live_venue?: string
           manage_partials?: boolean
@@ -312,6 +314,7 @@ export type Database = {
           account_target?: string
           allowed_symbols?: string[]
           created_at?: string
+          demo_only?: boolean
           live_acknowledged_at?: string | null
           live_venue?: string
           manage_partials?: boolean
