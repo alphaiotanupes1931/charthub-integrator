@@ -416,23 +416,24 @@ export function dailyBiasGate(
 
   const h4Row = ladder.find((r) => r.label === "4H");
   const h4Dir = snap.mtf?.h4.direction ?? h4Row?.bias ?? "neutral";
-  const broken = daily?.structure === wanted || h4Row?.structure === wanted;
-  if (broken) {
+  // Only the Daily itself breaking structure can open a trade against it.
+  // A 4H break the other way is a retracement inside the daily move.
+  if (daily?.structure === wanted) {
     return {
       cap: "B",
-      reason: `The Daily bias is ${dailyBias} while this is a ${bias.toLowerCase()}. Structure has already broken ${wanted} on the Daily or 4H, so it is allowed but held at B until the Daily itself turns.`,
+      reason: `The Daily bias is ${dailyBias} but the Daily has already broken structure ${wanted}, so this ${bias.toLowerCase()} is allowed and held at B until the Daily bias itself turns.`,
     };
   }
   return {
-    cap: "C",
-    reason: `Timeframe cascade: the Daily bias is ${dailyBias} and the 4H is ${h4Dir}, so this ${bias.toLowerCase()} is a retracement inside the daily move, not a trend trade. Daily outranks the 4H, so the grade is held at C — the higher-probability trade is the ${dailyBias === "bearish" ? "sell" : "buy"} that follows the Daily.`,
+    cap: "NO ENTRY",
+    reason: `Daily bias first: the Daily is ${dailyBias} and the 4H is ${h4Dir}, so this ${bias.toLowerCase()} fights the daily bias. The 4H move is a retracement inside the daily move, not a trade. The trade is the ${dailyBias === "bearish" ? "sell" : "buy"} that follows the Daily.`,
   };
 }
 
 // ---------- Hard-coded Time Frame Combo ----------
-// 4H = DIRECTION, 1H = LIQUIDITY, 15m = BOS/ChoCH, 5m = execution.
-// This is a gate, not a hint: a setup that fights the 4H direction is NO ENTRY,
-// and a setup without 1H liquidity plus a 15m break cannot reach a high grade.
+// Daily = BIAS, 4H = current leg, 1H = LIQUIDITY, 15m = BOS/ChoCH, 5m = execution.
+// A setup with the Daily but against the 4H is a pullback entry (capped at B);
+// against both is NO ENTRY. Fighting the Daily alone is handled by dailyBiasGate.
 export type ComboGate = {
   /** "NO ENTRY" kills the trade outright; otherwise the highest grade allowed. */
   cap: typeof GRADES[number] | null;
@@ -445,7 +446,7 @@ export function timeFrameComboGate(
   snap: MarketSnapshot,
 ): ComboGate {
   if (bias === "Neutral") {
-    return { cap: "NO ENTRY", reason: "No 4H direction to trade with.", checks: { h4: false, h1: false, m15: false } };
+    return { cap: "NO ENTRY", reason: "No direction to trade with.", checks: { h4: false, h1: false, m15: false } };
   }
   const wanted = bias === "Long" ? "bullish" : "bearish";
   const opposite = wanted === "bullish" ? "bearish" : "bullish";
@@ -454,14 +455,22 @@ export function timeFrameComboGate(
   const h4Row = ladder.find((r) => r.label === "4H");
   const h4Dir = m?.h4.direction ?? h4Row?.bias ?? "neutral";
   const h4Trend = m?.h4.trend ?? h4Row?.trend ?? "range";
+  const dailyDir = ladder.find((r) => r.label === "Daily")?.bias ?? snap.cisd.htfBias;
 
-  // Step 1 - 4H direction. Trading against it is not a lower grade, it is no trade.
+  // Step 1 - direction. The Daily bias leads; the 4H is the current leg.
   if (h4Dir === opposite || h4Trend === (wanted === "bullish" ? "down" : "up")) {
     const broken = h4Row?.structure === wanted;
     if (!broken) {
+      if (dailyDir === wanted) {
+        return {
+          cap: "B",
+          reason: `Daily bias is ${dailyDir} and this ${bias.toLowerCase()} follows it. The 4H is ${h4Dir}/${h4Trend}, a pullback against the daily, so it is held at B until the 4H turns back with the Daily.`,
+          checks: { h4: false, h1: false, m15: false },
+        };
+      }
       return {
         cap: "NO ENTRY",
-        reason: `Time Frame Combo step 1 failed: the 4H direction is ${h4Dir}/${h4Trend}, so a ${bias.toLowerCase()} here is counter-trend. No entry until the 4H breaks structure ${wanted}.`,
+        reason: `Time Frame Combo step 1 failed: the 4H is ${h4Dir}/${h4Trend} and the Daily does not support a ${bias.toLowerCase()}. No entry.`,
         checks: { h4: false, h1: false, m15: false },
       };
     }
