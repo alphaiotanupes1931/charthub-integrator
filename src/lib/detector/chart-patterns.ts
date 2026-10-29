@@ -7,7 +7,8 @@ import type { ObCandle } from "@/lib/orderBlocks";
 
 export type PatternName =
   | "Double top" | "Double bottom" | "Head and shoulders" | "Inverse head and shoulders"
-  | "Ascending triangle" | "Descending triangle" | "Symmetrical triangle" | "Bull flag" | "Bear flag";
+  | "Ascending triangle" | "Descending triangle" | "Symmetrical triangle" | "Bull flag" | "Bear flag"
+  | "Rising wedge" | "Falling wedge" | "Rectangle" | "Cup and handle" | "Rounding bottom";
 
 export type PatternRead = {
   name: PatternName;
@@ -19,6 +20,8 @@ export type PatternRead = {
   invalidation: number;
   endTime: number;
   text: string;
+  /** Pattern height used for the measured-move target, when known. */
+  height?: number;
 };
 
 type Pivot = { i: number; price: number; kind: "H" | "L" };
@@ -51,12 +54,15 @@ export function findPivots(c: ObCandle[], k = 3): Pivot[] {
 
 const fmt = (n: number) => (Math.abs(n) >= 100 ? n.toFixed(2) : n.toFixed(5));
 
-function make(name: PatternName, direction: PatternRead["direction"], status: PatternRead["status"], trigger: number, invalidation: number, endTime: number): PatternRead {
+function make(name: PatternName, direction: PatternRead["direction"], status: PatternRead["status"], trigger: number, invalidation: number, endTime: number, height?: number): PatternRead {
   const verb = direction === "bullish" ? "above" : direction === "bearish" ? "below" : "through";
-  const text = status === "confirmed"
+  let text = status === "confirmed"
     ? `Chart pattern: ${name} confirmed - price closed ${verb} ${fmt(trigger)}. Cancelled on a close back past ${fmt(invalidation)}.`
     : `Chart pattern: ${name} forming. It confirms on a close ${verb} ${fmt(trigger)}; cancelled past ${fmt(invalidation)}.`;
-  return { name, direction, status, trigger, invalidation, endTime, text };
+  const read: PatternRead = { name, direction, status, trigger, invalidation, endTime, text, height };
+  const lv = patternTradeLevels(read);
+  if (lv) text += ` Breakout trade: ${lv.side.toLowerCase()} ${fmt(lv.entry)}, stop ${fmt(lv.stop)}, target ${fmt(lv.target)} (${lv.rr}R).`;
+  return { ...read, text };
 }
 
 function doubles(c: ObCandle[], piv: Pivot[], tol: number, a: number): PatternRead | null {
@@ -117,13 +123,26 @@ function triangles(c: ObCandle[], piv: Pivot[], tol: number, a: number): Pattern
   if (top - bot < 1.5 * a) return null;
   const hiNow = hs[hs.length - 1]!.price, loNow = ls[ls.length - 1]!.price;
   const close = last.close;
-  if (flat(sh, hs) && sl > 0 && !flat(sl, ls)) {
+  const fh = flat(sh, hs), fl = flat(sl, ls);
+  if (fh && fl) {
+    if (close > top) return make("Rectangle", "bullish", "confirmed", top, bot, last.time);
+    if (close < bot) return make("Rectangle", "bearish", "confirmed", bot, top, last.time);
+    return make("Rectangle", "neutral", "forming", top, bot, last.time);
+  }
+  if (fh && sl > 0 && !fl) {
     return make("Ascending triangle", "bullish", close > top ? "confirmed" : "forming", top, loNow, last.time);
   }
-  if (flat(sl, ls) && sh < 0 && !flat(sh, hs)) {
+  if (fl && sh < 0 && !fh) {
     return make("Descending triangle", "bearish", close < bot ? "confirmed" : "forming", bot, hiNow, last.time);
   }
-  if (sh < 0 && sl > 0 && !flat(sh, hs) && !flat(sl, ls)) {
+  // Wedges: both lines slope the same way and converge.
+  if (!fh && !fl && sh > 0 && sl > 0 && sl > sh) {
+    return make("Rising wedge", "bearish", close < loNow ? "confirmed" : "forming", loNow, top, last.time);
+  }
+  if (!fh && !fl && sh < 0 && sl < 0 && sh < sl) {
+    return make("Falling wedge", "bullish", close > hiNow ? "confirmed" : "forming", hiNow, bot, last.time);
+  }
+  if (sh < 0 && sl > 0 && !fh && !fl) {
     if (close > hiNow) return make("Symmetrical triangle", "bullish", "confirmed", hiNow, loNow, last.time);
     if (close < loNow) return make("Symmetrical triangle", "bearish", "confirmed", loNow, hiNow, last.time);
     return make("Symmetrical triangle", "neutral", "forming", hiNow, loNow, last.time);
@@ -131,39 +150,67 @@ function triangles(c: ObCandle[], piv: Pivot[], tol: number, a: number): Pattern
   return null;
 }
 
-function flags(c: ObCandle[], a: number): PatternRead | null {
+/** Cup and handle / rounding bottom: a U-shaped low between two similar rims. */
+function cups(c: ObCandle[], a: number): PatternRead | null {
   const last = c[c.length - 1]!;
-  for (let len = 4; len <= 15; len++) {
-    const startCons = c.length - len;
-    const poleEnd = startCons - 1;
-    if (poleEnd - 8 < 0) break;
-    const pole = c.slice(poleEnd - 8, poleEnd + 1);
-    const cons = c.slice(startCons);
-    const poleLow = Math.min(...pole.map((b) => b.low)), poleHigh = Math.max(...pole.map((b) => b.high));
-    const up = pole[pole.length - 1]!.close > pole[0]!.open;
-    const move = poleHigh - poleLow;
-    if (move < 4 * a) continue;
-    const consBody = cons.slice(0, -1);
-    if (consBody.length < 3) continue;
-    const ch = Math.max(...consBody.map((b) => b.high)), cl = Math.min(...consBody.map((b) => b.low));
-    if (up) {
-      if (poleHigh - cl > 0.5 * move || ch > poleHigh + 0.25 * a) continue;
-      return make("Bull flag", "bullish", last.close > ch ? "confirmed" : "forming", ch, cl, last.time);
+  for (const len of [60, 45, 30]) {
+    if (c.length < len + 1) continue;
+    const s = c.slice(-len);
+    const third = Math.floor(len / 3);
+    const leftRim = Math.max(...s.slice(0, third).map((b) => b.high));
+    let lowIdx = 0;
+    s.forEach((b, i) => { if (b.low < s[lowIdx]!.low) lowIdx = i; });
+    if (lowIdx < third || lowIdx > len - third) continue; // bottom must sit in the middle
+    const low = s[lowIdx]!.low;
+    const depth = leftRim - low;
+    if (depth < 3 * a) continue;
+    // Rounded, not V: the bars around the low stay in the lower half for a while.
+    const nearLow = s.filter((b) => b.close < low + depth * 0.35).length;
+    if (nearLow < Math.max(4, Math.floor(len / 8))) continue;
+    const right = s.slice(lowIdx);
+    const rightRim = Math.max(...right.map((b) => b.high));
+    if (rightRim < leftRim - 0.25 * depth) continue;
+    const rimIdx = lowIdx + right.findIndex((b) => b.high === rightRim);
+    const handle = s.slice(rimIdx + 1);
+    const handleLow = handle.length ? Math.min(...handle.map((b) => b.low)) : rightRim;
+    const pull = rightRim - handleLow;
+    const rim = Math.min(leftRim, rightRim);
+    const broke = last.close > Math.max(leftRim, rightRim);
+    if (handle.length >= 3 && pull > 0.1 * depth && pull <= 0.5 * depth) {
+      return make("Cup and handle", "bullish", broke ? "confirmed" : "forming", Math.max(leftRim, rightRim), handleLow, last.time, depth);
     }
-    if (cl - poleLow > 0.5 * move || cl < poleLow - 0.25 * a) continue;
-    return make("Bear flag", "bearish", last.close < cl ? "confirmed" : "forming", cl, ch, last.time);
+    return make("Rounding bottom", "bullish", broke ? "confirmed" : "forming", rim, low, last.time, depth);
   }
   return null;
 }
 
-/** Most relevant pattern on the series, or null. Priority: H&S, doubles, flags, triangles. */
+/** Most relevant pattern on the series, or null. Priority: H&S, doubles, cups, flags, triangles/wedges/rectangles. */
 export function detectChartPattern(c: ObCandle[]): PatternRead | null {
   if (c.length < 30) return null;
   const s = c.slice(-150);
   const a = atr(s) || Math.abs(s[s.length - 1]!.close) * 0.002;
   const tol = 0.6 * a;
   const piv = findPivots(s);
-  return headShoulders(s, piv, tol, a) ?? doubles(s, piv, tol, a) ?? flags(s, a) ?? triangles(s, piv, tol, a);
+  return headShoulders(s, piv, tol, a) ?? doubles(s, piv, tol, a) ?? cups(s, a) ?? flags(s, a) ?? triangles(s, piv, tol, a);
+}
+
+export type PatternTradeLevels = { side: "Long" | "Short"; entry: number; stop: number; target: number; rr: number };
+
+/**
+ * Breakout trade off a pattern: entry at the trigger (neckline / breakout line), stop at the
+ * invalidation level, target = pattern height projected from the trigger, at least 1.5R.
+ * Neutral patterns (unbroken rectangle / symmetrical triangle) get no levels.
+ */
+export function patternTradeLevels(read: PatternRead): PatternTradeLevels | null {
+  if (read.direction === "neutral") return null;
+  const long = read.direction === "bullish";
+  const entry = read.trigger;
+  const stop = read.invalidation;
+  const risk = long ? entry - stop : stop - entry;
+  if (!(risk > 0)) return null;
+  const height = Math.max(read.height ?? risk, 1.5 * risk);
+  const target = long ? entry + height : entry - height;
+  return { side: long ? "Long" : "Short", entry, stop, target, rr: Math.round((height / risk) * 100) / 100 };
 }
 
 const GRADE_ORDER = ["NO ENTRY", "C", "B", "A", "A+"] as const;
