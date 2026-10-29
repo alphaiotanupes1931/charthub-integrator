@@ -56,22 +56,23 @@ describe("chart pattern grade nudge", () => {
   });
 });
 
-import { patternTradeLevels } from "@/lib/detector/chart-patterns";
+import { patternTradeLevels, rangePattern, findPivots } from "@/lib/detector/chart-patterns";
+const range = (c: ObCandle[]) => rangePattern(c, findPivots(c), 0.6, 1);
 import { TRADE_MANAGEMENT_RULES_PROMPT } from "@/lib/trade-management-rules.shared";
 
 describe("new patterns and breakout levels", () => {
   it("finds a rising wedge as bearish", () => {
-    const r = detectChartPattern(path([100, 110, 106, 114, 112, 117, 116, 119, 118], 5));
+    const r = range(path([100, 110, 106, 114, 112, 117, 116, 119, 118, 118.5], 5));
     expect(r?.name).toBe("Rising wedge");
     expect(r?.direction).toBe("bearish");
   });
   it("finds a falling wedge as bullish", () => {
-    const r = detectChartPattern(path([120, 110, 114, 106, 108, 103, 104, 101, 102], 5));
+    const r = range(path([120, 110, 114, 106, 108, 103, 104, 101, 102], 5));
     expect(r?.name).toBe("Falling wedge");
     expect(r?.direction).toBe("bullish");
   });
   it("finds a rectangle as neutral while inside the box", () => {
-    const r = detectChartPattern(path([100, 110, 100, 110, 100, 110, 100, 105], 5));
+    const r = range(path([100, 110, 100, 110, 100, 110, 100, 105], 5));
     expect(r?.name).toBe("Rectangle");
     expect(r?.direction).toBe("neutral");
   });
