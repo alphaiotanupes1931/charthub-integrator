@@ -110,7 +110,7 @@ function headShoulders(c: ObCandle[], piv: Pivot[], tol: number, a: number): Pat
   return null;
 }
 
-function triangles(c: ObCandle[], piv: Pivot[], tol: number, a: number): PatternRead | null {
+export function rangePattern(c: ObCandle[], piv: Pivot[], tol: number, a: number): PatternRead | null {
   const last = c[c.length - 1]!;
   const recent = piv.filter((p) => p.i >= c.length - 60);
   const hs = recent.filter((p) => p.kind === "H").slice(-3);
@@ -191,7 +191,7 @@ export function detectChartPattern(c: ObCandle[]): PatternRead | null {
   const a = atr(s) || Math.abs(s[s.length - 1]!.close) * 0.002;
   const tol = 0.6 * a;
   const piv = findPivots(s);
-  return headShoulders(s, piv, tol, a) ?? doubles(s, piv, tol, a) ?? cups(s, a) ?? flags(s, a) ?? triangles(s, piv, tol, a);
+  return headShoulders(s, piv, tol, a) ?? doubles(s, piv, tol, a) ?? cups(s, a) ?? flags(s, a) ?? rangePattern(s, piv, tol, a);
 }
 
 export type PatternTradeLevels = { side: "Long" | "Short"; entry: number; stop: number; target: number; rr: number };
