@@ -39,8 +39,9 @@ export function findPivots(c: ObCandle[], k = 3): Pivot[] {
     let hi = true, lo = true;
     for (let j = i - k; j <= i + k; j++) {
       if (j === i) continue;
-      if (c[j]!.high >= c[i]!.high) hi = false;
-      if (c[j]!.low <= c[i]!.low) lo = false;
+      // Strict on the left, inclusive on the right, so a flat two-bar top still counts once.
+      if (j < i ? c[j]!.high >= c[i]!.high : c[j]!.high > c[i]!.high) hi = false;
+      if (j < i ? c[j]!.low <= c[i]!.low : c[j]!.low < c[i]!.low) lo = false;
     }
     if (hi) out.push({ i, price: c[i]!.high, kind: "H" });
     if (lo) out.push({ i, price: c[i]!.low, kind: "L" });
