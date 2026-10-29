@@ -50,7 +50,7 @@ export function stopInsideStructure(p: { long: boolean; stop: number; structureL
 }
 
 export const TRADE_MANAGEMENT_RULES_PROMPT = `# TRADE MANAGEMENT RULES (v2, override earlier management guidance)
-Timeframes: 4H = direction (can end a trade only on a CLOSED 4H candle through a named level). 1H = structure (can end a trade only on a CLOSED 1H candle through the defined level). 15m and lower = timing only, NEVER a reason to exit on their own.
+Timeframes: DAILY = bias and direction, always above the 4H (never put the 4H trend over the daily bias). 4H = current leg (can end a trade only on a CLOSED 4H candle through a named level). 1H = structure (can end a trade only on a CLOSED 1H candle through the defined level). 15m and lower = timing only, NEVER a reason to exit on their own.
 
 OPEN P&L DIRECTION (check before stating any number): LONG profit = price - entry; SHORT profit = entry - price. A SHORT with price ABOVE entry is IN DRAWDOWN (points against the trader), never "into profit". A LONG with price BELOW entry is in drawdown. Say "X points against you" or "X points in profit" using this formula, and give R as profit / (distance from entry to stop).
 

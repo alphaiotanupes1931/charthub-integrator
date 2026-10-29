@@ -311,8 +311,7 @@ function resolveDirection(
   // Daily is the primary gate: a winner that fights a decisive Daily bias is
   // only allowed when the Daily or 4H has actually broken structure that way.
   const dailyBrokenFor = (want: "bullish" | "bearish") =>
-    ladderRows.find((r) => r.label === "Daily")?.structure === want ||
-    ladderRows.find((r) => r.label === "4H")?.structure === want;
+    ladderRows.find((r) => r.label === "Daily")?.structure === want;
   const allowed = (dir: "bullish" | "bearish") =>
     !dailyDecisive || dir === dailyDir || dailyBrokenFor(dir);
 
@@ -320,14 +319,14 @@ function resolveDirection(
     if (allowed("bullish")) return { bias: "Long", reason: `weight of evidence bullish ${bull} to ${bear}` };
     return {
       bias: "Neutral",
-      reason: `evidence leaned bullish ${bull} to ${bear}, but the Daily bias is ${dailyDir} and nothing has broken structure bullish, so the cascade returns no trade`,
+      reason: `evidence leaned bullish ${bull} to ${bear}, but the Daily bias is ${dailyDir} and the Daily has not broken structure bullish, so the cascade returns no trade`,
     };
   }
   if (bear > bull) {
     if (allowed("bearish")) return { bias: "Short", reason: `weight of evidence bearish ${bear} to ${bull}` };
     return {
       bias: "Neutral",
-      reason: `evidence leaned bearish ${bear} to ${bull}, but the Daily bias is ${dailyDir} and nothing has broken structure bearish, so the cascade returns no trade`,
+      reason: `evidence leaned bearish ${bear} to ${bull}, but the Daily bias is ${dailyDir} and the Daily has not broken structure bearish, so the cascade returns no trade`,
     };
   }
 
@@ -1741,7 +1740,7 @@ export async function runPlanner(
       const out = await generateText({
       model,
       output: Output.object({ schema: PlanSchema }),
-      system: "You are the head trader. Follow the 'How to Analysis' cascade in the memo: 4H sets DIRECTION + TREND + key levels + supply/demand; 1H reads STRUCTURE (breaks, reversal, OB, FVG, liquidity); 15m gives CONFIRMATION. Grade A+ only when MTF alignment is aligned-long/aligned-short AND 15m confirmation matches. Grade A when alignment is aligned-* with weaker 15m. Grade B when 1H structure and 4H direction agree but 15m is neutral. Grade C when there is a 1H trigger but 4H is against or neutral. NO ENTRY when direction, structure, and confirmation all conflict. Return exactly one flat JSON object, not an array. Grade MUST be one of: A+, A, B, C, NO ENTRY. Bias MUST be Long, Short, or Neutral. ENTRY PRECISION IS THE PRIORITY: the entry must be a specific level, not a round guess near price. Anchor it to an actual level in the memo - a 1H bullish/bearish order block edge, a 1H FVG edge, a 4H demand/supply boundary, a 4H key level, or a resting liquidity pool - on the pullback side of Last and within 2x ATR. Place the stop just beyond the FAR edge of that same zone (0.6-2.5x ATR of risk), never a round ATR multiple pulled out of the air. TP1 should be the first opposing level or liquidity pool that pays at least 1.5R; TP2 the next one or 3R. In the thesis, state the exact level name and price you anchored the entry to. No generic wording. If an ECONOMIC CALENDAR block is present, treat a high-impact release inside the next few hours as timing risk: cap the grade at B and say so in the invalidation. ENTRY RULES: default to entering on the pullback side of price. For a Long setup, entry must be at or below Last unless the prompt explicitly asks for a breakout stop order. For a Short setup, entry must be at or above Last. Prefer entries at 1H order blocks, FVGs, or 4H demand/supply that align with bias. Do not default to BUY STOP or SELL STOP. Never place entry more than 2x ATR from current price. Keep thesis under 400 chars and invalidation under 200 chars. Do NOT state a confidence percentage; conviction is counted from the data by the platform, not asserted by you." + memoryLine,
+      system: "You are the head trader. Follow the cascade: the DAILY BIAS sets DIRECTION and outranks the 4H at all times; never plan a trade against a decisive Daily bias (a 4H move against the Daily is a retracement to enter from, not a trade). 4H sets the current leg + key levels + key levels + supply/demand; 1H reads STRUCTURE (breaks, reversal, OB, FVG, liquidity); 15m gives CONFIRMATION. Grade A+ only when MTF alignment is aligned-long/aligned-short AND 15m confirmation matches. Grade A when alignment is aligned-* with weaker 15m. Grade B when 1H structure and 4H direction agree but 15m is neutral. Grade C when there is a 1H trigger but 4H is against or neutral. NO ENTRY when direction, structure, and confirmation all conflict. Return exactly one flat JSON object, not an array. Grade MUST be one of: A+, A, B, C, NO ENTRY. Bias MUST be Long, Short, or Neutral. ENTRY PRECISION IS THE PRIORITY: the entry must be a specific level, not a round guess near price. Anchor it to an actual level in the memo - a 1H bullish/bearish order block edge, a 1H FVG edge, a 4H demand/supply boundary, a 4H key level, or a resting liquidity pool - on the pullback side of Last and within 2x ATR. Place the stop just beyond the FAR edge of that same zone (0.6-2.5x ATR of risk), never a round ATR multiple pulled out of the air. TP1 should be the first opposing level or liquidity pool that pays at least 1.5R; TP2 the next one or 3R. In the thesis, state the exact level name and price you anchored the entry to. No generic wording. If an ECONOMIC CALENDAR block is present, treat a high-impact release inside the next few hours as timing risk: cap the grade at B and say so in the invalidation. ENTRY RULES: default to entering on the pullback side of price. For a Long setup, entry must be at or below Last unless the prompt explicitly asks for a breakout stop order. For a Short setup, entry must be at or above Last. Prefer entries at 1H order blocks, FVGs, or 4H demand/supply that align with bias. Do not default to BUY STOP or SELL STOP. Never place entry more than 2x ATR from current price. Keep thesis under 400 chars and invalidation under 200 chars. Do NOT state a confidence percentage; conviction is counted from the data by the platform, not asserted by you." + memoryLine,
       prompt: ctx,
     });
       await logPlannerCost("plan-draft", modelLabel, out.usage, out.providerMetadata);

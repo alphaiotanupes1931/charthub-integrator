@@ -36,14 +36,14 @@ const snap = (o: {
   }) as never;
 
 describe("Daily outranks the 4H", () => {
-  it("holds a long at C when the Daily is bearish and nothing has broken up", () => {
+  it("blocks a long when the Daily is bearish and the Daily has not broken up", () => {
     const s = snap({ daily: "bearish", h4: "bullish" });
-    expect(dailyBiasGate("Long", s).cap).toBe("C");
-    expect(gradeFromEvidence("Long", 90, s)).toBe("C");
+    expect(dailyBiasGate("Long", s).cap).toBe("NO ENTRY");
+    expect(gradeFromEvidence("Long", 90, s)).toBe("NO ENTRY");
   });
 
-  it("allows B once the Daily or 4H has broken structure the trade's way", () => {
-    const s = snap({ daily: "bearish", h4: "bullish", h4Structure: "bullish" });
+  it("allows B only once the Daily has broken structure the trade's way", () => {
+    const s = snap({ daily: "bearish", h4: "bullish", dailyStructure: "bullish" });
     expect(dailyBiasGate("Long", s).cap).toBe("B");
   });
 
@@ -54,5 +54,12 @@ describe("Daily outranks the 4H", () => {
 
   it("never fires on a neutral read", () => {
     expect(dailyBiasGate("Neutral", snap({ daily: "bearish", h4: "bullish" })).cap).toBeNull();
+  });
+});
+
+describe("4H break alone cannot override the Daily", () => {
+  it("still blocks a long against a bearish Daily when only the 4H broke up", () => {
+    const s = snap({ daily: "bearish", h4: "bullish", h4Structure: "bullish" });
+    expect(dailyBiasGate("Long", s).cap).toBe("NO ENTRY");
   });
 });
