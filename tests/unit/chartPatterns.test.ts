@@ -55,3 +55,39 @@ describe("chart pattern grade nudge", () => {
     expect(applyChartPattern("B", "Short", read("bearish", "forming"), false).action).toBe("none");
   });
 });
+
+import { patternTradeLevels } from "@/lib/detector/chart-patterns";
+import { TRADE_MANAGEMENT_RULES_PROMPT } from "@/lib/trade-management-rules.shared";
+
+describe("new patterns and breakout levels", () => {
+  it("finds a rising wedge as bearish", () => {
+    const r = detectChartPattern(path([100, 110, 106, 114, 112, 117, 116, 119, 118], 5));
+    expect(r?.name).toBe("Rising wedge");
+    expect(r?.direction).toBe("bearish");
+  });
+  it("finds a falling wedge as bullish", () => {
+    const r = detectChartPattern(path([120, 110, 114, 106, 108, 103, 104, 101, 102], 5));
+    expect(r?.name).toBe("Falling wedge");
+    expect(r?.direction).toBe("bullish");
+  });
+  it("finds a rectangle as neutral while inside the box", () => {
+    const r = detectChartPattern(path([100, 110, 100, 110, 100, 110, 100, 105], 5));
+    expect(r?.name).toBe("Rectangle");
+    expect(r?.direction).toBe("neutral");
+  });
+  it("short breakout levels: stop above, target below, at least 1.5R", () => {
+    const lv = patternTradeLevels({ name: "Double top", direction: "bearish", status: "confirmed", trigger: 100, invalidation: 110, endTime: 0, text: "" });
+    expect(lv).toEqual({ side: "Short", entry: 100, stop: 110, target: 85, rr: 1.5 });
+  });
+  it("uses the measured move when it is bigger than 1.5R", () => {
+    const lv = patternTradeLevels({ name: "Cup and handle", direction: "bullish", status: "confirmed", trigger: 100, invalidation: 96, endTime: 0, text: "", height: 20 });
+    expect(lv?.target).toBe(120);
+    expect(lv?.rr).toBe(5);
+  });
+  it("gives no levels to a neutral pattern", () => {
+    expect(patternTradeLevels({ name: "Rectangle", direction: "neutral", status: "forming", trigger: 110, invalidation: 100, endTime: 0, text: "" })).toBeNull();
+  });
+  it("coach rules say a short with price above entry is drawdown", () => {
+    expect(TRADE_MANAGEMENT_RULES_PROMPT).toContain("SHORT profit = entry - price");
+  });
+});
