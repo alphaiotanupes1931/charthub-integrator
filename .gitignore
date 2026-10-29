@@ -35,3 +35,4 @@ reports/
 # Backtest rig candle store
 research/data/
 research/out/*.csv
+.lovable/
