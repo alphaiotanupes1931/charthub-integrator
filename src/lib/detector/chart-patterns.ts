@@ -150,30 +150,30 @@ export function rangePattern(c: ObCandle[], piv: Pivot[], tol: number, a: number
   return null;
 }
 
-  }
-  if (fl && sh < 0 && !fh) {
-    return make("Descending triangle", "bearish", close < bot ? "confirmed" : "forming", bot, hiNow, last.time);
-  }
-  // Wedges: both lines slope the same way and converge.
-  if (!fh && !fl && sh > 0 && sl > 0 && sl > sh) {
-    return make("Rising wedge", "bearish", close < loNow ? "confirmed" : "forming", loNow, top, last.time);
-  }
-  if (!fh && !fl && sh < 0 && sl < 0 && sh < sl) {
-    return make("Falling wedge", "bullish", close > hiNow ? "confirmed" : "forming", hiNow, bot, last.time);
-  }
-  if (sh < 0 && sl > 0 && !fh && !fl) {
-    if (close > hiNow) return make("Symmetrical triangle", "bullish", "confirmed", hiNow, loNow, last.time);
-    if (close < loNow) return make("Symmetrical triangle", "bearish", "confirmed", loNow, hiNow, last.time);
-    return make("Symmetrical triangle", "neutral", "forming", hiNow, loNow, last.time);
+function flags(c: ObCandle[], a: number): PatternRead | null {
+  const last = c[c.length - 1]!;
+  for (let len = 4; len <= 15; len++) {
+    const startCons = c.length - len;
+    const poleEnd = startCons - 1;
+    if (poleEnd - 8 < 0) break;
+    const pole = c.slice(poleEnd - 8, poleEnd + 1);
+    const cons = c.slice(startCons);
+    const poleLow = Math.min(...pole.map((b) => b.low)), poleHigh = Math.max(...pole.map((b) => b.high));
+    const up = pole[pole.length - 1]!.close > pole[0]!.open;
+    const move = poleHigh - poleLow;
+    if (move < 4 * a) continue;
+    const consBody = cons.slice(0, -1);
+    if (consBody.length < 3) continue;
+    const ch = Math.max(...consBody.map((b) => b.high)), cl = Math.min(...consBody.map((b) => b.low));
+    if (up) {
+      if (poleHigh - cl > 0.5 * move || ch > poleHigh + 0.25 * a) continue;
+      return make("Bull flag", "bullish", last.close > ch ? "confirmed" : "forming", ch, cl, last.time);
+    }
+    if (cl - poleLow > 0.5 * move || cl < poleLow - 0.25 * a) continue;
+    return make("Bear flag", "bearish", last.close < cl ? "confirmed" : "forming", cl, ch, last.time);
   }
   return null;
 }
-
-/** Cup and handle / rounding bottom: a U-shaped low between two similar rims. */
-function cups(c: ObCandle[], a: number): PatternRead | null {
-  const last = c[c.length - 1]!;
-  for (const len of [60, 45, 30]) {
-    if (c.length < len + 1) continue;
 
 /** Cup and handle / rounding bottom: a U-shaped low between two similar rims. */
 function cups(c: ObCandle[], a: number): PatternRead | null {
