@@ -1,6 +1,7 @@
 // Dedicated chat endpoint for the news / economic calendar page. Same feed the
 // briefings use, but the model is told to answer questions about the releases
 // and the session read only - no setup grading, no chart drawing.
+import { getGatewayKey } from "@/lib/gateway-key";
 import { createFileRoute } from "@tanstack/react-router";
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
 import { createClient } from "@supabase/supabase-js";
@@ -84,7 +85,7 @@ export const Route = createFileRoute("/api/news-chat")({
         }
 
         const anthropicKey = process.env.ANTHROPIC_API_KEY;
-        const gatewayKey = process.env.LOVABLE_API_KEY;
+        const gatewayKey = getGatewayKey();
         if (!anthropicKey && !gatewayKey) {
           return new Response("The news desk is temporarily unavailable. Please try again shortly.", {
             status: 503,

@@ -1,5 +1,6 @@
 // Journal intelligence: correlate mental state against realised P&L in code,
 // then have the coach name the recurring mistakes it can see in the log.
+import { getGatewayKey } from "@/lib/gateway-key";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireCapability } from "@/lib/capability-middleware";
@@ -92,7 +93,7 @@ export const reviewJournal = createServerFn({ method: "POST" })
     let mistakes: string[] = [];
     let strengths: string[] = [];
 
-    const apiKey = process.env.LOVABLE_API_KEY;
+    const apiKey = getGatewayKey();
     if (apiKey && trades.length >= 5) {
       const { generateText, Output, NoObjectGeneratedError } = await import("ai");
       const { runScanModel } = await import("@/lib/agents/scan-model.server");

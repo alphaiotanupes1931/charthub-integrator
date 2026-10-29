@@ -49,7 +49,7 @@ Create a `.env` with your Supabase project values, and set server secrets in you
 | `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` | Supabase project (also `VITE_`-prefixed for the client) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Server-only Supabase access |
 | `ANTHROPIC_API_KEY` | Claude models |
-| `LOVABLE_API_KEY` | AI gateway key used for fallback models, speech, news and briefings |
+| `AI_GATEWAY_KEY` | AI gateway key used for fallback models, speech, news, briefings and email (the legacy name `LOVABLE_API_KEY` is still read) |
 | `OANDA_API_KEY`, `OANDA_ACCOUNT_ID`, `OANDA_ENV` | Market data and OANDA trading |
 | `ALPACA_OAUTH_CLIENT_ID`, `ALPACA_OAUTH_CLIENT_SECRET`, `ALPACA_REDIRECT_URI` | Alpaca connection |
 | `TWELVE_DATA_API_KEY` | Additional market data |

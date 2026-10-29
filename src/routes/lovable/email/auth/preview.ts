@@ -1,3 +1,4 @@
+import { getGatewayKey } from "@/lib/gateway-key";
 import * as React from 'react'
 import { render } from '@react-email/render'
 import { createFileRoute } from '@tanstack/react-router'
@@ -64,7 +65,7 @@ export const Route = createFileRoute("/lovable/email/auth/preview")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const apiKey = process.env['LOVABLE_API_KEY']
+        const apiKey = getGatewayKey()
 
         if (!apiKey) {
           return Response.json(
@@ -73,7 +74,7 @@ export const Route = createFileRoute("/lovable/email/auth/preview")({
           )
         }
 
-        // Verify the caller is authorized with LOVABLE_API_KEY
+        // Verify the caller is authorized with the gateway key
         const authHeader = request.headers.get('Authorization')
         if (!authHeader || authHeader !== `Bearer ${apiKey}`) {
           return Response.json({ error: 'Unauthorized' }, { status: 401 })

@@ -1,3 +1,4 @@
+import { getGatewayKey } from "@/lib/gateway-key";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -29,7 +30,7 @@ const Input = z.object({
 export const reviewPreScanAnswers = createServerFn({ method: "POST" })
   .inputValidator((raw: unknown) => Input.parse(raw))
   .handler(async ({ data }) => {
-    const apiKey = process.env['LOVABLE_API_KEY'];
+    const apiKey = getGatewayKey();
     const correctCount = data.answers.filter((a) => a.wasCorrect).length;
     const fallback = data.answers
       .map((a) => `${a.wasCorrect ? "Correct" : "Not quite"} — ${a.correct}. ${a.why}`)

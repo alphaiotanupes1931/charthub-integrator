@@ -1,6 +1,7 @@
 // Public entry point for the 3-layer research stack.
 // L1: getSnapshot   L2: runResearch   L3: runPlanner (+ Hermes memory)
 
+import { getGatewayKey } from "@/lib/gateway-key";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import { createClient } from "@supabase/supabase-js";
@@ -30,7 +31,7 @@ export const runResearchPlan = createServerFn({ method: "POST" })
     journalPerf: z.string().max(300).optional(),
   }).parse(raw))
   .handler(async ({ data }): Promise<TradePlan> => {
-    const apiKey = process.env.LOVABLE_API_KEY;
+    const apiKey = getGatewayKey();
     if (!apiKey) {
       return {
         methodologyVersion: SCANNER_METHODOLOGY_VERSION,

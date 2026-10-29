@@ -1,9 +1,10 @@
+import { getGatewayKey } from "@/lib/gateway-key";
 import * as React from 'react'
 import { render } from '@react-email/render'
 import { EmailAPIError, sendLovableEmail } from '@lovable.dev/email-js'
 import { TEMPLATES } from './registry'
 
-// Server-only: reads LOVABLE_API_KEY. Never import from client components.
+// Server-only: reads the gateway key. Never import from client components.
 
 // Configuration baked in at scaffold time
 const SITE_NAME = "TradeMind"
@@ -37,9 +38,9 @@ export async function sendTemplateEmail(
   to: string,
   options: SendTemplateEmailOptions = {}
 ): Promise<SendTemplateEmailResult> {
-  const apiKey = process.env['LOVABLE_API_KEY']
+  const apiKey = getGatewayKey()
   if (!apiKey) {
-    throw new Error('LOVABLE_API_KEY is not configured')
+    throw new Error('AI gateway key is not configured')
   }
 
   const template = TEMPLATES[templateName]
