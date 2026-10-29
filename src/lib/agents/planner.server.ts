@@ -2026,6 +2026,20 @@ export async function runPlanner(
     } catch { /* track record is advisory; never fail a scan over it */ }
   }
 
+  // Classic chart patterns (src/lib/detector/chart-patterns.ts): one-step grade nudge, never blocks.
+  if (bias !== "Neutral" && !isNoEntry) {
+    try {
+      const cp = await import("@/lib/detector/chart-patterns");
+      const read = cp.detectChartPattern(snap.candles1h?.length ? snap.candles1h : snap.candles);
+      if (read) {
+        const res = cp.applyChartPattern(grade, bias, read, gradeCaps.some((c) => c.binding));
+        warnings.push(read.text);
+        if (res.action === "down") gradeCaps.push({ label: "Chart pattern", cap: res.grade as GradeCapReason["cap"], reason: `${read.name} confirmed against this ${bias.toLowerCase()}.`, binding: true });
+        if (res.action !== "none") grade = res.grade as typeof grade;
+      }
+    } catch { /* advisory; never fail a scan over it */ }
+  }
+
   // Marcus's A-setup sequence: sweep -> CHoCH -> FVG in reversal leg -> retest.
   if (bias !== "Neutral" && !isNoEntry) {
     try {
