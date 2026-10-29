@@ -1,5 +1,6 @@
 // Client-callable server functions for the Hermes learning agent.
 
+import { getGatewayKey } from "@/lib/gateway-key";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -40,7 +41,7 @@ export const recordHermesFeedback = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
 
     // Distil in the background; don't block the user gesture.
-    const apiKey = process.env.LOVABLE_API_KEY;
+    const apiKey = getGatewayKey();
     if (apiKey) {
       const distilled = await distillLessonFromFeedback(apiKey, {
         kind: data.kind, ticker: data.ticker, interval: data.interval,

@@ -1,3 +1,4 @@
+import { getGatewayKey } from "@/lib/gateway-key";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -115,7 +116,7 @@ export const parseClosedTradesScreenshot = createServerFn({ method: "POST" })
       return { trades: [], note: "Those screenshots are too large. Crop them to the closed-trades list and try again." };
     }
 
-    const apiKey = process.env['LOVABLE_API_KEY'];
+    const apiKey = getGatewayKey();
     if (!apiKey) {
       return { trades: [], note: "Screenshot reading is not configured on this deployment." };
     }
@@ -242,7 +243,7 @@ export const parseTradeSetupScreenshot = createServerFn({ method: "POST" })
       return { ...EMPTY_SETUP, note: "That screenshot is too large. Crop it to the chart and try again." };
     }
 
-    const apiKey = process.env['LOVABLE_API_KEY'];
+    const apiKey = getGatewayKey();
     if (!apiKey) return { ...EMPTY_SETUP, note: "Screenshot reading is not configured on this deployment." };
 
     try {
@@ -315,7 +316,7 @@ export const parseTradeSetupText = createServerFn({ method: "POST" })
     z.object({ text: z.string().min(4).max(4000) }).parse(input),
   )
   .handler(async ({ data }): Promise<ParsedTradeSetup> => {
-    const apiKey = process.env['LOVABLE_API_KEY'];
+    const apiKey = getGatewayKey();
     if (!apiKey) return { ...EMPTY_SETUP, note: "Text reading is not configured on this deployment." };
 
     try {

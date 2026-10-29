@@ -1,3 +1,4 @@
+import { getGatewayKey } from "@/lib/gateway-key";
 import * as React from 'react'
 import { createAuthEmailHandler } from '@lovable.dev/email-js'
 import { createFileRoute } from '@tanstack/react-router'
@@ -22,7 +23,7 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
     handlers: {
       POST: ({ request }) => {
         const handler = createAuthEmailHandler({
-          apiKey: process.env['LOVABLE_API_KEY']!,
+          apiKey: getGatewayKey()!,
           from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
           senderDomain: SENDER_DOMAIN,
           sendUrl: process.env['LOVABLE_SEND_URL'],

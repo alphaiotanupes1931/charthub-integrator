@@ -1,4 +1,5 @@
 // Briefing generator + Telegram delivery. Server-only.
+import { getGatewayKey } from "@/lib/gateway-key";
 import { getSnapshot } from "@/lib/agents/market-data.server";
 import type { MarketSnapshot } from "@/lib/agents/types";
 
@@ -114,7 +115,7 @@ export async function buildBriefingBody(
 
 // Telegram delivery via connector gateway.
 export async function sendTelegramMessage(chatId: number | string, text: string): Promise<{ ok: boolean; error?: string }> {
-  const gatewayKey = process.env.LOVABLE_API_KEY;
+  const gatewayKey = getGatewayKey();
   const connKey = process.env.TELEGRAM_API_KEY;
   if (!gatewayKey || !connKey) return { ok: false, error: "telegram_not_configured" };
   try {

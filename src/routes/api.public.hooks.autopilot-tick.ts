@@ -1,5 +1,6 @@
 // Scheduled autopilot tick. Runs the scan for every trader whose autopilot is in
 // auto mode, so setups are filed (and paper-filled) without the app being open.
+import { getGatewayKey } from "@/lib/gateway-key";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/api/public/hooks/autopilot-tick")({
@@ -11,7 +12,7 @@ export const Route = createFileRoute("/api/public/hooks/autopilot-tick")({
         if (expected && provided !== expected) {
           return new Response("unauthorized", { status: 401 });
         }
-        const apiKey = process.env.LOVABLE_API_KEY;
+        const apiKey = getGatewayKey();
         if (!apiKey) return Response.json({ ok: false, error: "analysis service not configured" }, { status: 503 });
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

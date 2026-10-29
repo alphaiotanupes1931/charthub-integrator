@@ -1,6 +1,7 @@
 // Cron endpoint: scan the default watchlist and fan A/A+ actionable
 // signals out to the shared Discord community webhook. Deduplicates
 // per-symbol within a 4-hour window so we don't spam the channel.
+import { getGatewayKey } from "@/lib/gateway-key";
 import { createFileRoute } from "@tanstack/react-router";
 
 const WATCHLIST = [
@@ -23,8 +24,8 @@ export const Route = createFileRoute("/api/public/hooks/scan-signals")({
           return new Response("unauthorized", { status: 401 });
         }
 
-        const apiKey = process.env.LOVABLE_API_KEY;
-        if (!apiKey) return Response.json({ ok: false, error: "no_lovable_api_key" }, { status: 500 });
+        const apiKey = getGatewayKey();
+        if (!apiKey) return Response.json({ ok: false, error: "no_gateway_key" }, { status: 500 });
 
         const { getSnapshot } = await import("@/lib/agents/market-data.server");
         const { runResearch } = await import("@/lib/agents/research.server");

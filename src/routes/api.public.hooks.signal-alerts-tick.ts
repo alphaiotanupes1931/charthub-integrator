@@ -4,6 +4,7 @@
 // actually asked for, with the scan models they chose, and drops a notification
 // in the app for every setup that passes their own grade rule. Nothing here
 // changes how grades are produced; it only decides who gets told.
+import { getGatewayKey } from "@/lib/gateway-key";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   alertDedupeKey,
@@ -41,8 +42,8 @@ export const Route = createFileRoute("/api/public/hooks/signal-alerts-tick")({
         if (expected && provided !== expected) {
           return new Response("unauthorized", { status: 401 });
         }
-        const apiKey = process.env['LOVABLE_API_KEY'];
-        if (!apiKey) return Response.json({ ok: false, error: "no_lovable_api_key" }, { status: 500 });
+        const apiKey = getGatewayKey();
+        if (!apiKey) return Response.json({ ok: false, error: "no_gateway_key" }, { status: 500 });
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { data: prefRows, error } = await supabaseAdmin
