@@ -150,6 +150,31 @@ export function rangePattern(c: ObCandle[], piv: Pivot[], tol: number, a: number
   return null;
 }
 
+  }
+  if (fl && sh < 0 && !fh) {
+    return make("Descending triangle", "bearish", close < bot ? "confirmed" : "forming", bot, hiNow, last.time);
+  }
+  // Wedges: both lines slope the same way and converge.
+  if (!fh && !fl && sh > 0 && sl > 0 && sl > sh) {
+    return make("Rising wedge", "bearish", close < loNow ? "confirmed" : "forming", loNow, top, last.time);
+  }
+  if (!fh && !fl && sh < 0 && sl < 0 && sh < sl) {
+    return make("Falling wedge", "bullish", close > hiNow ? "confirmed" : "forming", hiNow, bot, last.time);
+  }
+  if (sh < 0 && sl > 0 && !fh && !fl) {
+    if (close > hiNow) return make("Symmetrical triangle", "bullish", "confirmed", hiNow, loNow, last.time);
+    if (close < loNow) return make("Symmetrical triangle", "bearish", "confirmed", loNow, hiNow, last.time);
+    return make("Symmetrical triangle", "neutral", "forming", hiNow, loNow, last.time);
+  }
+  return null;
+}
+
+/** Cup and handle / rounding bottom: a U-shaped low between two similar rims. */
+function cups(c: ObCandle[], a: number): PatternRead | null {
+  const last = c[c.length - 1]!;
+  for (const len of [60, 45, 30]) {
+    if (c.length < len + 1) continue;
+
 /** Cup and handle / rounding bottom: a U-shaped low between two similar rims. */
 function cups(c: ObCandle[], a: number): PatternRead | null {
   const last = c[c.length - 1]!;
