@@ -1,3 +1,4 @@
+import { getGatewayKey } from "@/lib/gateway-key";
 import { TRADE_MANAGEMENT_RULES_PROMPT } from "@/lib/trade-management-rules.shared";
 import { COACH_INTEGRITY_RULES } from "@/lib/coach-integrity";
 import { createFileRoute } from "@tanstack/react-router";
@@ -839,7 +840,7 @@ export const Route = createFileRoute("/api/chat")({
         }
 
         const anthropicKey = process.env.ANTHROPIC_API_KEY;
-        const key = process.env.LOVABLE_API_KEY;
+        const key = getGatewayKey();
         if (!anthropicKey && !key) return new Response("The AI coach is temporarily unavailable. Please try again shortly.", { status: 503, headers: cors });
 
 

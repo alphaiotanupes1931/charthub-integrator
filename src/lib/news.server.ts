@@ -1,3 +1,4 @@
+import { getGatewayKey } from "@/lib/gateway-key";
 // Forex Factory economic calendar + AI news write-up. Server only.
 // Source: Forex Factory's own weekly JSON feed (faireconomy mirror), which is
 // what the calendar page on forexfactory.com renders from.
@@ -315,7 +316,7 @@ export async function writeNewsBriefing(
   watchlist: string[],
 ): Promise<string | null> {
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
-  const gatewayKey = process.env.LOVABLE_API_KEY;
+  const gatewayKey = getGatewayKey();
   if (!anthropicKey && !gatewayKey) return null;
   if (!events.length) return null;
 

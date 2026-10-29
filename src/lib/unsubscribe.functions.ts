@@ -1,4 +1,5 @@
 // Public server functions behind the branded unsubscribe page.
+import { getGatewayKey } from "@/lib/gateway-key";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -51,7 +52,7 @@ export const confirmUnsubscribe = createServerFn({ method: "POST" })
     try {
       const { setEmailUnsubscribe } = await import("@lovable.dev/email-js");
       const { SENDER_DOMAIN } = await import("./email-raw.server");
-      const apiKey = process.env["LOVABLE_API_KEY"];
+      const apiKey = getGatewayKey();
       if (apiKey) {
         await setEmailUnsubscribe(
           { recipient: email, domain: SENDER_DOMAIN, subscribed: false },

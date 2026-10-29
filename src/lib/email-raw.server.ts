@@ -3,6 +3,7 @@
 // Mirrors the request shape of the template helper in
 // src/lib/email-templates/send-email.ts — delivery, retries, suppression and
 // the unsubscribe footer are handled by the managed email API.
+import { getGatewayKey } from "@/lib/gateway-key";
 import { EmailAPIError, sendLovableEmail } from "@lovable.dev/email-js";
 
 export const SITE_NAME = "TradeMind";
@@ -22,8 +23,8 @@ export async function sendRawEmail(input: {
   idempotencyKey: string;
   replyTo?: string;
 }): Promise<RawEmailResult> {
-  const apiKey = process.env["LOVABLE_API_KEY"];
-  if (!apiKey) throw new Error("LOVABLE_API_KEY is not configured");
+  const apiKey = getGatewayKey();
+  if (!apiKey) throw new Error("AI gateway key is not configured");
 
   try {
     await sendLovableEmail(

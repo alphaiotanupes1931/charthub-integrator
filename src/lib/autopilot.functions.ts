@@ -1,6 +1,7 @@
 // Autopilot: AI-proposed trades with human-in-the-loop approval.
 // Phase 1 stores settings + proposals and enforces the rails server-side.
 // Execution stays behind an explicit approve step.
+import { getGatewayKey } from "@/lib/gateway-key";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireCapability } from "@/lib/capability-middleware";
@@ -293,7 +294,7 @@ export const runAutopilotScan = createServerFn({ method: "POST" })
     z.object({ timeframe: z.string().default("60") }).parse(raw ?? {}),
   )
   .handler(async ({ data, context }) => {
-    const apiKey = process.env.LOVABLE_API_KEY;
+    const apiKey = getGatewayKey();
     if (!apiKey) throw new Error("The analysis service is not configured right now.");
 
     const { data: row } = await context.supabase

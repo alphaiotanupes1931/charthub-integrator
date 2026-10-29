@@ -3,6 +3,7 @@
 // planner helpers directly (not through runResearchPlan) so it stays a single
 // server call for the whole watchlist.
 
+import { getGatewayKey } from "@/lib/gateway-key";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getSnapshot } from "./market-data.server";
@@ -129,7 +130,7 @@ export function signalState(
 export const runSignalScan = createServerFn({ method: "POST" })
   .inputValidator((raw: unknown) => Input.parse(raw))
   .handler(async ({ data }): Promise<Signal[]> => {
-    const apiKey = process.env.LOVABLE_API_KEY;
+    const apiKey = getGatewayKey();
     if (!apiKey) return [];
     const tickers = data.tickers && data.tickers.length ? data.tickers : DEFAULT_WATCHLIST;
     const results = await Promise.all(tickers.map(async (ticker): Promise<Signal | null> => {

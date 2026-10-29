@@ -1,3 +1,4 @@
+import { getGatewayKey } from "@/lib/gateway-key";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   corsHeadersFor,
@@ -23,7 +24,7 @@ function emptyAudio(headers: Record<string, string>) {
 }
 
 async function speakWithAiGateway(text: string) {
-  const apiKey = process.env.LOVABLE_API_KEY;
+  const apiKey = getGatewayKey();
   if (!apiKey) return null;
 
   const response = await fetch(GATEWAY_TTS_URL, {
