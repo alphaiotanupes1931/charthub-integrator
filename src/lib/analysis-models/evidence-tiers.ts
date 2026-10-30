@@ -15,7 +15,8 @@ export const TIER_ALLOWS: Record<EvidenceTier, readonly RuleAction[]> = {
 export type RuleId =
   | "entry.broken_level" | "entry.order_block" | "entry.order_block_mid" | "entry.imbalance" | "entry.retracement_618_79"
   | "context.fvg_presence" | "context.nesting_15m_in_1h" | "context.session_sequence"
-  | "context.scan_track_record" | "context.a_setup_sequence" | "context.chart_pattern" | "context.premium_discount";
+  | "context.scan_track_record" | "context.a_setup_sequence" | "context.chart_pattern" | "context.premium_discount"
+  | "context.news_48h" | "context.htf_alignment_cap";
 
 export const RULE_TIERS: Record<RuleId, EvidenceTier> = {
   "entry.broken_level": "B",
@@ -34,6 +35,10 @@ export const RULE_TIERS: Record<RuleId, EvidenceTier> = {
   "context.chart_pattern": "B",
   // Buy in discount / sell in premium. Backtest premium-discount-v1 found no edge: record only.
   "context.premium_discount": "C",
+  // High-impact news 1-2 days out. Marked-down scans averaged +0.70R (n=22 settled): warning only.
+  "context.news_48h": "C",
+  // Weekly+Daily opposed cap, loosened from C to B after held scans averaged +0.46R.
+  "context.htf_alignment_cap": "B",
 };
 
 export function ruleMay(rule: RuleId, action: RuleAction): boolean {
