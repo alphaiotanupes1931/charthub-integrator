@@ -54,6 +54,7 @@ import { PreScanCheck } from "@/components/PreScanCheck";
 import { MarketClock } from "@/components/MarketClock";
 import { AutoTradingToggle, AUTO_TRADE_CONTEXT_KEY } from "@/components/AutoTradingToggle";
 import { TradeOfferDialog, type TradeOffer } from "@/components/TradeOfferDialog";
+import { setupAction } from "@/lib/setup-action.shared";
 import { gradeMeets } from "@/lib/autopilot.shared";
 import { deriveOrderType } from "@/lib/order-type";
 import { getAutoTradeContext } from "@/lib/auto-trade.functions";
@@ -485,8 +486,9 @@ function toBacktestTf(interval: string): "15" | "60" | "240" | "D" {
 }
 
 function ScanTicket({
-  result, symbol, interval, onRescan, onAttach, onStopVoice, voiceSpeaking,
+  result, symbol, interval, onRescan, onAttach, onStopVoice, voiceSpeaking, onAutoTrade,
 }: {
+  onAutoTrade?: () => void;
   result: ScanResult;
   symbol: Symbol;
   interval: string;
@@ -724,6 +726,8 @@ function ScanTicket({
       </div>
 
 
+      <SetupActionBar result={result} onAutoTrade={isNoEntry ? undefined : onAutoTrade} />
+
       {!isNoEntry && (
         <div className="grid grid-cols-2 gap-2">
           <TicketCell label="Entry" value={result.entry} />
@@ -888,6 +892,49 @@ function ScanTicket({
       <div className="pt-1 flex justify-center">
         <ScreenshotAttach onPick={onAttach} />
       </div>
+    </div>
+  );
+}
+
+function SetupActionBar({ result, onAutoTrade }: { result: ScanResult; onAutoTrade?: () => void }) {
+  const num = (v?: string) => {
+    const n = parseFloat(String(v ?? "").replace(/[^0-9.\-]/g, ""));
+    return Number.isFinite(n) ? n : undefined;
+  };
+  const b = result.bias?.toLowerCase() ?? "";
+  const side = b.includes("short") ? "short" : b.includes("long") ? "long" : null;
+  const entry = num(result.entry);
+  const dec = decimalsFor(result.refPrice || entry || 1);
+  const a = setupAction({
+    grade: result.grade, side, entry, stop: num(result.stop), tp1: num(result.tp1),
+    price: typeof result.refPrice === "number" ? result.refPrice : undefined,
+    fmt: (n) => n.toFixed(dec),
+  });
+  const tone = a.kind === "enter"
+    ? "border-primary/40 bg-primary/10 text-primary"
+    : a.kind === "wait"
+      ? "border-border bg-card text-foreground"
+      : "border-destructive/30 bg-destructive/5 text-destructive";
+  const canAuto = onAutoTrade && (a.kind === "enter" || a.kind === "wait" || a.kind === "low_grade");
+  return (
+    <div className={`rounded-2xl border px-3.5 py-3 ${tone}`}>
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.15em] opacity-80">What to do</div>
+          <div className="text-base font-semibold leading-tight">{a.label}</div>
+        </div>
+        {canAuto && (
+          <button
+            type="button"
+            onClick={onAutoTrade}
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 transition"
+            title="Place this setup with your broker at TradeMind's entry, stop and target"
+          >
+            <Bot className="h-4 w-4" /> Auto-trade
+          </button>
+        )}
+      </div>
+      <p className="mt-1.5 text-xs text-muted-foreground">{a.detail}</p>
     </div>
   );
 }
@@ -1672,6 +1719,12 @@ function Dashboard() {
       });
       return;
     }
+    openTradeOffer(plan, scanSymbol, scanInterval);
+  };
+
+  // The setup card's Auto-trade button: opens the same confirm popup on demand,
+  // whatever the Auto Trading toggle says. The server still applies every rail.
+  const openTradeOffer = (plan: ScanResult, scanSymbol: Symbol, scanInterval: string) => {
     const { bias, entry, stop, tp1 } = levelsForPlan(plan);
     if (bias !== "long" && bias !== "short") {
       toast.info("No trade offered: this scan has no directional bias");
@@ -2607,6 +2660,7 @@ function Dashboard() {
                 <TraderTypePrompt className="mb-4" />
                 <PageInstructions path="/dashboard" className="mb-4" />
                 <ScanBody
+                  onAutoTrade={result ? () => openTradeOffer(result, symbol, interval) : undefined}
                   result={result}
                   scanning={scanning}
                   symbol={symbol}
@@ -2721,6 +2775,7 @@ function Dashboard() {
         {rightTab === "analysis" && (
           <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4">
             <ScanBody
+              onAutoTrade={result ? () => openTradeOffer(result, symbol, interval) : undefined}
               result={result}
               scanning={scanning}
               symbol={symbol}
@@ -2809,8 +2864,9 @@ function Dashboard() {
 }
 
 function ScanBody({
-  result, scanning, symbol, intervalLabel, interval, lensId, runScan, onAttach, onStopScan, onStopVoice, voiceSpeaking,
+  result, scanning, symbol, intervalLabel, interval, lensId, runScan, onAttach, onStopScan, onStopVoice, voiceSpeaking, onAutoTrade,
 }: {
+  onAutoTrade?: () => void;
   result: ScanResult | null;
   scanning: boolean;
   symbol: Symbol;
@@ -2866,6 +2922,7 @@ function ScanBody({
       onAttach={onAttach}
       onStopVoice={onStopVoice}
       voiceSpeaking={voiceSpeaking}
+      onAutoTrade={onAutoTrade}
     />
   );
 }
