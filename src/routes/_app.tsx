@@ -143,6 +143,12 @@ async function getHydratedUser() {
   return null;
 }
 
+// The gate runs before every page change inside the app. Once a user has passed
+// the full check this tab session, later tab clicks only re-read the local
+// session (instant) instead of repeating the network and profile checks, which
+// could stall and leave the click doing nothing until a refresh.
+let gatePassedFor: string | null = null;
+
 export const Route = createFileRoute("/_app")({
   ssr: false,
   pendingMs: 0,
@@ -166,6 +172,13 @@ export const Route = createFileRoute("/_app")({
           };
         }
       } catch { /* ignore */ }
+    }
+    if (gatePassedFor) {
+      const { data } = await withTimeout(supabase.auth.getSession(), "local session check", 1_500)
+        .catch(() => ({ data: { session: null } }));
+      const u = data.session?.user;
+      if (u && u.id === gatePassedFor) return { user: u };
+      gatePassedFor = null;
     }
     let user: Awaited<ReturnType<typeof getHydratedUser>> = null;
     try {
@@ -192,17 +205,18 @@ export const Route = createFileRoute("/_app")({
     // use the app. Any failure here is soft: never block dashboard access on
     // a profile read.
     try {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("must_change_password,email")
-        .eq("id", user.id)
-        .maybeSingle();
+      const { data: profile } = await withTimeout(
+        supabase.from("profiles").select("must_change_password,email").eq("id", user.id).maybeSingle(),
+        "profile check",
+        4_000,
+      );
       // Keep the profile email in step with the confirmed auth email. Legacy
       // username accounts were created with a placeholder address, and username
       // sign-in resolves through this column, so a stale value would lock them out
       // after they add their real email in settings.
       if (user.email && profile && profile.email?.toLowerCase() !== user.email.toLowerCase()) {
-        await supabase.from("profiles").update({ email: user.email }).eq("id", user.id);
+        // Fire and forget: never hold the page change on this write.
+        void supabase.from("profiles").update({ email: user.email }).eq("id", user.id).then(() => undefined, () => undefined);
       }
       if (profile?.must_change_password) {
         throw redirect({ to: "/reset-password" });
@@ -211,6 +225,7 @@ export const Route = createFileRoute("/_app")({
       if (err && typeof err === "object" && ("to" in err || "isRedirect" in err || "href" in err)) throw err;
       logGate({ step: "profile-timeout-soft-allow", message: (err as Error)?.message ?? "profile read failed" });
     }
+    gatePassedFor = user.id;
     return { user };
 
   },
