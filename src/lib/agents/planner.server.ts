@@ -2043,6 +2043,14 @@ export async function runPlanner(
   }
 
   // Classic chart patterns (src/lib/detector/chart-patterns.ts): one-step grade nudge, never blocks.
+  // The read is always returned for the chart, even on Neutral scans; only directional scans nudge the grade.
+  let chartPatternOut: import("./types").ScanResult["chartPattern"];
+  try {
+    const cp = await import("@/lib/detector/chart-patterns");
+    const read = cp.detectChartPattern(snap.candles1h?.length ? snap.candles1h : snap.candles);
+    if (read) chartPatternOut = { name: read.name, direction: read.direction, status: read.status, trigger: read.trigger, invalidation: read.invalidation, points: read.points ?? [] };
+    if (read && (bias === "Neutral" || isNoEntry)) warnings.push(read.text);
+  } catch { /* advisory */ }
   if (bias !== "Neutral" && !isNoEntry) {
     try {
       const cp = await import("@/lib/detector/chart-patterns");
@@ -2301,6 +2309,7 @@ export async function runPlanner(
     flags: setupFlags.length ? setupFlags : undefined,
     htfBias: dailyBias,
     warnings: warnings.length ? warnings : undefined,
+    chartPattern: chartPatternOut,
     sessionVolume: volRead && !volRead.unavailable
       ? {
           session: volRead.session,
