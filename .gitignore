@@ -36,3 +36,4 @@ reports/
 research/data/
 research/out/*.csv
 .lovable/
+research/data-pd/
