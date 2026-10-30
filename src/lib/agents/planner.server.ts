@@ -1889,11 +1889,12 @@ export async function runPlanner(
   const downgradeOne = (g: typeof GRADES[number]): typeof GRADES[number] =>
     g === "A+" ? "A" : g === "A" ? "B" : g === "B" ? "C" : g;
 
-  // FIX 5: a high-impact release inside two days is real event risk even when it
-  // is not imminent, so it costs one letter and is stated plainly.
+  // News 1-2 days out is a warning only (evidence tier C, rule context.news_48h):
+  // logged scans it marked down averaged +0.70R, so it no longer costs a letter.
+  // News inside the hold window is still a B cap below.
+  void downgradeOne;
   if (news48Warning) {
-    grade = downgradeOne(grade);
-    warnings.push(news48Warning);
+    warnings.push(news48Warning.replace("so this grade is knocked down one letter", "so watch the release"));
   }
 
   // Thin overnight tape used to be a hard NO ENTRY. That is what made gold read
@@ -2000,7 +2001,6 @@ export async function runPlanner(
       reason: newsWarning.trim(),
     });
   }
-  if (news48Warning) gradeCaps.push({ label: "Event risk within 48 hours", cap: grade, reason: `${news48Warning} This costs one grade letter.` });
   if (timingGate) gradeCaps.push({ label: "Session timing", cap: grade, reason: `${timingGate} This is an execution wait, not a lower-quality structure grade.` });
   if (mitigation?.warning) gradeCaps.push({ label: "Entry zone already tested", cap: grade, reason: mitigation.warning });
   if (selectedEntryZone?.qualityLabel !== "high") {

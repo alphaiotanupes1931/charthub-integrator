@@ -321,8 +321,9 @@ export function recomputeMtfBias(l: LadderInput): MtfBiasResult {
 
   let maxGrade: Grade = 'A+';
   if (htfOpposed) {
-    maxGrade = 'C';
-    reason += '. Weekly and Daily both opposed, grade capped at C and entry must sit at an HTF zone.';
+    // Was C; logged scans held at C by this cap averaged +0.46R (rule_evidence: context.htf_alignment_cap).
+    maxGrade = 'B';
+    reason += '. Weekly and Daily both opposed, grade capped at B and entry must sit at an HTF zone.';
   }
   if (primaryBias === 'neutral') maxGrade = 'F';
 
