@@ -37,6 +37,7 @@ import { ANALYSIS_MODELS } from "@/lib/analysis-models";
 import { useAnalysisModel } from "@/hooks/useAnalysisModel";
 import { reportSystemNotice } from "@/lib/notifications.functions";
 import { runResearchPlan } from "@/lib/agents/research.functions";
+import { TradingDesk } from "@/components/TradingDesk";
 import { recordHermesFeedback } from "@/lib/agents/hermes.functions";
 import { listChatThreads, createChatThread, deleteChatThread, renameChatThread } from "@/lib/chat.functions";
 import type { ResearchMemo, OrderFlow } from "@/lib/agents/types";
@@ -547,6 +548,15 @@ function ScanTicket({
 
   return (
     <div className="space-y-5">
+      {notes.length > 0 && (
+        <TradingDesk
+          notes={notes}
+          grade={result.grade}
+          bias={result.bias}
+          verdict={result.synopsis ?? result.notes}
+          playKey={`${result.memo?.ticker}-${result.memo?.interval}-${result.memo?.generatedAt}`}
+        />
+      )}
       <div className="space-y-4">
         <div className="flex items-end justify-between gap-3">
           <div className="min-w-0">
