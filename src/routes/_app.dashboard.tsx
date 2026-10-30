@@ -10,7 +10,7 @@ import { CANDLE_STYLES, CANDLE_STYLE_MAP, type CandleStyleId } from "@/lib/candl
 import { enforceGradeDirection } from "@/lib/chartAnnotations";
 
 import { emitFirstWeekEvent } from "@/hooks/useFirstWeek";
-import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Clock, MessageSquare, X, Plug, Square, Paperclip, ChevronUp, PanelRightClose, PanelRightOpen, BarChart3, ThumbsUp, ThumbsDown, Brain, LineChart, Settings2, Maximize, Minimize, Maximize2, Minimize2, BookOpen, FlaskConical, Zap, Info } from "lucide-react";
+import { ChevronDown, Crosshair, Loader2, Check, Activity, LayoutGrid, Clock, MessageSquare, X, Plug, Square, Paperclip, ChevronUp, PanelRightClose, PanelRightOpen, BarChart3, ThumbsUp, ThumbsDown, Brain, LineChart, Settings2, Maximize, Minimize, Maximize2, Minimize2, BookOpen, FlaskConical, Zap, Info, Bot } from "lucide-react";
 
 
 import { useCoachVoice } from "@/hooks/useCoachVoice";
