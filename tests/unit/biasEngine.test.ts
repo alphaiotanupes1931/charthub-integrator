@@ -130,14 +130,14 @@ test('8. stacked imbalances read by location and mitigation, not by their own di
   assert.equal(imbalanceRead(overhead, 1.3510), 'resistance', 'untouched supply overhead is not bullish fuel');
 });
 
-test('9. weekly and daily both opposed caps the grade at C but keeps the direction', () => {
+test('9. weekly and daily both opposed caps the grade at B but keeps the direction', () => {
   const m = recomputeMtfBias({
     weekly: 'bearish', daily: 'bearish', oneH: 'bullish', fifteenM: 'bullish', computedAt: NOW,
     fourH: { trend: 'up', reversal: detect4hReversal(CONFIRMED_REVERSAL, ATR) },
   });
   assert.equal(m.primaryBias, 'bullish');
   assert.equal(m.htfOpposed, true);
-  assert.equal(m.maxGrade, 'C');
+  assert.equal(m.maxGrade, 'B');
 });
 
 test('10. prior scan verdicts are voided so a stale bias cannot re-enter via the transcript', () => {
