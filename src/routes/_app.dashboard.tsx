@@ -231,6 +231,7 @@ function findSymbolFromTag(tag?: string | null): Symbol | null {
 }
 
 type ScanResult = {
+  chartPattern?: import("@/components/NativeChart").ChartPatternOverlay;
   obEntryShadow?: import("@/lib/ob-entry-shadow").ObEntryShadow | null;
   sequenceShadow?: import("@/lib/sequence-entry-shadow").SequenceShadow | null;
   entryCandidates?: import("@/lib/entry-candidates").EntryCandidates | null;
@@ -1102,6 +1103,7 @@ function Dashboard() {
   useEffect(() => {
     setAiGrade(null);
     setAiAnnotationsRaw([]);
+    setScanPattern(null);
     setAiConcept(null);
   }, [symbol.ticker]);
   useEffect(() => {
@@ -1194,6 +1196,7 @@ function Dashboard() {
   useEffect(() => {
     snapshotPriceRef.current = typeof snapshot?.lastPrice === "number" ? snapshot.lastPrice : undefined;
   }, [snapshot?.lastPrice]);
+  const [scanPattern, setScanPattern] = useState<import("@/components/NativeChart").ChartPatternOverlay | null>(null);
   const [aiAnnotationsRaw, setAiAnnotationsRaw] = useState<import("@/lib/chartAnnotations").ChartAnnotation[]>([]);
   const [aiConcept, setAiConcept] = useState<import("@/lib/chartAnnotations").ConceptRef | null>(null);
   const [aiGrade, setAiGrade] = useState<import("@/lib/chartAnnotations").ChartGrade | null>(null);
@@ -1519,6 +1522,8 @@ function Dashboard() {
 
   const applyPlanToSignalCards = (plan: ScanResult) => {
     const last = snapshot?.lastPrice;
+    setScanPattern(plan.chartPattern ?? null);
+    if (plan.chartPattern) setChartTab("setup");
     const { bias, entry, stop, tp1, tp2 } = levelsForPlan(plan);
 
     setAiGrade(enforceGradeDirection({
@@ -2484,12 +2489,13 @@ function Dashboard() {
                     onSnapshot={setSnapshot}
                     annotations={aiAnnotations}
                     candleType={candleType}
+                    pattern={scanPattern}
                   />
                 }
               />
 
             ) : (
-              <NativeChart symbol={symbol.tv} ticker={symbol.ticker} interval={interval} enabled={levels} sessions={sessionsOn} onSnapshot={setSnapshot} annotations={aiAnnotations} candleType={candleType} />
+              <NativeChart symbol={symbol.tv} ticker={symbol.ticker} interval={interval} enabled={levels} sessions={sessionsOn} onSnapshot={setSnapshot} annotations={aiAnnotations} candleType={candleType} pattern={scanPattern} />
             )}
 
             {/* Exit-fullscreen floater (only visible in fullscreen, top-left so it never covers TradingView's camera button) */}
@@ -2508,6 +2514,16 @@ function Dashboard() {
             {chartTab === "live" && aiAnnotations.length > 0 && (
               <div className="pointer-events-none absolute left-3 top-12 z-20 rounded-xl border border-primary/40 bg-background/90 px-2 py-1 text-[10px] font-mono tracking-tight text-primary backdrop-blur">
                 Entry markers available on Setup
+              </div>
+            )}
+            {scanPattern && chartTab !== "live" && (
+              <div className="pointer-events-none absolute left-3 top-12 z-20 max-w-[70%] rounded-xl border border-border/60 bg-background/90 px-2.5 py-1.5 backdrop-blur">
+                <div className={`text-xs font-semibold ${scanPattern.direction === "bullish" ? "text-bull" : scanPattern.direction === "bearish" ? "text-bear" : "text-foreground"}`}>
+                  {scanPattern.name} · {scanPattern.status === "confirmed" ? "Confirmed" : "Forming"}
+                </div>
+                <div className="text-[10px] text-muted-foreground">
+                  {scanPattern.direction === "bullish" ? "Bullish" : scanPattern.direction === "bearish" ? "Bearish" : "Either way"} · {scanPattern.status === "confirmed" ? "broke" : "breaks on a close past"} {scanPattern.trigger.toFixed(scanPattern.trigger >= 100 ? 2 : 5)}
+                </div>
               </div>
             )}
             {aiConcept && (
