@@ -36,6 +36,11 @@ import {
 
 
 /** Best-effort cost accounting for each planner step. Never blocks a scan. */
+// Order flow and volume (delta, CVD, POC, buy %) no longer feed direction,
+// confidence or grade caps: the trader's call is Daily bias + location + entry.
+// The figures still print in the scan details as information only.
+export const ORDER_FLOW_IN_GRADES = false;
+
 async function logPlannerCost(kind: string, model: string, usage: unknown, providerMetadata: unknown) {
   try {
     const { logAiCost } = await import("@/lib/ai-cost.server");
@@ -230,7 +235,7 @@ export function countEvidence(
   check(memo.consensus === (wantBull ? "bullish" : "bearish"));
 
   // Real order flow agreement.
-  const of = snap.orderFlow;
+  const of = ORDER_FLOW_IN_GRADES ? snap.orderFlow : null;
   if (of) {
     check(wantBull ? of.cvd > 0 : of.cvd < 0);
     check(wantBull ? of.delta > 0 : of.delta < 0);
@@ -303,7 +308,7 @@ function resolveDirection(
   vote(snap.cisd.state !== "none" ? snap.cisd.state : undefined, 2, "CISD");
   vote(snap.cisd.htfBias, 1, "HTF bias");
   vote(memo.consensus !== "neutral" ? memo.consensus : undefined, 2, "analyst consensus");
-  vote(snap.orderFlow?.bias, 1, "order flow");
+  if (ORDER_FLOW_IN_GRADES) vote(snap.orderFlow?.bias, 1, "order flow");
 
   const bull = votes.filter((v) => v.dir === "bullish").reduce((s, v) => s + v.weight, 0);
   const bear = votes.filter((v) => v.dir === "bearish").reduce((s, v) => s + v.weight, 0);
@@ -816,7 +821,7 @@ export function nearTermOverrideRead(
   bias: typeof BIASES[number],
   snap: MarketSnapshot,
 ): { bias: typeof BIASES[number] | null; reason: string | null } {
-  if (bias === "Neutral") return { bias: null, reason: null };
+  if (bias === "Neutral" || !ORDER_FLOW_IN_GRADES) return { bias: null, reason: null };
   const mtf = snap.mtf;
   const of = snap.orderFlow;
   if (!mtf || !of || of.estimated) return { bias: null, reason: null };
@@ -938,11 +943,13 @@ export function collectGradeCaps(
   push("Time Frame Combo gate", timeFrameComboGate(bias, snap));
   push("1H against the higher timeframes", lowerTimeframeOppositionRead(bias, snap));
   push("Break of structure quality", protectedStructureRead(bias, snap));
-  push("Order flow opposing the setup", orderFlowOppositionRead(bias, snap));
-  push("Delta expanding against the position", deltaAgainstPositionRead(bias, snap));
+  if (ORDER_FLOW_IN_GRADES) {
+    push("Order flow opposing the setup", orderFlowOppositionRead(bias, snap));
+    push("Delta expanding against the position", deltaAgainstPositionRead(bias, snap));
+  }
   push("Setup type", setupTypeRead(bias, snap));
   push("Stale 4H data", staleHigherTimeframeRead(snap));
-  if (snap.orderFlow?.deltaConflict) {
+  if (ORDER_FLOW_IN_GRADES && snap.orderFlow?.deltaConflict) {
     out.push({
       label: "Order flow contradicts itself",
       cap: "B",
@@ -1948,8 +1955,9 @@ export async function runPlanner(
   const counterTrend = counterTrendRead(bias, snap);
   const comboGate = timeFrameComboGate(bias, snap);
   const ltfRead = lowerTimeframeOppositionRead(bias, snap);
-  const flowRead = orderFlowOppositionRead(bias, snap);
-  const deltaRead = deltaAgainstPositionRead(bias, snap);
+  const noFlowRead = { cap: null, reason: null };
+  const flowRead = ORDER_FLOW_IN_GRADES ? orderFlowOppositionRead(bias, snap) : noFlowRead;
+  const deltaRead = ORDER_FLOW_IN_GRADES ? deltaAgainstPositionRead(bias, snap) : noFlowRead;
   const setupRead = setupTypeRead(bias, snap);
   const staleRead = staleHigherTimeframeRead(snap);
   const selectedEntryZone = bias === "Neutral"
