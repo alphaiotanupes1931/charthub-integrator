@@ -7,7 +7,7 @@ import { gzipSync, gunzipSync } from "node:zlib";
 import { fetchRange, type RigBar } from "./download";
 import { buildSetups, scoreSetups, medianSpread, type LedgerRow } from "./ledger";
 import { register, holdoutOpened } from "./registry";
-import { dayBootstrap, mean } from "./stats";
+import { mean } from "./stats";
 import { dealingRange, readPremiumDiscount } from "@/lib/detector/dealing-range";
 
 const PREREG = {
@@ -31,6 +31,17 @@ async function bars(inst: string, tf: string, from: number): Promise<RigBar[]> {
   return b;
 }
 
+function diffCi(s: { day: string; side: string; r: number }[]) {
+  const days = new Map<string, { c: number[]; w: number[] }>();
+  for (const r of s) { const d = days.get(r.day) ?? { c: [], w: [] }; (r.side === "correct" ? d.c : d.w).push(r.r); days.set(r.day, d); }
+  const list = [...days.values()];
+  let seed = 7; const rand = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648);
+  const est = (ds: typeof list) => { const c = ds.flatMap((d) => d.c), w = ds.flatMap((d) => d.w); return mean(c) - mean(w); };
+  const boots: number[] = [];
+  for (let k = 0; k < 2000; k++) boots.push(est(Array.from(list, () => list[Math.floor(rand() * list.length)]!)));
+  boots.sort((a, b) => a - b);
+  return { avgR: round(est(list)), lo: round(boots[50]!), hi: round(boots[1950]!), pPositive: round(boots.filter((x) => x > 0).length / 2000) };
+}
 const round = (x: number) => Math.round(x * 1000) / 1000;
 
 async function main() {
@@ -75,12 +86,7 @@ async function main() {
     const byInst: Record<string, unknown> = {};
     for (const inst of INSTS) { const x = s.filter((r) => r.inst === inst); byInst[inst] = { correct: sum(x.filter((r) => r.side === "correct")).avgR, wrong: sum(x.filter((r) => r.side === "wrong")).avgR }; }
     cells.byInstrumentAvgR = byInst;
-    // Difference CI: day-clustered bootstrap on (correct mean - wrong mean) per row,
-    // centered so wrong-side rows contribute negatively.
-    const c = s.filter((r) => r.side === "correct"), w = s.filter((r) => r.side === "wrong");
-    const mc = mean(c.map((r) => r.r)), mw = mean(w.map((r) => r.r));
-    const diffRows = [...c.map((r) => ({ day: r.day, time: r.setupTime, v: (r.r - mc) + (mc - mw) })), ...w.map((r) => ({ day: r.day, time: r.setupTime, v: (r.r - mw) * -1 + (mc - mw) }))];
-    cells.diff = { avgR: round(mc - mw), ci: dayBootstrap(diffRows) };
+    cells.diff = diffCi(s);
     report[split] = cells;
   }
   register("verdict", { runId, prereg: PREREG.id, report });
