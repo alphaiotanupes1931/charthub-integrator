@@ -20,15 +20,9 @@ const shortWithBullishNearTerm = (h4Trend: "down" | "range"): MarketSnapshot => 
 } as unknown as MarketSnapshot);
 
 describe("nearTermOverrideRead", () => {
-  it("flips to the near-term side when the 4H is not trending against it", () => {
-    const r = nearTermOverrideRead("Short", shortWithBullishNearTerm("range"));
-    expect(r.bias).toBe("Long");
-    expect(r.reason).toContain("near-term override");
-  });
-
-  it("stands aside when the 4H still trends with the original side", () => {
-    const r = nearTermOverrideRead("Short", shortWithBullishNearTerm("down"));
-    expect(r.bias).toBe("Neutral");
+  it("order flow can no longer flip or cancel the direction", () => {
+    expect(nearTermOverrideRead("Short", shortWithBullishNearTerm("range")).bias).toBeNull();
+    expect(nearTermOverrideRead("Short", shortWithBullishNearTerm("down")).bias).toBeNull();
   });
 
   it("does nothing when the near-term reads agree with the bias", () => {

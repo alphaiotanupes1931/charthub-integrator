@@ -31,8 +31,9 @@ describe("countEvidence", () => {
   it("caps below 100 even when everything aligns", () => {
     const v = countEvidence(snap(true), memo(true), "A+", "Long", 3);
     // 4H+1H agreement and the 15m confirmation now count as confirmation
-    // quality; the missing piece here is an aligned 1H/4H zone.
-    expect(v).toBe(85);
+    // quality; the missing piece here is an aligned 1H/4H zone. Order flow
+    // no longer counts toward the score.
+    expect(v).toBe(83);
   });
 
   it("scores a counter-trend trade low", () => {
@@ -113,12 +114,12 @@ describe("gradeFromEvidence", () => {
     expect(gradeFromEvidence("Long", 40, pullback)).toBe("B");
   });
 
-  it("caps a setup whose order flow opposes it", () => {
+  it("order flow against the setup no longer lowers the grade", () => {
     const against = {
       ...snap(true),
       orderFlow: { bias: "bearish", delta: -900, deltaAvg: -100, cvdSlope: -5, estimated: false },
     } as unknown as MarketSnapshot;
-    expect(gradeFromEvidence("Long", 90, against)).toBe("C");
+    expect(gradeFromEvidence("Long", 90, against)).toBe(gradeFromEvidence("Long", 90, snap(true)));
   });
 
 
