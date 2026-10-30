@@ -2048,6 +2048,18 @@ export async function runPlanner(
     } catch { /* advisory; never fail a scan over it */ }
   }
 
+  // Premium / discount (src/lib/detector/dealing-range.ts). Evidence tier C:
+  // the backtest showed no measurable edge yet, so it is recorded in the notes
+  // only and does not move the grade until logged results justify it.
+  if (bias !== "Neutral" && !isNoEntry) {
+    try {
+      const pd = await import("@/lib/detector/dealing-range");
+      const range = pd.dealingRange(snap.candles1h?.length ? snap.candles1h : snap.candles);
+      const entryNum = Number(finalPlan.entry);
+      if (range && Number.isFinite(entryNum)) warnings.push(pd.readPremiumDiscount(bias, entryNum, range).text);
+    } catch { /* advisory; never fail a scan over it */ }
+  }
+
   // Marcus's A-setup sequence: sweep -> CHoCH -> FVG in reversal leg -> retest.
   if (bias !== "Neutral" && !isNoEntry) {
     try {
