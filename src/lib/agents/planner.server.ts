@@ -2093,7 +2093,7 @@ export async function runPlanner(
   if (bias !== "Neutral" && !isNoEntry) {
     try {
       const as = await import("@/lib/a-setup-sequence.shared");
-      const read = as.readASetup(bias, snap.candles1h?.length ? snap.candles1h : snap.candles);
+      const read = as.readASetup(bias, snap.candles1h?.length ? snap.candles1h : snap.candles, snap.candles15m);
       const res = as.applyASetup(grade, read, gradeCaps.some((c) => c.binding));
       warnings.push(read.text);
       if (res.action === "down") gradeCaps.push({ label: "A-setup sequence", cap: "B", reason: `${read.text} A needs the full sequence.`, binding: true });
