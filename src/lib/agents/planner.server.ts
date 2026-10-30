@@ -2047,8 +2047,21 @@ export async function runPlanner(
   let chartPatternOut: import("./types").TradePlan["chartPattern"];
   try {
     const cp = await import("@/lib/detector/chart-patterns");
-    const read = cp.detectChartPattern(snap.candles1h?.length ? snap.candles1h : snap.candles);
-    if (read) chartPatternOut = { name: read.name, direction: read.direction, status: read.status, trigger: read.trigger, invalidation: read.invalidation, points: read.points ?? [] };
+    // Display-only fallback: if the 1H chart has no pattern, zoom out to 4H, then in to 15m,
+    // so more scans name a pattern. Grade nudges below still use the 1H read only.
+    const sources: Array<[string, typeof snap.candles | undefined]> = [
+      ["1H", snap.candles1h?.length ? snap.candles1h : snap.candles],
+      ["4H", snap.candles4h],
+      ["15m", snap.candles15m],
+    ];
+    let read: ReturnType<typeof cp.detectChartPattern> = null;
+    let readTf = "1H";
+    for (const [tf, c] of sources) {
+      if (!c?.length) continue;
+      read = cp.detectChartPattern(c);
+      if (read) { readTf = tf; break; }
+    }
+    if (read) chartPatternOut = { name: readTf === "1H" ? read.name : `${read.name} (${readTf})`, direction: read.direction, status: read.status, trigger: read.trigger, invalidation: read.invalidation, points: read.points ?? [] };
     if (read && (bias === "Neutral" || isNoEntry)) warnings.push(read.text);
   } catch { /* advisory */ }
   if (bias !== "Neutral" && !isNoEntry) {
