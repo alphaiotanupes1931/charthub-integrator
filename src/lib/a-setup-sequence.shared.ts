@@ -1,6 +1,6 @@
-// Marcus's "real A setup" (Oct 2026): liquidity sweep -> change of character
-// (close through the recent opposite swing) -> fair value gap inside the leg
-// that gave the reversal -> retest of that gap -> entry on the retest candle.
+// Marcus's "real A setup" (Oct 2026, revised Oct 30): 1H liquidity sweep -> change of character
+// -> fair value gap (1H or 15m) or origin order block in the reversal leg. Sweep +
+// CHoCH + intact zone qualifies ("ready at entry"); a close through it fails.
 // Evidence tier B (context.a_setup_sequence): may move the grade, never blocks.
 
 import type { ObCandle } from "@/lib/orderBlocks";
