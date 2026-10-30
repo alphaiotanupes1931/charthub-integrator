@@ -33,6 +33,11 @@ describe("chart pattern detector", () => {
     expect(r?.name).toBe("Head and shoulders");
     expect(r?.status).toBe("confirmed");
   });
+  it("returns the two peaks and the neckline low as outline points for the chart", () => {
+    const r = detectChartPattern(path([100, 102, 101, 110, 104, 110, 103]));
+    const prices = (r?.points ?? []).map((p) => Math.round(p.price));
+    expect(prices).toEqual([110, 104, 110]);
+  });
 });
 
 describe("chart pattern grade nudge", () => {

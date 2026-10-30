@@ -253,6 +253,15 @@ export type TradePlan = {
   htfBias?: "bullish" | "bearish" | "neutral";
   /** Session/execution warnings the trader must see (thin volume, mitigated block). */
   warnings?: string[];
+  /** Classic chart pattern read on the scan's candles, for drawing on the chart. */
+  chartPattern?: {
+    name: string;
+    direction: "bullish" | "bearish" | "neutral";
+    status: "forming" | "confirmed";
+    trigger: number;
+    invalidation: number;
+    points: Array<{ time: number; price: number }>;
+  };
   /** Session volume read for the last bar and the stop floor it produced. */
   sessionVolume?: {
     session: "Sydney" | "Tokyo" | "London" | "New York";

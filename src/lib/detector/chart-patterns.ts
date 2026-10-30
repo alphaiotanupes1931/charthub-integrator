@@ -22,6 +22,8 @@ export type PatternRead = {
   text: string;
   /** Pattern height used for the measured-move target, when known. */
   height?: number;
+  /** Swing points that outline the pattern, oldest first, for drawing it on a chart. */
+  points?: Array<{ time: number; price: number }>;
 };
 
 type Pivot = { i: number; price: number; kind: "H" | "L" };
@@ -52,14 +54,16 @@ export function findPivots(c: ObCandle[], k = 3): Pivot[] {
   return out.sort((a, b) => a.i - b.i);
 }
 
+const pts = (c: ObCandle[], ps: Pivot[]) => [...ps].sort((a, b) => a.i - b.i).map((p) => ({ time: c[p.i]!.time, price: p.price }));
+
 const fmt = (n: number) => (Math.abs(n) >= 100 ? n.toFixed(2) : n.toFixed(5));
 
-function make(name: PatternName, direction: PatternRead["direction"], status: PatternRead["status"], trigger: number, invalidation: number, endTime: number, height?: number): PatternRead {
+function make(name: PatternName, direction: PatternRead["direction"], status: PatternRead["status"], trigger: number, invalidation: number, endTime: number, height?: number, points?: Array<{ time: number; price: number }>): PatternRead {
   const verb = direction === "bullish" ? "above" : direction === "bearish" ? "below" : "through";
   let text = status === "confirmed"
     ? `Chart pattern: ${name} confirmed - price closed ${verb} ${fmt(trigger)}. Cancelled on a close back past ${fmt(invalidation)}.`
     : `Chart pattern: ${name} forming. It confirms on a close ${verb} ${fmt(trigger)}; cancelled past ${fmt(invalidation)}.`;
-  const read: PatternRead = { name, direction, status, trigger, invalidation, endTime, text, height };
+  const read: PatternRead = { name, direction, status, trigger, invalidation, endTime, text, height, points };
   const lv = patternTradeLevels(read);
   if (lv) text += ` Breakout trade: ${lv.side.toLowerCase()} ${fmt(lv.entry)}, stop ${fmt(lv.stop)}, target ${fmt(lv.target)} (${lv.rr}R).`;
   return { ...read, text };
@@ -82,7 +86,8 @@ function doubles(c: ObCandle[], piv: Pivot[], tol: number, a: number): PatternRe
     if (after.some((b) => (top ? b.close > extreme + tol : b.close < extreme - tol))) continue;
     const broke = after.some((b) => (top ? b.close < neck : b.close > neck));
     if (broke && after.length > 30) continue; // stale
-    return make(top ? "Double top" : "Double bottom", top ? "bearish" : "bullish", broke ? "confirmed" : "forming", neck, extreme, last.time);
+    const neckPiv = mid.find((m) => m.price === neck)!;
+    return make(top ? "Double top" : "Double bottom", top ? "bearish" : "bullish", broke ? "confirmed" : "forming", neck, extreme, last.time, undefined, pts(c, [p1, neckPiv, p2]));
   }
   return null;
 }
@@ -105,7 +110,8 @@ function headShoulders(c: ObCandle[], piv: Pivot[], tol: number, a: number): Pat
     if (after.some((b) => (top ? b.close > h.price : b.close < h.price))) continue;
     const broke = after.some((b) => (top ? b.close < neck : b.close > neck));
     if (broke && after.length > 30) continue;
-    return make(top ? "Head and shoulders" : "Inverse head and shoulders", top ? "bearish" : "bullish", broke ? "confirmed" : "forming", neck, r.price, last.time);
+    const n1 = t1.find((x) => x.price === pick(t1))!, n2 = t2.find((x) => x.price === pick(t2))!;
+    return make(top ? "Head and shoulders" : "Inverse head and shoulders", top ? "bearish" : "bullish", broke ? "confirmed" : "forming", neck, r.price, last.time, undefined, pts(c, [l, n1, h, n2, r]));
   }
   return null;
 }
@@ -123,29 +129,30 @@ export function rangePattern(c: ObCandle[], piv: Pivot[], tol: number, a: number
   if (top - bot < 1.5 * a) return null;
   const hiNow = hs[hs.length - 1]!.price, loNow = ls[ls.length - 1]!.price;
   const close = last.close;
+  const outline = pts(c, [...hs, ...ls]);
   const fh = flat(sh, hs), fl = flat(sl, ls);
   if (fh && fl) {
-    if (close > top) return make("Rectangle", "bullish", "confirmed", top, bot, last.time);
-    if (close < bot) return make("Rectangle", "bearish", "confirmed", bot, top, last.time);
-    return make("Rectangle", "neutral", "forming", top, bot, last.time);
+    if (close > top) return make("Rectangle", "bullish", "confirmed", top, bot, last.time, undefined, outline);
+    if (close < bot) return make("Rectangle", "bearish", "confirmed", bot, top, last.time, undefined, outline);
+    return make("Rectangle", "neutral", "forming", top, bot, last.time, undefined, outline);
   }
   if (fh && sl > 0 && !fl) {
-    return make("Ascending triangle", "bullish", close > top ? "confirmed" : "forming", top, loNow, last.time);
+    return make("Ascending triangle", "bullish", close > top ? "confirmed" : "forming", top, loNow, last.time, undefined, outline);
   }
   if (fl && sh < 0 && !fh) {
-    return make("Descending triangle", "bearish", close < bot ? "confirmed" : "forming", bot, hiNow, last.time);
+    return make("Descending triangle", "bearish", close < bot ? "confirmed" : "forming", bot, hiNow, last.time, undefined, outline);
   }
   // Wedges: both lines slope the same way and converge.
   if (!fh && !fl && sh > 0 && sl > 0 && sl > sh) {
-    return make("Rising wedge", "bearish", close < loNow ? "confirmed" : "forming", loNow, top, last.time);
+    return make("Rising wedge", "bearish", close < loNow ? "confirmed" : "forming", loNow, top, last.time, undefined, outline);
   }
   if (!fh && !fl && sh < 0 && sl < 0 && sh < sl) {
-    return make("Falling wedge", "bullish", close > hiNow ? "confirmed" : "forming", hiNow, bot, last.time);
+    return make("Falling wedge", "bullish", close > hiNow ? "confirmed" : "forming", hiNow, bot, last.time, undefined, outline);
   }
   if (sh < 0 && sl > 0 && !fh && !fl) {
-    if (close > hiNow) return make("Symmetrical triangle", "bullish", "confirmed", hiNow, loNow, last.time);
-    if (close < loNow) return make("Symmetrical triangle", "bearish", "confirmed", loNow, hiNow, last.time);
-    return make("Symmetrical triangle", "neutral", "forming", hiNow, loNow, last.time);
+    if (close > hiNow) return make("Symmetrical triangle", "bullish", "confirmed", hiNow, loNow, last.time, undefined, outline);
+    if (close < loNow) return make("Symmetrical triangle", "bearish", "confirmed", loNow, hiNow, last.time, undefined, outline);
+    return make("Symmetrical triangle", "neutral", "forming", hiNow, loNow, last.time, undefined, outline);
   }
   return null;
 }
@@ -167,10 +174,12 @@ function flags(c: ObCandle[], a: number): PatternRead | null {
     const ch = Math.max(...consBody.map((b) => b.high)), cl = Math.min(...consBody.map((b) => b.low));
     if (up) {
       if (poleHigh - cl > 0.5 * move || ch > poleHigh + 0.25 * a) continue;
-      return make("Bull flag", "bullish", last.close > ch ? "confirmed" : "forming", ch, cl, last.time);
+      const fp = [{ time: pole[0]!.time, price: poleLow }, { time: pole[pole.length - 1]!.time, price: poleHigh }, { time: last.time, price: cl }];
+      return make("Bull flag", "bullish", last.close > ch ? "confirmed" : "forming", ch, cl, last.time, undefined, fp);
     }
     if (cl - poleLow > 0.5 * move || cl < poleLow - 0.25 * a) continue;
-    return make("Bear flag", "bearish", last.close < cl ? "confirmed" : "forming", cl, ch, last.time);
+    const fp = [{ time: pole[0]!.time, price: poleHigh }, { time: pole[pole.length - 1]!.time, price: poleLow }, { time: last.time, price: ch }];
+    return make("Bear flag", "bearish", last.close < cl ? "confirmed" : "forming", cl, ch, last.time, undefined, fp);
   }
   return null;
 }
@@ -201,10 +210,12 @@ function cups(c: ObCandle[], a: number): PatternRead | null {
     const pull = rightRim - handleLow;
     const rim = Math.min(leftRim, rightRim);
     const broke = last.close > Math.max(leftRim, rightRim);
+    const leftIdx = s.slice(0, third).findIndex((b) => b.high === leftRim);
+    const cp = [{ time: s[leftIdx]!.time, price: leftRim }, { time: s[lowIdx]!.time, price: low }, { time: s[rimIdx]!.time, price: rightRim }];
     if (handle.length >= 3 && pull > 0.1 * depth && pull <= 0.5 * depth) {
-      return make("Cup and handle", "bullish", broke ? "confirmed" : "forming", Math.max(leftRim, rightRim), handleLow, last.time, depth);
+      return make("Cup and handle", "bullish", broke ? "confirmed" : "forming", Math.max(leftRim, rightRim), handleLow, last.time, depth, [...cp, { time: last.time, price: handleLow }]);
     }
-    return make("Rounding bottom", "bullish", broke ? "confirmed" : "forming", rim, low, last.time, depth);
+    return make("Rounding bottom", "bullish", broke ? "confirmed" : "forming", rim, low, last.time, depth, cp);
   }
   return null;
 }
