@@ -102,7 +102,18 @@ interface Props {
   annotations?: import("@/lib/chartAnnotations").ChartAnnotation[];
   candleType?: CandleStyleId;
   className?: string;
+  /** Chart pattern from the latest scan: outlined, its trigger/cancel lines drawn, and the view zoomed out to show it. */
+  pattern?: ChartPatternOverlay | null;
 }
+
+export type ChartPatternOverlay = {
+  name: string;
+  direction: "bullish" | "bearish" | "neutral";
+  status: "forming" | "confirmed";
+  trigger: number;
+  invalidation: number;
+  points: Array<{ time: number; price: number }>;
+};
 
 // FX session windows in UTC (approximate, ignores DST).
 // Rendered as translucent full-range boxes framing each session's high/low,
@@ -351,7 +362,7 @@ function computeLevels(candles: Candle[]) {
   return { vwap, poc, sr: clustered, zones, fvg, fib, liq, of, delta };
 }
 
-export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSnapshot, annotations, candleType = "candle", className }: Props) {
+export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSnapshot, annotations, candleType = "candle", className, pattern }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
@@ -980,6 +991,50 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       ro.disconnect();
     };
   }, [ready, enabled.OB, orderBlocks, candles]);
+
+  // ---- Chart pattern overlay: outline, trigger/cancel lines, zoom out to fit ----
+  useEffect(() => {
+    const chart = chartRef.current;
+    const s = seriesRef.current;
+    if (!ready || !chart || !s || !pattern || candles.length === 0) return;
+    const color = pattern.direction === "bullish" ? BULL_COLOR : pattern.direction === "bearish" ? "#f87171" : "#fbbf24";
+    const created: Array<ReturnType<typeof s.createPriceLine>> = [];
+    let outline: ReturnType<typeof chart.addSeries> | null = null;
+    try {
+      // Snap each pattern point onto this chart's own bars so the line sits on candles at any timeframe.
+      const times = candles.map((c) => c.time as number);
+      const snap = (t: number) => {
+        let best = times[0]!;
+        for (const x of times) { if (x <= t) best = x; else break; }
+        return best;
+      };
+      const seen = new Set<number>();
+      const data = pattern.points
+        .map((p) => ({ time: snap(p.time), value: p.price }))
+        .filter((p) => (seen.has(p.time) ? false : (seen.add(p.time), true)))
+        .sort((a, b) => a.time - b.time);
+      if (data.length >= 2) {
+        outline = chart.addSeries(LineSeries, {
+          color, lineWidth: 2, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false,
+        });
+        outline.setData(data.map((p) => ({ time: p.time as Time, value: p.value })));
+      }
+      const label = `${pattern.name}${pattern.status === "confirmed" ? " (confirmed)" : " (forming)"}`;
+      created.push(s.createPriceLine({ price: pattern.trigger, color, lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: true, title: `${label} trigger` }));
+      created.push(s.createPriceLine({ price: pattern.invalidation, color: "#94a3b8", lineWidth: 1, lineStyle: LineStyle.Dotted, axisLabelVisible: true, title: "Pattern cancelled past" }));
+      // Zoom out so the whole pattern is in view, with a little room either side.
+      if (data.length) {
+        const ts = chart.timeScale();
+        const firstIdx = times.indexOf(data[0]!.time);
+        const from = Math.max(0, firstIdx - 15);
+        ts.setVisibleLogicalRange({ from, to: times.length + 8 });
+      }
+    } catch { /* overlay is advisory: never break the chart */ }
+    return () => {
+      created.forEach((l) => { try { s.removePriceLine(l); } catch { /* ignore */ } });
+      if (outline) { try { chart.removeSeries(outline); } catch { /* ignore */ } }
+    };
+  }, [ready, pattern, candles]);
 
   // ---- AI annotations (hlines / zones / labels) ----
   useEffect(() => {

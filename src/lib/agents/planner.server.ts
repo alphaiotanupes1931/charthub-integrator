@@ -2044,7 +2044,7 @@ export async function runPlanner(
 
   // Classic chart patterns (src/lib/detector/chart-patterns.ts): one-step grade nudge, never blocks.
   // The read is always returned for the chart, even on Neutral scans; only directional scans nudge the grade.
-  let chartPatternOut: import("./types").ScanResult["chartPattern"];
+  let chartPatternOut: import("./types").TradePlan["chartPattern"];
   try {
     const cp = await import("@/lib/detector/chart-patterns");
     const read = cp.detectChartPattern(snap.candles1h?.length ? snap.candles1h : snap.candles);
