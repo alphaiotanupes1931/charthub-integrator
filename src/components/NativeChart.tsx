@@ -366,6 +366,8 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
+  const fittedDataRef = useRef<{ chart: IChartApi; ticker: string; interval: string } | null>(null);
+  const fittedPatternRef = useRef<{ chart: IChartApi; pattern: ChartPatternOverlay } | null>(null);
   const linesRef = useRef<IPriceLine[]>([]);
   const annLinesRef = useRef<IPriceLine[]>([]);
   const vwapSeriesRef = useRef<ISeriesApi<"Line">[]>([]);
@@ -709,11 +711,18 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
         }
         seriesRef.current.setData(values as never);
       }
-      chartRef.current.timeScale().fitContent();
+      // Refresh candles without undoing the trader's pan/zoom. Fit only the
+      // first non-empty dataset for a chart instance or instrument/timeframe.
+      const chart = chartRef.current;
+      const fitted = fittedDataRef.current;
+      if (ohlc.length > 0 && (!fitted || fitted.chart !== chart || fitted.ticker !== ticker || fitted.interval !== interval)) {
+        chart.timeScale().fitContent();
+        fittedDataRef.current = { chart, ticker, interval };
+      }
     } catch (err) {
       setInitError(err instanceof Error ? err.message : "Chart data could not be drawn");
     }
-  }, [styleData, ready]);
+  }, [styleData, ready, ticker, interval]);
 
   // Blank-panel guard: if we have candles but the canvas never got real pixels
   // (hidden container at mount, zero-size layout, engine hiccup), fall back to
@@ -996,6 +1005,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
   useEffect(() => {
     const chart = chartRef.current;
     const s = seriesRef.current;
+    if (!pattern) fittedPatternRef.current = null;
     if (!ready || !chart || !s || !pattern || candles.length === 0) return;
     const color = pattern.direction === "bullish" ? BULL_COLOR : pattern.direction === "bearish" ? "#f87171" : "#fbbf24";
     const created: Array<ReturnType<typeof s.createPriceLine>> = [];
@@ -1004,7 +1014,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       // Snap each pattern point onto this chart's own bars so the line sits on candles at any timeframe.
       const times = candles.map((c) => c.time as number);
       const snap = (t: number) => {
-        let best = times[0]!;
+        let best = times[0];
         for (const x of times) { if (x <= t) best = x; else break; }
         return best;
       };
@@ -1022,12 +1032,16 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       const label = `${pattern.name}${pattern.status === "confirmed" ? " (confirmed)" : " (forming)"}`;
       created.push(s.createPriceLine({ price: pattern.trigger, color, lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: true, title: `${label} trigger` }));
       created.push(s.createPriceLine({ price: pattern.invalidation, color: "#94a3b8", lineWidth: 1, lineStyle: LineStyle.Dotted, axisLabelVisible: true, title: "Pattern cancelled past" }));
-      // Zoom out so the whole pattern is in view, with a little room either side.
-      if (data.length) {
+      // A newly scanned pattern gets one fit. Redrawing its overlay on a price
+      // refresh must not move the view the trader has chosen since that scan.
+      const fitted = fittedPatternRef.current;
+      const firstPoint = data[0];
+      if (firstPoint && (!fitted || fitted.chart !== chart || fitted.pattern !== pattern)) {
         const ts = chart.timeScale();
-        const firstIdx = times.indexOf(data[0]!.time);
+        const firstIdx = times.indexOf(firstPoint.time);
         const from = Math.max(0, firstIdx - 15);
         ts.setVisibleLogicalRange({ from, to: times.length + 8 });
+        fittedPatternRef.current = { chart, pattern };
       }
     } catch { /* overlay is advisory: never break the chart */ }
     return () => {
