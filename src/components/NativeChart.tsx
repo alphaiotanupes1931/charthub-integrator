@@ -372,7 +372,9 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
   const annLinesRef = useRef<IPriceLine[]>([]);
   const vwapSeriesRef = useRef<ISeriesApi<"Line">[]>([]);
   const vwapMarkersRef = useRef<ISeriesMarkersPluginApi<Time> | null>(null);
-  const [ready, setReady] = useState(false);
+  // Use the instance, not a boolean: teardown/recreation can batch false/true
+  // into an unchanged value, leaving effects subscribed to the removed chart.
+  const [ready, setReady] = useState<IChartApi | null>(null);
   const [initError, setInitError] = useState<string | null>(null);
   const [initAttempt, setInitAttempt] = useState(0);
   const [notPainted, setNotPainted] = useState(false);
@@ -615,18 +617,18 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     } catch (err) {
       // Never leave a blank panel: fall back to the lightweight SVG renderer.
       setInitError(err instanceof Error ? err.message : "Chart engine failed to start");
-      setReady(false);
+      setReady(null);
       return;
     }
     chartRef.current = chart;
     seriesRef.current = series;
-    setReady(true);
+    setReady(chart);
     return () => {
       linesRef.current = [];
-      try { chart.remove(); } catch { /* ignore */ }
       chartRef.current = null;
       seriesRef.current = null;
-      setReady(false);
+      try { chart.remove(); } catch { /* ignore */ }
+      setReady(null);
     };
   }, [initAttempt, candleType, fmtTime, fmtDateTime]);
 
@@ -862,6 +864,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     const chart = chartRef.current;
 
     const recompute = () => {
+      if (chartRef.current !== chart) return;
       const ts = chart.timeScale();
       const series = seriesRef.current;
       const visible = ts.getVisibleRange();
@@ -948,11 +951,12 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     const ro = new ResizeObserver(recompute);
     if (containerRef.current) ro.observe(containerRef.current);
     return () => {
+      ro.disconnect();
+      if (chartRef.current !== chart) return; // chart.remove() already cleared subscriptions
       ts.unsubscribeVisibleTimeRangeChange(recompute);
       ts.unsubscribeVisibleLogicalRangeChange(recompute);
-      ro.disconnect();
     };
-  }, [sessions, ready, candles]);
+  }, [sessions, ready, candles, ticker]);
 
   // ---- Order Blocks overlay (time-anchored boxes extending to mitigation) ----
   useEffect(() => {
@@ -961,6 +965,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     const chart = chartRef.current;
 
     const recompute = () => {
+      if (chartRef.current !== chart) return;
       const series = seriesRef.current;
       if (!series) return;
       const ts = chart.timeScale();
@@ -995,9 +1000,10 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     const ro = new ResizeObserver(recompute);
     if (containerRef.current) ro.observe(containerRef.current);
     return () => {
+      ro.disconnect();
+      if (chartRef.current !== chart) return;
       ts.unsubscribeVisibleTimeRangeChange(recompute);
       ts.unsubscribeVisibleLogicalRangeChange(recompute);
-      ro.disconnect();
     };
   }, [ready, enabled.OB, orderBlocks, candles]);
 
@@ -1052,7 +1058,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
 
   // ---- AI annotations (hlines / zones / labels) ----
   useEffect(() => {
-    if (!ready || !seriesRef.current) { setAnnZones([]); return; }
+    if (!ready || !chartRef.current || !seriesRef.current) { setAnnZones([]); return; }
     const s = seriesRef.current;
     // Clear previous AI lines
     annLinesRef.current.forEach((l) => { try { s.removePriceLine(l); } catch { /* ignore */ } });
@@ -1086,12 +1092,13 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     // Build zone overlays with pixel coords
     const chart = chartRef.current;
     const recomputeZones = () => {
-      if (!seriesRef.current || !chart) return;
+      const series = seriesRef.current;
+      if (!series || chartRef.current !== chart) return;
       const out: Array<{ key: string; top: number; height: number; color: string; label?: string }> = [];
       annotations.forEach((a, i) => {
         if (a.kind !== "zone") return;
-        const yTop = seriesRef.current!.priceToCoordinate(a.top);
-        const yBot = seriesRef.current!.priceToCoordinate(a.bottom);
+        const yTop = series.priceToCoordinate(a.top);
+        const yBot = series.priceToCoordinate(a.bottom);
         if (yTop == null || yBot == null) return;
         const top = Math.min(yTop, yBot);
         const height = Math.max(2, Math.abs(yBot - yTop));
@@ -1100,13 +1107,14 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       setAnnZones(out);
     };
     recomputeZones();
-    const ts = chart!.timeScale();
+    const ts = chart.timeScale();
     ts.subscribeVisibleTimeRangeChange(recomputeZones);
     const ro = new ResizeObserver(recomputeZones);
     if (containerRef.current) ro.observe(containerRef.current);
     return () => {
-      ts.unsubscribeVisibleTimeRangeChange(recomputeZones);
       ro.disconnect();
+      if (chartRef.current !== chart) return;
+      ts.unsubscribeVisibleTimeRangeChange(recomputeZones);
     };
   }, [annotations, ready, candles]);
 
@@ -1336,7 +1344,9 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     const cvs = drawCanvasRef.current;
     const host = containerRef.current;
     if (!cvs || !host) return;
+    const chart = chartRef.current;
     const resize = () => {
+      if (chartRef.current !== chart) return;
       const rect = host.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
       cvs.width = Math.max(1, Math.floor(rect.width * dpr));
@@ -1348,12 +1358,12 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     resize();
     const ro = new ResizeObserver(resize);
     ro.observe(host);
-    const chart = chartRef.current;
     const ts = chart?.timeScale();
     ts?.subscribeVisibleLogicalRangeChange(redraw);
     ts?.subscribeVisibleTimeRangeChange(redraw);
     return () => {
       ro.disconnect();
+      if (chartRef.current !== chart) return;
       ts?.unsubscribeVisibleLogicalRangeChange(redraw);
       ts?.unsubscribeVisibleTimeRangeChange(redraw);
     };

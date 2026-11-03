@@ -1,5 +1,9 @@
 # Roadmap
 
+## Monitoring fixes (Nov 3)
+- [ ] Keep demo trade management and run logging active when scheduled entries are skipped.
+- [ ] Rebind chart overlays after chart recreation and verify candle-style switching.
+
 ## Done
 - Shadow 1R-target tracking: `shadow_tp1r_r` column, computed at resolution and
   backfilled onto 804 historical signals; read-only report `getShadowTp1rReport`.

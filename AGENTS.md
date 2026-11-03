@@ -1,6 +1,8 @@
 # Engineering rules
 
 - Chart data refreshes redraw overlays without fitting the viewport; fit only the first nonempty instrument/timeframe dataset or a newly applied scan pattern. Why: preserve the trader's zoom and pan during live updates.
+- Chart-dependent effects key on the chart instance and ignore callbacks/cleanup for removed instances. Why: boolean readiness can stay true across recreation and retain disposed overlay subscriptions.
+- Demo scheduling gates new entries only; trade management and run logging continue on skipped schedule ticks. Why: existing positions still need protection after entry hours or an hourly fill.
 
 - Live entry prices come only from the model named in each signal's `entry_model`; switching an instrument requires an entry in `ENTRY_MODEL_V2_LIVE` (src/lib/detector/entry-detector.ts). Why: a silent entry-model swap went unnoticed for a week.
 - Any change to entry logic must keep `tests/unit/entryGoldenSet.test.ts` green or regenerate `tests/golden/entry-windows.json` deliberately in the same change. Why: frozen windows catch accidental entry-price drift.

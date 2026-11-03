@@ -103,14 +103,15 @@ export async function runAutopilotForUser(
 
   // Demo test schedule: one trade per New York hour, 9 AM to 5 PM weekdays.
   let hourlyLimitReached = false;
+  let skipNewEntries = false;
   if (settings.demoOnly && settings.mode === "auto") {
     const { demoScheduleSlot, slotStart } = await import("@/lib/autopilot-schedule.shared");
     const now = new Date();
     if (demoScheduleSlot(now) === null) {
       result.haltedReason = "Outside the 9 AM to 5 PM New York trading window";
-      return result;
-    }
-    const { count: thisHour } = await client
+      skipNewEntries = true;
+    } else {
+      const { count: thisHour } = await client
       .from("autopilot_proposals")
       .select("id", { count: "exact", head: true })
       .eq("user_id", userId)
@@ -118,11 +119,13 @@ export async function runAutopilotForUser(
       .gte("decided_at", slotStart(now).toISOString());
     if ((thisHour ?? 0) > 0) {
       result.haltedReason = "Already placed this hour's trade";
-      return result;
+      skipNewEntries = true;
+    }
     }
   }
 
-  const symbols = settings.allowedSymbols.length
+  // Entry timing never suspends protection of positions already open.
+  const symbols = skipNewEntries ? [] : settings.allowedSymbols.length
     ? settings.allowedSymbols.slice(0, 8)
     : DEFAULT_AUTOPILOT_SETTINGS.allowedSymbols;
   result.scanned = symbols.length;
