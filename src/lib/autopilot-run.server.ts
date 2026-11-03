@@ -45,10 +45,17 @@ export function settingsFromRow(row: Record<string, unknown> | null): AutopilotS
 
 // Realised loss today at the trader's live broker account, as a percentage of
 // account equity, plus the equity used for position sizing.
-export async function dailyLossPct(_client: Client, userId: string): Promise<{ pct: number; equity: number }> {
+export async function dailyLossPct(
+  _client: Client,
+  userId: string,
+): Promise<{ pct: number; equity: number; openPositions: number | null }> {
   const { liveAccountFacts } = await import("@/lib/auto-trade.server");
   const facts = await liveAccountFacts(userId);
-  return { pct: facts.dailyLossPct, equity: facts.equity };
+  return {
+    pct: facts.dailyLossPct,
+    equity: facts.equity,
+    openPositions: facts.connected ? facts.openPositions : null,
+  };
 }
 
 
@@ -68,7 +75,7 @@ export async function runAutopilotForUser(
     haltedReason: null,
   };
 
-  const { pct, equity } = await dailyLossPct(client, userId);
+  const { pct, equity, openPositions: brokerOpen } = await dailyLossPct(client, userId);
   if (pct >= settings.maxDailyLossPct) {
     const reason = `Daily loss cap hit: down ${pct}% today against your ${settings.maxDailyLossPct}% limit. Autopilot is paused until tomorrow.`;
     await client
@@ -94,6 +101,27 @@ export async function runAutopilotForUser(
   }
 
 
+  // Demo test schedule: one trade per New York hour, 9 AM to 5 PM weekdays.
+  let hourlyLimitReached = false;
+  if (settings.demoOnly && settings.mode === "auto") {
+    const { demoScheduleSlot, slotStart } = await import("@/lib/autopilot-schedule.shared");
+    const now = new Date();
+    if (demoScheduleSlot(now) === null) {
+      result.haltedReason = "Outside the 9 AM to 5 PM New York trading window";
+      return result;
+    }
+    const { count: thisHour } = await client
+      .from("autopilot_proposals")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .eq("status", "filled")
+      .gte("decided_at", slotStart(now).toISOString());
+    if ((thisHour ?? 0) > 0) {
+      result.haltedReason = "Already placed this hour's trade";
+      return result;
+    }
+  }
+
   const symbols = settings.allowedSymbols.length
     ? settings.allowedSymbols.slice(0, 8)
     : DEFAULT_AUTOPILOT_SETTINGS.allowedSymbols;
@@ -116,7 +144,9 @@ export async function runAutopilotForUser(
     .select("id", { count: "exact", head: true })
     .eq("user_id", userId)
     .in("status", ["approved", "filled"]);
-  let openPositions = count ?? 0;
+  // Prefer the broker's real open positions; old filled rows stay "filled"
+  // forever and would otherwise block every new trade.
+  let openPositions = brokerOpen ?? count ?? 0;
 
   for (const symbol of symbols) {
     if (waiting.has(symbol)) {
@@ -140,6 +170,7 @@ export async function runAutopilotForUser(
       // a connected account it is a real market order with the stop and target
       // attached. A setup whose trigger has not fired is never auto-placed.
       const executable =
+        !hourlyLimitReached &&
         verdict.allowed && settings.mode === "auto" && draft.units !== null && draft.triggered;
       if (verdict.allowed && settings.mode === "auto" && !draft.triggered) {
         result.skipped.push(`${symbol}: setup filed but not triggered yet`);
@@ -227,6 +258,7 @@ export async function runAutopilotForUser(
             .eq("id", inserted.id as string);
           result.executed += 1;
           openPositions += 1;
+          if (settings.demoOnly) hourlyLimitReached = true;
           const { journalPlacedTrade } = await import("@/lib/journal-auto.server");
           await journalPlacedTrade({
             userId,
