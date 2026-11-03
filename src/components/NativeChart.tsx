@@ -759,6 +759,11 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
     if (!ready || !chartRef.current || !seriesRef.current) return;
     const chart = chartRef.current;
     const cleanup = () => {
+      if (chartRef.current !== chart) {
+        vwapSeriesRef.current = [];
+        vwapMarkersRef.current = null;
+        return;
+      }
       vwapSeriesRef.current.forEach((sr) => { try { chart.removeSeries(sr); } catch { /* ignore */ } });
       vwapSeriesRef.current = [];
       if (vwapMarkersRef.current) { try { vwapMarkersRef.current.setMarkers([]); } catch { /* ignore */ } }
@@ -1051,6 +1056,7 @@ export function NativeChart({ symbol, ticker, interval, enabled, sessions, onSna
       }
     } catch { /* overlay is advisory: never break the chart */ }
     return () => {
+      if (chartRef.current !== chart) return;
       created.forEach((l) => { try { s.removePriceLine(l); } catch { /* ignore */ } });
       if (outline) { try { chart.removeSeries(outline); } catch { /* ignore */ } }
     };
