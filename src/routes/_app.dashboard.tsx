@@ -1207,6 +1207,8 @@ function Dashboard() {
     snapshotPriceRef.current = typeof snapshot?.lastPrice === "number" ? snapshot.lastPrice : undefined;
   }, [snapshot?.lastPrice]);
   const [scanPattern, setScanPattern] = useState<import("@/components/NativeChart").ChartPatternOverlay | null>(null);
+  // A scan's pattern belongs to its selected timeframe, not the next chart.
+  useEffect(() => { setScanPattern(null); }, [interval]);
   const [aiAnnotationsRaw, setAiAnnotationsRaw] = useState<import("@/lib/chartAnnotations").ChartAnnotation[]>([]);
   const [aiConcept, setAiConcept] = useState<import("@/lib/chartAnnotations").ConceptRef | null>(null);
   const [aiGrade, setAiGrade] = useState<import("@/lib/chartAnnotations").ChartGrade | null>(null);
