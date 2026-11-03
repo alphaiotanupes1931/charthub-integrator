@@ -1,5 +1,9 @@
 # Roadmap
 
+## Monitoring fixes (Nov 3)
+- [x] Keep demo trade management and run logging active when scheduled entries are skipped (six mocked runner regressions passed; no broker orders placed).
+- [x] Rebind chart overlays after chart recreation; isolated browser style/resize/scroll/toggle/unmount check passed with zero errors. Signed-in dashboard verification waits on backend maintenance; publishing remains pending.
+
 ## Done
 - Shadow 1R-target tracking: `shadow_tp1r_r` column, computed at resolution and
   backfilled onto 804 historical signals; read-only report `getShadowTp1rReport`.
