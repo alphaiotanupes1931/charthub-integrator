@@ -27,6 +27,11 @@ const LogInput = z.object({
   htfBias: z.string().max(12).nullable().optional(),
   methodologyVersion: z.string().max(40).nullable().optional(),
   entryModel: z.string().max(40).nullable().optional(),
+  liquidityDraw: z.object({ status: z.string(), side: z.enum(["buyside", "sellside"]).nullable(), feed: z.string(),
+    lastSweep: z.object({ price: z.number(), time: z.number() }).nullable(),
+    pools: z.array(z.object({ price: z.number(), frame: z.string() })).max(3),
+    sizeMultiplier: z.number(), continuation: z.boolean(), finalTarget: z.number().optional(),
+  }).nullable().optional(),
   gradeCaps: z.array(z.object({ label: z.string().max(80), cap: z.string().max(10) })).max(20).nullable().optional(),
 });
 
@@ -58,6 +63,7 @@ export const logScan = createServerFn({ method: "POST" })
         htf_bias: data.htfBias ?? null,
         methodology_version: data.methodologyVersion ?? null,
         entry_model: data.entryModel ?? null,
+        liquidity_draw: data.liquidityDraw as never ?? null,
         grade_caps: data.gradeCaps ?? null,
         status: lv.status,
       })

@@ -19,6 +19,7 @@ export type ProposalDraft = {
   /** False when the lower timeframes have not confirmed yet: too early to take. */
   triggered: boolean;
   triggerRule: string | null;
+  riskPct?: number;
 };
 
 export function parseLevel(text: string | null | undefined): number | null {
@@ -69,7 +70,8 @@ export async function buildProposalDraft(
     entry,
     stopLoss,
     takeProfit,
-    units: sizeUnits(equity, settings.riskPct, entry, stopLoss),
+    units: sizeUnits(equity, settings.riskPct * (plan.liquidityDraw?.sizeMultiplier ?? 1), entry, stopLoss),
+    riskPct: settings.riskPct * (plan.liquidityDraw?.sizeMultiplier ?? 1),
     reasoning: plan.notes ?? "",
     triggered: plan.triggered !== false,
     triggerRule: plan.triggerRule ?? null,

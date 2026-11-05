@@ -105,6 +105,10 @@ export const Route = createFileRoute("/_app/dashboard")({
     meta: [
       { title: "Dashboard, TradeMind" },
       { name: "description", content: "Live chart and AI setup analysis for your active instrument." },
+      { property: "og:title", content: "TradeMind Trading Dashboard" },
+      { property: "og:description", content: "Review liquidity draws, chart patterns and protected trading setups." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   validateSearch: (s: Record<string, unknown>): DashboardSearch => ({
@@ -327,6 +331,8 @@ function normalizePlanLevels(plan: ScanResult, last?: number): NormalizedLevels 
   let stop = num(plan.stop);
   let tp1 = num(plan.tp1);
   let tp2 = num(plan.tp2);
+  // Draw levels are the actual proximal edge / ordered pools, never synthetic R floors.
+  if (plan.entryModel === "liquidity_draw_proximal") return { bias, entry, stop, tp1, tp2 };
   if (entry && stop && tp1 && tp2 && last && isFinite(last) && last > 0) {
     const tol = Math.max(last * 0.0001, Math.abs(entry - stop) * 0.05);
     if (bias === "long" && entry > last + tol) entry = last;
@@ -1622,6 +1628,7 @@ function Dashboard() {
       seqSessionPhase: plan.sequenceShadow?.sessionPhase ? `${plan.sequenceShadow.sessionPhase.session}:${plan.sequenceShadow.sessionPhase.phase}` : null,
       seqH1Phase: plan.sequenceShadow?.h1Phase ?? null,
       entryModel: plan.entryModel ?? "legacy",
+      liquidityDraw: plan.liquidityDraw,
       entryCandidates: plan.entryCandidates ?? null,
       gradeCaps: plan.gradeCaps ?? null,
     });

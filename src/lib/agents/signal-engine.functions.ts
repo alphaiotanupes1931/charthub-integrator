@@ -21,6 +21,7 @@ import type { TradePlan } from "./types";
 export type SignalState = "forming" | "confirmed" | "invalidated";
 
 export type Signal = {
+  liquidityDraw?: TradePlan["liquidityDraw"];
   ticker: string;
   /** Market price used to build the plan, required when filing it for scoring. */
   refPrice: number | null;
@@ -181,6 +182,7 @@ export const runSignalScan = createServerFn({ method: "POST" })
           secondsToBarClose: snap.bar?.secondsToClose ?? 0,
           trials: trialFields(plan),
           gradeCaps: (plan.gradeCaps ?? []).map((c) => ({ label: c.label, cap: c.cap })),
+          liquidityDraw: plan.liquidityDraw,
         };
       } catch { return null; }
     }));
