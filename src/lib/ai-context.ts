@@ -131,11 +131,17 @@ export function priorScansBlock(messages: ChatLikeMessage[]): string {
     return `- [${label}, message ${s.turn}] ${bits.join(", ")}`;
   });
 
+  const last = included[included.length - 1]!;
+  const record = last.grade
+    ? [`CARD RECORD (US30 brief F2): the most recent card was graded ${last.grade}${last.bias ? ` ${last.bias}` : ""}${last.confidence ? `, confidence ${last.confidence}%` : ""}${last.synopsis ? `. Card reason: ${last.synopsis}` : ""}.`,
+       "When asked about that card's grade, state exactly this grade and explain it only from the card's reason and caps. Never state a different grade for it, and never derive a grade from confidence; no confidence-to-grade mapping exists. This is a historical record, not a current call."]
+    : [];
   return [
     "LEVELS FROM EARLIER SCANS IN THIS THREAD (you DO have these - never say you lack the previous scan):",
     ...lines,
+    ...record,
     "When the trader references \"the scan\", \"that setup\", or \"the grade\", they mean the most recent entry above. Quote its actual levels.",
-    "The DIRECTION and GRADE of every earlier scan are VOID and are not shown to you on purpose. Never restate or defend an earlier bias. Direction comes only from the authoritative bias block computed for this turn.",
+    "Earlier directions are not a reason to keep a bias now. Never defend an earlier bias as a current call. Direction comes only from the authoritative bias block computed for this turn.",
     "If the current computed bias disagrees with a setup the trader is already in, say plainly that the market moved and what changed.",
   ].join("\n");
 }
