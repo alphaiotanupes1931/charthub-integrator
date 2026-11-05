@@ -253,6 +253,7 @@ type ScanResult = {
   dailyBias?: "bullish" | "bearish" | "neutral";
   currentTrend?: "up" | "down" | "range";
   synopsis?: string;
+  liquidityDraw?: import("@/lib/agents/types").TradePlan["liquidityDraw"];
   gradeCaps?: Array<{ label: string; cap: string; reason: string; binding?: boolean }>;
   dataSource?: string;
   dataFetchedAt?: string;
@@ -627,6 +628,17 @@ function ScanTicket({
           </div>
         )}
 
+        {result.liquidityDraw && (
+          <div className="border-y border-border py-3 text-xs space-y-2">
+            <div className="flex justify-between gap-3 flex-wrap">
+              <strong>Draw: {result.liquidityDraw.side ?? "Awaiting sweep"} · {result.liquidityDraw.status}</strong>
+              <span className="text-muted-foreground">{result.liquidityDraw.feed.replace("api-fxtrade.oanda.com", "Live").replace("api-fxpractice.oanda.com", "Practice")}</span>
+            </div>
+            {result.liquidityDraw.lastSweep && <p>Last sweep: {fmtPrice(result.liquidityDraw.lastSweep.price, decimalsFor(result.liquidityDraw.lastSweep.price))} · {new Date(result.liquidityDraw.lastSweep.time * 1000).toLocaleString()}</p>}
+            <p>Next pools: {result.liquidityDraw.pools.map(p => `${fmtPrice(p.price, decimalsFor(p.price))} (${p.frame})`).join(" → ") || "None mapped"}</p>
+            <p className="text-muted-foreground">{result.liquidityDraw.continuation ? "Continuation" : "Sweep setup"} · {result.liquidityDraw.sizeMultiplier * 100}% of configured risk</p>
+          </div>
+        )}
         {!isNoEntry && result.triggered === false && (
           <div className="rounded-xl border border-gold/40 bg-gold/10 px-3 py-2">
             <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-gold">
