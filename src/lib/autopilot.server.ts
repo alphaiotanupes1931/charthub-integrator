@@ -38,7 +38,7 @@ export function sizeUnits(equity: number, riskPct: number, entry: number, stop: 
   if (perUnit <= 0) return null;
   const units = riskAmount / perUnit;
   if (!Number.isFinite(units) || units <= 0) return null;
-  return Math.max(1, Math.floor(units));
+  return units >= 1 ? Math.floor(units) : null;
 }
 
 export async function buildProposalDraft(

@@ -826,7 +826,7 @@ function ScanTicket({
       >
         <MetricRow label="Daily bias (today)" value={dailyBiasLabel} />
         <MetricRow label="Current trend (4H)" value={currentTrendLabel} />
-        {biasTrendConflict && (
+        {biasTrendConflict && !result.liquidityDraw && (
           <p className="pt-1 text-[10px] leading-relaxed text-muted-foreground">
             Price is moving against the daily bias, so it is travelling into the level rather than away from it. Wait
             for confirmation on the lower timeframe.

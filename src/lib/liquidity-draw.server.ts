@@ -58,6 +58,7 @@ export async function liquidityDrawPlan(snap: MarketSnapshot, memo: ResearchMemo
     refPrice: snap.lastPrice, tradeStyle,
     dailyBias: snap.mtf?.ladder?.find(r => r.label === "Daily")?.bias ?? snap.cisd.htfBias,
     currentTrend: snap.mtf?.h4.trend,
+    orderFlow: snap.orderFlow,
   };
   if (!snap.liquidityFeed) return { ...base, notes: "OANDA draw data is incomplete. No mixed-feed setup was issued; rescan when all four timeframes are available." };
   let read: DrawRead;
@@ -72,7 +73,8 @@ export async function liquidityDrawPlan(snap: MarketSnapshot, memo: ResearchMemo
   };
   // A target touch alone never authorizes an opposite order; wait for reclaim + closed CHoCH.
   if (!state.side || !state.sweep || state.status !== "active") {
-    base.notes = state.status === "reached" ? "Draw reached. Awaiting a closed 15m reversal confirmation or the next unswept pool." : base.notes;
+    base.notes = state.status === "reached" ? "Draw reached. Awaiting a closed 15m reversal confirmation or the next unswept pool."
+      : state.status === "invalidated" ? "Previous draw invalidated by a new sweep extreme. Awaiting a new confirmed sweep; Daily bias did not choose the direction." : base.notes;
     return base;
   }
   const zone = latestDrawZone(seriesFor(snap), state, snap.lastPrice);
