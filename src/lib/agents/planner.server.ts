@@ -2045,6 +2045,24 @@ export async function runPlanner(
         if (rec.action === "down") gradeCaps.push({ label: "Scan track record", cap: rec.newGrade as GradeCapReason["cap"], reason: rec.text, binding: true });
         grade = rec.newGrade as typeof grade;
       }
+      // F7: settlement cap for this symbol's grade bucket.
+      if (grade === "A" || grade === "A+" || grade === "B") {
+        const { data: bucket } = await (supabaseAdmin.from("scan_log") as any)
+          .select("status, realized_r")
+          .eq("symbol", snap.ticker).in("grade", tr.gradeBucket(grade))
+          .gte("created_at", since).limit(1000);
+        const fc = tr.gradeBucketCap(
+          ((bucket ?? []) as Array<{ status: string; realized_r: number | string | null }>).map((r) => ({
+            status: r.status, realized_r: r.realized_r == null ? null : Number(r.realized_r),
+          })),
+          grade, snap.ticker,
+        );
+        if (fc.cap) {
+          warnings.push(fc.text);
+          gradeCaps.push({ label: "Grade settlement record", cap: "C", reason: fc.text, binding: true });
+          grade = "C" as typeof grade;
+        }
+      }
     } catch { /* track record is advisory; never fail a scan over it */ }
   }
 

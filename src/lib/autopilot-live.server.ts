@@ -150,6 +150,24 @@ async function placeOnVenue(
       try {
         const { tradeLockerSession, tradeLockerPlaceOrder } = await import("@/lib/venues/tradelocker.server");
         const session = await tradeLockerSession(userId);
+        // F9 on TradeLocker: split into a TP1 half and a runner half aimed at the
+        // final pool, so half is banked at TP1 without needing position edits.
+        const runnerTl = intent.stopLoss ? intent.runner ?? null : null;
+        const halfUnits = Math.floor(Math.abs(intent.units) / 2);
+        if (runnerTl && halfUnits >= 1) {
+          try {
+            const a = await tradeLockerPlaceOrder(session, { symbol: intent.symbol, side: intent.side, size: halfUnits, stopLoss: intent.stopLoss, takeProfit: runnerTl.tp1 });
+            const b = await tradeLockerPlaceOrder(session, { symbol: intent.symbol, side: intent.side, size: Math.abs(intent.units) - halfUnits, stopLoss: intent.stopLoss, takeProfit: runnerTl.finalPool });
+            return {
+              ok: true,
+              detail: `Opened ${intent.side} ${a.instrument} on TradeLocker in two halves: ${a.lots} lots target TP1 ${runnerTl.tp1}, ${b.lots} lots run to the final pool ${runnerTl.finalPool}.`,
+              orderId: a.orderId,
+            };
+          } catch (e) {
+            // Below minimum lot for a split: fall back to one order at the plan target.
+            if (!/min|step|lots/i.test((e as Error).message)) throw e;
+          }
+        }
         const res = await tradeLockerPlaceOrder(session, {
           symbol: intent.symbol,
           side: intent.side,

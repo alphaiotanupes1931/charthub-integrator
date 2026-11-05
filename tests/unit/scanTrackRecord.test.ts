@@ -38,3 +38,20 @@ describe("scan track record", () => {
     expect(t).toMatchObject({ n: 30, avgR: 0, newGrade: "B" });
   });
 });
+
+import { gradeBucketCap, gradeBucket } from "@/lib/scan-track-record.shared";
+describe("F7 grade bucket settlement cap", () => {
+  const rows = (n: number, r: number) => Array.from({ length: n }, () => ({ status: "stop", realized_r: r }));
+  it("caps A at C after 15 settled with negative expectancy", () => {
+    expect(gradeBucketCap(rows(15, -0.1), "A", "US30").cap).toBe(true);
+  });
+  it("does not cap with 14 settled", () => {
+    expect(gradeBucketCap(rows(14, -1), "A", "US30").cap).toBe(false);
+  });
+  it("does not cap positive expectancy", () => {
+    expect(gradeBucketCap(rows(20, 0.2), "A+", "US30").cap).toBe(false);
+  });
+  it("A and A+ share a bucket", () => {
+    expect(gradeBucket("A+")).toEqual(["A", "A+"]);
+  });
+});
