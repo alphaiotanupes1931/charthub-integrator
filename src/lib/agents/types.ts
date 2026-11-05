@@ -177,6 +177,9 @@ export type TradePlan = {
     lastSweep: { price: number; time: number } | null;
     pools: Array<{ price: number; frame: string }>;
     sizeMultiplier: number; continuation: boolean; finalTarget?: number;
+    /** Hours between the sweep wick bar and the scan. */
+    sweepAgeHours?: number;
+    cancelled?: { reason: string; time: number; level: number; previousSide: "buyside" | "sellside" } | null;
   };
   /** Immutable ruleset identifier used to reproduce and audit this scan. */
   methodologyVersion: string;

@@ -13,19 +13,50 @@ export type Sweep = { side: PoolSide; pool: LiquidityPool; extreme: number; time
 export type DrawState = {
   version: typeof LIQUIDITY_DRAW_VERSION; feed: string; processedTime: number;
   side: PoolSide | null; sweep: Sweep | null; pending: Sweep | null;
-  target: LiquidityPool | null; status: "active" | "waiting" | "reached" | "invalidated";
+  target: LiquidityPool | null; status: "active" | "waiting" | "reached" | "invalidated" | "cancelled";
   crossed?: { pool: LiquidityPool; extreme: number; time: number } | null;
+  /** F1: set when a closed 1H candle broke the last 1H swing against the draw. */
+  cancelled?: { reason: "1H CHoCH"; time: number; level: number; previousSide: PoolSide } | null;
 };
+
+/**
+ * F1 (US30 Nov 5 brief): a closed 1H candle beyond the last confirmed 1H swing
+ * formed after the sweep, against the draw, is a change of character.
+ * Only 1H closes inside (fromClose, toClose] are checked. Returns the 1H bar time.
+ */
+export function h1ChochAgainst(h1: Candle[], side: PoolSide, since: number, fromClose: number, toClose: number): { time: number; level: number } | null {
+  const up = side === "buyside";
+  for (let c = 0; c < h1.length; c++) {
+    const bar = h1[c]!;
+    const close = bar.time + 3600;
+    if (close <= fromClose || close > toClose || bar.time < since) continue;
+    let level: number | null = null;
+    // Last 2-left/2-right fractal whose right bars both closed before this bar.
+    for (let i = c - 3; i >= 2; i--) {
+      const b = h1[i]!;
+      if (b.time < since) break;
+      const n = [h1[i - 2]!, h1[i - 1]!, h1[i + 1]!, h1[i + 2]!];
+      if (up ? n.every(x => b.low < x.low) : n.every(x => b.high > x.high)) { level = up ? b.low : b.high; break; }
+    }
+    if (level !== null && (up ? bar.close < level : bar.close > level)) return { time: bar.time, level };
+  }
+  return null;
+}
 export type DrawRead = { state: DrawState; pools: LiquidityPool[]; targets: LiquidityPool[] };
 export const emptyDraw = (feed: string): DrawState => ({ version: LIQUIDITY_DRAW_VERSION, feed, processedTime: 0, side: null, sweep: null, pending: null, target: null, status: "waiting" });
 
 /** One closed 15m tick. HTF labels are deliberately absent from this state machine. */
-export function advanceDraw(previous: DrawState, bar: Candle, pools: LiquidityPool[], history: Candle[], endPools: LiquidityPool[] = pools): DrawState {
+export function advanceDraw(previous: DrawState, bar: Candle, pools: LiquidityPool[], history: Candle[], endPools: LiquidityPool[] = pools, h1: Candle[] = []): DrawState {
   if (bar.time <= previous.processedTime) return previous;
   let state: DrawState = { ...previous, crossed: previous.crossed ? { ...previous.crossed } : null, processedTime: bar.time };
   if (state.sweep && state.side && bar.time > state.sweep.time &&
       (state.side === "buyside" ? bar.low < state.sweep.extreme : bar.high > state.sweep.extreme)) {
     state = { ...state, side: null, sweep: null, target: null, pending: null, crossed: null, status: "invalidated" };
+  }
+  if (state.sweep && state.side && h1.length) {
+    const cut = h1ChochAgainst(h1, state.side, state.sweep.time, previous.processedTime + 900, bar.time + 900);
+    if (cut) state = { ...state, side: null, sweep: null, target: null, pending: null, crossed: null, status: "cancelled",
+      cancelled: { reason: "1H CHoCH", time: cut.time, level: cut.level, previousSide: state.side } };
   }
   const pending = state.pending;
   if (pending && bar.time > pending.time) {
@@ -36,7 +67,7 @@ export function advanceDraw(previous: DrawState, bar: Candle, pools: LiquidityPo
       const side = pending.side === "sellside" ? "buyside" : "sellside";
       const targets = orderedPools(endPools.filter(p => p.id !== pending.pool.id), side, bar.close);
       state = { ...state, side, sweep: { ...pending, confirmedAt: bar.time + 900 }, pending: null,
-        target: targets[0] ?? null, crossed: null, status: targets.length ? "active" : "reached" };
+        target: targets[0] ?? null, crossed: null, cancelled: null, status: targets.length ? "active" : "reached" };
     }
   }
   // Persist the target identity; a closer newly formed pool cannot rewrite the lock.
@@ -85,7 +116,7 @@ export function replayDraw(series: PoolSeries, feed: string, previous?: DrawStat
   const m15 = series["15m"] ?? [];
   for (const bar of m15) {
     if (bar.time <= state.processedTime) continue;
-    state = advanceDraw(state, bar, mapLiquidityPools(series, bar.time), m15, mapLiquidityPools(series, bar.time + 900));
+    state = advanceDraw(state, bar, mapLiquidityPools(series, bar.time), m15, mapLiquidityPools(series, bar.time + 900), series["1H"] ?? []);
   }
   const latest = m15.at(-1);
   const pools = mapLiquidityPools(series, latest ? latest.time + 900 : 0);
@@ -134,6 +165,41 @@ export function drawLevels(state: DrawState, zone: DrawZone, targets: LiquidityP
   const first = forward[0];
   if (!first || (long ? stop >= entry : stop <= entry)) return null;
   return { entry, stop, tp1: first.price, tp2: forward[1]?.price ?? first.price, finalPool: forward.at(-1)?.price ?? first.price };
+}
+
+export type DrawCap = { label: string; cap: "C"; reason: string };
+
+/**
+ * F4 + F5 (US30 Nov 5 brief).
+ * F4: continuation entries more than 2/3 of the way from the sweep to the draw cap at C.
+ * F5: an unswept opposite-side pool closer to entry than TP1 caps at C (replaces "pool inside stop").
+ */
+export function drawLateCaps(a: { long: boolean; entry: number; tp1: number; sweepPrice: number; drawPrice: number | null;
+  continuation: boolean; pools: LiquidityPool[]; fmt?: (n: number) => string }): DrawCap[] {
+  const f = a.fmt ?? ((n: number) => String(n));
+  const caps: DrawCap[] = [];
+  if (a.continuation && a.drawPrice != null && a.drawPrice !== a.sweepPrice) {
+    const progress = Math.abs(a.entry - a.sweepPrice) / Math.abs(a.drawPrice - a.sweepPrice);
+    if (progress > 0.667) caps.push({ label: "Late-leg continuation", cap: "C",
+      reason: `Entry is ${Math.round(progress * 100)}% of the way from the sweep ${f(a.sweepPrice)} to the draw ${f(a.drawPrice)} (limit 67%).` });
+  }
+  const opp = a.pools.filter(p => p.status === "unswept" && (a.long ? p.side === "sellside" && p.price < a.entry : p.side === "buyside" && p.price > a.entry))
+    .sort((x, y) => Math.abs(x.price - a.entry) - Math.abs(y.price - a.entry))[0];
+  const toTp1 = Math.abs(a.tp1 - a.entry);
+  if (opp && Math.abs(opp.price - a.entry) < toTp1) caps.push({ label: "Opposite pool closer than TP1", cap: "C",
+    reason: `Unswept ${opp.side} pool ${f(opp.price)} is ${f(Math.abs(opp.price - a.entry))} from entry; TP1 is ${f(toTp1)} away.` });
+  return caps;
+}
+
+/** F6: move the stop beyond the far edge (+0.1 ATR) of every zone it lands in. */
+export function clearStopFromZones(long: boolean, stop: number, zones: Array<{ top: number; bottom: number }>, atr: number): number {
+  let s = stop;
+  for (let guard = 0; guard < 20; guard++) {
+    const hit = zones.find(z => s > z.bottom && s < z.top);
+    if (!hit) return s;
+    s = long ? hit.bottom - atr * 0.1 : hit.top + atr * 0.1;
+  }
+  return s;
 }
 
 export function drawGrade(args: { aligned: boolean; nested: boolean; continuation: boolean; opposingInsideStop: boolean }): { cap: "A" | "B" | "C"; sizeMultiplier: number } {
