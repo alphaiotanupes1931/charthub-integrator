@@ -1,7 +1,7 @@
 import type { MarketSnapshot, ResearchMemo, TradePlan } from "./agents/types";
 import type { TradeStyle } from "./tradeTiming";
 import { computeOrderBlocks } from "./orderBlocks";
-import { drawGrade, drawLevels, latestDrawZone, replayDraw, LIQUIDITY_DRAW_VERSION, type DrawRead, type DrawState } from "./detector/liquidity-draw";
+import { clearStopFromZones, drawLateCaps, drawGrade, drawLevels, latestDrawZone, replayDraw, LIQUIDITY_DRAW_VERSION, type DrawRead, type DrawState } from "./detector/liquidity-draw";
 import type { PoolSeries } from "./detector/liquidity-pools";
 
 function seriesFor(snap: MarketSnapshot): PoolSeries {
@@ -65,12 +65,22 @@ export async function liquidityDrawPlan(snap: MarketSnapshot, memo: ResearchMemo
   try { read = await persistentDraw(snap); }
   catch (e) { return { ...base, notes: e instanceof Error ? e.message : "Active draw could not be verified. Rescan." }; }
   const { state } = read;
+  const nowSec = (snap.candles15m?.at(-1)?.time ?? 0) + 900;
+  const sweepAgeHours = state.sweep ? Math.round(((nowSec - state.sweep.time) / 3600) * 10) / 10 : undefined;
   base.liquidityDraw = {
     status: state.status, side: state.side, feed: state.feed,
     lastSweep: state.sweep ? { price: state.sweep.extreme, time: state.sweep.time } : null,
     pools: read.targets.slice(0, 3).map(p => ({ price: p.price, frame: p.frame })),
-    sizeMultiplier: 0, continuation: false,
+    sizeMultiplier: 0, continuation: false, sweepAgeHours, cancelled: state.cancelled ?? null,
   };
+  if (state.status === "cancelled" && state.cancelled) {
+    const c = state.cancelled, dir = c.previousSide === "buyside" ? "sellside" : "buyside";
+    const px = snap.lastPrice;
+    const next = read.pools.filter(p => p.status === "unswept" && p.side === dir && (dir === "sellside" ? p.price < px : p.price > px))
+      .sort((a, b) => Math.abs(a.price - px) - Math.abs(b.price - px))[0];
+    const d = px >= 100 ? 2 : px >= 10 ? 3 : 5;
+    return { ...base, notes: `Draw cancelled: 1H CHoCH. The 1H candle at ${new Date(c.time * 1000).toISOString()} closed beyond the 1H swing ${c.level.toFixed(d)} against the ${c.previousSide} draw. No ${c.previousSide === "buyside" ? "long" : "short"} continuation.${next ? ` Candidate draw: ${dir} pool ${next.price.toFixed(d)}; awaiting a fresh zone.` : ""}` };
+  }
   // A target touch alone never authorizes an opposite order; wait for reclaim + closed CHoCH.
   if (!state.side || !state.sweep || state.status !== "active") {
     base.notes = state.status === "reached" ? "Draw reached. Awaiting a closed 15m reversal confirmation or the next unswept pool."
@@ -79,20 +89,25 @@ export async function liquidityDrawPlan(snap: MarketSnapshot, memo: ResearchMemo
   }
   const zone = latestDrawZone(seriesFor(snap), state, snap.lastPrice);
   if (!zone) return { ...base, notes: `Draw remains ${state.side}. Awaiting a fresh 15m/1H zone; Daily bias cannot flip this lock.` };
-  const levels = drawLevels(state, zone, read.targets, snap.stats.atr14);
-  if (!levels) return { ...base, notes: `Draw remains ${state.side}, but no valid protected entry and forward target are mapped.` };
+  const rawLevels = drawLevels(state, zone, read.targets, snap.stats.atr14);
+  if (!rawLevels) return { ...base, notes: `Draw remains ${state.side}, but no valid protected entry and forward target are mapped.` };
   const bias = state.side === "buyside" ? "Long" : "Short", want = bias === "Long" ? "bullish" : "bearish";
+  // F6: the stop may not sit inside any 15m/1H/4H zone.
+  const allZones = [snap.candles15m, snap.candles1h, snap.candles4h].flatMap(b => computeOrderBlocks(b ?? [], { max: 30 }))
+    .map(z => ({ top: z.top, bottom: z.bot }));
+  const levels = { ...rawLevels, stop: clearStopFromZones(bias === "Long", rawLevels.stop, allZones, snap.stats.atr14) };
   const aligned = base.dailyBias === want && snap.mtf?.h4.direction === want;
-  const opposingInsideStop = read.pools.some(p => p.status === "unswept" && p.side !== state.side &&
-    (bias === "Long" ? p.price > levels.stop && p.price < levels.entry : p.price < levels.stop && p.price > levels.entry));
-  const policy = drawGrade({ aligned, nested: nestedAtSweep(snap, state), continuation: zone.continuation, opposingInsideStop });
+  const policy0 = drawGrade({ aligned, nested: nestedAtSweep(snap, state), continuation: zone.continuation, opposingInsideStop: false });
+  const decimals0 = snap.lastPrice >= 100 ? 2 : snap.lastPrice >= 10 ? 3 : 5;
+  const lateCaps = drawLateCaps({ long: bias === "Long", entry: levels.entry, tp1: levels.tp1, sweepPrice: state.sweep.extreme,
+    drawPrice: state.target?.price ?? null, continuation: zone.continuation, pools: read.pools, fmt: n => n.toFixed(decimals0) });
+  const policy = lateCaps.length ? { cap: "C" as const, sizeMultiplier: 0.25 } : policy0;
   let grade: TradePlan["grade"] = policy.cap;
   const warnings: string[] = [];
-  const caps: NonNullable<TradePlan["gradeCaps"]> = [{ label: "Liquidity draw policy", cap: policy.cap,
-    reason: opposingInsideStop ? "Unswept opposing liquidity lies inside the stop; reduced risk."
-      : aligned ? "Draw agrees with Daily and 4H; maximum A, full configured risk."
+  const caps: NonNullable<TradePlan["gradeCaps"]> = [{ label: "Liquidity draw policy", cap: policy0.cap,
+    reason: aligned ? "Draw agrees with Daily and 4H; maximum A, full configured risk."
       : policy.cap === "A" ? "Counter-bias sweep inside nested 4H/Daily zone; maximum A, half risk."
-      : "Counter-bias or continuation draw; maximum B, half risk." }];
+      : "Counter-bias or continuation draw; maximum B, half risk." }, ...lateCaps];
   // Preserve the existing measured history adjustment; it cannot exceed draw ceilings.
   try {
     const tr = await import("./scan-track-record.shared");
@@ -137,7 +152,7 @@ export async function liquidityDrawPlan(snap: MarketSnapshot, memo: ResearchMemo
     notes: `${note} ${warnings.join(" ")}`, synopsis: note,
     entry: fmt(levels.entry), stop: fmt(levels.stop), tp1: fmt(levels.tp1), tp2: fmt(levels.tp2),
     rr: `1 : ${(Math.abs(levels.tp2 - levels.entry) / Math.abs(levels.entry - levels.stop)).toFixed(1)}`,
-    details: `${note}\nSweep ${fmt(state.sweep.extreme)} at ${new Date(state.sweep.time * 1000).toISOString()}. Feed ${state.feed}. Next pools ${read.targets.slice(0, 3).map(p => fmt(p.price)).join(", ")}. Final HTF target ${fmt(htfFinal)}. Risk multiplier ${policy.sizeMultiplier}. Stop beyond ${zone.continuation ? "zone far edge" : "sweep extreme"}. ${warnings.join(" ")}`,
+    details: `${note}\nSweep ${fmt(state.sweep.extreme)} at ${new Date(state.sweep.time * 1000).toISOString()} (${sweepAgeHours}h ago).${levels.stop !== rawLevels.stop ? ` Stop moved from ${fmt(rawLevels.stop)} to clear a zone.` : ""} Feed ${state.feed}. Next pools ${read.targets.slice(0, 3).map(p => fmt(p.price)).join(", ")}. Final HTF target ${fmt(htfFinal)}. Risk multiplier ${policy.sizeMultiplier}. Stop beyond ${zone.continuation ? "zone far edge" : "sweep extreme"}. ${warnings.join(" ")}`,
     counterTrend: !aligned, chartPattern, warnings, gradeCaps: caps.map(c => ({ ...c, binding: c.cap === grade })),
     triggered, triggerLevel: triggered ? undefined : levels.entry,
     triggerRule: triggered ? "Price is at the fresh zone with a closed 15m reaction." : "Wait for price at the fresh zone and a closed 15m reaction; do not chase.",
