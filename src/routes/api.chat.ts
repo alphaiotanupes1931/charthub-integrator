@@ -130,7 +130,12 @@ function cardGradeGuard(cardGrade: string | null): StreamTextTransform<ToolSet> 
         if (chunk.type === "text-delta") { text += chunk.text; lastId = chunk.id; }
         if (chunk.type === "finish" && lastId && !/```chart-grade/.test(text)) {
           const fix = cardGradeCorrection(text, cardGrade);
-          if (fix) controller.enqueue({ type: "text-delta", id: lastId, text: fix } as never);
+          if (fix) {
+            const id = `grade-guard-${lastId}`;
+            controller.enqueue({ type: "text-start", id } as never);
+            controller.enqueue({ type: "text-delta", id, text: fix } as never);
+            controller.enqueue({ type: "text-end", id } as never);
+          }
         }
         controller.enqueue(chunk);
       },
