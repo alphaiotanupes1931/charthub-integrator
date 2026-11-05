@@ -715,7 +715,7 @@ export async function getSnapshot(rawTicker: string, interval: string): Promise<
   const lastClosed = candles.at(-1)?.close ?? 0;
   // Distance-to-entry checks want the live price; everything structural uses
   // the last closed bar.
-  const last = forming?.close ?? lastClosed;
+  let last = forming?.close ?? lastClosed;
   const highs = candles.map(c => c.high);
   const lows = candles.map(c => c.low);
   const closes = candles.map(c => c.close);
@@ -737,6 +737,9 @@ export async function getSnapshot(rawTicker: string, interval: string): Promise<
   const candlesDaily = source === "oanda" && oandaHost
     ? await fromOandaHost(oandaHost, process.env.OANDA_API_KEY ?? "", ticker, "D").then(closedBars).catch(() => []) : [];
   const mtf = mtfRead?.mtf;
+  // Execution observation comes from the freshest same-host 15m closed bar when
+  // a primary timeframe has no forming quote (e.g. a Daily scan).
+  if (!forming && source === "oanda") last = mtfRead?.candles15m.at(-1)?.close ?? last;
   const candles4h = mtfRead?.candles4h ?? (interval === "240" ? candles : []);
 
   return {

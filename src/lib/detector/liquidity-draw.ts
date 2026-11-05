@@ -22,7 +22,7 @@ export const emptyDraw = (feed: string): DrawState => ({ version: LIQUIDITY_DRAW
 /** One closed 15m tick. HTF labels are deliberately absent from this state machine. */
 export function advanceDraw(previous: DrawState, bar: Candle, pools: LiquidityPool[], history: Candle[], endPools: LiquidityPool[] = pools): DrawState {
   if (bar.time <= previous.processedTime) return previous;
-  let state: DrawState = { ...previous, processedTime: bar.time };
+  let state: DrawState = { ...previous, crossed: previous.crossed ? { ...previous.crossed } : null, processedTime: bar.time };
   if (state.sweep && state.side && bar.time > state.sweep.time &&
       (state.side === "buyside" ? bar.low < state.sweep.extreme : bar.high > state.sweep.extreme)) {
     state = { ...state, side: null, sweep: null, target: null, pending: null, crossed: null, status: "invalidated" };

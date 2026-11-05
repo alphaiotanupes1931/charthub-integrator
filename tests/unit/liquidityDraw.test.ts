@@ -49,6 +49,17 @@ describe("Marcus Nov 3–4 draw acceptance", () => {
     const state=advanceDraw(buyState(),bar(8,27600,27610,27512,27580),targets,history);
     expect(state.side).toBeNull(); expect(state.status).toBe("invalidated");
   });
+  it("closing through TP1 advances to the next unswept pool without an HTF flip", () => {
+    const state=advanceDraw(buyState(),bar(8,28320,28350,28310,28340),targets,history);
+    expect(state.side).toBe("buyside"); expect(state.target?.price).toBe(28404.60);
+    expect(state.crossed?.pool.price).toBe(28331.20); expect(state.status).toBe("active");
+  });
+  it("a confirmation bar never selects a pool it already wicked through", () => {
+    const pending=advanceDraw(emptyDraw(feed),bar(6,27600,27620,27513,27580),[pool("sellside",27550),...targets],history);
+    const end=targets.map((p,i)=>i===0?{...p,status:"swept" as const}:p);
+    const state=advanceDraw(pending,bar(7,27580,28350,27560,27800),targets,history,end);
+    expect(state.target?.price).toBe(28404.60);
+  });
   it("duplicate or older ticks cannot resurrect or mutate saved draws", () => {
     const state=buyState(); expect(advanceDraw(state,bar(6,27600,27620,27513,27580),targets,history)).toBe(state);
   });
