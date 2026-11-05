@@ -125,7 +125,50 @@ export function replayDraw(series: PoolSeries, feed: string, previous?: DrawStat
   return { state, pools, targets };
 }
 
-export type DrawZone = { top: number; bottom: number; time: number; formedAt: number; frame: "15m" | "1H"; kind: "order block" | "FVG"; continuation: boolean };
+/**
+ * F10 (US30 brief v2): zone life cycle. Bars from `from` on are scanned.
+ * A visit starts when a bar overlaps the zone after being outside it; a finished
+ * visit (price left again) makes the zone "touched". Any close beyond the far
+ * edge (below the bottom for demand, above the top for supply) makes it "broken".
+ * The visit still in progress on the last bar does not count as a prior touch.
+ */
+export type ZoneStatus = "fresh" | "touched" | "broken";
+export function zoneStatus(z: { top: number; bottom: number }, demand: boolean, bars: Candle[], from: number): { status: ZoneStatus; touches: number } {
+  let touches = 0, inside = false;
+  for (const b of bars) {
+    if (b.time < from) continue;
+    if (demand ? b.close < z.bottom : b.close > z.top) return { status: "broken", touches: touches + (inside ? 0 : 1) };
+    const overlap = b.low <= z.top && b.high >= z.bottom;
+    if (overlap && !inside) inside = true;
+    else if (!overlap && inside) { inside = false; touches++; }
+  }
+  return { status: touches > 0 ? "touched" : "fresh", touches };
+}
+
+/**
+ * F9 (US30 brief v2): TP2 is not a hard exit. Once price has reached TP2 the
+ * runner trails behind the last confirmed 1H swing (2-left/2-right fractal) formed
+ * after TP2, and closes on a closed 1H CHoCH against the draw or at the final pool.
+ */
+export type RunnerAction = { action: "hold" | "trail" | "close"; stop: number; reason: string };
+export function runnerAfterTp2(a: { long: boolean; stop: number; tp2: number; finalPool: number; h1: Candle[]; tp2Time: number | null; price: number }): RunnerAction {
+  const { long } = a;
+  if (a.tp2Time == null) return { action: "hold", stop: a.stop, reason: "TP2 not reached; normal management." };
+  if (long ? a.price >= a.finalPool : a.price <= a.finalPool) return { action: "close", stop: a.stop, reason: `Final pool ${a.finalPool} reached.` };
+  const choch = h1ChochAgainst(a.h1, long ? "buyside" : "sellside", a.tp2Time, a.tp2Time, Number.POSITIVE_INFINITY);
+  if (choch) return { action: "close", stop: a.stop, reason: `1H CHoCH against the draw: close beyond the 1H swing ${choch.level}.` };
+  let swing: number | null = null;
+  for (let i = a.h1.length - 3; i >= 2; i--) {
+    const b = a.h1[i]!;
+    if (b.time < a.tp2Time) break;
+    const n = [a.h1[i - 2]!, a.h1[i - 1]!, a.h1[i + 1]!, a.h1[i + 2]!];
+    if (long ? n.every(x => b.low < x.low) : n.every(x => b.high > x.high)) { swing = long ? b.low : b.high; break; }
+  }
+  if (swing != null && (long ? swing > a.stop : swing < a.stop)) return { action: "trail", stop: swing, reason: `Trail behind the 1H swing ${swing}.` };
+  return { action: "hold", stop: a.stop, reason: "Runner past TP2; no newer 1H swing to trail behind yet." };
+}
+
+export type DrawZone = { top: number; bottom: number; time: number; formedAt: number; frame: "15m" | "1H"; kind: "order block" | "FVG"; continuation: boolean; status?: ZoneStatus };
 export function latestDrawZone(series: PoolSeries, state: DrawState, price: number): DrawZone | null {
   if (!state.side || !state.sweep) return null;
   const long = state.side === "buyside";
