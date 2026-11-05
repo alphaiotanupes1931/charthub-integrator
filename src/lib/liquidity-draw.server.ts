@@ -166,7 +166,7 @@ export async function liquidityDrawPlan(snap: MarketSnapshot, memo: ResearchMemo
     counterTrend: !aligned, chartPattern, warnings, gradeCaps: caps.map(c => ({ ...c, binding: c.cap === grade })),
     triggered, triggerLevel: triggered ? undefined : levels.entry,
     triggerRule: triggered ? "Price is at the fresh zone with a closed 15m reaction." : "Wait for price at the fresh zone and a closed 15m reaction; do not chase.",
-    liquidityDraw: { ...base.liquidityDraw, sizeMultiplier: policy.sizeMultiplier, continuation: zone.continuation, finalTarget: htfFinal },
+    liquidityDraw: { ...base.liquidityDraw, sizeMultiplier: policy.sizeMultiplier, continuation: zone.continuation, finalTarget: htfFinal, finalPool: levels.finalPool },
     entryZone: { label: `${zone.frame} ${zone.kind}`, top: zone.top, bottom: zone.bottom,
       quality: 0, qualityLabel: "medium", distanceAtr: Math.abs(levels.entry - snap.lastPrice) / Math.max(snap.stats.atr14, 1e-9) },
   };

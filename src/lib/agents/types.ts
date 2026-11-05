@@ -177,6 +177,8 @@ export type TradePlan = {
     lastSweep: { price: number; time: number } | null;
     pools: Array<{ price: number; frame: string }>;
     sizeMultiplier: number; continuation: boolean; finalTarget?: number;
+    /** F9: last ordered liquidity pool; the runner's hard exit after TP2. */
+    finalPool?: number;
     /** Hours between the sweep wick bar and the scan. */
     sweepAgeHours?: number;
     cancelled?: { reason: string; time: number; level: number; previousSide: "buyside" | "sellside" } | null;

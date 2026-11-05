@@ -4,6 +4,7 @@ import { getSnapshot } from "@/lib/agents/market-data.server";
 import { runResearch } from "@/lib/agents/research.server";
 import { runPlanner } from "@/lib/agents/planner.server";
 import type { AutopilotSettings } from "@/lib/autopilot.shared";
+import { runnerLevels, type RunnerLevels } from "@/lib/stop-management.shared";
 
 export type ProposalDraft = {
   symbol: string;
@@ -20,6 +21,8 @@ export type ProposalDraft = {
   triggered: boolean;
   triggerRule: string | null;
   riskPct?: number;
+  /** F9: liquidity-draw runner levels; the broker target goes to the final pool. */
+  runner?: RunnerLevels | null;
 };
 
 export function parseLevel(text: string | null | undefined): number | null {
@@ -75,5 +78,6 @@ export async function buildProposalDraft(
     reasoning: plan.notes ?? "",
     triggered: plan.triggered !== false,
     triggerRule: plan.triggerRule ?? null,
+    runner: plan.liquidityDraw ? runnerLevels(plan.bias === "Long", takeProfit, parseLevel(plan.tp2), plan.liquidityDraw.finalPool) : null,
   };
 }

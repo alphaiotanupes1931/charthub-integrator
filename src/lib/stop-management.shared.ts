@@ -33,5 +33,24 @@ export function desiredRunnerStop(p: {
   return desired;
 }
 
+/** F9 runner levels carried on the broker trade itself (OANDA comment, max 128 chars). */
+export type RunnerLevels = { tp1: number; tp2: number; finalPool: number };
+
+/** Runner only when TP2 and the final pool lie progressively beyond TP1 in the trade direction. */
+export function runnerLevels(long: boolean, tp1: number | null, tp2: number | null, finalPool: number | null | undefined): RunnerLevels | null {
+  if (tp1 == null || tp2 == null || finalPool == null || ![tp1, tp2, finalPool].every(Number.isFinite)) return null;
+  const ok = long ? tp2 > tp1 && finalPool > tp2 : tp2 < tp1 && finalPool < tp2;
+  return ok ? { tp1, tp2, finalPool } : null;
+}
+export function encodeRunner(r: RunnerLevels): string {
+  return `TM runner tp1=${r.tp1} tp2=${r.tp2} fp=${r.finalPool}`;
+}
+export function decodeRunner(comment: string | null | undefined): RunnerLevels | null {
+  const m = /tp1=(-?[\d.]+) tp2=(-?[\d.]+) fp=(-?[\d.]+)/.exec(comment ?? "");
+  if (!m) return null;
+  const [tp1, tp2, finalPool] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  return [tp1, tp2, finalPool].every(Number.isFinite) ? { tp1, tp2, finalPool } : null;
+}
+
 export const RUNNER_MANAGEMENT_TEXT =
   "After TP1: bank half and move the stop to break-even, not to TP1. The old TP1 level is now support (resistance for shorts) - if price pulls back to it and the 15m reacts, that is an add with its own stop, not an exit. Only trail the runner once it is about 3R ahead, keeping the stop about 1.5R behind price. TP2 is not a hard exit on liquidity-draw trades: after TP2, trail behind 1H swing structure and close only on a closed 1H change of character against the draw or at the final pool.";
