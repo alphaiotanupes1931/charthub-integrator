@@ -17,7 +17,8 @@ export function mapLiquidityPools(series: PoolSeries, asOf: number): LiquidityPo
     const bars = (series[frame] ?? []).filter(b => b.time + SECONDS[frame] <= asOf);
     const add = (side: PoolSide, price: number, time: number, confirmedAt: number, kind: LiquidityPool["kind"]) => {
       if (!Number.isFinite(price) || price <= 0) return;
-      const after = bars.filter(b => b.time >= confirmedAt);
+      const after = (series["15m"] ?? []).filter(b => b.time >= confirmedAt && b.time + 900 <= asOf);
+      if (!after.length) after.push(...bars.filter(b => b.time >= confirmedAt));
       const through = after.some(b => side === "buyside" ? b.close > price : b.close < price);
       const wicked = after.some(b => side === "buyside" ? b.high > price : b.low < price);
       result.push({ id: `${frame}:${side}:${time}:${price}`, frame, side, price, time, confirmedAt, kind,

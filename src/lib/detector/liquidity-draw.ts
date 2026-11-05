@@ -19,7 +19,7 @@ export type DrawRead = { state: DrawState; pools: LiquidityPool[]; targets: Liqu
 export const emptyDraw = (feed: string): DrawState => ({ version: LIQUIDITY_DRAW_VERSION, feed, processedTime: 0, side: null, sweep: null, pending: null, target: null, status: "waiting" });
 
 /** One closed 15m tick. HTF labels are deliberately absent from this state machine. */
-export function advanceDraw(previous: DrawState, bar: Candle, pools: LiquidityPool[], history: Candle[]): DrawState {
+export function advanceDraw(previous: DrawState, bar: Candle, pools: LiquidityPool[], history: Candle[], endPools: LiquidityPool[] = pools): DrawState {
   if (bar.time <= previous.processedTime) return previous;
   let state: DrawState = { ...previous, processedTime: bar.time };
   if (state.sweep && state.side && bar.time > state.sweep.time &&
@@ -33,7 +33,7 @@ export function advanceDraw(previous: DrawState, bar: Candle, pools: LiquidityPo
     if (invalid) state.pending = null;
     else if (confirmed) {
       const side = pending.side === "sellside" ? "buyside" : "sellside";
-      const targets = orderedPools(pools.filter(p => p.id !== pending.pool.id), side, bar.close);
+      const targets = orderedPools(endPools.filter(p => p.id !== pending.pool.id), side, bar.close);
       state = { ...state, side, sweep: { ...pending, confirmedAt: bar.time + 900 }, pending: null,
         target: targets[0] ?? null, status: targets.length ? "active" : "reached" };
     }
@@ -44,9 +44,8 @@ export function advanceDraw(previous: DrawState, bar: Candle, pools: LiquidityPo
     const closedThrough = state.side === "buyside" ? bar.close > state.target.price : bar.close < state.target.price;
     if (reached) state.status = "reached";
     if (closedThrough) {
-      const next = orderedPools(pools.filter(p => p.id !== state.target?.id), state.side, bar.close)[0];
-      state.target = next ?? null;
-      state.status = next ? "active" : "reached";
+      // Preserve the taken identity until rejection confirms the handoff.
+      state.status = "reached";
     }
   }
   const candidates = pools.filter(p => p.status === "unswept" && p.confirmedAt <= bar.time &&
@@ -56,7 +55,7 @@ export function advanceDraw(previous: DrawState, bar: Candle, pools: LiquidityPo
     if (p.side === "buyside" ? bar.high > p.price && bar.close < p.price : bar.low < p.price && bar.close > p.price) candidates.unshift(p);
   }
   // While locked, only a sweep of the draw side can hand it off. Ignore unrelated pullback sweeps.
-  const eligible = state.side ? candidates.filter(p => p.side === state.side) : candidates;
+  const eligible = state.side ? candidates.filter(p => p.id === state.target?.id) : candidates;
   const pool = eligible.sort((a, b) => Math.abs(a.price - bar.close) - Math.abs(b.price - bar.close))[0];
   if (pool && !state.pending) {
     const prior = history.filter(b => b.time < bar.time).slice(-8);
@@ -78,7 +77,7 @@ export function replayDraw(series: PoolSeries, feed: string, previous?: DrawStat
   const m15 = series["15m"] ?? [];
   for (const bar of m15) {
     if (bar.time <= state.processedTime) continue;
-    state = advanceDraw(state, bar, mapLiquidityPools(series, bar.time), m15);
+    state = advanceDraw(state, bar, mapLiquidityPools(series, bar.time), m15, mapLiquidityPools(series, bar.time + 900));
   }
   const latest = m15.at(-1);
   const pools = mapLiquidityPools(series, latest ? latest.time + 900 : 0);
@@ -87,7 +86,7 @@ export function replayDraw(series: PoolSeries, feed: string, previous?: DrawStat
   return { state, pools, targets };
 }
 
-export type DrawZone = { top: number; bottom: number; time: number; frame: "15m" | "1H"; kind: "order block" | "FVG"; continuation: boolean };
+export type DrawZone = { top: number; bottom: number; time: number; formedAt: number; frame: "15m" | "1H"; kind: "order block" | "FVG"; continuation: boolean };
 export function latestDrawZone(series: PoolSeries, state: DrawState, price: number): DrawZone | null {
   if (!state.side || !state.sweep) return null;
   const long = state.side === "buyside";
@@ -98,7 +97,10 @@ export function latestDrawZone(series: PoolSeries, state: DrawState, price: numb
       if (ob.kind !== (long ? "bullish" : "bearish") || ob.time < state.sweep.time || ob.mitigations > 1) continue;
       // At most the current first visit: a prior closed visit is not a fresh continuation.
       if (ob.mitigatedTime && ob.mitigatedTime < (bars.at(-1)?.time ?? 0)) continue;
-      zones.push({ top: ob.top, bottom: ob.bot, time: ob.time, frame, kind: "order block", continuation: ob.time >= state.sweep.confirmedAt });
+      const formation = bars.find(b => b.time > ob.time && (long ? b.close > ob.breakLevel : b.close < ob.breakLevel));
+      if (!formation) continue;
+      const formedAt = formation.time + (frame === "15m" ? 900 : 3600);
+      zones.push({ top: ob.top, bottom: ob.bot, time: ob.time, formedAt, frame, kind: "order block", continuation: formation.time > state.sweep.confirmedAt });
     }
     for (let i = 2; i < bars.length; i++) {
       const a = bars[i - 2], b = bars[i];
@@ -107,7 +109,8 @@ export function latestDrawZone(series: PoolSeries, state: DrawState, price: numb
       if (bottom >= top) continue;
       if (bars.slice(i + 1, -1).some(x => x.low <= top && x.high >= bottom)) continue;
       if (bars.slice(i + 1).some(x => long ? x.close < bottom : x.close > top)) continue;
-      zones.push({ top, bottom, time: a.time, frame, kind: "FVG", continuation: a.time >= state.sweep.confirmedAt });
+      const formedAt = b.time + (frame === "15m" ? 900 : 3600);
+      zones.push({ top, bottom, time: a.time, formedAt, frame, kind: "FVG", continuation: b.time > state.sweep.confirmedAt });
     }
   }
   return zones.filter(z => long ? z.bottom <= price : z.top >= price).sort((a, b) => b.time - a.time)[0] ?? null;

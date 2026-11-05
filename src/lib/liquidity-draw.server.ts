@@ -1,7 +1,7 @@
 import type { MarketSnapshot, ResearchMemo, TradePlan } from "./agents/types";
 import type { TradeStyle } from "./tradeTiming";
 import { computeOrderBlocks } from "./orderBlocks";
-import { advanceDraw, drawGrade, drawLevels, emptyDraw, latestDrawZone, replayDraw, LIQUIDITY_DRAW_VERSION, type DrawRead, type DrawState } from "./detector/liquidity-draw";
+import { drawGrade, drawLevels, latestDrawZone, replayDraw, LIQUIDITY_DRAW_VERSION, type DrawRead, type DrawState } from "./detector/liquidity-draw";
 import type { PoolSeries } from "./detector/liquidity-pools";
 
 function seriesFor(snap: MarketSnapshot): PoolSeries {
@@ -19,6 +19,13 @@ export async function persistentDraw(snap: MarketSnapshot): Promise<DrawRead> {
       .eq("symbol", snap.ticker).eq("feed", feed).maybeSingle();
     if (error) throw new Error("Could not read active draw");
     const prior = data?.state as unknown as DrawState | null;
+    const first = snap.candles15m?.[0];
+    if (prior?.processedTime && first && first.time > prior.processedTime + 900) {
+      throw new Error("Draw continuity unverified after missing candle history. No order issued.");
+    }
+    if (prior?.processedTime && prior.processedTime > (snap.candles15m?.at(-1)?.time ?? 0)) {
+      throw new Error("This snapshot is older than the saved draw. Rescan.");
+    }
     const read = replayDraw(series, feed, prior);
     if (data && Number(data.processed_time) >= read.state.processedTime) return read;
     const { data: saved, error: saveError } = await supabaseAdmin.rpc("save_liquidity_draw", {
@@ -116,7 +123,8 @@ export async function liquidityDrawPlan(snap: MarketSnapshot, memo: ResearchMemo
   const tolerance = Math.max(snap.stats.atr14 * 0.1, snap.lastPrice * 0.0001);
   const atZone = snap.lastPrice >= zone.bottom - tolerance && snap.lastPrice <= zone.top + tolerance;
   const latest = snap.candles15m?.at(-1);
-  const reaction = latest && (bias === "Long" ? latest.close > latest.open && latest.close >= zone.bottom : latest.close < latest.open && latest.close <= zone.top);
+  const reaction = latest && latest.time >= zone.formedAt && latest.low <= zone.top && latest.high >= zone.bottom &&
+    (bias === "Long" ? latest.close > latest.open && latest.close >= zone.top : latest.close < latest.open && latest.close <= zone.bottom);
   const triggered = Boolean(atZone && reaction);
   const note = `${bias === "Long" ? "BUY" : "SELL"} ${zone.continuation ? "continuation" : "sweep setup"} toward ${state.side}. ${zone.frame} ${zone.kind} proximal entry ${fmt(levels.entry)}. Daily/4H affect risk, not direction.`;
   const finalPool = levels.finalPool;
