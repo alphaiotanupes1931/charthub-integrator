@@ -127,7 +127,8 @@
 ## US30 Nov 5 brief (v2)
 - [x] F1 cancel draw on 1H CHoCH; F2 coach grade = card; F3 sweep age on card; F4/F5 C caps; F6 stop clears zones; Nov 5 regression test
 - [x] F9 runner rule + card/coach guidance; F10 broken/touched zones in draw entries, nesting and HTF targets
-- [ ] F9 in Autopilot execution (broker TP currently at TP1; needs per-trade final pool stored) — waiting on approval to change live order handling
+- [x] F9 in Autopilot (OANDA): broker TP at final pool, half banked at TP1 + break-even, 1H trail/CHoCH close after TP2
+- [ ] F9 for TradeLocker/Capital Autopilot orders (still close at TP1)
 - [ ] F7 per-instrument grade calibration — blocked on verified settlement data (Bug 18)
 - [ ] F8 coach side labels / stop-out arithmetic (bugs 7, 12)
 - [ ] Rerun section 6 on real OANDA US30 Nov 5 bars (current test is an event-level fixture)
