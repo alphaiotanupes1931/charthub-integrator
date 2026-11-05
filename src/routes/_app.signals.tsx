@@ -391,6 +391,12 @@ function SignalColumn({ title, tone, signals, onClick }: { title: string; tone: 
               </div>
             )}
             <div className="mt-2 text-xs text-muted-foreground line-clamp-2">{s.notes}</div>
+            {s.liquidityDraw && <div className="mt-2 border-t border-border pt-2 text-[10px] text-muted-foreground space-y-1">
+              <div>Draw: {s.liquidityDraw.side ?? "Awaiting sweep"} · {s.liquidityDraw.status}</div>
+              <div>Feed: {s.liquidityDraw.feed.replace("api-fxtrade.oanda.com", "Live").replace("api-fxpractice.oanda.com", "Practice")}</div>
+              <div>Last sweep: {s.liquidityDraw.lastSweep ? `${s.liquidityDraw.lastSweep.price} · ${new Date(s.liquidityDraw.lastSweep.time * 1000).toLocaleString()}` : "None confirmed"}</div>
+              <div>Pools: {s.liquidityDraw.pools.map(p => `${p.price} (${p.frame})`).join(" → ") || "None mapped"}</div>
+            </div>}
           </button>
         ))}
       </div>
