@@ -176,26 +176,29 @@ export function latestDrawZone(series: PoolSeries, state: DrawState, price: numb
   for (const frame of ["15m", "1H"] as const) {
     const bars = series[frame] ?? [];
     for (const ob of computeOrderBlocks(bars, { max: 30 })) {
-      if (ob.kind !== (long ? "bullish" : "bearish") || ob.time < state.sweep.time || ob.mitigations > 1) continue;
-      // At most the current first visit: a prior closed visit is not a fresh continuation.
-      if (ob.mitigatedTime && ob.mitigatedTime < (bars.at(-1)?.time ?? 0)) continue;
+      if (ob.kind !== (long ? "bullish" : "bearish") || ob.time < state.sweep.time) continue;
       const formation = bars.find(b => b.time > ob.time && (long ? b.close > ob.breakLevel : b.close < ob.breakLevel));
       if (!formation) continue;
       const formedAt = formation.time + (frame === "15m" ? 900 : 3600);
-      zones.push({ top: ob.top, bottom: ob.bot, time: ob.time, formedAt, frame, kind: "order block", continuation: formation.time > state.sweep.confirmedAt });
+      // F10: broken zones never trade again; a touched zone stays usable but is downgraded.
+      const life = zoneStatus({ top: ob.top, bottom: ob.bot }, long, bars, formedAt);
+      if (life.status === "broken" || life.touches > 1) continue;
+      zones.push({ top: ob.top, bottom: ob.bot, time: ob.time, formedAt, frame, kind: "order block", continuation: formation.time > state.sweep.confirmedAt, status: life.status });
     }
     for (let i = 2; i < bars.length; i++) {
       const a = bars[i - 2], b = bars[i];
       if (!a || !b || a.time < state.sweep.time) continue;
       const bottom = long ? a.high : b.high, top = long ? b.low : a.low;
       if (bottom >= top) continue;
-      if (bars.slice(i + 1, -1).some(x => x.low <= top && x.high >= bottom)) continue;
-      if (bars.slice(i + 1).some(x => long ? x.close < bottom : x.close > top)) continue;
       const formedAt = b.time + (frame === "15m" ? 900 : 3600);
-      zones.push({ top, bottom, time: a.time, formedAt, frame, kind: "FVG", continuation: b.time > state.sweep.confirmedAt });
+      const life = zoneStatus({ top, bottom }, long, bars, formedAt);
+      if (life.status === "broken" || life.touches > 1) continue;
+      zones.push({ top, bottom, time: a.time, formedAt, frame, kind: "FVG", continuation: b.time > state.sweep.confirmedAt, status: life.status });
     }
   }
-  return zones.filter(z => long ? z.bottom <= price : z.top >= price).sort((a, b) => b.time - a.time)[0] ?? null;
+  // Fresh zones first, then the most recent.
+  return zones.filter(z => long ? z.bottom <= price : z.top >= price)
+    .sort((a, b) => (a.status === "touched" ? 1 : 0) - (b.status === "touched" ? 1 : 0) || b.time - a.time)[0] ?? null;
 }
 
 export function drawLevels(state: DrawState, zone: DrawZone, targets: LiquidityPool[], atr: number) {
