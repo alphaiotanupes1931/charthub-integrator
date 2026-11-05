@@ -244,6 +244,7 @@ export async function runAutopilotForUser(
           entry: draft.entry,
           stopLoss: draft.stopLoss,
           takeProfit: draft.takeProfit,
+          runner: draft.runner ?? null,
         }, { demoOnly: settings.demoOnly });
         if (!sent.ok) {
           await client

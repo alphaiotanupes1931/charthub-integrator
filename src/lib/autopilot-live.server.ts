@@ -16,6 +16,8 @@ export type LiveOrderIntent = {
   entry: number;
   stopLoss: number | null;
   takeProfit: number | null;
+  /** F9 (OANDA only): broker target at the final pool, levels stored on the trade. */
+  runner?: import("@/lib/stop-management.shared").RunnerLevels | null;
 };
 
 export type LiveOrderOutcome = { ok: boolean; detail: string; orderId?: string };
@@ -202,12 +204,18 @@ async function placeOnVenue(
     positionFill: "DEFAULT",
   };
   // Tag so later trade management only ever touches autopilot's own trades.
-  order.clientExtensions = { tag: AUTOPILOT_TAG, comment: "TradeMind autopilot" };
+  const { encodeRunner } = await import("@/lib/stop-management.shared");
+  const runner = intent.stopLoss ? intent.runner ?? null : null;
+  order.clientExtensions = { tag: AUTOPILOT_TAG, comment: runner ? encodeRunner(runner) : "TradeMind autopilot" };
+  // Trade-level extensions survive the fill so management can read the runner levels.
+  order.tradeClientExtensions = order.clientExtensions;
   if (intent.stopLoss) {
     order.stopLossOnFill = { price: priceStr(instrument, intent.stopLoss), timeInForce: "GTC" };
   }
-  if (intent.takeProfit) {
-    order.takeProfitOnFill = { price: priceStr(instrument, intent.takeProfit), timeInForce: "GTC" };
+  // F9: a runner's broker target is the final pool; TP1 banks half and TP2 starts the 1H trail.
+  const tp = runner ? runner.finalPool : intent.takeProfit;
+  if (tp) {
+    order.takeProfitOnFill = { price: priceStr(instrument, tp), timeInForce: "GTC" };
   }
 
   const res = await oandaSend(
