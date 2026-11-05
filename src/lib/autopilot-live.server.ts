@@ -318,6 +318,48 @@ export async function manageLiveTrades(
     out.checked += 1;
 
     const long = units > 0;
+    // F9 runner trades: bank half at TP1 + break-even, then after TP2 trail behind
+    // 1H structure and close on a 1H CHoCH against the draw (broker TP = final pool).
+    const sm = await import("@/lib/stop-management.shared");
+    const runner = sm.decodeRunner((t["clientExtensions"] as { comment?: string } | undefined)?.comment);
+    if (runner) {
+      const price = last as number;
+      const beyond = (lvl: number) => (long ? price >= lvl : price <= lvl);
+      if (!beyond(runner.tp1)) continue;
+      const alreadyPartial = Math.abs(units) < Math.abs(initialUnits) - 0.5;
+      if (!alreadyPartial) {
+        const half = Math.floor(Math.abs(units) / 2);
+        if (half >= 1) {
+          const res = await oandaSend(target.host, target.creds.apiKey, `/accounts/${target.accountId}/trades/${id}/close`, "PUT", { units: String(half) });
+          if (res.ok) { out.partialsTaken += 1; out.notes.push(`${instrument}: TP1 reached, ${half} units banked, runner kept toward ${runner.finalPool}`); }
+        }
+      }
+      let newStop: number | null = (long ? stop < entry : stop > entry) ? entry : null;
+      const openTime = String(t["openTime"] ?? "");
+      const candles = openTime ? await oandaGet(target.host, target.creds.apiKey,
+        `/instruments/${instrument}/candles?granularity=H1&price=M&from=${encodeURIComponent(openTime)}`) : null;
+      const h1 = (Array.isArray(candles?.body["candles"]) ? (candles!.body["candles"] as Array<Record<string, unknown>>) : [])
+        .filter(c => c["complete"] === true)
+        .map(c => { const m = c["mid"] as Record<string, string>; return { time: Math.floor(Date.parse(String(c["time"])) / 1000), open: Number(m.o), high: Number(m.h), low: Number(m.l), close: Number(m.c) }; });
+      const tp2Bar = h1.find(b => (long ? b.high >= runner.tp2 : b.low <= runner.tp2));
+      const tp2Time = tp2Bar ? tp2Bar.time : beyond(runner.tp2) ? Math.floor(Date.now() / 1000) : null;
+      const { runnerAfterTp2 } = await import("@/lib/detector/liquidity-draw");
+      const r = runnerAfterTp2({ long, stop: newStop ?? stop, tp2: runner.tp2, finalPool: runner.finalPool, h1, tp2Time, price });
+      if (r.action === "close") {
+        const res = await oandaSend(target.host, target.creds.apiKey, `/accounts/${target.accountId}/trades/${id}/close`, "PUT", { units: "ALL" });
+        out.notes.push(res.ok ? `${instrument}: runner closed. ${r.reason}` : `${instrument}: could not close the runner (HTTP ${res.status})`);
+        continue;
+      }
+      if (r.action === "trail") newStop = r.stop;
+      if (newStop === null) continue;
+      const res = await oandaSend(target.host, target.creds.apiKey, `/accounts/${target.accountId}/trades/${id}/orders`, "PUT",
+        { stopLoss: { price: priceStr(instrument, newStop), timeInForce: "GTC" } });
+      if (res.ok) {
+        if (newStop === entry) { out.movedToBreakEven += 1; out.notes.push(`${instrument}: TP1 reached, stop to break-even`); }
+        else { out.trailed += 1; out.notes.push(`${instrument}: runner stop trailed to ${priceStr(instrument, newStop)} behind the 1H swing`); }
+      } else out.notes.push(`${instrument}: could not move the stop (HTTP ${res.status})`);
+      continue;
+    }
     const risk = Math.abs(entry - stop);
     if (risk <= 0) continue;
     const price = last as number;
