@@ -213,7 +213,7 @@ export function drawLevels(state: DrawState, zone: DrawZone, targets: LiquidityP
   return { entry, stop, tp1: first.price, tp2: forward[1]?.price ?? first.price, finalPool: forward.at(-1)?.price ?? first.price };
 }
 
-export type DrawCap = { label: string; cap: "C"; reason: string };
+export type DrawCap = { label: string; cap: "B" | "C"; reason: string };
 
 /**
  * F4 + F5 (US30 Nov 5 brief).
