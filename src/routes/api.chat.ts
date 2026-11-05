@@ -2,7 +2,8 @@ import { getGatewayKey } from "@/lib/gateway-key";
 import { TRADE_MANAGEMENT_RULES_PROMPT } from "@/lib/trade-management-rules.shared";
 import { COACH_INTEGRITY_RULES } from "@/lib/coach-integrity";
 import { createFileRoute } from "@tanstack/react-router";
-import { priorScansBlock, voidPriorScanVerdicts } from "@/lib/ai-context";
+import { extractPriorScans, priorScansBlock, voidPriorScanVerdicts } from "@/lib/ai-context";
+import { cardGradeCorrection } from "@/lib/coach-grade-guard";
 import { levelCheckBlock, parseStatedLevels } from "@/lib/levelValidation";
 import { convertToModelMessages, streamText, type StreamTextTransform, type ToolSet, type UIMessage } from "ai";
 import { createClient } from "@supabase/supabase-js";
@@ -118,6 +119,24 @@ const stripReasoningTransform: StreamTextTransform<ToolSet> = () =>
       controller.enqueue(chunk);
     },
   });
+
+/** F2: if a reply (without a fresh scan card) states a grade other than the card's, append a correction. */
+function cardGradeGuard(cardGrade: string | null): StreamTextTransform<ToolSet> {
+  return () => {
+    let text = "";
+    let lastId: string | null = null;
+    return new TransformStream({
+      transform(chunk, controller) {
+        if (chunk.type === "text-delta") { text += chunk.text; lastId = chunk.id; }
+        if (chunk.type === "finish" && lastId && !/```chart-grade/.test(text)) {
+          const fix = cardGradeCorrection(text, cardGrade);
+          if (fix) controller.enqueue({ type: "text-delta", id: lastId, text: fix } as never);
+        }
+        controller.enqueue(chunk);
+      },
+    });
+  };
+}
 
 type Trade = {
   id: string;
@@ -1252,7 +1271,7 @@ ATTACHED CHART OVERRIDE (this message has an image):
           temperature: useClaude ? 0.45 : undefined,
           abortSignal: request.signal,
           ...(useClaude ? {} : { providerOptions: { lovable: { service_tier: "priority" } } }),
-          experimental_transform: stripReasoningTransform,
+          experimental_transform: [stripReasoningTransform, cardGradeGuard(extractPriorScans(messages).at(-1)?.grade ?? null)],
           onError: async ({ error }) => {
             const msg = (error as Error)?.message ?? String(error);
             console.error(`[chat] req=${reqId} stream_error`, msg);
