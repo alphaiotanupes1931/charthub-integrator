@@ -27,7 +27,13 @@ import { ENGINE_FIX_LABEL } from "@/lib/signal-engine-version";
 
 
 export const Route = createFileRoute("/_app/signals")({
-  head: () => ({ meta: [{ title: "AI Signals, TradeMind" }] }),
+  head: () => ({ meta: [
+    { title: "AI Signals, TradeMind" },
+    { name: "description", content: "Review TradeMind watchlist setups, liquidity draws and scan outcomes." },
+    { property: "og:title", content: "TradeMind AI Signals" },
+    { property: "og:description", content: "Review watchlist setups, liquidity draws and scan outcomes." },
+    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
+  ] }),
   component: SignalsRoute,
 });
 
@@ -91,6 +97,8 @@ function SignalsPage() {
           refPrice: s.refPrice,
           ...(s.trials ?? {}),
           gradeCaps: s.gradeCaps ?? null,
+          liquidityDraw: s.liquidityDraw,
+          dataSource: s.liquidityDraw?.feed,
         });
       }
       setHistory(listSignals());

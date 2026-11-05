@@ -14,6 +14,7 @@ export type DrawState = {
   version: typeof LIQUIDITY_DRAW_VERSION; feed: string; processedTime: number;
   side: PoolSide | null; sweep: Sweep | null; pending: Sweep | null;
   target: LiquidityPool | null; status: "active" | "waiting" | "reached" | "invalidated";
+  crossed?: { pool: LiquidityPool; extreme: number; time: number } | null;
 };
 export type DrawRead = { state: DrawState; pools: LiquidityPool[]; targets: LiquidityPool[] };
 export const emptyDraw = (feed: string): DrawState => ({ version: LIQUIDITY_DRAW_VERSION, feed, processedTime: 0, side: null, sweep: null, pending: null, target: null, status: "waiting" });
@@ -24,7 +25,7 @@ export function advanceDraw(previous: DrawState, bar: Candle, pools: LiquidityPo
   let state: DrawState = { ...previous, processedTime: bar.time };
   if (state.sweep && state.side && bar.time > state.sweep.time &&
       (state.side === "buyside" ? bar.low < state.sweep.extreme : bar.high > state.sweep.extreme)) {
-    state = { ...state, side: null, sweep: null, target: null, pending: null, status: "invalidated" };
+    state = { ...state, side: null, sweep: null, target: null, pending: null, crossed: null, status: "invalidated" };
   }
   const pending = state.pending;
   if (pending && bar.time > pending.time) {
@@ -35,7 +36,7 @@ export function advanceDraw(previous: DrawState, bar: Candle, pools: LiquidityPo
       const side = pending.side === "sellside" ? "buyside" : "sellside";
       const targets = orderedPools(endPools.filter(p => p.id !== pending.pool.id), side, bar.close);
       state = { ...state, side, sweep: { ...pending, confirmedAt: bar.time + 900 }, pending: null,
-        target: targets[0] ?? null, status: targets.length ? "active" : "reached" };
+        target: targets[0] ?? null, crossed: null, status: targets.length ? "active" : "reached" };
     }
   }
   // Persist the target identity; a closer newly formed pool cannot rewrite the lock.
@@ -44,8 +45,10 @@ export function advanceDraw(previous: DrawState, bar: Candle, pools: LiquidityPo
     const closedThrough = state.side === "buyside" ? bar.close > state.target.price : bar.close < state.target.price;
     if (reached) state.status = "reached";
     if (closedThrough) {
-      // Preserve the taken identity until rejection confirms the handoff.
-      state.status = "reached";
+      state.crossed = { pool: state.target, extreme: state.side === "buyside" ? bar.high : bar.low, time: bar.time };
+      const next = orderedPools(endPools, state.side, bar.close)[0];
+      state.target = next ?? state.target;
+      state.status = next ? "active" : "reached";
     }
   }
   const candidates = pools.filter(p => p.status === "unswept" && p.confirmedAt <= bar.time &&
@@ -54,8 +57,13 @@ export function advanceDraw(previous: DrawState, bar: Candle, pools: LiquidityPo
     const p = state.target;
     if (p.side === "buyside" ? bar.high > p.price && bar.close < p.price : bar.low < p.price && bar.close > p.price) candidates.unshift(p);
   }
+  const crossed = state.crossed;
+  if (crossed && state.side && bar.time > crossed.time) {
+    crossed.extreme = state.side === "buyside" ? Math.max(crossed.extreme, bar.high) : Math.min(crossed.extreme, bar.low);
+    if (state.side === "buyside" ? bar.close < crossed.pool.price : bar.close > crossed.pool.price) candidates.unshift(crossed.pool);
+  }
   // While locked, only a sweep of the draw side can hand it off. Ignore unrelated pullback sweeps.
-  const eligible = state.side ? candidates.filter(p => p.id === state.target?.id) : candidates;
+  const eligible = state.side ? candidates.filter(p => p.id === state.target?.id || p.id === state.crossed?.pool.id) : candidates;
   const pool = eligible.sort((a, b) => Math.abs(a.price - bar.close) - Math.abs(b.price - bar.close))[0];
   if (pool && !state.pending) {
     const prior = history.filter(b => b.time < bar.time).slice(-8);
@@ -66,7 +74,7 @@ export function advanceDraw(previous: DrawState, bar: Candle, pools: LiquidityPo
       if (!b || !a || !z || !a2 || !z2) continue;
       if (pool.side === "sellside" ? [a, a2, z, z2].every(x => b.high > x.high) : [a, a2, z, z2].every(x => b.low < x.low)) swing = pool.side === "sellside" ? b.high : b.low;
     }
-    if (swing !== null) state.pending = { side: pool.side, pool, extreme: pool.side === "sellside" ? bar.low : bar.high,
+    if (swing !== null) state.pending = { side: pool.side, pool, extreme: pool.id === state.crossed?.pool.id ? state.crossed.extreme : pool.side === "sellside" ? bar.low : bar.high,
       time: bar.time, confirmedAt: 0, breakLevel: swing };
   }
   return state;

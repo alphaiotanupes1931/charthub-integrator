@@ -44,7 +44,10 @@ export function TradeOfferDialog({
 
   const sizing = useQuery({
     queryKey: ["autoTrade", "preview", offer?.symbol, offer?.entry, offer?.stop],
-    queryFn: () => preview({ data: { entry: offer!.entry, stop: offer!.stop } }),
+    queryFn: () => {
+      if (!offer) throw new Error("No trade selected");
+      return preview({ data: { symbol: offer.symbol, entry: offer.entry, stop: offer.stop } });
+    },
     enabled: Boolean(offer),
     retry: false,
   });
