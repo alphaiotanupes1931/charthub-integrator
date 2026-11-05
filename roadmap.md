@@ -1,5 +1,11 @@
 # Roadmap
 
+## Liquidity draw addendum (Nov 5)
+- [ ] Build shared pool mapping, confirmed-sweep draw lock and proximal-zone entries.
+- [ ] Persist draw state atomically by instrument/feed across dashboard and scheduled scans.
+- [ ] Integrate Classic grading/size, targets, scan logging and visible draw/feed details.
+- [ ] Run addendum acceptance regressions and frozen entry tests; verify a signed-in scan.
+
 ## Monitoring fixes (Nov 3)
 - [x] Keep demo trade management and run logging active when scheduled entries are skipped (six mocked runner regressions passed; no broker orders placed).
 - [x] Rebind chart overlays after chart recreation; isolated browser style/resize/scroll/toggle/unmount check passed with zero errors. Signed-in dashboard verification waits on backend maintenance; publishing remains pending.
