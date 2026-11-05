@@ -5,6 +5,7 @@
 - [x] Persist draw state atomically by instrument/feed across dashboard and scheduled scans.
 - [x] Integrate Classic grading/size, targets, scan logging and visible draw/feed details.
 - [x] Run addendum acceptance regressions and frozen entry tests; signed-in Gold scan saved/read back with zero browser errors (892 unit tests passed; no orders).
+- [x] Added WTI Oil to the owner's Autopilot watchlist (9 symbols) and published the liquidity-draw engine to production (1,361 tests passed, typecheck clean).
 
 ## Monitoring fixes (Nov 3)
 - [x] Keep demo trade management and run logging active when scheduled entries are skipped (six mocked runner regressions passed; no broker orders placed).
