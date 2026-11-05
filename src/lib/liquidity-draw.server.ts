@@ -101,7 +101,11 @@ export async function liquidityDrawPlan(snap: MarketSnapshot, memo: ResearchMemo
   const decimals0 = snap.lastPrice >= 100 ? 2 : snap.lastPrice >= 10 ? 3 : 5;
   const lateCaps = drawLateCaps({ long: bias === "Long", entry: levels.entry, tp1: levels.tp1, sweepPrice: state.sweep.extreme,
     drawPrice: state.target?.price ?? null, continuation: zone.continuation, pools: read.pools, fmt: n => n.toFixed(decimals0) });
-  const policy = lateCaps.length ? { cap: "C" as const, sizeMultiplier: 0.25 } : policy0;
+  // F10: a zone that already held one visit is downgraded to B at most.
+  if (zone.status === "touched" && policy0.cap === "A") lateCaps.push({ label: "Touched zone", cap: "B" as never,
+    reason: `The ${zone.frame} ${zone.kind} was already visited once; second touches break more often.` });
+  const policy = lateCaps.some(c => c.cap === "C") ? { cap: "C" as const, sizeMultiplier: 0.25 }
+    : lateCaps.length ? { cap: "B" as const, sizeMultiplier: Math.min(policy0.sizeMultiplier, 0.5) } : policy0;
   let grade: TradePlan["grade"] = policy.cap;
   const warnings: string[] = [];
   const caps: NonNullable<TradePlan["gradeCaps"]> = [{ label: "Liquidity draw policy", cap: policy0.cap,
