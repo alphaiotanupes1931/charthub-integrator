@@ -36,6 +36,27 @@ export type TrackRecord = {
 
 const LADDER = ["C", "B", "A"] as const;
 
+/** F7: a symbol's grade bucket (e.g. US30 A/A+) with this many settled calls... */
+export const GRADE_BUCKET_MIN_SETTLED = 15;
+
+/**
+ * F7 settlement cap: when the same symbol's past calls at this grade bucket
+ * have 15+ settled results with negative expectancy, cap the new call at C.
+ * A and A+ share one bucket. Unfilled/expired count as 0R.
+ */
+export function gradeBucketCap(rows: TrackRow[], grade: string, label: string): { cap: boolean; n: number; avgR: number; text: string } {
+  const settled = rows.filter((r) => r.status !== "open" && r.status !== "no_trade");
+  const n = settled.length;
+  const sum = settled.reduce((a, r) => a + (typeof r.realized_r === "number" && Number.isFinite(r.realized_r) ? r.realized_r : 0), 0);
+  const avgR = n ? Math.round((sum / n) * 100) / 100 : 0;
+  const cap = n >= GRADE_BUCKET_MIN_SETTLED && avgR < 0 && grade !== "C" && grade !== "NO ENTRY";
+  return { cap, n, avgR, text: cap ? `Past ${label} ${grade} calls: ${n} settled at ${avgR}R average. This grade has lost money on this market, so the call is capped at C.` : "" };
+}
+
+export function gradeBucket(grade: string): string[] {
+  return grade === "A" || grade === "A+" ? ["A", "A+"] : [grade];
+}
+
 export function evaluateTrackRecord(
   rows: TrackRow[],
   grade: string,
