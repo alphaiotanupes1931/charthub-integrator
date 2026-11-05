@@ -193,7 +193,7 @@ export async function runAutopilotForUser(
           stop_loss: draft.stopLoss,
           take_profit: draft.takeProfit,
           units: draft.units,
-          risk_pct: settings.riskPct,
+          risk_pct: draft.riskPct ?? settings.riskPct,
           order_type: "market",
           account_target: "live",
           reasoning: draft.reasoning,

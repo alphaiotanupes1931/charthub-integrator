@@ -27,7 +27,13 @@ import { ENGINE_FIX_LABEL } from "@/lib/signal-engine-version";
 
 
 export const Route = createFileRoute("/_app/signals")({
-  head: () => ({ meta: [{ title: "AI Signals, TradeMind" }] }),
+  head: () => ({ meta: [
+    { title: "AI Signals, TradeMind" },
+    { name: "description", content: "Review TradeMind watchlist setups, liquidity draws and scan outcomes." },
+    { property: "og:title", content: "TradeMind AI Signals" },
+    { property: "og:description", content: "Review watchlist setups, liquidity draws and scan outcomes." },
+    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
+  ] }),
   component: SignalsRoute,
 });
 
@@ -91,6 +97,8 @@ function SignalsPage() {
           refPrice: s.refPrice,
           ...(s.trials ?? {}),
           gradeCaps: s.gradeCaps ?? null,
+          liquidityDraw: s.liquidityDraw,
+          dataSource: s.liquidityDraw?.feed,
         });
       }
       setHistory(listSignals());
@@ -383,6 +391,12 @@ function SignalColumn({ title, tone, signals, onClick }: { title: string; tone: 
               </div>
             )}
             <div className="mt-2 text-xs text-muted-foreground line-clamp-2">{s.notes}</div>
+            {s.liquidityDraw && <div className="mt-2 border-t border-border pt-2 text-[10px] text-muted-foreground space-y-1">
+              <div>Draw: {s.liquidityDraw.side ?? "Awaiting sweep"} · {s.liquidityDraw.status}</div>
+              <div>Feed: {s.liquidityDraw.feed.replace("api-fxtrade.oanda.com", "Live").replace("api-fxpractice.oanda.com", "Practice")}</div>
+              <div>Last sweep: {s.liquidityDraw.lastSweep ? `${s.liquidityDraw.lastSweep.price} · ${new Date(s.liquidityDraw.lastSweep.time * 1000).toLocaleString()}` : "None confirmed"}</div>
+              <div>Pools: {s.liquidityDraw.pools.map(p => `${p.price} (${p.frame})`).join(" → ") || "None mapped"}</div>
+            </div>}
           </button>
         ))}
       </div>

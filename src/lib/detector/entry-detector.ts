@@ -15,7 +15,7 @@ import { findSweepAndBreak } from "@/lib/sequence-entry-shadow";
 
 export const ENTRY_FRAMEWORK_VERSION = "entry-framework-2.0-shadow";
 
-export type EntryModel = "order_block" | "order_block_mid" | "imbalance" | "broken_level" | "retracement_618_79" | "legacy";
+export type EntryModel = "order_block" | "order_block_mid" | "imbalance" | "broken_level" | "retracement_618_79" | "legacy" | "liquidity_draw_proximal";
 export const CANDIDATE_MODELS = ["order_block", "order_block_mid", "imbalance", "broken_level", "retracement_618_79"] as const;
 export type CandidateModel = (typeof CANDIDATE_MODELS)[number];
 

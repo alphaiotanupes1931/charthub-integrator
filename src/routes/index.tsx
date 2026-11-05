@@ -37,6 +37,8 @@ export const Route = createFileRoute("/")({
           "TradeMind grades every trade setup on structure, risk, and confluence. Take the ones that meet your rules. Skip the rest.",
       },
       { property: "og:title", content: "TradeMind — Setup grading for active traders" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       {
         property: "og:description",
         content: "Grade every setup A+ to No Entry. Journal, review, improve.",

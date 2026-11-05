@@ -53,6 +53,9 @@ export type OrderFlow = {
 };
 
 export type MarketSnapshot = {
+  /** Exact homogeneous host/price stream used for draw detection. */
+  liquidityFeed?: string;
+  candlesDaily?: Candle[];
   ticker: string;
   interval: string;
   source: "oanda" | "yahoo" | "coingecko" | "twelvedata" | "binance" | "cached" | "backup" | "unavailable";
@@ -169,6 +172,12 @@ export type ResearchMemo = {
 };
 
 export type TradePlan = {
+  liquidityDraw?: {
+    status: string; side: "buyside" | "sellside" | null; feed: string;
+    lastSweep: { price: number; time: number } | null;
+    pools: Array<{ price: number; frame: string }>;
+    sizeMultiplier: number; continuation: boolean; finalTarget?: number;
+  };
   /** Immutable ruleset identifier used to reproduce and audit this scan. */
   methodologyVersion: string;
   grade: "A+" | "A" | "B" | "C" | "NO ENTRY";

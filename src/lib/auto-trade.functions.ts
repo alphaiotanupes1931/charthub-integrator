@@ -101,7 +101,7 @@ export const setAutoTradingMode = createServerFn({ method: "POST" })
 export const previewAutoTrade = createServerFn({ method: "POST" })
   .middleware([requireCapability("autopilot")])
   .inputValidator((raw: unknown) =>
-    z.object({ entry: z.number(), stop: z.number() }).parse(raw),
+    z.object({ entry: z.number(), stop: z.number(), symbol: z.string().max(30).optional() }).parse(raw),
   )
   .handler(async ({ data, context }) => {
     const { data: row } = await context.supabase
@@ -112,14 +112,16 @@ export const previewAutoTrade = createServerFn({ method: "POST" })
     const settings = settingsFromRow((row as Record<string, unknown> | null) ?? null);
     const { liveAccountFacts, sizeFromRisk } = await import("@/lib/auto-trade.server");
     const facts = await liveAccountFacts(context.userId);
-    const units = sizeFromRisk(facts.equity, settings.riskPct, data.entry, data.stop);
+    const { savedDrawRisk } = await import("./draw-order-risk.server");
+    const riskPct = settings.riskPct * await savedDrawRisk(context.supabase, context.userId, data.symbol, data.entry, data.stop);
+    const units = sizeFromRisk(facts.equity, riskPct, data.entry, data.stop);
     return {
       connected: facts.connected,
       reason: facts.reason,
       equity: facts.equity,
       currency: facts.currency,
-      riskPct: settings.riskPct,
-      riskAmount: Math.round(((facts.equity * settings.riskPct) / 100) * 100) / 100,
+      riskPct,
+      riskAmount: Math.round(((facts.equity * riskPct) / 100) * 100) / 100,
       units,
       // Approximate value of the position at entry (units x entry, in the
       // instrument's quote currency). Margin needed depends on the account's
@@ -179,7 +181,9 @@ export const placeAutoTrade = createServerFn({ method: "POST" })
     );
     if (!verdict.allowed) throw new Error(verdict.reason ?? "This trade breaks one of your risk rails.");
 
-    const units = sizeFromRisk(facts.equity, settings.riskPct, data.entry, data.stopLoss);
+    const { savedDrawRisk } = await import("./draw-order-risk.server");
+    const riskPct = settings.riskPct * await savedDrawRisk(context.supabase, context.userId, data.symbol, data.entry, data.stopLoss);
+    const units = sizeFromRisk(facts.equity, riskPct, data.entry, data.stopLoss);
     if (!units) {
       throw new Error("Your account is too small for this stop distance at your current risk setting.");
     }
@@ -197,7 +201,7 @@ export const placeAutoTrade = createServerFn({ method: "POST" })
         stop_loss: data.stopLoss,
         take_profit: data.takeProfit ?? null,
         units,
-        risk_pct: settings.riskPct,
+        risk_pct: riskPct,
         order_type: "market",
         account_target: "live",
         reasoning: data.reasoning ?? null,

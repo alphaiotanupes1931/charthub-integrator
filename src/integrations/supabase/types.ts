@@ -1062,6 +1062,33 @@ export type Database = {
         }
         Relationships: []
       }
+      liquidity_draw_state: {
+        Row: {
+          feed: string
+          processed_time: number
+          state: Json | null
+          symbol: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          feed: string
+          processed_time?: number
+          state?: Json | null
+          symbol: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          feed?: string
+          processed_time?: number
+          state?: Json | null
+          symbol?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
       manual_revenue: {
         Row: {
           active: boolean
@@ -1913,6 +1940,7 @@ export type Database = {
           grade_caps: Json | null
           htf_bias: string | null
           id: string
+          liquidity_draw: Json | null
           mae_r: number | null
           methodology_version: string | null
           mfe_r: number | null
@@ -1947,6 +1975,7 @@ export type Database = {
           grade_caps?: Json | null
           htf_bias?: string | null
           id?: string
+          liquidity_draw?: Json | null
           mae_r?: number | null
           methodology_version?: string | null
           mfe_r?: number | null
@@ -1981,6 +2010,7 @@ export type Database = {
           grade_caps?: Json | null
           htf_bias?: string | null
           id?: string
+          liquidity_draw?: Json | null
           mae_r?: number | null
           methodology_version?: string | null
           mfe_r?: number | null
@@ -3030,6 +3060,16 @@ export type Database = {
       redeem_invite: {
         Args: { _code: string; _user_id: string }
         Returns: string
+      }
+      save_liquidity_draw: {
+        Args: {
+          p_feed: string
+          p_state: Json
+          p_symbol: string
+          p_time: number
+          p_version: number
+        }
+        Returns: boolean
       }
     }
     Enums: {

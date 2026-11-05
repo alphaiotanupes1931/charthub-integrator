@@ -105,6 +105,10 @@ export const Route = createFileRoute("/_app/dashboard")({
     meta: [
       { title: "Dashboard, TradeMind" },
       { name: "description", content: "Live chart and AI setup analysis for your active instrument." },
+      { property: "og:title", content: "TradeMind Trading Dashboard" },
+      { property: "og:description", content: "Review liquidity draws, chart patterns and protected trading setups." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   validateSearch: (s: Record<string, unknown>): DashboardSearch => ({
@@ -253,6 +257,7 @@ type ScanResult = {
   dailyBias?: "bullish" | "bearish" | "neutral";
   currentTrend?: "up" | "down" | "range";
   synopsis?: string;
+  liquidityDraw?: import("@/lib/agents/types").TradePlan["liquidityDraw"];
   gradeCaps?: Array<{ label: string; cap: string; reason: string; binding?: boolean }>;
   dataSource?: string;
   dataFetchedAt?: string;
@@ -326,6 +331,8 @@ function normalizePlanLevels(plan: ScanResult, last?: number): NormalizedLevels 
   let stop = num(plan.stop);
   let tp1 = num(plan.tp1);
   let tp2 = num(plan.tp2);
+  // Draw levels are the actual proximal edge / ordered pools, never synthetic R floors.
+  if (plan.entryModel === "liquidity_draw_proximal") return { bias, entry, stop, tp1, tp2 };
   if (entry && stop && tp1 && tp2 && last && isFinite(last) && last > 0) {
     const tol = Math.max(last * 0.0001, Math.abs(entry - stop) * 0.05);
     if (bias === "long" && entry > last + tol) entry = last;
@@ -627,6 +634,17 @@ function ScanTicket({
           </div>
         )}
 
+        {result.liquidityDraw && (
+          <div className="border-y border-border py-3 text-xs space-y-2">
+            <div className="flex justify-between gap-3 flex-wrap">
+              <strong>Draw: {result.liquidityDraw.side ?? "Awaiting sweep"} · {result.liquidityDraw.status}</strong>
+              <span className="text-muted-foreground">{result.liquidityDraw.feed.replace("api-fxtrade.oanda.com", "Live").replace("api-fxpractice.oanda.com", "Practice")}</span>
+            </div>
+            {result.liquidityDraw.lastSweep && <p>Last sweep: {fmtPrice(result.liquidityDraw.lastSweep.price, decimalsFor(result.liquidityDraw.lastSweep.price))} · {new Date(result.liquidityDraw.lastSweep.time * 1000).toLocaleString()}</p>}
+            <p>Next pools: {result.liquidityDraw.pools.map(p => `${fmtPrice(p.price, decimalsFor(p.price))} (${p.frame})`).join(" → ") || "None mapped"}</p>
+            <p className="text-muted-foreground">{result.liquidityDraw.continuation ? "Continuation" : "Sweep setup"} · {result.liquidityDraw.sizeMultiplier * 100}% of configured risk</p>
+          </div>
+        )}
         {!isNoEntry && result.triggered === false && (
           <div className="rounded-xl border border-gold/40 bg-gold/10 px-3 py-2">
             <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-gold">
@@ -808,7 +826,7 @@ function ScanTicket({
       >
         <MetricRow label="Daily bias (today)" value={dailyBiasLabel} />
         <MetricRow label="Current trend (4H)" value={currentTrendLabel} />
-        {biasTrendConflict && (
+        {biasTrendConflict && !result.liquidityDraw && (
           <p className="pt-1 text-[10px] leading-relaxed text-muted-foreground">
             Price is moving against the daily bias, so it is travelling into the level rather than away from it. Wait
             for confirmation on the lower timeframe.
@@ -1610,6 +1628,7 @@ function Dashboard() {
       seqSessionPhase: plan.sequenceShadow?.sessionPhase ? `${plan.sequenceShadow.sessionPhase.session}:${plan.sequenceShadow.sessionPhase.phase}` : null,
       seqH1Phase: plan.sequenceShadow?.h1Phase ?? null,
       entryModel: plan.entryModel ?? "legacy",
+      liquidityDraw: plan.liquidityDraw,
       entryCandidates: plan.entryCandidates ?? null,
       gradeCaps: plan.gradeCaps ?? null,
     });

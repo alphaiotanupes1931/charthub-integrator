@@ -126,7 +126,7 @@ async function fromOandaHost(host: string, key: string, ticker: string, interval
   }
 }
 
-async function fromOanda(ticker: string, interval: string): Promise<Candle[]> {
+async function fromOanda(ticker: string, interval: string, onHost?: (host: string) => void): Promise<Candle[]> {
   const key = process.env.OANDA_API_KEY;
   if (!key || !oandaInstrument(ticker)) throw new Error("oanda not configured for ticker");
   const practiceFirst = (process.env.OANDA_ENV ?? "live").toLowerCase() === "practice";
@@ -135,7 +135,11 @@ async function fromOanda(ticker: string, interval: string): Promise<Candle[]> {
     : ["api-fxtrade.oanda.com", "api-fxpractice.oanda.com"];
   let lastError: unknown;
   for (const host of hosts) {
-    try { return await fromOandaHost(host, key, ticker, interval); }
+    try {
+      const bars = await fromOandaHost(host, key, ticker, interval);
+      onHost?.(host);
+      return bars;
+    }
     catch (error) { lastError = error; }
   }
   throw lastError instanceof Error ? lastError : new Error("oanda unavailable");
@@ -642,15 +646,23 @@ async function buildMtf(
   ticker: string,
   primaryInterval: string,
   primaryCandles: Candle[],
+  oandaHost?: string,
 ): Promise<{ mtf: MtfContext; candles4h: Candle[]; candles1h: Candle[]; candles15m: Candle[]; candles5m: Candle[] } | undefined> {
-  const useH4 = primaryInterval === "240" ? primaryCandles : await loadCandlesSafe(ticker, "240");
-  const useH1 = primaryInterval === "60"  ? primaryCandles : await loadCandlesSafe(ticker, "60");
-  const use15 = primaryInterval === "15"  ? primaryCandles : await loadCandlesSafe(ticker, "15");
-  const use5 = primaryInterval === "5" ? primaryCandles : await loadCandlesSafe(ticker, "5");
+  const load = (interval: string) => oandaHost
+    ? fromOandaHost(oandaHost, process.env.OANDA_API_KEY ?? "", ticker, interval).then(closedBars)
+    : loadCandlesSafe(ticker, interval);
+  const [useH4, useH1, use15, use5] = await Promise.all([
+    primaryInterval === "240" ? primaryCandles : load("240"),
+    primaryInterval === "60" ? primaryCandles : load("60"),
+    primaryInterval === "15" ? primaryCandles : load("15"),
+    primaryInterval === "5" ? primaryCandles : load("5"),
+  ]);
   if (useH4.length < 20 || useH1.length < 20 || use15.length < 10) return undefined;
   const h4 = h4Analysis(useH4);
   const base = { h4, h1: h1Analysis(useH1, h4.direction), m15: m15Confirmation(use15) };
-  const ladder = await getTimeframeLadder(ticker).catch(() => [] as TimeframeRead[]);
+  const ladder = oandaHost
+    ? (await Promise.all(LADDER.map(async tf => readTimeframe(tf.label, tf.interval, await load(tf.interval).catch(() => []))))).filter((r): r is TimeframeRead => r !== null)
+    : await getTimeframeLadder(ticker).catch(() => [] as TimeframeRead[]);
   return { mtf: { ...base, alignment: computeAlignment(base), ladder }, candles4h: useH4, candles1h: useH1, candles15m: use15, candles5m: use5 };
 }
 
@@ -658,11 +670,12 @@ async function buildMtf(
 export async function getSnapshot(rawTicker: string, interval: string): Promise<MarketSnapshot> {
   const ticker = normalizeTicker(rawTicker);
   let candles: Candle[] = [];
+  let oandaHost: string | undefined;
 
   let source: MarketSnapshot["source"] = "unavailable";
   // Same feed order as the charts so a signal and its chart never disagree.
   const loaders: Array<{ source: Exclude<MarketSnapshot["source"], "backup" | "unavailable" | "cached">; load: () => Promise<Candle[]> }> = [
-    { source: "oanda", load: () => fromOanda(ticker, interval) },
+    { source: "oanda", load: () => fromOanda(ticker, interval, host => { oandaHost = host; }) },
     { source: "binance", load: () => fromBinance(ticker, interval) },
     { source: "twelvedata", load: () => fromTwelveData(ticker, interval) },
     // Yahoo backstop so indices/energy scans survive an OANDA 401.
@@ -702,7 +715,7 @@ export async function getSnapshot(rawTicker: string, interval: string): Promise<
   const lastClosed = candles.at(-1)?.close ?? 0;
   // Distance-to-entry checks want the live price; everything structural uses
   // the last closed bar.
-  const last = forming?.close ?? lastClosed;
+  let last = forming?.close ?? lastClosed;
   const highs = candles.map(c => c.high);
   const lows = candles.map(c => c.low);
   const closes = candles.map(c => c.close);
@@ -720,14 +733,21 @@ export async function getSnapshot(rawTicker: string, interval: string): Promise<
   const htfBias = detectHtfBias(candles);
   const cisd = { ...cisdRaw, htfBias };
 
-  const mtfRead = source === "unavailable" ? undefined : await buildMtf(ticker, interval, candles).catch(() => undefined);
+  const mtfRead = source === "unavailable" ? undefined : await buildMtf(ticker, interval, candles, source === "oanda" ? oandaHost : undefined).catch(() => undefined);
+  const candlesDaily = source === "oanda" && oandaHost
+    ? await fromOandaHost(oandaHost, process.env.OANDA_API_KEY ?? "", ticker, "D").then(closedBars).catch(() => []) : [];
   const mtf = mtfRead?.mtf;
+  // Execution observation comes from the freshest same-host 15m closed bar when
+  // a primary timeframe has no forming quote (e.g. a Daily scan).
+  if (!forming && source === "oanda") last = mtfRead?.candles15m.at(-1)?.close ?? last;
   const candles4h = mtfRead?.candles4h ?? (interval === "240" ? candles : []);
 
   return {
     ticker,
     interval,
     source,
+    liquidityFeed: source === "oanda" && oandaHost && mtfRead && candlesDaily.length >= 20 ? `OANDA:${oandaHost}:mid` : undefined,
+    candlesDaily,
     lastPrice: last,
     candles,
     stats: {

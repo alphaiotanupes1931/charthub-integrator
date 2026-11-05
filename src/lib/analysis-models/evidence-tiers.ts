@@ -16,9 +16,11 @@ export type RuleId =
   | "entry.broken_level" | "entry.order_block" | "entry.order_block_mid" | "entry.imbalance" | "entry.retracement_618_79"
   | "context.fvg_presence" | "context.nesting_15m_in_1h" | "context.session_sequence"
   | "context.scan_track_record" | "context.a_setup_sequence" | "context.chart_pattern" | "context.premium_discount"
-  | "context.news_48h" | "context.htf_alignment_cap";
+  | "context.news_48h" | "context.htf_alignment_cap" | "context.liquidity_draw";
 
 export const RULE_TIERS: Record<RuleId, EvidenceTier> = {
+  // Nov 5 organizing model, approved by user; ceilings/size only, no discretionary blocker.
+  "context.liquidity_draw": "B",
   "entry.broken_level": "B",
   "entry.order_block": "C",
   "entry.order_block_mid": "C",

@@ -1542,7 +1542,13 @@ export async function runPlanner(
   tradeStyle: TradeStyle = "intraday",
   modelId: AnalysisModelId = "classic",
 ): Promise<TradePlan> {
-
+  // Classic only: the Nov 5 draw policy supersedes Daily directional gating.
+  // Other named analysis models retain their own rules and entry prices.
+  const { LIQUIDITY_DRAW_LIVE } = await import("@/lib/detector/liquidity-draw");
+  if (modelId === "classic" && LIQUIDITY_DRAW_LIVE.has(snap.ticker)) {
+    const { liquidityDrawPlan } = await import("@/lib/liquidity-draw.server");
+    return liquidityDrawPlan(snap, memo, tradeStyle);
+  }
 
   // Forex Factory calendar feeds the scan decision, not just the chat and the
   // briefings: timing risk is part of whether a setup is worth taking.

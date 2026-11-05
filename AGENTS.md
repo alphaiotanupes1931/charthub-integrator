@@ -1,5 +1,8 @@
 # Engineering rules
 
+- Classic liquidity-draw detection and proximal entries live in `src/lib/detector/liquidity-{pools,draw}.ts`; the named rollout is separate from v2 candidates. Why: live and replay must share one definition without silently changing frozen candidate models.
+- Liquidity locks persist by canonical symbol and exact OANDA host/mid feed using versioned compare-and-swap; all constituent timeframes must use that feed. Why: concurrent rescans cannot resurrect stale draws or mix price scales.
+
 - Chart data refreshes redraw overlays without fitting the viewport; fit only the first nonempty instrument/timeframe dataset or a newly applied scan pattern. Why: preserve the trader's zoom and pan during live updates.
 - Chart-dependent effects key on the chart instance and ignore callbacks/cleanup for removed instances. Why: boolean readiness can stay true across recreation and retain disposed overlay subscriptions.
 - Demo scheduling gates new entries only; trade management and run logging continue on skipped schedule ticks. Why: existing positions still need protection after entry hours or an hourly fill.
