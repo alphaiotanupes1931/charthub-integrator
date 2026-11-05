@@ -125,7 +125,50 @@ export function replayDraw(series: PoolSeries, feed: string, previous?: DrawStat
   return { state, pools, targets };
 }
 
-export type DrawZone = { top: number; bottom: number; time: number; formedAt: number; frame: "15m" | "1H"; kind: "order block" | "FVG"; continuation: boolean };
+/**
+ * F10 (US30 brief v2): zone life cycle. Bars from `from` on are scanned.
+ * A visit starts when a bar overlaps the zone after being outside it; a finished
+ * visit (price left again) makes the zone "touched". Any close beyond the far
+ * edge (below the bottom for demand, above the top for supply) makes it "broken".
+ * The visit still in progress on the last bar does not count as a prior touch.
+ */
+export type ZoneStatus = "fresh" | "touched" | "broken";
+export function zoneStatus(z: { top: number; bottom: number }, demand: boolean, bars: Candle[], from: number): { status: ZoneStatus; touches: number } {
+  let touches = 0, inside = false;
+  for (const b of bars) {
+    if (b.time < from) continue;
+    if (demand ? b.close < z.bottom : b.close > z.top) return { status: "broken", touches: touches + (inside ? 0 : 1) };
+    const overlap = b.low <= z.top && b.high >= z.bottom;
+    if (overlap && !inside) inside = true;
+    else if (!overlap && inside) { inside = false; touches++; }
+  }
+  return { status: touches > 0 ? "touched" : "fresh", touches };
+}
+
+/**
+ * F9 (US30 brief v2): TP2 is not a hard exit. Once price has reached TP2 the
+ * runner trails behind the last confirmed 1H swing (2-left/2-right fractal) formed
+ * after TP2, and closes on a closed 1H CHoCH against the draw or at the final pool.
+ */
+export type RunnerAction = { action: "hold" | "trail" | "close"; stop: number; reason: string };
+export function runnerAfterTp2(a: { long: boolean; stop: number; tp2: number; finalPool: number; h1: Candle[]; tp2Time: number | null; price: number }): RunnerAction {
+  const { long } = a;
+  if (a.tp2Time == null) return { action: "hold", stop: a.stop, reason: "TP2 not reached; normal management." };
+  if (long ? a.price >= a.finalPool : a.price <= a.finalPool) return { action: "close", stop: a.stop, reason: `Final pool ${a.finalPool} reached.` };
+  const choch = h1ChochAgainst(a.h1, long ? "buyside" : "sellside", a.tp2Time, a.tp2Time, Number.POSITIVE_INFINITY);
+  if (choch) return { action: "close", stop: a.stop, reason: `1H CHoCH against the draw: close beyond the 1H swing ${choch.level}.` };
+  let swing: number | null = null;
+  for (let i = a.h1.length - 3; i >= 2; i--) {
+    const b = a.h1[i]!;
+    if (b.time < a.tp2Time) break;
+    const n = [a.h1[i - 2]!, a.h1[i - 1]!, a.h1[i + 1]!, a.h1[i + 2]!];
+    if (long ? n.every(x => b.low < x.low) : n.every(x => b.high > x.high)) { swing = long ? b.low : b.high; break; }
+  }
+  if (swing != null && (long ? swing > a.stop : swing < a.stop)) return { action: "trail", stop: swing, reason: `Trail behind the 1H swing ${swing}.` };
+  return { action: "hold", stop: a.stop, reason: "Runner past TP2; no newer 1H swing to trail behind yet." };
+}
+
+export type DrawZone = { top: number; bottom: number; time: number; formedAt: number; frame: "15m" | "1H"; kind: "order block" | "FVG"; continuation: boolean; status?: ZoneStatus };
 export function latestDrawZone(series: PoolSeries, state: DrawState, price: number): DrawZone | null {
   if (!state.side || !state.sweep) return null;
   const long = state.side === "buyside";
@@ -133,26 +176,29 @@ export function latestDrawZone(series: PoolSeries, state: DrawState, price: numb
   for (const frame of ["15m", "1H"] as const) {
     const bars = series[frame] ?? [];
     for (const ob of computeOrderBlocks(bars, { max: 30 })) {
-      if (ob.kind !== (long ? "bullish" : "bearish") || ob.time < state.sweep.time || ob.mitigations > 1) continue;
-      // At most the current first visit: a prior closed visit is not a fresh continuation.
-      if (ob.mitigatedTime && ob.mitigatedTime < (bars.at(-1)?.time ?? 0)) continue;
+      if (ob.kind !== (long ? "bullish" : "bearish") || ob.time < state.sweep.time) continue;
       const formation = bars.find(b => b.time > ob.time && (long ? b.close > ob.breakLevel : b.close < ob.breakLevel));
       if (!formation) continue;
       const formedAt = formation.time + (frame === "15m" ? 900 : 3600);
-      zones.push({ top: ob.top, bottom: ob.bot, time: ob.time, formedAt, frame, kind: "order block", continuation: formation.time > state.sweep.confirmedAt });
+      // F10: broken zones never trade again; a touched zone stays usable but is downgraded.
+      const life = zoneStatus({ top: ob.top, bottom: ob.bot }, long, bars, formedAt);
+      if (life.status === "broken" || life.touches > 1) continue;
+      zones.push({ top: ob.top, bottom: ob.bot, time: ob.time, formedAt, frame, kind: "order block", continuation: formation.time > state.sweep.confirmedAt, status: life.status });
     }
     for (let i = 2; i < bars.length; i++) {
       const a = bars[i - 2], b = bars[i];
       if (!a || !b || a.time < state.sweep.time) continue;
       const bottom = long ? a.high : b.high, top = long ? b.low : a.low;
       if (bottom >= top) continue;
-      if (bars.slice(i + 1, -1).some(x => x.low <= top && x.high >= bottom)) continue;
-      if (bars.slice(i + 1).some(x => long ? x.close < bottom : x.close > top)) continue;
       const formedAt = b.time + (frame === "15m" ? 900 : 3600);
-      zones.push({ top, bottom, time: a.time, formedAt, frame, kind: "FVG", continuation: b.time > state.sweep.confirmedAt });
+      const life = zoneStatus({ top, bottom }, long, bars, formedAt);
+      if (life.status === "broken" || life.touches > 1) continue;
+      zones.push({ top, bottom, time: a.time, formedAt, frame, kind: "FVG", continuation: b.time > state.sweep.confirmedAt, status: life.status });
     }
   }
-  return zones.filter(z => long ? z.bottom <= price : z.top >= price).sort((a, b) => b.time - a.time)[0] ?? null;
+  // Fresh zones first, then the most recent.
+  return zones.filter(z => long ? z.bottom <= price : z.top >= price)
+    .sort((a, b) => (a.status === "touched" ? 1 : 0) - (b.status === "touched" ? 1 : 0) || b.time - a.time)[0] ?? null;
 }
 
 export function drawLevels(state: DrawState, zone: DrawZone, targets: LiquidityPool[], atr: number) {
@@ -167,7 +213,7 @@ export function drawLevels(state: DrawState, zone: DrawZone, targets: LiquidityP
   return { entry, stop, tp1: first.price, tp2: forward[1]?.price ?? first.price, finalPool: forward.at(-1)?.price ?? first.price };
 }
 
-export type DrawCap = { label: string; cap: "C"; reason: string };
+export type DrawCap = { label: string; cap: "B" | "C"; reason: string };
 
 /**
  * F4 + F5 (US30 Nov 5 brief).

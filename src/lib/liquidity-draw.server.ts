@@ -1,7 +1,7 @@
 import type { MarketSnapshot, ResearchMemo, TradePlan } from "./agents/types";
 import type { TradeStyle } from "./tradeTiming";
 import { computeOrderBlocks } from "./orderBlocks";
-import { clearStopFromZones, drawLateCaps, drawGrade, drawLevels, latestDrawZone, replayDraw, LIQUIDITY_DRAW_VERSION, type DrawRead, type DrawState } from "./detector/liquidity-draw";
+import { zoneStatus, clearStopFromZones, drawLateCaps, drawGrade, drawLevels, latestDrawZone, replayDraw, LIQUIDITY_DRAW_VERSION, type DrawRead, type DrawState } from "./detector/liquidity-draw";
 import type { PoolSeries } from "./detector/liquidity-pools";
 
 function seriesFor(snap: MarketSnapshot): PoolSeries {
@@ -41,8 +41,12 @@ export async function persistentDraw(snap: MarketSnapshot): Promise<DrawRead> {
 function nestedAtSweep(snap: MarketSnapshot, state: DrawState): boolean {
   if (!state.sweep || !state.side) return false;
   const long = state.side === "buyside", t = state.sweep.time;
-  const h4 = computeOrderBlocks((snap.candles4h ?? []).filter(b => b.time + 14400 <= t), { max: 30 });
-  const daily = computeOrderBlocks((snap.candlesDaily ?? []).filter(b => b.time + 86400 <= t), { max: 30 });
+  // F10: a 4H/Daily zone already closed through before the sweep is broken and cannot nest.
+  const h4Bars = (snap.candles4h ?? []).filter(b => b.time + 14400 <= t), dBars = (snap.candlesDaily ?? []).filter(b => b.time + 86400 <= t);
+  const intact = (bars: typeof h4Bars, step: number) => (z: { kind: string; top: number; bot: number; time: number }) =>
+    zoneStatus({ top: z.top, bottom: z.bot }, z.kind === "bullish", bars, z.time + step).status !== "broken";
+  const h4 = computeOrderBlocks(h4Bars, { max: 30 }).filter(intact(h4Bars, 14400 * 2));
+  const daily = computeOrderBlocks(dBars, { max: 30 }).filter(intact(dBars, 86400 * 2));
   return h4.some(a => a.kind === (long ? "bullish" : "bearish") && state.sweep &&
     state.sweep.extreme >= a.bot && state.sweep.extreme <= a.top && daily.some(b =>
       b.kind === a.kind && a.bot >= b.bot && a.top <= b.top));
@@ -101,7 +105,11 @@ export async function liquidityDrawPlan(snap: MarketSnapshot, memo: ResearchMemo
   const decimals0 = snap.lastPrice >= 100 ? 2 : snap.lastPrice >= 10 ? 3 : 5;
   const lateCaps = drawLateCaps({ long: bias === "Long", entry: levels.entry, tp1: levels.tp1, sweepPrice: state.sweep.extreme,
     drawPrice: state.target?.price ?? null, continuation: zone.continuation, pools: read.pools, fmt: n => n.toFixed(decimals0) });
-  const policy = lateCaps.length ? { cap: "C" as const, sizeMultiplier: 0.25 } : policy0;
+  // F10: a zone that already held one visit is downgraded to B at most.
+  if (zone.status === "touched" && policy0.cap === "A") lateCaps.push({ label: "Touched zone", cap: "B",
+    reason: `The ${zone.frame} ${zone.kind} was already visited once; second touches break more often.` });
+  const policy = lateCaps.some(c => c.cap === "C") ? { cap: "C" as const, sizeMultiplier: 0.25 }
+    : lateCaps.length ? { cap: "B" as const, sizeMultiplier: Math.min(policy0.sizeMultiplier, 0.5) } : policy0;
   let grade: TradePlan["grade"] = policy.cap;
   const warnings: string[] = [];
   const caps: NonNullable<TradePlan["gradeCaps"]> = [{ label: "Liquidity draw policy", cap: policy0.cap,
@@ -145,14 +153,16 @@ export async function liquidityDrawPlan(snap: MarketSnapshot, memo: ResearchMemo
   const triggered = Boolean(atZone && reaction);
   const note = `${bias === "Long" ? "BUY" : "SELL"} ${zone.continuation ? "continuation" : "sweep setup"} toward ${state.side}. ${zone.frame} ${zone.kind} proximal entry ${fmt(levels.entry)}. Daily/4H affect risk, not direction.`;
   const finalPool = levels.finalPool;
-  const opposingZones = computeOrderBlocks(snap.candles4h ?? [], { max: 30 }).filter(b => b.kind !== want);
+  const opposingZones = computeOrderBlocks(snap.candles4h ?? [], { max: 30 }).filter(b => b.kind !== want &&
+    zoneStatus({ top: b.top, bottom: b.bot }, b.kind === "bullish", snap.candles4h ?? [], b.time + 28800).status !== "broken");
+  const runnerText = `Runner: TP2 ${fmt(levels.tp2)} is not a hard exit. After TP2, trail behind 1H swings and close on a 1H CHoCH against the draw or at the final pool ${fmt(levels.finalPool)}.`;
   const htfFinal = opposingZones.map(b => bias === "Long" ? b.bot : b.top)
     .filter(p => bias === "Long" ? p >= finalPool : p <= finalPool).sort((a, b) => Math.abs(a - finalPool) - Math.abs(b - finalPool))[0] ?? finalPool;
   return { ...base, grade, bias, confidence: grade === "A" ? 75 : grade === "B" ? 60 : 40,
     notes: `${note} ${warnings.join(" ")}`, synopsis: note,
     entry: fmt(levels.entry), stop: fmt(levels.stop), tp1: fmt(levels.tp1), tp2: fmt(levels.tp2),
     rr: `1 : ${(Math.abs(levels.tp2 - levels.entry) / Math.abs(levels.entry - levels.stop)).toFixed(1)}`,
-    details: `${note}\nSweep ${fmt(state.sweep.extreme)} at ${new Date(state.sweep.time * 1000).toISOString()} (${sweepAgeHours}h ago).${levels.stop !== rawLevels.stop ? ` Stop moved from ${fmt(rawLevels.stop)} to clear a zone.` : ""} Feed ${state.feed}. Next pools ${read.targets.slice(0, 3).map(p => fmt(p.price)).join(", ")}. Final HTF target ${fmt(htfFinal)}. Risk multiplier ${policy.sizeMultiplier}. Stop beyond ${zone.continuation ? "zone far edge" : "sweep extreme"}. ${warnings.join(" ")}`,
+    details: `${note}\nSweep ${fmt(state.sweep.extreme)} at ${new Date(state.sweep.time * 1000).toISOString()} (${sweepAgeHours}h ago).${levels.stop !== rawLevels.stop ? ` Stop moved from ${fmt(rawLevels.stop)} to clear a zone.` : ""} Feed ${state.feed}. Next pools ${read.targets.slice(0, 3).map(p => fmt(p.price)).join(", ")}. Final HTF target ${fmt(htfFinal)}. Risk multiplier ${policy.sizeMultiplier}. Stop beyond ${zone.continuation ? "zone far edge" : "sweep extreme"}. Zone ${zone.status ?? "fresh"}. ${runnerText} ${warnings.join(" ")}`,
     counterTrend: !aligned, chartPattern, warnings, gradeCaps: caps.map(c => ({ ...c, binding: c.cap === grade })),
     triggered, triggerLevel: triggered ? undefined : levels.entry,
     triggerRule: triggered ? "Price is at the fresh zone with a closed 15m reaction." : "Wait for price at the fresh zone and a closed 15m reaction; do not chase.",
