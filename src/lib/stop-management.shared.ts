@@ -34,4 +34,4 @@ export function desiredRunnerStop(p: {
 }
 
 export const RUNNER_MANAGEMENT_TEXT =
-  "After TP1: bank half and move the stop to break-even, not to TP1. The old TP1 level is now support (resistance for shorts) - if price pulls back to it and the 15m reacts, that is an add with its own stop, not an exit. Only trail the runner once it is about 3R ahead, keeping the stop about 1.5R behind price.";
+  "After TP1: bank half and move the stop to break-even, not to TP1. The old TP1 level is now support (resistance for shorts) - if price pulls back to it and the 15m reacts, that is an add with its own stop, not an exit. Only trail the runner once it is about 3R ahead, keeping the stop about 1.5R behind price. TP2 is not a hard exit on liquidity-draw trades: after TP2, trail behind 1H swing structure and close only on a closed 1H change of character against the draw or at the final pool.";
