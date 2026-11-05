@@ -152,7 +152,7 @@ export async function liquidityDrawPlan(snap: MarketSnapshot, memo: ResearchMemo
     notes: `${note} ${warnings.join(" ")}`, synopsis: note,
     entry: fmt(levels.entry), stop: fmt(levels.stop), tp1: fmt(levels.tp1), tp2: fmt(levels.tp2),
     rr: `1 : ${(Math.abs(levels.tp2 - levels.entry) / Math.abs(levels.entry - levels.stop)).toFixed(1)}`,
-    details: `${note}\nSweep ${fmt(state.sweep.extreme)} at ${new Date(state.sweep.time * 1000).toISOString()} (${sweepAgeHours}h ago).${levels.stop !== rawLevels.stop ? ` Stop moved from ${fmt(rawLevels.stop)} to clear a zone.` : ""}` Feed ${state.feed}. Next pools ${read.targets.slice(0, 3).map(p => fmt(p.price)).join(", ")}. Final HTF target ${fmt(htfFinal)}. Risk multiplier ${policy.sizeMultiplier}. Stop beyond ${zone.continuation ? "zone far edge" : "sweep extreme"}. ${warnings.join(" ")}`,
+    details: `${note}\nSweep ${fmt(state.sweep.extreme)} at ${new Date(state.sweep.time * 1000).toISOString()} (${sweepAgeHours}h ago).${levels.stop !== rawLevels.stop ? ` Stop moved from ${fmt(rawLevels.stop)} to clear a zone.` : ""} Feed ${state.feed}. Next pools ${read.targets.slice(0, 3).map(p => fmt(p.price)).join(", ")}. Final HTF target ${fmt(htfFinal)}. Risk multiplier ${policy.sizeMultiplier}. Stop beyond ${zone.continuation ? "zone far edge" : "sweep extreme"}. ${warnings.join(" ")}`,
     counterTrend: !aligned, chartPattern, warnings, gradeCaps: caps.map(c => ({ ...c, binding: c.cap === grade })),
     triggered, triggerLevel: triggered ? undefined : levels.entry,
     triggerRule: triggered ? "Price is at the fresh zone with a closed 15m reaction." : "Wait for price at the fresh zone and a closed 15m reaction; do not chase.",
