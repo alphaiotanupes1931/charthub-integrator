@@ -126,7 +126,7 @@ async function fromOandaHost(host: string, key: string, ticker: string, interval
   }
 }
 
-async function fromOanda(ticker: string, interval: string): Promise<Candle[]> {
+async function fromOanda(ticker: string, interval: string, onHost?: (host: string) => void): Promise<Candle[]> {
   const key = process.env.OANDA_API_KEY;
   if (!key || !oandaInstrument(ticker)) throw new Error("oanda not configured for ticker");
   const practiceFirst = (process.env.OANDA_ENV ?? "live").toLowerCase() === "practice";
