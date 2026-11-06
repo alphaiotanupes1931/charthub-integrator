@@ -81,21 +81,25 @@ export const getTradeLockerStatus = createServerFn({ method: "GET" })
     try {
       const session = await tlSession(context.userId);
       if (!session) return { connected: false as const, reason: "No TradeLocker login saved yet." };
+      const { readTLAccount } = await import("./tradelocker-data.server");
+      const accounts = await Promise.all(session.accounts.map(async (a) => {
+        const live = await readTLAccount(session.creds.env, session.token, a).catch(() => null);
+        return {
+          id: String(a.id), accNum: a.accNum != null ? String(a.accNum) : null,
+          name: live?.account.name ?? a.name ?? null,
+          balance: live?.balance ?? a.accountBalance ?? null,
+          currency: live?.account.currency ?? a.currency ?? null,
+          status: live?.account.status ?? a.status ?? null,
+          accountType: tradeLockerAccountType(live?.account ?? a),
+        };
+      }));
       return {
         connected: true as const,
         env: session.creds.env,
         email: session.creds.email,
         server: session.creds.server,
         activeAccountId: String(session.account?.id ?? ""),
-        accounts: session.accounts.map((a) => ({
-          id: String(a.id),
-          accNum: a.accNum != null ? String(a.accNum) : null,
-          name: a.name ?? null,
-          balance: a.accountBalance ?? null,
-          currency: a.currency ?? null,
-          status: a.status ?? null,
-          accountType: tradeLockerAccountType(a),
-        })),
+        accounts,
       };
     } catch (e) {
       return { connected: false as const, reason: (e as Error).message };
