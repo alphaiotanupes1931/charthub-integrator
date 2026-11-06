@@ -200,6 +200,7 @@ async function tradeLockerSnapshot(userId: string): Promise<BrokerSnapshot | nul
   const { tradeLockerAccountType } = await import("./tradelocker-account.shared");
   const live = await readTLAccount(creds.env, token, account);
   const warnings: string[] = [];
+  if (!live.config.positionsConfig?.columns?.length) warnings.push("Position configuration unavailable; do not assume the account is flat.");
   const read = async (path: string) => {
     const res = await fetch(`${base}${path}`, { headers });
     if (!res.ok) throw new Error("Account data unavailable");
@@ -278,6 +279,8 @@ async function tradeLockerSnapshot(userId: string): Promise<BrokerSnapshot | nul
         .filter((c): c is ReadOnlyClose => !!c)
         .sort((a, b) => Date.parse(b.closedAt ?? "") - Date.parse(a.closedAt ?? ""))
         .slice(0, 20);
+    } else {
+      warnings.push("Closed broker history unavailable; use recorded journal history, not invented closes.");
     }
   } catch {
     warnings.push("Closed broker history unavailable; use recorded journal history, not invented closes.");

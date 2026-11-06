@@ -11,9 +11,9 @@ export async function coachAccountFacts(userId: string, db: SupabaseClient<Datab
   const result = await buildBrokerSnapshots(userId);
   if (!result.connected) throw new Error("Connect your broker before reviewing a trade.");
   const preferred = row?.live_venue ?? "tradelocker";
-  const account = result.snapshots.find((s) => s.broker === preferred) ?? result.snapshots[0];
+  const account = result.snapshots.find((s) => s.broker === preferred);
   if (!account?.accountId) throw new Error("Select a trading account on the Broker page first.");
-  if (account.readWarnings?.length) throw new Error("Account positions or protection could not be checked. Refresh your broker connection first.");
+  if (account.readWarnings?.some((w) => /Open positions|Protective orders|configuration/.test(w))) throw new Error("Account positions or protection could not be checked. Refresh your broker connection first.");
   const live = account.broker === "tradelocker" ? account.accountType !== "demo" : account.env !== "practice";
   const refused = demoOnlyRefusal(live ? "live" : "demo", row?.demo_only);
   if (refused) throw new Error(refused);
