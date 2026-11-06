@@ -69,7 +69,7 @@ export function advanceDraw(previous: DrawState, bar: Candle, pools: LiquidityPo
     }
   }
   const reset = state.reset;
-  if (!state.side && reset && reset.confirmedAt === null &&
+  if (!state.side && reset && reset.confirmedAt === null && (state.status !== "cancelled" || bar.time > reset.time) &&
       (reset.previousSide === "buyside" ? bar.close < reset.level : bar.close > reset.level)) {
     const side = reset.previousSide === "buyside" ? "sellside" : "buyside";
     const target = orderedPools(endPools, side, bar.close)[0];
