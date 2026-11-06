@@ -169,6 +169,13 @@
       "when": 1793854426341,
       "tag": "0023_liquidity_draw_state",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1793927176413,
+      "tag": "0024_autopilot_evaluations",
+      "breakpoints": true
     }
   ]
 }

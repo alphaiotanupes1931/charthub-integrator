@@ -1929,6 +1929,7 @@ export type Database = {
       }
       scan_log: {
         Row: {
+          autopilot_proposal_id: string | null
           bias: string
           confidence: number | null
           counter_trend: boolean | null
@@ -1939,6 +1940,7 @@ export type Database = {
           grade: string
           grade_caps: Json | null
           htf_bias: string | null
+          hypothetical_risk_amount: number | null
           id: string
           liquidity_draw: Json | null
           mae_r: number | null
@@ -1964,6 +1966,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          autopilot_proposal_id?: string | null
           bias: string
           confidence?: number | null
           counter_trend?: boolean | null
@@ -1974,6 +1977,7 @@ export type Database = {
           grade: string
           grade_caps?: Json | null
           htf_bias?: string | null
+          hypothetical_risk_amount?: number | null
           id?: string
           liquidity_draw?: Json | null
           mae_r?: number | null
@@ -1999,6 +2003,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          autopilot_proposal_id?: string | null
           bias?: string
           confidence?: number | null
           counter_trend?: boolean | null
@@ -2009,6 +2014,7 @@ export type Database = {
           grade?: string
           grade_caps?: Json | null
           htf_bias?: string | null
+          hypothetical_risk_amount?: number | null
           id?: string
           liquidity_draw?: Json | null
           mae_r?: number | null
@@ -2033,7 +2039,15 @@ export type Database = {
           tp2?: number | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "scan_log_autopilot_proposal_id_fkey"
+            columns: ["autopilot_proposal_id"]
+            isOneToOne: false
+            referencedRelation: "autopilot_proposals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       scanner_expert_reviews: {
         Row: {

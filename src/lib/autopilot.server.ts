@@ -5,8 +5,12 @@ import { runResearch } from "@/lib/agents/research.server";
 import { runPlanner } from "@/lib/agents/planner.server";
 import type { AutopilotSettings } from "@/lib/autopilot.shared";
 import { runnerLevels, type RunnerLevels } from "@/lib/stop-management.shared";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
+import { logAutopilotEvaluation } from "@/lib/autopilot-evaluation.server";
 
 export type ProposalDraft = {
+  scanId?: string;
   symbol: string;
   timeframe: string;
   side: "long" | "short";
@@ -50,20 +54,23 @@ export async function buildProposalDraft(
   timeframe: string,
   settings: AutopilotSettings,
   equity: number,
+  evaluation: { client: SupabaseClient<Database>; userId: string },
 ): Promise<ProposalDraft | null> {
   const snap = await getSnapshot(symbol, timeframe);
   if (snap.source === "unavailable" || snap.candles.length < 20) return null;
 
   const memo = await runResearch(apiKey, snap);
   const plan = await runPlanner(apiKey, snap, memo);
-  if (plan.bias === "Neutral" || plan.grade === "NO ENTRY") return null;
-
   const entry = parseLevel(plan.entry);
-  if (entry === null) return null;
   const stopLoss = parseLevel(plan.stop);
   const takeProfit = parseLevel(plan.tp1);
+  const riskPct = settings.riskPct * (plan.liquidityDraw?.sizeMultiplier ?? 1);
+  const scanId = await logAutopilotEvaluation(evaluation.client, evaluation.userId, symbol, timeframe, plan,
+    { entry, stop: stopLoss, tp1: takeProfit, tp2: parseLevel(plan.tp2) }, equity * riskPct / 100);
+  if (plan.bias === "Neutral" || plan.grade === "NO ENTRY" || entry === null) return null;
 
   return {
+    scanId,
     symbol,
     timeframe,
     side: plan.bias === "Long" ? "long" : "short",
