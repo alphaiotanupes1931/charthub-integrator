@@ -38,7 +38,7 @@ const confirm = confirmCoachTrade as unknown as (input: unknown) => Promise<{ or
 const prepare = prepareCoachTrade as unknown as (input: unknown) => Promise<unknown>;
 describe("coach confirmation executes once with account protection", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     mocks.facts.mockResolvedValue({ account: { ...account, accountType: "demo", currency: "USD" }, live: false, equity: 50000, riskPct: 0.5, sizeFromRisk: () => 25 });
     mocks.risk.mockResolvedValue(1);
     mocks.claim.mockResolvedValueOnce({ data: { id: proposalId }, error: null }).mockResolvedValue({ data: null, error: null });
