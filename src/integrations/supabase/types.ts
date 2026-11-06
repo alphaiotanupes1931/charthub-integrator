@@ -3071,6 +3071,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      platform_accuracy_summary: { Args: never; Returns: Json }
       redeem_invite: {
         Args: { _code: string; _user_id: string }
         Returns: string
