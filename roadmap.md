@@ -1,5 +1,10 @@
 # Roadmap
 
+## Account-aware coach and TradeLocker labels (Nov 6)
+- [ ] Show broker-reported account type independently of login environment; never infer live/demo from balance.
+- [ ] Give the coach fresh private account context and explicit, guarded confirmation controls for supported trading actions.
+- [ ] Run account classification/action regressions and verify the signed-in experience without placing diagnostic orders.
+
 ## Evaluated setups and invalidation reset (Nov 6)
 - [x] Persist Autopilot evaluations in scan_log before execution; backfill existing proposals and show a separate dated Journal view with hypothetical R and risk-based currency estimates.
 - [x] Reset invalidated draws only after opposing closed structural breaks; retain exact-feed pool targets and require new protected zones. Pending proposals are rescanned instead of freezing draw updates.
