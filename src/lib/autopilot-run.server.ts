@@ -152,12 +152,20 @@ export async function runAutopilotForUser(
   let openPositions = brokerOpen ?? count ?? 0;
 
   for (const symbol of symbols) {
-    if (waiting.has(symbol)) {
-      result.skipped.push(`${symbol}: already waiting for you`);
-      continue;
-    }
     try {
       const draft = await buildProposalDraft(apiKey, symbol, timeframe, settings, equity, { client, userId });
+      // Pending entries are not a reason to stop rescanning: the draw may have
+      // invalidated or the entry may now be confirmed. Retire superseded plans
+      // only after the new evaluation has been saved successfully.
+      if (waiting.has(symbol)) {
+        const { error: retireError } = await client.from("autopilot_proposals")
+          .update({ status: "expired", decided_at: new Date().toISOString(), rejection_reason: "Superseded by a fresh scan" })
+          .eq("user_id", userId).eq("symbol", symbol).eq("status", "pending");
+        if (retireError) {
+          result.skipped.push(`${symbol}: pending setup could not be refreshed`);
+          continue;
+        }
+      }
       if (!draft) {
         result.skipped.push(`${symbol}: no setup`);
         continue;
