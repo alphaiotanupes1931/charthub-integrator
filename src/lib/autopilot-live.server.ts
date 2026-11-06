@@ -259,6 +259,64 @@ async function placeOnVenue(
   };
 }
 
+/**
+ * Demo-only resting LIMIT order at the planned entry, with stop and target
+ * attached on fill. Expires after `hours`. Skips when autopilot already has a
+ * resting order on the same instrument, so 15-minute rescans never stack.
+ */
+export async function placeRestingLimitOrder(
+  userId: string,
+  intent: LiveOrderIntent,
+  hours = 4,
+): Promise<LiveOrderOutcome & { duplicate?: boolean }> {
+  const target = await oandaTarget(userId);
+  if (!target) return { ok: false, detail: "No usable OANDA account is connected." };
+  const refused = demoOnlyRefusal(target.env, true);
+  if (refused) return { ok: false, detail: refused };
+  if (!intent.stopLoss) return { ok: false, detail: "Resting orders need a stop." };
+  const instrument = oandaInstrument(intent.symbol);
+  const { oandaGet } = await import("@/lib/broker-readonly.server");
+  const pend = await oandaGet(target.host, target.creds.apiKey, `/accounts/${target.accountId}/pendingOrders`);
+  const orders = Array.isArray(pend.body["orders"]) ? (pend.body["orders"] as Array<Record<string, unknown>>) : [];
+  const mine = orders.some((o) => o["instrument"] === instrument && o["type"] === "LIMIT"
+    && (o["clientExtensions"] as { tag?: string } | undefined)?.tag === AUTOPILOT_TAG);
+  if (mine) return { ok: false, duplicate: true, detail: "A resting autopilot order is already waiting on this instrument." };
+
+  const size = Math.max(1, Math.floor(Math.abs(intent.units)));
+  const { encodeRunner } = await import("@/lib/stop-management.shared");
+  const runner = intent.runner ?? null;
+  const ext = { tag: AUTOPILOT_TAG, comment: runner ? encodeRunner(runner) : "TradeMind autopilot" };
+  const tp = runner ? runner.finalPool : intent.takeProfit;
+  const order: Record<string, unknown> = {
+    instrument,
+    units: String(intent.side === "long" ? size : -size),
+    type: "LIMIT",
+    price: priceStr(instrument, intent.entry),
+    timeInForce: "GTD",
+    gtdTime: new Date(Date.now() + hours * 3600_000).toISOString(),
+    positionFill: "DEFAULT",
+    clientExtensions: ext,
+    tradeClientExtensions: ext,
+    stopLossOnFill: { price: priceStr(instrument, intent.stopLoss), timeInForce: "GTC" },
+    ...(tp ? { takeProfitOnFill: { price: priceStr(instrument, tp), timeInForce: "GTC" } } : {}),
+  };
+  const res = await oandaSend(target.host, target.creds.apiKey, `/accounts/${target.accountId}/orders`, "POST", { order });
+  const reject = (res.json?.["orderRejectTransaction"] ?? res.json?.["orderCancelTransaction"]) as { rejectReason?: string; reason?: string } | undefined;
+  const reason = reject?.rejectReason ?? reject?.reason ?? (res.json?.["errorCode"] as string | undefined);
+  if (!res.ok || reason) {
+    return { ok: false, detail: reason ? oandaRejectMessage(reason, intent.symbol) : `OANDA turned the order down (HTTP ${res.status}).` };
+  }
+  const fill = res.json["orderFillTransaction"] as { id?: string; price?: string } | undefined;
+  const created = res.json["orderCreateTransaction"] as { id?: string } | undefined;
+  return {
+    ok: true,
+    orderId: fill?.id ?? created?.id,
+    detail: fill
+      ? `Filled ${intent.side} ${size} ${instrument} at ${fill.price} on demo OANDA.`
+      : `Resting ${intent.side} limit for ${size} ${instrument} at ${priceStr(instrument, intent.entry)} on demo OANDA, good for ${hours}h.`,
+  };
+}
+
 export type ManageResult = {
   checked: number;
   movedToBreakEven: number;
