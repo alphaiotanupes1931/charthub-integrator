@@ -1,6 +1,5 @@
 // Read-only broker account snapshot.
 //
-// Phase 3 of the build plan: the coach should be able to SEE the trader's real
 // account (balance, open positions, recent closes) without any ability to place
 // or modify orders. Everything here is GET-only on purpose; order placement
 // stays in the existing broker-* modules behind the broker_live capability.

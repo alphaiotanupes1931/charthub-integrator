@@ -1,5 +1,9 @@
 # Engineering rules
 
+- Coach trade reviews use encrypted owner/account-bound five-minute tickets, an atomic one-time proposal claim and separate explicit confirmation; recheck account, risk, grade, demo lock and live quote before execution. Why: model output and chat text must never authorize or replay broker orders.
+- TradeLocker account type comes from account details, independently of API environment; account state, positions and protective orders use broker-configured columns. Why: balances do not identify account type, and fixed position indexes corrupt P&L and stop visibility.
+- Coach broker snapshots use only user-linked credentials, never platform market-feed credentials. Why: an unconnected trader must not see the platform owner's brokerage account.
+
 - Classic liquidity-draw detection and proximal entries live in `src/lib/detector/liquidity-{pools,draw}.ts`; the named rollout is separate from v2 candidates. Why: live and replay must share one definition without silently changing frozen candidate models.
 - Liquidity locks persist by canonical symbol and exact OANDA host/mid feed using versioned compare-and-swap; all constituent timeframes must use that feed. Why: concurrent rescans cannot resurrect stale draws or mix price scales.
 
