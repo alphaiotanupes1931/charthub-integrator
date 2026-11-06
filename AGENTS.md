@@ -7,6 +7,7 @@
 - Chart-dependent effects key on the chart instance and ignore callbacks/cleanup for removed instances. Why: boolean readiness can stay true across recreation and retain disposed overlay subscriptions.
 - Demo scheduling gates new entries only; trade management and run logging continue on skipped schedule ticks. Why: existing positions still need protection after entry hours or an hourly fill.
 - Autopilot evaluations persist in scan_log before proposal execution and remain separate from broker journal profit; use fill-required replay and the recorded exact feed when available. Why: missed or blocked setups must be reviewable without inventing realised gains.
+- Dashboard and AI Signals accuracy displays reuse useSignalOutcomes totals and show the decided-scan sample and account scope. Why: accuracy must match Signal History, not model confidence or an invented platform-wide percentage.
 - Invalidated liquidity draws reset only on opposing closed structural breaks toward unswept pools and require a newly formed protected entry zone. Why: avoid indefinite lockout without chasing a wick or overriding pool direction with Daily bias.
 
 - Live entry prices come only from the model named in each signal's `entry_model`; switching an instrument requires an entry in `ENTRY_MODEL_V2_LIVE` (src/lib/detector/entry-detector.ts). Why: a silent entry-model swap went unnoticed for a week.
