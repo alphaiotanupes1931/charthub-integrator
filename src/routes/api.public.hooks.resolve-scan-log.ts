@@ -7,7 +7,7 @@ export const Route = createFileRoute("/api/public/hooks/resolve-scan-log")({
     handlers: {
       POST: async ({ request }) => {
         const expected = process.env.SUPABASE_PUBLISHABLE_KEY;
-        if (expected && request.headers.get("apikey") !== expected) {
+        if (!expected || request.headers.get("apikey") !== expected) {
           return new Response("unauthorized", { status: 401 });
         }
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -15,7 +15,7 @@ export const Route = createFileRoute("/api/public/hooks/resolve-scan-log")({
 
         const { data, error } = await supabaseAdmin
           .from("scan_log")
-          .select("id, symbol, timeframe, bias, entry, stop, tp1, created_at, signal_score_id")
+          .select("id, symbol, timeframe, bias, entry, stop, tp1, created_at, signal_score_id, data_feed")
           .eq("status", "open")
           .lt("created_at", new Date(Date.now() - 30 * 60 * 1000).toISOString())
           .order("created_at", { ascending: true })
@@ -46,6 +46,7 @@ export const Route = createFileRoute("/api/public/hooks/resolve-scan-log")({
                 stop: Number(row.stop),
                 tp1: Number(row.tp1),
                 created_at: row.created_at,
+                data_feed: row.data_feed,
               } as never);
               if (res.status !== "open") {
                 upd = { status: res.status, realized_r: res.realizedR, mae_r: res.maeR ?? null, mfe_r: res.mfeR ?? null, resolved_at: new Date().toISOString() };
