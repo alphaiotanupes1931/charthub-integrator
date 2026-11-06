@@ -82,4 +82,19 @@ describe("demo schedule only gates new entries", () => {
     expect(mocks.build).toHaveBeenCalledTimes(1);
     expect(mocks.manage).toHaveBeenCalledTimes(1);
   });
+  it("rescans a pending symbol and retires the stale entry after a no-entry evaluation", async () => {
+    vi.setSystemTime(new Date("2026-11-03T21:05:00Z"));
+    const update = vi.fn().mockReturnThis();
+    const query = {
+      select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), update,
+      gte: vi.fn().mockResolvedValue({ count: 0 }), in: vi.fn().mockResolvedValue({ count: 0 }),
+      then: (resolve: (value: unknown) => unknown) => Promise.resolve({ data: [{ symbol: "US30", expires_at: "2026-11-04T00:00:00Z" }], error: null }).then(resolve),
+    };
+    update.mockReturnValue(query);
+    const client = { from: () => query } as unknown as SupabaseClient<Database>;
+    await runAutopilotForUser(client, "test-user", { ...DEFAULT_AUTOPILOT_SETTINGS, mode: "auto", demoOnly: true, allowedSymbols: ["US30"] }, "60", "test-key");
+    expect(mocks.build).toHaveBeenCalledWith("test-key", "US30", "60", expect.any(Object), 10000, { client, userId: "test-user" });
+    expect(update).toHaveBeenCalledWith(expect.objectContaining({ status: "expired", rejection_reason: "Superseded by a fresh scan" }));
+    expect(mocks.place).not.toHaveBeenCalled();
+  });
 });
