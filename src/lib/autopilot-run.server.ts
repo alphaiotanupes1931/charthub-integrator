@@ -192,6 +192,12 @@ export async function runAutopilotForUser(
         result.skipped.push(`${symbol}: setup filed but not triggered yet`);
       }
       const autoLive = executable;
+      // Demo only: instead of waiting for a touch between 15-minute checks, rest
+      // a limit order at the planned entry so a fast tag-and-go still fills.
+      const restLimit =
+        !executable && !hourlyLimitReached && verdict.allowed && settings.mode === "auto"
+        && settings.demoOnly && settings.liveVenue === "oanda"
+        && draft.units !== null && !draft.triggered && draft.stopLoss != null && draft.entry != null;
 
       const { data: inserted, error } = await client
         .from("autopilot_proposals")
@@ -247,6 +253,29 @@ export async function runAutopilotForUser(
         },
       );
 
+
+      if (restLimit) {
+        const { placeRestingLimitOrder } = await import("@/lib/autopilot-live.server");
+        const rest = await placeRestingLimitOrder(userId, {
+          symbol: draft.symbol,
+          side: draft.side,
+          units: Math.max(1, Math.floor(draft.units ?? 1)),
+          entry: draft.entry,
+          stopLoss: draft.stopLoss,
+          takeProfit: draft.takeProfit,
+          runner: draft.runner ?? null,
+        });
+        if (rest.ok) {
+          await client.from("autopilot_proposals")
+            .update({ status: "approved", order_type: "limit", broker_order_id: rest.orderId ?? null, decided_at: new Date().toISOString() } as never)
+            .eq("id", inserted.id as string);
+          openPositions += 1;
+          hourlyLimitReached = true;
+          await logAutopilotEvent(userId, "proposal", `${draft.symbol} ${draft.side}: ${rest.detail}`, { symbol: draft.symbol, proposalId: inserted.id, resting: true });
+        } else if (!rest.duplicate) {
+          await logAutopilotEvent(userId, "failed", `${draft.symbol} resting order failed: ${rest.detail}`, { symbol: draft.symbol, proposalId: inserted.id });
+        }
+      }
 
       if (autoLive) {
         const size = Math.max(1, Math.floor(draft.units ?? 1));
