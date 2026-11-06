@@ -152,12 +152,20 @@ export async function runAutopilotForUser(
   let openPositions = brokerOpen ?? count ?? 0;
 
   for (const symbol of symbols) {
-    if (waiting.has(symbol)) {
-      result.skipped.push(`${symbol}: already waiting for you`);
-      continue;
-    }
     try {
-      const draft = await buildProposalDraft(apiKey, symbol, timeframe, settings, equity);
+      const draft = await buildProposalDraft(apiKey, symbol, timeframe, settings, equity, { client, userId });
+      // Pending entries are not a reason to stop rescanning: the draw may have
+      // invalidated or the entry may now be confirmed. Retire superseded plans
+      // only after the new evaluation has been saved successfully.
+      if (waiting.has(symbol)) {
+        const { error: retireError } = await client.from("autopilot_proposals")
+          .update({ status: "expired", decided_at: new Date().toISOString(), rejection_reason: "Superseded by a fresh scan" })
+          .eq("user_id", userId).eq("symbol", symbol).eq("status", "pending");
+        if (retireError) {
+          result.skipped.push(`${symbol}: pending setup could not be refreshed`);
+          continue;
+        }
+      }
       if (!draft) {
         result.skipped.push(`${symbol}: no setup`);
         continue;
@@ -168,6 +176,11 @@ export async function runAutopilotForUser(
         openPositions,
         dailyLossPct: pct,
       });
+      if (draft.scanId) {
+        await client.from("scan_log").update({ refused_reason: verdict.allowed
+          ? (draft.triggered ? null : draft.triggerRule ?? "Waiting for entry confirmation") : verdict.reason ?? "Blocked by risk limits" })
+          .eq("id", draft.scanId).eq("user_id", userId);
+      }
 
       // Auto mode places the trade itself. On paper that is a paper position; on
       // a connected account it is a real market order with the stop and target
@@ -207,6 +220,7 @@ export async function runAutopilotForUser(
         result.skipped.push(`${symbol}: could not be saved`);
         continue;
       }
+      if (draft.scanId) await client.from("scan_log").update({ autopilot_proposal_id: inserted.id } as never).eq("id", draft.scanId).eq("user_id", userId);
 
       if (!verdict.allowed) {
         result.blocked += 1;
@@ -261,6 +275,7 @@ export async function runAutopilotForUser(
             .update({ status: "filled", broker_order_id: sent.orderId ?? null })
             .eq("id", inserted.id as string);
           result.executed += 1;
+          if (draft.scanId) await client.from("scan_log").update({ taken: true, taken_at: new Date().toISOString() }).eq("id", draft.scanId).eq("user_id", userId);
           openPositions += 1;
           if (settings.demoOnly) hourlyLimitReached = true;
           const { journalPlacedTrade } = await import("@/lib/journal-auto.server");

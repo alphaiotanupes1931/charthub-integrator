@@ -1,5 +1,11 @@
 # Roadmap
 
+## Evaluated setups and invalidation reset (Nov 6)
+- [x] Persist Autopilot evaluations in scan_log before execution; backfill existing proposals and show a separate dated Journal view with hypothetical R and risk-based currency estimates.
+- [x] Reset invalidated draws only after opposing closed structural breaks; retain exact-feed pool targets and require new protected zones. Pending proposals are rescanned instead of freezing draw updates.
+- [x] Regression suite and signed-in Journal verified: Nov 5 showed 34 unexecuted setups, no browser errors or mobile overflow; no diagnostic orders.
+- [ ] Publish the new runner and resolver before the next scheduled session (not requested in this turn).
+
 ## Liquidity draw addendum (Nov 5)
 - [x] Build shared pool mapping, confirmed-sweep draw lock and proximal-zone entries.
 - [x] Persist draw state atomically by instrument/feed across dashboard and scheduled scans.

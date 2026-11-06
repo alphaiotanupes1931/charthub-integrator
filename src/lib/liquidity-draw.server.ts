@@ -73,7 +73,7 @@ export async function liquidityDrawPlan(snap: MarketSnapshot, memo: ResearchMemo
   const sweepAgeHours = state.sweep ? Math.round(((nowSec - state.sweep.time) / 3600) * 10) / 10 : undefined;
   base.liquidityDraw = {
     status: state.status, side: state.side, feed: state.feed,
-    lastSweep: state.sweep ? { price: state.sweep.extreme, time: state.sweep.time } : null,
+    lastSweep: state.sweep && !state.reset?.confirmedAt ? { price: state.sweep.extreme, time: state.sweep.time } : null,
     pools: read.targets.slice(0, 3).map(p => ({ price: p.price, frame: p.frame })),
     sizeMultiplier: 0, continuation: false, sweepAgeHours, cancelled: state.cancelled ?? null,
   };
@@ -88,7 +88,7 @@ export async function liquidityDrawPlan(snap: MarketSnapshot, memo: ResearchMemo
   // A target touch alone never authorizes an opposite order; wait for reclaim + closed CHoCH.
   if (!state.side || !state.sweep || state.status !== "active") {
     base.notes = state.status === "reached" ? "Draw reached. Awaiting a closed 15m reversal confirmation or the next unswept pool."
-      : state.status === "invalidated" ? "Previous draw invalidated by a new sweep extreme. Awaiting a new confirmed sweep; Daily bias did not choose the direction." : base.notes;
+      : state.status === "invalidated" ? "Previous draw invalidated. Awaiting a closed opposing structural break and an unswept pool; a wick or Daily bias alone cannot reset direction." : base.notes;
     return base;
   }
   const zone = latestDrawZone(seriesFor(snap), state, snap.lastPrice);
@@ -101,7 +101,8 @@ export async function liquidityDrawPlan(snap: MarketSnapshot, memo: ResearchMemo
     .map(z => ({ top: z.top, bottom: z.bot }));
   const levels = { ...rawLevels, stop: clearStopFromZones(bias === "Long", rawLevels.stop, allZones, snap.stats.atr14) };
   const aligned = base.dailyBias === want && snap.mtf?.h4.direction === want;
-  const policy0 = drawGrade({ aligned, nested: nestedAtSweep(snap, state), continuation: zone.continuation, opposingInsideStop: false });
+  const continuation = zone.continuation || Boolean(state.reset?.confirmedAt);
+  const policy0 = drawGrade({ aligned, nested: !state.reset?.confirmedAt && nestedAtSweep(snap, state), continuation, opposingInsideStop: false });
   const decimals0 = snap.lastPrice >= 100 ? 2 : snap.lastPrice >= 10 ? 3 : 5;
   const lateCaps = drawLateCaps({ long: bias === "Long", entry: levels.entry, tp1: levels.tp1, sweepPrice: state.sweep.extreme,
     drawPrice: state.target?.price ?? null, continuation: zone.continuation, pools: read.pools, fmt: n => n.toFixed(decimals0) });
@@ -151,7 +152,7 @@ export async function liquidityDrawPlan(snap: MarketSnapshot, memo: ResearchMemo
   const reaction = latest && latest.time >= zone.formedAt && latest.low <= zone.top && latest.high >= zone.bottom &&
     (bias === "Long" ? latest.close > latest.open && latest.close >= zone.top : latest.close < latest.open && latest.close <= zone.bottom);
   const triggered = Boolean(atZone && reaction);
-  const note = `${bias === "Long" ? "BUY" : "SELL"} ${zone.continuation ? "continuation" : "sweep setup"} toward ${state.side}. ${zone.frame} ${zone.kind} proximal entry ${fmt(levels.entry)}. Daily/4H affect risk, not direction.`;
+  const note = `${bias === "Long" ? "BUY" : "SELL"} ${state.reset?.confirmedAt ? `structural-break reset (closed beyond ${fmt(state.reset.level)})` : zone.continuation ? "continuation" : "sweep setup"} toward ${state.side}. ${zone.frame} ${zone.kind} proximal entry ${fmt(levels.entry)}. Daily/4H affect risk, not direction.`;
   const finalPool = levels.finalPool;
   const opposingZones = computeOrderBlocks(snap.candles4h ?? [], { max: 30 }).filter(b => b.kind !== want &&
     zoneStatus({ top: b.top, bottom: b.bot }, b.kind === "bullish", snap.candles4h ?? [], b.time + 28800).status !== "broken");
@@ -162,11 +163,11 @@ export async function liquidityDrawPlan(snap: MarketSnapshot, memo: ResearchMemo
     notes: `${note} ${warnings.join(" ")}`, synopsis: note,
     entry: fmt(levels.entry), stop: fmt(levels.stop), tp1: fmt(levels.tp1), tp2: fmt(levels.tp2),
     rr: `1 : ${(Math.abs(levels.tp2 - levels.entry) / Math.abs(levels.entry - levels.stop)).toFixed(1)}`,
-    details: `${note}\nSweep ${fmt(state.sweep.extreme)} at ${new Date(state.sweep.time * 1000).toISOString()} (${sweepAgeHours}h ago).${levels.stop !== rawLevels.stop ? ` Stop moved from ${fmt(rawLevels.stop)} to clear a zone.` : ""} Feed ${state.feed}. Next pools ${read.targets.slice(0, 3).map(p => fmt(p.price)).join(", ")}. Final HTF target ${fmt(htfFinal)}. Risk multiplier ${policy.sizeMultiplier}. Stop beyond ${zone.continuation ? "zone far edge" : "sweep extreme"}. Zone ${zone.status ?? "fresh"}. ${runnerText} ${warnings.join(" ")}`,
+    details: `${note}\n${state.reset?.confirmedAt ? `Structural reset confirmed at ${new Date(state.reset.confirmedAt * 1000).toISOString()}; no new sweep claimed.` : `Sweep ${fmt(state.sweep.extreme)} at ${new Date(state.sweep.time * 1000).toISOString()} (${sweepAgeHours}h ago).`}${levels.stop !== rawLevels.stop ? ` Stop moved from ${fmt(rawLevels.stop)} to clear a zone.` : ""} Feed ${state.feed}. Next pools ${read.targets.slice(0, 3).map(p => fmt(p.price)).join(", ")}. Final HTF target ${fmt(htfFinal)}. Risk multiplier ${policy.sizeMultiplier}. Stop beyond ${continuation ? "zone far edge" : "sweep extreme"}. Zone ${zone.status ?? "fresh"}. ${runnerText} ${warnings.join(" ")}`,
     counterTrend: !aligned, chartPattern, warnings, gradeCaps: caps.map(c => ({ ...c, binding: c.cap === grade })),
     triggered, triggerLevel: triggered ? undefined : levels.entry,
     triggerRule: triggered ? "Price is at the fresh zone with a closed 15m reaction." : "Wait for price at the fresh zone and a closed 15m reaction; do not chase.",
-    liquidityDraw: { ...base.liquidityDraw, sizeMultiplier: policy.sizeMultiplier, continuation: zone.continuation, finalTarget: htfFinal, finalPool: levels.finalPool },
+    liquidityDraw: { ...base.liquidityDraw, sizeMultiplier: policy.sizeMultiplier, continuation, finalTarget: htfFinal, finalPool: levels.finalPool },
     entryZone: { label: `${zone.frame} ${zone.kind}`, top: zone.top, bottom: zone.bottom,
       quality: 0, qualityLabel: "medium", distanceAtr: Math.abs(levels.entry - snap.lastPrice) / Math.max(snap.stats.atr14, 1e-9) },
   };

@@ -17,6 +17,8 @@ export type DrawState = {
   crossed?: { pool: LiquidityPool; extreme: number; time: number } | null;
   /** F1: set when a closed 1H candle broke the last 1H swing against the draw. */
   cancelled?: { reason: "1H CHoCH"; time: number; level: number; previousSide: PoolSide } | null;
+  /** Closed structural-break reset, distinct from a new liquidity sweep. */
+  reset?: { time: number; level: number; previousSide: PoolSide; anchor: number; pool: LiquidityPool; confirmedAt: number | null } | null;
 };
 
 /**
@@ -51,12 +53,30 @@ export function advanceDraw(previous: DrawState, bar: Candle, pools: LiquidityPo
   let state: DrawState = { ...previous, crossed: previous.crossed ? { ...previous.crossed } : null, processedTime: bar.time };
   if (state.sweep && state.side && bar.time > state.sweep.time &&
       (state.side === "buyside" ? bar.low < state.sweep.extreme : bar.high > state.sweep.extreme)) {
-    state = { ...state, side: null, sweep: null, target: null, pending: null, crossed: null, status: "invalidated" };
+    const recent = history.filter(b => b.time < bar.time).slice(-8);
+    const anchor = state.side === "buyside" ? Math.max(bar.high, ...recent.map(b => b.high)) : Math.min(bar.low, ...recent.map(b => b.low));
+    state = { ...state, reset: { time: bar.time, level: state.sweep.extreme, previousSide: state.side, anchor,
+      pool: state.sweep.pool, confirmedAt: null }, side: null, sweep: null, target: null, pending: null, crossed: null, cancelled: null, status: "invalidated" };
   }
   if (state.sweep && state.side && h1.length) {
     const cut = h1ChochAgainst(h1, state.side, state.sweep.time, previous.processedTime + 900, bar.time + 900);
-    if (cut) state = { ...state, side: null, sweep: null, target: null, pending: null, crossed: null, status: "cancelled",
-      cancelled: { reason: "1H CHoCH", time: cut.time, level: cut.level, previousSide: state.side } };
+    if (cut) {
+      const recent = history.filter(b => b.time <= bar.time).slice(-8);
+      const anchor = state.side === "buyside" ? Math.max(bar.high, ...recent.map(b => b.high)) : Math.min(bar.low, ...recent.map(b => b.low));
+      state = { ...state, reset: { time: bar.time, level: cut.level, previousSide: state.side, anchor, pool: state.sweep.pool, confirmedAt: null },
+        side: null, sweep: null, target: null, pending: null, crossed: null, status: "cancelled",
+        cancelled: { reason: "1H CHoCH", time: cut.time, level: cut.level, previousSide: state.side } };
+    }
+  }
+  const reset = state.reset;
+  if (!state.side && reset && reset.confirmedAt === null && (state.status !== "cancelled" || bar.time > reset.time) &&
+      (reset.previousSide === "buyside" ? bar.close < reset.level : bar.close > reset.level)) {
+    const side = reset.previousSide === "buyside" ? "sellside" : "buyside";
+    const target = orderedPools(endPools, side, bar.close)[0];
+    if (target) state = { ...state, side, target, status: "active", cancelled: null,
+      reset: { ...reset, confirmedAt: bar.time + 900 },
+      sweep: { side: reset.previousSide, pool: reset.pool, extreme: reset.anchor, time: reset.time,
+        confirmedAt: bar.time + 900, breakLevel: reset.level } };
   }
   const pending = state.pending;
   if (pending && bar.time > pending.time) {
@@ -67,7 +87,7 @@ export function advanceDraw(previous: DrawState, bar: Candle, pools: LiquidityPo
       const side = pending.side === "sellside" ? "buyside" : "sellside";
       const targets = orderedPools(endPools.filter(p => p.id !== pending.pool.id), side, bar.close);
       state = { ...state, side, sweep: { ...pending, confirmedAt: bar.time + 900 }, pending: null,
-        target: targets[0] ?? null, crossed: null, cancelled: null, status: targets.length ? "active" : "reached" };
+        target: targets[0] ?? null, crossed: null, cancelled: null, reset: null, status: targets.length ? "active" : "reached" };
     }
   }
   // Persist the target identity; a closer newly formed pool cannot rewrite the lock.
@@ -197,7 +217,7 @@ export function latestDrawZone(series: PoolSeries, state: DrawState, price: numb
     }
   }
   // Fresh zones first, then the most recent.
-  return zones.filter(z => long ? z.bottom <= price : z.top >= price)
+  return zones.filter(z => (!state.reset?.confirmedAt || z.formedAt >= state.reset.confirmedAt) && (long ? z.bottom <= price : z.top >= price))
     .sort((a, b) => (a.status === "touched" ? 1 : 0) - (b.status === "touched" ? 1 : 0) || b.time - a.time)[0] ?? null;
 }
 
@@ -205,7 +225,7 @@ export function drawLevels(state: DrawState, zone: DrawZone, targets: LiquidityP
   if (!state.sweep || !state.side) return null;
   const long = state.side === "buyside", entry = long ? zone.top : zone.bottom;
   const buffer = Math.max(atr * 0.15, entry * 0.0001);
-  const anchor = zone.continuation ? long ? zone.bottom : zone.top : state.sweep.extreme;
+  const anchor = zone.continuation || state.reset?.confirmedAt ? long ? zone.bottom : zone.top : state.sweep.extreme;
   const stop = long ? anchor - buffer : anchor + buffer;
   const forward = targets.filter(p => long ? p.price > entry : p.price < entry);
   const first = forward[0];

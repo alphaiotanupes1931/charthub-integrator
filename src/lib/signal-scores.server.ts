@@ -20,6 +20,7 @@ export type OpenSignal = {
   stop: number;
   tp1: number;
   created_at: string;
+  data_feed?: string | null;
   ob_shadow_entry?: number | null;
   ob_shadow_stop?: number | null;
   seq_shadow_entry?: number | null;
@@ -132,8 +133,13 @@ export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
   const { getHistory } = await import("@/lib/backtest/history.server");
   let bars: BtBar[];
   try {
-    const res = await getHistory(sig.symbol, tf, ageHours > 240 ? "1y" : "3m");
-    bars = res.bars;
+    if (sig.data_feed?.startsWith("OANDA:")) {
+      const { exactScanHistory } = await import("@/lib/scan-history.server");
+      bars = await exactScanHistory(sig.symbol, sig.data_feed, sig.created_at);
+    } else {
+      const res = await getHistory(sig.symbol, tf, ageHours > 240 ? "1y" : "3m");
+      bars = res.bars;
+    }
   } catch {
     return { status: "open", realizedR: null };
   }
@@ -161,7 +167,7 @@ export async function resolveSignal(sig: OpenSignal): Promise<Resolution> {
     return {
       status: "unfilled",
       candidateR,
-      realizedR: null,
+      realizedR: 0,
       netR: null,
       costR: null,
       maeR: null,
