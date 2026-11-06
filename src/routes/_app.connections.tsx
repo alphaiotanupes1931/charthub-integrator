@@ -1,3 +1,4 @@
+import { PasswordInput } from "@/components/PasswordInput";
 import { BrokerAccountPanel } from "@/components/BrokerAccountPanel";
 import { InboundSignalKeys } from "@/components/InboundSignalKeys";
 import { PageInstructions } from "@/components/PageInstructions";
@@ -259,13 +260,24 @@ function ConnectionsPage() {
                               {f.label}
                               {f.optional ? " (optional)" : ""}
                             </span>
-                            <input
-                              type={f.secret ? "password" : "text"}
-                              autoComplete="off"
-                              value={form[f.key] ?? ""}
-                              onChange={(ev) => setForm((p) => ({ ...p, [f.key]: ev.target.value }))}
-                              className="mt-1 w-full rounded-xl border border-border/60 bg-background px-2.5 py-1.5 text-sm outline-none focus:border-foreground"
-                            />
+                            {f.secret ? (
+                              <div className="mt-1">
+                                <PasswordInput
+                                  autoComplete="off"
+                                  value={form[f.key] ?? ""}
+                                  onChange={(ev) => setForm((p) => ({ ...p, [f.key]: ev.target.value }))}
+                                  className="w-full rounded-xl border border-border/60 bg-background px-2.5 py-1.5 text-sm outline-none focus:border-foreground"
+                                />
+                              </div>
+                            ) : (
+                              <input
+                                type="text"
+                                autoComplete="off"
+                                value={form[f.key] ?? ""}
+                                onChange={(ev) => setForm((p) => ({ ...p, [f.key]: ev.target.value }))}
+                                className="mt-1 w-full rounded-xl border border-border/60 bg-background px-2.5 py-1.5 text-sm outline-none focus:border-foreground"
+                              />
+                            )}
                           </label>
                         ))}
                         <div className="flex flex-wrap gap-2 pt-1">
