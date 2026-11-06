@@ -17,6 +17,7 @@ import { useCoachVoice } from "@/hooks/useCoachVoice";
 import { DashboardChatPanel, type DashboardChatHandle } from "@/components/DashboardChatPanel";
 import { ChartConceptOverlay } from "@/components/ConceptDiagram";
 import { ChartSignalCards } from "@/components/ChartSignalCards";
+import { TradeMindAccuracy } from "@/components/TradeMindAccuracy";
 import { ScanStamp } from "@/components/ScanStamp";
 import { ScanVersionHistory } from "@/components/ScanVersionHistory";
 import { ChartTradeBar } from "@/components/ChartTradeBar";
@@ -2479,6 +2480,7 @@ function Dashboard() {
           {/* Scan output preview + live performance strip */}
           {!isChartFullscreen && (
             <div className="space-y-3">
+              <TradeMindAccuracy />
               <ChartSignalCards
                 grade={aiGrade}
                 lastPrice={snapshot?.lastPrice}
