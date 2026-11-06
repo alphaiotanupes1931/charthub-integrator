@@ -8,13 +8,15 @@ function outcomeLabel(status: string | null, r: number | null): string {
   const rTxt = r == null ? "" : ` (${r > 0 ? "+" : ""}${r.toFixed(2)}R)`;
   if (status === "target" || status === "tp") return `Hit target${rTxt}`;
   if (status === "stop" || status === "loss") return `Hit stop${rTxt}`;
-  if (status === "expired" || status === "unfilled") return "Never filled";
+  if (status === "unfilled") return "Entry not reached · 0R";
+  if (status === "expired") return `Expired${rTxt}`;
+  if (status === "no_trade") return "No entry";
   if (status === "void") return "Cancelled";
   return `${status}${rTxt}`;
 }
 
 /** Every scan run on this day: taken vs skipped and what happened after. */
-export function JournalDayScans({ date }: { date: string }) {
+export function JournalDayScans({ date, autopilotOnly = false }: { date: string; autopilotOnly?: boolean }) {
   const [data, setData] = useState<DayData | null>(null);
   const [failed, setFailed] = useState(false);
 
@@ -22,11 +24,13 @@ export function JournalDayScans({ date }: { date: string }) {
     let live = true;
     setData(null);
     setFailed(false);
-    getJournalDay({ data: { date } })
-      .then((d) => { if (live) setData(d); })
+    const load = () => getJournalDay({ data: { date } })
+      .then((d) => { if (live) setData({ ...d, scans: autopilotOnly ? d.scans.filter(s => s.source === "autopilot") : d.scans }); })
       .catch(() => { if (live) setFailed(true); });
-    return () => { live = false; };
-  }, [date]);
+    void load();
+    const timer = setInterval(load, 60_000);
+    return () => { live = false; clearInterval(timer); };
+  }, [date, autopilotOnly]);
 
   const taken = data?.scans.filter((s) => s.taken).length ?? 0;
   const skipped = (data?.scans.length ?? 0) - taken;
@@ -34,7 +38,7 @@ export function JournalDayScans({ date }: { date: string }) {
   return (
     <div className="border-t border-border/60">
       <div className="flex items-center justify-between px-4 pt-4 pb-2">
-        <div className="text-sm font-semibold">Scans this day</div>
+        <div className="text-sm font-semibold">{autopilotOnly ? "Autopilot evaluated setups" : "Scans this day"}</div>
         {data && (
           <div className="text-[11px] text-muted-foreground">
             {data.scans.length} scans · {taken} taken · {skipped} skipped
@@ -49,10 +53,11 @@ export function JournalDayScans({ date }: { date: string }) {
       {data && data.scans.length > 0 && (
         <div className="divide-y divide-border/60">
           {data.scans.map((s) => (
-            <div key={s.id} className="flex items-center gap-3 px-4 py-2.5 text-sm">
+            <div key={s.id} className="flex flex-wrap items-center gap-3 px-4 py-2.5 text-sm">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-semibold">{s.symbol}</span>
+                  {s.source === "autopilot" && <span className="text-[10px] text-primary">Autopilot · hypothetical outcome</span>}
                   {s.grade && <span className="text-[10px] rounded bg-muted/40 px-1.5 py-0.5 text-muted-foreground">Grade {s.grade}</span>}
                   {s.bias && <span className="text-[11px] text-muted-foreground">{s.bias}</span>}
                   {s.timeframe && <span className="text-[10px] rounded border border-border/60 px-1.5 py-0.5 text-muted-foreground">{s.timeframe}</span>}
@@ -60,15 +65,18 @@ export function JournalDayScans({ date }: { date: string }) {
                     {new Date(s.at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
                   </span>
                 </div>
+                {s.feed && <div className="text-[11px] text-muted-foreground break-all">Feed: {s.feed}</div>}
+                {s.reason && <div className="text-[11px] text-muted-foreground">{s.reason}</div>}
                 <div className="mt-0.5 text-[11px] text-muted-foreground tabular-nums">
                   {s.entry != null ? `Entry ${s.entry}` : ""}{s.stop != null ? ` · Stop ${s.stop}` : ""}{s.tp1 != null ? ` · TP ${s.tp1}` : ""}
                 </div>
               </div>
               <div className="text-right shrink-0">
                 <div className={`text-[11px] font-medium ${s.taken ? "text-primary" : "text-muted-foreground"}`}>
-                  {s.taken ? "Taken" : "Skipped"}
+                  {s.taken ? "Broker order placed" : "Not executed"}
                 </div>
                 <div className="text-[11px] text-muted-foreground">{outcomeLabel(s.status, s.realizedR)}</div>
+                {s.hypotheticalPnl != null && <div className="text-[11px] text-muted-foreground">Est. {s.hypotheticalPnl > 0 ? "+" : ""}{s.hypotheticalPnl.toFixed(2)} account currency</div>}
               </div>
             </div>
           ))}

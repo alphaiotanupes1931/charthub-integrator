@@ -59,9 +59,10 @@ import { parseTradeSetupScreenshot, parseTradeSetupText } from "@/lib/journal-im
 
 import { ActionLoader } from "@/components/ActionLoader";
 import { takePendingChatLog } from "@/lib/chat-to-journal";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_app/journal")({
-  head: () => ({ meta: [{ title: "Trade Journal, TradeMind" }] }),
+  head: () => ({ meta: [{ title: "Trade Journal | TradeMind" }, { name: "description", content: "Review broker trades and Autopilot evaluated setups with tracked outcomes." }, { property: "og:title", content: "Trade Journal | TradeMind" }, { property: "og:description", content: "Review your trades and separately tracked Autopilot setup outcomes." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: JournalPage,
 });
 
@@ -389,7 +390,8 @@ function applyFilter(trades: Trade[], f: InsightsFilter): Trade[] {
 
 
 function JournalPage() {
-  const [tab, setTab] = useState<"calendar" | "trades" | "review" | "insights" | "mental">("calendar");
+  const [tab, setTab] = useState<"calendar" | "trades" | "review" | "insights" | "mental" | "autopilot">("calendar");
+  const [setupDate, setSetupDate] = useState(todayYmd);
   const [cursor, setCursor] = useState(() => {
     const d = new Date(); d.setDate(1); return d;
   });
@@ -756,6 +758,7 @@ function JournalPage() {
   const TABS = [
     { id: "calendar" as const, label: "Calendar", icon: CalIcon },
     { id: "trades" as const, label: "Trades", icon: BookOpen },
+    { id: "autopilot" as const, label: "Autopilot setups", icon: NotebookPen },
     { id: "review" as const, label: "Wins vs Losses", icon: BarChart3 },
     { id: "insights" as const, label: "Insights", icon: Brain },
     { id: "mental" as const, label: "Mental State", icon: HeartPulse },
@@ -780,7 +783,7 @@ function JournalPage() {
             const Icon = t.icon;
             const active = tab === t.id;
             return (
-              <button
+              <Button variant="ghost"
                 key={t.id}
                 onClick={() => setTab(t.id)}
                 className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm transition ${
@@ -790,7 +793,7 @@ function JournalPage() {
                 }`}
               >
                 <Icon className="h-3.5 w-3.5" /> {t.label}
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -802,6 +805,15 @@ function JournalPage() {
         </button>
       </div>
 
+      {tab === "autopilot" && (
+        <section>
+          <div className="flex justify-between items-center gap-3 mb-4 flex-wrap">
+            <h2 className="font-semibold">Evaluated setups · not account profit</h2>
+            <input aria-label="Setup date" type="date" value={setupDate} onChange={e => setSetupDate(e.target.value)} className="border border-border rounded-md bg-background text-foreground px-3 py-2" />
+          </div>
+          <JournalDayScans date={setupDate} autopilotOnly />
+        </section>
+      )}
       {tab === "calendar" && (
         <div className="rounded-xl border border-border/60 bg-card p-4">
           <div className="flex items-center justify-between px-2 sm:px-4 py-2 mb-2">

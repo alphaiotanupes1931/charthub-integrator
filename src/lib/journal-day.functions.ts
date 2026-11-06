@@ -3,6 +3,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { hypotheticalPnl } from "@/lib/autopilot-evaluation.shared";
 
 /** UTC bounds of a New York calendar day (DST-safe to within the hour). */
 function nyDayBounds(ymd: string): { from: string; to: string } {
@@ -21,13 +22,13 @@ export const getJournalDay = createServerFn({ method: "POST" })
     const { from, to } = nyDayBounds(data.date);
     const [scans, threads] = await Promise.all([
       supabase
-        .from("signal_scores")
-        .select("id,symbol,timeframe,grade,bias,confidence,entry,stop,tp1,status,realized_r,taken,created_at")
+        .from("scan_log")
+        .select("id,symbol,timeframe,grade,bias,confidence,entry,stop,tp1,status,realized_r,taken,created_at,source,data_feed,refused_reason,hypothetical_risk_amount")
         .eq("user_id", userId)
         .gte("created_at", from)
         .lt("created_at", to)
         .order("created_at", { ascending: true })
-        .limit(200),
+        .limit(500),
       supabase
         .from("chat_threads")
         .select("id,title,updated_at")
@@ -37,6 +38,7 @@ export const getJournalDay = createServerFn({ method: "POST" })
         .order("updated_at", { ascending: false })
         .limit(50),
     ]);
+    if (scans.error) throw new Error("Could not load evaluated setups");
     return {
       scans: (scans.data ?? []).map((s) => ({
         id: s.id as string,
@@ -50,6 +52,10 @@ export const getJournalDay = createServerFn({ method: "POST" })
         status: (s.status as string | null) ?? null,
         realizedR: s.realized_r == null ? null : Number(s.realized_r),
         taken: !!s.taken,
+        source: s.source,
+        feed: s.data_feed,
+        reason: s.refused_reason,
+        hypotheticalPnl: hypotheticalPnl(s.realized_r == null ? null : Number(s.realized_r), s.hypothetical_risk_amount == null ? null : Number(s.hypothetical_risk_amount)),
         at: s.created_at as string,
       })),
       chats: (threads.data ?? []).map((t) => ({ id: t.id as string, title: (t.title as string | null) ?? "Untitled chat" })),
