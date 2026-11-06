@@ -75,7 +75,7 @@ export const confirmCoachTrade = createServerFn({ method: "POST" })
         const result = await tradeLockerPlaceOrder(session, { symbol: p.symbol, side: p.side, size: ticket.units, stopLoss: p.stop, takeProfit: p.target });
         orderId = result.orderId; fill = result.fillPrice ?? price;
       } else {
-        const { oandaEstimate, oandaPlaceOrder, oandaStatus } = await import("./broker-oanda.functions");
+        const { oandaEstimate, oandaStatus } = await import("./broker-oanda.functions");
         const status = await oandaStatus(context.userId);
         if (!status.connected) throw new Error("Your OANDA account could not be checked.");
         assertCoachAccount(ticket.account, { broker: "oanda", accountId: status.accountId, env: String(status.env) });
@@ -83,8 +83,20 @@ export const confirmCoachTrade = createServerFn({ method: "POST" })
         const price = p.side === "long" ? quote.ask : quote.bid;
         if (!price || Math.abs(price - p.entry) > Math.abs(p.entry - p.stop) * 0.25) throw new Error("Price moved away from the planned entry. No order sent; request a fresh review.");
         coachPlanSchema.parse({ ...p, entry: price });
-        const result = await oandaPlaceOrder(context.userId, { symbol: p.symbol, side: p.side, units: ticket.units, orderType: "market", stopLoss: p.stop, takeProfit: p.target });
-        orderId = result.orderId; fill = result.fillPrice ?? price;
+        const { loadOandaCreds, oandaHost } = await import("./broker-readonly.server");
+        const { oandaInstrument } = await import("./autopilot-live.server");
+        const creds = await loadOandaCreds(context.userId);
+        if (!creds) throw new Error("Your linked OANDA credentials are unavailable.");
+        // Send to the exact confirmed account/host, without fallback account selection.
+        const response = await fetch(`https://${oandaHost(ticket.account.env === "live" ? "live" : "practice")}/v3/accounts/${encodeURIComponent(ticket.account.accountId)}/orders`, {
+          method: "POST", headers: { Authorization: `Bearer ${creds.apiKey}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ order: { type: "MARKET", instrument: oandaInstrument(p.symbol), units: String(p.side === "long" ? ticket.units : -ticket.units),
+            timeInForce: "FOK", positionFill: "DEFAULT", priceBound: String(p.side === "long" ? p.entry + Math.abs(p.entry - p.stop) * 0.25 : p.entry - Math.abs(p.entry - p.stop) * 0.25),
+            stopLossOnFill: { price: String(p.stop), timeInForce: "GTC" }, takeProfitOnFill: { price: String(p.target), timeInForce: "GTC" } } }),
+        });
+        const result = await response.json() as { orderFillTransaction?: { id?: string; price?: string } };
+        if (!response.ok || !result.orderFillTransaction?.id) throw new Error("OANDA did not confirm a fill. Check your account for the order outcome.");
+        orderId = result.orderFillTransaction.id; fill = Number(result.orderFillTransaction.price ?? price);
       }
       await context.supabase.from("autopilot_proposals").update({ status: "filled", broker_order_id: orderId }).eq("id", ticket.proposalId).eq("user_id", context.userId);
       const { journalPlacedTrade } = await import("./journal-auto.server");

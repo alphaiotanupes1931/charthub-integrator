@@ -333,7 +333,7 @@ function ChatThreadInner({
               <Message key={m.id} from={m.role}>
                 <div className="flex flex-col gap-2 w-full">
                   {parsed.grade && <ThreadGradeCard grade={parsed.grade} />}
-                  {parsed.grade && <CoachTradeAction grade={parsed.grade} symbol={readLastChart()?.ticker} timeframe={readLastChart()?.intervalLabel} />}
+                  {parsed.grade && <CoachTradeAction grade={parsed.grade} symbol={ctx.chart?.ticker} timeframe={ctx.chart?.intervalLabel} />}
                   <MessageResponse>{parsed.cleanText || text}</MessageResponse>
                 </div>
               </Message>

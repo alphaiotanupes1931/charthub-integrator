@@ -1,6 +1,7 @@
 // Read-only broker account snapshot.
 //
-// account (balance, open positions, recent closes) without any ability to place
+// The coach can see linked account balances, open positions and recent closes.
+// This module has no ability to place
 // or modify orders. Everything here is GET-only on purpose; order placement
 // stays in the existing broker-* modules behind the broker_live capability.
 //
@@ -279,7 +280,7 @@ async function tradeLockerSnapshot(userId: string): Promise<BrokerSnapshot | nul
         .slice(0, 20);
     }
   } catch {
-    /* read-only: closed history is optional */
+    warnings.push("Closed broker history unavailable; use recorded journal history, not invented closes.");
   }
 
   return {
