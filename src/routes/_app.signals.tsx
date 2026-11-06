@@ -19,6 +19,7 @@ import { CapabilityGate } from "@/components/CapabilityGate";
 import { InfoTip } from "@/components/InfoTip";
 import { InstrumentEdgePanel } from "@/components/InstrumentEdgePanel";
 import { DailyScanLog } from "@/components/DailyScanLog";
+import { TradeMindAccuracy } from "@/components/TradeMindAccuracy";
 
 import { useSignalOutcomes, outcomeLabel } from "@/hooks/useSignalOutcomes";
 import type { SignalScoreRow } from "@/lib/signal-scores.shared";
@@ -118,6 +119,7 @@ function SignalsPage() {
         title="AI Signal Engine"
         description="Scans a watchlist through the 3-layer research stack and returns BUY/SELL/HOLD calls with entries, stops and targets."
       />
+      <TradeMindAccuracy />
 
       <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border/60 bg-card p-4">
         <div className="flex items-center gap-1 rounded-xl border border-border/60 p-1">
