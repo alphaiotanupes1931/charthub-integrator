@@ -1,3 +1,4 @@
+import { PasswordInput } from "@/components/PasswordInput";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -187,10 +188,9 @@ export function TradeLockerPanel() {
           </label>
           <label className="text-xs text-muted-foreground">
             Password
-            <input
+            <PasswordInput
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              type="password"
               autoComplete="current-password"
               className="mt-1 w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm text-foreground"
               placeholder="TradeLocker password"

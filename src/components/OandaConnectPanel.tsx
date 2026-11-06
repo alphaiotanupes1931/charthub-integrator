@@ -1,3 +1,4 @@
+import { PasswordInput } from "@/components/PasswordInput";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -160,10 +161,9 @@ export function OandaConnectPanel({ onChange }: { onChange?: () => void }) {
             Paste an OANDA access token from a live or paper (demo) account. We detect which
             one it is, and the token stays encrypted on the server.
           </p>
-          <input
+          <PasswordInput
             value={apiKey}
             onChange={(ev) => setApiKey(ev.target.value)}
-            type="password"
             autoComplete="off"
             placeholder="Paste your OANDA access token"
             className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm font-mono"
