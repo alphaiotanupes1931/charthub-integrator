@@ -1,5 +1,10 @@
 # Roadmap
 
+## Evaluated setups and invalidation reset (Nov 6)
+- [ ] Persist every Autopilot evaluation in the scan log and show it in Journal separately from broker trades.
+- [ ] Reset invalidated draws only after an opposing closed structural break, retaining pool targets and protected-zone entries.
+- [ ] Run regression tests and signed-in Journal verification; no diagnostic broker orders.
+
 ## Liquidity draw addendum (Nov 5)
 - [x] Build shared pool mapping, confirmed-sweep draw lock and proximal-zone entries.
 - [x] Persist draw state atomically by instrument/feed across dashboard and scheduled scans.
