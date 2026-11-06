@@ -195,10 +195,9 @@ export function TradeLockerConnectPanel({ onChange }: { onChange?: () => void })
             placeholder="TradeLocker email"
             className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm"
           />
-          <input
+          <PasswordInput
             value={password}
             onChange={(ev) => setPassword(ev.target.value)}
-            type="password"
             autoComplete="current-password"
             placeholder="TradeLocker password"
             className="w-full rounded-xl border border-border/60 bg-background px-3 py-2 text-sm"
