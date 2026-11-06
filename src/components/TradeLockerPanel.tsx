@@ -1,4 +1,6 @@
 import { PasswordInput } from "@/components/PasswordInput";
+import { Button } from "@/components/ui/button";
+import { tradeLockerAccountLabel } from "@/lib/tradelocker-account.shared";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -110,7 +112,7 @@ export function TradeLockerPanel() {
             Signed in as <span className="font-semibold">{status.email}</span> on server{" "}
             <span className="font-mono">{status.server}</span>
             <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-bold">
-              {status.env === "live" ? "Live" : "Demo"}
+              {status.env === "live" ? "Live API connection" : "Demo API connection"}
             </span>
           </div>
 
@@ -118,7 +120,8 @@ export function TradeLockerPanel() {
             {status.accounts.map((a) => {
               const active = a.id === status.activeAccountId;
               return (
-                <button
+                <Button
+                  variant="outline"
                   key={a.id}
                   onClick={() => (active ? undefined : choose(a.id))}
                   className={`flex w-full flex-wrap items-center gap-x-4 gap-y-1 rounded-xl border px-3 py-2 text-left text-sm ${
@@ -127,6 +130,7 @@ export function TradeLockerPanel() {
                 >
                   <span className="font-mono">{a.accNum ?? a.id}</span>
                   {a.name && <span className="text-muted-foreground">{a.name}</span>}
+                  <span className="text-xs text-muted-foreground">{tradeLockerAccountLabel(a.accountType)}</span>
                   <span className="text-muted-foreground">{money(a.balance, a.currency)}</span>
                   {a.status && <span className="text-xs text-muted-foreground">{a.status}</span>}
                   {active && (
@@ -134,7 +138,7 @@ export function TradeLockerPanel() {
                       IN USE
                     </span>
                   )}
-                </button>
+                </Button>
               );
             })}
           </div>

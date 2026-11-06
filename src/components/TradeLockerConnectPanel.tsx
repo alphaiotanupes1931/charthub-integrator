@@ -1,4 +1,5 @@
 import { PasswordInput } from "@/components/PasswordInput";
+import { tradeLockerAccountLabel } from "@/lib/tradelocker-account.shared";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -122,8 +123,9 @@ export function TradeLockerConnectPanel({ onChange }: { onChange?: () => void })
             <span className="font-medium text-foreground">{connected.server}</span>
           </p>
           {connected.accounts.map((a) => (
-            <div key={a.id} className="flex items-center gap-2 rounded-xl border border-border/60 px-3 py-2 text-xs">
+            <div key={a.id} className="flex flex-wrap items-center gap-2 rounded-xl border border-border/60 px-3 py-2 text-xs">
               <span className="font-semibold">Account {a.accNum ?? a.id}</span>
+              <span className="text-muted-foreground">{tradeLockerAccountLabel(a.accountType)}</span>
               {a.name && <span className="text-muted-foreground truncate">{a.name}</span>}
               {a.balance != null && (
                 <span className="font-mono text-muted-foreground">

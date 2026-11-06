@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireCapability } from "@/lib/capability-middleware";
+import { tradeLockerAccountType } from "@/lib/tradelocker-account.shared";
 
 // TradeLocker supports a real credential login (email + password + server), so
 // this is an actual "log in to your broker" flow rather than a pasted API token.
@@ -67,6 +68,7 @@ export const connectTradeLocker = createServerFn({ method: "POST" })
         balance: a.accountBalance ?? null,
         currency: a.currency ?? null,
         status: a.status ?? null,
+        accountType: tradeLockerAccountType(a),
       })),
     };
   });
@@ -92,6 +94,7 @@ export const getTradeLockerStatus = createServerFn({ method: "GET" })
           balance: a.accountBalance ?? null,
           currency: a.currency ?? null,
           status: a.status ?? null,
+          accountType: tradeLockerAccountType(a),
         })),
       };
     } catch (e) {
@@ -121,6 +124,10 @@ export const setTradeLockerAccount = createServerFn({ method: "POST" })
   .middleware([requireCapability("broker_live")])
   .inputValidator((raw: unknown) => z.object({ accountId: z.string().trim().min(1) }).parse(raw))
   .handler(async ({ data, context }) => {
+    const { tlSession } = await import("@/lib/broker-tradelocker.server");
+    const session = await tlSession(context.userId);
+    const account = session?.accounts.find((a) => String(a.id) === data.accountId);
+    if (!account) throw new Error("This account is not available under your TradeLocker login.");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("user_broker_credentials")
