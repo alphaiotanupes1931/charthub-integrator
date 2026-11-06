@@ -39,6 +39,8 @@ export const Route = createFileRoute("/_app/broker")({
       { title: "Brokers — TradeMind" },
       { name: "description", content: "Connect OANDA or TradeLocker and place real trades straight from your scans." },
       { property: "og:title", content: "Brokers — TradeMind" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { property: "og:description", content: "Connect OANDA or TradeLocker and place real trades straight from your scans." },
     ],
   }),

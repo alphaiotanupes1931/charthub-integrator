@@ -21,7 +21,7 @@ export function BrokerAccountPanel({ className = "" }: { className?: string }) {
     <section className={`rounded-2xl border border-border/60 bg-card/60 p-4 sm:p-5 ${className}`}>
       <div className="flex items-center gap-2">
         <Activity className="h-4 w-4 text-primary" />
-        <h2 className="text-sm font-semibold">Live account</h2>
+        <h2 className="text-sm font-semibold">Connected accounts</h2>
         <InfoTip term="Read-only link" text="We can see your balance, open positions and recent closes. We cannot place, change or close orders from here." />
         <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-accent/60 px-2 py-0.5 text-[10px] text-muted-foreground">
           <ShieldCheck className="h-3 w-3" /> Read-only
@@ -58,7 +58,7 @@ export function BrokerAccountPanel({ className = "" }: { className?: string }) {
               <div className="mt-4">
                 <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Open positions</div>
                 {s.positions.length === 0 ? (
-                  <p className="mt-2 text-xs text-muted-foreground">Flat right now.</p>
+                  <p className="mt-2 text-xs text-muted-foreground">{s.readWarnings?.some((w) => w.startsWith("Open positions")) ? "Positions unavailable" : "Flat right now."}</p>
                 ) : (
                   <ul className="mt-2 space-y-2">
                     {s.positions.map((p, i) => (
@@ -68,9 +68,9 @@ export function BrokerAccountPanel({ className = "" }: { className?: string }) {
                         </span>
                         <span className="font-medium">{p.symbol}</span>
                         <span className="text-muted-foreground">{p.units} @ {p.entry}</span>
-                        <span className="text-muted-foreground">SL {p.stopLoss ?? "none"}</span>
-                        <span className="text-muted-foreground">TP {p.takeProfit ?? "none"}</span>
-                        <span className={p.unrealizedPL >= 0 ? "text-bull" : "text-bear"}>{money(p.unrealizedPL)}</span>
+                        <span className="text-muted-foreground">SL {p.stopLoss ?? "unconfirmed"}</span>
+                        <span className="text-muted-foreground">TP {p.takeProfit ?? "unconfirmed"}</span>
+                        <span className={(p.unrealizedPL ?? 0) >= 0 ? "text-bull" : "text-bear"}>{money(p.unrealizedPL)}</span>
                       </li>
                     ))}
                   </ul>

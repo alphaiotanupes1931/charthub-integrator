@@ -55,6 +55,7 @@ import { buildLearningPromptBlock } from "@/lib/signalLearning";
 import { takeTrade } from "@/lib/signalHistory";
 import { AiContextInspector } from "@/components/AiContextInspector";
 import { AiCreditNotice } from "@/components/AiCreditNotice";
+import { CoachTradeAction } from "@/components/CoachTradeAction";
 
 
 export type DashboardChatHandle = {
@@ -446,7 +447,7 @@ function GradeCard({ grade, lastPrice, symbol, interval }: { grade: ChartGrade; 
           >
             <BookOpen className="h-3 w-3" /> Log this trade
           </button>
-
+          <CoachTradeAction grade={grade} symbol={symbol} timeframe={interval} />
         </div>
       )}
     </div>

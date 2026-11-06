@@ -1,5 +1,10 @@
 # Roadmap
 
+## Account-aware coach and TradeLocker labels (Nov 6)
+- [x] Show broker-reported account type independently of login environment; verified both linked owner accounts are Demo, including the zero-balance account.
+- [x] Give the coach fresh private account state, configured positions/protection and explicit account-bound confirmation for new protected trades; closing/changing positions remains broker-only.
+- [x] Signed-in coach read back the selected account, balance and today's realized P&L; no diagnostic orders. Current Gold reply declined a setup, so live confirmation was verified through mocked broker tests, not a real order.
+
 ## Evaluated setups and invalidation reset (Nov 6)
 - [x] Persist Autopilot evaluations in scan_log before execution; backfill existing proposals and show a separate dated Journal view with hypothetical R and risk-based currency estimates.
 - [x] Reset invalidated draws only after opposing closed structural breaks; retain exact-feed pool targets and require new protected zones. Pending proposals are rescanned instead of freezing draw updates.

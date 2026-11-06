@@ -38,9 +38,17 @@ import { buildLearningPromptBlock } from "@/lib/signalLearning";
 import { parseAiPayload, type ChartGrade } from "@/lib/chartAnnotations";
 import { ScanStamp } from "@/components/ScanStamp";
 import { AiContextInspector } from "@/components/AiContextInspector";
+import { CoachTradeAction } from "@/components/CoachTradeAction";
 
 
 export const Route = createFileRoute("/_app/chat/$threadId")({
+  head: () => ({ meta: [
+    { title: "TradeMind — Your coach conversation" },
+    { name: "description", content: "Review your trading account and discuss protected trade plans with your TradeMind coach." },
+    { property: "og:title", content: "TradeMind — Your coach conversation" },
+    { property: "og:description", content: "Private account-aware trading coaching and confirmed trade reviews." },
+    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
+  ] }),
   component: ChatThread,
 });
 
@@ -325,6 +333,7 @@ function ChatThreadInner({
               <Message key={m.id} from={m.role}>
                 <div className="flex flex-col gap-2 w-full">
                   {parsed.grade && <ThreadGradeCard grade={parsed.grade} />}
+                  {parsed.grade && <CoachTradeAction grade={parsed.grade} symbol={ctx.chart?.ticker} timeframe={ctx.chart?.intervalLabel} />}
                   <MessageResponse>{parsed.cleanText || text}</MessageResponse>
                 </div>
               </Message>

@@ -1,7 +1,7 @@
 // Read-only broker account snapshot.
 //
-// Phase 3 of the build plan: the coach should be able to SEE the trader's real
-// account (balance, open positions, recent closes) without any ability to place
+// The coach can see linked account balances, open positions and recent closes.
+// This module has no ability to place
 // or modify orders. Everything here is GET-only on purpose; order placement
 // stays in the existing broker-* modules behind the broker_live capability.
 //
@@ -13,10 +13,11 @@ export type ReadOnlyPosition = {
   side: "long" | "short";
   units: number;
   entry: number;
-  unrealizedPL: number;
+  unrealizedPL: number | null;
   stopLoss: number | null;
   takeProfit: number | null;
   openedAt: string | null;
+  protectionKnown?: boolean;
 };
 
 export type ReadOnlyClose = {
@@ -39,6 +40,9 @@ export type BrokerSnapshot = {
   positions: ReadOnlyPosition[];
   recentCloses: ReadOnlyClose[];
   fetchedAt: number;
+  accountType?: string;
+  realizedToday?: number | null;
+  readWarnings?: string[];
 };
 
 export type BrokerSnapshotResult =
@@ -79,13 +83,7 @@ export async function loadOandaCreds(userId: string): Promise<OandaCreds | null>
       env: (row.env as "practice" | "live") ?? "practice",
     };
   }
-  const envKey = process.env.OANDA_API_KEY;
-  if (!envKey) return null;
-  return {
-    apiKey: envKey,
-    accountId: process.env.OANDA_ACCOUNT_ID?.trim() || null,
-    env: (process.env.OANDA_ENV ?? "practice").toLowerCase() === "live" ? "live" : "practice",
-  };
+  return null;
 }
 
 export const oandaHost = (env: "practice" | "live") =>
@@ -197,34 +195,40 @@ async function tradeLockerSnapshot(userId: string): Promise<BrokerSnapshot | nul
   const headers = tlHeaders(token, account);
   const accId = String(account.id ?? account.accNum ?? "");
 
-  let positions: ReadOnlyPosition[] = [];
-  try {
-    const res = await fetch(`${base}/trade/accounts/${accId}/positions`, { headers });
-    if (res.ok) {
-      const body = (await res.json()) as { d?: { positions?: unknown[] } };
-      const rows = Array.isArray(body?.d?.positions) ? (body.d!.positions as unknown[]) : [];
-      // TradeLocker returns positions as ordered arrays described by a config
-      // endpoint; only the stable leading fields are read here.
-      positions = rows
-        .map((row) => (Array.isArray(row) ? row : []))
-        .filter((row) => row.length >= 6)
-        .map((row) => {
-          const qty = num(row[4]);
-          return {
-            symbol: prettySymbol(String(row[1] ?? "")),
-            side: String(row[3] ?? "").toLowerCase() === "sell" ? ("short" as const) : ("long" as const),
-            units: Math.abs(qty),
-            entry: num(row[5]),
-            unrealizedPL: num(row[8]),
-            stopLoss: null,
-            takeProfit: null,
-            openedAt: null,
-          };
-        });
-    }
-  } catch {
-    /* read-only: a failed position read must not break the snapshot */
-  }
+  const { readTLAccount } = await import("./tradelocker-data.server");
+  const { tlRecord, tlNumber } = await import("./tradelocker-data.shared");
+  const { tradeLockerAccountType } = await import("./tradelocker-account.shared");
+  const live = await readTLAccount(creds.env, token, account);
+  const warnings: string[] = [];
+  if (!live.config.positionsConfig?.columns?.length) warnings.push("Position configuration unavailable; do not assume the account is flat.");
+  const read = async (path: string) => {
+    const res = await fetch(`${base}${path}`, { headers });
+    if (!res.ok) throw new Error("Account data unavailable");
+    return await res.json() as { d?: { positions?: unknown[]; orders?: unknown[]; instruments?: Array<{ tradableInstrumentId?: number; name?: string }> } };
+  };
+  const [positionResponse, orderResponse, instrumentResponse] = await Promise.all([
+    read(`/trade/accounts/${accId}/positions`).catch(() => { warnings.push("Open positions unavailable, not confirmed empty."); return null; }),
+    read(`/trade/accounts/${accId}/orders`).catch(() => { warnings.push("Protective orders unavailable; do not assume stops or targets are missing."); return null; }),
+    read(`/trade/accounts/${accId}/instruments`).catch(() => null),
+  ]);
+  const orders = (orderResponse?.d?.orders ?? []).map((row) => tlRecord(live.config.ordersConfig?.columns, row));
+  const protection = (id: unknown, stop: boolean) => {
+    const order = orders.find((o) => String(o.id) === String(id));
+    return order ? tlNumber(stop ? order.stopPrice ?? order.price : order.price) : null;
+  };
+  const positions: ReadOnlyPosition[] = (positionResponse?.d?.positions ?? []).map((row) => {
+    const p = tlRecord(live.config.positionsConfig?.columns, row);
+    const symbol = instrumentResponse?.d?.instruments?.find((i) => String(i.tradableInstrumentId) === String(p.tradableInstrumentId))?.name;
+    return {
+      symbol: symbol ?? `instrument #${String(p.tradableInstrumentId ?? "unknown")}`,
+      side: String(p.side).toLowerCase() === "sell" ? "short" : "long",
+      units: Math.abs(tlNumber(p.qty) ?? 0), entry: tlNumber(p.avgPrice) ?? 0,
+      unrealizedPL: tlNumber(p.unrealizedPl),
+      stopLoss: protection(p.stopLossId, true), takeProfit: protection(p.takeProfitId, false),
+      protectionKnown: Boolean(orderResponse),
+      openedAt: p.openDate ? String(p.openDate) : null,
+    };
+  });
 
   // Closed positions come back either as objects or as the ordered arrays
   // TradeLocker uses elsewhere, so both shapes are read defensively.
@@ -275,9 +279,11 @@ async function tradeLockerSnapshot(userId: string): Promise<BrokerSnapshot | nul
         .filter((c): c is ReadOnlyClose => !!c)
         .sort((a, b) => Date.parse(b.closedAt ?? "") - Date.parse(a.closedAt ?? ""))
         .slice(0, 20);
+    } else {
+      warnings.push("Closed broker history unavailable; use recorded journal history, not invented closes.");
     }
   } catch {
-    /* read-only: closed history is optional */
+    warnings.push("Closed broker history unavailable; use recorded journal history, not invented closes.");
   }
 
   return {
@@ -285,9 +291,12 @@ async function tradeLockerSnapshot(userId: string): Promise<BrokerSnapshot | nul
     env: creds.env,
     accountId: accId || null,
     currency: (account as { currency?: string }).currency ?? null,
-    balance: (account as { accountBalance?: number }).accountBalance ?? null,
-    equity: null,
-    unrealizedPL: positions.reduce((s, p) => s + p.unrealizedPL, 0) || null,
+    balance: live.balance,
+    equity: tlNumber(live.values.projectedBalance),
+    unrealizedPL: tlNumber(live.values.openNetPnL),
+    realizedToday: tlNumber(live.values.todayNet),
+    accountType: tradeLockerAccountType(live.account),
+    readWarnings: warnings,
     positions,
     recentCloses,
     fetchedAt: Date.now(),
@@ -324,15 +333,17 @@ export function brokerContextBlock(result: BrokerSnapshotResult): string {
     ]
       .filter(Boolean)
       .join(", ");
-    lines.push(`${s.broker.toUpperCase()} (${s.env})${money ? `: ${money}` : ""}`);
+    lines.push(`${s.broker.toUpperCase()} account ${s.accountId ?? "unknown"} (connection ${s.env}, account type ${s.accountType ?? s.env})${money ? `: ${money}` : ""}`);
+    if (s.realizedToday != null) lines.push(`  Broker-reported realized P&L today ${s.realizedToday} ${s.currency ?? ""}`);
+    for (const warning of s.readWarnings ?? []) lines.push(`  DATA WARNING: ${warning}`);
     if (s.positions.length === 0) {
-      lines.push("  No open positions.");
+      lines.push(s.readWarnings?.some((w) => w.startsWith("Open positions")) ? "  Open position count unknown." : "  No open positions.");
     } else {
       for (const p of s.positions) {
         lines.push(
           `  OPEN ${p.side.toUpperCase()} ${p.symbol} ${p.units} @ ${p.entry}` +
-            `${p.stopLoss != null ? ` SL ${p.stopLoss}` : " SL none"}` +
-            `${p.takeProfit != null ? ` TP ${p.takeProfit}` : " TP none"}` +
+            `${p.stopLoss != null ? ` SL ${p.stopLoss}` : p.protectionKnown === false ? " SL unknown" : " SL not reported"}` +
+            `${p.takeProfit != null ? ` TP ${p.takeProfit}` : p.protectionKnown === false ? " TP unknown" : " TP not reported"}` +
             ` unrealized ${p.unrealizedPL}`,
         );
       }
@@ -344,5 +355,5 @@ export function brokerContextBlock(result: BrokerSnapshotResult): string {
   return `LIVE BROKER ACCOUNT (read-only, refreshed just now)
 ${lines.join("\n")}
 
-Use these real positions when the trader asks about managing a trade: you already know their side, size, entry, stop and open P&L, so never ask where price is or what they are in. You cannot place, modify or close orders; if they ask you to, tell them to use their broker or the order ticket in the app.`;
+Use these real positions when the trader asks about managing a trade: you already know their side, size, entry, stop and open P&L, so never ask where price is or what they are in. You can offer a new protected trade using a chart-grade plan; the reply shows a Review trade button that opens an account-bound confirmation. Never claim you placed anything from chat text or a plain yes: only the separate Confirm trade control can send the order. Closing positions or changing stops is not supported by this chat action yet; direct those requests to the broker. Give specific, respectful feedback from actual account and journal data, distinguishing open P&L from realized P&L. Never claim to see data marked unknown or unavailable. Never infer Live/Demo from balance.`;
 }

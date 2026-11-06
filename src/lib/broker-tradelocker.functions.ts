@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireCapability } from "@/lib/capability-middleware";
+import { tradeLockerAccountType } from "@/lib/tradelocker-account.shared";
 
 // TradeLocker supports a real credential login (email + password + server), so
 // this is an actual "log in to your broker" flow rather than a pasted API token.
@@ -67,6 +68,7 @@ export const connectTradeLocker = createServerFn({ method: "POST" })
         balance: a.accountBalance ?? null,
         currency: a.currency ?? null,
         status: a.status ?? null,
+        accountType: tradeLockerAccountType(a),
       })),
     };
   });
@@ -79,20 +81,25 @@ export const getTradeLockerStatus = createServerFn({ method: "GET" })
     try {
       const session = await tlSession(context.userId);
       if (!session) return { connected: false as const, reason: "No TradeLocker login saved yet." };
+      const { readTLAccount } = await import("./tradelocker-data.server");
+      const accounts = await Promise.all(session.accounts.map(async (a) => {
+        const live = await readTLAccount(session.creds.env, session.token, a).catch(() => null);
+        return {
+          id: String(a.id), accNum: a.accNum != null ? String(a.accNum) : null,
+          name: live?.account.name ?? a.name ?? null,
+          balance: live?.balance ?? a.accountBalance ?? null,
+          currency: live?.account.currency ?? a.currency ?? null,
+          status: live?.account.status ?? a.status ?? null,
+          accountType: tradeLockerAccountType(live?.account ?? a),
+        };
+      }));
       return {
         connected: true as const,
         env: session.creds.env,
         email: session.creds.email,
         server: session.creds.server,
         activeAccountId: String(session.account?.id ?? ""),
-        accounts: session.accounts.map((a) => ({
-          id: String(a.id),
-          accNum: a.accNum != null ? String(a.accNum) : null,
-          name: a.name ?? null,
-          balance: a.accountBalance ?? null,
-          currency: a.currency ?? null,
-          status: a.status ?? null,
-        })),
+        accounts,
       };
     } catch (e) {
       return { connected: false as const, reason: (e as Error).message };
@@ -121,6 +128,10 @@ export const setTradeLockerAccount = createServerFn({ method: "POST" })
   .middleware([requireCapability("broker_live")])
   .inputValidator((raw: unknown) => z.object({ accountId: z.string().trim().min(1) }).parse(raw))
   .handler(async ({ data, context }) => {
+    const { tlSession } = await import("@/lib/broker-tradelocker.server");
+    const session = await tlSession(context.userId);
+    const account = session?.accounts.find((a) => String(a.id) === data.accountId);
+    if (!account) throw new Error("This account is not available under your TradeLocker login.");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("user_broker_credentials")

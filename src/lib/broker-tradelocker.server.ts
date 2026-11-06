@@ -19,6 +19,9 @@ export type TLAccount = {
   accountBalance?: number;
   currency?: string;
   status?: string;
+  accountType?: string;
+  type?: string;
+  isDemo?: boolean;
 };
 
 export async function tlFetch<T>(url: string, init: RequestInit, label: string): Promise<T> {
@@ -81,6 +84,7 @@ export async function loadTradeLockerCreds(userId: string): Promise<StoredTL | n
     .select("api_key_ciphertext, account_id, env, is_active, updated_at")
     .eq("user_id", userId)
     .eq("broker", "tradelocker")
+    .eq("is_active", true)
     .order("is_active", { ascending: false })
     .limit(1);
   const row = (data ?? [])[0];
@@ -110,7 +114,8 @@ export async function tlSession(userId: string) {
   const account =
     accounts.find(
       (a) => String(a.id) === String(creds.accountId) || String(a.accNum) === String(creds.accountId),
-    ) ?? accounts[0];
+    ) ?? (creds.accountId ? undefined : accounts[0]);
+  if (creds.accountId && !account) throw new Error("Your selected TradeLocker account is no longer available. Select an account again on the Broker page.");
   return { creds, token, accounts, account };
 }
 
