@@ -176,6 +176,13 @@
       "when": 1793927176413,
       "tag": "0024_autopilot_evaluations",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1793927920325,
+      "tag": "0025_platform_accuracy_summary",
+      "breakpoints": true
     }
   ]
 }
