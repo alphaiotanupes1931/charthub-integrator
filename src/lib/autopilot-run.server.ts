@@ -197,7 +197,10 @@ export async function runAutopilotForUser(
       const restLimit =
         !executable && !hourlyLimitReached && verdict.allowed && settings.mode === "auto"
         && settings.demoOnly && settings.liveVenue === "oanda"
-        && draft.units !== null && !draft.triggered && draft.stopLoss != null && draft.entry != null;
+        && draft.units !== null && !draft.triggered && draft.stopLoss != null && draft.entry != null
+        // US OANDA only takes forex; metals/indices/oil wait for the trigger and
+        // then route to TradeLocker through placeLiveOrder.
+        && (await import("@/lib/venue-routing.shared")).isForexPair(draft.symbol);
 
       const { data: inserted, error } = await client
         .from("autopilot_proposals")
@@ -272,6 +275,21 @@ export async function runAutopilotForUser(
           openPositions += 1;
           hourlyLimitReached = true;
           await logAutopilotEvent(userId, "proposal", `${draft.symbol} ${draft.side}: ${rest.detail}`, { symbol: draft.symbol, proposalId: inserted.id, resting: true });
+          if (draft.scanId) await client.from("scan_log").update({ taken: true, taken_at: new Date().toISOString() }).eq("id", draft.scanId).eq("user_id", userId);
+          const { journalPlacedTrade } = await import("@/lib/journal-auto.server");
+          await journalPlacedTrade({
+            userId,
+            proposalId: inserted.id as string,
+            symbol: draft.symbol,
+            side: draft.side,
+            timeframe: (draft as { timeframe?: string | null }).timeframe ?? null,
+            entry: Number(draft.entry),
+            stopLoss: Number(draft.stopLoss),
+            takeProfit: draft.takeProfit ?? null,
+            units: Math.max(1, Math.floor(draft.units ?? 1)),
+            grade: (draft as { grade?: string | null }).grade ?? null,
+            detail: `Resting limit order on OANDA Demo. ${rest.detail}`,
+          });
         } else if (!rest.duplicate) {
           await logAutopilotEvent(userId, "failed", `${draft.symbol} resting order failed: ${rest.detail}`, { symbol: draft.symbol, proposalId: inserted.id });
         }
