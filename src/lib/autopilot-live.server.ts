@@ -155,17 +155,31 @@ async function placeOnVenue(
         const runnerTl = intent.stopLoss ? intent.runner ?? null : null;
         const halfUnits = Math.floor(Math.abs(intent.units) / 2);
         if (runnerTl && halfUnits >= 1) {
+          let a: Awaited<ReturnType<typeof tradeLockerPlaceOrder>> | null = null;
           try {
-            const a = await tradeLockerPlaceOrder(session, { symbol: intent.symbol, side: intent.side, size: halfUnits, stopLoss: intent.stopLoss, takeProfit: runnerTl.tp1 });
-            const b = await tradeLockerPlaceOrder(session, { symbol: intent.symbol, side: intent.side, size: Math.abs(intent.units) - halfUnits, stopLoss: intent.stopLoss, takeProfit: runnerTl.finalPool });
-            return {
-              ok: true,
-              detail: `Opened ${intent.side} ${a.instrument} on TradeLocker in two halves: ${a.lots} lots target TP1 ${runnerTl.tp1}, ${b.lots} lots run to the final pool ${runnerTl.finalPool}.`,
-              orderId: a.orderId,
-            };
+            a = await tradeLockerPlaceOrder(session, { symbol: intent.symbol, side: intent.side, size: halfUnits, stopLoss: intent.stopLoss, takeProfit: runnerTl.tp1 });
           } catch (e) {
-            // Below minimum lot for a split: fall back to one order at the plan target.
+            // First half rejected (e.g. below minimum lot): nothing is open, so
+            // fall back to one order at the plan target.
             if (!/min|step|lots/i.test((e as Error).message)) throw e;
+          }
+          if (a) {
+            // The first half is live. Never send another full-size order on top
+            // of it: if the runner half fails, report the open half as the fill.
+            try {
+              const b = await tradeLockerPlaceOrder(session, { symbol: intent.symbol, side: intent.side, size: Math.abs(intent.units) - halfUnits, stopLoss: intent.stopLoss, takeProfit: runnerTl.finalPool });
+              return {
+                ok: true,
+                detail: `Opened ${intent.side} ${a.instrument} on TradeLocker in two halves: ${a.lots} lots target TP1 ${runnerTl.tp1}, ${b.lots} lots run to the final pool ${runnerTl.finalPool}.`,
+                orderId: a.orderId,
+              };
+            } catch (e) {
+              return {
+                ok: true,
+                detail: `Opened ${intent.side} ${a.lots} lots ${a.instrument} on TradeLocker targeting TP1 ${runnerTl.tp1}; the runner half was not accepted (${(e as Error).message}), so only half size is open.`,
+                orderId: a.orderId,
+              };
+            }
           }
         }
         const res = await tradeLockerPlaceOrder(session, {
