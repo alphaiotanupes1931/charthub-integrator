@@ -115,7 +115,8 @@ export async function runAutopilotForUser(
       .from("autopilot_proposals")
       .select("id", { count: "exact", head: true })
       .eq("user_id", userId)
-      .eq("status", "filled")
+      // Resting limit orders count too, so each 15-minute run cannot add another.
+      .or("status.eq.filled,and(status.eq.approved,order_type.in.(limit,limit_tradelocker))")
       .gte("decided_at", slotStart(now).toISOString());
     if ((thisHour ?? 0) > 0) {
       result.haltedReason = "Already placed this hour's trade";
@@ -283,6 +284,8 @@ export async function runAutopilotForUser(
           hourlyLimitReached = true;
           await logAutopilotEvent(userId, "proposal", `${draft.symbol} ${draft.side}: ${rest.detail}`, { symbol: draft.symbol, proposalId: inserted.id, resting: true });
           if (draft.scanId) await client.from("scan_log").update({ taken: true, taken_at: new Date().toISOString() }).eq("id", draft.scanId).eq("user_id", userId);
+          // Journal only real fills; a waiting order may expire without trading.
+          if ((rest as { filled?: boolean }).filled) {
           const { journalPlacedTrade } = await import("@/lib/journal-auto.server");
           await journalPlacedTrade({
             userId,
@@ -295,8 +298,9 @@ export async function runAutopilotForUser(
             takeProfit: draft.takeProfit ?? null,
             units: Math.max(1, Math.floor(draft.units ?? 1)),
             grade: (draft as { grade?: string | null }).grade ?? null,
-            detail: `Resting limit order on ${venueLabel}. ${rest.detail}`,
+            detail: `Filled via limit order on ${venueLabel}. ${rest.detail}`,
           });
+          }
         } else if (!rest.duplicate) {
           await logAutopilotEvent(userId, "failed", `${draft.symbol} resting order failed: ${rest.detail}`, { symbol: draft.symbol, proposalId: inserted.id });
         }
