@@ -282,7 +282,7 @@ export async function placeRestingLimitOrder(
   userId: string,
   intent: LiveOrderIntent,
   hours = 4,
-): Promise<LiveOrderOutcome & { duplicate?: boolean }> {
+): Promise<LiveOrderOutcome & { duplicate?: boolean; filled?: boolean }> {
   const target = await oandaTarget(userId);
   if (!target) return { ok: false, detail: "No usable OANDA account is connected." };
   const refused = demoOnlyRefusal(target.env, true);
@@ -325,6 +325,7 @@ export async function placeRestingLimitOrder(
   return {
     ok: true,
     orderId: fill?.id ?? created?.id,
+    filled: Boolean(fill),
     detail: fill
       ? `Filled ${intent.side} ${size} ${instrument} at ${fill.price} on demo OANDA.`
       : `Resting ${intent.side} limit for ${size} ${instrument} at ${priceStr(instrument, intent.entry)} on demo OANDA, good for ${hours}h.`,
