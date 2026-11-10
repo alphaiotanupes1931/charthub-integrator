@@ -199,6 +199,8 @@ export type TLOrderIntent = {
   size: number;
   stopLoss?: number | null;
   takeProfit?: number | null;
+  /** When set, a resting limit order at this price (GTC) instead of a market order. */
+  limitPrice?: number | null;
 };
 
 export type TLOrderResult = {
@@ -223,14 +225,15 @@ export async function tradeLockerPlaceOrder(s: TLTradeSession, intent: TLOrderIn
   const rules = await tradeLockerVolumeRules(s, inst, intent.symbol);
   const vol = unitsToTradeLockerLots(intent.size, rules);
   if (!vol.ok) throw new Error(`${intent.symbol}: ${vol.reason}`);
+  const isLimit = intent.limitPrice != null && Number.isFinite(intent.limitPrice);
   const body: Record<string, unknown> = {
-    price: 0,
+    price: isLimit ? intent.limitPrice : 0,
     qty: vol.lots,
     routeId: inst.tradeRouteId,
     side: intent.side === "long" ? "buy" : "sell",
-    validity: "IOC",
+    validity: isLimit ? "GTC" : "IOC",
     tradableInstrumentId: inst.tradableInstrumentId,
-    type: "market",
+    type: isLimit ? "limit" : "market",
   };
   if (intent.stopLoss) {
     body.stopLoss = intent.stopLoss;
@@ -278,6 +281,16 @@ export async function tradeLockerPlaceOrder(s: TLTradeSession, intent: TLOrderIn
     accountId: s.accountId,
     env: s.env,
   };
+}
+
+/** Cancel a resting order. Best-effort: an already-filled order cannot be cancelled. */
+export async function tradeLockerCancelOrder(s: TLTradeSession, orderId: string): Promise<boolean> {
+  try {
+    await tlFetch(`${tlBase(s.env)}/trade/orders/${encodeURIComponent(orderId)}`, { method: "DELETE", headers: headers(s) }, "Cancel failed");
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export type TLPositionRow = {

@@ -15,16 +15,9 @@ export type InstrumentReview = {
   reviewedOn: string;
 };
 
-export const INSTRUMENTS_UNDER_REVIEW: InstrumentReview[] = [
-  {
-    symbol: "GBP/USD",
-    reason: "Held back from alerts and auto trading while its results are under review. Analysis and coaching still work.",
-    evidence:
-      "Filed signals lost money at every stop width tested, and a two-year hourly replay of the same rules was negative " +
-      "in both the earlier window (-0.05R per trade) and the held-out window (-0.16R per trade).",
-    reviewedOn: "2026-09-20",
-  },
-];
+// GBP/USD was held here from 2026-09-20 (negative replay) and released on
+// 2026-11-09 at the owner's request so the Demo autopilot can trade it again.
+export const INSTRUMENTS_UNDER_REVIEW: InstrumentReview[] = [];
 
 const BY_SYMBOL = new Map(INSTRUMENTS_UNDER_REVIEW.map((row) => [row.symbol.toUpperCase(), row]));
 

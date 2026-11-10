@@ -150,6 +150,10 @@ export async function runAutopilotForUser(
   // Prefer the broker's real open positions; old filled rows stay "filled"
   // forever and would otherwise block every new trade.
   let openPositions = brokerOpen ?? count ?? 0;
+  // Resting TradeLocker limits have no broker expiry; retire them after 4h.
+  if (settings.demoOnly) {
+    await (await import("@/lib/autopilot-live.server")).cancelStaleTradeLockerLimits(userId).catch(() => 0);
+  }
 
   for (const symbol of symbols) {
     try {
@@ -194,13 +198,14 @@ export async function runAutopilotForUser(
       const autoLive = executable;
       // Demo only: instead of waiting for a touch between 15-minute checks, rest
       // a limit order at the planned entry so a fast tag-and-go still fills.
-      const restLimit =
+      const restBase =
         !executable && !hourlyLimitReached && verdict.allowed && settings.mode === "auto"
-        && settings.demoOnly && settings.liveVenue === "oanda"
-        && draft.units !== null && !draft.triggered && draft.stopLoss != null && draft.entry != null
-        // US OANDA only takes forex; metals/indices/oil wait for the trigger and
-        // then route to TradeLocker through placeLiveOrder.
-        && (await import("@/lib/venue-routing.shared")).isForexPair(draft.symbol);
+        && settings.demoOnly
+        && draft.units !== null && !draft.triggered && draft.stopLoss != null && draft.entry != null;
+      // US OANDA only takes forex; indices/metals/oil rest on TradeLocker Demo.
+      const isFx = (await import("@/lib/venue-routing.shared")).isForexPair(draft.symbol);
+      const restLimit = restBase && settings.liveVenue === "oanda" && isFx;
+      const restTradeLocker = restBase && !isFx;
 
       const { data: inserted, error } = await client
         .from("autopilot_proposals")
@@ -257,9 +262,11 @@ export async function runAutopilotForUser(
       );
 
 
-      if (restLimit) {
-        const { placeRestingLimitOrder } = await import("@/lib/autopilot-live.server");
-        const rest = await placeRestingLimitOrder(userId, {
+      if (restLimit || restTradeLocker) {
+        const live = await import("@/lib/autopilot-live.server");
+        const place = restTradeLocker ? live.placeRestingTradeLockerLimit : live.placeRestingLimitOrder;
+        const venueLabel = restTradeLocker ? "TradeLocker Demo" : "OANDA Demo";
+        const rest = await place(userId, {
           symbol: draft.symbol,
           side: draft.side,
           units: Math.max(1, Math.floor(draft.units ?? 1)),
@@ -270,7 +277,7 @@ export async function runAutopilotForUser(
         });
         if (rest.ok) {
           await client.from("autopilot_proposals")
-            .update({ status: "approved", order_type: "limit", broker_order_id: rest.orderId ?? null, decided_at: new Date().toISOString() } as never)
+            .update({ status: "approved", order_type: restTradeLocker ? live.TL_LIMIT_ORDER_TYPE : "limit", broker_order_id: rest.orderId ?? null, decided_at: new Date().toISOString() } as never)
             .eq("id", inserted.id as string);
           openPositions += 1;
           hourlyLimitReached = true;
@@ -288,7 +295,7 @@ export async function runAutopilotForUser(
             takeProfit: draft.takeProfit ?? null,
             units: Math.max(1, Math.floor(draft.units ?? 1)),
             grade: (draft as { grade?: string | null }).grade ?? null,
-            detail: `Resting limit order on OANDA Demo. ${rest.detail}`,
+            detail: `Resting limit order on ${venueLabel}. ${rest.detail}`,
           });
         } else if (!rest.duplicate) {
           await logAutopilotEvent(userId, "failed", `${draft.symbol} resting order failed: ${rest.detail}`, { symbol: draft.symbol, proposalId: inserted.id });
