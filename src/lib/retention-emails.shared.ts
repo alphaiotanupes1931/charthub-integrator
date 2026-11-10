@@ -80,6 +80,38 @@ export function scannerWinsForDay(rows: ResolvedRow[], day: string): Win[] {
   return [...best.values()].sort((a, b) => b.r - a.r);
 }
 
+export type BotProposalRow = {
+  symbol: string;
+  side: string;
+  status: string;
+  order_type?: string | null;
+  rejection_reason: string | null;
+  created_at: string;
+};
+
+const sideOf = (b: string) => (/(short|sell|bear)/i.test(b) ? "short" : "long");
+
+/**
+ * One plain sentence per win saying what this trader's auto trader did with it,
+ * from their own proposals that day. Taken beats everything else; otherwise the
+ * latest proposal's outcome explains the miss.
+ */
+export function botNoteForWin(win: { symbol: string; bias: string }, rows: BotProposalRow[]): string {
+  const side = sideOf(win.bias);
+  const mine = rows
+    .filter((r) => r.symbol.toUpperCase() === win.symbol.toUpperCase() && sideOf(r.side) === side)
+    .sort((a, b) => b.created_at.localeCompare(a.created_at));
+  if (!mine.length) {
+    return rows.length ? "Your auto trader did not have this one on its list." : "Auto trading is off for your account.";
+  }
+  if (mine.some((r) => r.status === "approved" || r.status === "filled")) return "Your auto trader took this trade.";
+  const last = mine[0]!;
+  if (last.status === "blocked") return `Skipped: ${last.rejection_reason ?? "blocked by your risk settings"}.`;
+  if (last.status === "failed") return `Order failed: ${last.rejection_reason ?? "the broker turned it down"}.`;
+  if (last.status === "pending") return "Still waiting for price to reach the entry.";
+  return "Waited for price to pull back to the entry, but it moved without filling.";
+}
+
 /** No wins, no email. */
 export function shouldSendWins(wins: Win[]): boolean {
   return wins.length > 0;

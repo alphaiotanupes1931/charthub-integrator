@@ -2,7 +2,7 @@ import React from 'react'
 import { Body, Button, Container, Head, Heading, Hr, Html, Link, Preview, Section, Text } from '@react-email/components'
 import type { TemplateEntry } from './registry'
 
-interface Win { symbol: string; direction: string; grade?: string; r: string }
+interface Win { symbol: string; direction: string; grade?: string; r: string; botNote?: string }
 interface Props { name?: string; dateLabel?: string; wins?: Win[]; appUrl?: string; unsubscribeUrl?: string }
 
 const ScannerWinsEmail = ({ name, dateLabel = 'today', wins = [], appUrl = 'https://www.trademindaicoach.com/journal', unsubscribeUrl = 'https://www.trademindaicoach.com/unsubscribe' }: Props) => (
@@ -18,6 +18,7 @@ const ScannerWinsEmail = ({ name, dateLabel = 'today', wins = [], appUrl = 'http
           {wins.map((w) => (
             <Text key={w.symbol + w.direction} style={row}>
               <strong>{w.symbol}</strong> {w.direction}{w.grade ? ` · ${w.grade}` : ''} · <span style={green}>+{w.r}R</span>
+              {w.botNote ? <><br /><span style={note}>{w.botNote}</span></> : null}
             </Text>
           ))}
         </Section>
@@ -48,6 +49,7 @@ const h1 = { fontSize: '24px', fontWeight: 700, color: '#0f172a', margin: '0 0 8
 const text = { fontSize: '15px', lineHeight: '24px', color: '#334155', margin: '0 0 16px' }
 const card = { backgroundColor: '#f0fdf4', borderRadius: '12px', padding: '16px 18px', margin: '8px 0 20px' }
 const row = { fontSize: '15px', color: '#0f172a', margin: '0 0 6px' }
+const note = { fontSize: '13px', color: '#64748b' }
 const green = { color: '#15803d', fontWeight: 700 }
 const button = { backgroundColor: '#0f172a', color: '#ffffff', borderRadius: '8px', padding: '12px 20px', fontSize: '14px', fontWeight: 600, textDecoration: 'none' }
 const hr = { borderColor: '#e2e8f0', margin: '28px 0 12px' }

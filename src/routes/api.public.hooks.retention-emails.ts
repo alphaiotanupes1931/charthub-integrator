@@ -60,9 +60,22 @@ export const Route = createFileRoute("/api/public/hooks/retention-emails")({
           if (!p.email || p.banned || p[prefCol] === false || already.has(p.id)) continue;
           if (onlyEmail && p.email !== onlyEmail) continue;
           try {
+            let data: Record<string, unknown> = payload;
+            if (kind === "scanner_wins") {
+              const since = new Date(now.getTime() - 30 * 3600_000).toISOString();
+              const { data: props } = await supabaseAdmin.from("autopilot_proposals")
+                .select("symbol, side, status, order_type, rejection_reason, created_at")
+                .eq("user_id", p.id).gte("created_at", since).limit(1000);
+              const rows = (props ?? []) as import("@/lib/retention-emails.shared").BotProposalRow[];
+              const wins = (payload.wins as Array<Record<string, string>>).map((w) => ({
+                ...w,
+                botNote: R.botNoteForWin({ symbol: w.symbol, bias: w.direction }, rows),
+              }));
+              data = { ...payload, wins };
+            }
             const r = await sendTemplateEmail(kind === "morning_brief" ? "morning-brief" : "scanner-wins", p.email, {
               idempotencyKey: `${kind}-${p.id}-${day}`,
-              templateData: { ...payload, name: p.display_name?.split(" ")[0] ?? undefined },
+              templateData: { ...data, name: p.display_name?.split(" ")[0] ?? undefined },
             });
             await supabaseAdmin.from("retention_emails" as never).insert({ user_id: p.id, kind, trading_day: day } as never);
             if ((r as { sent?: boolean })?.sent !== false) sent += 1;
