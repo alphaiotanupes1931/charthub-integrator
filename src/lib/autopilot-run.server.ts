@@ -150,6 +150,10 @@ export async function runAutopilotForUser(
   // Prefer the broker's real open positions; old filled rows stay "filled"
   // forever and would otherwise block every new trade.
   let openPositions = brokerOpen ?? count ?? 0;
+  // Resting TradeLocker limits have no broker expiry; retire them after 4h.
+  if (settings.demoOnly) {
+    await (await import("@/lib/autopilot-live.server")).cancelStaleTradeLockerLimits(userId).catch(() => 0);
+  }
 
   for (const symbol of symbols) {
     try {
