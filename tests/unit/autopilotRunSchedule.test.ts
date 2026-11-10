@@ -24,7 +24,7 @@ vi.mock("@/lib/autopilot-live.server", () => ({
 function clientWithHourlyFills(hourlyFills: number) {
   const query = {
     select: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(), or: vi.fn().mockReturnThis(),
     gte: vi.fn().mockResolvedValue({ count: hourlyFills }),
     in: vi.fn().mockResolvedValue({ count: 4 }),
     then: (resolve: (value: { data: never[] }) => unknown) =>
@@ -87,7 +87,7 @@ describe("demo schedule only gates new entries", () => {
     vi.setSystemTime(new Date("2026-11-03T21:05:00Z"));
     const update = vi.fn().mockReturnThis();
     const query = {
-      select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), update,
+      select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), or: vi.fn().mockReturnThis(), update,
       gte: vi.fn().mockResolvedValue({ count: 0 }), in: vi.fn().mockResolvedValue({ count: 0 }),
       then: (resolve: (value: unknown) => unknown) => Promise.resolve({ data: [{ symbol: "US30", expires_at: "2026-11-04T00:00:00Z" }], error: null }).then(resolve),
     };
