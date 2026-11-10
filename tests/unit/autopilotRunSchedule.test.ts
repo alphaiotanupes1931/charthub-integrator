@@ -18,6 +18,7 @@ vi.mock("@/lib/auto-trade.server", () => ({ liveAccountFacts: mocks.facts }));
 vi.mock("@/lib/autopilot-live.server", () => ({
   manageLiveTrades: mocks.manage,
   placeLiveOrder: mocks.place,
+  cancelStaleTradeLockerLimits: async () => 0,
 }));
 
 function clientWithHourlyFills(hourlyFills: number) {
