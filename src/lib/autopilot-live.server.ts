@@ -331,6 +331,82 @@ export async function placeRestingLimitOrder(
   };
 }
 
+/** Marks proposals whose resting order sits on TradeLocker, so expiry can cancel them. */
+export const TL_LIMIT_ORDER_TYPE = "limit_tradelocker";
+
+/**
+ * Demo-only resting LIMIT order on TradeLocker (indices, metals, oil) at the
+ * planned entry with stop and target attached. TradeLocker has no reliable
+ * expiry, so it rests GTC and `cancelStaleTradeLockerLimits` removes it after
+ * `hours`. One resting autopilot order per instrument at a time.
+ */
+export async function placeRestingTradeLockerLimit(
+  userId: string,
+  intent: LiveOrderIntent,
+  hours = 4,
+): Promise<LiveOrderOutcome & { duplicate?: boolean }> {
+  const { resolveTradeVenue } = await import("@/lib/broker-trade.functions");
+  const row = await resolveTradeVenue(userId);
+  if (!row || row.broker !== "tradelocker") return { ok: false, detail: "No TradeLocker account is connected." };
+  const refused = demoOnlyRefusal(row.env, true);
+  if (refused) return { ok: false, detail: refused };
+  if (!intent.stopLoss) return { ok: false, detail: "Resting orders need a stop." };
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const since = new Date(Date.now() - hours * 3600_000).toISOString();
+  const { count } = await supabaseAdmin.from("autopilot_proposals")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId).eq("symbol", intent.symbol).eq("order_type", TL_LIMIT_ORDER_TYPE)
+    .eq("status", "approved").gte("decided_at", since);
+  if ((count ?? 0) > 0) return { ok: false, duplicate: true, detail: "A resting autopilot order is already waiting on this instrument." };
+  try {
+    const { tradeLockerSession, tradeLockerPlaceOrder } = await import("@/lib/venues/tradelocker.server");
+    const session = await tradeLockerSession(userId);
+    const tp = intent.runner ? intent.runner.finalPool : intent.takeProfit;
+    const res = await tradeLockerPlaceOrder(session, {
+      symbol: intent.symbol,
+      side: intent.side,
+      size: Math.abs(intent.units),
+      stopLoss: intent.stopLoss,
+      takeProfit: tp,
+      limitPrice: intent.entry,
+    });
+    return {
+      ok: true,
+      orderId: res.orderId,
+      detail: `Resting ${intent.side} limit for ${res.lots} lots ${res.instrument} at ${intent.entry} on TradeLocker Demo, cancelled after ${hours}h if not filled.`,
+    };
+  } catch (e) {
+    return { ok: false, detail: (e as Error).message };
+  }
+}
+
+/** Cancel TradeLocker resting autopilot orders older than `hours`. */
+export async function cancelStaleTradeLockerLimits(userId: string, hours = 4): Promise<number> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const cutoff = new Date(Date.now() - hours * 3600_000).toISOString();
+  const { data } = await supabaseAdmin.from("autopilot_proposals")
+    .select("id, broker_order_id")
+    .eq("user_id", userId).eq("order_type", TL_LIMIT_ORDER_TYPE).eq("status", "approved")
+    .lt("decided_at", cutoff).limit(20);
+  if (!data?.length) return 0;
+  let n = 0;
+  try {
+    const { tradeLockerSession, tradeLockerCancelOrder } = await import("@/lib/venues/tradelocker.server");
+    const session = await tradeLockerSession(userId);
+    for (const p of data) {
+      if (p.broker_order_id && p.broker_order_id !== "pending") await tradeLockerCancelOrder(session, p.broker_order_id as string);
+      // Mark done either way so it stops counting as a waiting order; a fill
+      // already shows up as a broker position and in the journal.
+      await supabaseAdmin.from("autopilot_proposals")
+        .update({ order_type: "limit_tradelocker_closed" } as never).eq("id", p.id as string);
+      n += 1;
+    }
+  } catch {
+    /* session unavailable: try again next run */
+  }
+  return n;
+}
+
 export type ManageResult = {
   checked: number;
   movedToBreakEven: number;
