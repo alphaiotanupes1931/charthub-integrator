@@ -60,6 +60,7 @@ import { parseTradeSetupScreenshot, parseTradeSetupText } from "@/lib/journal-im
 import { ActionLoader } from "@/components/ActionLoader";
 import { takePendingChatLog } from "@/lib/chat-to-journal";
 import { Button } from "@/components/ui/button";
+import { pipsBetween, formatPips } from "@/lib/pips.shared";
 
 export const Route = createFileRoute("/_app/journal")({
   head: () => ({ meta: [{ title: "Trade Journal | TradeMind" }, { name: "description", content: "Review broker trades and Autopilot evaluated setups with tracked outcomes." }, { property: "og:title", content: "Trade Journal | TradeMind" }, { property: "og:description", content: "Review your trades and separately tracked Autopilot setup outcomes." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -208,6 +209,13 @@ function tradePnl(t: Trade): number {
   const pv = t.pointValue && isFinite(t.pointValue) && t.pointValue > 0 ? t.pointValue : 1;
   const fees = t.fees && isFinite(t.fees) ? t.fees : 0;
   return (effectiveExit(t) - t.entry) * dir * size * pv - fees;
+}
+
+// Pips gained or lost; open trades (exit equal to entry) count as none yet.
+function tradePips(t: Trade): number | null {
+  const exit = effectiveExit(t);
+  if (!exit || exit === t.entry) return null;
+  return pipsBetween(t.symbol, t.entry, exit, t.side);
 }
 
 function tradeRR(t: Trade): number | null {
@@ -1254,7 +1262,9 @@ function TradeRow({ t, onEdit, onDelete, onUpdate }: { t: Trade; onEdit: (t: Tra
           <span>Stop <span className="text-foreground font-medium">{t.stop || "-"}</span></span>
           {t.takeProfit != null && t.takeProfit !== 0 && <span>TP <span className="text-foreground font-medium">{t.takeProfit}</span></span>}
           <span>Exit <span className="text-foreground font-medium">{t.exit && t.exit !== t.entry ? t.exit : "open"}</span></span>
-          <span>Size <span className="text-foreground font-medium">{t.size}</span></span>
+          <span>Size <span className="text-foreground font-medium">{t.size} units</span></span>
+          {tradePips(t) != null && <span>Pips <span className={`font-medium ${(tradePips(t) ?? 0) >= 0 ? "text-bull" : "text-destructive"}`}>{formatPips(tradePips(t))}</span></span>}
+          {t.stop ? <span>Stop distance <span className="text-foreground font-medium">{formatPips(Math.abs(pipsBetween(t.symbol, t.entry, t.stop) ?? 0))}</span></span> : null}
         </div>
         {t.resultNote && <div className="mt-1 text-[11px] text-muted-foreground">{t.resultNote}</div>}
         {t.lockedPlan && planEdited(t) && (
@@ -1578,7 +1588,8 @@ function InsightsPanel({ trades: allTrades }: { trades: Trade[] }) {
       patterns.push(`Highest-edge setup: "${perSetup[0].setup}" (${perSetup[0].winRate.toFixed(0)}% win rate, ${perSetup[0].pnl.toFixed(2)} net).`);
     }
 
-    return { netPnl, winRate, ruleBrokenPnl, ruleBrokenCount: ruleBrokenTrades.length,
+    const netPips = trades.reduce((a, t) => a + (tradePips(t) ?? 0), 0);
+    return { netPnl, netPips, winRate, ruleBrokenPnl, ruleBrokenCount: ruleBrokenTrades.length,
       disciplinedPnl, disciplinedCount: disciplinedTrades.length,
       lossByCategory, perSymbol, perDow, perSetup, patterns };
   }, [trades]);
@@ -1629,9 +1640,10 @@ function InsightsPanel({ trades: allTrades }: { trades: Trade[] }) {
     <div className="space-y-4">
       {filterBar}
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <StatCard label="Net P&L" value={`${stats.netPnl >= 0 ? "+" : ""}${stats.netPnl.toFixed(2)}`} positive={stats.netPnl >= 0} />
         <StatCard label="Win rate" value={`${stats.winRate.toFixed(0)}%`} positive={stats.winRate >= 50} />
+        <StatCard label="Net pips" value={formatPips(Math.round(stats.netPips * 10) / 10)} positive={stats.netPips >= 0} />
         <StatCard label="Rule-break P&L" value={`${stats.ruleBrokenPnl >= 0 ? "+" : ""}${stats.ruleBrokenPnl.toFixed(2)}`} positive={stats.ruleBrokenPnl >= 0} sub={`${stats.ruleBrokenCount} trades`} />
         <StatCard label="Disciplined P&L" value={`${stats.disciplinedPnl >= 0 ? "+" : ""}${stats.disciplinedPnl.toFixed(2)}`} positive={stats.disciplinedPnl >= 0} sub={`${stats.disciplinedCount} trades`} />
       </div>

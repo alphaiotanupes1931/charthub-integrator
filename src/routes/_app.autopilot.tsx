@@ -56,6 +56,7 @@ type SettingsPatch = {
   riskPct?: number;
   maxOpenPositions?: number;
   maxDailyLossPct?: number;
+  sizingBalance?: number | null;
   allowedSymbols?: string[];
   sessionWindows?: string[];
   acknowledgeLive?: boolean;
@@ -414,6 +415,25 @@ function AutopilotPage() {
               onBlur={(e) => save.mutate({ riskPct: Number(e.target.value) })}
               className="mt-1 w-full rounded-xl border border-border/60 bg-background px-2 py-2 text-sm"
             />
+          </label>
+          <label className="text-xs">
+            <span className="text-muted-foreground">Size trades as if my account were</span>
+            <select
+              defaultValue={settings.sizingBalance == null ? "" : String(settings.sizingBalance)}
+              onChange={(e) => save.mutate({ sizingBalance: e.target.value === "" ? null : Number(e.target.value) })}
+              className="mt-1 w-full rounded-xl border border-border/60 bg-background px-2 py-2 text-sm"
+            >
+              <option value="">My real broker balance</option>
+              <option value="10000">$10,000</option>
+              <option value="25000">$25,000</option>
+              <option value="50000">$50,000</option>
+              <option value="100000">$100,000</option>
+            </select>
+            <span className="mt-1 block text-[11px] text-muted-foreground">
+              {settings.sizingBalance
+                ? `Risk per trade is about $${Math.round((settings.sizingBalance * settings.riskPct) / 100).toLocaleString()}.`
+                : "Uses whatever the broker account holds."}
+            </span>
           </label>
           <label className="text-xs">
             <span className="text-muted-foreground">Max open positions</span>

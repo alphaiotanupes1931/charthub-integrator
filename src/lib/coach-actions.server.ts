@@ -1,5 +1,5 @@
 import { buildBrokerSnapshots } from "./broker-readonly.server";
-import { DEFAULT_AUTOPILOT_SETTINGS, evaluateRails } from "./autopilot.shared";
+import { DEFAULT_AUTOPILOT_SETTINGS, evaluateRails, sizingEquity } from "./autopilot.shared";
 import { sizeFromRisk } from "./auto-trade.server";
 import { demoOnlyRefusal } from "./autopilot-live.server";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -30,5 +30,5 @@ export async function coachAccountFacts(userId: string, db: SupabaseClient<Datab
     maxDailyLossPct: row?.max_daily_loss_pct ?? DEFAULT_AUTOPILOT_SETTINGS.maxDailyLossPct,
   }, { symbol, grade, openPositions: account.positions.length, dailyLossPct: Math.max(0, -realized / equity * 100) });
   if (!rails.allowed) throw new Error(rails.reason ?? "Trade blocked by your limits.");
-  return { account, live, equity, riskPct: row?.risk_pct ?? DEFAULT_AUTOPILOT_SETTINGS.riskPct, sizeFromRisk };
+  return { account, live, equity: sizingEquity(equity, row?.sizing_balance == null ? null : Number(row.sizing_balance)), riskPct: row?.risk_pct ?? DEFAULT_AUTOPILOT_SETTINGS.riskPct, sizeFromRisk };
 }

@@ -1,4 +1,5 @@
 import { PageInstructions } from "@/components/PageInstructions";
+import { pipsBetween } from "@/lib/pips.shared";
 import { TraderTypePrompt } from "@/components/trader-profile/TraderTypePrompt";
 import { InfoTip } from "@/components/InfoTip";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
@@ -761,9 +762,9 @@ function ScanTicket({
       {!isNoEntry && (
         <div className="grid grid-cols-2 gap-2">
           <TicketCell label="Entry" value={result.entry} />
-          <TicketCell label="Stop"  value={result.stop} tone="bad" />
-          <TicketCell label="TP1"   value={result.tp1} tone="good" />
-          <TicketCell label="TP2"   value={result.tp2} tone="good" />
+          <TicketCell label="Stop"  value={result.stop} tone="bad" sub={ticketPips(symbol.ticker, result.entry, result.stop)} />
+          <TicketCell label="TP1"   value={result.tp1} tone="good" sub={ticketPips(symbol.ticker, result.entry, result.tp1)} />
+          <TicketCell label="TP2"   value={result.tp2} tone="good" sub={ticketPips(symbol.ticker, result.entry, result.tp2)} />
         </div>
       )}
 
@@ -996,12 +997,22 @@ function MetricRow({ label, value, hidden }: { label: string; value: string; hid
 }
 
 
-function TicketCell({ label, value, tone }: { label: string; value: string; tone?: "good" | "bad" }) {
+// Distance from entry in pips, e.g. "24 pips away".
+function ticketPips(ticker: string, entry: string, level: string): string | undefined {
+  const n = (v: string) => Number(String(v ?? "").replace(/,/g, "").match(/-?\d+(?:\.\d+)?/)?.[0]);
+  const e = n(entry), l = n(level);
+  if (!Number.isFinite(e) || !Number.isFinite(l)) return undefined;
+  const p = Math.abs(pipsBetween(ticker, e, l) ?? NaN);
+  return Number.isFinite(p) ? `${p.toLocaleString(undefined, { maximumFractionDigits: 1 })} pips away` : undefined;
+}
+
+function TicketCell({ label, value, tone, sub }: { label: string; value: string; tone?: "good" | "bad"; sub?: string }) {
   const color = tone === "good" ? "text-bull" : tone === "bad" ? "text-destructive" : "text-foreground";
   return (
     <div className="rounded-2xl bg-card border border-border/50 px-3.5 py-3">
       <div className="text-[10px] tracking-tight text-muted-foreground mb-0.5">{label}</div>
       <div className={`font-mono text-sm font-semibold ${color}`}>{value}</div>
+      {sub && <div className="text-[10px] text-muted-foreground mt-0.5">{sub}</div>}
     </div>
   );
 }

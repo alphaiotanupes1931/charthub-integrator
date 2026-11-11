@@ -27,6 +27,7 @@ function settingsFromRow(row: Record<string, unknown> | null): AutopilotSettings
     manageTrades: row["manage_trades"] !== false,
     managePartials: row["manage_partials"] !== false,
     trailAfterTp1: row["trail_after_tp1"] !== false,
+    sizingBalance: row["sizing_balance"] == null ? null : Number(row["sizing_balance"]),
   };
 }
 
@@ -114,14 +115,16 @@ export const previewAutoTrade = createServerFn({ method: "POST" })
     const facts = await liveAccountFacts(context.userId);
     const { savedDrawRisk } = await import("./draw-order-risk.server");
     const riskPct = settings.riskPct * await savedDrawRisk(context.supabase, context.userId, data.symbol, data.entry, data.stop);
-    const units = sizeFromRisk(facts.equity, riskPct, data.entry, data.stop);
+    const { sizingEquity } = await import("@/lib/autopilot.shared");
+    const sizeBase = sizingEquity(facts.equity, settings.sizingBalance);
+    const units = sizeFromRisk(sizeBase, riskPct, data.entry, data.stop);
     return {
       connected: facts.connected,
       reason: facts.reason,
-      equity: facts.equity,
+      equity: sizeBase,
       currency: facts.currency,
       riskPct,
-      riskAmount: Math.round(((facts.equity * riskPct) / 100) * 100) / 100,
+      riskAmount: Math.round(((sizeBase * riskPct) / 100) * 100) / 100,
       units,
       // Approximate value of the position at entry (units x entry, in the
       // instrument's quote currency). Margin needed depends on the account's
@@ -183,7 +186,8 @@ export const placeAutoTrade = createServerFn({ method: "POST" })
 
     const { savedDrawRisk } = await import("./draw-order-risk.server");
     const riskPct = settings.riskPct * await savedDrawRisk(context.supabase, context.userId, data.symbol, data.entry, data.stopLoss);
-    const units = sizeFromRisk(facts.equity, riskPct, data.entry, data.stopLoss);
+    const { sizingEquity } = await import("@/lib/autopilot.shared");
+    const units = sizeFromRisk(sizingEquity(facts.equity, settings.sizingBalance), riskPct, data.entry, data.stopLoss);
     if (!units) {
       throw new Error("Your account is too small for this stop distance at your current risk setting.");
     }

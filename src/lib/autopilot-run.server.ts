@@ -40,6 +40,7 @@ export function settingsFromRow(row: Record<string, unknown> | null): AutopilotS
     managePartials: row.manage_partials !== false,
     trailAfterTp1: row.trail_after_tp1 !== false,
     demoOnly: row.demo_only === true,
+    sizingBalance: row.sizing_balance == null ? null : Number(row.sizing_balance),
   };
 }
 
@@ -158,7 +159,7 @@ export async function runAutopilotForUser(
 
   for (const symbol of symbols) {
     try {
-      const draft = await buildProposalDraft(apiKey, symbol, timeframe, settings, equity, { client, userId });
+      const draft = await buildProposalDraft(apiKey, symbol, timeframe, settings, (await import("@/lib/autopilot.shared")).sizingEquity(equity, settings.sizingBalance), { client, userId });
       // Pending entries are not a reason to stop rescanning: the draw may have
       // invalidated or the entry may now be confirmed. Retire superseded plans
       // only after the new evaluation has been saved successfully.

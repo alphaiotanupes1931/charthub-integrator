@@ -24,6 +24,8 @@ export type AutopilotSettings = {
   trailAfterTp1: boolean;
   /** Refuse any order that would reach a real-money account (test runs). */
   demoOnly?: boolean;
+  /** Size every trade as if the account held this balance; null uses the broker balance. */
+  sizingBalance?: number | null;
 };
 
 export const DEFAULT_AUTOPILOT_SETTINGS: AutopilotSettings = {
@@ -46,6 +48,12 @@ export const DEFAULT_AUTOPILOT_SETTINGS: AutopilotSettings = {
 // strings "null"/"undefined", HOLD, NO ENTRY, an empty string - is not a grade
 // and can never clear the minimum-grade rail. Fail closed, explicitly.
 const GRADE_RANK: Record<string, number> = { "A+": 4, A: 3, B: 2, C: 1, D: 0 };
+
+/** Balance used for position sizing: the override when set, else the broker equity. */
+export function sizingEquity(brokerEquity: number, sizingBalance: number | null | undefined): number {
+  if (sizingBalance != null && Number.isFinite(sizingBalance) && sizingBalance > 0) return sizingBalance;
+  return brokerEquity;
+}
 
 export function gradeMeets(grade: string | null | undefined, minGrade: string | null | undefined): boolean {
   if (typeof grade !== "string" || typeof minGrade !== "string") return false;
