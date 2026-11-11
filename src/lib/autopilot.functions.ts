@@ -34,6 +34,7 @@ export const getAutopilotSettings = createServerFn({ method: "GET" })
       manageTrades: (data as Record<string, unknown>)["manage_trades"] !== false,
       managePartials: (data as Record<string, unknown>)["manage_partials"] !== false,
       trailAfterTp1: (data as Record<string, unknown>)["trail_after_tp1"] !== false,
+      sizingBalance: data.sizing_balance == null ? null : Number(data.sizing_balance),
     };
   });
 
@@ -55,6 +56,7 @@ export const updateAutopilotSettings = createServerFn({ method: "POST" })
         sessionWindows: z.array(z.string()).optional(),
         acknowledgeLive: z.boolean().optional(),
         pausedReason: z.string().nullable().optional(),
+        sizingBalance: z.number().min(100).max(10_000_000).nullable().optional(),
       })
       .parse(raw),
   )
@@ -72,6 +74,7 @@ export const updateAutopilotSettings = createServerFn({ method: "POST" })
     if (data.allowedSymbols !== undefined) patch.allowed_symbols = data.allowedSymbols;
     if (data.sessionWindows !== undefined) patch.session_windows = data.sessionWindows;
     if (data.pausedReason !== undefined) patch.paused_reason = data.pausedReason;
+    if (data.sizingBalance !== undefined) patch.sizing_balance = data.sizingBalance;
     if (data.acknowledgeLive !== undefined) {
       patch.live_acknowledged_at = data.acknowledgeLive ? new Date().toISOString() : null;
     }
