@@ -100,6 +100,18 @@ export function NotificationBell() {
 
   // Browser Notification + beep for newly-arrived alerts.
   const seenIdsRef = useRef<Set<string>>(new Set());
+  const [desktopMuted, setDesktopMuted] = useState(true);
+  const desktopMutedRef = useRef(true);
+  useEffect(() => {
+    const m = window.localStorage.getItem("tm-desktop-alerts") !== "on";
+    setDesktopMuted(m); desktopMutedRef.current = m;
+  }, []);
+  const toggleDesktop = () => {
+    const next = !desktopMuted;
+    setDesktopMuted(next); desktopMutedRef.current = next;
+    window.localStorage.setItem("tm-desktop-alerts", next ? "off" : "on");
+    if (!next && "Notification" in window && Notification.permission === "default") Notification.requestPermission().catch(() => {});
+  };
   const firstLoadRef = useRef(true);
   useEffect(() => {
     if (!rows.length) return;
@@ -111,6 +123,7 @@ export function NotificationBell() {
     const fresh = rows.filter((r) => !seenIdsRef.current.has(r.id) && !r.read_at);
     if (fresh.length === 0) return;
     fresh.forEach((r) => seenIdsRef.current.add(r.id));
+    if (desktopMutedRef.current) return;
 
     // Beep
     try {
@@ -165,9 +178,6 @@ export function NotificationBell() {
       <button
         onClick={() => {
           setOpen(true);
-          if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
-            Notification.requestPermission().catch(() => {});
-          }
         }}
         className="relative h-9 w-9 rounded-xl border border-border/60 flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/40 transition shrink-0"
         aria-label={`Notifications${unread ? ` (${unread} unread)` : ""}`}
@@ -232,6 +242,12 @@ export function NotificationBell() {
                 Clear
               </button>
               <div className="flex-1" />
+              <button
+                onClick={toggleDesktop}
+                className="font-medium text-muted-foreground hover:text-foreground transition"
+              >
+                {desktopMuted ? "Computer pop-ups: off" : "Computer pop-ups: on"}
+              </button>
             </div>
 
 

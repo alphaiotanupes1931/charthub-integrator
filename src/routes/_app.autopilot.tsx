@@ -424,6 +424,9 @@ function AutopilotPage() {
               className="mt-1 w-full rounded-xl border border-border/60 bg-background px-2 py-2 text-sm"
             >
               <option value="">My real broker balance</option>
+              <option value="500">$500</option>
+              <option value="1000">$1,000</option>
+              <option value="2500">$2,500</option>
               <option value="10000">$10,000</option>
               <option value="25000">$25,000</option>
               <option value="50000">$50,000</option>
