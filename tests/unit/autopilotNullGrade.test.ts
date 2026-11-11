@@ -18,7 +18,7 @@ describe("minimum-grade rail fails closed", () => {
     for (const g of NOT_GRADES) {
       it(`grade ${JSON.stringify(g)} vs min ${min} is refused`, () => {
         expect(gradeMeets(g as string | null, min)).toBe(false);
-        const v = evaluateRails({ ...live, minGrade: min }, { symbol: "EUR/USD", grade: g as string | null, openPositions: 0 });
+        const v = evaluateRails({ ...live, minGrade: min }, { symbol: "XAU/USD", grade: g as string | null, openPositions: 0 });
         expect(v.allowed).toBe(false);
       });
     }
@@ -34,7 +34,7 @@ describe("minimum-grade rail fails closed", () => {
     expect(gradeMeets("A+", "A")).toBe(true);
     expect(gradeMeets("A", "A")).toBe(true);
     expect(gradeMeets("B", "A")).toBe(false);
-    expect(evaluateRails({ ...live, minGrade: "A" }, { symbol: "EUR/USD", grade: "A", openPositions: 0 }).allowed).toBe(true);
+    expect(evaluateRails({ ...live, minGrade: "A" }, { symbol: "XAU/USD", grade: "A", openPositions: 0 }).allowed).toBe(true);
   });
 
   it("paper bots refuse null grades and unknown minimums", () => {

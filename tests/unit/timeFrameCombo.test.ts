@@ -39,8 +39,8 @@ const snap = (o: {
 describe("hard-coded Time Frame Combo", () => {
   it("rejects a short while the 4H direction is bullish", () => {
     const g = timeFrameComboGate("Short", snap({ h4: "bullish" }));
-    expect(g.cap).toBe("NO ENTRY");
-    expect(gradeFromEvidence("Short", 95, snap({ h4: "bullish" }))).toBe("NO ENTRY");
+    expect(g.cap).toBe("C");
+    expect(gradeFromEvidence("Short", 95, snap({ h4: "bullish" }))).toBe("C");
   });
 
   it("allows the counter-direction only after the 4H breaks structure", () => {

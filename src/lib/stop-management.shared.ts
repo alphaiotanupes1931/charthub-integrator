@@ -1,3 +1,9 @@
+/**
+ * F9 runners: move the stop to break-even when TP1 is reached. Not in the brief
+ * and untested, so it stays OFF until results justify it.
+ */
+export const RUNNER_BREAKEVEN_AT_TP1 = false;
+
 // Runner stop rules after the first target.
 // Lesson from the US30 trade: pulling the stop up to TP1 right after banking
 // half turned old resistance into a stop-out on the very retest that was an

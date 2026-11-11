@@ -55,6 +55,25 @@ export function sizingEquity(brokerEquity: number, sizingBalance: number | null 
   return brokerEquity;
 }
 
+/** C (and D) trades are taken for data only, at no more than this % risk. */
+export const LOW_GRADE_MAX_RISK_PCT = 0.25;
+
+/** Risk for one trade: C/D grades are capped at LOW_GRADE_MAX_RISK_PCT; a C stays a C. */
+export function autopilotRiskPct(riskPct: number, grade: string | null | undefined): number {
+  const g = typeof grade === "string" ? grade.trim().toUpperCase() : "";
+  return g === "C" || g === "D" ? Math.min(riskPct, LOW_GRADE_MAX_RISK_PCT) : riskPct;
+}
+
+/** Forex pairs: alert-only until settled results justify auto trading (stops too small for costs). */
+export function isForexPair(symbol: string): boolean {
+  return /^[A-Z]{3}\/[A-Z]{3}$/.test(symbol.trim().toUpperCase()) && !/^(XAU|XAG|XPT|XPD|BTC|ETH)\//.test(symbol.trim().toUpperCase());
+}
+
+/** Crypto has no reliable feed yet, so it is never auto traded. */
+export function isCryptoWithoutFeed(symbol: string): boolean {
+  return /^(BTC|ETH)/.test(symbol.trim().toUpperCase().replace(/[^A-Z]/g, ""));
+}
+
 export function gradeMeets(grade: string | null | undefined, minGrade: string | null | undefined): boolean {
   if (typeof grade !== "string" || typeof minGrade !== "string") return false;
   const g = GRADE_RANK[grade.trim().toUpperCase()];
@@ -98,6 +117,12 @@ export function evaluateRails(
   }
   if (settings.allowedSymbols.length > 0 && !settings.allowedSymbols.includes(candidate.symbol)) {
     return { allowed: false, reason: `${candidate.symbol} is not on your allowed symbol list` };
+  }
+  if (isCryptoWithoutFeed(candidate.symbol)) {
+    return { allowed: false, reason: `${candidate.symbol} is off the auto list until a reliable price feed is connected` };
+  }
+  if (isForexPair(candidate.symbol)) {
+    return { allowed: false, reason: `${candidate.symbol} is alert-only: forex stops are too small for spread and costs until settled results say otherwise` };
   }
   const review = instrumentReview(candidate.symbol);
   if (review) {
