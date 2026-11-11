@@ -1263,7 +1263,7 @@ function TradeRow({ t, onEdit, onDelete, onUpdate }: { t: Trade; onEdit: (t: Tra
           {t.takeProfit != null && t.takeProfit !== 0 && <span>TP <span className="text-foreground font-medium">{t.takeProfit}</span></span>}
           <span>Exit <span className="text-foreground font-medium">{t.exit && t.exit !== t.entry ? t.exit : "open"}</span></span>
           <span>Size <span className="text-foreground font-medium">{t.size} units</span></span>
-          {tradePips(t) != null && <span>Pips <span className={`font-medium ${(tradePips(t) ?? 0) >= 0 ? "text-emerald-500" : "text-red-500"}`}>{formatPips(tradePips(t))}</span></span>}
+          {tradePips(t) != null && <span>Pips <span className={`font-medium ${(tradePips(t) ?? 0) >= 0 ? "text-bull" : "text-destructive"}`}>{formatPips(tradePips(t))}</span></span>}
           {t.stop ? <span>Stop distance <span className="text-foreground font-medium">{formatPips(Math.abs(pipsBetween(t.symbol, t.entry, t.stop) ?? 0))}</span></span> : null}
         </div>
         {t.resultNote && <div className="mt-1 text-[11px] text-muted-foreground">{t.resultNote}</div>}
