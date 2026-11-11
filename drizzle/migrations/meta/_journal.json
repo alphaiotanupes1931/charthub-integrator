@@ -183,6 +183,13 @@
       "when": 1793927920325,
       "tag": "0025_platform_accuracy_summary",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1794368281166,
+      "tag": "0026_migration",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,1 @@
+ALTER TABLE public.autopilot_settings ADD COLUMN IF NOT EXISTS sizing_balance numeric NULL CHECK (sizing_balance IS NULL OR (sizing_balance >= 100 AND sizing_balance <= 10000000));
