@@ -3,7 +3,7 @@
 import { getSnapshot } from "@/lib/agents/market-data.server";
 import { runResearch } from "@/lib/agents/research.server";
 import { runPlanner } from "@/lib/agents/planner.server";
-import type { AutopilotSettings } from "@/lib/autopilot.shared";
+import { autopilotRiskPct, type AutopilotSettings } from "@/lib/autopilot.shared";
 import { runnerLevels, type RunnerLevels } from "@/lib/stop-management.shared";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
@@ -64,7 +64,7 @@ export async function buildProposalDraft(
   const entry = parseLevel(plan.entry);
   const stopLoss = parseLevel(plan.stop);
   const takeProfit = parseLevel(plan.tp1);
-  const riskPct = settings.riskPct * (plan.liquidityDraw?.sizeMultiplier ?? 1);
+  const riskPct = autopilotRiskPct(settings.riskPct * (plan.liquidityDraw?.sizeMultiplier ?? 1), plan.grade);
   const scanId = await logAutopilotEvaluation(evaluation.client, evaluation.userId, symbol, timeframe, plan,
     { entry, stop: stopLoss, tp1: takeProfit, tp2: parseLevel(plan.tp2) }, equity * riskPct / 100);
   if (plan.bias === "Neutral" || plan.grade === "NO ENTRY" || entry === null) return null;
@@ -80,8 +80,8 @@ export async function buildProposalDraft(
     entry,
     stopLoss,
     takeProfit,
-    units: sizeUnits(equity, settings.riskPct * (plan.liquidityDraw?.sizeMultiplier ?? 1), entry, stopLoss),
-    riskPct: settings.riskPct * (plan.liquidityDraw?.sizeMultiplier ?? 1),
+    units: sizeUnits(equity, riskPct, entry, stopLoss),
+    riskPct,
     reasoning: plan.notes ?? "",
     triggered: plan.triggered !== false,
     triggerRule: plan.triggerRule ?? null,

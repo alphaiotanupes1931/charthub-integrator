@@ -501,7 +501,7 @@ export async function manageLiveTrades(
           if (res.ok) { out.partialsTaken += 1; out.notes.push(`${instrument}: TP1 reached, ${half} units banked, runner kept toward ${runner.finalPool}`); }
         }
       }
-      let newStop: number | null = (long ? stop < entry : stop > entry) ? entry : null;
+      let newStop: number | null = sm.RUNNER_BREAKEVEN_AT_TP1 && (long ? stop < entry : stop > entry) ? entry : null;
       const openTime = String(t["openTime"] ?? "");
       const candles = openTime ? await oandaGet(target.host, target.creds.apiKey,
         `/instruments/${instrument}/candles?granularity=H1&price=M&from=${encodeURIComponent(openTime)}`) : null;
