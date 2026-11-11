@@ -94,13 +94,13 @@ export function advanceDraw(previous: DrawState, bar: Candle, pools: LiquidityPo
   if (state.side && state.target) {
     const reached = state.side === "buyside" ? bar.high >= state.target.price : bar.low <= state.target.price;
     const closedThrough = state.side === "buyside" ? bar.close > state.target.price : bar.close < state.target.price;
-    if (reached) state.status = "reached";
     if (closedThrough) {
       state.crossed = { pool: state.target, extreme: state.side === "buyside" ? bar.high : bar.low, time: bar.time };
       const next = orderedPools(endPools, state.side, bar.close)[0];
       state.target = next ?? state.target;
       state.status = next ? "active" : "reached";
     }
+    else if (reached) state.status = "reached";
   }
   const candidates = pools.filter(p => p.status === "unswept" && p.confirmedAt <= bar.time &&
     (p.side === "sellside" ? bar.low < p.price && bar.close > p.price : bar.high > p.price && bar.close < p.price));
@@ -202,7 +202,7 @@ export function latestDrawZone(series: PoolSeries, state: DrawState, price: numb
       const formedAt = formation.time + (frame === "15m" ? 900 : 3600);
       // F10: broken zones never trade again; a touched zone stays usable but is downgraded.
       const life = zoneStatus({ top: ob.top, bottom: ob.bot }, long, bars, formedAt);
-      if (life.status === "broken" || life.touches > 1) continue;
+      if (life.status === "broken" || life.touches > 2) continue;
       zones.push({ top: ob.top, bottom: ob.bot, time: ob.time, formedAt, frame, kind: "order block", continuation: formation.time > state.sweep.confirmedAt, status: life.status });
     }
     for (let i = 2; i < bars.length; i++) {
@@ -212,7 +212,7 @@ export function latestDrawZone(series: PoolSeries, state: DrawState, price: numb
       if (bottom >= top) continue;
       const formedAt = b.time + (frame === "15m" ? 900 : 3600);
       const life = zoneStatus({ top, bottom }, long, bars, formedAt);
-      if (life.status === "broken" || life.touches > 1) continue;
+      if (life.status === "broken" || life.touches > 2) continue;
       zones.push({ top, bottom, time: a.time, formedAt, frame, kind: "FVG", continuation: b.time > state.sweep.confirmedAt, status: life.status });
     }
   }
