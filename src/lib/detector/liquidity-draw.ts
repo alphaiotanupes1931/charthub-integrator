@@ -100,11 +100,7 @@ export function advanceDraw(previous: DrawState, bar: Candle, pools: LiquidityPo
       state.target = next ?? state.target;
       state.status = next ? "active" : "reached";
     }
-    else if (reached) {
-      // Auto-advance: a touched target hands off to the next unswept pool beyond it, same side.
-      const beyond = orderedPools(endPools.filter(p => p.id !== state.target!.id), state.side, state.target.price)[0];
-      if (beyond) { state.target = beyond; state.status = "active"; } else state.status = "reached";
-    }
+    else if (reached) state.status = "reached";
   }
   const candidates = pools.filter(p => p.status === "unswept" && p.confirmedAt <= bar.time &&
     (p.side === "sellside" ? bar.low < p.price && bar.close > p.price : bar.high > p.price && bar.close < p.price));
