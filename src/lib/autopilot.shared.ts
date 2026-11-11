@@ -42,6 +42,7 @@ export const DEFAULT_AUTOPILOT_SETTINGS: AutopilotSettings = {
   manageTrades: true,
   managePartials: true,
   trailAfterTp1: true,
+  sizingBalance: 500,
 };
 
 // Only real letter grades carry a rank. Anything else - null, undefined, the

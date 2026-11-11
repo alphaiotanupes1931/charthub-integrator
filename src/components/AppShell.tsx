@@ -80,6 +80,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { to: "/signals",    label: "AI Signals",      icon: Radar },
       { to: "/wyckoff",    label: "Wyckoff Mode",    icon: Layers },
+      { to: "/autopilot",  label: "Autopilot",       icon: Bot },
       { to: "/journal",    label: "Trade Journal",   icon: NotebookPen },
       { to: "/alerts",     label: "Price Alerts",    icon: Bell },
       { to: "/calculator", label: "Risk Calculator", icon: Calculator },
