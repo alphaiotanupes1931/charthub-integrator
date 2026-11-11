@@ -42,7 +42,7 @@ describe("US30 Nov 5 regression (brief section 6)", () => {
     expect(drawLateCaps({ long: true, entry: 53695, stop: 53646.5, tp1: 53806.5, sweepPrice: 53412.5, drawPrice: 53806.5, continuation: true, pools: [] })).toEqual([]);
   });
   it("F4: a continuation 82% of the way to the draw caps at C", () => {
-    const caps = drawLateCaps({ long: true, entry: 53724, stop: 53680, tp1: 53806.5, sweepPrice: 53412.5, drawPrice: 53806.5, continuation: true, pools: [] });
+    const caps = drawLateCaps({ long: true, entry: 53735, stop: 53690, tp1: 53806.5, sweepPrice: 53412.5, drawPrice: 53806.5, continuation: true, pools: [] });
     expect(caps.map(c => c.label)).toEqual(["Late-leg continuation"]);
     expect(caps[0]!.reason).toContain("82%");
     expect(caps[0]!.reason).toContain("limit 80%");
