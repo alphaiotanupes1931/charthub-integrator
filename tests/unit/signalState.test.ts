@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { signalState } from "@/lib/agents/signal-engine.functions";
+import { signalState, toAction } from "@/lib/agents/signal-engine.functions";
 import type { TradePlan } from "@/lib/agents/types";
 
 const plan = (over: Partial<TradePlan>): TradePlan =>
@@ -37,5 +37,20 @@ describe("signal state machine", () => {
   it("invalidates NO ENTRY and neutral plans", () => {
     expect(signalState(plan({ grade: "NO ENTRY" }), "HOLD").state).toBe("invalidated");
     expect(signalState(plan({ bias: "Neutral" }), "HOLD").state).toBe("invalidated");
+  });
+});
+
+describe("signal action", () => {
+  it("shows a Grade C long with confidence 40 as BUY, not HOLD", () => {
+    expect(toAction(plan({ grade: "C", bias: "Long", confidence: 40 }))).toBe("BUY");
+  });
+
+  it("shows a Grade C short with confidence 40 as SELL", () => {
+    expect(toAction(plan({ grade: "C", bias: "Short", confidence: 40 }))).toBe("SELL");
+  });
+
+  it("keeps NO ENTRY and neutral plans as HOLD", () => {
+    expect(toAction(plan({ grade: "NO ENTRY" }))).toBe("HOLD");
+    expect(toAction(plan({ bias: "Neutral", grade: "C" }))).toBe("HOLD");
   });
 });

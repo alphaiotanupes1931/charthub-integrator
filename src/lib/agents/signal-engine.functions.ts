@@ -94,11 +94,14 @@ const Input = z.object({
   interval: z.string().default("60"),
 });
 
-function toAction(plan: TradePlan): Signal["action"] {
+/**
+ * The grade is the authority, not the confidence number. A graded plan with a
+ * direction (including Demo-tradeable C setups, whose confidence sits around
+ * 40) is a BUY/SELL, the same as Autopilot reads it. A confidence cut-off here
+ * used to hide every C setup on the Signals page as HOLD / NO ENTRY.
+ */
+export function toAction(plan: TradePlan): Signal["action"] {
   if (plan.grade === "NO ENTRY" || plan.bias === "Neutral") return "HOLD";
-  // Conviction is now counted from evidence (25-90) rather than floored by
-  // grade, so the actionable cut-off sits lower than the old 55.
-  if (plan.confidence < 45) return "HOLD";
   return plan.bias === "Long" ? "BUY" : "SELL";
 }
 
