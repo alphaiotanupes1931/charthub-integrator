@@ -474,8 +474,8 @@ export function timeFrameComboGate(
         };
       }
       return {
-        cap: "NO ENTRY",
-        reason: `Time Frame Combo step 1 failed: the 4H is ${h4Dir}/${h4Trend} and the Daily does not support a ${bias.toLowerCase()}. No entry.`,
+        cap: "C",
+        reason: `Time Frame Combo step 1: the 4H is ${h4Dir}/${h4Trend} and the Daily does not support a ${bias.toLowerCase()}, so it is held at C (grade and size, not direction).`,
         checks: { h4: false, h1: false, m15: false },
       };
     }
