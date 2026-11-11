@@ -38,18 +38,25 @@ describe("US30 Nov 5 regression (brief section 6)", () => {
   it("F1: no cancel while the 1H holds its swing", () => {
     expect(h1ChochAgainst(h1.slice(0, 13), "buyside", t0, 0, t0 + 14 * 3600)).toBeNull();
   });
-  it("F4: the 53,695 continuation is 72% of the way to the draw and caps at C", () => {
-    const caps = drawLateCaps({ long: true, entry: 53695, tp1: 53806.5, sweepPrice: 53412.5, drawPrice: 53806.5, continuation: true, pools: [] });
+  it("F4: a continuation 72% of the way to the draw is no longer capped (limit 80%)", () => {
+    expect(drawLateCaps({ long: true, entry: 53695, stop: 53646.5, tp1: 53806.5, sweepPrice: 53412.5, drawPrice: 53806.5, continuation: true, pools: [] })).toEqual([]);
+  });
+  it("F4: a continuation 82% of the way to the draw caps at C", () => {
+    const caps = drawLateCaps({ long: true, entry: 53724, stop: 53680, tp1: 53806.5, sweepPrice: 53412.5, drawPrice: 53806.5, continuation: true, pools: [] });
     expect(caps.map(c => c.label)).toEqual(["Late-leg continuation"]);
-    expect(caps[0]!.reason).toContain("72%");
+    expect(caps[0]!.reason).toContain("82%");
+    expect(caps[0]!.reason).toContain("limit 80%");
   });
   it("F4: not a continuation, no late-leg cap", () => {
-    expect(drawLateCaps({ long: true, entry: 53695, tp1: 53806.5, sweepPrice: 53412.5, drawPrice: 53806.5, continuation: false, pools: [] })).toEqual([]);
+    expect(drawLateCaps({ long: true, entry: 53695, stop: 53646.5, tp1: 53806.5, sweepPrice: 53412.5, drawPrice: 53806.5, continuation: false, pools: [] })).toEqual([]);
   });
-  it("F5: sellside 53,618 (77 pts) is closer than TP1 (111.5 pts), cap names pool and distances", () => {
-    const caps = drawLateCaps({ long: true, entry: 53695, tp1: 53806.5, sweepPrice: 53412.5, drawPrice: 53806.5, continuation: false, pools, fmt: n => n.toFixed(2) });
+  it("F5: sellside 53,618 (77 pts) beyond a 48.5 pt stop is not capped", () => {
+    expect(drawLateCaps({ long: true, entry: 53695, stop: 53646.5, tp1: 53806.5, sweepPrice: 53412.5, drawPrice: 53806.5, continuation: false, pools })).toEqual([]);
+  });
+  it("F5: sellside 53,618 inside a 100 pt stop caps at C and names pool and distances", () => {
+    const caps = drawLateCaps({ long: true, entry: 53695, stop: 53595, tp1: 53806.5, sweepPrice: 53412.5, drawPrice: 53806.5, continuation: false, pools, fmt: n => n.toFixed(2) });
     expect(caps).toHaveLength(1);
-    expect(caps[0]!.reason).toBe("Unswept sellside pool 53618.00 is 77.00 from entry; TP1 is 111.50 away.");
+    expect(caps[0]!.reason).toBe("Unswept sellside pool 53618.00 is 77.00 from entry, inside the 100.00 stop.");
   });
   it("F6: a long stop inside the 1H bull OB moves below 53,656.50", () => {
     const stop = clearStopFromZones(true, 53658.64, [{ top: 53686, bottom: 53656.5 }], 100);

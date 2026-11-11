@@ -237,23 +237,25 @@ export type DrawCap = { label: string; cap: "B" | "C"; reason: string };
 
 /**
  * F4 + F5 (US30 Nov 5 brief).
- * F4: continuation entries more than 2/3 of the way from the sweep to the draw cap at C.
- * F5: an unswept opposite-side pool closer to entry than TP1 caps at C (replaces "pool inside stop").
+ * F4: continuation entries more than LATE_LEG_LIMIT of the way from the sweep to the draw cap at C.
+ * F5: an unswept opposite-side pool between entry and stop (inside the stop distance) caps at C.
+ * Nov 11: loosened from 67% and "closer than TP1" at the trader's request; nearly every setup was capped.
  */
-export function drawLateCaps(a: { long: boolean; entry: number; tp1: number; sweepPrice: number; drawPrice: number | null;
+export const LATE_LEG_LIMIT = 0.8;
+export function drawLateCaps(a: { long: boolean; entry: number; stop: number; tp1: number; sweepPrice: number; drawPrice: number | null;
   continuation: boolean; pools: LiquidityPool[]; fmt?: (n: number) => string }): DrawCap[] {
   const f = a.fmt ?? ((n: number) => String(n));
   const caps: DrawCap[] = [];
   if (a.continuation && a.drawPrice != null && a.drawPrice !== a.sweepPrice) {
     const progress = Math.abs(a.entry - a.sweepPrice) / Math.abs(a.drawPrice - a.sweepPrice);
-    if (progress > 0.667) caps.push({ label: "Late-leg continuation", cap: "C",
-      reason: `Entry is ${Math.round(progress * 100)}% of the way from the sweep ${f(a.sweepPrice)} to the draw ${f(a.drawPrice)} (limit 67%).` });
+    if (progress > LATE_LEG_LIMIT) caps.push({ label: "Late-leg continuation", cap: "C",
+      reason: `Entry is ${Math.round(progress * 100)}% of the way from the sweep ${f(a.sweepPrice)} to the draw ${f(a.drawPrice)} (limit ${Math.round(LATE_LEG_LIMIT * 100)}%).` });
   }
   const opp = a.pools.filter(p => p.status === "unswept" && (a.long ? p.side === "sellside" && p.price < a.entry : p.side === "buyside" && p.price > a.entry))
     .sort((x, y) => Math.abs(x.price - a.entry) - Math.abs(y.price - a.entry))[0];
-  const toTp1 = Math.abs(a.tp1 - a.entry);
-  if (opp && Math.abs(opp.price - a.entry) < toTp1) caps.push({ label: "Opposite pool closer than TP1", cap: "C",
-    reason: `Unswept ${opp.side} pool ${f(opp.price)} is ${f(Math.abs(opp.price - a.entry))} from entry; TP1 is ${f(toTp1)} away.` });
+  const toStop = Math.abs(a.entry - a.stop);
+  if (opp && Math.abs(opp.price - a.entry) < toStop) caps.push({ label: "Opposite pool inside stop", cap: "C",
+    reason: `Unswept ${opp.side} pool ${f(opp.price)} is ${f(Math.abs(opp.price - a.entry))} from entry, inside the ${f(toStop)} stop.` });
   return caps;
 }
 

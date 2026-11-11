@@ -104,7 +104,7 @@ export async function liquidityDrawPlan(snap: MarketSnapshot, memo: ResearchMemo
   const continuation = zone.continuation || Boolean(state.reset?.confirmedAt);
   const policy0 = drawGrade({ aligned, nested: !state.reset?.confirmedAt && nestedAtSweep(snap, state), continuation, opposingInsideStop: false });
   const decimals0 = snap.lastPrice >= 100 ? 2 : snap.lastPrice >= 10 ? 3 : 5;
-  const lateCaps = drawLateCaps({ long: bias === "Long", entry: levels.entry, tp1: levels.tp1, sweepPrice: state.sweep.extreme,
+  const lateCaps = drawLateCaps({ long: bias === "Long", entry: levels.entry, stop: levels.stop, tp1: levels.tp1, sweepPrice: state.sweep.extreme,
     drawPrice: state.target?.price ?? null, continuation: zone.continuation, pools: read.pools, fmt: n => n.toFixed(decimals0) });
   // F10: a zone that already held one visit is downgraded to B at most.
   if (zone.status === "touched" && policy0.cap === "A") lateCaps.push({ label: "Touched zone", cap: "B",
