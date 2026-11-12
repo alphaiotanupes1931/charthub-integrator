@@ -190,6 +190,13 @@
       "when": 1794368281166,
       "tag": "0026_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1794494864263,
+      "tag": "0027_lock_liquidity_draw_state_reads",
+      "breakpoints": true
     }
   ]
 }
