@@ -166,8 +166,30 @@ function RootComponent() {
     // Single global auth state listener: invalidate router/cache on identity changes.
     let unsub: (() => void) | undefined;
     import("@/integrations/supabase/client").then(({ supabase }) => {
-      const { data } = supabase.auth.onAuthStateChange((event) => {
+      const { data } = supabase.auth.onAuthStateChange((event, session) => {
         if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+        try {
+          if (event !== "SIGNED_OUT" && session?.user?.email) {
+            localStorage.setItem("tm-last-email", session.user.email);
+            sessionStorage.removeItem("tm-manual-signout");
+          }
+          if (event === "SIGNED_OUT") {
+            const manual = sessionStorage.getItem("tm-manual-signout") === "1";
+            sessionStorage.removeItem("tm-manual-signout");
+            const path = window.location.pathname;
+            const inApp = !/^\/($|auth|forgot-password|reset-password|quiz|pricing)/.test(path);
+            if (!manual && inApp) {
+              queryClient.clear();
+              const email = localStorage.getItem("tm-last-email") ?? undefined;
+              void router.navigate({
+                to: "/auth",
+                search: { mode: "signin", reason: "expired", redirect: path + window.location.search, ...(email ? { email } : {}) },
+                replace: true,
+              });
+              return;
+            }
+          }
+        } catch { /* ignore */ }
         router.invalidate();
         if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
       });

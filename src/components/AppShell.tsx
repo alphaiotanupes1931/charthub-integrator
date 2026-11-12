@@ -215,6 +215,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   async function handleSignOut() {
     try {
+      try { sessionStorage.setItem("tm-manual-signout", "1"); localStorage.removeItem("tm-last-email"); } catch { /* ignore */ }
       await queryClient.cancelQueries();
       queryClient.clear();
       await supabase.auth.signOut();

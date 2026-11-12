@@ -182,7 +182,12 @@ export const Route = createFileRoute("/_app")({
       user = null;
     }
     if (!user) {
-      throw redirect({ to: "/auth", search: { redirect: location.href, mode: "signin" } });
+      let lastEmail: string | undefined;
+      try { lastEmail = localStorage.getItem("tm-last-email") ?? undefined; } catch { /* ignore */ }
+      throw redirect({
+        to: "/auth",
+        search: { redirect: location.href, mode: "signin", ...(lastEmail ? { reason: "expired", email: lastEmail } : {}) },
+      });
     }
     // Temporary-password accounts must choose a new password before they can
     // use the app. Any failure here is soft: never block dashboard access on

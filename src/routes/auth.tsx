@@ -38,6 +38,7 @@ const searchSchema = z.object({
   banned: optionalSearchString,
   email: optionalSearchString,
   force: optionalSearchString,
+  reason: optionalSearchString,
 });
 
 export const Route = createFileRoute("/auth")({
@@ -384,6 +385,14 @@ function AuthPage() {
               ? "Sign in"
               : "Create your account"}
           </h1>
+          {search.reason === "expired" && !recoveryMode && mode === "signin" && (
+            <div role="status" className="mt-3 rounded-xl border border-primary/30 bg-primary/10 p-3 text-sm text-foreground">
+              <p className="font-medium">Your session timed out</p>
+              <p className="mt-0.5 text-muted-foreground">
+                For your security you were signed out. Your trades and data are safe. Sign in again and we will take you back to where you were. Forgot your password? Use the reset link below the password box.
+              </p>
+            </div>
+          )}
           <p className="mt-1 text-sm text-muted-foreground">
             {recoveryMode
               ? "Enter the recovery code you saved during onboarding."
