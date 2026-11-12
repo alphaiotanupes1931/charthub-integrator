@@ -91,6 +91,8 @@ export function evaluateRails(
     symbol: string;
     grade: string | null;
     openPositions: number;
+    /** Open broker positions on this same symbol. */
+    openOnSymbol?: number;
     dailyLossPct?: number;
     /** Sweep-gate state. Only ACTIVE (or unset) may execute; HOLD/ARMED/INVALIDATED never do. */
     gateState?: string | null;
@@ -135,8 +137,10 @@ export function evaluateRails(
       reason: `Grade ${candidate.grade ?? "unknown"} is below your ${settings.minGrade} minimum`,
     };
   }
-  if (candidate.openPositions >= settings.maxOpenPositions) {
-    return { allowed: false, reason: `Already at your ${settings.maxOpenPositions} open position limit` };
+  // No account-wide position cap: one stacked pair must never lock out other
+  // instruments. Only same-symbol stacking is limited.
+  if ((candidate.openOnSymbol ?? 0) >= MAX_POSITIONS_PER_SYMBOL) {
+    return { allowed: false, reason: `Already ${MAX_POSITIONS_PER_SYMBOL} open ${candidate.symbol} positions` };
   }
   return { allowed: true, reason: null };
 }
@@ -152,3 +156,6 @@ export const MODE_COPY: Record<AutopilotMode, { label: string; detail: string }>
       "When a scan comes back at or above your minimum grade, you get asked whether to place it. Approved trades go to your connected account with the stop and target attached, and are managed from there.",
   },
 };
+
+/** Most open positions Autopilot will hold on one symbol at a time. */
+export const MAX_POSITIONS_PER_SYMBOL = 2;

@@ -176,7 +176,15 @@ export const Route = createFileRoute("/api/public/hooks/journal-verify-tick")({
           } catch { /* notification failure must not stop the sweep */ }
         }
 
-        return Response.json({ ok: true, scanned: rows.length, checked, resolved });
+        // Broker-confirmed closes: real exit price and profit on the close day.
+        let synced = 0;
+        const { syncBrokerClosesToJournal } = await import("@/lib/journal-broker-sync.server");
+        const autoUsers = new Set(rows.filter((r) => r.data?.["executed"] && !r.data?.["brokerClosedAt"]).map((r) => r.user_id));
+        for (const uid of autoUsers) {
+          try { synced += await syncBrokerClosesToJournal(uid); } catch { /* next sweep */ }
+        }
+
+        return Response.json({ ok: true, scanned: rows.length, checked, resolved, synced });
       },
     },
   },

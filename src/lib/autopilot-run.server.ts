@@ -49,13 +49,14 @@ export function settingsFromRow(row: Record<string, unknown> | null): AutopilotS
 export async function dailyLossPct(
   _client: Client,
   userId: string,
-): Promise<{ pct: number; equity: number; openPositions: number | null }> {
+): Promise<{ pct: number; equity: number; openPositions: number | null; openBySymbol: Record<string, number> }> {
   const { liveAccountFacts } = await import("@/lib/auto-trade.server");
   const facts = await liveAccountFacts(userId);
   return {
     pct: facts.dailyLossPct,
     equity: facts.equity,
     openPositions: facts.connected ? facts.openPositions : null,
+    openBySymbol: facts.openBySymbol ?? {},
   };
 }
 
@@ -76,7 +77,7 @@ export async function runAutopilotForUser(
     haltedReason: null,
   };
 
-  const { pct, equity, openPositions: brokerOpen } = await dailyLossPct(client, userId);
+  const { pct, equity, openPositions: brokerOpen, openBySymbol } = await dailyLossPct(client, userId);
   if (pct >= settings.maxDailyLossPct) {
     const reason = `Daily loss cap hit: down ${pct}% today against your ${settings.maxDailyLossPct}% limit. Autopilot is paused until tomorrow.`;
     await client
@@ -180,6 +181,7 @@ export async function runAutopilotForUser(
         symbol,
         grade: draft.grade,
         openPositions,
+        openOnSymbol: openBySymbol[(await import("@/lib/auto-trade.server")).symbolKey(symbol)] ?? 0,
         dailyLossPct: pct,
       });
       if (draft.scanId) {
@@ -282,6 +284,7 @@ export async function runAutopilotForUser(
             .update({ status: "approved", order_type: restTradeLocker ? live.TL_LIMIT_ORDER_TYPE : "limit", broker_order_id: rest.orderId ?? null, decided_at: new Date().toISOString() } as never)
             .eq("id", inserted.id as string);
           openPositions += 1;
+          { const k = (await import("@/lib/auto-trade.server")).symbolKey(draft.symbol); openBySymbol[k] = (openBySymbol[k] ?? 0) + 1; }
           hourlyLimitReached = true;
           await logAutopilotEvent(userId, "proposal", `${draft.symbol} ${draft.side}: ${rest.detail}`, { symbol: draft.symbol, proposalId: inserted.id, resting: true });
           if (draft.scanId) await client.from("scan_log").update({ taken: true, taken_at: new Date().toISOString() }).eq("id", draft.scanId).eq("user_id", userId);
@@ -336,6 +339,7 @@ export async function runAutopilotForUser(
           result.executed += 1;
           if (draft.scanId) await client.from("scan_log").update({ taken: true, taken_at: new Date().toISOString() }).eq("id", draft.scanId).eq("user_id", userId);
           openPositions += 1;
+          { const k = (await import("@/lib/auto-trade.server")).symbolKey(draft.symbol); openBySymbol[k] = (openBySymbol[k] ?? 0) + 1; }
           if (settings.demoOnly) hourlyLimitReached = true;
           const { journalPlacedTrade } = await import("@/lib/journal-auto.server");
           await journalPlacedTrade({

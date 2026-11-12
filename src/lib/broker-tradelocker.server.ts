@@ -24,9 +24,23 @@ export type TLAccount = {
   isDemo?: boolean;
 };
 
+/** Cloudflare "error code: 1015" and HTTP 429 mean TradeLocker is rate limiting us. */
+export function isTradeLockerRateLimit(status: number, text: string): boolean {
+  return status === 429 || /error code:\s*1015/i.test(text);
+}
+
 export async function tlFetch<T>(url: string, init: RequestInit, label: string): Promise<T> {
-  const res = await fetch(url, init);
-  const text = await res.text();
+  let res = await fetch(url, init);
+  let text = await res.text();
+  // Rate limited: back off and retry instead of dropping the order.
+  for (let attempt = 1; attempt <= 3 && isTradeLockerRateLimit(res.status, text); attempt++) {
+    await new Promise((r) => setTimeout(r, 1500 * attempt));
+    res = await fetch(url, init);
+    text = await res.text();
+  }
+  if (isTradeLockerRateLimit(res.status, text)) {
+    throw new Error(`${label}: TradeLocker is limiting how many requests we send right now (rate limit). It will be retried on the next run.`);
+  }
   let body: unknown = text;
   try {
     body = JSON.parse(text);

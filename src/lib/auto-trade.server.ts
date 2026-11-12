@@ -8,6 +8,8 @@ export type LiveAccountFacts = {
   reason: string | null;
   equity: number;
   openPositions: number;
+  /** Open positions per normalised symbol (e.g. GBPUSD). */
+  openBySymbol: Record<string, number>;
   dailyLossPct: number;
   currency: string | null;
 };
@@ -20,6 +22,7 @@ export async function liveAccountFacts(userId: string): Promise<LiveAccountFacts
       reason: snap.connected ? "No broker account returned any data." : snap.reason,
       equity: 0,
       openPositions: 0,
+      openBySymbol: {},
       dailyLossPct: 0,
       currency: null,
     };
@@ -27,6 +30,11 @@ export async function liveAccountFacts(userId: string): Promise<LiveAccountFacts
   const first = snap.snapshots[0];
   const equity = Number(first.equity ?? first.balance ?? 0);
   const openPositions = snap.snapshots.reduce((n, s) => n + s.positions.length, 0);
+  const openBySymbol: Record<string, number> = {};
+  for (const s of snap.snapshots) for (const p of s.positions) {
+    const k = symbolKey(p.symbol);
+    openBySymbol[k] = (openBySymbol[k] ?? 0) + 1;
+  }
 
   const dayStart = new Date();
   dayStart.setUTCHours(0, 0, 0, 0);
@@ -43,6 +51,7 @@ export async function liveAccountFacts(userId: string): Promise<LiveAccountFacts
     reason: null,
     equity,
     openPositions,
+    openBySymbol,
     dailyLossPct,
     currency: first.currency ?? null,
   };
@@ -59,4 +68,9 @@ export function sizeFromRisk(equity: number, riskPct: number, entry: number, sto
   const riskAmount = (equity * riskPct) / 100;
   const units = Math.floor(riskAmount / distance);
   return units >= 1 ? units : null;
+}
+
+/** Compare symbols across brokers: "GBP/USD", "GBP_USD" and "GBPUSD" match. */
+export function symbolKey(symbol: string): string {
+  return String(symbol ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 }

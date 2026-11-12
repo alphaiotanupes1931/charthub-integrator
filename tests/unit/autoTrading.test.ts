@@ -27,8 +27,10 @@ describe("auto trading grade gate", () => {
     expect(v.reason).toContain("acknowledged");
   });
 
-  it("stops at the open position limit and the daily loss cap", () => {
-    expect(evaluateRails(live, { symbol: "XAU/USD", grade: "A", openPositions: 2, dailyLossPct: 0 }).allowed).toBe(false);
+  it("has no account-wide position cap, limits 2 per symbol, and keeps the daily loss cap", () => {
+    expect(evaluateRails(live, { symbol: "XAU/USD", grade: "A", openPositions: 9, dailyLossPct: 0 }).allowed).toBe(true);
+    expect(evaluateRails(live, { symbol: "XAU/USD", grade: "A", openPositions: 2, openOnSymbol: 2, dailyLossPct: 0 }).allowed).toBe(false);
+    expect(evaluateRails(live, { symbol: "XAU/USD", grade: "A", openPositions: 2, openOnSymbol: 1, dailyLossPct: 0 }).allowed).toBe(true);
     expect(evaluateRails(live, { symbol: "XAU/USD", grade: "A", openPositions: 0, dailyLossPct: 3.2 }).allowed).toBe(false);
     expect(evaluateRails(live, { symbol: "XAU/USD", grade: "A", openPositions: 0, dailyLossPct: 0.4 }).allowed).toBe(true);
   });
