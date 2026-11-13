@@ -14,8 +14,8 @@ describe("Nov 10 brief", () => {
   it("allows C trades through the rails when the minimum is ALL", () => {
     expect(rail("NAS100", "C").allowed).toBe(true);
   });
-  it("keeps forex alert-only", () => {
-    expect(rail("EUR/USD").allowed).toBe(false);
+  it("allows forex auto trading", () => {
+    expect(rail("EUR/USD").allowed).toBe(true);
     expect(rail("XAU/USD").allowed).toBe(true);
   });
   it("keeps BTC and ETH off auto trading", () => {

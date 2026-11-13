@@ -124,9 +124,6 @@ export function evaluateRails(
   if (isCryptoWithoutFeed(candidate.symbol)) {
     return { allowed: false, reason: `${candidate.symbol} is off the auto list until a reliable price feed is connected` };
   }
-  if (isForexPair(candidate.symbol)) {
-    return { allowed: false, reason: `${candidate.symbol} is alert-only: forex stops are too small for spread and costs until settled results say otherwise` };
-  }
   const review = instrumentReview(candidate.symbol);
   if (review) {
     return { allowed: false, reason: `${review.symbol} is under review and cannot be traded automatically` };
