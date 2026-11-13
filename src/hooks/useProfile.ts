@@ -14,7 +14,7 @@ export function useProfile() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async function refresh(): Promise<void> {
     setLoading(true);
     const { data: u, error: authError } = await supabase.auth.getUser();
     if (!u.user) {
@@ -22,11 +22,19 @@ export function useProfile() {
       // An expired or revoked sign-in leaves a stale local session: the app
       // looks signed in but every data read fails. Clear it and send the
       // trader back to sign in so their account and data load again.
+      // Only clear a session the server truly rejected. A missing session
+      // right after sign-in or a network blip must never sign the trader out.
       const status = (authError as { status?: number } | null)?.status;
-      if (authError && (status === 400 || status === 401 || status === 403 || /refresh token|jwt|session/i.test(authError.message))) {
+      const { data: local } = await supabase.auth.getSession();
+      if (local.session && authError && (status === 401 || status === 403)) {
+        await new Promise((r) => setTimeout(r, 1500));
+        const retry = await supabase.auth.getUser();
+        if (retry.data.user) { void refresh(); return; }
+        const rs = (retry.error as { status?: number } | null)?.status;
+        if (rs !== 401 && rs !== 403) return;
         try { await supabase.auth.signOut({ scope: "local" }); } catch { /* ignore */ }
         if (typeof window !== "undefined" && !window.location.pathname.startsWith("/auth")) {
-          window.location.assign(`/auth?mode=signin&redirect=${encodeURIComponent(window.location.pathname)}`);
+          window.location.assign(`/auth?mode=signin&reason=expired&redirect=${encodeURIComponent(window.location.pathname)}`);
         }
       }
       return;
